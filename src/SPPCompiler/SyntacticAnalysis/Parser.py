@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable, List, Tuple, TYPE_CHECKING
+from typing import Callable, List, Dict, Tuple, TYPE_CHECKING
 import functools
 
 from SPPCompiler.LexicalAnalysis.TokenType import TokenType
@@ -25,7 +25,7 @@ class Parser:
     _tokens: List[Token]
     _index: int
     _err_fmt: ErrorFormatter
-    _errors: List[ParserError]
+    _errors: Dict[int, ParserError]
     _pos_shift: int
 
     def __init__(self, tokens: List[Token], file_name: str = "", pos_shift: int = 0) -> None:
@@ -34,7 +34,7 @@ class Parser:
         self._tokens = tokens
         self._index = 0
         self._err_fmt = ErrorFormatter(self._tokens, file_name)
-        self._errors = []
+        self._errors = {}
         self._pos_shift = pos_shift
 
     def current_pos(self) -> int:
@@ -53,13 +53,8 @@ class Parser:
             return ast
 
         except ParserError as e:
-            final_error = self._errors[0]
-
-            for current_error in self._errors:
-                if current_error.pos > final_error.pos:
-                    final_error = current_error
-
-            all_expected_tokens = "['" + "' | '".join(final_error.expected_tokens).replace("\n", "\\n") + "']"
+            final_error = [*self._errors.values()][-1]
+            all_expected_tokens = "['" + "' | '".join(map(lambda t: t.value, final_error.expected_tokens)).replace("\n", "\\n") + "']"
             error_message = str(final_error).replace("$", all_expected_tokens)
             error_message = self._err_fmt.error(final_error.pos, message=error_message, tag_message="Invalid syntax")
             raise SystemExit(error_message) from None
@@ -1627,7 +1622,7 @@ class Parser:
             return p1
         else:
             new_error = ParserError(self.current_pos(), f"Expected '{characters}', got '{p1.value}'")
-            self._errors.append(new_error)
+            self._errors[self.current_pos()] = new_error
             raise new_error
 
     @parser_rule
@@ -1641,7 +1636,7 @@ class Parser:
         # Check if the end of the file has been reached.
         if self._index > len(self._tokens) - 1:
             new_error = ParserError(self.current_pos(), f"Expected '{token_type}', got <EOF>")
-            self._errors.append(new_error)
+            self._errors[self.current_pos()] = new_error
             raise new_error
 
         # Save the current position before skipping newlines and whitespace.
@@ -1658,19 +1653,17 @@ class Parser:
             token_print = lambda t: f"<{t.name[2:]}>" if t.name[:2] == "Cm" else t.value
 
             c2 = self.current_pos()
-            for error in self._errors:
-                if error.pos == c2:
-                    existing_error = next(error for error in self._errors if error.pos == c2)
-                    existing_error.expected_tokens.add(token_print(token_type))
-                    raise existing_error
+            if error := self._errors.get(c2, None):
+                error.expected_tokens.add(token_type)
+                raise error
 
             new_error = ParserError(f"Expected $, got '{token_print(self.current_tok().token_type)}'")
             new_error.pos = c2
-            new_error.expected_tokens.add(token_print(token_type))
-            self._errors.append(new_error)
+            new_error.expected_tokens.add(token_type)  # token_print(token_type))
+            self._errors[c2] = new_error
             raise new_error
 
-        # Otherwise, the parse was successful, to return a TokenAst as the correct position.
+        # Otherwise, the parse was successful, so return a TokenAst as the correct position.
         r = TokenAst(c1, self.current_tok())
         self._index += 1
         return r

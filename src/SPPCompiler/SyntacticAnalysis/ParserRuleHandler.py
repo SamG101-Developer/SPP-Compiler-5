@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class ParserRuleHandler[T]:
     ParserRule = Callable[[], T]
+    __slots__ = ["_rule", "_parser", "_for_alternate", "_result"]
 
     _rule: ParserRule
     _parser: Parser
@@ -68,7 +69,7 @@ class ParserRuleHandler[T]:
         if self._result.length < 1:
             new_error = ParserError(f"Expected one or more {self._rule}.")
             new_error.pos = self._parser._index
-            self._parser._errors.append(new_error)
+            self._parser._errors[self._parser.current_pos()] = new_error
             raise new_error
         return self._result
 
@@ -79,7 +80,7 @@ class ParserRuleHandler[T]:
         if self._result.length < 2:
             new_error = ParserError(f"Expected two or more {self._rule}.")
             new_error.pos = self._parser._index
-            self._parser._errors.append(new_error)
+            self._parser._errors[self._parser.current_pos()] = new_error
             raise new_error
         return self._result
 
@@ -87,11 +88,6 @@ class ParserRuleHandler[T]:
         assert not self._for_alternate
         self._for_alternate = True
         return self
-
-    def and_then(self, wrapper_function) -> ParserRuleHandler:
-        new_parser_rule_handler = ParserRuleHandler(self._parser, self._rule)
-        new_parser_rule_handler._rule = lambda: wrapper_function(self._rule())
-        return new_parser_rule_handler
 
     def __or__(self, that: ParserRuleHandler) -> ParserAlternateRulesHandler:
         from SPPCompiler.SyntacticAnalysis.ParserAlternateRulesHandler import ParserAlternateRulesHandler
