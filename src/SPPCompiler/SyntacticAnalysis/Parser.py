@@ -17,8 +17,8 @@ if TYPE_CHECKING:
 # Decorator that wraps the function in a ParserRuleHandler
 def parser_rule(func) -> Callable[..., ParserRuleHandler]:
     @functools.wraps(func)
+    @functools.lru_cache(maxsize=None)
     def wrapper(self, *args) -> ParserRuleHandler:
-        # print(f"{self._index} / {len(self._tokens)}", self._index / len(self._tokens))
         return ParserRuleHandler(self, functools.partial(func, self, *args))
     return wrapper
 
@@ -90,12 +90,12 @@ class Parser:
 
     @parser_rule
     def parse_module_member(self) -> ModuleMemberAst:
-        p1 = self.parse_function_prototype().for_alt()
-        p2 = self.parse_class_prototype().for_alt()
-        p3 = self.parse_sup_prototype_inheritance().for_alt()
-        p4 = self.parse_sup_prototype_functions().for_alt()
-        p5 = self.parse_global_use_statement().for_alt()
-        p6 = self.parse_global_constant().for_alt()
+        p1 = self.parse_function_prototype()
+        p2 = self.parse_class_prototype()
+        p3 = self.parse_sup_prototype_inheritance()
+        p4 = self.parse_sup_prototype_functions()
+        p5 = self.parse_global_use_statement()
+        p6 = self.parse_global_constant()
         p7 = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
         return p7
 
@@ -147,8 +147,8 @@ class Parser:
 
     @parser_rule
     def parse_sup_member(self) -> SupMemberAst:
-        p1 = self.parse_sup_method_prototype().for_alt()
-        p2 = self.parse_sup_use_statement().for_alt()
+        p1 = self.parse_sup_method_prototype()
+        p2 = self.parse_sup_use_statement()
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -167,8 +167,8 @@ class Parser:
 
     @parser_rule
     def parse_function_prototype(self) -> FunctionPrototypeAst:
-        p1 = self.parse_subroutine_prototype().for_alt()
-        p2 = self.parse_coroutine_prototype().for_alt()
+        p1 = self.parse_subroutine_prototype()
+        p2 = self.parse_coroutine_prototype()
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -210,8 +210,8 @@ class Parser:
 
     @parser_rule
     def parse_function_call_argument(self) -> FunctionCallArgumentAst:
-        p1 = self.parse_function_call_argument_named().for_alt()
-        p2 = self.parse_function_call_argument_normal().for_alt()
+        p1 = self.parse_function_call_argument_named()
+        p2 = self.parse_function_call_argument_normal()
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -242,10 +242,10 @@ class Parser:
 
     @parser_rule
     def parse_function_parameter(self) -> FunctionParameterAst:
-        p1 = self.parse_function_parameter_variadic().for_alt()
-        p2 = self.parse_function_parameter_optional().for_alt()
-        p3 = self.parse_function_parameter_required().for_alt()
-        p4 = self.parse_function_parameter_self().for_alt()
+        p1 = self.parse_function_parameter_variadic()
+        p2 = self.parse_function_parameter_optional()
+        p3 = self.parse_function_parameter_required()
+        p4 = self.parse_function_parameter_self()
         p5 = (p1 | p2 | p3 | p4).parse_once()
         return p5
 
@@ -299,10 +299,10 @@ class Parser:
 
     @parser_rule
     def parse_generic_argument(self) -> GenericArgumentAst:
-        p1 = self.parse_generic_type_argument_named().for_alt()
-        p2 = self.parse_generic_type_argument_normal().for_alt()
-        p3 = self.parse_generic_comp_argument_named().for_alt()
-        p4 = self.parse_generic_comp_argument_normal().for_alt()
+        p1 = self.parse_generic_type_argument_named()
+        p2 = self.parse_generic_type_argument_normal()
+        p3 = self.parse_generic_comp_argument_named()
+        p4 = self.parse_generic_comp_argument_normal()
         p5 = (p1 | p2 | p3 | p4).parse_once()
         return p5
 
@@ -344,12 +344,12 @@ class Parser:
 
     @parser_rule
     def parse_generic_parameter(self) -> GenericParameterAst:
-        p1 = self.parse_generic_comp_parameter_variadic().for_alt()
-        p2 = self.parse_generic_comp_parameter_optional().for_alt()
-        p3 = self.parse_generic_comp_parameter_required().for_alt()
-        p4 = self.parse_generic_type_parameter_variadic().for_alt()
-        p5 = self.parse_generic_type_parameter_optional().for_alt()
-        p6 = self.parse_generic_type_parameter_required().for_alt()
+        p1 = self.parse_generic_comp_parameter_variadic()
+        p2 = self.parse_generic_comp_parameter_optional()
+        p3 = self.parse_generic_comp_parameter_required()
+        p4 = self.parse_generic_type_parameter_variadic()
+        p5 = self.parse_generic_type_parameter_optional()
+        p6 = self.parse_generic_type_parameter_required()
         p7 = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
         return p7
 
@@ -520,19 +520,19 @@ class Parser:
 
     @parser_rule
     def parse_primary_expression(self) -> ExpressionAst:
-        p1 = self.parse_literal().for_alt()
-        p2 = self.parse_object_initialization().for_alt()
-        # p3 = self.parse_lambda_prototype().for_alt()
-        p4 = self.parse_parenthesized_expression().for_alt()
-        p5 = self.parse_identifier().for_alt()
-        p6 = self.parse_type().for_alt()
-        p7 = self.parse_case_expression().for_alt()
-        p8 = self.parse_loop_expression().for_alt()
-        p9 = self.parse_gen_expression().for_alt()
-        p10 = self.parse_with_expression().for_alt()
-        p11 = self.parse_inner_scope(self.parse_statement).for_alt()
-        p12 = self.parse_self_keyword().for_alt()
-        p13 = self.parse_token(TokenType.TkVariadic).for_alt()
+        p1 = self.parse_literal()
+        p2 = self.parse_object_initialization()
+        # p3 = self.parse_lambda_prototype()
+        p4 = self.parse_parenthesized_expression()
+        p5 = self.parse_identifier()
+        p6 = self.parse_type()
+        p7 = self.parse_case_expression()
+        p8 = self.parse_loop_expression()
+        p9 = self.parse_gen_expression()
+        p10 = self.parse_with_expression()
+        p11 = self.parse_inner_scope(self.parse_statement)
+        p12 = self.parse_self_keyword()
+        p13 = self.parse_token(TokenType.TkVariadic)
         p14 = (p1 | p2 | p4 | p5 | p6 | p7 | p8 | p9 | p10 | p11 | p12 | p13).parse_once()
         return p14
 
@@ -572,8 +572,8 @@ class Parser:
 
     @parser_rule
     def parse_loop_expression_condition(self) -> LoopConditionAst:
-        p1 = self.parse_loop_expression_condition_iterable().for_alt()
-        p2 = self.parse_loop_expression_condition_boolean().for_alt()
+        p1 = self.parse_loop_expression_condition_iterable()
+        p2 = self.parse_loop_expression_condition_boolean()
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -600,8 +600,8 @@ class Parser:
 
     @parser_rule
     def parse_gen_expression(self) -> GenExpressionAst:
-        p1 = self.parse_gen_expression_unroll().for_alt()
-        p2 = self.parse_gen_expression_normal().for_alt()
+        p1 = self.parse_gen_expression_unroll()
+        p2 = self.parse_gen_expression_normal()
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -650,8 +650,8 @@ class Parser:
     def parse_exit_statement(self) -> LoopControlFlowStatementAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwExit).parse_one_or_more(TokenType.TkWhitespace)
-        p2 = self.parse_token(TokenType.KwSkip).for_alt()
-        p3 = self.parse_expression().for_alt()
+        p2 = self.parse_token(TokenType.KwSkip)
+        p3 = self.parse_expression()
         p4 = (p2 | p3).parse_optional()
         return LoopControlFlowStatementAst(c1, p1, p4)
 
@@ -685,15 +685,15 @@ class Parser:
 
     @parser_rule
     def parse_statement(self) -> StatementAst:
-        p1 = self.parse_use_statement().for_alt()
-        p2 = self.parse_let_statement().for_alt()
-        p3 = self.parse_return_statement().for_alt()
-        p4 = self.parse_exit_statement().for_alt()
-        p5 = self.parse_skip_statement().for_alt()
-        p6 = self.parse_pin_statement().for_alt()
-        p7 = self.parse_rel_statement().for_alt()
-        p8 = self.parse_assignment_statement().for_alt()
-        p9 = self.parse_expression().for_alt()
+        p1 = self.parse_use_statement()
+        p2 = self.parse_let_statement()
+        p3 = self.parse_return_statement()
+        p4 = self.parse_exit_statement()
+        p5 = self.parse_skip_statement()
+        p6 = self.parse_pin_statement()
+        p7 = self.parse_rel_statement()
+        p8 = self.parse_assignment_statement()
+        p9 = self.parse_expression()
         p10 = (p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8 | p9).parse_once()
         return p10
 
@@ -704,8 +704,8 @@ class Parser:
         c1 = self.current_pos()
         p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
         p2 = self.parse_token(TokenType.KwUse).parse_once()
-        p3 = self.parse_use_statement_type_alias().for_alt()
-        p4 = self.parse_use_statement_namespace_reduction().for_alt()
+        p3 = self.parse_use_statement_type_alias()
+        p4 = self.parse_use_statement_namespace_reduction()
         p5 = (p3 | p4).parse_once()
         return UseStatementAst(c1, p1, p2, p5)
 
@@ -713,8 +713,8 @@ class Parser:
     def parse_use_statement(self) -> UseStatementAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwUse).parse_once()
-        p2 = self.parse_use_statement_type_alias().for_alt()
-        p3 = self.parse_use_statement_namespace_reduction().for_alt()
+        p2 = self.parse_use_statement_type_alias()
+        p3 = self.parse_use_statement_namespace_reduction()
         p4 = (p2 | p3).parse_once()
         return UseStatementAst(c1, [], p1, p4)
 
@@ -751,8 +751,8 @@ class Parser:
     @parser_rule
     def parse_use_statement_namespace_reduction_body(self) -> UseStatementNamespaceReductionBodyAst:
         c1 = self.current_pos()
-        p1 = self.parse_use_statement_namespace_reduction_types_multiple().for_alt()
-        p2 = self.parse_use_statement_namespace_reduction_types_single().for_alt()
+        p1 = self.parse_use_statement_namespace_reduction_types_multiple()
+        p2 = self.parse_use_statement_namespace_reduction_types_single()
         p3 = (p1 | p2).parse_once()
         return UseStatementNamespaceReductionBodyAst(c1, p3)
 
@@ -781,8 +781,8 @@ class Parser:
 
     @parser_rule
     def parse_let_statement(self) -> LetStatementAst:
-        p1 = self.parse_let_statement_initialized().for_alt()
-        p2 = self.parse_let_statement_uninitialized().for_alt()
+        p1 = self.parse_let_statement_initialized()
+        p2 = self.parse_let_statement_uninitialized()
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -806,9 +806,9 @@ class Parser:
 
     @parser_rule
     def parse_local_variable(self) -> LocalVariableAst:
-        p1 = self.parse_local_variable_single_identifier().for_alt()
-        p2 = self.parse_local_variable_tuple_destructure().for_alt()
-        p3 = self.parse_local_variable_object_destructure().for_alt()
+        p1 = self.parse_local_variable_single_identifier()
+        p2 = self.parse_local_variable_tuple_destructure()
+        p3 = self.parse_local_variable_object_destructure()
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
@@ -859,27 +859,27 @@ class Parser:
 
     @parser_rule
     def parse_local_variable_nested_for_object_destructure(self) -> LocalVariableNestedForDestructureObjectAst:
-        p1 = self.parse_local_variable_attribute_binding().for_alt()
-        p2 = self.parse_local_variable_single_identifier().for_alt()
-        p3 = self.parse_local_variable_skip_arguments().for_alt()
+        p1 = self.parse_local_variable_attribute_binding()
+        p2 = self.parse_local_variable_single_identifier()
+        p3 = self.parse_local_variable_skip_arguments()
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
     @parser_rule
     def parse_local_variable_nested_for_tuple_destructure(self) -> LocalVariableNestedForDestructureTupleAst:
-        p1 = self.parse_local_variable_tuple_destructure().for_alt()
-        p2 = self.parse_local_variable_object_destructure().for_alt()
-        p3 = self.parse_local_variable_single_identifier().for_alt()
-        p4 = self.parse_local_variable_skip_arguments().for_alt()
-        p5 = self.parse_local_variable_skip_argument().for_alt()
+        p1 = self.parse_local_variable_tuple_destructure()
+        p2 = self.parse_local_variable_object_destructure()
+        p3 = self.parse_local_variable_single_identifier()
+        p4 = self.parse_local_variable_skip_arguments()
+        p5 = self.parse_local_variable_skip_argument()
         p6 = (p1 | p2 | p3 | p4 | p5).parse_once()
         return p6
 
     @parser_rule
     def parse_local_variable_nested_for_attribute_binding(self) -> LocalVariableNestedForAttributeBindingAst:
-        p1 = self.parse_local_variable_object_destructure().for_alt()
-        p2 = self.parse_local_variable_tuple_destructure().for_alt()
-        p3 = self.parse_local_variable_single_identifier().for_alt()  # todo
+        p1 = self.parse_local_variable_object_destructure()
+        p2 = self.parse_local_variable_tuple_destructure()
+        p3 = self.parse_local_variable_single_identifier()  # todo
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
@@ -897,10 +897,10 @@ class Parser:
 
     @parser_rule
     def parse_pattern_statement(self) -> PatternBlockAst:
-        p1 = self.parse_pattern_statement_flavour_destructuring().for_alt()
-        p2 = self.parse_pattern_statement_flavour_non_destructuring().for_alt()
-        p3 = self.parse_pattern_statement_flavour_else_case().for_alt()
-        p4 = self.parse_pattern_statement_flavour_else().for_alt()
+        p1 = self.parse_pattern_statement_flavour_destructuring()
+        p2 = self.parse_pattern_statement_flavour_non_destructuring()
+        p3 = self.parse_pattern_statement_flavour_else_case()
+        p4 = self.parse_pattern_statement_flavour_else()
         p5 = (p1 | p2 | p3 | p4).parse_once()
         return p5
 
@@ -936,8 +936,8 @@ class Parser:
 
     @parser_rule
     def parse_pattern_group_destructure(self) -> PatternGroupDestructureAst:
-        p1 = self.parse_pattern_variant_tuple_destructure().for_alt()
-        p2 = self.parse_pattern_variant_object_destructure().for_alt()
+        p1 = self.parse_pattern_variant_tuple_destructure()
+        p2 = self.parse_pattern_variant_object_destructure()
         return (p1 | p2).parse_once()
 
     @parser_rule
@@ -988,10 +988,10 @@ class Parser:
     @parser_rule
     def parse_pattern_variant_literal(self) -> PatternVariantLiteralAst:
         c1 = self.current_pos()
-        p1 = self.parse_literal_float().for_alt()
-        p2 = self.parse_literal_integer().for_alt()
-        p3 = self.parse_literal_string().for_alt()
-        p4 = self.parse_literal_boolean().for_alt()
+        p1 = self.parse_literal_float()
+        p2 = self.parse_literal_integer()
+        p3 = self.parse_literal_string()
+        p4 = self.parse_literal_boolean()
         p5 = (p1 | p2 | p3 | p4).parse_once()
         return PatternVariantLiteralAst(c1, p5)
 
@@ -1016,29 +1016,29 @@ class Parser:
 
     @parser_rule
     def parse_pattern_variant_nested_for_object_destructure(self) -> PatternVariantNestedForDestructureObjectAst:
-        p1 = self.parse_pattern_variant_attribute_binding().for_alt()
-        p2 = self.parse_pattern_variant_single_identifier().for_alt()
-        p3 = self.parse_pattern_variant_skip_arguments().for_alt()
+        p1 = self.parse_pattern_variant_attribute_binding()
+        p2 = self.parse_pattern_variant_single_identifier()
+        p3 = self.parse_pattern_variant_skip_arguments()
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
     @parser_rule
     def parse_pattern_variant_nested_for_tuple_destructure(self) -> PatternVariantNestedForDestructureTupleAst:
-        p1 = self.parse_pattern_variant_tuple_destructure().for_alt()
-        p2 = self.parse_pattern_variant_object_destructure().for_alt()
-        p3 = self.parse_pattern_variant_single_identifier().for_alt()
-        p4 = self.parse_pattern_variant_literal().for_alt()
-        p5 = self.parse_pattern_variant_skip_arguments().for_alt()
-        p6 = self.parse_pattern_variant_skip_argument().for_alt()
+        p1 = self.parse_pattern_variant_tuple_destructure()
+        p2 = self.parse_pattern_variant_object_destructure()
+        p3 = self.parse_pattern_variant_single_identifier()
+        p4 = self.parse_pattern_variant_literal()
+        p5 = self.parse_pattern_variant_skip_arguments()
+        p6 = self.parse_pattern_variant_skip_argument()
         p7 = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
         return p7
 
     @parser_rule
     def parse_pattern_variant_nested_for_attribute_binding(self) -> PatternVariantNestedForAttributeBindingAst:
-        p1 = self.parse_pattern_variant_tuple_destructure().for_alt()
-        p2 = self.parse_pattern_variant_object_destructure().for_alt()
-        p3 = self.parse_pattern_variant_single_identifier().for_alt()
-        p4 = self.parse_pattern_variant_literal().for_alt()
+        p1 = self.parse_pattern_variant_tuple_destructure()
+        p2 = self.parse_pattern_variant_object_destructure()
+        p3 = self.parse_pattern_variant_single_identifier()
+        p4 = self.parse_pattern_variant_literal()
         p5 = (p1 | p2 | p3 | p4).parse_once()
         return p5
 
@@ -1068,48 +1068,48 @@ class Parser:
 
     @parser_rule
     def parse_binary_op_precedence_level_4(self) -> TokenAst:
-        p1 = self.parse_token(TokenType.TkEq).for_alt()
-        p2 = self.parse_token(TokenType.TkNe).for_alt()
-        p3 = self.parse_token(TokenType.TkLe).for_alt()
-        p4 = self.parse_token(TokenType.TkGe).for_alt()
-        p5 = self.parse_token(TokenType.TkLt).for_alt()
-        p6 = self.parse_token(TokenType.TkGt).for_alt()
-        p7 = self.parse_token(TokenType.TkSs).for_alt()
+        p1 = self.parse_token(TokenType.TkEq)
+        p2 = self.parse_token(TokenType.TkNe)
+        p3 = self.parse_token(TokenType.TkLe)
+        p4 = self.parse_token(TokenType.TkGe)
+        p5 = self.parse_token(TokenType.TkLt)
+        p6 = self.parse_token(TokenType.TkGt)
+        p7 = self.parse_token(TokenType.TkSs)
         p8 = (p1 | p2 | p3 | p4 | p5 | p6 | p7).parse_once()
         return p8
 
     @parser_rule
     def parse_binary_op_precedence_level_5(self) -> TokenAst:
-        p1 = self.parse_token(TokenType.TkAdd).for_alt()
-        p2 = self.parse_token(TokenType.TkSub).for_alt()
-        p3 = self.parse_token(TokenType.TkAddAssign).for_alt()
-        p4 = self.parse_token(TokenType.TkSubAssign).for_alt()
+        p1 = self.parse_token(TokenType.TkAdd)
+        p2 = self.parse_token(TokenType.TkSub)
+        p3 = self.parse_token(TokenType.TkAddAssign)
+        p4 = self.parse_token(TokenType.TkSubAssign)
         p5 = (p1 | p2 | p3 | p4).parse_once()
         return p5
 
     @parser_rule
     def parse_binary_op_precedence_level_6(self) -> TokenAst:
-        p1 = self.parse_token(TokenType.TkMul).for_alt()
-        p2 = self.parse_token(TokenType.TkDiv).for_alt()
-        p3 = self.parse_token(TokenType.TkRem).for_alt()
-        p4 = self.parse_token(TokenType.TkMod).for_alt()
-        p5 = self.parse_token(TokenType.TkExp).for_alt()
-        p6 = self.parse_token(TokenType.TkMulAssign).for_alt()
-        p7 = self.parse_token(TokenType.TkDivAssign).for_alt()
-        p8 = self.parse_token(TokenType.TkRemAssign).for_alt()
-        p9 = self.parse_token(TokenType.TkModAssign).for_alt()
-        p10 = self.parse_token(TokenType.TkExpAssign).for_alt()
+        p1 = self.parse_token(TokenType.TkMul)
+        p2 = self.parse_token(TokenType.TkDiv)
+        p3 = self.parse_token(TokenType.TkRem)
+        p4 = self.parse_token(TokenType.TkMod)
+        p5 = self.parse_token(TokenType.TkExp)
+        p6 = self.parse_token(TokenType.TkMulAssign)
+        p7 = self.parse_token(TokenType.TkDivAssign)
+        p8 = self.parse_token(TokenType.TkRemAssign)
+        p9 = self.parse_token(TokenType.TkModAssign)
+        p10 = self.parse_token(TokenType.TkExpAssign)
         p11 = (p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8 | p9 | p10).parse_once()
         return p11
 
     @parser_rule
     def parse_boolean_comparison_op(self) -> TokenAst:
-        p1 = self.parse_token(TokenType.TkEq).for_alt()
-        p2 = self.parse_token(TokenType.TkNe).for_alt()
-        p3 = self.parse_token(TokenType.TkLe).for_alt()
-        p4 = self.parse_token(TokenType.TkGe).for_alt()
-        p5 = self.parse_token(TokenType.TkLt).for_alt()
-        p6 = self.parse_token(TokenType.TkGt).for_alt()
+        p1 = self.parse_token(TokenType.TkEq)
+        p2 = self.parse_token(TokenType.TkNe)
+        p3 = self.parse_token(TokenType.TkLe)
+        p4 = self.parse_token(TokenType.TkGe)
+        p5 = self.parse_token(TokenType.TkLt)
+        p6 = self.parse_token(TokenType.TkGt)
         p8 = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
         return p8
 
@@ -1120,10 +1120,10 @@ class Parser:
 
     @parser_rule
     def parse_postfix_op(self) -> PostfixExpressionOperatorAst:
-        p1 = self.parse_postfix_op_function_call().for_alt()
-        p2 = self.parse_postfix_op_member_access().for_alt()
-        p3 = self.parse_postfix_op_early_return().for_alt()
-        p4 = self.parse_postfix_op_not_keyword().for_alt()
+        p1 = self.parse_postfix_op_function_call()
+        p2 = self.parse_postfix_op_member_access()
+        p3 = self.parse_postfix_op_early_return()
+        p4 = self.parse_postfix_op_not_keyword()
         p5 = (p1 | p2 | p3 | p4).parse_once()
         return p5
 
@@ -1137,8 +1137,8 @@ class Parser:
 
     @parser_rule
     def parse_postfix_op_member_access(self) -> PostfixExpressionOperatorMemberAccessAst:
-        p1 = self.parse_postfix_op_member_access_runtime().for_alt()
-        p2 = self.parse_postfix_op_member_access_static().for_alt()
+        p1 = self.parse_postfix_op_member_access_runtime()
+        p2 = self.parse_postfix_op_member_access_static()
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -1146,8 +1146,8 @@ class Parser:
     def parse_postfix_op_member_access_runtime(self) -> PostfixExpressionOperatorMemberAccessAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.TkDot).parse_once()
-        p2 = self.parse_identifier().for_alt()
-        p3 = self.parse_token(TokenType.LxDecInteger).for_alt()
+        p2 = self.parse_identifier()
+        p3 = self.parse_token(TokenType.LxDecInteger)
         p4 = (p2 | p3).parse_once()
         return PostfixExpressionOperatorMemberAccessAst(c1, p1, p4)
 
@@ -1175,9 +1175,9 @@ class Parser:
 
     @parser_rule
     def parse_convention(self) -> ConventionAst:
-        p1 = self.parse_convention_mut().for_alt()
-        p2 = self.parse_convention_ref().for_alt()
-        p3 = self.parse_convention_mov().for_alt()
+        p1 = self.parse_convention_mut()
+        p2 = self.parse_convention_ref()
+        p3 = self.parse_convention_mov()
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
@@ -1218,8 +1218,8 @@ class Parser:
 
     @parser_rule
     def parse_object_initializer_argument(self) -> ObjectInitializerArgumentAst:
-        p1 = self.parse_object_initializer_argument_named().for_alt()
-        p2 = self.parse_object_initializer_argument_normal().for_alt()
+        p1 = self.parse_object_initializer_argument_named()
+        p2 = self.parse_object_initializer_argument_normal()
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -1239,9 +1239,9 @@ class Parser:
 
     @parser_rule
     def parse_object_initializer_argument_named_key(self) -> IdentifierAst | TokenAst:
-        p1 = self.parse_identifier().for_alt()
-        p2 = self.parse_token(TokenType.KwElse).for_alt()
-        p3 = self.parse_token(TokenType.KwSup).for_alt()
+        p1 = self.parse_identifier()
+        p2 = self.parse_token(TokenType.KwElse)
+        p3 = self.parse_token(TokenType.KwSup)
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
@@ -1270,8 +1270,8 @@ class Parser:
     #
     # @parser_rule
     # def parse_lambda_capture_item(self) -> LambdaCaptureItemAst:
-    #     p1 = self.parse_lambda_capture_item_named().for_alt()
-    #     p2 = self.parse_lambda_capture_item_normal().for_alt()
+    #     p1 = self.parse_lambda_capture_item_named()
+    #     p2 = self.parse_lambda_capture_item_normal()
     #     p3 = (p1 | p2).parse_once()
     #     return p3
     #
@@ -1295,10 +1295,10 @@ class Parser:
 
     @parser_rule
     def parse_type(self) -> TypeAst:
-        p1 = self.parse_type_optional().for_alt()
-        p2 = self.parse_type_variant().for_alt()
-        p3 = self.parse_type_tuple().for_alt()
-        p4 = self.parse_type_single().for_alt()
+        p1 = self.parse_type_optional()
+        p2 = self.parse_type_variant()
+        p3 = self.parse_type_tuple()
+        p4 = self.parse_type_single()
         p5 = (p1 | p2 | p3 | p4).parse_once()
         return p5
 
@@ -1311,8 +1311,8 @@ class Parser:
 
     @parser_rule
     def parse_type_single(self) -> TypeAst:
-        p1 = self.parse_type_single_with_namespace().for_alt()
-        p2 = self.parse_type_single_without_namespace().for_alt()
+        p1 = self.parse_type_single_with_namespace()
+        p2 = self.parse_type_single_without_namespace()
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -1342,9 +1342,9 @@ class Parser:
 
     @parser_rule
     def parse_type_non_union(self) -> TypeAst:
-        p1 = self.parse_type_single().for_alt()
-        p2 = self.parse_type_tuple().for_alt()
-        p3 = self.parse_type_optional().for_alt()
+        p1 = self.parse_type_single()
+        p2 = self.parse_type_tuple()
+        p3 = self.parse_type_optional()
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
@@ -1358,16 +1358,16 @@ class Parser:
     def parse_type_part(self) -> TypePartAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.TkDblColon).parse_once()
-        p2 = self.parse_generic_identifier().for_alt()
-        p3 = self.parse_token(TokenType.LxDecInteger).for_alt()
+        p2 = self.parse_generic_identifier()
+        p3 = self.parse_token(TokenType.LxDecInteger)
         p4 = (p2 | p3).parse_once()
         return p4
 
     @parser_rule
     def parse_type_part_first(self) -> TypePartAst:
         c1 = self.current_pos()
-        p1 = self.parse_generic_identifier().for_alt()
-        p2 = self.parse_self_type_keyword().for_alt()
+        p1 = self.parse_generic_identifier()
+        p2 = self.parse_self_type_keyword()
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -1402,21 +1402,21 @@ class Parser:
 
     @parser_rule
     def parse_literal(self) -> LiteralAst:
-        p1 = self.parse_literal_float().for_alt()
-        p2 = self.parse_literal_integer().for_alt()
-        p3 = self.parse_literal_string().for_alt()
-        p4 = self.parse_literal_tuple(self.parse_expression).for_alt()
-        p5 = self.parse_literal_array(self.parse_expression).for_alt()
-        p6 = self.parse_literal_regex().for_alt()
-        p7 = self.parse_literal_boolean().for_alt()
+        p1 = self.parse_literal_float()
+        p2 = self.parse_literal_integer()
+        p3 = self.parse_literal_string()
+        p4 = self.parse_literal_tuple(self.parse_expression)
+        p5 = self.parse_literal_array(self.parse_expression)
+        p6 = self.parse_literal_regex()
+        p7 = self.parse_literal_boolean()
         p8 = (p1 | p2 | p3 | p4 | p5 | p6 | p7).parse_once()
         return p8
 
     @parser_rule
     def parse_literal_integer(self) -> IntegerLiteralAst:
-        p1 = self.parse_literal_integer_b10().for_alt()
-        p2 = self.parse_literal_integer_b02().for_alt()
-        p3 = self.parse_literal_integer_b16().for_alt()
+        p1 = self.parse_literal_integer_b10()
+        p2 = self.parse_literal_integer_b02()
+        p3 = self.parse_literal_integer_b16()
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
@@ -1433,16 +1433,16 @@ class Parser:
 
     @parser_rule
     def parse_literal_tuple(self, item) -> TupleLiteralAst:
-        p1 = self.parse_literal_tuple_0_items().for_alt()
-        p2 = self.parse_literal_tuple_1_items(item).for_alt()
-        p3 = self.parse_literal_tuple_n_items(item).for_alt()
+        p1 = self.parse_literal_tuple_0_items()
+        p2 = self.parse_literal_tuple_1_items(item)
+        p3 = self.parse_literal_tuple_n_items(item)
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
     @parser_rule
     def parse_literal_array(self, item) -> ArrayLiteralAst:
-        p1 = self.parse_literal_array_0_items().for_alt()
-        p2 = self.parse_literal_array_n_items(item).for_alt()
+        p1 = self.parse_literal_array_0_items()
+        p2 = self.parse_literal_array_n_items(item)
         p3 = (p1 | p2).parse_once()
         return p3
 
@@ -1455,8 +1455,8 @@ class Parser:
     @parser_rule
     def parse_literal_boolean(self) -> BooleanLiteralAst:
         c1 = self.current_pos()
-        p1 = self.parse_token(TokenType.KwTrue).for_alt()
-        p2 = self.parse_token(TokenType.KwFalse).for_alt()
+        p1 = self.parse_token(TokenType.KwTrue)
+        p2 = self.parse_token(TokenType.KwFalse)
         p3 = (p1 | p2).parse_once()
         return BooleanLiteralAst(c1, p3.token.token_metadata == "true")
 
@@ -1496,32 +1496,32 @@ class Parser:
 
     @parser_rule
     def parse_numeric_prefix_op(self) -> TokenAst:
-        p1 = self.parse_token(TokenType.TkSub).for_alt()
-        p2 = self.parse_token(TokenType.TkAdd).for_alt()
+        p1 = self.parse_token(TokenType.TkSub)
+        p2 = self.parse_token(TokenType.TkAdd)
         p3 = (p1 | p2).parse_once()
         return p3
 
     @parser_rule
     def parse_numeric_postfix_type(self) -> TokenType:
         p1  = self.parse_token(TokenType.TkUnderscore).parse_once()
-        p2  = self.parse_characters("i8").for_alt()
-        p3  = self.parse_characters("i16").for_alt()
-        p4  = self.parse_characters("i32").for_alt()
-        p5  = self.parse_characters("i64").for_alt()
-        p6  = self.parse_characters("i128").for_alt()
-        p7  = self.parse_characters("i256").for_alt()
-        p8  = self.parse_characters("u8").for_alt()
-        p9  = self.parse_characters("u16").for_alt()
-        p10 = self.parse_characters("u32").for_alt()
-        p11 = self.parse_characters("u64").for_alt()
-        p12 = self.parse_characters("u128").for_alt()
-        p13 = self.parse_characters("u256").for_alt()
-        p14 = self.parse_characters("f8").for_alt()
-        p15 = self.parse_characters("f16").for_alt()
-        p16 = self.parse_characters("f32").for_alt()
-        p17 = self.parse_characters("f64").for_alt()
-        p18 = self.parse_characters("f128").for_alt()
-        p19 = self.parse_characters("f256").for_alt()
+        p2  = self.parse_characters("i8")
+        p3  = self.parse_characters("i16")
+        p4  = self.parse_characters("i32")
+        p5  = self.parse_characters("i64")
+        p6  = self.parse_characters("i128")
+        p7  = self.parse_characters("i256")
+        p8  = self.parse_characters("u8")
+        p9  = self.parse_characters("u16")
+        p10 = self.parse_characters("u32")
+        p11 = self.parse_characters("u64")
+        p12 = self.parse_characters("u128")
+        p13 = self.parse_characters("u256")
+        p14 = self.parse_characters("f8")
+        p15 = self.parse_characters("f16")
+        p16 = self.parse_characters("f32")
+        p17 = self.parse_characters("f64")
+        p18 = self.parse_characters("f128")
+        p19 = self.parse_characters("f256")
         p20 = (p2 | p3 | p4 | p5 | p6 | p7 | p8 | p9 | p10 | p11 | p12 | p13 | p14 | p15 | p16 | p17 | p18 | p19).parse_once()
         return p20
 
@@ -1572,14 +1572,14 @@ class Parser:
     # ===== GLOBAL CONSTANTS =====
     @parser_rule
     def parse_global_constant_value(self) -> ExpressionAst:
-        p1 = self.parse_literal_float().for_alt()
-        p2 = self.parse_literal_integer().for_alt()
-        p3 = self.parse_literal_string().for_alt()
-        p4 = self.parse_literal_tuple(self.parse_global_constant_value).for_alt()
-        p5 = self.parse_literal_array(self.parse_global_constant_value).for_alt()
-        p6 = self.parse_literal_regex().for_alt()
-        p7 = self.parse_literal_boolean().for_alt()
-        p8 = self.parse_global_object_initialization().for_alt()
+        p1 = self.parse_literal_float()
+        p2 = self.parse_literal_integer()
+        p3 = self.parse_literal_string()
+        p4 = self.parse_literal_tuple(self.parse_global_constant_value)
+        p5 = self.parse_literal_array(self.parse_global_constant_value)
+        p6 = self.parse_literal_regex()
+        p7 = self.parse_literal_boolean()
+        p8 = self.parse_global_object_initialization()
         p9 = (p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8).parse_once()
         return p9
 

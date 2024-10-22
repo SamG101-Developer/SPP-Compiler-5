@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 
 class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
+    __slots__ = ["_parser_rule_handlers"]
     _parser_rule_handlers: List[ParserRuleHandler]
 
     def __init__(self, parser: Parser) -> None:
@@ -19,14 +20,13 @@ class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
         self._parser_rule_handlers.append(parser_rule_handler)
         return self
 
-    def parse_once(self, save: bool = True) -> Ast:
+    def parse_once(self) -> Ast:
         from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
 
         for parser_rule_handler in self._parser_rule_handlers:
             parser_index = self._parser._index
             try:
                 ast = parser_rule_handler.parse_once()
-                if save: self._result = ast
                 return ast
             except ParserError:
                 self._parser._index = parser_index
@@ -35,13 +35,13 @@ class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
         self._parser.store_error(self._parser._index, "Expected one of the alternatives.")
         raise self._parser._error
 
-    def parse_optional(self, save=True) -> Optional[T]:
+    def parse_optional(self) -> Optional[T]:
         from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
 
         for parser_rule_handler in self._parser_rule_handlers:
             parser_index = self._parser._index
             try:
-                ast = parser_rule_handler.parse_optional(save)
+                ast = parser_rule_handler.parse_optional()
                 if ast:
                     return ast
             except ParserError:
@@ -50,7 +50,4 @@ class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
         return None
 
     def __or__(self, that) -> ParserAlternateRulesHandler:
-        if not (self._for_alternate and that._for_alternate):
-            raise SystemExit("Cannot use '|' operator on a non-alternate rule.")
-
         return self.add_parser_rule_handler(that)
