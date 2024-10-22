@@ -54,7 +54,7 @@ class Parser:
 
         except ParserError as e:
             final_error = [*self._errors.values()][-1]
-            all_expected_tokens = "['" + "' | '".join(map(lambda t: t.value, final_error.expected_tokens)).replace("\n", "\\n") + "']"
+            all_expected_tokens = "['" + "' | '".join(map(lambda t: t.print(), final_error.expected_tokens)).replace("\n", "\\n") + "']"
             error_message = str(final_error).replace("$", all_expected_tokens)
             error_message = self._err_fmt.error(final_error.pos, message=error_message, tag_message="Invalid syntax")
             raise SystemExit(error_message) from None
@@ -1650,14 +1650,12 @@ class Parser:
 
         # Handle an incorrectly placed token.
         if self.current_tok().token_type != token_type:
-            token_print = lambda t: f"<{t.name[2:]}>" if t.name[:2] == "Cm" else t.value
-
             c2 = self.current_pos()
             if error := self._errors.get(c2, None):
                 error.expected_tokens.add(token_type)
                 raise error
 
-            new_error = ParserError(f"Expected $, got '{token_print(self.current_tok().token_type)}'")
+            new_error = ParserError(f"Expected $, got '{self.current_tok().token_type.print()}'")
             new_error.pos = c2
             new_error.expected_tokens.add(token_type)  # token_print(token_type))
             self._errors[c2] = new_error

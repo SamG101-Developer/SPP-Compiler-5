@@ -41,12 +41,13 @@ class ParserRuleHandler[T]:
             self._parser._index = parser_index
             return None
 
-    def parse_zero_or_more(self, separator: TokenType) -> Seq[T]:
+    def parse_zero_or_more(self, separator: TokenType, *, propagate_error: bool = False) -> Seq[T]:
         from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
 
         self._result = Seq()
         i = 0
         parsed_sep = False
+        error = None
         while True:
             try:
                 if i > 0:
@@ -56,32 +57,23 @@ class ParserRuleHandler[T]:
                 parsed_sep = False
                 self._result.append(ast)
                 i += 1
-            except ParserError:
+            except ParserError as e:
                 if parsed_sep:
                     self._parser._index -= 1
+                error = e
                 break
-        return self._result
+        return self._result if not propagate_error else (self._result, error)
 
     def parse_one_or_more(self, separator: TokenType) -> Seq[T]:
-        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
-
-        self.parse_zero_or_more(separator)
-        if self._result.length < 1:
-            new_error = ParserError(f"Expected one or more {self._rule}.")
-            new_error.pos = self._parser._index
-            self._parser._errors[self._parser.current_pos()] = new_error
-            raise new_error
+        result = self.parse_zero_or_more(separator, propagate_error=True)
+        if result[0].length < 1:
+            raise result[1]
         return self._result
 
     def parse_two_or_more(self, separator: TokenType) -> Seq[T]:
-        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
-
-        self.parse_one_or_more(separator)
-        if self._result.length < 2:
-            new_error = ParserError(f"Expected two or more {self._rule}.")
-            new_error.pos = self._parser._index
-            self._parser._errors[self._parser.current_pos()] = new_error
-            raise new_error
+        result = self.parse_zero_or_more(separator, propagate_error=True)
+        if result[0].length < 2:
+            raise result[1]
         return self._result
 
     def for_alt(self) -> ParserRuleHandler:

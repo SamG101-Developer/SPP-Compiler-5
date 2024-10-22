@@ -139,6 +139,9 @@ class TokenType(Enum, metaclass=TokenTypeMeta):
     ERR = "Unknown"
     NO_TOK = ""
 
+    def print(self) -> str:
+        return f"<{self.name[2:]}>" if self.name[:2] == "Cm" else self.value
+
     @staticmethod
     def tokens() -> List[TokenType]:
         return sorted([tok for tok in TokenType if tok.name.startswith("Tk")], key=lambda t: len(t.value), reverse=True)
