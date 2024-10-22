@@ -31,7 +31,9 @@ class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
             except ParserError:
                 self._parser._index = parser_index
                 continue
-        raise ParserError(self._parser._index, "Expected one of the alternatives.")
+
+        self._parser.store_error(self._parser._index, "Expected one of the alternatives.")
+        raise self._parser._error
 
     def parse_optional(self, save=True) -> Optional[T]:
         from SPPCompiler.SyntacticAnalysis.ParserError import ParserError

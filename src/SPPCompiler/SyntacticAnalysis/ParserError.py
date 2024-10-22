@@ -8,12 +8,12 @@ if TYPE_CHECKING:
 
 class ParserError(Exception):
     pos: int
-    expected_tokens: OrderedSet[TokenType]
+    expected_tokens: list[TokenType]
 
     def __init__(self, *args) -> None:
         super().__init__(*args)
         self.pos = -1
-        self.expected_tokens = OrderedSet()
+        self.expected_tokens = []
 
 
 __all__ = ["ParserError"]
