@@ -1,0 +1,18 @@
+from typing import Union
+
+from SPPCompiler.SemanticAnalysis.GenericCompParameterOptionalAst import GenericCompParameterOptionalAst
+from SPPCompiler.SemanticAnalysis.GenericCompParameterRequiredAst import GenericCompParameterRequiredAst
+from SPPCompiler.SemanticAnalysis.GenericCompParameterVariadicAst import GenericCompParameterVariadicAst
+from SPPCompiler.SemanticAnalysis.GenericTypeParameterOptionalAst import GenericTypeParameterOptionalAst
+from SPPCompiler.SemanticAnalysis.GenericTypeParameterRequiredAst import GenericTypeParameterRequiredAst
+from SPPCompiler.SemanticAnalysis.GenericTypeParameterVariadicAst import GenericTypeParameterVariadicAst
+
+type GenericParameterAst = Union[
+    GenericCompParameterOptionalAst,
+    GenericCompParameterRequiredAst,
+    GenericCompParameterVariadicAst,
+    GenericTypeParameterOptionalAst,
+    GenericTypeParameterRequiredAst,
+    GenericTypeParameterVariadicAst]
+
+__all__ = ["GenericParameterAst"]

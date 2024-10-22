@@ -1,0 +1,15 @@
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+
+if TYPE_CHECKING:
+    from SPPCompiler.SemanticAnalysis.UseStatementNamespaceReductionTypesAst import UseStatementNamespaceReductionTypesAst
+
+
+@dataclass
+class UseStatementNamespaceReductionBodyAst(Ast):
+    type: UseStatementNamespaceReductionTypesAst
+
+
+__all__ = ["UseStatementNamespaceReductionBodyAst"]
