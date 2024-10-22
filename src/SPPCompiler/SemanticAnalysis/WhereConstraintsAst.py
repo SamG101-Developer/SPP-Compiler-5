@@ -15,5 +15,9 @@ class WhereConstraintsAst(Ast):
     tok_colon: TokenAst
     constraints: Seq[TypeAst]
 
+    def __post_init__(self) -> None:
+        self.types = Seq(self.types)
+        self.constraints = Seq(self.constraints)
+
 
 __all__ = ["WhereConstraintsAst"]

@@ -25,6 +25,7 @@ class ClassPrototypeAst(Ast):
 
     def __post_init__(self) -> None:
         from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst, InnerScopeAst, TypeAst, WhereBlockAst
+        self.annotations = Seq(self.annotations)
         self.name = TypeAst.from_identifier(self.name)
         self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
         self.where_block = self.where_block or WhereBlockAst.default()

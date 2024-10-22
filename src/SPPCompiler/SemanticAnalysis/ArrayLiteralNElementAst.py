@@ -16,6 +16,9 @@ class ArrayLiteralNElementAst(Ast):
     elements: Seq[ExpressionAst]
     tok_right_bracket: TokenAst
 
+    def __post_init__(self) -> None:
+        self.elements = Seq(self.elements)
+
     def __eq__(self, other: ArrayLiteralNElementAst) -> bool:
         return self.elements == other.elements
 

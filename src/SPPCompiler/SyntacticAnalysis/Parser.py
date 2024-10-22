@@ -425,7 +425,7 @@ class Parser:
     def parse_where_block_constraints_group(self) -> WhereConstraintsGroupAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.TkBrackL).parse_once()
-        p2 = self.parse_where_block_constraints().parse_zero_or_more(TokenType.TkComma)
+        p2 = self.parse_where_block_constraints().parse_one_or_more(TokenType.TkComma)
         p3 = self.parse_token(TokenType.TkBrackR).parse_once()
         return WhereConstraintsGroupAst(c1, p1, p2, p3)
 
@@ -443,7 +443,7 @@ class Parser:
     def parse_annotation(self) -> AnnotationAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.TkAt).parse_once()
-        p2 = self.parse_identifier().parse_one_or_more(TokenType.TkDblColon)
+        p2 = self.parse_identifier().parse_once()
         return AnnotationAst(c1, p1, p2)
 
     # ===== EXPRESSIONS =====
@@ -644,7 +644,6 @@ class Parser:
         p2 = self.parse_expression().parse_optional()
         return RetStatementAst(c1, p1, p2)
 
-    # Todo: Consider "break(2)" instead of "break break"
     @parser_rule
     def parse_exit_statement(self) -> LoopControlFlowStatementAst:
         c1 = self.current_pos()
@@ -704,7 +703,7 @@ class Parser:
         p1 = self.parse_annotation().parse_zero_or_more()
         p2 = self.parse_token(TokenType.KwUse).parse_once()
         p3 = self.parse_use_statement_type_alias().for_alt()
-        p4 = self.parse_use_statement_import().for_alt()
+        p4 = self.parse_use_statement_namespace_reduction().for_alt()
         p5 = (p3 | p4).parse_once()
         return UseStatementAst(c1, p1, p2, p5)
 
@@ -713,45 +712,45 @@ class Parser:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwUse).parse_once()
         p2 = self.parse_use_statement_type_alias().for_alt()
-        p3 = self.parse_use_statement_import().for_alt()
+        p3 = self.parse_use_statement_namespace_reduction().for_alt()
         p4 = (p2 | p3).parse_once()
         return UseStatementAst(c1, [], p1, p4)
 
     @parser_rule
-    def parse_use_statement_import(self) -> UseStatementNamespaceReductionAst:
+    def parse_use_statement_namespace_reduction(self) -> UseStatementNamespaceReductionAst:
         c1 = self.current_pos()
-        p1 = self.parse_use_statement_import_body().parse_once()
+        p1 = self.parse_use_statement_namespace_reduction_body().parse_once()
         return UseStatementNamespaceReductionAst(c1, p1)
 
     @parser_rule
-    def parse_use_statement_import_multiple_types(self) -> UseStatementNamespaceReductionTypesMultipleAst:
+    def parse_use_statement_namespace_reduction_types_multiple(self) -> UseStatementNamespaceReductionTypesMultipleAst:
         c1 = self.current_pos()
         p1 = self.parse_identifier().parse_one_or_more(TokenType.TkDblColon)
         p2 = self.parse_token(TokenType.TkBraceL).parse_once()
-        p3 = self.parse_use_statement_import_body().parse_one_or_more(TokenType.TkComma)
+        p3 = self.parse_use_statement_namespace_reduction_body().parse_one_or_more(TokenType.TkComma)
         p4 = self.parse_token(TokenType.TkBraceR).parse_once()
         return UseStatementNamespaceReductionTypesMultipleAst(c1, p1, p2, p3, p4)
 
     @parser_rule
-    def parse_use_statement_import_single_type(self) -> UseStatementNamespaceReductionTypesSingleAst:
+    def parse_use_statement_namespace_reduction_types_single(self) -> UseStatementNamespaceReductionTypesSingleAst:
         c1 = self.current_pos()
         p1 = self.parse_identifier().parse_zero_or_more(TokenType.TkDblColon)
         p2 = self.parse_generic_identifier().parse_one_or_more(TokenType.TkDblColon)  # No generics allowed here
-        p3 = self.parse_use_statement_import_alias().parse_optional()
+        p3 = self.parse_use_statement_namespace_reduction_type_alias().parse_optional()
         return UseStatementNamespaceReductionTypesSingleAst(c1, p1, p2, p3)
 
     @parser_rule
-    def parse_use_statement_import_alias(self) -> UseStatementNamespaceReductionTypeAliasAst:
+    def parse_use_statement_namespace_reduction_type_alias(self) -> UseStatementNamespaceReductionTypeAliasAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwAs).parse_once()
         p2 = self.parse_upper_identifier().parse_once()
         return UseStatementNamespaceReductionTypeAliasAst(c1, p1, p2)
 
     @parser_rule
-    def parse_use_statement_import_body(self) -> UseStatementNamespaceReductionBodyAst:
+    def parse_use_statement_namespace_reduction_body(self) -> UseStatementNamespaceReductionBodyAst:
         c1 = self.current_pos()
-        p1 = self.parse_use_statement_import_multiple_types().for_alt()
-        p2 = self.parse_use_statement_import_single_type().for_alt()
+        p1 = self.parse_use_statement_namespace_reduction_types_multiple().for_alt()
+        p2 = self.parse_use_statement_namespace_reduction_types_single().for_alt()
         p3 = (p1 | p2).parse_once()
         return UseStatementNamespaceReductionBodyAst(c1, p3)
 
@@ -886,11 +885,10 @@ class Parser:
 
     @parser_rule
     def parse_assignment_statement(self) -> AssignmentStatementAst:
-        # Todo: Investigate multi-assignment: is it work it?
         c1 = self.current_pos()
         p1 = self.parse_expression().parse_one_or_more(TokenType.TkComma)
         p2 = self.parse_token(TokenType.TkAssign).parse_once()
-        p3 = self.parse_expression().parse_once()
+        p3 = self.parse_expression().parse_one_or_more(TokenType.TkComma)
         return AssignmentStatementAst(c1, p1, p2, p3)
 
     # ===== PATTERNS =====
@@ -1296,7 +1294,7 @@ class Parser:
     @parser_rule
     def parse_type(self) -> TypeAst:
         p1 = self.parse_type_optional().for_alt()
-        p2 = self.parse_type_union().for_alt()
+        p2 = self.parse_type_variant().for_alt()
         p3 = self.parse_type_tuple().for_alt()
         p4 = self.parse_type_single().for_alt()
         p5 = (p1 | p2 | p3 | p4).parse_once()
@@ -1334,10 +1332,10 @@ class Parser:
         return p4
 
     @parser_rule
-    def parse_type_union(self) -> TypeAst:
+    def parse_type_variant(self) -> TypeAst:
         c1 = self.current_pos()
-        p1 = self.parse_type_non_union().parse_one_or_more(TokenType.TkUnion)
-        return TypeUnionAst(c1, p1).to_type()
+        p1 = self.parse_type_non_union().parse_two_or_more(TokenType.TkUnion)
+        return TypeVariantAst(c1, p1).to_type()
 
     @parser_rule
     def parse_type_parts(self) -> List[TypePartAst]:

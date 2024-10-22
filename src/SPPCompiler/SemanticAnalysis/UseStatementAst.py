@@ -17,5 +17,8 @@ class UseStatementAst(Ast):
     tok_use: TokenAst
     body: UseStatementNamespaceReductionAst | UseStatementTypeAliasAst
 
+    def __post_init__(self) -> None:
+        self.annotations = Seq(self.annotations)
+
 
 __all__ = ["UseStatementAst"]

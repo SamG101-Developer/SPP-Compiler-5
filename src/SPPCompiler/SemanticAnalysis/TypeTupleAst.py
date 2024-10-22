@@ -15,6 +15,9 @@ class TypeTupleAst(Ast):
     elements: Seq[TypeAst]
     tok_right_paren: TokenAst
 
+    def __post_init__(self) -> None:
+        self.elements = Seq(self.elements)
+
     def to_type(self) -> TypeAst:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         return CommonTypes.Tup(self.elements, self.tok_left_paren.pos)

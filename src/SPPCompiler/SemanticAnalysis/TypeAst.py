@@ -17,7 +17,8 @@ class TypeAst(Ast):
     types: Seq[TypePartAst]
 
     def __post_init__(self):
-        self.namespace = self.namespace or Seq()
+        self.namespace = Seq(self.namespace)
+        self.types = Seq(self.types)
 
     @staticmethod
     def from_identifier(identifier: IdentifierAst) -> TypeAst:

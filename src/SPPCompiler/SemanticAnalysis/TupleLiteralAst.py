@@ -15,5 +15,8 @@ class TupleLiteralAst(Ast):
     elements: Seq[ExpressionAst]
     tok_right_paren: TokenAst
 
+    def __post_init__(self) -> None:
+        self.elements = Seq(self.elements)
+
 
 __all__ = ["TupleLiteralAst"]

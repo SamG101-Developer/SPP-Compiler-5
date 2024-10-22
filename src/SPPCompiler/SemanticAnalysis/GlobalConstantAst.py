@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.Token import Token
 
 
 @dataclass
@@ -18,10 +17,13 @@ class GlobalConstantAst(Ast):
     annotations: Seq[AnnotationAst]
     tok_cmp: TokenAst
     identifier: IdentifierAst
-    tok_colon: Token
+    tok_colon: TokenAst
     type: TypeAst
     tok_assign: TokenAst
     value: ExpressionAst
+
+    def __post_init__(self) -> None:
+        self.annotations = Seq(self.annotations)
 
 
 __all__ = ["GlobalConstantAst"]

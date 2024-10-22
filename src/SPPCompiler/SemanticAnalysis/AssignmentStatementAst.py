@@ -15,5 +15,9 @@ class AssignmentStatementAst(Ast):
     op: TokenAst
     rhs: Seq[ExpressionAst]
 
+    def __post_init__(self) -> None:
+        self.lhs = Seq(self.lhs)
+        self.rhs = Seq(self.rhs)
+
 
 __all__ = ["AssignmentStatementAst"]

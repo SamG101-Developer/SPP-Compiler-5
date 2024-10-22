@@ -16,6 +16,9 @@ class GenericArgumentGroupAst(Ast, Default):
     arguments: Seq[GenericArgumentAst]
     tok_right_bracket: TokenAst
 
+    def __post_init__(self) -> None:
+        self.arguments = Seq(self.arguments)
+
     @staticmethod
     def default() -> Default:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType

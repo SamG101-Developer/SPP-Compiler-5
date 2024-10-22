@@ -19,5 +19,8 @@ class PatternBlockAst(Ast):
     guard: Optional[PatternGuardAst]
     body: InnerScopeAst[StatementAst]
 
+    def __post_init__(self) -> None:
+        self.patterns = Seq(self.patterns)
+
 
 __all__ = ["PatternBlockAst"]

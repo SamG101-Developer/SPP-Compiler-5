@@ -14,5 +14,8 @@ class RelStatementAst(Ast):
     tok_rel: TokenAst
     expressions: Seq[ExpressionAst]
 
+    def __post_init__(self) -> None:
+        self.expressions = Seq(self.expressions)
+
 
 __all__ = ["RelStatementAst"]

@@ -16,6 +16,9 @@ class GenericParameterGroupAst(Ast, Default):
     parameters: Seq[GenericParameterAst]
     tok_right_bracket: TokenAst
 
+    def __post_init__(self) -> None:
+        self.parameters = Seq(self.parameters)
+
     @staticmethod
     def default() -> Default:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType

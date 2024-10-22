@@ -15,5 +15,8 @@ class PatternVariantDestructureTupleAst(Ast):
     elements: Seq[PatternVariantNestedForDestructureTupleAst]
     tok_right_paren: TokenAst
 
+    def __post_init__(self) -> None:
+        self.elements = Seq(self.elements)
+
 
 __all__ = ["PatternVariantDestructureTupleAst"]

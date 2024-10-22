@@ -16,5 +16,9 @@ class UseStatementNamespaceReductionTypesSingleAst(Ast):
     types: Seq[GenericIdentifierAst]  # Only 1, loaded into a list for consistency with multiple types.
     alias: Optional[UseStatementNamespaceReductionTypeAliasAst]
 
+    def __post_init__(self) -> None:
+        self.namespace = Seq(self.namespace)
+        self.types = Seq(self.types)
+
 
 __all__ = ["UseStatementNamespaceReductionTypesSingleAst"]

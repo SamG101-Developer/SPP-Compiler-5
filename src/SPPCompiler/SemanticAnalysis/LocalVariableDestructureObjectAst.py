@@ -13,9 +13,12 @@ if TYPE_CHECKING:
 @dataclass
 class LocalVariableDestructureObjectAst(Ast):
     class_type: TypeAst
-    paren_l_token: TokenAst
-    items: Seq[LocalVariableNestedForDestructureObjectAst]
-    paren_r_token: TokenAst
+    tok_left_paren: TokenAst
+    elements: Seq[LocalVariableNestedForDestructureObjectAst]
+    tok_right_paren: TokenAst
+
+    def __post_init__(self) -> None:
+        self.elements = Seq(self.elements)
 
 
 __all__ = ["LocalVariableDestructureObjectAst"]

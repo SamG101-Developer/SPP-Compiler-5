@@ -18,5 +18,8 @@ class ClassAttributeAst(Ast):
     tok_colon: TokenAst
     type: TypeAst
 
+    def __post_init__(self) -> None:
+        self.annotations = Seq(self.annotations)
+
 
 __all__ = ["ClassAttributeAst"]

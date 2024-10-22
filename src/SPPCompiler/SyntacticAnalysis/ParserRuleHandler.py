@@ -38,22 +38,33 @@ class ParserRuleHandler[T]:
             self._parser._index = parser_index
             return None
 
-    def parse_zero_or_more(self, *, precede_with: TokenType = TokenType.NO_TOK, follow_with: TokenType = TokenType.NO_TOK) -> Seq[T]:
+    def parse_zero_or_more(self, separator: TokenType = TokenType.NO_TOK) -> Seq[T]:
         self._result = Seq()
+        i = 0
         while True:
             try:
-                self._parser.parse_token(precede_with).parse_once()
+                if i > 0:
+                    self._parser.parse_token(separator).parse_once()
                 ast = self.parse_once()
-                self._parser.parse_token(follow_with).parse_once()
                 self._result.append(ast)
+                i += 1
             except ParserError:
                 break
         return self._result
 
-    def parse_one_or_more(self, *, precede_with: TokenType = TokenType.NO_TOK, follow_with: TokenType = TokenType.NO_TOK) -> Seq[T]:
-        self.parse_zero_or_more(precede_with=precede_with, follow_with=follow_with)
+    def parse_one_or_more(self, separator: TokenType = TokenType.NO_TOK) -> Seq[T]:
+        self.parse_zero_or_more(separator)
         if not self._result:
             new_error = ParserError(f"Expected one or more {self._rule}.")
+            new_error.pos = self._parser._index
+            self._parser._errors.append(new_error)
+            raise new_error
+        return self._result
+
+    def parse_two_or_more(self, separator: TokenType = TokenType.NO_TOK) -> Seq[T]:
+        self.parse_one_or_more(separator)
+        if len(self._result) < 2:
+            new_error = ParserError(f"Expected two or more {self._rule}.")
             new_error.pos = self._parser._index
             self._parser._errors.append(new_error)
             raise new_error

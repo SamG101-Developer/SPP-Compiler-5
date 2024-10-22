@@ -16,6 +16,9 @@ class FunctionCallArgumentGroupAst(Ast, Default):
     arguments: Seq[FunctionCallArgumentAst]
     tok_right_paren: TokenAst
 
+    def __post_init__(self) -> None:
+        self.arguments = Seq(self.arguments)
+
     @staticmethod
     def default() -> Default:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType

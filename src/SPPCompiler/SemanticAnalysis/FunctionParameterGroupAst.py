@@ -16,6 +16,9 @@ class FunctionParameterGroupAst(Ast, Default):
     parameters: Seq[FunctionParameterAst]
     tok_right_paren: TokenAst
 
+    def __post_init__(self) -> None:
+        self.parameters = Seq(self.parameters)
+
     @staticmethod
     def default() -> Default:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType

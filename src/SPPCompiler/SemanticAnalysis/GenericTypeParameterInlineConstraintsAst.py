@@ -14,5 +14,8 @@ class GenericTypeParameterInlineConstraintsAst(Ast):
     tok_colon: TokenAst
     constraints: Seq[TypeAst]
 
+    def __post_init__(self) -> None:
+        self.constraints = Seq(self.constraints)
+
 
 __all__ = ["GenericTypeParameterInlineConstraintsAst"]

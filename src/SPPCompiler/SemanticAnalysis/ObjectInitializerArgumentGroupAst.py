@@ -15,5 +15,8 @@ class ObjectInitializerArgumentGroupAst(Ast):
     arguments: Seq[ObjectInitializerArgumentAst]
     tok_right_paren: TokenAst
 
+    def __post_init__(self) -> None:
+        self.arguments = Seq(self.arguments)
+
 
 __all__ = ["ObjectInitializerArgumentGroupAst"]

@@ -17,5 +17,9 @@ class UseStatementNamespaceReductionTypesMultipleAst(Ast):
     types: Seq[UseStatementNamespaceReductionBodyAst]
     tok_right_brace: TokenAst
 
+    def __post_init__(self) -> None:
+        self.namespace = Seq(self.namespace)
+        self.types = Seq(self.types)
+
 
 __all__ = ["UseStatementNamespaceReductionTypesMultipleAst"]

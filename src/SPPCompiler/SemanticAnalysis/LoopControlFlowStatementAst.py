@@ -11,8 +11,11 @@ if TYPE_CHECKING:
 
 @dataclass
 class LoopControlFlowStatementAst(Ast):
-    exit_tokens: Seq[TokenAst]
+    tok_seq_exit: Seq[TokenAst]
     skip_or_expr: ExpressionAst
+
+    def __post_init__(self) -> None:
+        self.tok_seq_exit = Seq(self.tok_seq_exit)
 
 
 __all__ = ["LoopControlFlowStatementAst"]

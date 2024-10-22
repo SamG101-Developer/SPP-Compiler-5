@@ -14,6 +14,9 @@ class InnerScopeAst[T](Ast, Default):
     members: Seq[T]
     tok_right_brace: TokenAst
 
+    def __post_init__(self) -> None:
+        self.members = Seq(self.members)
+
     @staticmethod
     def default() -> Default:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType

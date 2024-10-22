@@ -12,5 +12,8 @@ if TYPE_CHECKING:
 class ModuleImplementationAst(Ast):
     members: Seq[ModuleMemberAst]
 
+    def __post_init__(self) -> None:
+        self.members = Seq(self.members)
+
 
 __all__ = ["ModuleImplementationAst"]

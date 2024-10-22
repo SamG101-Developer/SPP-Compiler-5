@@ -14,5 +14,8 @@ class PinStatementAst(Ast):
     tok_pin: TokenAst
     expressions: Seq[ExpressionAst]
 
+    def __post_init__(self) -> None:
+        self.expressions = Seq(self.expressions)
+
 
 __all__ = ["PinStatementAst"]

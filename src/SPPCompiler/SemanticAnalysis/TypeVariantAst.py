@@ -9,12 +9,15 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class TypeUnionAst(Ast):
+class TypeVariantAst(Ast):
     elements: Seq[TypeAst]
+
+    def __post_init__(self) -> None:
+        self.elements = Seq(self.elements)
 
     def to_type(self) -> TypeAst:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         return CommonTypes.Var(self.elements, self.elements[0].pos)
 
 
-__all__ = ["TypeUnionAst"]
+__all__ = ["TypeVariantAst"]

@@ -17,5 +17,8 @@ class CaseExpressionAst(Ast):
     tok_then: TokenAst
     branches: Seq[PatternBlockAst]
 
+    def __post_init__(self) -> None:
+        self.branches = Seq(self.branches)
+
 
 __all__ = ["CaseExpressionAst"]

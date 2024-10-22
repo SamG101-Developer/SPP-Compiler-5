@@ -15,6 +15,9 @@ class WhereConstraintsGroupAst(Ast, Default):
     constraints: Seq[WhereConstraintsAst]
     tok_right_brack: TokenAst
 
+    def __post_init__(self) -> None:
+        self.constraints = Seq(self.constraints)
+
     @staticmethod
     def default() -> Default:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType

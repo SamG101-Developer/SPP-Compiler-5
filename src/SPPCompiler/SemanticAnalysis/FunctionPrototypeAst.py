@@ -37,6 +37,7 @@ class FunctionPrototypeAst(Ast):
 
     def __post_init__(self) -> None:
         from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst, InnerScopeAst, WhereBlockAst
+        self.annotations = Seq(self.annotations)
         self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
         self.where_block = self.where_block or WhereBlockAst.default()
         self.body = self.body or InnerScopeAst.default()
