@@ -11,7 +11,7 @@ class Seq[T]:
     def __init__(self, value: Seq[T] | Iterable[T] = None) -> None:
         match value:
             case Seq(): self._value = value._value
-            case Iterable(): self._value = value
+            case list(): self._value = value
             case None: self._value = []
 
     # Appending operations

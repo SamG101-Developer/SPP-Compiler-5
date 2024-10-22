@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -12,4 +13,4 @@ class PatternVariantElseAst(Ast):
     tok_else: TokenAst
 
 
-__all__ = [PatternVariantElseAst]
+__all__ = ["PatternVariantElseAst"]

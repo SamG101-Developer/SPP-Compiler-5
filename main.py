@@ -7,10 +7,10 @@ __status__ = "Development"
 
 
 from SPPCompiler.LexicalAnalysis.Lexer import Lexer
-
+from SPPCompiler.SyntacticAnalysis.Parser import Parser
+from SPPCompiler.Utils.ProgressBar import ProgressBar
 
 with open("tst/LexicalAnalysis/code_1.spp", "r") as file:
-    lexer = Lexer(file.read())
-    tokens = lexer.lex()
-    print("DONE")
-
+    tok = Lexer(file.read()).lex()
+    bar = ProgressBar("Parsing", len(tok))
+    ast = Parser(tok).parse()

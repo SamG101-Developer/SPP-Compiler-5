@@ -20,7 +20,7 @@ class FunctionParameterSelfAst(Ast):
 
     def __post_init__(self) -> None:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        self.type = CommonTypes.SelfType(self.pos)
+        self.type = CommonTypes.Self(self.pos)
 
     def __eq__(self, other: FunctionParameterSelfAst) -> bool:
         return isinstance(other, FunctionParameterSelfAst)

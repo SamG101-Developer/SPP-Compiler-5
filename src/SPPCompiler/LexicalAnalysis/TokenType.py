@@ -141,11 +141,11 @@ class TokenType(Enum, metaclass=TokenTypeMeta):
 
     @staticmethod
     def tokens() -> List[TokenType]:
-        return [tok for tok in TokenType if tok.name.startswith("Tk")]
+        return sorted([tok for tok in TokenType if tok.name.startswith("Tk")], key=lambda t: len(t.value), reverse=True)
 
     @staticmethod
     def keywords() -> List[TokenType]:
-        return [tok for tok in TokenType if tok.name.startswith("Kw")]
+        return sorted([tok for tok in TokenType if tok.name.startswith("Kw")], key=lambda t: len(t.value), reverse=True)
 
     @staticmethod
     def lexemes() -> List[TokenType]:

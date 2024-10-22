@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, TYPE_CHECKING
 
@@ -8,7 +9,6 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.FunctionPrototypeAst import FunctionPrototypeAst
     from SPPCompiler.SemanticAnalysis.GenericArgumentGroupAst import GenericArgumentGroupAst
     from SPPCompiler.SemanticAnalysis.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
 @dataclass

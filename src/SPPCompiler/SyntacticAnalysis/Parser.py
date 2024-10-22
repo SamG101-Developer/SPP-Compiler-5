@@ -1,21 +1,22 @@
 from __future__ import annotations
-
+from typing import Callable, List, Tuple, TYPE_CHECKING
 import functools
-from typing import Callable, List, Tuple
 
 from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-from SPPCompiler.LexicalAnalysis.Token import Token
 from SPPCompiler.SyntacticAnalysis.ParserRuleHandler import ParserRuleHandler
-from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
-
-from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 from SPPCompiler.SemanticAnalysis import *
+
+if TYPE_CHECKING:
+    from SPPCompiler.LexicalAnalysis.Token import Token
+    from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+    from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
 
 # Decorator that wraps the function in a ParserRuleHandler
 def parser_rule(func) -> Callable[..., ParserRuleHandler]:
     @functools.wraps(func)
     def wrapper(self, *args) -> ParserRuleHandler:
+        # print(f"{self._index} / {len(self._tokens)}", self._index / len(self._tokens))
         return ParserRuleHandler(self, functools.partial(func, self, *args))
     return wrapper
 
@@ -27,7 +28,9 @@ class Parser:
     _errors: List[ParserError]
     _pos_shift: int
 
-    def __init__(self, tokens: List[Token], file_name: str, pos_shift: int = 0) -> None:
+    def __init__(self, tokens: List[Token], file_name: str = "", pos_shift: int = 0) -> None:
+        from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
+
         self._tokens = tokens
         self._index = 0
         self._err_fmt = ErrorFormatter(self._tokens, file_name)
@@ -43,8 +46,11 @@ class Parser:
     # ===== PARSING =====
 
     def parse(self) -> ProgramAst:
+        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+
         try:
-            return self.parse_program().parse_once()
+            ast = self.parse_program().parse_once()
+            return ast
 
         except ParserError as e:
             final_error = self._errors[0]
@@ -83,7 +89,7 @@ class Parser:
     @parser_rule
     def parse_module_implementation(self) -> ModuleImplementationAst:
         c1 = self.current_pos()
-        p1 = self.parse_module_member().parse_zero_or_more()
+        p1 = self.parse_module_member().parse_zero_or_more(TokenType.TkNewLine)
         return ModuleImplementationAst(c1, p1)
 
     @parser_rule
@@ -102,7 +108,7 @@ class Parser:
     @parser_rule
     def parse_class_prototype(self) -> ClassPrototypeAst:
         c1 = self.current_pos()
-        p1 = self.parse_annotation().parse_zero_or_more()
+        p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
         p2 = self.parse_token(TokenType.KwCls).parse_once()
         p3 = self.parse_upper_identifier().parse_once()
         p4 = self.parse_generic_parameters().parse_optional()
@@ -113,7 +119,7 @@ class Parser:
     @parser_rule
     def parse_class_attribute(self) -> ClassAttributeAst:
         c1 = self.current_pos()
-        p1 = self.parse_annotation().parse_zero_or_more()
+        p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
         p2 = self.parse_identifier().parse_once()
         p3 = self.parse_token(TokenType.TkColon).parse_once()
         p4 = self.parse_type().parse_once()
@@ -145,14 +151,14 @@ class Parser:
 
     @parser_rule
     def parse_sup_member(self) -> SupMemberAst:
-        p1 = self.parse_sup_method_prototype().parse_once()
+        p1 = self.parse_sup_method_prototype().for_alt()
         p2 = self.parse_sup_use_statement().for_alt()
         p3 = (p1 | p2).parse_once()
         return p3
 
     @parser_rule
     def parse_sup_use_statement(self) -> SupUseStatementAst:
-        p1 = self.parse_annotation().parse_zero_or_more()
+        p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
         p2 = self.parse_use_statement().parse_once()
         return SupUseStatementAst(**p2.__dict__, annotations=p1)
 
@@ -173,7 +179,7 @@ class Parser:
     @parser_rule
     def parse_subroutine_prototype(self) -> SubroutinePrototypeAst:
         c1 = self.current_pos()
-        p1 = self.parse_annotation().parse_zero_or_more()
+        p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
         p2 = self.parse_token(TokenType.KwFun).parse_once()
         p3 = self.parse_identifier().parse_once()
         p4 = self.parse_generic_parameters().parse_optional()
@@ -187,7 +193,7 @@ class Parser:
     @parser_rule
     def parse_coroutine_prototype(self) -> CoroutinePrototypeAst:
         c1 = self.current_pos()
-        p1 = self.parse_annotation().parse_zero_or_more()
+        p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
         p2 = self.parse_token(TokenType.KwCor).parse_once()
         p3 = self.parse_identifier().parse_once()
         p4 = self.parse_generic_parameters().parse_optional()
@@ -505,7 +511,7 @@ class Parser:
     @parser_rule
     def parse_unary_expression(self) -> ExpressionAst:
         c1 = self.current_pos()
-        p1 = self.parse_unary_op().parse_zero_or_more()
+        p1 = self.parse_unary_op().parse_zero_or_more(TokenType.NO_TOK)
         p2 = self.parse_postfix_expression().parse_once()
         return functools.reduce(lambda acc, x: UnaryExpressionAst(c1, x, acc), p1, p2)
 
@@ -513,7 +519,7 @@ class Parser:
     def parse_postfix_expression(self) -> ExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_primary_expression().parse_once()
-        p2 = self.parse_postfix_op().parse_zero_or_more()
+        p2 = self.parse_postfix_op().parse_zero_or_more(TokenType.NO_TOK)
         return functools.reduce(lambda acc, x: PostfixExpressionAst(c1, acc, x), p2, p1)
 
     @parser_rule
@@ -647,7 +653,7 @@ class Parser:
     @parser_rule
     def parse_exit_statement(self) -> LoopControlFlowStatementAst:
         c1 = self.current_pos()
-        p1 = self.parse_token(TokenType.KwExit).parse_one_or_more()
+        p1 = self.parse_token(TokenType.KwExit).parse_one_or_more(TokenType.TkWhitespace)
         p2 = self.parse_token(TokenType.KwSkip).for_alt()
         p3 = self.parse_expression().for_alt()
         p4 = (p2 | p3).parse_optional()
@@ -700,7 +706,7 @@ class Parser:
     @parser_rule
     def parse_global_use_statement(self) -> UseStatementAst:
         c1 = self.current_pos()
-        p1 = self.parse_annotation().parse_zero_or_more()
+        p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
         p2 = self.parse_token(TokenType.KwUse).parse_once()
         p3 = self.parse_use_statement_type_alias().for_alt()
         p4 = self.parse_use_statement_namespace_reduction().for_alt()
@@ -768,7 +774,7 @@ class Parser:
     @parser_rule
     def parse_global_constant(self) -> GlobalConstantAst:
         c1 = self.current_pos()
-        p1 = self.parse_annotation().parse_zero_or_more()
+        p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
         p2 = self.parse_token(TokenType.KwCmp).parse_once()
         p3 = self.parse_identifier().parse_once()
         p4 = self.parse_token(TokenType.TkColon).parse_once()
@@ -1309,10 +1315,26 @@ class Parser:
 
     @parser_rule
     def parse_type_single(self) -> TypeAst:
+        p1 = self.parse_type_single_with_namespace().for_alt()
+        p2 = self.parse_type_single_without_namespace().for_alt()
+        p3 = (p1 | p2).parse_once()
+        return p3
+
+    @parser_rule
+    def parse_type_single_with_namespace(self) -> TypeAst:
         c1 = self.current_pos()
-        p1 = self.parse_identifier().parse_zero_or_more(TokenType.TkDblColon)
-        p2 = self.parse_type_parts().parse_once()
-        return TypeAst(c1, p1, p2)
+        p1 = self.parse_identifier().parse_one_or_more(TokenType.TkDblColon)
+        p2 = self.parse_token(TokenType.TkDblColon).parse_once()
+        p3 = self.parse_type_part_first().parse_once()
+        p4 = self.parse_type_part().parse_zero_or_more(TokenType.NO_TOK)
+        return TypeAst(c1, p1, [p3, *p4])
+
+    @parser_rule
+    def parse_type_single_without_namespace(self) -> TypeAst:
+        c1 = self.current_pos()
+        p1 = self.parse_type_part_first().parse_once()
+        p2 = self.parse_type_part().parse_zero_or_more(TokenType.NO_TOK)
+        return TypeAst(c1, [], [p1, *p2])
 
     @parser_rule
     def parse_type_tuple(self) -> TypeAst:
@@ -1320,8 +1342,7 @@ class Parser:
         p1 = self.parse_token(TokenType.TkParenL).parse_once()
         p2 = self.parse_type().parse_zero_or_more(TokenType.TkComma)
         p3 = self.parse_token(TokenType.TkParenR).parse_once()
-        p4 = self.parse_type_part().parse_zero_or_more()
-        return TypeTupleAst(c1, p1, p2, p3, p4).to_type()
+        return TypeTupleAst(c1, p1, p2, p3).to_type()
 
     @parser_rule
     def parse_type_non_union(self) -> TypeAst:
@@ -1338,12 +1359,6 @@ class Parser:
         return TypeVariantAst(c1, p1).to_type()
 
     @parser_rule
-    def parse_type_parts(self) -> List[TypePartAst]:
-        p1 = self.parse_type_part_first().parse_once()
-        p2 = self.parse_type_part().parse_zero_or_more()
-        return [p1] + p2
-
-    @parser_rule
     def parse_type_part(self) -> TypePartAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.TkDblColon).parse_once()
@@ -1355,17 +1370,16 @@ class Parser:
     @parser_rule
     def parse_type_part_first(self) -> TypePartAst:
         c1 = self.current_pos()
-        # p1 = self.parse_generic_identifier().for_alt()
-        # p2 = self.parse_self_type_keyword().for_alt()
-        # p3 = (p1 | p2).parse_once()
-        p1 = self.parse_generic_identifier().parse_once()
-        return p1
+        p1 = self.parse_generic_identifier().for_alt()
+        p2 = self.parse_self_type_keyword().for_alt()
+        p3 = (p1 | p2).parse_once()
+        return p3
 
-    # @parser_rule
-    # def parse_self_type_keyword(self) -> GenericIdentifierAst:
-    #     c1 = self.current_pos()
-    #     p1 = self.parse_token(TokenType.KwSelfType).parse_once()
-    #     return GenericIdentifierAst(c1, p1.token.token_metadata, None)
+    @parser_rule
+    def parse_self_type_keyword(self) -> GenericIdentifierAst:
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.KwSelfType).parse_once()
+        return GenericIdentifierAst(c1, p1.token.token_metadata, None)
 
     # ===== IDENTIFIERS =====
 
@@ -1600,7 +1614,8 @@ class Parser:
 
     @parser_rule
     def parse_lexeme(self, lexeme: TokenType) -> TokenAst:
-        p1 = self.parse_token(lexeme).parse_once()
+        compiled_lexeme = TokenType[f"Cm{lexeme.name}"]
+        p1 = self.parse_token(compiled_lexeme).parse_once()
         return p1
 
     @parser_rule
@@ -1617,6 +1632,8 @@ class Parser:
 
     @parser_rule
     def parse_token(self, token_type: TokenType) -> TokenAst:
+        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+
         # For the "no token", instantly return a new token.
         if token_type == TokenType.NO_TOK:
             return TokenAst(self.current_pos(), Token("", TokenType.NO_TOK))
@@ -1638,7 +1655,7 @@ class Parser:
 
         # Handle an incorrectly placed token.
         if self.current_tok().token_type != token_type:
-            token_print = lambda t: f"<{t.name[2:]}>" if t.name.startswith("Lx") else t.value
+            token_print = lambda t: f"<{t.name[2:]}>" if t.name[:2] == "Cm" else t.value
 
             c2 = self.current_pos()
             for error in self._errors:

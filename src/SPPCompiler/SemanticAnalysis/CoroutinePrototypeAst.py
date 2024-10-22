@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from SPPCompiler.SemanticAnalysis import FunctionPrototypeAst
+from SPPCompiler.SemanticAnalysis.FunctionPrototypeAst import FunctionPrototypeAst
 
 
 @dataclass

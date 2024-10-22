@@ -1,15 +1,17 @@
 from __future__ import annotations
 from typing import List, Optional, TYPE_CHECKING
 
+from SPPCompiler.SyntacticAnalysis.ParserRuleHandler import ParserRuleHandler
+
 if TYPE_CHECKING:
-    from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
-    from SPPCompiler.SyntacticAnalysis.ParserRuleHandler import ParserRuleHandler
+    from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+    from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
 
 class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
     _parser_rule_handlers: List[ParserRuleHandler]
 
-    def __init__(self, parser: "Parser") -> None:
+    def __init__(self, parser: Parser) -> None:
         super().__init__(parser, None)
         self._parser_rule_handlers = []
 
@@ -17,18 +19,23 @@ class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
         self._parser_rule_handlers.append(parser_rule_handler)
         return self
 
-    def parse_once(self) -> Ast:
+    def parse_once(self, save: bool = True) -> Ast:
+        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+
         for parser_rule_handler in self._parser_rule_handlers:
             parser_index = self._parser._index
             try:
-                self._result = parser_rule_handler.parse_once()
-                return self._result
+                ast = parser_rule_handler.parse_once()
+                if save: self._result = ast
+                return ast
             except ParserError:
                 self._parser._index = parser_index
                 continue
         raise ParserError(self._parser._index, "Expected one of the alternatives.")
 
     def parse_optional(self, save=True) -> Optional[T]:
+        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+
         for parser_rule_handler in self._parser_rule_handlers:
             parser_index = self._parser._index
             try:

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -21,4 +22,4 @@ class InnerScopeAst[T](Ast, Default):
     def default() -> Default:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis.TokenAst import TokenAst
-        return InnerScopeAst(-1, TokenAst.dummy(TokenType.TkBraceL), Seq(), TokenAst.dummy(TokenType.TkBraceR))
+        return InnerScopeAst(-1, TokenAst.default(TokenType.TkBraceL), Seq(), TokenAst.default(TokenType.TkBraceR))

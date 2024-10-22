@@ -104,6 +104,7 @@ from SPPCompiler.SemanticAnalysis.StatementAst import *
 from SPPCompiler.SemanticAnalysis.StringLiteralAst import *
 from SPPCompiler.SemanticAnalysis.SubroutineAst import *
 from SPPCompiler.SemanticAnalysis.SupMemberAst import *
+from SPPCompiler.SemanticAnalysis.SupPrototypeAst import *
 from SPPCompiler.SemanticAnalysis.SupPrototypeFunctionsAst import *
 from SPPCompiler.SemanticAnalysis.SupPrototypeInheritanceAst import *
 from SPPCompiler.SemanticAnalysis.SupUseStatementAst import *
@@ -114,7 +115,7 @@ from SPPCompiler.SemanticAnalysis.TypeOptionalAst import *
 from SPPCompiler.SemanticAnalysis.TypePartAst import *
 from SPPCompiler.SemanticAnalysis.TypeTupleAst import *
 from SPPCompiler.SemanticAnalysis.TypeVariantAst import *
-from SPPCompiler.SemanticAnalysis.UnaryExpression import *
+from SPPCompiler.SemanticAnalysis.UnaryExpressionAst import *
 from SPPCompiler.SemanticAnalysis.UnaryExpressionOperatorAst import *
 from SPPCompiler.SemanticAnalysis.UnaryExpressionOperatorAsyncAst import *
 from SPPCompiler.SemanticAnalysis.UseStatementAst import *

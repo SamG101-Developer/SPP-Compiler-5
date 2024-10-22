@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import List, TYPE_CHECKING
 import re
 
@@ -14,6 +15,8 @@ class Lexer:
     _code_injection: bool
 
     def __init__(self, raw_code: str, code_injection: bool = False) -> None:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+
         self._raw_code = raw_code
         self._alpha_regex = re.compile(r"[A-Za-z_]")
         self._comment_lexemes = [TokenType.LxSingleLineComment, TokenType.LxMultiLineComment]

@@ -7,7 +7,6 @@ if TYPE_CHECKING:
     from SPPCompiler.LexicalAnalysis.TokenType import TokenType
     from SPPCompiler.SyntacticAnalysis.Parser import Parser
     from SPPCompiler.SyntacticAnalysis.ParserAlternateRulesHandler import ParserAlternateRulesHandler
-    from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
 
 
 class ParserRuleHandler[T]:
@@ -24,11 +23,14 @@ class ParserRuleHandler[T]:
         self._for_alternate = False
         self._result = None
 
-    def parse_once(self) -> T:
-        self._result = self._rule()
-        return self._result
+    def parse_once(self, save: bool = True) -> T:
+        ast = self._rule()
+        if save: self._result = ast
+        return ast
 
     def parse_optional(self, save=True) -> Optional[T]:
+        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+
         parser_index = self._parser._index
         try:
             ast = self._rule()
@@ -38,32 +40,43 @@ class ParserRuleHandler[T]:
             self._parser._index = parser_index
             return None
 
-    def parse_zero_or_more(self, separator: TokenType = TokenType.NO_TOK) -> Seq[T]:
+    def parse_zero_or_more(self, separator: TokenType) -> Seq[T]:
+        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+
         self._result = Seq()
         i = 0
+        parsed_sep = False
         while True:
             try:
                 if i > 0:
                     self._parser.parse_token(separator).parse_once()
-                ast = self.parse_once()
+                    parsed_sep = True
+                ast = self.parse_once(save=False)
+                parsed_sep = False
                 self._result.append(ast)
                 i += 1
             except ParserError:
+                if parsed_sep:
+                    self._parser._index -= 1
                 break
         return self._result
 
-    def parse_one_or_more(self, separator: TokenType = TokenType.NO_TOK) -> Seq[T]:
+    def parse_one_or_more(self, separator: TokenType) -> Seq[T]:
+        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+
         self.parse_zero_or_more(separator)
-        if not self._result:
+        if self._result.length < 1:
             new_error = ParserError(f"Expected one or more {self._rule}.")
             new_error.pos = self._parser._index
             self._parser._errors.append(new_error)
             raise new_error
         return self._result
 
-    def parse_two_or_more(self, separator: TokenType = TokenType.NO_TOK) -> Seq[T]:
+    def parse_two_or_more(self, separator: TokenType) -> Seq[T]:
+        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+
         self.parse_one_or_more(separator)
-        if len(self._result) < 2:
+        if self._result.length < 2:
             new_error = ParserError(f"Expected two or more {self._rule}.")
             new_error.pos = self._parser._index
             self._parser._errors.append(new_error)
