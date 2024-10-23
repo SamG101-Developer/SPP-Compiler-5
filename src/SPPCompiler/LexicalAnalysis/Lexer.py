@@ -12,18 +12,16 @@ class Lexer:
     _alpha_regex: re.Pattern
     _comment_lexemes: List[TokenType]
     _multi_line_comment_lexemes: List[TokenType]
-    _code_injection: bool
 
-    def __init__(self, raw_code: str, code_injection: bool = False) -> None:
+    def __init__(self, raw_code: str) -> None:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
 
         self._raw_code = raw_code
         self._alpha_regex = re.compile(r"[A-Za-z_]")
         self._comment_lexemes = [TokenType.LxSingleLineComment, TokenType.LxMultiLineComment]
         self._multi_line_comment_lexemes = [TokenType.LxMultiLineComment]
-        self._code_injection = code_injection
 
-    def lex(self) -> List[Token]:
+    def lex(self, code_injection: bool = False) -> List[Token]:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.LexicalAnalysis.Token import Token
 
@@ -32,7 +30,7 @@ class Lexer:
 
         # The "$" is only allowed in code injection (from semantic analysis).
         all_tokens = TokenType.all_tokens()
-        if not self._code_injection:
+        if not code_injection:
             all_tokens.remove(TokenType.TkDollar)
 
         while i < len(self._raw_code):
