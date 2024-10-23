@@ -63,7 +63,7 @@ class Seq[T]:
         joined = mapped.join(separator)
         return joined
 
-    def empty(self) -> bool:
+    def is_empty(self) -> bool:
         return len(self._value) == 0
 
     def not_empty(self) -> bool:

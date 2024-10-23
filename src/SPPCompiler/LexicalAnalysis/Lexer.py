@@ -18,7 +18,7 @@ class Lexer:
 
         self._raw_code = raw_code
         self._alpha_regex = re.compile(r"[A-Za-z_]")
-        self._comment_lexemes = [TokenType.LxSingleLineComment, TokenType.LxMultiLineComment]
+        self._comment_lexemes = [TokenType.CmLxSingleLineComment, TokenType.CmLxMultiLineComment]
         self._multi_line_comment_lexemes = [TokenType.LxMultiLineComment]
 
     def lex(self, code_injection: bool = False) -> List[Token]:
