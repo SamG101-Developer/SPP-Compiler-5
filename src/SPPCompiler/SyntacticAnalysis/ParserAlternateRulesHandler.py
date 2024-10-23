@@ -42,8 +42,7 @@ class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
             parser_index = self._parser._index
             try:
                 ast = parser_rule_handler.parse_optional()
-                if ast:
-                    return ast
+                return ast
             except ParserError:
                 self._parser._index = parser_index
                 continue

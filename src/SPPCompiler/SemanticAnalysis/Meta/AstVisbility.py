@@ -16,3 +16,10 @@ class AstVisibility(Enum):
 
 class VisibilityEnabled:
     _visibility: AstVisibility = field(default=AstVisibility.Private, init=False)
+
+
+# Decorator to apply the VisibilityEnabled class to a class.
+def visibility_enabled_ast(cls: type) -> type:
+    if VisibilityEnabled not in cls.__bases__:
+        cls.__bases__ = (VisibilityEnabled,) + cls.__bases__
+    return cls
