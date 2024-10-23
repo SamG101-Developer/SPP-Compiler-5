@@ -15,4 +15,32 @@ type GenericParameterAst = Union[
     GenericTypeParameterRequiredAst,
     GenericTypeParameterVariadicAst]
 
-__all__ = ["GenericParameterAst"]
+type GenericCompParameterAst = Union[
+    GenericCompParameterOptionalAst,
+    GenericCompParameterRequiredAst,
+    GenericCompParameterVariadicAst]
+
+type GenericTypeParameterAst = Union[
+    GenericTypeParameterOptionalAst,
+    GenericTypeParameterRequiredAst,
+    GenericTypeParameterVariadicAst]
+
+type GenericParameterRequiredAst = Union[
+    GenericCompParameterRequiredAst,
+    GenericTypeParameterRequiredAst]
+
+type GenericParameterOptionalAst = Union[
+    GenericCompParameterOptionalAst,
+    GenericTypeParameterOptionalAst]
+
+type GenericParameterVariadicAst = Union[
+    GenericCompParameterVariadicAst,
+    GenericTypeParameterVariadicAst]
+
+__all__ = [
+    "GenericParameterAst",
+    "GenericCompParameterAst",
+    "GenericTypeParameterAst",
+    "GenericParameterRequiredAst",
+    "GenericParameterOptionalAst",
+    "GenericParameterVariadicAst"]

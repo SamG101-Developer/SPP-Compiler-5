@@ -11,4 +11,15 @@ type GenericArgumentAst = Union[
     GenericTypeArgumentNamedAst,
     GenericTypeArgumentUnnamedAst]
 
-__all__ = ["GenericArgumentAst"]
+type GenericArgumentNamedAst = Union[
+    GenericCompArgumentNamedAst,
+    GenericTypeArgumentNamedAst]
+
+type GenericArgumentUnnamedAst = Union[
+    GenericCompArgumentUnnamedAst,
+    GenericTypeArgumentUnnamedAst]
+
+__all__ = [
+    "GenericArgumentAst",
+    "GenericArgumentNamedAst",
+    "GenericArgumentUnnamedAst"]
