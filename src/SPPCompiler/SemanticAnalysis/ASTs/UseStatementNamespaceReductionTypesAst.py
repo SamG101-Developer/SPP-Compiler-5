@@ -1,0 +1,10 @@
+from typing import Union
+
+from SPPCompiler.SemanticAnalysis.ASTs.UseStatementNamespaceReductionTypesMultipleAst import UseStatementNamespaceReductionTypesMultipleAst
+from SPPCompiler.SemanticAnalysis.ASTs.UseStatementNamespaceReductionTypesSingleAst import UseStatementNamespaceReductionTypesSingleAst
+
+type UseStatementNamespaceReductionTypesAst = Union[
+    UseStatementNamespaceReductionTypesSingleAst,
+    UseStatementNamespaceReductionTypesMultipleAst]
+
+__all__ = ["UseStatementNamespaceReductionTypesAst"]
