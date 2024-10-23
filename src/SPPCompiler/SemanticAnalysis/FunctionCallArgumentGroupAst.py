@@ -7,6 +7,8 @@ from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.FunctionCallArgumentAst import FunctionCallArgumentAst
+    from SPPCompiler.SemanticAnalysis.FunctionCallArgumentNamedAst import FunctionCallArgumentNamedAst
+    from SPPCompiler.SemanticAnalysis.FunctionCallArgumentUnnamedAst import FunctionCallArgumentUnnamedAst
     from SPPCompiler.SemanticAnalysis.TokenAst import TokenAst
 
 
@@ -20,10 +22,20 @@ class FunctionCallArgumentGroupAst(Ast, Default):
         self.arguments = Seq(self.arguments)
 
     @staticmethod
-    def default() -> Default:
+    def default(arguments: Seq[FunctionCallArgumentAst] = None) -> FunctionCallArgumentGroupAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis.TokenAst import TokenAst
-        return FunctionCallArgumentGroupAst(-1, TokenAst.default(TokenType.TkParenL), Seq(), TokenAst.default(TokenType.TkParenR))
+        return FunctionCallArgumentGroupAst(-1, TokenAst.default(TokenType.TkParenL), arguments or Seq(), TokenAst.default(TokenType.TkParenR))
+
+    def get_named(self) -> Seq[FunctionCallArgumentNamedAst]:
+        # Get all the named function call arguments.
+        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst
+        return self.arguments.filter_to_type(FunctionCallArgumentNamedAst)
+
+    def get_unnamed(self) -> Seq[FunctionCallArgumentUnnamedAst]:
+        # Get all the unnamed function call arguments.
+        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentUnnamedAst
+        return self.arguments.filter_to_type(FunctionCallArgumentUnnamedAst)
 
     def __eq__(self, other: FunctionCallArgumentGroupAst) -> bool:
         return isinstance(other, FunctionCallArgumentGroupAst) and self.arguments == other.arguments
