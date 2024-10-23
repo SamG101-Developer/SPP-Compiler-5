@@ -5,16 +5,11 @@ __maintainer__ = "Sam Gardner"
 __email__ = "samuelgardner101@gmail.com"
 __status__ = "Development"
 
-from SPPCompiler.LexicalAnalysis.Lexer import Lexer
-from SPPCompiler.SyntacticAnalysis.Parser import Parser
-from SPPCompiler.Utils.ProgressBar import ProgressBar
+from SPPCompiler.Compiler.Compiler import Compiler
 
 
 def main():
-    with open("tst/LexicalAnalysis/code_1.spp", "r") as file:
-        tok = Lexer(file.read()).lex()
-        bar = ProgressBar("Parsing", len(tok))
-        ast = Parser(tok).parse()
+    c = Compiler("project/src", mode="d")
 
 
 if __name__ == "__main__":
