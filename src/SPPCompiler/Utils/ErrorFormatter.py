@@ -13,9 +13,7 @@ class ErrorFormatter:
         self._tokens = tokens
         self._file_path = file_path[file_path.rfind("src\\") + 4:]
 
-    def error(self, start_pos: int, end_pos: int = -1, message: str = "", tag_message: str = "", minimal: bool = False, no_format: bool = False) -> str:
-        if no_format:
-            return message
+    def error(self, start_pos: int, message: str = "", tag_message: str = "", minimal: bool = False) -> str:
         while self._tokens[start_pos].token_type in [TokenType.TkNewLine, TokenType.TkWhitespace]:
             start_pos += 1
 
@@ -29,17 +27,13 @@ class ErrorFormatter:
         error_line_number = len([x for x in self._tokens[:start_pos] if x.token_type == TokenType.TkNewLine])
 
         # The number of "^" is the length of the token data where the error is. Todo: Should span entire AST node.
-        if end_pos == -1:
-            carets = "^" * len(self._tokens[start_pos].token_metadata)
-        else:
-            carets = "^" * (end_pos - start_pos)
-        carets_line_as_string = f"{carets}"
-        carets_line_as_string = " " * sum([len(str(token)) for token in self._tokens[error_line_start_pos : start_pos]]) + carets_line_as_string
+        carets = "^" * len(self._tokens[start_pos].token_metadata)
+        carets = " " * sum([len(str(token)) for token in self._tokens[error_line_start_pos : start_pos]]) + carets
 
         # Print the preceding spaces before the error line
         l1 = len(error_line_as_string)
         error_line_as_string = error_line_as_string.replace("  ", "")
-        carets_line_as_string = carets_line_as_string[l1 - len(error_line_as_string):] + f"{Fore.LIGHTWHITE_EX}{Style.BRIGHT} <- {tag_message}"
+        carets = carets[l1 - len(error_line_as_string):] + f"{Fore.LIGHTWHITE_EX}{Style.BRIGHT} <- {tag_message}"
 
         left_padding = " " * len(str(error_line_number))
         final_error_message = "\n".join([
@@ -47,7 +41,7 @@ class ErrorFormatter:
             f"Error in file '{self._file_path}', on line {error_line_number}:" if not minimal else f"Context from file '{self._file_path}', on line {error_line_number}:",
             f"{Fore.LIGHTWHITE_EX}{left_padding} |",
             f"{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{error_line_number} | {error_line_as_string}",
-            f"{Fore.LIGHTWHITE_EX}{left_padding} | {Style.NORMAL}{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{carets_line_as_string}\n",
+            f"{Fore.LIGHTWHITE_EX}{left_padding} | {Style.NORMAL}{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{carets}\n",
             f"{Style.RESET_ALL}{Fore.LIGHTRED_EX}{message}" * (not minimal)])
 
         return final_error_message
