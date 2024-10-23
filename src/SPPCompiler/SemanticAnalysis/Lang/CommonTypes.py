@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.TypeAst import TypeAst
+    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
 
 
 class CommonTypes:
