@@ -54,7 +54,7 @@ class SemanticError(Exception):
 
     def add_error(self, pos: int, tag: str, msg: str, tip: str, fmt: Format = Format.NORMAL) -> SemanticError:
         # Add an error into the output list.
-        self.error_info.append(SemanticError.ErrorInfo(pos, msg, tag, tip, fmt))
+        self.error_info.append(SemanticError.ErrorInfo(pos, tag, msg, tip, fmt))
         return self
 
     def add_info(self, pos: int, tag: str) -> SemanticError:
@@ -68,16 +68,14 @@ class SemanticError(Exception):
             return "", True
 
         # Otherwise, combine the message and tip into a single color-formatted string.
-        f = (f"\n{Style.BRIGHT}Semantic Error: {Style.NORMAL}{error_info.msg}"
-             f"\n{Fore.LIGHTCYAN_EX}{Style.BRIGHT}Tip: {Style.NORMAL}{error_info.tip}")
+        f = f"\n{Style.BRIGHT}Semantic Error: {Style.NORMAL}{error_info.msg}\n{Fore.LIGHTCYAN_EX}{Style.BRIGHT}Tip: {Style.NORMAL}{error_info.tip}"
         return f, False
 
     def throw(self, error_formatter: ErrorFormatter) -> NoReturn:
         error_message = ""
         for error in self.error_info:
-            is_minimal = error.fmt == SemanticError.Format.MINIMAL
-            formatted_message = f"\n{Style.BRIGHT}Semantic Error: {Style.NORMAL}{error.msg}\n{Fore.LIGHTCYAN_EX}{Style.BRIGHT}Tip: {Style.NORMAL}{error.tip}" if error.msg else ""
-            error_message += error_formatter.error(error.pos, message=formatted_message, tag_message=error.tag, minimal=is_minimal)
+            formatted_message, is_minimal = self._format_message(error)
+            error_message += error_formatter.error(error.pos, formatted_message, error.tag, is_minimal)
         raise SystemExit(error_message) from None
 
 

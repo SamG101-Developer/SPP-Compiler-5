@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from SPPCompiler.Utils.Errors import SemanticError
@@ -13,8 +14,8 @@ class AstErrors:
         e.add_info(annotation.pos, f"Annotation '{annotation}' defined here")
         e.add_error(
             pos=applied_to.pos,
-            tag=f"Non-{white_list.title()} defined here.",
-            msg=f"The annotation '{annotation}' can only be applied to {white_list}.",
+            tag=f"Non-{white_list} AST defined here.",
+            msg=f"The '{annotation}' annotation can only be applied to {white_list} ASTs.",
             tip=f"Remove the annotation from here")
         return e
 
