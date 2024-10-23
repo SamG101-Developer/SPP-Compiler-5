@@ -15,7 +15,7 @@ class WhereBlockAst(Ast, Default):
     constraint_group: WhereConstraintsGroupAst
 
     @staticmethod
-    def default() -> Default:
+    def default() -> WhereBlockAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import WhereConstraintsGroupAst, TokenAst
         return WhereBlockAst(-1, TokenAst.default(TokenType.KwWhere), WhereConstraintsGroupAst.default())

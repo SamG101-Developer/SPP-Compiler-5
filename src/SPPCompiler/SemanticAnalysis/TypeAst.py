@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.Utils.Sequence import Seq
 
-
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.TypePartAst import TypePartAst
@@ -24,6 +23,11 @@ class TypeAst(Ast):
     def from_identifier(identifier: IdentifierAst) -> TypeAst:
         from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, TypeAst
         return TypeAst(identifier.pos, Seq(), Seq([GenericIdentifierAst.from_identifier(identifier)]))
+
+    @staticmethod
+    def from_function_identifier(identifier: IdentifierAst) -> TypeAst:
+        mock_type_name = IdentifierAst(f"${identifier.value[0].upper()}{identifier.value[1:]}")
+        return TypeAst.from_identifier(mock_type_name)
 
 
 __all__ = ["TypeAst"]

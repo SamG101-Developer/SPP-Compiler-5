@@ -20,7 +20,7 @@ class WhereConstraintsGroupAst(Ast, Default):
         self.constraints = Seq(self.constraints)
 
     @staticmethod
-    def default() -> Default:
+    def default() -> WhereConstraintsGroupAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis.TokenAst import TokenAst
         return WhereConstraintsGroupAst(-1, TokenAst.default(TokenType.TkBrackL), Seq(), TokenAst.default(TokenType.TkBrackR))

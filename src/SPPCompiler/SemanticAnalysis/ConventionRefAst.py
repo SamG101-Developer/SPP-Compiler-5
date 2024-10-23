@@ -13,7 +13,7 @@ class ConventionRefAst(Ast, Default):
     tok_borrow: TokenAst
 
     @staticmethod
-    def default() -> Default:
+    def default() -> ConventionRefAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         return ConventionRefAst(-1, TokenAst.default(tok=TokenType.TkBorrow))
 

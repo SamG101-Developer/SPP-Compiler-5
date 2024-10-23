@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 class ConventionMovAst(Ast, Default):
 
     @staticmethod
-    def default() -> Default:
+    def default() -> ConventionMovAst:
         return ConventionMovAst(-1)
 
 

@@ -19,7 +19,7 @@ class InnerScopeAst[T](Ast, Default):
         self.members = Seq(self.members)
 
     @staticmethod
-    def default() -> Default:
+    def default(body: Seq[T] = None) -> InnerScopeAst[T]:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis.TokenAst import TokenAst
-        return InnerScopeAst(-1, TokenAst.default(TokenType.TkBraceL), Seq(), TokenAst.default(TokenType.TkBraceR))
+        return InnerScopeAst(-1, TokenAst.default(TokenType.TkBraceL), body or Seq(), TokenAst.default(TokenType.TkBraceR))

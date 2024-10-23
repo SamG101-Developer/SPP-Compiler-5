@@ -12,7 +12,7 @@ class TokenAst(Ast, Default):
     token: Token
 
     @staticmethod
-    def default(token_type: TokenType = TokenType.NO_TOK, info: str = "", pos: int = -1) -> Default:
+    def default(token_type: TokenType = TokenType.NO_TOK, info: str = "", pos: int = -1) -> TokenAst:
         return TokenAst(pos, Token(info, token_type))
 
     def __eq__(self, other: TokenAst) -> bool:
