@@ -131,6 +131,7 @@ class CommonTypes:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Rgx", None)])
 
+    """
     @staticmethod
     def CtxRef(pos: int = -1):
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
@@ -154,6 +155,7 @@ class CommonTypes:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         elem_type = GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), [GenericTypeArgumentUnnamedAst(-1, elem_type)], TokenAst.default(TokenType.TkBrackR))
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Arr", elem_type)])
+    """
 
     @staticmethod
     def Opt(inner_type, pos: int = -1):
@@ -177,32 +179,33 @@ class CommonTypes:
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Var", types)])
 
     @staticmethod
-    def FunRef(return_type, param_types, pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst, TokenAst
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+    def FunRef(param_types, return_type, pos: int = -1):  # param_types is a tuple
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
         return_type_generic = GenericTypeArgumentUnnamedAst(-1, return_type)
-        param_types_generic = GenericTypeArgumentUnnamedAst(-1, CommonTypes.tuple(param_types))
-        types = GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), [return_type_generic, param_types_generic], TokenAst.default(TokenType.TkBrackR))
+        param_types_generic = GenericTypeArgumentUnnamedAst(-1, param_types)
+        types = GenericArgumentGroupAst.default([return_type_generic, param_types_generic])
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "FunRef", types)])
 
     @staticmethod
-    def FunMut(return_type, param_types, pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst, TokenAst
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+    def FunMut(param_types, return_type, pos: int = -1):  # param_types is a tuple
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
         return_type_generic = GenericTypeArgumentUnnamedAst(-1, return_type)
-        param_types_generic = GenericTypeArgumentUnnamedAst(-1, CommonTypes.tuple(param_types))
-        types = GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), [return_type_generic, param_types_generic], TokenAst.default(TokenType.TkBrackR))
+        param_types_generic = GenericTypeArgumentUnnamedAst(-1, param_types)
+        types = GenericArgumentGroupAst.default([return_type_generic, param_types_generic])
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "FunMut", types)])
 
     @staticmethod
-    def FunMov(return_type, param_types, pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst, TokenAst
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+    def FunMov(param_types, return_type, pos: int = -1):  # param_types is a tuple
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
         return_type_generic = GenericTypeArgumentUnnamedAst(-1, return_type)
-        param_types_generic = GenericTypeArgumentUnnamedAst(-1, CommonTypes.tuple(param_types))
-        types = GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), [return_type_generic, param_types_generic], TokenAst.default(TokenType.TkBrackR))
+        param_types_generic = GenericTypeArgumentUnnamedAst(-1, param_types)
+        types = GenericArgumentGroupAst.default([return_type_generic, param_types_generic])
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "FunMov", types)])
 
+    """
     @staticmethod
     def GenRef(gen_type=None, ret_type=None, send_type=None, pos: int = -1):
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst, TokenAst
@@ -231,3 +234,4 @@ class CommonTypes:
     def Copy(pos: int = -1):
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Copy", None)])
+    """
