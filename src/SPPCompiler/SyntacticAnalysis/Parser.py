@@ -10,14 +10,14 @@ from SPPCompiler.SyntacticAnalysis.ParserRuleHandler import ParserRuleHandler
 from SPPCompiler.SemanticAnalysis import *
 
 if TYPE_CHECKING:
-    from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+    from SPPCompiler.Utils.Errors import ParserError
     from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
 
 # Decorator that wraps the function in a ParserRuleHandler
 def parser_rule(func) -> Callable[..., ParserRuleHandler]:
     @functools.wraps(func)
-    @functools.lru_cache(maxsize=None)
+    @functools.cache
     def wrapper(self, *args) -> ParserRuleHandler:
         return ParserRuleHandler(self, functools.partial(func, self, *args))
     return wrapper
@@ -30,8 +30,8 @@ class Parser:
     _error: Optional[ParserError]
 
     def __init__(self, tokens: List[Token], file_name: str = "") -> None:
+        from SPPCompiler.Utils.Errors import ParserError
         from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
-        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
 
         self._tokens = tokens
         self._index = 0
@@ -47,7 +47,7 @@ class Parser:
     # ===== PARSING =====
 
     def parse(self) -> ProgramAst:
-        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+        from SPPCompiler.Utils.Errors import ParserError
 
         try:
             ast = self.parse_program().parse_once()
@@ -1638,9 +1638,6 @@ class Parser:
             self.store_error(self.current_pos(), new_error)
             raise new_error
 
-        # Save the current position before skipping newlines and whitespace.
-        # c1 = self._index
-
         # Skip newlines and whitespace for non-newline parsing, and whitespace only for new-line parsing.
         if token_type != TokenType.TkNewLine:
             while self._tokens[self._index].token_type == TokenType.TkNewLine or self._tokens[self._index].token_type == TokenType.TkWhitespace:
@@ -1672,50 +1669,6 @@ class Parser:
             self._error.args = (error,)
             return True
         return False
-
-
-"""
-@parser_rule
-def parse_token(self, token_type: TokenType) -> TokenAst:
-    from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
-
-    # For the "no token", instantly return a new token.
-    if token_type == TokenType.NO_TOK:
-        return TokenAst(self.current_pos(), Token("", TokenType.NO_TOK))
-
-    # Check if the end of the file has been reached.
-    if self._index > len(self._tokens) - 1:
-        new_error = ParserError(self.current_pos(), f"Expected '{token_type}', got <EOF>")
-        self._errors[self.current_pos()] = new_error
-        raise new_error
-
-    # Save the current position before skipping newlines and whitespace.
-    c1 = self.current_pos()
-
-    # Skip newlines and whitespace for non-newline parsing, and whitespace only for new-line parsing.
-    while token_type != TokenType.TkNewLine and self.current_tok().token_type in [TokenType.TkNewLine, TokenType.TkWhitespace]:
-        self._index += 1
-    while token_type == TokenType.TkNewLine and self.current_tok().token_type == TokenType.TkWhitespace:
-        self._index += 1
-
-    # Handle an incorrectly placed token.
-    if self.current_tok().token_type != token_type:
-        c2 = self.current_pos()
-        if error := self._errors.get(c2, None):
-            error.expected_tokens.add(token_type)
-            raise error
-
-        new_error = ParserError(f"Expected $, got '{self.current_tok().token_type.print()}'")
-        new_error.pos = c2
-        new_error.expected_tokens.add(token_type)  # token_print(token_type))
-        self._errors[c2] = new_error
-        raise new_error
-
-    # Otherwise, the parse was successful, so return a TokenAst as the correct position.
-    r = TokenAst(c1, self.current_tok())
-    self._index += 1
-    return r
-"""
 
 
 __all__ = ["Parser", "parser_rule"]

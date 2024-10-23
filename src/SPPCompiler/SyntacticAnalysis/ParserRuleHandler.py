@@ -25,7 +25,7 @@ class ParserRuleHandler[T]:
         return ast
 
     def parse_optional(self) -> Optional[T]:
-        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+        from SPPCompiler.Utils.Errors import ParserError
 
         parser_index = self._parser._index
         try:
@@ -36,7 +36,7 @@ class ParserRuleHandler[T]:
             return None
 
     def parse_zero_or_more(self, separator: TokenType, *, propagate_error: bool = False) -> Seq[T]:
-        from SPPCompiler.SyntacticAnalysis.ParserError import ParserError
+        from SPPCompiler.Utils.Errors import ParserError
 
         result = Seq()
         i = 0
