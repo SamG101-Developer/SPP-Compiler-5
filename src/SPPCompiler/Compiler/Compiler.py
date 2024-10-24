@@ -1,5 +1,7 @@
 from __future__ import annotations
+from fastenum import Enum
 from typing import TYPE_CHECKING
+import os
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -10,13 +12,17 @@ if TYPE_CHECKING:
 
 
 class Compiler:
+    class Mode(Enum):
+        Debug = "d"
+        Release = "r"
+
     _src_path: str
     _module_tree: ModuleTree
-    _mode: str
+    _mode: Mode
     _ast: ProgramAst
     _analyser: Analyser
 
-    def __init__(self, src_path: str, mode: str = "d") -> None:
+    def __init__(self, src_path: str, mode: Mode) -> None:
         from SPPCompiler.Compiler.ModuleTree import ModuleTree
         from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import ProgramAst
 
@@ -31,8 +37,9 @@ class Compiler:
 
     def compile(self) -> None:
         from SPPCompiler.LexicalAnalysis.Lexer import Lexer
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter
         from SPPCompiler.SemanticAnalysis.Analyser import Analyser
+        from SPPCompiler.SyntacticAnalysis.Parser import Parser
         from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
         # Lexing stage.
@@ -49,6 +56,16 @@ class Compiler:
         self._ast.modules = Seq([module.module_ast for module in self._module_tree.modules])
         self._analyser = Analyser(self._ast)
         self._analyser.analyse(self._module_tree)
+
+        # Save the AST to the output file (if in debug mode).
+        if self._mode == Compiler.Mode.Debug:
+            for module in self._module_tree:
+                ast = module.module_ast
+                out_path = module.path.replace("src", "out", 1).replace(".spp", ".ast")
+                if not os.path.exists(os.path.dirname(out_path)):
+                    os.makedirs(os.path.dirname(out_path))
+                with open(out_path, "w") as file:
+                    file.write(ast.print(AstPrinter()))
 
     def output_process(self) -> None:
         ...

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import visibility_enabled_ast
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.Utils.Sequence import Seq
@@ -43,11 +44,26 @@ class FunctionPrototypeAst(Ast, Stage1_PreProcessor):
         from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst, InnerScopeAst
         from SPPCompiler.SemanticAnalysis import WhereBlockAst
 
-        # Convert the annotations into a sequence, and other defaults.
+        # Convert the annotations into a sequence, and create other defaults.
         self.annotations = Seq(self.annotations)
         self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
         self.where_block = self.where_block or WhereBlockAst.default()
         self.body = self.body or InnerScopeAst.default()
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            self.annotations.print(printer, " "),
+            self.tok_fun.print(printer) + " ",
+            self.name.print(printer),
+            self.generic_parameter_group.print(printer),
+            self.function_parameter_group.print(printer) + " ",
+            self.tok_arrow.print(printer) + " ",
+            self.return_type.print(printer),
+            self.where_block.print(printer),
+            self.body.print(printer)]
+        return "".join(string)
 
     def pre_process(self, context: PreProcessingContext) -> None:
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, ModulePrototypeAst, SupPrototypeInheritanceAst
@@ -58,7 +74,7 @@ class FunctionPrototypeAst(Ast, Stage1_PreProcessor):
 
         # Substitute the "Self" parameter's type with the name of the method.
         if not isinstance(context, ModulePrototypeAst) and self.function_parameter_group.get_self():
-            self.function_parameter_group.get_self().type = self.name
+            self.function_parameter_group.get_self().type = context.name
 
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
         mock_class_name = TypeAst.from_function_identifier(self.name)
@@ -76,7 +92,7 @@ class FunctionPrototypeAst(Ast, Stage1_PreProcessor):
         function_ast = copy.deepcopy(self)
         mock_superimposition_body = InnerScopeAst.default(Seq([function_ast]))
         mock_superimposition = SupPrototypeInheritanceAst(self.pos, None, self.generic_parameter_group, mock_class_name, self.where_block, mock_superimposition_body, None, function_type)
-        self._ctx.body.members.append(mock_superimposition)
+        self._ctx.body.members.insert(0, mock_superimposition)
         self._ctx.body.members.remove(self)
 
         # Pre-process the annotations of this function's duplicate.
@@ -88,16 +104,16 @@ class FunctionPrototypeAst(Ast, Stage1_PreProcessor):
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
         if isinstance(self._ctx, ModulePrototypeAst) or not self.function_parameter_group.get_self():
-            return CommonTypes.FunRef(self.function_parameter_group.parameters.map_attr("type"), self.return_type)
+            return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         if isinstance(self.function_parameter_group.get_self().convention, ConventionMovAst):
-            return CommonTypes.FunMov(self.function_parameter_group.parameters.map_attr("type"), self.return_type)
+            return CommonTypes.FunMov(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         if isinstance(self.function_parameter_group.get_self().convention, ConventionMutAst):
-            return CommonTypes.FunMut(self.function_parameter_group.parameters.map_attr("type"), self.return_type)
+            return CommonTypes.FunMut(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         if isinstance(self.function_parameter_group.get_self().convention, ConventionRefAst):
-            return CommonTypes.FunRef(self.function_parameter_group.parameters.map_attr("type"), self.return_type)
+            return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
     def _deduce_mock_class_call(self, function_type) -> IdentifierAst:
         from SPPCompiler.SemanticAnalysis import IdentifierAst

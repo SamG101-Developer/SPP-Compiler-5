@@ -184,7 +184,7 @@ class CommonTypes:
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
         return_type_generic = GenericTypeArgumentUnnamedAst(-1, return_type)
         param_types_generic = GenericTypeArgumentUnnamedAst(-1, param_types)
-        types = GenericArgumentGroupAst.default([return_type_generic, param_types_generic])
+        types = GenericArgumentGroupAst.default([param_types_generic, return_type_generic])
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "FunRef", types)])
 
     @staticmethod
@@ -193,7 +193,7 @@ class CommonTypes:
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
         return_type_generic = GenericTypeArgumentUnnamedAst(-1, return_type)
         param_types_generic = GenericTypeArgumentUnnamedAst(-1, param_types)
-        types = GenericArgumentGroupAst.default([return_type_generic, param_types_generic])
+        types = GenericArgumentGroupAst.default([param_types_generic, return_type_generic])
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "FunMut", types)])
 
     @staticmethod
@@ -202,7 +202,7 @@ class CommonTypes:
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
         return_type_generic = GenericTypeArgumentUnnamedAst(-1, return_type)
         param_types_generic = GenericTypeArgumentUnnamedAst(-1, param_types)
-        types = GenericArgumentGroupAst.default([return_type_generic, param_types_generic])
+        types = GenericArgumentGroupAst.default([param_types_generic, return_type_generic])
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "FunMov", types)])
 
     """

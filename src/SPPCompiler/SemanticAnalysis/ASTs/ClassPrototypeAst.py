@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import visibility_enabled_ast
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.Utils.Sequence import Seq
@@ -32,12 +33,24 @@ class ClassPrototypeAst(Ast, Stage1_PreProcessor):
         from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst, InnerScopeAst
         from SPPCompiler.SemanticAnalysis import TypeAst, WhereBlockAst
 
-        # Convert the annotations into a sequence, the name to a TypeAst, and other defaults.
+        # Convert the annotations into a sequence, the name to a TypeAst, and create other defaults.
         self.annotations = Seq(self.annotations)
         self.name = TypeAst.from_identifier(self.name)
         self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
         self.where_block = self.where_block or WhereBlockAst.default()
         self.body = self.body or InnerScopeAst.default()
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            self.annotations.print(printer, " "),
+            self.tok_cls.print(printer) + " ",
+            self.name.print(printer),
+            self.generic_parameter_group.print(printer),
+            self.where_block.print(printer),
+            self.body.print(printer)]
+        return "".join(string)
 
     def pre_process(self, context: PreProcessingContext) -> None:
         super().pre_process(context)

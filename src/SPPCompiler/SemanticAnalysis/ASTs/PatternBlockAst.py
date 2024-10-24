@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -15,13 +16,24 @@ if TYPE_CHECKING:
 
 @dataclass
 class PatternBlockAst(Ast):
-    comp_operator: TokenAst
+    comp_operator: Optional[TokenAst]
     patterns: Seq[PatternVariantAst]
     guard: Optional[PatternGuardAst]
-    body: InnerScopeAst[StatementAst]
+    body: Optional[InnerScopeAst[StatementAst]]
 
     def __post_init__(self) -> None:
+        # Convert the patterns into a sequence.
         self.patterns = Seq(self.patterns)
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            self.comp_operator.print(printer) if self.comp_operator else "",
+            self.patterns.print(printer, ", "),
+            self.guard.print(printer) if self.guard else "",
+            self.body.print(printer) if self.body else ""]
+        return "".join(string)
 
 
 __all__ = ["PatternBlockAst"]

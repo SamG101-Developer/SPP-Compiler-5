@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -29,6 +30,18 @@ class GenericParameterGroupAst(Ast, Default):
         self.parameters = Seq(self.parameters)
         self.type_parameters = self.parameters.filter_to_type(*GenericTypeParameterAst.__value__.__args__)
         self.comp_parameters = self.parameters.filter_to_type(*GenericCompParameterAst.__value__.__args__)
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        if self.parameters:
+            string = [
+                self.tok_left_bracket.print(printer),
+                self.parameters.print(printer, ", "),
+                self.tok_right_bracket.print(printer) + " "]
+        else:
+            string = []
+        return "".join(string)
 
     @staticmethod
     def default(parameters: Seq[GenericParameterAst] = None) -> GenericParameterGroupAst:

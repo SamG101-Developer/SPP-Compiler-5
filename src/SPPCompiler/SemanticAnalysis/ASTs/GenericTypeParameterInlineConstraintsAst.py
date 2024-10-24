@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -16,7 +17,19 @@ class GenericTypeParameterInlineConstraintsAst(Ast, Default):
     constraints: Seq[TypeAst]
 
     def __post_init__(self) -> None:
+        # Convert the constraints into a sequence.
         self.constraints = Seq(self.constraints)
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        if self.constraints:
+            string = [
+                self.tok_colon.print(printer),
+                self.constraints.print(printer, ", ")]
+        else:
+            string = []
+        return "".join(string)
 
     @staticmethod
     def default() -> GenericTypeParameterInlineConstraintsAst:

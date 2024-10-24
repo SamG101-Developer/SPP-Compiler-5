@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -17,7 +18,17 @@ class WhereConstraintsGroupAst(Ast, Default):
     tok_right_brack: TokenAst
 
     def __post_init__(self) -> None:
+        # Convert the constraints into a sequence.
         self.constraints = Seq(self.constraints)
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            self.tok_left_brack.print(printer),
+            self.constraints.print(printer, ", "),
+            self.tok_right_brack.print(printer)]
+        return "".join(string)
 
     @staticmethod
     def default() -> WhereConstraintsGroupAst:

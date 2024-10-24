@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -25,6 +26,9 @@ class ProgramAst(Ast, Stage1_PreProcessor):
 
     def current(self) -> ModulePrototypeAst:
         return self._current
+
+    def print(self, printer: AstPrinter) -> str:
+        return ""
 
 
 __all__ = ["ProgramAst"]

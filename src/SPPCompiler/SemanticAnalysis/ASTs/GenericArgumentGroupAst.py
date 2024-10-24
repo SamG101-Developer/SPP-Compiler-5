@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -35,6 +36,18 @@ class GenericArgumentGroupAst(Ast, Default):
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
         return GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), arguments or Seq(), TokenAst.default(TokenType.TkBrackR))
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        if self.arguments:
+            string = [
+                self.tok_left_bracket.print(printer),
+                self.arguments.print(printer, ", "),
+                self.tok_right_bracket.print(printer)]
+        else:
+            string = []
+        return "".join(string)
 
     def get_named(self) -> Seq[GenericArgumentNamedAst]:
         from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst

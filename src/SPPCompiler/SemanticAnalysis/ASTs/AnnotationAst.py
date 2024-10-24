@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 
 if TYPE_CHECKING:
@@ -14,6 +15,14 @@ if TYPE_CHECKING:
 class AnnotationAst(Ast, Stage1_PreProcessor):
     tok_at: TokenAst
     name: IdentifierAst
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            self.tok_at.print(printer),
+            self.name.print(printer) + " "]
+        return "".join(string)
 
     def pre_process(self, context: PreProcessingContext) -> None:
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.

@@ -1470,7 +1470,7 @@ class Parser:
         p1 = self.parse_token(TokenType.KwTrue)
         p2 = self.parse_token(TokenType.KwFalse)
         p3 = (p1 | p2).parse_once()
-        return BooleanLiteralAst(c1, p3.token.token_metadata == "true")
+        return BooleanLiteralAst(c1, p3)
 
     # ===== NUMBERS =====
 
@@ -1488,7 +1488,7 @@ class Parser:
         p1 = self.parse_numeric_prefix_op().parse_optional()
         p2 = self.parse_lexeme(TokenType.LxDecInteger).parse_once()
         p3 = self.parse_numeric_postfix_type().parse_optional()
-        return IntegerLiteralAst(c1, p2, p3, p1)
+        return IntegerLiteralAst(c1, p1, p2, p3)
 
     @parser_rule
     def parse_literal_integer_b02(self) -> IntegerLiteralAst:

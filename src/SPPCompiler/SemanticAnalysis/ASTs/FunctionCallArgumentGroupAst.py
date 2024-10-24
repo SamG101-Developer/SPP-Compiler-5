@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -19,7 +20,17 @@ class FunctionCallArgumentGroupAst(Ast, Default):
     tok_right_paren: TokenAst
 
     def __post_init__(self) -> None:
+        # Convert the arguments into a sequence.
         self.arguments = Seq(self.arguments)
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            self.tok_left_paren.print(printer),
+            self.arguments.print(printer, ", "),
+            self.tok_right_paren.print(printer)]
+        return "".join(string)
 
     @staticmethod
     def default(arguments: Seq[FunctionCallArgumentAst] = None) -> FunctionCallArgumentGroupAst:

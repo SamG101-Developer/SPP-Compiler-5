@@ -9,7 +9,7 @@ from SPPCompiler.Compiler.Compiler import Compiler
 
 
 def main():
-    c = Compiler("project/src", mode="d")
+    c = Compiler("project/src", mode=Compiler.Mode.Debug)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ModuleImplementationAst import ModuleImplementationAst
@@ -13,6 +14,11 @@ if TYPE_CHECKING:
 class ModulePrototypeAst(Ast):
     body: ModuleImplementationAst
     tok_eof: TokenAst
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        return self.body.print(printer)
 
 
 __all__ = ["ModulePrototypeAst"]
