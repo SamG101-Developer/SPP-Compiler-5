@@ -1,4 +1,5 @@
 import functools
+import re
 
 
 class AstPrinter:
@@ -6,7 +7,7 @@ class AstPrinter:
     _current_indent: int
 
     def __init__(self, indent_size: int = 4) -> None:
-        self._indent_size = indent_size // 2
+        self._indent_size = indent_size
         self._current_indent = 0
 
     def increase_indent(self) -> None:
@@ -16,7 +17,8 @@ class AstPrinter:
         self._current_indent -= self._indent_size
 
     def format_code(self, code: str) -> str:
-        return code.replace("\n", "\n" + " " * self._indent_size, code.count("\n") - 2)
+        return re.sub(r"\n", "\n" + " " * self._current_indent, code)
+        # return code.replace("\n", "\n" + " " * self._indent_size, code.count("\n") - 1)
 
 
 # Decorators for the printer methods
@@ -31,12 +33,12 @@ def ast_printer_method(func):
             printer.increase_indent()
             line = func(self, *args)
             line = printer.format_code(line)
-            if len(line.split("\n")) > 1 and line.split("\n")[-2].strip() == "}":
-                lines, last, _ = line.rsplit("\n", 2)
-                last = last.replace(" " * printer._indent_size * 2, "", 1)
-                line = f"{lines}\n{last}\n{_}"
+            line = "\n".join([x for x in line.split("\n") if x.strip()])
             printer.decrease_indent()
-
+            if line.split("\n") and line.split("\n")[-1].strip() == "}":
+                lines, last = line.rsplit("\n", 1)
+                last = last.lstrip().replace("}", " " * printer._current_indent + "}")
+                line = f"{lines}\n{last}"
         else:
             line = func(self, *args)
             line = printer.format_code(line)
