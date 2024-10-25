@@ -138,7 +138,6 @@ class AliasSymbol(TypeSymbol):
 
 type Symbol = NamespaceSymbol | VariableSymbol | TypeSymbol | AliasSymbol
 
-
 __all__ = [
     "Symbol",
     "NamespaceSymbol",
