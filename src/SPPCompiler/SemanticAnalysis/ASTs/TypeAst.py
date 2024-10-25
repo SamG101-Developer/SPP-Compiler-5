@@ -22,6 +22,12 @@ class TypeAst(Ast):
         self.namespace = Seq(self.namespace)
         self.types = Seq(self.types)
 
+    def __eq__(self, other: TypeAst) -> bool:
+        return isinstance(other, TypeAst) and self.namespace == other.namespace and self.types == other.types
+
+    def __json__(self) -> str:
+        return f"cls {self.print(AstPrinter())}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

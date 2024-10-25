@@ -1,7 +1,7 @@
 from __future__ import annotations
 from fastenum import Enum
 from typing import TYPE_CHECKING
-import os
+import json, os
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -61,11 +61,17 @@ class Compiler:
         if self._mode == Compiler.Mode.Debug:
             for module in self._module_tree:
                 ast = module.module_ast
-                out_path = module.path.replace("src", "out", 1).replace(".spp", ".ast")
-                if not os.path.exists(os.path.dirname(out_path)):
-                    os.makedirs(os.path.dirname(out_path))
-                with open(out_path, "w") as file:
+                out_ast_path = module.path.replace("src", "out/ast", 1).replace(".spp", ".ast")
+                if not os.path.exists(os.path.dirname(out_ast_path)):
+                    os.makedirs(os.path.dirname(out_ast_path))
+                with open(out_ast_path, "w") as file:
                     file.write(ast.print(AstPrinter()))
+
+            out_scope_manager_path = self._src_path.replace("src", "out/smg", 1)
+            if not os.path.exists(out_scope_manager_path):
+                os.makedirs(out_scope_manager_path)
+            with open(out_scope_manager_path + "/scope_manager.json", "w") as file:
+                file.write(json.dumps(self._analyser._scope_manager.global_scope, indent=4))
 
     def output_process(self) -> None:
         ...

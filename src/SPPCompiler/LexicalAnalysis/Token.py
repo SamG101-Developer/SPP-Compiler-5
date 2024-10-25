@@ -16,7 +16,7 @@ class Token:
 
     def __eq__(self, other: Token) -> bool:
         c1 = self.token_type == other.token_type
-        c2 = self.token_metadata == other.token_metadata if self.token_type[:2] == "Lx" else True
+        c2 = self.token_metadata == other.token_metadata if self.token_type.name[:2] in ["Lx", "Cm"] else True
         return c1 and c2
 
 

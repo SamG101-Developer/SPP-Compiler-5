@@ -6,7 +6,6 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 
-
 type PreProcessingContext = Optional[Ast]
 
 

@@ -102,11 +102,11 @@ class TypeSymbol:
 
         # Link the type symbol to the associated scope.
         if self.scope and not self.is_generic and not self.name.value == "Self":
-            self.scope.type_symbol = self
+            self.scope._type_symbol = self
 
     def __json__(self) -> Dict:
         # Dump the TypeSymbol as a JSON object.
-        return {"what": "type", "name": self.name, "type": self.type, "scope": self.scope.name}
+        return {"what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if not self.is_generic else ""}
 
     def __str__(self) -> str:
         # Dump the TypeSymbol as a JSON string.

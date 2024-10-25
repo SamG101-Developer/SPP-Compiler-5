@@ -39,16 +39,23 @@ class Scope:
     _type_symbol: Optional[TypeSymbol]
 
     def __init__(self, name: Any, parent: Optional[Scope] = None, manager: Optional[ScopeManager] = None, ast: Optional[Ast] = None) -> None:
+        from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
+
+        # Initialize the scope with the given name, parent, and AST.
         self._name = name
         self._parent = parent
+        self._ast = ast
+
+        # Initialize everything else with default values.
         self._children = Seq()
         self._symbol_table = SymbolTable()
-        self._ast = ast
         self._direct_sup_scopes = Seq()
         self._direct_sub_scopes = Seq()
         self._type_symbol = None
 
-    def add_type_symbol(self, symbol: Symbol) -> None:
+    def add_symbol(self, symbol: Symbol) -> None:
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+
         # Shift the scope for namespaced types and add the symbol to the correct scope.
         scope = self
         if isinstance(symbol, TypeSymbol):
@@ -93,7 +100,7 @@ class Scope:
 
     def __json__(self) -> dict:
         return {
-            "name": self._name, "parent": self._parent, "children": self._children, "symbol_table": self._symbol_table,
+            "name": self._name, "parent": self._parent.name if self._parent else "", "children": self._children, "symbol_table": self._symbol_table,
         }
 
     def __str__(self) -> str:

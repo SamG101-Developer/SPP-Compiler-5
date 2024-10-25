@@ -234,6 +234,9 @@ class Seq[T]:
     def __str__(self):
         return f"[{self.map(str).join(", ")}]" if self.not_empty() else "<empty>"
 
+    def __json__(self):
+        return self._value
+
     # Properties
 
     @property
