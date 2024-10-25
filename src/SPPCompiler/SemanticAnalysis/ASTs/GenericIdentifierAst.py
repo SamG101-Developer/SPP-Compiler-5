@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import hashlib
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
-from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentGroupAst import GenericArgumentGroupAst
