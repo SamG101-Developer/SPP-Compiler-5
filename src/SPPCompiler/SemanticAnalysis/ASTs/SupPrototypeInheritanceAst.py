@@ -42,10 +42,5 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
             self.body.print(printer)]
         return "".join(string)
 
-    # def pre_process(self, context: PreProcessingContext) -> None:
-    #     if self.super_class.types[-1].value in ["FunMov", "FunMut", "FunRef"]:  # Todo: more solid check
-    #         return
-    #     super().pre_process(context)
-
 
 __all__ = ["SupPrototypeInheritanceAst"]

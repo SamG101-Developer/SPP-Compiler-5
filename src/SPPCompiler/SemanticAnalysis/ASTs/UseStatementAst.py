@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import visibility_enabled_ast
+from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -16,8 +18,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-@visibility_enabled_ast
-class UseStatementAst(Ast, Stage1_PreProcessor):
+class UseStatementAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator):
     annotations: Seq[AnnotationAst]
     tok_use: TokenAst
     body: UseStatementNamespaceReductionAst | UseStatementTypeAliasAst
@@ -40,6 +41,9 @@ class UseStatementAst(Ast, Stage1_PreProcessor):
 
         # Pre-process the annotations of this use statement.
         Seq(self.annotations).for_each(lambda a: a.pre_process(self))
+
+    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+        self.body.generate_symbols(scope_manager)  # , visibility=self._visibility)
 
 
 __all__ = ["UseStatementAst"]

@@ -6,6 +6,8 @@ from SPPCompiler.LexicalAnalysis.TokenType import TokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterGroupAst import GenericParameterGroupAst
@@ -17,7 +19,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor):
+class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator):
     tok_sup: TokenAst
     generic_parameter_group: GenericParameterGroupAst
     name: TypeAst
@@ -51,6 +53,9 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor):
 
         # Pre-process the members of this superimposition.
         self.body.members.for_each(lambda m: m.pre_process(self))
+
+    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+        ...
 
 
 __all__ = ["SupPrototypeFunctionsAst"]

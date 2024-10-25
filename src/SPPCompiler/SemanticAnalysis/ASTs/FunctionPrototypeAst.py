@@ -6,8 +6,10 @@ from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import visibility_enabled_ast
+from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -23,8 +25,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-@visibility_enabled_ast
-class FunctionPrototypeAst(Ast, Stage1_PreProcessor):
+class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator):
     annotations: Seq[AnnotationAst]
     tok_fun: TokenAst
     name: IdentifierAst
@@ -82,6 +83,7 @@ class FunctionPrototypeAst(Ast, Stage1_PreProcessor):
         function_call = self._deduce_mock_class_call(function_type)
 
         # If this is the first overload being converted, then the class needs to be made for the type.
+        # print(self._ctx, repr(self._ctx.body.members.filter_to_type(ClassPrototypeAst).map_attr("name").first(None)), repr(mock_class_name))
         if self._ctx.body.members.filter_to_type(ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
             mock_class_ast = AstMutation.inject_code(f"cls {mock_class_name} {{}}", Parser.parse_class_prototype)
             mock_constant_ast = AstMutation.inject_code(f"cmp {self.name}: {mock_class_name} = {mock_class_name}()", Parser.parse_global_constant)
@@ -90,6 +92,7 @@ class FunctionPrototypeAst(Ast, Stage1_PreProcessor):
 
         # Superimpose the function type over the mock class.
         function_ast = copy.deepcopy(self)
+        function_ast._orig = self.name
         mock_superimposition_body = InnerScopeAst.default(Seq([function_ast]))
         mock_superimposition = SupPrototypeInheritanceAst(self.pos, None, self.generic_parameter_group, mock_class_name, self.where_block, mock_superimposition_body, None, function_type)
         self._ctx.body.members.insert(0, mock_superimposition)
@@ -97,6 +100,17 @@ class FunctionPrototypeAst(Ast, Stage1_PreProcessor):
 
         # Pre-process the annotations of this function's duplicate.
         Seq(self.annotations).for_each(lambda a: a.pre_process(function_ast))
+
+    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+        # Create a new scope for the function.
+        scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}>", self)
+        super().generate_symbols(scope_manager)
+
+        # Generate the generic parameters and attributes of the function.
+        self.generic_parameter_group.parameters.for_each(lambda p: p.generate(scope_manager))
+
+        # Move out of the function scope.
+        scope_manager.move_out_of_current_scope()
 
     def _deduce_mock_class_type(self) -> TypeAst:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst

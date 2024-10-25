@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterGroupAst import GenericParameterGroupAst
@@ -12,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class UseStatementTypeAliasAst(Ast):
+class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator):
     new_type: TypeAst
     generic_parameter_group: GenericParameterGroupAst
     tok_assign: TokenAst
@@ -37,6 +39,10 @@ class UseStatementTypeAliasAst(Ast):
             self.tok_assign.print(printer),
             self.old_type.print(printer)]
         return "".join(string)
+
+    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+        # Todo
+        ...
 
 
 __all__ = ["UseStatementTypeAliasAst"]

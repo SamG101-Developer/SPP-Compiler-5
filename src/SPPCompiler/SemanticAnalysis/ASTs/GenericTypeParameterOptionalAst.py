@@ -4,15 +4,17 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericTypeParameterInlineConstraintsAst import GenericTypeParameterInlineConstraintsAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class GenericTypeParameterOptionalAst(Ast):
+class GenericTypeParameterOptionalAst(Ast, Stage2_SymbolGenerator):
     name: TypeAst
     constraints: GenericTypeParameterInlineConstraintsAst
     tok_assign: TokenAst
@@ -38,6 +40,12 @@ class GenericTypeParameterOptionalAst(Ast):
             self.tok_assign.print(printer) + " ",
             self.default.print(printer)]
         return "".join(string)
+
+    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+        # Create a type symbol for this type in the current scope (class / function).
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+        symbol = TypeSymbol(name=self.name.types[-1], type=None, is_generic=True)
+        scope_manager.current_scope.add_symbol(symbol)
 
 
 __all__ = ["GenericTypeParameterOptionalAst"]

@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import visibility_enabled_ast
+from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -16,11 +17,11 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.ASTs.WhereBlockAst import WhereBlockAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-@visibility_enabled_ast
-class ClassPrototypeAst(Ast, Stage1_PreProcessor):
+class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator):
     annotations: Seq[AnnotationAst]
     tok_cls: TokenAst
     name: TypeAst
@@ -40,6 +41,9 @@ class ClassPrototypeAst(Ast, Stage1_PreProcessor):
         self.where_block = self.where_block or WhereBlockAst.default()
         self.body = self.body or InnerScopeAst.default()
 
+    def __json__(self):
+        return f"{self.name}{self.generic_parameter_group}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -58,6 +62,25 @@ class ClassPrototypeAst(Ast, Stage1_PreProcessor):
         # Pre-process the annotations and attributes of this class.
         self.annotations.for_each(lambda a: a.pre_process(self))
         self.body.members.for_each(lambda m: m.pre_process(self))
+
+    def generate_symbols(self, scope_manager: ScopeManager, is_alias: bool = False) -> None:
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
+
+        # Create a new scope for the class.
+        scope_manager.create_and_move_into_new_scope(self.name, self)
+        super().generate_symbols(scope_manager)
+
+        # Create a new symbol for the class.
+        symbol_type = TypeSymbol if not is_alias else AliasSymbol
+        symbol = symbol_type(name=self.name.types[-1], type=self, scope=scope_manager.current_scope, visibility=self._visibility)
+        scope_manager.current_scope.parent.add_symbol(symbol)
+
+        # Generate the generic parameters and attributes of the class.
+        self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))
+        self.body.members.for_each(lambda m: m.generate_symbols(scope_manager))
+
+        # Move out of the type scope.
+        scope_manager.move_out_of_current_scope()
 
 
 __all__ = ["ClassPrototypeAst"]

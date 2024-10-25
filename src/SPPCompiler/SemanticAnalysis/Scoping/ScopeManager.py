@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Any, Iterator, Optional, TYPE_CHECKING
 
 from SPPCompiler.Utils.Sequence import Seq
@@ -25,7 +26,7 @@ class ScopeManager:
 
         # Inject the "_global" namespace symbol into this scope (makes lookups orthogonal).
         global_namespace_symbol = NamespaceSymbol(name=self._global_scope.name, scope=self._global_scope)
-        self._global_scope.add_type_symbol(global_namespace_symbol)
+        self._global_scope.add_symbol(global_namespace_symbol)
 
     def __iter__(self) -> Iterator[Scope]:
         # Iterate over the scope manager's scopes, starting from the global scope.
@@ -37,7 +38,13 @@ class ScopeManager:
         # Initialize the iterator with the global scope.
         return _iterator(self._global_scope)
 
+    def reset(self, scope: Optional[Scope] = None) -> None:
+        self._current_scope = scope or self._global_scope
+        self._iterator = iter(self)
+
     def create_and_move_into_new_scope(self, name: Any, ast: Optional[Ast] = None) -> Scope:
+        from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+
         # Create a new scope (parent is the current scope) and move into it.
         scope = Scope(name, self._current_scope, self, ast)
         self._current_scope._children.append(scope)
@@ -49,7 +56,7 @@ class ScopeManager:
         # Return the new scope.
         return scope
 
-    def exit_current_scope(self) -> Scope:
+    def move_out_of_current_scope(self) -> Scope:
         # Exit the current scope into the parent scope and return the parent scope.
         self._current_scope = self._current_scope._parent
         return self._current_scope
