@@ -44,5 +44,8 @@ class GenericIdentifierAst(Ast):
     def from_identifier(identifier: IdentifierAst) -> GenericIdentifierAst:
         return GenericIdentifierAst(identifier.pos, identifier.value, None)
 
+    def without_generics(self) -> GenericIdentifierAst:
+        return GenericIdentifierAst(self.pos, self.value, None)
+
 
 __all__ = ["GenericIdentifierAst"]

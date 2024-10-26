@@ -38,7 +38,7 @@ class Scope:
     _direct_sub_scopes: Seq[Scope]
     _type_symbol: Optional[TypeSymbol]
 
-    def __init__(self, name: Any, parent: Optional[Scope] = None, manager: Optional[ScopeManager] = None, ast: Optional[Ast] = None) -> None:
+    def __init__(self, name: Any, parent: Optional[Scope] = None, ast: Optional[Ast] = None) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
 
         # Initialize the scope with the given name, parent, and AST.
@@ -54,29 +54,35 @@ class Scope:
         self._type_symbol = None
 
     def add_symbol(self, symbol: Symbol) -> None:
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+        self._symbol_table.add(symbol)
 
-        # Shift the scope for namespaced types and add the symbol to the correct scope.
-        scope = self
-        if isinstance(symbol, TypeSymbol):
-            scope, symbol = shift_scope_for_namespaced_type(self, symbol)
-        scope._symbol_table.add(symbol)
+    def all_symbols(self, exclusive: bool = False) -> Seq[Symbol]:
+        # Get all the symbols in the scope.
+        symbols = self._symbol_table.all()
+        if not exclusive and self._parent:
+            symbols.extend(self._parent.all_symbols())
+        return symbols
 
     def get_symbol(self, name: IdentifierAst | TypeAst | GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
+
         # Get the symbol from the symbol table if it exists.
         if not isinstance(name, (IdentifierAst, TypeAst, GenericIdentifierAst)): return None
-        symbol = self._symbol_table.get(name)
+        scope = self
+        if isinstance(name, TypeAst):
+            scope, name = shift_scope_for_namespaced_type(self, name)
+        symbol = scope._symbol_table.get(name)
 
         # If this is not an exclusive search, search the parent scope.
-        if not symbol and self._parent and not exclusive:
-            symbol = self._parent.get_symbol(name)
+        if not symbol and scope._parent and not exclusive:
+            symbol = scope._parent.get_symbol(name)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
-        if not symbol and (symbol.name.value.startswith("$") or isinstance(name, IdentifierAst)):
-            symbol = search_super_scopes(self, name)
+        if not symbol and (isinstance(name, IdentifierAst) or name.value.startswith("$")):
+            symbol = search_super_scopes(scope, name)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
-        return confirm_type_with_alias(self, symbol, ignore_alias)
+        return confirm_type_with_alias(scope, symbol, ignore_alias)
 
     def get_variable_symbol_outermost_part(self, name: IdentifierAst | PostfixExpressionAst) -> Optional[VariableSymbol]:
         # There is no symbol for non-identifiers.
@@ -155,19 +161,16 @@ class Scope:
         return all_sub_scopes
 
 
-def shift_scope_for_namespaced_type(scope: Scope, symbol: TypeSymbol | NamespaceSymbol) -> Tuple[Scope, TypeSymbol | NamespaceSymbol]:
-    from SPPCompiler.SemanticAnalysis import TypeAst
-
-    # For TypeAsts, move through each namespace/type part accessing the namespace scope.
-    if isinstance(symbol.name, TypeAst):
-        for part in symbol.name.namespace + symbol.name.types[:-1]:
-            # Get the next type/namespace symbol from the scope.
-            inner_symbol = scope.get_type_symbol(part)
-            match inner_symbol:
-                case None: break
-                case _: scope = inner_symbol.scope
-        symbol.name = symbol.name.types[-1]
-    return scope, symbol
+def shift_scope_for_namespaced_type(scope: Scope, type: TypeAst) -> Tuple[Scope, GenericIdentifierAst]:
+    # For TypeAsts, move through each namespace/type part accessing the namespace scope.#
+    for part in type.namespace + type.types[:-1]:
+        # Get the next type/namespace symbol from the scope.
+        inner_symbol = scope.get_type_symbol(part)
+        match inner_symbol:
+            case None: break
+            case _: scope = inner_symbol.scope
+    type = type.types[-1]
+    return scope, type
 
 
 def search_super_scopes(scope: Scope, name: IdentifierAst | GenericIdentifierAst) -> Optional[VariableSymbol]:

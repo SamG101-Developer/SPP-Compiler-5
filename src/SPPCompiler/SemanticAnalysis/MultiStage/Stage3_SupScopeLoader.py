@@ -8,11 +8,7 @@ if TYPE_CHECKING:
 
 class Stage3_SupScopeLoader(ABC):
     @abstractmethod
-    def load_sup_scopes(self, scope_handler: ScopeManager) -> None:
-        ...
-
-    @abstractmethod
-    def load_sup_scopes_generic(self, scope_handler: ScopeManager) -> None:
+    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         ...
 
 

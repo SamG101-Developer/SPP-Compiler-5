@@ -8,6 +8,7 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator):
+class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupScopeLoader):
     modules: Seq[ModulePrototypeAst]
     _current: Optional[ModulePrototypeAst] = field(default=None, init=False, repr=False)
 
@@ -37,6 +38,11 @@ class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator):
             module.body.members.for_each(lambda m: m.generate_symbols(scope_manager))
             scope_manager.reset()
 
+    def load_sup_scopes(self, scope_manager: ScopeManager, module_tree: Optional[ModuleTree] = None) -> None:
+        for module in self.modules:
+            self._current = module
+            module.body.members.for_each(lambda m: m.load_sup_scopes(scope_manager))
+
     def current(self) -> ModulePrototypeAst:
         return self._current
 
@@ -52,12 +58,13 @@ class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator):
 
             if Seq(scope_manager.current_scope.children).map(lambda s: s.name).contains(part):
                 scope = Seq(scope_manager.current_scope.children).filter(lambda s: s.name == part).first()
-                scope_manager.reset(scope)
+                if scope_manager.current_scope is not scope: scope_manager.reset(scope)
 
             else:
                 scope_manager.current_scope.add_symbol(namespace_symbol := NamespaceSymbol(name=part))
                 scope = scope_manager.create_and_move_into_new_scope(part)
                 namespace_symbol.scope = scope
+                namespace_symbol.scope._type_symbol = namespace_symbol
 
 
 __all__ = ["ProgramAst"]

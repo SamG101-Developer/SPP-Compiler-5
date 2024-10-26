@@ -7,6 +7,7 @@ from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator):
+class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupScopeLoader):
     annotations: Seq[AnnotationAst]
     tok_cmp: TokenAst
     name: IdentifierAst
@@ -54,6 +55,9 @@ class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility)
         scope_manager.current_scope.add_symbol(symbol)
+
+    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        ...
 
 
 __all__ = ["GlobalConstantAst"]

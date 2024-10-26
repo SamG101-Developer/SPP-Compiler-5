@@ -7,6 +7,7 @@ from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator):
+class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupScopeLoader):
     annotations: Seq[AnnotationAst]
     tok_cls: TokenAst
     name: TypeAst
@@ -66,9 +67,13 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
     def generate_symbols(self, scope_manager: ScopeManager, is_alias: bool = False) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 
+        print(f"\t\tCreating class scope/symbol for {self.name.types[-1]} in {scope_manager.current_scope}")
+
         # Create a new scope for the class.
         scope_manager.create_and_move_into_new_scope(self.name, self)
         super().generate_symbols(scope_manager)
+
+        print(f"\t\tCreated scope {scope_manager.current_scope.name}")
 
         # Create a new symbol for the class.
         symbol_type = TypeSymbol if not is_alias else AliasSymbol
@@ -80,6 +85,11 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         self.body.members.for_each(lambda m: m.generate_symbols(scope_manager))
 
         # Move out of the type scope.
+        scope_manager.move_out_of_current_scope()
+
+    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        scope_manager.move_to_next_scope()
+        # print(self)
         scope_manager.move_out_of_current_scope()
 
 

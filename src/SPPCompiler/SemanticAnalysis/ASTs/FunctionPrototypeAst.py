@@ -9,6 +9,7 @@ from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator):
+class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupScopeLoader):
     annotations: Seq[AnnotationAst]
     tok_fun: TokenAst
     name: IdentifierAst
@@ -107,25 +108,35 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_S
         super().generate_symbols(scope_manager)
 
         # Generate the generic parameters and attributes of the function.
-        self.generic_parameter_group.parameters.for_each(lambda p: p.generate(scope_manager))
+        self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))
 
         # Move out of the function scope.
         scope_manager.move_out_of_current_scope()
+
+    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        scope_manager.move_to_next_scope()
+        print(f"\tMoved into {scope_manager.current_scope}")
+        scope_manager.move_out_of_current_scope()
+        print(f"\tMoved back out to {scope_manager.current_scope}")
 
     def _deduce_mock_class_type(self) -> TypeAst:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst
         from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
+        # Module-level functions are always FunRef.
         if isinstance(self._ctx, ModulePrototypeAst) or not self.function_parameter_group.get_self():
             return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
+        # Class methods with "self" are the FunMov type.
         if isinstance(self.function_parameter_group.get_self().convention, ConventionMovAst):
             return CommonTypes.FunMov(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
+        # Class methods with "&mut self" are the FunMut type.
         if isinstance(self.function_parameter_group.get_self().convention, ConventionMutAst):
             return CommonTypes.FunMut(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
+        # Class methods with "&self" are the FunRef type.
         if isinstance(self.function_parameter_group.get_self().convention, ConventionRefAst):
             return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 

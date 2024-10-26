@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.LexicalAnalysis.TokenType import TokenType
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
@@ -41,6 +41,11 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
             self.where_block.print(printer),
             self.body.print(printer)]
         return "".join(string)
+
+    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        if self.name.types[-1].value[0] == "$": return
+        print(f"Next superimposition is inheritance (ext {self.super_class})")
+        super().load_sup_scopes(scope_manager)
 
 
 __all__ = ["SupPrototypeInheritanceAst"]

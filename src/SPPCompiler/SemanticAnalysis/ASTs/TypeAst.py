@@ -2,6 +2,7 @@ from __future__ import annotations
 from convert_case import pascal_case
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+import hashlib
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -25,6 +26,9 @@ class TypeAst(Ast):
     def __eq__(self, other: TypeAst) -> bool:
         return isinstance(other, TypeAst) and self.namespace == other.namespace and self.types == other.types
 
+    def __hash__(self) -> int:
+        return int.from_bytes(hashlib.md5("".join([str(p) for p in self.namespace + self.types]).encode()).digest())
+
     def __json__(self) -> str:
         return f"cls {self.print(AstPrinter())}"
 
@@ -46,6 +50,12 @@ class TypeAst(Ast):
         from SPPCompiler.SemanticAnalysis import IdentifierAst
         mock_type_name = IdentifierAst(identifier.pos, f"${pascal_case(identifier.value.replace("_", " "))}")
         return TypeAst.from_identifier(mock_type_name)
+
+    def without_generics(self) -> TypeAst:
+        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
+        match self.types[-1]:
+            case GenericIdentifierAst(): return TypeAst(self.pos, self.namespace, self.types[:-1] + [self.types[-1].without_generics()])
+            case _: return TypeAst(self.pos, self.namespace.copy(), self.types.copy())
 
 
 __all__ = ["TypeAst"]

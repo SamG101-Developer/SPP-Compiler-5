@@ -14,39 +14,32 @@ class ScopeManager:
     _current_scope: Scope
     _iterator: Iterator[Scope]
 
-    def __init__(self, global_scope: Optional[Scope] = None, current_scop: Optional[Scope] = None) -> None:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst
-        from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
-
+    def __init__(self, global_scope, current_scop: Optional[Scope] = None) -> None:
         # Create the default global and current scopes if they are not provided.
-        self._global_scope = global_scope or Scope(name=IdentifierAst(-1, "_global"), manager=self)
+        self._global_scope = global_scope
         self._current_scope = current_scop or self._global_scope
         self._iterator = iter(self)
 
-        # Inject the "_global" namespace symbol into this scope (makes lookups orthogonal).
-        global_namespace_symbol = NamespaceSymbol(name=self._global_scope.name, scope=self._global_scope)
-        self._global_scope.add_symbol(global_namespace_symbol)
-
     def __iter__(self) -> Iterator[Scope]:
         # Iterate over the scope manager's scopes, starting from the global scope.
-        def _iterator(scope: Scope) -> Iterator[Scope]:
-            yield scope
-            for child in scope._children:
+        def _iterator(s: Scope) -> Iterator[Scope]:
+            for child in s._children:
+                yield child
                 yield from _iterator(child)
 
-        # Initialize the iterator with the global scope.
-        return _iterator(self._global_scope)
+        # Initialize the iterator with the current scope.
+        return _iterator(self._current_scope)
 
-    def reset(self, scope: Optional[Scope] = None) -> None:
+    def reset(self, scope: Optional[Scope] = None, iterator: Optional[Iterator[Scope]] = None) -> None:
+        # Reset the scope manager to the provided/default scope and iterator.
         self._current_scope = scope or self._global_scope
-        self._iterator = iter(self)
+        self._iterator = iterator or iter(self)
 
     def create_and_move_into_new_scope(self, name: Any, ast: Optional[Ast] = None) -> Scope:
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         # Create a new scope (parent is the current scope) and move into it.
-        scope = Scope(name, self._current_scope, self, ast)
+        scope = Scope(name, self._current_scope, ast)
         self._current_scope._children.append(scope)
 
         # Set the new scope as the current scope, and advance the iterator to match.
@@ -62,8 +55,17 @@ class ScopeManager:
         return self._current_scope
 
     def move_to_next_scope(self) -> Scope:
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
         # Move to the next scope in the iterator and return it.
+        is_old_scope_namespace_scope = isinstance(self._current_scope.type_symbol, NamespaceSymbol)
         self._current_scope = next(self._iterator)
+        is_new_scope_namespace_scope = isinstance(self._current_scope.type_symbol, NamespaceSymbol)
+
+        # If the old and new scopes are namespace scopes, then move to the next scope (inside new namespace).
+        if is_old_scope_namespace_scope and is_new_scope_namespace_scope:
+            self._current_scope = next(self._iterator)
+
+        # Return the new scope.
         return self._current_scope
 
     def get_namespaced_scope(self, namespace: Seq[IdentifierAst]) -> Optional[Scope]:
