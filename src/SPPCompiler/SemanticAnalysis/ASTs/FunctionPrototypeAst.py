@@ -52,6 +52,16 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_S
         self.where_block = self.where_block or WhereBlockAst.default()
         self.body = self.body or InnerScopeAst.default()
 
+    def __eq__(self, other: FunctionPrototypeAst) -> bool:
+        # Check both ASTs are the same type and have the same name, generic parameter group, function parameter group,
+        # return type and where block.
+        return all([
+            self.name == other.name,
+            self.generic_parameter_group == other.generic_parameter_group,
+            self.function_parameter_group == other.function_parameter_group,
+            self.return_type == other.return_type,
+            self.where_block == other.where_block])
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -103,6 +113,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_S
         Seq(self.annotations).for_each(lambda a: a.pre_process(function_ast))
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
+
         # Create a new scope for the function.
         scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}>", self)
         super().generate_symbols(scope_manager)
@@ -114,10 +125,9 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_S
         scope_manager.move_out_of_current_scope()
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+
         scope_manager.move_to_next_scope()
-        print(f"\tMoved into {scope_manager.current_scope}")
         scope_manager.move_out_of_current_scope()
-        print(f"\tMoved back out to {scope_manager.current_scope}")
 
     def _deduce_mock_class_type(self) -> TypeAst:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst

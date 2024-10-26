@@ -28,6 +28,10 @@ class GenericCompParameterVariadicAst(Ast, Stage2_SymbolGenerator):
         # Convert the name to a TypeAst.
         self.name = TypeAst.from_identifier(self.name)
 
+    def __eq__(self, other: GenericCompParameterVariadicAst) -> bool:
+        # Check both ASTs are the same type and have the same name.
+        return isinstance(other, GenericCompParameterVariadicAst) and self.name == other.name
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

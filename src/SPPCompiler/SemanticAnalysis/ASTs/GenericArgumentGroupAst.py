@@ -31,6 +31,10 @@ class GenericArgumentGroupAst(Ast, Default):
         self.type_arguments = self.arguments.filter_to_type(*GenericTypeArgumentAst.__value__.__args__)
         self.comp_arguments = self.arguments.filter_to_type(*GenericCompArgumentAst.__value__.__args__)
 
+    def __eq__(self, other: GenericArgumentGroupAst) -> bool:
+        # Check both ASTs are the same type and have the same arguments.
+        return isinstance(other, GenericArgumentGroupAst) and self.arguments == other.arguments
+
     @staticmethod
     def default(arguments: Seq[GenericArgumentAst] = None) -> GenericArgumentGroupAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
@@ -56,9 +60,6 @@ class GenericArgumentGroupAst(Ast, Default):
     def get_unnamed(self) -> Seq[GenericArgumentUnnamedAst]:
         from SPPCompiler.SemanticAnalysis import GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst
         return self.arguments.filter_to_type(GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst)
-
-    def __eq__(self, other: GenericArgumentGroupAst) -> bool:
-        return isinstance(other, GenericArgumentGroupAst) and self.arguments == other.arguments
 
 
 __all__ = ["GenericArgumentGroupAst"]

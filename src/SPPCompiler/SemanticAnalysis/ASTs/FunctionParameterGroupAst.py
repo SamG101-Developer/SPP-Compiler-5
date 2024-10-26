@@ -25,6 +25,10 @@ class FunctionParameterGroupAst(Ast, Default):
         # Convert the parameters into a sequence.
         self.parameters = Seq(self.parameters)
 
+    def __eq__(self, other: FunctionParameterGroupAst) -> bool:
+        # Check both ASTs are the same type and have the same parameters.
+        return isinstance(other, FunctionParameterGroupAst) and self.parameters == other.parameters
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -64,9 +68,6 @@ class FunctionParameterGroupAst(Ast, Default):
         # Get all the function parameters that are not "self".
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst
         return self.parameters.filter_not_type(FunctionParameterSelfAst)
-
-    def __eq__(self, other: FunctionParameterGroupAst) -> bool:
-        return isinstance(other, FunctionParameterGroupAst) and self.parameters == other.parameters
 
 
 __all__ = ["FunctionParameterGroupAst"]

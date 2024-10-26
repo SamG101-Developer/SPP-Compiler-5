@@ -13,6 +13,10 @@ if TYPE_CHECKING:
 class ConventionRefAst(Ast, Default):
     tok_borrow: TokenAst
 
+    def __eq__(self, other: ConventionRefAst) -> bool:
+        # Check both ASTs are the same type.
+        return isinstance(other, ConventionRefAst)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

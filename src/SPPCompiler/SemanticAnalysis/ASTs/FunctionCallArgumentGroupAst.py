@@ -23,6 +23,10 @@ class FunctionCallArgumentGroupAst(Ast, Default):
         # Convert the arguments into a sequence.
         self.arguments = Seq(self.arguments)
 
+    def __eq__(self, other: FunctionCallArgumentGroupAst) -> bool:
+        # Check both ASTs are the same type and have the same arguments.
+        return isinstance(other, FunctionCallArgumentGroupAst) and self.arguments == other.arguments
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -47,9 +51,6 @@ class FunctionCallArgumentGroupAst(Ast, Default):
         # Get all the unnamed function call arguments.
         from SPPCompiler.SemanticAnalysis import FunctionCallArgumentUnnamedAst
         return self.arguments.filter_to_type(FunctionCallArgumentUnnamedAst)
-
-    def __eq__(self, other: FunctionCallArgumentGroupAst) -> bool:
-        return isinstance(other, FunctionCallArgumentGroupAst) and self.arguments == other.arguments
 
 
 __all__ = ["FunctionCallArgumentGroupAst"]
