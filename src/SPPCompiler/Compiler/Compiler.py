@@ -22,18 +22,24 @@ class Compiler:
     _ast: ProgramAst
     _analyser: Analyser
 
-    def __init__(self, src_path: str, mode: Mode) -> None:
+    def __init__(self, src_path: str, mode: Mode, standalone: bool = False) -> None:
         from SPPCompiler.Compiler.ModuleTree import ModuleTree
         from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import ProgramAst
 
         # Register the parameters against the instance.
         self._src_path = src_path
-        self._module_tree = ModuleTree(src_path)
+        self._module_tree = ModuleTree(src_path, standalone)
         self._mode = mode
         self._ast = ProgramAst(0, Seq())
 
         # Compile the modules.
         self.compile()
+
+    @staticmethod
+    def standalone(code: str) -> None:
+        with open(f"..\\tmp\\src\\{os.urandom(16).hex()}.spp", "w") as file:
+            file.write(code)
+        Compiler(file.name, Compiler.Mode.Release, True).compile()
 
     def compile(self) -> None:
         from SPPCompiler.LexicalAnalysis.Lexer import Lexer
@@ -44,7 +50,8 @@ class Compiler:
 
         # Lexing stage.
         for module in self._module_tree.modules:
-            module.code = open(module.path).read()
+            with open(module.path) as fo:
+                module.code = fo.read()
             module.token_stream = Lexer(module.code).lex()
             module.error_formatter = ErrorFormatter(module.token_stream, module.path)
 

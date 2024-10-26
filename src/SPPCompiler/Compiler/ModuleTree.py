@@ -24,10 +24,13 @@ class ModuleTree:
     _src_path: str
     _modules: Seq[Module]
 
-    def __init__(self, src_path: str) -> None:
+    def __init__(self, src_path: str, standalone: bool = False) -> None:
         # Get all the spp module files from the src path
         self._src_path = src_path
-        self._modules = Seq(glob(self._src_path + "/**/*.spp", recursive=True)).map(Module)
+        if not standalone:
+            self._modules = Seq(glob(self._src_path + "/**/*.spp", recursive=True)).map(Module)
+        else:
+            self._modules = Seq([Module(src_path)])
 
     def __iter__(self) -> Iterable[Module]:
         # Iterate over the modules
