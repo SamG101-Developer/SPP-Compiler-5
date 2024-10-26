@@ -56,11 +56,7 @@ class Parser:
             return ast
 
         except ParserError as e:
-            final_error = self._error
-            all_expected_tokens = "{'" + "' | '".join(OrderedSet(map(lambda t: t.print(), final_error.expected_tokens))).replace("\n", "\\n") + "'}"
-            error_message = str(final_error).replace("$", all_expected_tokens)
-            error_message = self._err_fmt.error(final_error.pos, message=error_message, tag_message="Invalid syntax")
-            raise SystemExit(error_message) from None
+            e.throw(self._err_fmt)
 
     # ===== PROGRAM =====
 

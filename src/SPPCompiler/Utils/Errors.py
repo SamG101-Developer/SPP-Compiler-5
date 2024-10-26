@@ -29,7 +29,7 @@ class ParserError(Exception):
         error_message = error_formatter.error(self.pos, message=error_message, tag_message="Syntax Error")
 
         # Raise the error.
-        raise SystemExit(error_message) from None
+        raise ParserError(error_message) from None
 
 
 class SemanticError(Exception):
@@ -48,8 +48,8 @@ class SemanticError(Exception):
 
     error_info: List[ErrorInfo]
 
-    def __init__(self) -> None:
-        super().__init__("")
+    def __init__(self, *args) -> None:
+        super().__init__(args)
         self.error_info = []
 
     def add_error(self, pos: int, tag: str, msg: str, tip: str, fmt: Format = Format.NORMAL) -> SemanticError:
@@ -76,7 +76,7 @@ class SemanticError(Exception):
         for error in self.error_info:
             formatted_message, is_minimal = self._format_message(error)
             error_message += error_formatter.error(error.pos, formatted_message, error.tag, is_minimal)
-        raise SystemExit(error_message) from None
+        raise SemanticError(error_message) from None
 
 
 __all__ = ["ParserError"]
