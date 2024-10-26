@@ -33,7 +33,7 @@ class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupSco
 
     def generate_symbols(self, scope_manager: ScopeManager, module_tree: Optional[ModuleTree] = None) -> None:
         for module in self.modules:
-            self._move_scope_manager_to_namespace(scope_manager, module_tree.modules.find(lambda m: m.module_ast == module))
+            self._move_scope_manager_to_namespace(scope_manager, module_tree.modules.find(lambda m: m.module_ast is module))
             self._current = module
             module.body.members.for_each(lambda m: m.generate_symbols(scope_manager))
             scope_manager.reset()
