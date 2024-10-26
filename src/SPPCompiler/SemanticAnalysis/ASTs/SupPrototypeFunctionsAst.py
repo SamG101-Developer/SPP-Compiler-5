@@ -58,54 +58,18 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
         self.body.members.for_each(lambda m: m.pre_process(self))
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
-        ...
+        super().generate_symbols(scope_manager)
+        scope_manager.create_and_move_into_new_scope("SUP_" + str(self.name), self)
+
+        self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))
+        self.body.members.for_each(lambda m: m.generate_symbols(scope_manager))
+
+        scope_manager.move_out_of_current_scope()
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, GlobalConstantAst
-        print("Loading sup scopes for superimposition over:", self.name, f"({self.name.without_generics()})")
-        print(f"\tCurrent scope: {scope_manager.current_scope}")
-
-        try:
-            type_scope = scope_manager.current_scope.get_symbol(self.name.without_generics()).scope
-        except AttributeError as e:
-            for x in range(100):
-                print(next(scope_manager._iterator), end=", ")
-            raise e
-        print("\tType scope:", type_scope)
-        print(f"\tType scope children size {type_scope.children.length}")
-
-        temp_manager = ScopeManager(scope_manager.global_scope, type_scope)
-        for member in self.body.members.filter_to_type(GlobalConstantAst):  # , ClassPrototypeAst):
-            member.generate_symbols(temp_manager)
-
-        # Todo: I think the class-scopes are being injected into the incorrect place in the "child" list of the parent
-        #  scope. There is either no analysis or double analysis, but the shifting of the iterator is not working as
-        #  expected.
-
-        # for x in range(self.body.members.filter_to_type(ClassPrototypeAst).length):
-        #     print(x)
-        #     next(scope_manager._iterator)
-
-        print(f"\tType scope children size {type_scope.children.length}")
-        print("\tTemp current scope:", temp_manager.current_scope)
-        print("\tCurrent scope:", scope_manager.current_scope)
-
-        # from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, GlobalConstantAst
-        # print("Loading sup scopes for superimposition over:", self.name, f"({self.name.without_generics()})")
-        #
-        # scope_manager._iterator, restore_scope_iterator = itertools.tee(scope_manager._iterator)
-        # restore_scope = scope_manager.current_scope
-        # print("\tCurrent scope:", restore_scope)
-        #
-        # type_scope = scope_manager.current_scope.get_symbol(self.name.without_generics()).scope
-        # scope_manager.reset(type_scope)
-        # print("\tType scope:", type_scope)
-        #
-        # for member in self.body.members.filter_to_type(GlobalConstantAst):  # ClassPrototypeAst
-        #     member.generate_symbols(scope_manager)
-        #
-        # scope_manager.reset(restore_scope, restore_scope_iterator)
-        # print("\tRestored scope:", restore_scope)
+        scope_manager.move_to_next_scope()
+        self.body.members.for_each(lambda m: m.load_sup_scopes(scope_manager))
+        scope_manager.move_out_of_current_scope()
 
 
 __all__ = ["SupPrototypeFunctionsAst"]

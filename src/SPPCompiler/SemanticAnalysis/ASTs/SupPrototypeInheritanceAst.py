@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.LexicalAnalysis.TokenType import TokenType
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import PreProcessingContext
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
@@ -42,9 +43,11 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
             self.body.print(printer)]
         return "".join(string)
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def pre_process(self, context: PreProcessingContext) -> None:
         if self.name.types[-1].value[0] == "$": return
-        print(f"Next superimposition is inheritance (ext {self.super_class})")
+        super().pre_process(context)
+
+    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         super().load_sup_scopes(scope_manager)
 
 
