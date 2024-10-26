@@ -13,9 +13,11 @@ class TokenAst(Ast, Default):
     token: Token
 
     def __eq__(self, other: TokenAst) -> bool:
+        # Check both ASTs are the same type and have the same token.
         return isinstance(other, TokenAst) and self.token == other.token
 
     def __hash__(self) -> int:
+        # Hash the token type's name into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.md5(self.token.token_type.name.encode()).digest())
 
     @ast_printer_method

@@ -24,9 +24,11 @@ class TypeAst(Ast):
         self.types = Seq(self.types)
 
     def __eq__(self, other: TypeAst) -> bool:
+        # Check both ASTs are the same type and have the same namespace and types.
         return isinstance(other, TypeAst) and self.namespace == other.namespace and self.types == other.types
 
     def __hash__(self) -> int:
+        # Hash the namespace and types into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.md5("".join([str(p) for p in self.namespace + self.types]).encode()).digest())
 
     def __json__(self) -> str:

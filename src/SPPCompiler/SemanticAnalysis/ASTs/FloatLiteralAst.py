@@ -24,7 +24,8 @@ class FloatLiteralAst(Ast):
         self.type = TypeAst.from_identifier(self.type)
 
     def __eq__(self, other: FloatLiteralAst) -> bool:
-        return isinstance(other, FloatLiteralAst) and self.tok_sign == other.tok_sign and int(self.value.token.token_metadata) == int(other.value.token.token_metadata)
+        # Check both ASTs are the same type and have the same sign, value and type.
+        return isinstance(other, FloatLiteralAst) and self.tok_sign == other.tok_sign and int(self.value.token.token_metadata) == int(other.value.token.token_metadata) and self.type == other.type
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

@@ -27,6 +27,7 @@ class FunctionParameterSelfAst(Ast):
         self.type = CommonTypes.Self(self.pos)
 
     def __eq__(self, other: FunctionParameterSelfAst) -> bool:
+        # Check both ASTs are the same type.
         return isinstance(other, FunctionParameterSelfAst)
 
     @ast_printer_method

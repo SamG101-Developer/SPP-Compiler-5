@@ -20,6 +20,7 @@ class FunctionCallArgumentNamedAst(Ast):
     value: ExpressionAst
 
     def __eq__(self, other: FunctionCallArgumentNamedAst) -> bool:
+        # Check both ASTs are the same type and have the same name and value.
         return isinstance(other, FunctionCallArgumentNamedAst) and self.name == other.name and self.value == other.value
 
     @ast_printer_method

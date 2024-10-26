@@ -20,6 +20,7 @@ class FunctionParameterRequiredAst(Ast):
     type: TypeAst
 
     def __eq__(self, other: FunctionParameterRequiredAst) -> bool:
+        # Check both ASTs are the same type and have the same variable.
         return isinstance(other, FunctionParameterRequiredAst) and self.variable == other.variable
 
     @ast_printer_method

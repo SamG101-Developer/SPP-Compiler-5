@@ -28,6 +28,7 @@ class GenericTypeParameterVariadicAst(Ast, Stage2_SymbolGenerator):
         self.constraints = self.constraints or GenericTypeParameterInlineConstraintsAst.default()
 
     def __eq__(self, other: GenericTypeParameterVariadicAst) -> bool:
+        # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericTypeParameterVariadicAst) and self.name == other.name
 
     @ast_printer_method

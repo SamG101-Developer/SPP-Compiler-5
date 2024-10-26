@@ -26,6 +26,7 @@ class GenericTypeParameterRequiredAst(Ast, Stage2_SymbolGenerator):
         self.inline_constraints = self.inline_constraints or GenericTypeParameterInlineConstraintsAst.default()
 
     def __eq__(self, other: GenericTypeParameterRequiredAst) -> bool:
+        # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericTypeParameterRequiredAst) and self.name == other.name
 
     @ast_printer_method

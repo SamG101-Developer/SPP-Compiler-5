@@ -23,6 +23,7 @@ class FunctionParameterOptionalAst(Ast):
     default: ExpressionAst
 
     def __eq__(self, other: FunctionParameterOptionalAst) -> bool:
+        # Check both ASTs are the same type and have the same variable.
         return isinstance(other, FunctionParameterOptionalAst) and self.variable == other.variable
 
     @ast_printer_method

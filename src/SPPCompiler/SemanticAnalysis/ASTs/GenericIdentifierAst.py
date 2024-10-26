@@ -24,9 +24,11 @@ class GenericIdentifierAst(Ast):
         self.generic_argument_group = self.generic_argument_group or GenericArgumentGroupAst.default()
 
     def __eq__(self, other: GenericIdentifierAst) -> bool:
+        # Check both ASTs are the same type and have the same value and generic argument group.
         return isinstance(other, GenericIdentifierAst) and self.value == other.value and self.generic_argument_group == other.generic_argument_group
 
     def __hash__(self) -> int:
+        # Hash the value into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.md5(self.value.encode()).digest())
 
     def __json__(self) -> str:

@@ -14,6 +14,7 @@ class GenericTypeArgumentUnnamedAst(Ast):
     value: TypeAst
 
     def __eq__(self, other: GenericTypeArgumentUnnamedAst) -> bool:
+        # Check both ASTs are the same type and have the same value.
         return isinstance(other, GenericTypeArgumentUnnamedAst) and self.value == other.value
 
     @ast_printer_method

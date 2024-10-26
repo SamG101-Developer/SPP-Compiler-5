@@ -14,6 +14,7 @@ class GenericCompArgumentUnnamedAst(Ast):
     value: ExpressionAst
 
     def __eq__(self, other: GenericCompArgumentUnnamedAst) -> bool:
+        # Check both ASTs are the same type and have the same value.
         return isinstance(other, GenericCompArgumentUnnamedAst) and self.value == other.value
 
     @ast_printer_method

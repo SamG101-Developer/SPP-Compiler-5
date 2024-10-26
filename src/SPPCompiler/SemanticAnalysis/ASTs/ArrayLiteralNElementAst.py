@@ -22,7 +22,8 @@ class ArrayLiteralNElementAst(Ast):
         self.elements = Seq(self.elements)
 
     def __eq__(self, other: ArrayLiteralNElementAst) -> bool:
-        return self.elements == other.elements
+        # Check both ASTs are the same type and have the same elements.
+        return isinstance(other, ArrayLiteralNElementAst) and self.elements == other.elements
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

@@ -16,16 +16,20 @@ class IdentifierAst(Ast):
     value: str
 
     def __eq__(self, other: IdentifierAst) -> bool:
+        # Check both ASTs are the same type and have the same value.
         return isinstance(other, IdentifierAst) and self.value == other.value
 
-    def __hash__(self):
+    def __hash__(self) -> int:
+        # Hash the value into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.md5(self.value.encode()).digest())
 
     def __json__(self) -> str:
+        # Return the internal string as the JSON formatted IdentifierAst.
         return self.value
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
+        # Print the internal string.
         return self.value
 
     @staticmethod

@@ -25,6 +25,7 @@ class GenericCompArgumentNamedAst(Ast):
         self.name = TypeAst.from_identifier(self.name)
 
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
+        # Check both ASTs are the same type and have the same name and value.
         return isinstance(other, GenericCompArgumentNamedAst) and self.name == other.name and self.value == other.value
 
     @ast_printer_method

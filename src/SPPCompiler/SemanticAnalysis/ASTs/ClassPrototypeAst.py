@@ -67,13 +67,9 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
     def generate_symbols(self, scope_manager: ScopeManager, is_alias: bool = False) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 
-        print(f"\t\tCreating class scope/symbol for {self.name.types[-1]} in {scope_manager.current_scope}")
-
         # Create a new scope for the class.
         scope_manager.create_and_move_into_new_scope(self.name, self)
         super().generate_symbols(scope_manager)
-
-        print(f"\t\tCreated scope {scope_manager.current_scope.name}")
 
         # Create a new symbol for the class.
         symbol_type = TypeSymbol if not is_alias else AliasSymbol
@@ -89,7 +85,6 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
-        # print(self)
         scope_manager.move_out_of_current_scope()
 
 

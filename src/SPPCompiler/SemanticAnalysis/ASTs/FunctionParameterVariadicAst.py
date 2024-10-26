@@ -21,6 +21,7 @@ class FunctionParameterVariadicAst(Ast):
     type: TypeAst
 
     def __eq__(self, other: FunctionParameterVariadicAst) -> bool:
+        # Check both ASTs are the same type and have the same variable.
         return isinstance(other, FunctionParameterVariadicAst) and self.variable == other.variable
 
     @ast_printer_method

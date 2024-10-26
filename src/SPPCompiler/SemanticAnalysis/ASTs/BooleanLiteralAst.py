@@ -14,6 +14,7 @@ class BooleanLiteralAst(Ast):
     value: TokenAst
 
     def __eq__(self, other: BooleanLiteralAst) -> bool:
+        # Check both ASTs are the same type and have the same value.
         return self.value == other.value
 
     @ast_printer_method
