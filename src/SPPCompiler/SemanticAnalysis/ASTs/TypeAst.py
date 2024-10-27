@@ -6,15 +6,18 @@ import hashlib
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypePartAst import TypePartAst
+    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
 @dataclass
-class TypeAst(Ast):
+class TypeAst(Ast, Stage4_SemanticAnalyser):
     namespace: Seq[IdentifierAst]
     types: Seq[TypePartAst]
 
@@ -58,6 +61,12 @@ class TypeAst(Ast):
         match self.types[-1]:
             case GenericIdentifierAst(): return TypeAst(self.pos, self.namespace, self.types[:-1] + [self.types[-1].without_generics()])
             case _: return TypeAst(self.pos, self.namespace.copy(), self.types.copy())
+
+    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Scope) -> bool:
+        ...
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["TypeAst"]

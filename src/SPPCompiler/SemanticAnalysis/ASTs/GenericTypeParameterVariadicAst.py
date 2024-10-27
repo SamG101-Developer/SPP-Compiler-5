@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericTypeParameterInlineConstraintsAst import GenericTypeParameterInlineConstraintsAst
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericTypeParameterVariadicAst(Ast, Stage2_SymbolGenerator):
+class GenericTypeParameterVariadicAst(Ast, Stage2_SymbolGenerator, Stage4_SemanticAnalyser):
     tok_variadic: TokenAst
     name: TypeAst
     constraints: GenericTypeParameterInlineConstraintsAst
@@ -45,6 +46,9 @@ class GenericTypeParameterVariadicAst(Ast, Stage2_SymbolGenerator):
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
         symbol = TypeSymbol(name=self.name.types[-1], type=None, is_generic=True)
         scope_manager.current_scope.add_symbol(symbol)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["GenericTypeParameterVariadicAst"]

@@ -7,6 +7,8 @@ from SPPCompiler.SemanticAnalysis.ASTs.BinaryExpressionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.BooleanLiteralAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.CaseExpressionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ClassAttributeAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.ClassImplementationAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.ClassMemberAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ClassPrototypeAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ConventionMovAst import *
@@ -19,6 +21,8 @@ from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentGroupAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentNamedAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentUnnamedAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.FunctionImplementationAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.FunctionMemberAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterGroupAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterOptionalAst import *
@@ -103,6 +107,7 @@ from SPPCompiler.SemanticAnalysis.ASTs.RetStatementAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.StatementAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.StringLiteralAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.SubroutineAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.SupImplementationAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.SupMemberAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import *

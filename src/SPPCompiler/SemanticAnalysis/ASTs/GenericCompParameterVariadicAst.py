@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericCompParameterVariadicAst(Ast, Stage2_SymbolGenerator):
+class GenericCompParameterVariadicAst(Ast, Stage2_SymbolGenerator, Stage4_SemanticAnalyser):
     tok_cmp: TokenAst
     tok_variadic: TokenAst
     name: TypeAst
@@ -46,10 +47,13 @@ class GenericCompParameterVariadicAst(Ast, Stage2_SymbolGenerator):
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         # Create a variable symbol for this constant in the current scope (class / function).
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
-        from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import AstVisibility
+        from SPPCompiler.SemanticAnalysis.Meta.AstVisibility import AstVisibility
         from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
         symbol = VariableSymbol(name=IdentifierAst.from_type(self.name), type=self.type, visibility=AstVisibility.Public)
         scope_manager.current_scope.add_symbol(symbol)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["GenericCompParameterVariadicAst"]

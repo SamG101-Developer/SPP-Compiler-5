@@ -2,8 +2,6 @@ from __future__ import annotations
 from typing import Callable, List, Optional, Tuple, TYPE_CHECKING
 import functools
 
-from ordered_set import OrderedSet
-
 from SPPCompiler.LexicalAnalysis.Token import Token
 from SPPCompiler.LexicalAnalysis.TokenType import TokenType
 from SPPCompiler.SyntacticAnalysis.ParserRuleHandler import ParserRuleHandler
@@ -101,8 +99,21 @@ class Parser:
         p3 = self.parse_upper_identifier().parse_once()
         p4 = self.parse_generic_parameters().parse_optional()
         p5 = self.parse_where_block().parse_optional()
-        p6 = self.parse_inner_scope(self.parse_class_attribute).parse_once()
+        p6 = self.parse_class_implementation().parse_once()
         return ClassPrototypeAst(c1, p1, p2, p3, p4, p5, p6)
+
+    @parser_rule
+    def parse_class_implementation(self) -> ClassImplementationAst:
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.TkBraceL).parse_once()
+        p2 = self.parse_class_member().parse_zero_or_more(TokenType.NO_TOK)
+        p3 = self.parse_token(TokenType.TkBraceR).parse_once()
+        return ClassImplementationAst(c1, p1, p2, p3)
+
+    @parser_rule
+    def parse_class_member(self) -> ClassMemberAst:
+        p1 = self.parse_class_attribute().parse_once()
+        return p1
 
     @parser_rule
     def parse_class_attribute(self) -> ClassAttributeAst:
@@ -122,7 +133,7 @@ class Parser:
         p2 = self.parse_generic_parameters().parse_optional()
         p3 = self.parse_type().parse_once()
         p4 = self.parse_where_block().parse_optional()
-        p5 = self.parse_inner_scope(self.parse_sup_member).parse_once()
+        p5 = self.parse_sup_implementation().parse_once()
         return SupPrototypeFunctionsAst(c1, p1, p2, p3, p4, p5)
 
     @parser_rule
@@ -134,8 +145,16 @@ class Parser:
         p4 = self.parse_token(TokenType.KwExt).parse_once()
         p5 = self.parse_type().parse_once()
         p6 = self.parse_where_block().parse_optional()
-        p7 = self.parse_inner_scope(self.parse_sup_member).parse_once()
+        p7 = self.parse_sup_implementation().parse_once()
         return SupPrototypeInheritanceAst(c1, p1, p2, p3, p6, p7, p4, p5)
+
+    @parser_rule
+    def parse_sup_implementation(self) -> SupImplementationAst:
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.TkBraceL).parse_once()
+        p2 = self.parse_sup_member().parse_zero_or_more(TokenType.NO_TOK)
+        p3 = self.parse_token(TokenType.TkBraceR).parse_once()
+        return SupImplementationAst(c1, p1, p2, p3)
 
     @parser_rule
     def parse_sup_member(self) -> SupMemberAst:
@@ -175,7 +194,7 @@ class Parser:
         p6 = self.parse_token(TokenType.TkArrowR).parse_once()
         p7 = self.parse_type().parse_once()
         p8 = self.parse_where_block().parse_optional()
-        p9 = self.parse_inner_scope(self.parse_statement).parse_once()
+        p9 = self.parse_function_implementation().parse_once()
         return SubroutinePrototypeAst(c1, p1, p2, p3, p4, p5, p6, p7, p8, p9)
 
     @parser_rule
@@ -189,8 +208,21 @@ class Parser:
         p6 = self.parse_token(TokenType.TkArrowR).parse_once()
         p7 = self.parse_type().parse_once()
         p8 = self.parse_where_block().parse_optional()
-        p9 = self.parse_inner_scope(self.parse_statement).parse_once()
+        p9 = self.parse_function_implementation().parse_once()
         return CoroutinePrototypeAst(c1, p1, p2, p3, p4, p5, p6, p7, p8, p9)
+
+    @parser_rule
+    def parse_function_implementation(self) -> FunctionImplementationAst:
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.TkBraceL).parse_once()
+        p2 = self.parse_function_member().parse_zero_or_more(TokenType.NO_TOK)
+        p3 = self.parse_token(TokenType.TkBraceR).parse_once()
+        return FunctionImplementationAst(c1, p1, p2, p3)
+
+    @parser_rule
+    def parse_function_member(self) -> FunctionMemberAst:
+        p1 = self.parse_statement().parse_once()
+        return p1
 
     @parser_rule
     def parse_function_call_arguments(self) -> FunctionCallArgumentGroupAst:
@@ -1123,8 +1155,14 @@ class Parser:
 
     @parser_rule
     def parse_unary_op(self) -> TokenAst:
-        p1 = self.parse_token(TokenType.KwAsync).parse_once()
+        p1 = self.parse_unary_op_async_call().parse_once()
         return p1
+
+    @parser_rule
+    def parse_unary_op_async_call(self) -> UnaryExpressionOperatorAsyncAst:
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.KwAsync).parse_once()
+        return UnaryExpressionOperatorAsyncAst(c1, p1)
 
     @parser_rule
     def parse_postfix_op(self) -> PostfixExpressionOperatorAst:
@@ -1567,7 +1605,7 @@ class Parser:
         p1 = self.parse_token(TokenType.TkBrackL).parse_once()
         p2 = self.parse_type().parse_once()
         p3 = self.parse_token(TokenType.TkComma).parse_once()
-        p4 = self.parse_literal_integer().parse_once()
+        p4 = self.parse_lexeme(TokenType.LxDecInteger).parse_once()
         p5 = self.parse_token(TokenType.TkBrackR).parse_once()
         return ArrayLiteral0ElementAst(c1, p1, p2, p3, p4, p5)
 

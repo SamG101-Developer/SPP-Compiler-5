@@ -4,6 +4,9 @@ from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Meta.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
@@ -13,7 +16,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenExpressionAst(Ast):
+class GenExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     tok_gen: TokenAst
     tok_with: Optional[TokenAst]
     convention: ConventionAst
@@ -37,6 +40,12 @@ class GenExpressionAst(Ast):
             self.convention.print(printer),
             self.expression.print(printer) if self.expression else ""]
         return "".join(string)
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+        ...
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["GenExpressionAst"]

@@ -4,14 +4,16 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.ASTs.WhereConstraintsGroupAst import WhereConstraintsGroupAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class WhereBlockAst(Ast, Default):
+class WhereBlockAst(Ast, Default, Stage4_SemanticAnalyser):
     tok_where: TokenAst
     constraint_group: WhereConstraintsGroupAst
 
@@ -31,6 +33,9 @@ class WhereBlockAst(Ast, Default):
         else:
             string = []
         return "".join(string)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["WhereBlockAst"]

@@ -4,6 +4,8 @@ from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -15,7 +17,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PatternBlockAst(Ast):
+class PatternBlockAst(Ast, Stage4_SemanticAnalyser):
     comp_operator: Optional[TokenAst]
     patterns: Seq[PatternVariantAst]
     guard: Optional[PatternGuardAst]
@@ -34,6 +36,9 @@ class PatternBlockAst(Ast):
             self.guard.print(printer) if self.guard else "",
             self.body.print(printer) if self.body else ""]
         return "".join(string)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["PatternBlockAst"]

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class ParserRuleHandler[T]:
-    ParserRule = Callable[[], T]
+    type ParserRule = Callable[[], T]
     __slots__ = ["_rule", "_parser"]
 
     _rule: Final[ParserRule]
@@ -81,7 +81,7 @@ class ParserRuleHandler[T]:
             raise result[1]
         return result[0]
 
-    def __or__(self, that: ParserRuleHandler) -> ParserAlternateRulesHandler:
+    def __or__[U](self, that: ParserRuleHandler[U]) -> ParserAlternateRulesHandler[T | U]:
         from SPPCompiler.SyntacticAnalysis.ParserAlternateRulesHandler import ParserAlternateRulesHandler
         return ParserAlternateRulesHandler(self._parser).add_parser_rule_handler(self).add_parser_rule_handler(that)
 

@@ -4,6 +4,9 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Meta.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -14,7 +17,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class FunctionCallArgumentGroupAst(Ast, Default):
+class FunctionCallArgumentGroupAst(Ast, Default, TypeInferrable, Stage4_SemanticAnalyser):
     tok_left_paren: TokenAst
     arguments: Seq[FunctionCallArgumentAst]
     tok_right_paren: TokenAst
@@ -51,6 +54,12 @@ class FunctionCallArgumentGroupAst(Ast, Default):
         # Get all the unnamed function call arguments.
         from SPPCompiler.SemanticAnalysis import FunctionCallArgumentUnnamedAst
         return self.arguments.filter_to_type(FunctionCallArgumentUnnamedAst)
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+        ...
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["FunctionCallArgumentGroupAst"]

@@ -4,15 +4,17 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableNestedForAttributeBindingAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class LocalVariableAttributeBindingAst(Ast):
+class LocalVariableAttributeBindingAst(Ast, Stage4_SemanticAnalyser):
     name: IdentifierAst
     tok_assign: TokenAst
     value: LocalVariableNestedForAttributeBindingAst
@@ -25,6 +27,9 @@ class LocalVariableAttributeBindingAst(Ast):
             self.tok_assign.print(printer),
             self.value.print(printer)]
         return "".join(string)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["LocalVariableAttributeBindingAst"]

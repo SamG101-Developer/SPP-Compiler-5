@@ -1,5 +1,4 @@
-import functools
-import re
+import functools, re
 
 
 class AstPrinter:
@@ -25,8 +24,8 @@ class AstPrinter:
 def ast_printer_method(func):
     @functools.wraps(func)
     def wrapper(self=None, *args):
-        from SPPCompiler.SemanticAnalysis import InnerScopeAst
-        indent = isinstance(self, InnerScopeAst)
+        from SPPCompiler.SemanticAnalysis import InnerScopeAst, ClassImplementationAst, FunctionImplementationAst, SupImplementationAst
+        indent = isinstance(self, (InnerScopeAst, ClassImplementationAst, FunctionImplementationAst, SupImplementationAst))
         printer = args[0]
 
         if indent:

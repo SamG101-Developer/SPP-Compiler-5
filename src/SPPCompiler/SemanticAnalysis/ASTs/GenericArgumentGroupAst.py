@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -11,10 +12,11 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentNamedAst, GenericArgumentUnnamedAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericCompArgumentAst, GenericTypeArgumentAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class GenericArgumentGroupAst(Ast, Default):
+class GenericArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
     tok_left_bracket: TokenAst
     arguments: Seq[GenericArgumentAst]
     tok_right_bracket: TokenAst
@@ -60,6 +62,9 @@ class GenericArgumentGroupAst(Ast, Default):
     def get_unnamed(self) -> Seq[GenericArgumentUnnamedAst]:
         from SPPCompiler.SemanticAnalysis import GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst
         return self.arguments.filter_to_type(GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["GenericArgumentGroupAst"]

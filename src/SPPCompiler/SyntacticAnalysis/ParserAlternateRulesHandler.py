@@ -20,7 +20,7 @@ class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
         self._parser_rule_handlers.append(parser_rule_handler)
         return self
 
-    def parse_once(self) -> Ast:
+    def parse_once(self) -> T:
         from SPPCompiler.Utils.Errors import ParserError
 
         for parser_rule_handler in self._parser_rule_handlers:

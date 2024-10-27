@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -13,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class LocalVariableDestructureObjectAst(Ast):
+class LocalVariableDestructureObjectAst(Ast, Stage4_SemanticAnalyser):
     class_type: TypeAst
     tok_left_paren: TokenAst
     elements: Seq[LocalVariableNestedForDestructureObjectAst]
@@ -32,6 +34,9 @@ class LocalVariableDestructureObjectAst(Ast):
             self.elements.print(printer, ", "),
             self.tok_right_paren.print(printer)]
         return "".join(string)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["LocalVariableDestructureObjectAst"]

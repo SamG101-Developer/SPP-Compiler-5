@@ -5,15 +5,16 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
-from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.UseStatementNamespaceReductionBodyAst import UseStatementNamespaceReductionBodyAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class UseStatementNamespaceReductionAst(Ast, Stage2_SymbolGenerator):
+class UseStatementNamespaceReductionAst(Ast, Stage2_SymbolGenerator, Stage4_SemanticAnalyser):
     body: UseStatementNamespaceReductionBodyAst
 
     _generated: bool = field(default=False, init=False, repr=False)
@@ -25,7 +26,9 @@ class UseStatementNamespaceReductionAst(Ast, Stage2_SymbolGenerator):
         return self.body.print(printer)
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
-        # Todo
+        ...
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
         ...
 
 

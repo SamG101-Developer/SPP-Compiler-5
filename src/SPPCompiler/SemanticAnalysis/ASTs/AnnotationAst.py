@@ -5,14 +5,16 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class AnnotationAst(Ast, Stage1_PreProcessor):
+class AnnotationAst(Ast, Stage1_PreProcessor, Stage4_SemanticAnalyser):
     tok_at: TokenAst
     name: IdentifierAst
 
@@ -27,7 +29,7 @@ class AnnotationAst(Ast, Stage1_PreProcessor):
     def pre_process(self, context: PreProcessingContext) -> None:
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
         from SPPCompiler.SemanticAnalysis import FunctionPrototypeAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstVisbility import VisibilityEnabled, AstVisibility
+        from SPPCompiler.SemanticAnalysis.Meta.AstVisibility import VisibilityEnabled, AstVisibility
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
         # Pre-process the name of this annotation.
@@ -66,6 +68,10 @@ class AnnotationAst(Ast, Stage1_PreProcessor):
             # The "static" annotation can only be applied to functions.
             case _:
                 raise AstErrors.UNKNOWN_ANNOTATION(self.name)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        # Todo: Prevent duplicate annotations.
+        ...
 
 
 __all__ = ["AnnotationAst"]

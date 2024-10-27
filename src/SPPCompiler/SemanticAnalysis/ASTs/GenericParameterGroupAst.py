@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -11,10 +12,11 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericParameterRequiredAst, GenericParameterOptionalAst, GenericParameterVariadicAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericCompParameterAst, GenericTypeParameterAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class GenericParameterGroupAst(Ast, Default):
+class GenericParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
     tok_left_bracket: TokenAst
     parameters: Seq[GenericParameterAst]
     tok_right_bracket: TokenAst
@@ -63,6 +65,9 @@ class GenericParameterGroupAst(Ast, Default):
         # Get all the variadic generic parameters.
         from SPPCompiler.SemanticAnalysis import GenericCompParameterVariadicAst, GenericTypeParameterVariadicAst
         return self.parameters.filter_to_type(GenericCompParameterVariadicAst, GenericTypeParameterVariadicAst)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["GenericParameterGroupAst"]

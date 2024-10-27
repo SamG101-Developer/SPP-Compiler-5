@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
@@ -11,10 +12,11 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class FunctionParameterOptionalAst(Ast):
+class FunctionParameterOptionalAst(Ast, Stage4_SemanticAnalyser):
     variable: LocalVariableAst
     tok_colon: TokenAst
     convention: ConventionAst
@@ -37,6 +39,9 @@ class FunctionParameterOptionalAst(Ast):
             self.tok_assign.print(printer) + " ",
             self.default.print(printer)]
         return "".join(string)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["FunctionParameterOptionalAst"]

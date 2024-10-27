@@ -4,6 +4,8 @@ from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class FunctionParameterGroupAst(Ast, Default):
+class FunctionParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
     tok_left_paren: TokenAst
     parameters: Seq[FunctionParameterAst]
     tok_right_paren: TokenAst
@@ -68,6 +70,9 @@ class FunctionParameterGroupAst(Ast, Default):
         # Get all the function parameters that are not "self".
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst
         return self.parameters.filter_not_type(FunctionParameterSelfAst)
+
+    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+        ...
 
 
 __all__ = ["FunctionParameterGroupAst"]
