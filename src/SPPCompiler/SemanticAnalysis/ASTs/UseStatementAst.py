@@ -54,7 +54,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, Stage1_PreProcesso
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         ...
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

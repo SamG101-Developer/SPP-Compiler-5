@@ -49,7 +49,7 @@ class GenericTypeParameterOptionalAst(Ast, Stage2_SymbolGenerator, Stage4_Semant
         symbol = TypeSymbol(name=self.name.types[-1], type=None, is_generic=True)
         scope_manager.current_scope.add_symbol(symbol)
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

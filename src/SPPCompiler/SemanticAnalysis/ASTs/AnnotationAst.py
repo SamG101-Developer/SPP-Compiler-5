@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from fastenum import Enum
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -11,6 +12,23 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+
+
+"""
+Ideas:
+- Allow all bocks (loop/case+branches/with) etc to have annotations
+- @inline, @noinline, @hot, @cold for functions
+- @likely, @unlikely, @fallthrough for case branches
+- @unroll, @allow_infinite for loops => map to a special return type?
+"""
+
+
+class _Annotations(Enum):
+    VirtualMethod = "virtual_method"
+    AbstractMethod = "abstract_method"
+    Public = "public"
+    Protected = "protected"
+    Private = "private"
 
 
 @dataclass
@@ -33,45 +51,46 @@ class AnnotationAst(Ast, Stage1_PreProcessor, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
         # Pre-process the name of this annotation.
-        match self.name.value:
+        if self.name.value == _Annotations.VirtualMethod.value:
+            # The "virtual_method" annotation can only be applied to functions.
+            if not isinstance(context, FunctionPrototypeAst):
+                raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "function")
+            context._virtual = True
 
-            case "virtual_method":
-                # The "virtual_method" annotation can only be applied to functions.
-                if not isinstance(context, FunctionPrototypeAst):
-                    raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "function")
-                context._virtual = True
+        elif self.name.value == _Annotations.AbstractMethod.value:
+            # The "abstract_method" annotation can only be applied to functions.
+            if not isinstance(context, FunctionPrototypeAst):
+                raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "function")
+            context._abstract = True
 
-            case "abstract_method":
-                # The "abstract_method" annotation can only be applied to functions.
-                if not isinstance(context, FunctionPrototypeAst):
-                    raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "function")
-                context._abstract = True
+        elif self.name.value == _Annotations.Public.value:
+            # The "public", access modifier annotation can only be applied to visibility enabled objects.
+            if not isinstance(context, VisibilityEnabled):
+                raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "visibility-enabled")
+            context.visibility = AstVisibility.Public
 
-            case "public":
-                # The "public", access modifier annotation can only be applied to visibility enabled objects.
-                if not isinstance(context, VisibilityEnabled):
-                    raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "visibility-enabled")
-                context.visibility = AstVisibility.Public
+        elif self.name.value == _Annotations.Protected.value:
+            # The "protected", access modifier annotation can only be applied to visibility enabled objects.
+            if not isinstance(context, VisibilityEnabled):
+                raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "visibility-enabled")
+            context.visibility = AstVisibility.Protected
 
-            case "protected":
-                # The "protected", access modifier annotation can only be applied to visibility enabled objects.
-                if not isinstance(context, VisibilityEnabled):
-                    raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "visibility-enabled")
-                context.visibility = AstVisibility.Protected
+        elif self.name.value == _Annotations.Private.value:
+            # The "private", access modifier annotation can only be applied to visibility enabled objects.
+            if not isinstance(context, VisibilityEnabled):
+                raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "visibility-enabled")
+            context.visibility = AstVisibility.Private
 
-            case "private":
-                # The "private", access modifier annotation can only be applied to visibility enabled objects.
-                if not isinstance(context, VisibilityEnabled):
-                    raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "visibility-enabled")
-                context.visibility = AstVisibility.Private
+        else:
+            raise AstErrors.UNKNOWN_ANNOTATION(self.name)
 
-            # The "static" annotation can only be applied to functions.
-            case _:
-                raise AstErrors.UNKNOWN_ANNOTATION(self.name)
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
-        # Todo: Prevent duplicate annotations.
-        ...
+        # Prevent duplicate annotations from being applied to an AST.
+        annotation_names = self._ctx.annotations.map_attr("name")
+        if duplicate_annotations := annotation_names.filter(lambda a: a.name == self.name).remove(self.name):
+            raise AstErrors.DUPLICATE_ANNOTATION(self.name, duplicate_annotations[0])
 
 
 __all__ = ["AnnotationAst"]

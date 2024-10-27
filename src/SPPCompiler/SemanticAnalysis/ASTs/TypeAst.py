@@ -65,7 +65,7 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
     def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Scope) -> bool:
         ...
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

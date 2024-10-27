@@ -60,7 +60,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         ...
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

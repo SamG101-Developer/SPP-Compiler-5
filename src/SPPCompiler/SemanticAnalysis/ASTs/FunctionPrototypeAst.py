@@ -132,7 +132,7 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
     def _deduce_mock_class_type(self) -> TypeAst:

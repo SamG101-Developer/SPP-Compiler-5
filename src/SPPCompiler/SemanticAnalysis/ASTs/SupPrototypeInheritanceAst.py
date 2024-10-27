@@ -50,7 +50,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         super().load_sup_scopes(scope_manager)
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

@@ -44,7 +44,7 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage4_SemanticAnaly
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         ...
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

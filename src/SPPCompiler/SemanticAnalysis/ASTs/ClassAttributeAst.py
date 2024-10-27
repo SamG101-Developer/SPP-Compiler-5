@@ -56,7 +56,7 @@ class ClassAttributeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PreProces
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility)
         scope_manager.current_scope.add_symbol(symbol)
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

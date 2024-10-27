@@ -50,7 +50,7 @@ class GenericCompParameterRequiredAst(Ast, Stage2_SymbolGenerator, Stage4_Semant
         symbol = VariableSymbol(name=IdentifierAst.from_type(self.name), type=self.type, visibility=AstVisibility.Public)
         scope_manager.current_scope.add_symbol(symbol)
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

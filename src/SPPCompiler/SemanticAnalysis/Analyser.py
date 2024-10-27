@@ -42,7 +42,8 @@ class Analyser:
         try:
             self._ast.pre_process(None)
             self._ast.generate_symbols(self._scope_manager, module_tree)
-            self._ast.load_sup_scopes(self._scope_manager, module_tree)
+            self._ast.load_sup_scopes(self._scope_manager)
+            self._ast.analyse_semantics(self._scope_manager)
         except SemanticError as error:
             errored_module = module_tree.modules.find(lambda module: self._ast.current() == module.module_ast)
             error.throw(errored_module.error_formatter)

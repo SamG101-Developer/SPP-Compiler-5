@@ -26,7 +26,7 @@ class LocalVariableDestructureSkipNArgumentsAst(Ast, Stage4_SemanticAnalyser):
             self.binding.print(printer) if self.binding else ""]
         return "".join(string)
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

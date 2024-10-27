@@ -34,7 +34,7 @@ class PatternVariantDestructureSkipNArgumentsAst(Ast, PatternMapping, TypeInferr
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         ...
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

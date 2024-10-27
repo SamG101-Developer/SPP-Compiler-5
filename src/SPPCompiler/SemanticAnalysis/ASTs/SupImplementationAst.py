@@ -56,7 +56,7 @@ class SupImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGener
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         self.members.for_each(lambda member: member.load_sup_scopes(scope_manager))
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

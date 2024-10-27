@@ -43,7 +43,7 @@ class FunctionImplementationAst(Ast, Default, Stage4_SemanticAnalyser):
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

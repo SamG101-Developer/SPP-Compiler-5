@@ -25,7 +25,7 @@ class ModuleImplementationAst(Ast, Stage4_SemanticAnalyser):
         # Print the AST with auto-formatting.
         return self.members.print(printer, "\n")
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

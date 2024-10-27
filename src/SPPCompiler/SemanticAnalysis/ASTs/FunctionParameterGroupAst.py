@@ -71,7 +71,7 @@ class FunctionParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst
         return self.parameters.filter_not_type(FunctionParameterSelfAst)
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

@@ -25,7 +25,7 @@ class WithExpressionAliasAst(Ast, Stage4_SemanticAnalyser):
             self.tok_assign.print(printer)]
         return "".join(string)
 
-    def analyse_semantics(self, scope_handler: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

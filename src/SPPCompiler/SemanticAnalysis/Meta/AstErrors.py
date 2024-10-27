@@ -28,3 +28,14 @@ class AstErrors:
             msg=f"The annotation '{annotation}' is not a valid annotation.",
             tip=f"Remove the annotation from here")
         return e
+
+    @staticmethod
+    def DUPLICATE_ANNOTATION(first_annotation: IdentifierAst, second_annotation: IdentifierAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(first_annotation.pos, f"Annotation '{first_annotation}' applied here")
+        e.add_error(
+            pos=second_annotation.pos,
+            tag="Duplicate annotation.",
+            msg=f"The annotation '{second_annotation}' is already applied.",
+            tip=f"Remove the duplicate annotation")
+        return e
