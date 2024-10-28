@@ -58,7 +58,7 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         super().generate_symbols(scope_manager)
-        scope_manager.create_and_move_into_new_scope("SUP_" + str(self.name), self)
+        scope_manager.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
 
         self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))
         self.body.generate_symbols(scope_manager)
@@ -71,7 +71,9 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        scope_manager.move_to_next_scope()
+        self.body.analyse_semantics(scope_manager, **kwargs)
+        scope_manager.move_out_of_current_scope()
 
 
 __all__ = ["SupPrototypeFunctionsAst"]

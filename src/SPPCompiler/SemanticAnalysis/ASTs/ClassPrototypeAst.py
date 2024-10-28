@@ -92,7 +92,11 @@ class ClassPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PreProces
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        scope_manager.move_to_next_scope()
+        self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
+        self.where_block.analyse_semantics(scope_manager, **kwargs)
+        self.body.analyse_semantics(scope_manager, **kwargs)
+        scope_manager.move_out_of_current_scope()
 
 
 __all__ = ["ClassPrototypeAst"]

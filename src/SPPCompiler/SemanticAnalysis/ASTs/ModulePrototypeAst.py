@@ -23,7 +23,7 @@ class ModulePrototypeAst(Ast, Stage4_SemanticAnalyser):
         return self.body.print(printer)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.body.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["ModulePrototypeAst"]

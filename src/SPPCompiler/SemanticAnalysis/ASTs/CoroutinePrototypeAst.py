@@ -11,7 +11,9 @@ if TYPE_CHECKING:
 @dataclass
 class CoroutinePrototypeAst(FunctionPrototypeAst):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        super().analyse_semantics(scope_manager, **kwargs)
+        self.body.analyse_semantics(scope_manager, **kwargs)
+        scope_manager.move_out_of_current_scope()
 
 
 __all__ = ["CoroutinePrototypeAst"]

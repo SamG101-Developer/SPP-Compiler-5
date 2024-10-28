@@ -39,7 +39,7 @@ class TupleLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.elements.for_each(lambda element: element.analyse_semantics(scope_manager, **kwargs))
 
 
 __all__ = ["TupleLiteralAst"]

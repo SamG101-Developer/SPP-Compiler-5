@@ -59,7 +59,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, TypeInferrable, Stage4_Semantic
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.arguments.for_each(lambda a: a.analyse_semantics(scope_manager, **kwargs))
 
 
 __all__ = ["FunctionCallArgumentGroupAst"]

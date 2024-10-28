@@ -40,7 +40,10 @@ class CaseExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        scope_manager.create_and_move_into_new_scope(f"<case-expr:{self.pos}>")
+        self.condition.analyse_semantics(scope_manager)
+        self.branches.for_each(lambda b: b.analyse_semantics(scope_manager))
+        scope_manager.move_out_of_current_scope()
 
 
 __all__ = ["CaseExpressionAst"]

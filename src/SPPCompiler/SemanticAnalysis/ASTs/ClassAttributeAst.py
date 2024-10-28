@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
 @dataclass
 class ClassAttributeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage4_SemanticAnalyser):
-
     annotations: Seq[AnnotationAst]
     name: IdentifierAst
     tok_colon: TokenAst
@@ -57,7 +56,8 @@ class ClassAttributeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PreProces
         scope_manager.current_scope.add_symbol(symbol)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.annotations.for_each(lambda a: a.analyse_semantics(scope_manager, **kwargs))
+        self.type.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["ClassAttributeAst"]

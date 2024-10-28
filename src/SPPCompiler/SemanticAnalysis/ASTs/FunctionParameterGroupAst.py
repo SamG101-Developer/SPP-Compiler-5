@@ -72,7 +72,34 @@ class FunctionParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         return self.parameters.filter_not_type(FunctionParameterSelfAst)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst, FunctionParameterVariadicAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # Check there are no duplicate parameter names.
+        parameter_names = self.parameters.map(lambda parameter: parameter.extract_names).flat()
+        if duplicate_parameters := parameter_names.non_unique_items():
+            raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_parameters[0][0], duplicate_parameters[0][1], "parameter")
+
+        # Check the parameters are in the correct order.
+        ordering = ["Self", "Required", "Optional", "Variadic"]
+        current = self.parameters.map_attr("_variant").zip(self.parameters)
+        ordered = current.sort(key=lambda x: ordering.index(x[0]))
+        if current != ordered:
+            difference = current.ordered_difference(ordered)
+            raise AstErrors.INVALID_PARAMETER_ORDER(difference[0][1], difference[1][1])
+
+        # Check there is only 1 "self" parameter.
+        self_parameters = self.parameters.filter_to_type(FunctionParameterSelfAst)
+        if self_parameters.length > 1:
+            raise AstErrors.MULTIPLE_SELF_PARAMETERS(self_parameters[0], self_parameters[1])
+
+        # Check there is only 1 variadic parameter.
+        variadic_parameters = self.parameters.filter_to_type(FunctionParameterVariadicAst)
+        if variadic_parameters.length > 1:
+            raise AstErrors.MULTIPLE_VARIADIC_PARAMETERS(variadic_parameters[0], variadic_parameters[1])
+
+        # Analyse the parameters.
+        self.parameters.for_each(lambda p: p.analyse_semantics(scope_manager, **kwargs))
 
 
 __all__ = ["FunctionParameterGroupAst"]

@@ -30,7 +30,8 @@ class ObjectInitializerAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.type.analyse_semantics(scope_manager, **kwargs)
+        self.object_argument_group.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["ObjectInitializerAst"]

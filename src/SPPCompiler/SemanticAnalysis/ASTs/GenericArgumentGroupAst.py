@@ -64,7 +64,7 @@ class GenericArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         return self.arguments.filter_to_type(GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.arguments.for_each(lambda arg: arg.analyse_semantics(scope_manager, **kwargs))
 
 
 __all__ = ["GenericArgumentGroupAst"]

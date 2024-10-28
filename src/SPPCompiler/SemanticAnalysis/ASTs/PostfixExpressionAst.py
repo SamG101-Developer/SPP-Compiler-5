@@ -30,7 +30,8 @@ class PostfixExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.lhs.analyse_semantics(scope_manager, **kwargs)
+        self.op.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["PostfixExpressionAst"]

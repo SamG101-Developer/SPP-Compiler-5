@@ -21,7 +21,7 @@ class ObjectInitializerArgumentUnnamedAst(Ast, Stage4_SemanticAnalyser):
         return self.name.print(printer)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.name.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["ObjectInitializerArgumentUnnamedAst"]

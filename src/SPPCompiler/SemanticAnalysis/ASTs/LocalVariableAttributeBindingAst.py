@@ -29,7 +29,7 @@ class LocalVariableAttributeBindingAst(Ast, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.value.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["LocalVariableAttributeBindingAst"]

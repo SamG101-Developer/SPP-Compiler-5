@@ -40,7 +40,7 @@ class FunctionCallArgumentNamedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser)
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.value.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["FunctionCallArgumentNamedAst"]

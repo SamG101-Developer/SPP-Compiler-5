@@ -1513,7 +1513,7 @@ class Parser:
         c1 = self.current_pos()
         p1 = self.parse_numeric_prefix_op().parse_optional()
         p2 = self.parse_lexeme(TokenType.LxDecDecimal).parse_once()
-        p3 = self.parse_numeric_postfix_type().parse_optional()
+        p3 = self.parse_float_postfix_type().parse_optional()
         return FloatLiteralAst(c1, p1, p2, p3)
 
     @parser_rule
@@ -1521,7 +1521,7 @@ class Parser:
         c1 = self.current_pos()
         p1 = self.parse_numeric_prefix_op().parse_optional()
         p2 = self.parse_lexeme(TokenType.LxDecInteger).parse_once()
-        p3 = self.parse_numeric_postfix_type().parse_optional()
+        p3 = self.parse_integer_postfix_type().parse_optional()
         return IntegerLiteralAst(c1, p1, p2, p3)
 
     @parser_rule
@@ -1529,7 +1529,7 @@ class Parser:
         c1 = self.current_pos()
         p1 = self.parse_numeric_prefix_op().parse_optional()
         p2 = self.parse_lexeme(TokenType.LxBinDigits).parse_once()
-        p3 = self.parse_numeric_postfix_type().parse_optional()
+        p3 = self.parse_integer_postfix_type().parse_optional()
         return IntegerLiteralAst(c1, p1, p2, p3)
 
     @parser_rule
@@ -1537,7 +1537,7 @@ class Parser:
         c1 = self.current_pos()
         p1 = self.parse_numeric_prefix_op().parse_optional()
         p2 = self.parse_lexeme(TokenType.LxHexDigits).parse_once()
-        p3 = self.parse_numeric_postfix_type().parse_optional()
+        p3 = self.parse_integer_postfix_type().parse_optional()
         return IntegerLiteralAst(c1, p1, p2, p3)
 
     @parser_rule
@@ -1548,7 +1548,7 @@ class Parser:
         return p3
 
     @parser_rule
-    def parse_numeric_postfix_type(self) -> TokenType:
+    def parse_integer_postfix_type(self) -> TokenType:
         p1  = self.parse_token(TokenType.TkUnderscore).parse_once()
         p2  = self.parse_characters("i8")
         p3  = self.parse_characters("i16")
@@ -1562,14 +1562,18 @@ class Parser:
         p11 = self.parse_characters("u64")
         p12 = self.parse_characters("u128")
         p13 = self.parse_characters("u256")
-        p14 = self.parse_characters("f8")
-        p15 = self.parse_characters("f16")
-        p16 = self.parse_characters("f32")
-        p17 = self.parse_characters("f64")
-        p18 = self.parse_characters("f128")
-        p19 = self.parse_characters("f256")
-        p20 = (p2 | p3 | p4 | p5 | p6 | p7 | p8 | p9 | p10 | p11 | p12 | p13 | p14 | p15 | p16 | p17 | p18 | p19).parse_once()
-        return p20
+        p14 = (p2 | p3 | p4 | p5 | p6 | p7 | p8 | p9 | p10 | p11 | p12 | p13).parse_once()
+        return p14
+
+    def parse_float_postfix_type(self) -> TokenType:
+        p1  = self.parse_characters("f8")
+        p2  = self.parse_characters("f16")
+        p3  = self.parse_characters("f32")
+        p4  = self.parse_characters("f64")
+        p5  = self.parse_characters("f128")
+        p6  = self.parse_characters("f256")
+        p7  = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
+        return p7
 
     # ===== TUPLES =====
 

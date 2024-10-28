@@ -37,7 +37,9 @@ class WithExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        scope_manager.create_and_move_into_new_scope(f"<with:{self.pos}>")
+        self.body.analyse_semantics(scope_manager, **kwargs)
+        scope_manager.move_out_of_current_scope()
 
 
 __all__ = ["WithExpressionAst"]

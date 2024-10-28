@@ -44,7 +44,7 @@ class FunctionImplementationAst(Ast, Default, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
 
 
 __all__ = ["FunctionImplementationAst"]

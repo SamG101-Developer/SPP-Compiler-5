@@ -45,7 +45,8 @@ class GenericTypeParameterRequiredAst(Ast, Stage2_SymbolGenerator, Stage4_Semant
         scope_manager.current_scope.add_symbol(symbol)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.name.analyse_semantics(scope_manager, **kwargs)
+        self.inline_constraints.analyse_semantics(scope_manager, **kwargs)
     
     
 __all__ = ["GenericTypeParameterRequiredAst"]

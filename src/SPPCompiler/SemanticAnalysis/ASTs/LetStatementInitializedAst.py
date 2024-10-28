@@ -35,7 +35,8 @@ class LetStatementInitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.assign_to.analyse_semantics(scope_manager, **kwargs)
+        self.value.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["LetStatementInitializedAst"]

@@ -36,7 +36,8 @@ class LocalVariableDestructureObjectAst(Ast, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.class_type.analyse_semantics(scope_manager, **kwargs)
+        self.elements.for_each(lambda element: element.analyse_semantics(scope_manager, **kwargs))
 
 
 __all__ = ["LocalVariableDestructureObjectAst"]

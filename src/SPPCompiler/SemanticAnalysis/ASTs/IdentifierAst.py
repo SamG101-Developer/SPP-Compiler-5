@@ -6,15 +6,16 @@ import hashlib, warnings
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class IdentifierAst(Ast, TypeInferrable):
+class IdentifierAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     value: str
 
     def __eq__(self, other: IdentifierAst) -> bool:
@@ -47,6 +48,9 @@ class IdentifierAst(Ast, TypeInferrable):
         return IdentifierAst(identifier.pos, identifier.value)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+        ...
+
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 
 

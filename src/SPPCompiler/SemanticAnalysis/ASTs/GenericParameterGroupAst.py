@@ -67,7 +67,7 @@ class GenericParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         return self.parameters.filter_to_type(GenericCompParameterVariadicAst, GenericTypeParameterVariadicAst)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.parameters.for_each(lambda p: p.analyse_semantics(scope_manager, **kwargs))
 
 
 __all__ = ["GenericParameterGroupAst"]

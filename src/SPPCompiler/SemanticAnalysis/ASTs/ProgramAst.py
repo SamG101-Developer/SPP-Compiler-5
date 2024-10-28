@@ -52,7 +52,7 @@ class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupSco
         # Analyse the semantics for all the modules.
         for module in self.modules:
             self._current = module
-            module.body.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
+            module.analyse_semantics(scope_manager, **kwargs)
         scope_manager.reset()
 
     def current(self) -> ModulePrototypeAst:

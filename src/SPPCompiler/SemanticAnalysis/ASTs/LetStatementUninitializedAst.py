@@ -34,7 +34,7 @@ class LetStatementUninitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser)
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.type.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["LetStatementUninitializedAst"]

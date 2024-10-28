@@ -45,7 +45,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.generic_argument_group.analyse_semantics(scope_manager, **kwargs)
+        self.function_argument_group.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["PostfixExpressionOperatorFunctionCallAst"]

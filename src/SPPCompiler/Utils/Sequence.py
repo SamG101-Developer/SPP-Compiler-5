@@ -91,7 +91,7 @@ class Seq[T]:
     def contains_any(self, items: Seq[T]) -> Seq[T]:
         return Seq([x for x in items if x in self._value])
 
-    def sort(self, key: Callable[[T], any] = None, reverse: bool = False) -> Seq[T]:
+    def sort(self, *, key: Callable[[T], any] = None, reverse: bool = False) -> Seq[T]:
         return Seq(sorted(self._value, key=key, reverse=reverse))
 
     def reverse(self) -> Seq[T]:

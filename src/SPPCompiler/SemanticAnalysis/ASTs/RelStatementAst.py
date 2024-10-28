@@ -35,7 +35,7 @@ class RelStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.expressions.for_each(lambda expression: expression.analyse_semantics(scope_manager, **kwargs))
 
 
 __all__ = ["RelStatementAst"]

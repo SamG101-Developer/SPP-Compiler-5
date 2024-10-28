@@ -55,7 +55,8 @@ class GenericCompParameterOptionalAst(Ast, Stage2_SymbolGenerator, Stage4_Semant
         scope_manager.current_scope.add_symbol(symbol)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.type.analyse_semantics(scope_manager)
+        self.default.analyse_semantics(scope_manager)
 
 
 __all__ = ["GenericCompParameterOptionalAst"]

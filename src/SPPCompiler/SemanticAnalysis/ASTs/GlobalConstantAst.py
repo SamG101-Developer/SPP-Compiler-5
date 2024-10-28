@@ -44,8 +44,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
             self.tok_colon.print(printer) + " ",
             self.type.print(printer) + " ",
             self.tok_assign.print(printer) + " ",
-            self.value.print(printer) + "\n"
-        ]
+            self.value.print(printer) + "\n"]
         return "".join(string)
 
     def pre_process(self, context: PreProcessingContext) -> None:
@@ -61,7 +60,8 @@ class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.type.analyse_semantics(scope_manager, **kwargs)
+        self.value.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["GlobalConstantAst"]

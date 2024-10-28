@@ -51,7 +51,9 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         super().load_sup_scopes(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        scope_manager.move_to_next_scope()
+        self.body.analyse_semantics(scope_manager, **kwargs)
+        scope_manager.move_out_of_current_scope()
 
 
 __all__ = ["SupPrototypeInheritanceAst"]

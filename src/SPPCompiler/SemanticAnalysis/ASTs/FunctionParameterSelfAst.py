@@ -1,10 +1,13 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
+import functools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Meta.AstParameterNameExtraction import AstParameterNameExtraction
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
@@ -15,11 +18,12 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class FunctionParameterSelfAst(Ast, Stage4_SemanticAnalyser):
+class FunctionParameterSelfAst(Ast, AstParameterNameExtraction, Stage4_SemanticAnalyser):
     tok_mut: Optional[TokenAst]
     convention: ConventionAst
     name: IdentifierAst
     type: TypeAst = field(default=None, init=False)
+    _variant: str = field(init=False, default="Self", repr=False)
 
     def __post_init__(self) -> None:
         # Import the necessary classes to create default instances.
@@ -40,6 +44,10 @@ class FunctionParameterSelfAst(Ast, Stage4_SemanticAnalyser):
             self.convention.print(printer),
             self.name.print(printer)]
         return "".join(string)
+
+    @functools.cached_property
+    def extract_names(self) -> Seq[IdentifierAst]:
+        return Seq([self.name])
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...

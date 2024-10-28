@@ -55,7 +55,7 @@ class ClassImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGen
         self.members.for_each(lambda m: m.generate_symbols(scope_manager))
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
 
 
 __all__ = ["ClassImplementationAst"]

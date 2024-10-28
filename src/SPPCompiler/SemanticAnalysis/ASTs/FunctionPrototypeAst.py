@@ -133,7 +133,12 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        scope_manager.move_to_next_scope()
+        self.generic_parameter_group.analyse_semantics(scope_manager)
+        self.function_parameter_group.analyse_semantics(scope_manager)
+        self.return_type.analyse_semantics(scope_manager)
+
+        # Subclasses will finish analysis and exit the scope.
 
     def _deduce_mock_class_type(self) -> TypeAst:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst

@@ -38,7 +38,8 @@ class AssignmentStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.lhs.for_each(lambda e: e.analyse_semantics(scope_manager, **kwargs))
+        self.rhs.for_each(lambda e: e.analyse_semantics(scope_manager, **kwargs))
 
 
 __all__ = ["AssignmentStatementAst"]

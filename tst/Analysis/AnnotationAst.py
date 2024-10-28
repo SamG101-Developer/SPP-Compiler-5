@@ -52,3 +52,11 @@ class TestAnnotationAst(TestCase):
         @abstract_method
         cls TestClass { }
         """
+
+    @should_fail
+    def test_invalid_annotation_duplicate(self) -> None:
+        """
+        @virtual_method
+        @virtual_method
+        cls TestClass { }
+        """

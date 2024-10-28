@@ -148,14 +148,17 @@ class CommonTypes:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         inner_type = GenericTypeArgumentUnnamedAst(-1, inner_type)
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Fut", GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), [inner_type], TokenAst.default(TokenType.TkBrackR)))])
+    """
 
     @staticmethod
-    def Arr(elem_type, pos: int = -1):  # todo: array size too
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst, TokenAst
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        elem_type = GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), [GenericTypeArgumentUnnamedAst(-1, elem_type)], TokenAst.default(TokenType.TkBrackR))
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Arr", elem_type)])
-    """
+    def Arr(elem_type, size, pos: int = -1):
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst
+        from SPPCompiler.SemanticAnalysis import GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst
+
+        elem_type_generic = GenericTypeArgumentUnnamedAst(-1, elem_type)
+        size_comp_generic = GenericCompArgumentUnnamedAst(-1, size)
+        generics = GenericArgumentGroupAst.default([elem_type_generic, size_comp_generic])
+        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Arr", generics)])
 
     @staticmethod
     def Opt(inner_type, pos: int = -1):
