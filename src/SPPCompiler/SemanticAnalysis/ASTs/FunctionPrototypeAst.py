@@ -167,7 +167,7 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
 
     def __deepcopy__(self, memodict=None) -> FunctionPrototypeAst:
         # Copy all attributes except for "_protected" attributes, which are re-linked.
-        return FunctionPrototypeAst(
+        return type(self)(
             copy.deepcopy(self.pos), copy.deepcopy(self.annotations), copy.deepcopy(self.tok_fun),
             copy.deepcopy(self.name), copy.deepcopy(self.generic_parameter_group),
             copy.deepcopy(self.function_parameter_group), copy.deepcopy(self.tok_arrow),

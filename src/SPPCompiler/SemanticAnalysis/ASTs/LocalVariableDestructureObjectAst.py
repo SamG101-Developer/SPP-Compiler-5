@@ -9,6 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
+    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableNestedForDestructureObjectAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
@@ -35,7 +36,7 @@ class LocalVariableDestructureObjectAst(Ast, Stage4_SemanticAnalyser):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         self.class_type.analyse_semantics(scope_manager, **kwargs)
         self.elements.for_each(lambda element: element.analyse_semantics(scope_manager, **kwargs))
 

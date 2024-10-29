@@ -77,7 +77,7 @@ class FunctionParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
 
         # Check there are no duplicate parameter names.
         parameter_names = self.parameters.map(lambda parameter: parameter.extract_names).flat()
-        if duplicate_parameters := parameter_names.non_unique_items():
+        if duplicate_parameters := parameter_names.non_unique():
             raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_parameters[0][0], duplicate_parameters[0][1], "parameter")
 
         # Check the parameters are in the correct order.

@@ -1459,17 +1459,17 @@ class Parser:
         return p8
 
     @parser_rule
+    def parse_literal_float(self) -> FloatLiteralAst:
+        p1 = self.parse_literal_float_b10().parse_once()
+        return p1
+
+    @parser_rule
     def parse_literal_integer(self) -> IntegerLiteralAst:
         p1 = self.parse_literal_integer_b10()
         p2 = self.parse_literal_integer_b02()
         p3 = self.parse_literal_integer_b16()
         p4 = (p1 | p2 | p3).parse_once()
         return p4
-
-    @parser_rule
-    def parse_literal_float(self) -> FloatLiteralAst:
-        p1 = self.parse_literal_float_b10().parse_once()
-        return p1
 
     @parser_rule
     def parse_literal_string(self) -> StringLiteralAst:
@@ -1549,6 +1549,7 @@ class Parser:
 
     @parser_rule
     def parse_integer_postfix_type(self) -> TokenType:
+        p0  = self.parse_token(TokenType.TkUnderscore).parse_once()
         p1  = self.parse_token(TokenType.TkUnderscore).parse_once()
         p2  = self.parse_characters("i8")
         p3  = self.parse_characters("i16")
@@ -1565,14 +1566,16 @@ class Parser:
         p14 = (p2 | p3 | p4 | p5 | p6 | p7 | p8 | p9 | p10 | p11 | p12 | p13).parse_once()
         return p14
 
+    @parser_rule
     def parse_float_postfix_type(self) -> TokenType:
-        p1  = self.parse_characters("f8")
-        p2  = self.parse_characters("f16")
-        p3  = self.parse_characters("f32")
-        p4  = self.parse_characters("f64")
-        p5  = self.parse_characters("f128")
-        p6  = self.parse_characters("f256")
-        p7  = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
+        p0 = self.parse_token(TokenType.TkUnderscore).parse_once()
+        p1 = self.parse_characters("f8")
+        p2 = self.parse_characters("f16")
+        p3 = self.parse_characters("f32")
+        p4 = self.parse_characters("f64")
+        p5 = self.parse_characters("f128")
+        p6 = self.parse_characters("f256")
+        p7 = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
         return p7
 
     # ===== TUPLES =====

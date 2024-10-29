@@ -28,7 +28,8 @@ class LoopElseStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # Infer the type from the body.
+        return self.body.infer_type(scope_manager, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         scope_manager.create_and_move_into_new_scope(f"<loop-else:{self.pos}>")

@@ -24,7 +24,10 @@ class RegexLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
     @functools.cache
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # Create the standard "std::Rgx" type.
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        regex_type = CommonTypes.Rgx(self.pos)
+        return InferredType.from_type(regex_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...

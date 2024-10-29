@@ -24,7 +24,10 @@ class StringLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
     @functools.cache
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # Create the standard "std::Str" type.
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        string_type = CommonTypes.Str(self.pos)
+        return InferredType.from_type(string_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...

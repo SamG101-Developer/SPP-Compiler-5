@@ -69,21 +69,21 @@ class Seq[T]:
     def not_empty(self) -> bool:
         return len(self._value) != 0
 
-    def unique_items(self) -> Seq[T]:
+    def unique(self) -> Seq[T]:
         return Seq(list(OrderedSet(self._value)))
 
-    def non_unique_items(self) -> Seq[List[T]]:
+    def non_unique(self) -> Seq[List[T]]:
         items = []
-        for x in self.unique_items():
+        for x in self.unique():
             if self._value.count(x) > 1:
                 items.append([y for y in self._value if y == x])
         return Seq(items)
 
     def non_unique_items_flat(self) -> Seq[T]:
-        return self.non_unique_items().map(lambda x: x[0])
+        return self.non_unique().map(lambda x: x[0])
 
     def contains_duplicates(self) -> bool:
-        return self.non_unique_items().not_empty()
+        return self.non_unique().not_empty()
 
     def contains(self, item: T) -> bool:
         return item in self._value

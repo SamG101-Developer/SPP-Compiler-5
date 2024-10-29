@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-import functools
 
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -18,7 +17,7 @@ if TYPE_CHECKING:
 @dataclass
 class ArrayLiteral0ElementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     tok_left_bracket: TokenAst
-    type: TypeAst
+    element_type: TypeAst
     tok_comma: TokenAst
     size: TokenAst
     tok_right_bracket: TokenAst
@@ -28,24 +27,23 @@ class ArrayLiteral0ElementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Print the AST with auto-formatting.
         string = [
             self.tok_left_bracket.print(printer),
-            self.type.print(printer),
+            self.element_type.print(printer),
             self.tok_comma.print(printer) + " ",
             self.size.print(printer),
             self.tok_right_bracket.print(printer)]
         return " ".join(string)
 
-    @functools.cache
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+        # Create the standard "std::Arr[T, n: BigNum]" type, with generic items.
         from SPPCompiler.SemanticAnalysis import IntegerLiteralAst
 
-        # Create an array type with the given size and element type.
+        # Create the size literal, and use the provided element type.
         size = IntegerLiteralAst.from_token(self.size, self.size.pos)
-        element_type = self.type
-        array_type = CommonTypes.Arr(element_type, size, self.pos)
-        return array_type
+        array_type = CommonTypes.Arr(self.element_type, size, self.pos)
+        return InferredType.from_type(array_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        self.type.analyse_semantics(scope_manager, **kwargs)
+        self.element_type.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["ArrayLiteral0ElementAst"]

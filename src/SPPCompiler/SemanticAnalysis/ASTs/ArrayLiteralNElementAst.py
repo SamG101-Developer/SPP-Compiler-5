@@ -38,17 +38,34 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+        # Create the standard "std::Arr[T, n: BigNum]" type, with generic items.
         from SPPCompiler.SemanticAnalysis import IntegerLiteralAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
-        # Create an array type with the number of elements as the size, and the element type from the 0th element.
+        # Create the size literal, and infer the element type.
         size = IntegerLiteralAst.from_python_literal(self.elements.length)
         element_type = self.elements[0].infer_type(scope_manager, **kwargs).type
         array_type = CommonTypes.Arr(element_type, size, self.pos)
         return InferredType.from_type(array_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import ConventionMovAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # Analyse the elements in the array.
         self.elements.for_each(lambda element: element.analyse_semantics(scope_manager, **kwargs))
+        element_types = self.elements.map(lambda e: e.infer_type(scope_manager, **kwargs))
+
+        # Check all elements have the same type as the 0th element.
+        unique_types = element_types.map_attr("type").unique()
+        if unique_types.length > 1:
+            raise AstErrors.ARRAY_ELEMENTS_DIFFERENT_TYPES(unique_types[0], unique_types[1])
+
+        # Check all elements are "owned", and not "borrowed".
+        borrowed_elements = self.elements.filter(lambda e: e.infer_type(scope_manager, **kwargs).convention == ConventionMovAst)
+        if borrowed_elements:
+            borrow_ast = scope_manager.current_scope.get_symbol(borrowed_elements[0]).memory_info.ast_borrowed
+            raise AstErrors.ARRAY_BORROWED_ELEMENT(borrowed_elements[0], borrow_ast)
 
 
 __all__ = ["ArrayLiteralNElementAst"]

@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-import functools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -26,9 +25,11 @@ class BooleanLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Print the AST with auto-formatting.
         return self.value.print(printer)
 
-    @functools.cache
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # Create the standard "std::Bool" type.
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        boolean_type = CommonTypes.Bool(self.pos)
+        return InferredType.from_type(boolean_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...

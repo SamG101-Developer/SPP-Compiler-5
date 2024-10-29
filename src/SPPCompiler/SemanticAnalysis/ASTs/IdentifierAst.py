@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-import hashlib, warnings
+import difflib, hashlib, warnings
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -48,10 +48,28 @@ class IdentifierAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return IdentifierAst(identifier.pos, identifier.value)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
+
+        # Extract the symbol from the current scope.
+        symbol = scope_manager.current_scope.get_symbol(self)
+
+        # If the symbol is a variable, then get its type.
+        if isinstance(symbol, VariableSymbol):
+            return InferredType(symbol.memory_info.convention, symbol.type)
+
+        # If the symbol is a namespace, then return "self" as the type.
+        elif isinstance(symbol, NamespaceSymbol):
+            return InferredType.from_type(self)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # Check there is a symbol with the same name in the current scope.
+        if not scope_manager.current_scope.has_symbol(self):
+            alternatives = scope_manager.current_scope.all_symbols().filter_to_type(VariableSymbol).map_attr("name")
+            closest_match = difflib.get_close_matches(self.value, alternatives.map_attr("value"), n=1, cutoff=0.5)
+            raise AstErrors.UNDEFINED_IDENTIFIER(self, closest_match[0] if closest_match else None)
 
 
 __all__ = ["IdentifierAst"]

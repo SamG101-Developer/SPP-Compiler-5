@@ -44,7 +44,15 @@ class InnerScopeAst[T](Ast, Default, TypeInferrable, Stage4_SemanticAnalyser):
         return InnerScopeAst(-1, TokenAst.default(TokenType.TkBraceL), body or Seq(), TokenAst.default(TokenType.TkBraceR))
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+
+        # Return the last member's inferred type, if there are any members.
+        if self.members:
+            return self.members[-1].infer_type(scope_manager, **kwargs)
+
+        # An empty scope is inferred to have a void type.
+        void_type = CommonTypes.Void(self.pos)
+        return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, inline: bool = False, **kwargs) -> None:
         self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))

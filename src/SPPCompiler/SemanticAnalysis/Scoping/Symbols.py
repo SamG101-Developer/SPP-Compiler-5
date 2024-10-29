@@ -4,33 +4,15 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional, TYPE_CHECKING
 import copy, json
 
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.SemanticAnalysis.Meta.AstMemory import MemoryInfo
 from SPPCompiler.SemanticAnalysis.Meta.AstVisibility import AstVisibility
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
     from SPPCompiler.SemanticAnalysis.ASTs.ClassPrototypeAst import ClassPrototypeAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-
-
-@dataclass(kw_only=True)
-class MemoryInfo:
-    ast_initialization: Optional[Ast] = field(default=None)  # where the memory is initialized (mut-ex with consumption)
-    ast_consumption: Optional[Ast] = field(default=None)  # where the memory is consumed (mut-ex with initialization)
-    ast_borrowed: Optional[Ast] = field(default=None)  # where the ast is borrowed (from parameter convention)
-    ast_partially_moved: Seq[Ast] = field(default_factory=Seq)  # list of partial moves (attributes)
-    ast_pinned: Seq[Ast] = field(default_factory=Seq)  # list of pinned attributes (or the entire object)
-
-    def consumed_by(self, ast: Ast) -> None:
-        self.ast_consumption = ast
-        self.ast_initialization = None
-
-    def initialized_by(self, ast: Ast) -> None:
-        self.ast_initialization = ast
-        self.ast_consumption = None
 
 
 @dataclass(kw_only=True)

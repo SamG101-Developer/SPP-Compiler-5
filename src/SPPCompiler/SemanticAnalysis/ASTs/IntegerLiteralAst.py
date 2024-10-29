@@ -14,6 +14,28 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
 
 
+def integer_limits(*, signed: bool, b: int) -> tuple[int, int]:
+    upper = pow(2, b - 1) - 1 if signed else pow(2, b) - 1
+    lower = pow(2, b - 1) if signed else 0
+    return lower, upper
+
+
+SIZE_MAPPING = {
+    "i8": integer_limits(signed=True, b=8),
+    "u8": integer_limits(signed=False, b=8),
+    "i16": integer_limits(signed=True, b=16),
+    "u16": integer_limits(signed=False, b=16),
+    "i32": integer_limits(signed=True, b=32),
+    "u32": integer_limits(signed=False, b=32),
+    "i64": integer_limits(signed=True, b=64),
+    "u64": integer_limits(signed=False, b=64),
+    "i128": integer_limits(signed=True, b=128),
+    "u128": integer_limits(signed=False, b=128),
+    "i256": integer_limits(signed=True, b=256),
+    "u256": integer_limits(signed=False, b=256)
+}
+
+
 @dataclass
 class IntegerLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     tok_sign: Optional[TokenAst]
@@ -52,10 +74,38 @@ class IntegerLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
     @functools.cache
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # Create an integer type based on the (optional) type postfix.
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+
+        # Match the type against the allowed type postfixes (no postfix is BigInt).
+        match self.type:
+            case None: float_type = CommonTypes.BigInt(self.pos)
+            case type if type.types[-1].value == "i8": CommonTypes.F8(self.pos)
+            case type if type.types[-1].value == "u8": CommonTypes.F8(self.pos)
+            case type if type.types[-1].value == "i16": CommonTypes.F16(self.pos)
+            case type if type.types[-1].value == "u16": CommonTypes.F16(self.pos)
+            case type if type.types[-1].value == "i32": CommonTypes.F32(self.pos)
+            case type if type.types[-1].value == "u32": CommonTypes.F32(self.pos)
+            case type if type.types[-1].value == "i64": CommonTypes.F64(self.pos)
+            case type if type.types[-1].value == "u64": CommonTypes.F64(self.pos)
+            case type if type.types[-1].value == "i128": CommonTypes.F128(self.pos)
+            case type if type.types[-1].value == "u128": CommonTypes.F128(self.pos)
+            case type if type.types[-1].value == "i256": CommonTypes.F256(self.pos)
+            case type if type.types[-1].value == "u256": CommonTypes.F256(self.pos)
+
+        return InferredType.from_type(float_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # No analysis needs to be done for the BigInt automatically inferred type.
+        if self.type.types[-1].value == "BigDec":
+            return
+
+        # Check if the value is within the bounds.
+        lower, upper = SIZE_MAPPING[self.type.types[-1].value]
+        if not (lower <= float(self.value.token.token_metadata) <= upper):
+            raise AstErrors.NUMBER_OUT_OF_RANGE(self, lower, upper, "integer")
 
 
 __all__ = ["IntegerLiteralAst"]

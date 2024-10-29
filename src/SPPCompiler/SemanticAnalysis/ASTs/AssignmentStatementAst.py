@@ -35,9 +35,11 @@ class AssignmentStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Ensure the LHS and RHS are semantically valid.
         self.lhs.for_each(lambda e: e.analyse_semantics(scope_manager, **kwargs))
         self.rhs.for_each(lambda e: e.analyse_semantics(scope_manager, **kwargs))
 

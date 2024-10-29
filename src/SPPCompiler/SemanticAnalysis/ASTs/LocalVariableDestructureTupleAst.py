@@ -8,8 +8,9 @@ from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stag
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableNestedForDestructureTupleAst
+    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -32,7 +33,7 @@ class LocalVariableDestructureTupleAst(Ast, Stage4_SemanticAnalyser):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         self.elements.for_each(lambda element: element.analyse_semantics(scope_manager, **kwargs))
 
 

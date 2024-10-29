@@ -36,7 +36,11 @@ class TupleLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
     @functools.cache
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # Create the standard "std::Tup[..Items]" type, with generic items.
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        inner_types = self.elements.map(lambda element: element.infer_type(scope_manager, **kwargs).element_type)
+        tuple_type = CommonTypes.Tup(inner_types, self.pos)
+        return InferredType.from_type(tuple_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         self.elements.for_each(lambda element: element.analyse_semantics(scope_manager, **kwargs))

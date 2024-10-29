@@ -63,6 +63,9 @@ class Scope:
             symbols.extend(self._parent.all_symbols())
         return symbols
 
+    def has_symbol(self, name: IdentifierAst | TypeAst | GenericIdentifierAst, exclusive: bool = False) -> bool:
+        return self.get_symbol(name, exclusive) is not None
+
     def get_symbol(self, name: IdentifierAst | TypeAst | GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
 

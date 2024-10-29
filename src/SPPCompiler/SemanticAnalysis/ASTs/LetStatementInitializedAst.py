@@ -32,7 +32,10 @@ class LetStatementInitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # Return the void type.
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        void_type = CommonTypes.Void(self.pos)
+        return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         self.assign_to.analyse_semantics(scope_manager, **kwargs)
