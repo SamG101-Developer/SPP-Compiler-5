@@ -44,7 +44,7 @@ class LoopConditionBooleanAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Check the loop condition is boolean.
         target_type = CommonTypes.Bool(self.pos)
         return_type = self.condition.infer_type(scope_manager).type
-        if not target_type.symbolic_eq(return_type, scope_manager.current_scope, scope_manager.current_scope):
+        if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
             raise AstErrors.CONDITION_NOT_BOOLEAN(self.condition, return_type, "loop")
 
 

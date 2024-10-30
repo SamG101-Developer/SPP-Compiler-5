@@ -61,7 +61,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
 
         # Ensure the attribute type is not void.
         void_type = CommonTypes.Void(self.pos)
-        if self.type.symbolic_eq(void_type, scope_manager.current_scope, scope_manager.current_scope):
+        if self.type.symbolic_eq(void_type, scope_manager.current_scope):
             raise AstErrors.INVALID_VOID_USE(self.type)
 
 

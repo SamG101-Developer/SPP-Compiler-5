@@ -32,7 +32,10 @@ class RelStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # All statements are inferred as "void".
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        void_type = CommonTypes.Void(self.pos)
+        return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         self.expressions.for_each(lambda expression: expression.analyse_semantics(scope_manager, **kwargs))

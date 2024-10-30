@@ -78,7 +78,7 @@ class GenExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             type=kwargs["function_ret_type"].types[-1].generic_argument_group["Gen"].value)
 
         # Check the expression type matches the expected type.
-        if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope, scope_manager.current_scope):
+        if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
             raise AstErrors.TYPE_MISMATCH(expression_type.type, expected_type.type, self.expression, expected_type.type)
 
         # Apply the function argument law of exclusivity checks to the expression.

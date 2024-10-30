@@ -118,7 +118,7 @@ class CaseExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
                     # Check the function's return type is boolean.
                     target_type = CommonTypes.Bool(self.pos)
                     return_type = binary_ast.infer_type(scope_manager).type
-                    if not target_type.symbolic_eq(return_type, scope_manager.current_scope, scope_manager.current_scope):
+                    if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
                         raise AstErrors.CONDITION_NOT_BOOLEAN(self.condition, return_type, "case")
 
         # Update the memory status of the symbols.

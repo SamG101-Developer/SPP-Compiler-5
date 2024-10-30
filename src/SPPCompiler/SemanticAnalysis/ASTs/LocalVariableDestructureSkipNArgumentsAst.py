@@ -16,14 +16,14 @@ if TYPE_CHECKING:
 
 @dataclass
 class LocalVariableDestructureSkipNArgumentsAst(Ast, VariableNameExtraction):
-    variadic_token: TokenAst
+    tok_variadic: TokenAst
     binding: Optional[LocalVariableSingleIdentifierAst]
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.variadic_token.print(printer),
+            self.tok_variadic.print(printer),
             self.binding.print(printer) if self.binding else ""]
         return "".join(string)
 

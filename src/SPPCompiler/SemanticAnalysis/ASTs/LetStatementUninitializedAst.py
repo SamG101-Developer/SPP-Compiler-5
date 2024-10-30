@@ -45,7 +45,7 @@ class LetStatementUninitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser)
 
         # Check the type isn't the void type.
         void_type = CommonTypes.Void(self.pos)
-        if self.type.symbolic_eq(void_type, scope_manager.current_scope, scope_manager.current_scope):
+        if self.type.symbolic_eq(void_type, scope_manager.current_scope):
             raise AstErrors.INVALID_VOID_USE(self.type)
 
         # Recursively analyse the variable.

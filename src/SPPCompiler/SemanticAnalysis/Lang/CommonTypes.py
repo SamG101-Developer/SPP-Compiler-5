@@ -187,13 +187,13 @@ class CommonTypes:
         return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Opt", generics)]))
 
     @staticmethod
-    def Tup(inner_types, pos: int = -1):
+    def Tup(inner_types: Seq = None, pos: int = -1):
         # Import ASTs needed for the type and generic argument creation.
         from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
 
         # Convert the inner types into generic arguments and load them into a group for the tuple type.
-        inner_type_generics = inner_types.map(lambda x: GenericTypeArgumentUnnamedAst(-1, x))
+        inner_type_generics = (inner_types or Seq()).map(lambda x: GenericTypeArgumentUnnamedAst(-1, x))
         generics = GenericArgumentGroupAst.default(inner_type_generics)
         return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Tup", generics)]))
 

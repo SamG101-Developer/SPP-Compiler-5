@@ -31,6 +31,12 @@ class LetStatementInitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             self.value.print(printer)]
         return "".join(string)
 
+    @staticmethod
+    def from_variable_and_value(variable: LocalVariableAst, value: ExpressionAst) -> LetStatementInitializedAst:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import TokenAst
+        return LetStatementInitializedAst(TokenAst.default(TokenType.KwLet), variable, TokenAst.default(TokenType.TkAssign), value)
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes

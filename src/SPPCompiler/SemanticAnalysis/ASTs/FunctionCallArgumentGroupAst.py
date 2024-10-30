@@ -82,8 +82,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
 
             # Check the argument type is a tuple
             tuple_argument_type = argument.infer_type(scope_manager, **kwargs).type
-            tuple_type = CommonTypes.Tup([])
-            if not tuple_argument_type.without_generics().symbolic_eq(tuple_type, scope_manager.current_scope, scope_manager.current_scope):
+            if not tuple_argument_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
                 raise AstErrors.UNPACKING_NON_TUPLE_TYPE(argument.value, tuple_argument_type)
 
             # Replace the tuple-expansion argument with the expanded arguments

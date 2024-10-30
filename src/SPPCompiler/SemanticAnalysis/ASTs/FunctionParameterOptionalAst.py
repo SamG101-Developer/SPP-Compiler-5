@@ -65,7 +65,7 @@ class FunctionParameterOptionalAst(Ast, Ordered, Stage4_SemanticAnalyser):
 
         # Make sure the default expression is of the correct type.
         default_type = self.default.infer_type(scope_manager).type
-        if not self.type.symbolic_eq(default_type, scope_manager.current_scope, scope_manager.current_scope):
+        if not self.type.symbolic_eq(default_type, scope_manager.current_scope):
             raise AstErrors.TYPE_MISMATCH(self.variable.extract_names[0], self.type, self.default, default_type)
 
         # Create the variable for the parameter.

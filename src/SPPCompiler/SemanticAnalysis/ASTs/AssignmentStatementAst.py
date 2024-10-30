@@ -36,7 +36,7 @@ class AssignmentStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        # Assignments do not return a value, as they are modelled as a statement, not an expression.
+        # All statements are inferred as "void".
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
@@ -76,7 +76,7 @@ class AssignmentStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             # Ensure the lhs and rhs have the same type and convention (cannot do "Str = &Str" for example).
             lhs_type = lhs_expr.infer_type(scope_manager, **kwargs)
             rhs_type = rhs_expr.infer_type(scope_manager, **kwargs)
-            if not lhs_type.symbolic_eq(rhs_type, scope_manager.current_scope, scope_manager.current_scope):
+            if not lhs_type.symbolic_eq(rhs_type, scope_manager.current_scope):
                 raise AstErrors.TYPE_MISMATCH(lhs_expr, lhs_type.type, rhs_expr, rhs_type.type)
 
             # Resolve memory status, by marking lhs identifiers as initialised, or removing partial moves.

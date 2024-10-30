@@ -27,7 +27,8 @@ class PostfixExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # Infer the type of the postfix operation being applied to the "lhs".
+        return self.op.infer_type(scope_manager, lhs=self.lhs, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst
@@ -37,6 +38,7 @@ class PostfixExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         if isinstance(self.lhs, TokenAst):
             raise AstErrors.INVALID_EXPRESSION(self.lhs)
 
+        # Analyse the "lhs" and "op".
         self.lhs.analyse_semantics(scope_manager, **kwargs)
         self.op.analyse_semantics(scope_manager, **kwargs)
 

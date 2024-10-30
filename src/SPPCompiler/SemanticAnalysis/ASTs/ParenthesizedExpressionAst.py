@@ -29,7 +29,8 @@ class ParenthesizedExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # Infer the type of the expression.
+        return self.expression.infer_type(scope_manager, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
@@ -39,6 +40,7 @@ class ParenthesizedExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         if isinstance(self.expression, (TokenAst, TypeAst)):
             raise AstErrors.INVALID_EXPRESSION(self.expression)
 
+        # Analyse the expression.
         self.expression.analyse_semantics(scope_manager, **kwargs)
 
 

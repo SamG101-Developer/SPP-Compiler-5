@@ -56,7 +56,7 @@ class RetStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         expected_type = InferredType.from_type(kwargs["function_ret_type"])
 
         # Check the expression type matches the expected type.
-        if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope, scope_manager.current_scope):
+        if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
             raise AstErrors.TYPE_MISMATCH(expression_type.type, expected_type.type, self.expression, expected_type.type)
 
 

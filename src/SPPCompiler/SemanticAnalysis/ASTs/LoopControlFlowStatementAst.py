@@ -75,7 +75,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
                 kwargs["loop_types"][depth] = (self.skip_or_expr or self.tok_seq_exit[-1], exit_type)
             else:
                 that_expr, that_exit_type = kwargs["loop_types"][depth]
-                if not exit_type.symbolic_eq(that_exit_type, scope_manager.current_scope, scope_manager.current_scope):
+                if not exit_type.symbolic_eq(that_exit_type, scope_manager.current_scope):
                     raise AstErrors.TYPE_MISMATCH(that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type)
 
 

@@ -38,8 +38,15 @@ class PatternBlockAst(Ast, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Create a new scope for the pattern block.
         scope_manager.create_and_move_into_new_scope(f"<pattern:{self.pos}>")
+
+        # Analyse the patterns, guard and body.
+        self.patterns.for_each(lambda p: p.analyse_semantics(scope_manager, **kwargs))
         self.body.analyse_semantics(scope_manager, **kwargs)
+        self.guard.analyse_semantics(scope_manager, **kwargs)
+
+        # Move out of the current scope.
         scope_manager.move_out_of_current_scope()
 
 

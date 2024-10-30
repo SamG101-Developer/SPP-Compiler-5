@@ -1,7 +1,7 @@
 from __future__ import annotations
 from convert_case import pascal_case
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import hashlib
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -62,7 +62,7 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
             case GenericIdentifierAst(): return TypeAst(self.pos, self.namespace, self.types[:-1] + [self.types[-1].without_generics()])
             case _: return TypeAst(self.pos, self.namespace.copy(), self.types.copy())
 
-    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Scope) -> bool:
+    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None) -> bool:
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

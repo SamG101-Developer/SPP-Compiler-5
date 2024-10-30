@@ -32,10 +32,29 @@ class PinStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # All statements are inferred as "void".
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        void_type = CommonTypes.Void(self.pos)
+        return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
+
+        # Analyse the expressions.
         self.expressions.for_each(lambda expression: expression.analyse_semantics(scope_manager, **kwargs))
+
+        # Check each expression is symbolic.
+        symbols = self.expressions.map(scope_manager.current_scope.get_variable_symbol_outermost_part)
+        if symbols.filter_out_none().length < self.expressions.length:
+            raise AstErrors.INVALID_PIN_TARGET(self, self.expressions[symbols.index(None)])
+
+        # Prevent overlapping symbols from being created.
+        symbols.remove_none()
+        for pin_target, symbol in self.expressions.zip(symbols):
+            if overlap := symbol.memory_info.ast_pinned.filter(lambda p: AstMemoryHandler.overlaps(p, pin_target)):
+                raise AstErrors.PIN_OVERLAP_CONFLICT(overlap, pin_target)
+            symbol.memory_info.ast_pinned.append(pin_target)
 
 
 __all__ = ["PinStatementAst"]

@@ -75,7 +75,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         # Check the value's type is the same as the type.
         expected_type = InferredType.from_type(self.type)
         given_type = self.value.infer_type(scope_manager, **kwargs)
-        if not expected_type.symbolic_eq(given_type, scope_manager.current_scope, scope_manager.current_scope):
+        if not expected_type.symbolic_eq(given_type, scope_manager.current_scope):
             raise AstErrors.TYPE_MISMATCH(self.name, self.type, self.value, given_type.type)
 
 

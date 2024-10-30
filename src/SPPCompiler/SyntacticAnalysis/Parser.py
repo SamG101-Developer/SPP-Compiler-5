@@ -1092,10 +1092,9 @@ class Parser:
     def parse_pattern_variant_nested_for_attribute_binding(self) -> PatternVariantNestedForAttributeBindingAst:
         p1 = self.parse_pattern_variant_tuple_destructure()
         p2 = self.parse_pattern_variant_object_destructure()
-        p3 = self.parse_pattern_variant_single_identifier()
-        p4 = self.parse_pattern_variant_literal()
-        p5 = (p1 | p2 | p3 | p4).parse_once()
-        return p5
+        p3 = self.parse_pattern_variant_literal()
+        p4 = (p1 | p2 | p3).parse_once()
+        return p4
 
     @parser_rule
     def parse_pattern_guard(self) -> PatternGuardAst:

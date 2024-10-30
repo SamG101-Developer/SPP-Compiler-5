@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
@@ -14,7 +13,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PatternVariantElseCaseAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class PatternVariantElseCaseAst(Ast, Stage4_SemanticAnalyser):
     tok_else: TokenAst
     case_expression: CaseExpressionAst
 
@@ -26,11 +25,9 @@ class PatternVariantElseCaseAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             self.case_expression.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
-
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        # Analyse the case expression.
+        self.case_expression.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["PatternVariantElseCaseAst"]

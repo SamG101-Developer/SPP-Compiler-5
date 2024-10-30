@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
@@ -13,7 +12,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PatternVariantLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class PatternVariantLiteralAst(Ast, Stage4_SemanticAnalyser):
     literal: LiteralAst
 
     @ast_printer_method
@@ -21,11 +20,9 @@ class PatternVariantLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Print the AST with auto-formatting.
         return self.literal.print(printer)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
-
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        # Analyse the literal.
+        self.literal.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["PatternVariantLiteralAst"]

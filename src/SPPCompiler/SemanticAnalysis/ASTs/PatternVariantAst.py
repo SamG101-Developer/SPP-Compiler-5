@@ -39,9 +39,7 @@ type PatternVariantNestedForDestructureTupleAst = Union[
 type PatternVariantNestedForAttributeBindingAst = Union[
     PatternVariantDestructureTupleAst,
     PatternVariantDestructureObjectAst,
-    PatternVariantExpressionAst,
-    PatternVariantLiteralAst,
-    PatternVariantSingleIdentifierAst]
+    PatternVariantLiteralAst]
 
 __all__ = [
     "PatternVariantAst",

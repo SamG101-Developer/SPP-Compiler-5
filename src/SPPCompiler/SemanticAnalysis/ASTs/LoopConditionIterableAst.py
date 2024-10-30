@@ -55,7 +55,7 @@ class LoopConditionIterableAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Todo: Generator has to be owned? If so, change to InferredType checks.
         allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics)
         iterable_type = self.iterable.infer_type(scope_manager, **kwargs).type
-        if not allowed_types.any(lambda t: t.symbolic_eq(iterable_type, scope_manager.current_scope, scope_manager.current_scope)):
+        if not allowed_types.any(lambda t: t.symbolic_eq(iterable_type, scope_manager.current_scope)):
             raise AstErrors.INVALID_ITERABLE_TYPE(self.iterable, iterable_type)
 
         # Create a "let" statement to introduce the loop variable into the scope.
