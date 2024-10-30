@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+import difflib
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -34,17 +35,20 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_Seman
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
         
         # Accessing static methods off of a type, such as "Str::new()".
         if isinstance(lhs, TypeAst):
             # Check static member access "::" is being used.
             if self.tok_access.token.token_type != TokenType.TkDblColon:
-                ...
+                raise AstErrors.STATIC_MEMBER_ACCESS_EXPECTED(lhs, self.tok_access)
         
             # Check the target field exists on the type.
             if not scope_manager.current_scope.get_symbol(lhs).scope.has_symbol(self.field):
-                ...
+                alternatives = scope_manager.current_scope.get_symbol(lhs).scope.all_symbols().map_attr("name")
+                closest_match = difflib.get_close_matches(self.field.value, alternatives.map_attr("value"), n=1, cutoff=0)
+                raise AstErrors.UNDEFINED_IDENTIFIER(self.field, closest_match[0] if closest_match else None)
         
         # Numerical access to a tuple, such as "tuple.0".
         elif isinstance(self.field, TokenAst):
@@ -53,7 +57,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_Seman
             
             # Check the lhs isn't a generic type.
             if lhs_symbol.is_generic:
-                ...
+                raise AstErrors.MEMBER_ACCESS_GENERIC_TYPE(lhs, lhs_type, self.tok_access)
         
             # Check the lhs is a tuple (only indexable type).
             if not lhs_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
@@ -70,7 +74,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_Seman
             
             # Check the lhs isn't a generic type.
             if lhs_symbol.is_generic:
-                ...
+                raise AstErrors.MEMBER_ACCESS_GENERIC_TYPE(lhs, lhs_type, self.tok_access)
             
             # Check the lhs is a variable and not a namespace.
             if isinstance(lhs_symbol, NamespaceSymbol):

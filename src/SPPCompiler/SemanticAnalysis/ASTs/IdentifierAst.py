@@ -68,7 +68,7 @@ class IdentifierAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Check there is a symbol with the same name in the current scope.
         if not scope_manager.current_scope.has_symbol(self):
             alternatives = scope_manager.current_scope.all_symbols().filter_to_type(VariableSymbol).map_attr("name")
-            closest_match = difflib.get_close_matches(self.value, alternatives.map_attr("value"), n=1, cutoff=0.5)
+            closest_match = difflib.get_close_matches(self.value, alternatives.map_attr("value"), n=1, cutoff=0)
             raise AstErrors.UNDEFINED_IDENTIFIER(self, closest_match[0] if closest_match else None)
 
 

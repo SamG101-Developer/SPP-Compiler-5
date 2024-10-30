@@ -367,3 +367,38 @@ class AstErrors:
             msg=f"The condition for a {what} must be a boolean type.",
             tip="Change the condition to be a boolean type.")
         return e
+
+    # MEMBER ACCESS ERRORS
+
+    @staticmethod
+    def STATIC_MEMBER_ACCESS_EXPECTED(lhs: Ast, access_token: TokenAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(lhs.pos, f"Static expression defined here")
+        e.add_error(
+            pos=access_token.pos,
+            tag="Runtime member access found.",
+            msg="The member access operator '.' can only be used on runtime expressions.",
+            tip="Use the member access operator '::' instead of '.'.")
+        return e
+
+    @staticmethod
+    def RUNTIME_MEMBER_ACCESS_EXPECTED(lhs: Ast, access_token: TokenAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(lhs.pos, f"Runtime expression defined here")
+        e.add_error(
+            pos=access_token.pos,
+            tag="Static member access found.",
+            msg="The member access operator '::' can only be used on static expressions.",
+            tip="Use the member access operator '.' instead of '::'.")
+        return e
+
+    @staticmethod
+    def MEMBER_ACCESS_GENERIC_TYPE(lhs: Ast, lhs_type: TypeAst, access_token: TokenAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(lhs.pos, f"Generic type '{lhs_type}' inferred here.")
+        e.add_error(
+            pos=access_token.pos,
+            tag="Member access on generic type.",
+            msg="Generic types do not support member access.",
+            tip="Use a concrete type instead of a generic type.")
+        return e
