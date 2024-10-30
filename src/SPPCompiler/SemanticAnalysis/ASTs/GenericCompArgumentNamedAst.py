@@ -1,9 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericCompArgumentNamedAst(Ast, Stage4_SemanticAnalyser):
+class GenericCompArgumentNamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
     name: TypeAst
     tok_assign: TokenAst
     value: ExpressionAst
@@ -25,6 +26,7 @@ class GenericCompArgumentNamedAst(Ast, Stage4_SemanticAnalyser):
 
         # Convert the name to a TypeAst.
         self.name = TypeAst.from_identifier(self.name)
+        self._variant = "Named"
 
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.
@@ -40,6 +42,14 @@ class GenericCompArgumentNamedAst(Ast, Stage4_SemanticAnalyser):
         return " ".join(string)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
+        if isinstance(self.value, (TokenAst, TypeAst)):
+            raise AstErrors.INVALID_EXPRESSION(self.value)
+
+        # Analyse the value of the named argument.
         self.value.analyse_semantics(scope_manager, **kwargs)
 
 

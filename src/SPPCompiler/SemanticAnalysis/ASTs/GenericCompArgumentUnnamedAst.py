@@ -1,9 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
@@ -12,8 +13,11 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericCompArgumentUnnamedAst(Ast, Stage4_SemanticAnalyser):
+class GenericCompArgumentUnnamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
     value: ExpressionAst
+
+    def __post_init__(self) -> None:
+        self._variant = "Unnamed"
 
     def __eq__(self, other: GenericCompArgumentUnnamedAst) -> bool:
         # Check both ASTs are the same type and have the same value.
@@ -25,6 +29,14 @@ class GenericCompArgumentUnnamedAst(Ast, Stage4_SemanticAnalyser):
         return self.value.print(printer)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
+        if isinstance(self.value, (TokenAst, TypeAst)):
+            raise AstErrors.INVALID_EXPRESSION(self.value)
+
+        # Analyse the value of the unnamed argument.
         self.value.analyse_semantics(scope_manager, **kwargs)
 
 

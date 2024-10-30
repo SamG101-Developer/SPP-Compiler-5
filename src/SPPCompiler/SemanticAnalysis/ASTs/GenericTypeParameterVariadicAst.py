@@ -1,9 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericTypeParameterVariadicAst(Ast, Stage2_SymbolGenerator, Stage4_SemanticAnalyser):
+class GenericTypeParameterVariadicAst(Ast, Ordered, Stage2_SymbolGenerator, Stage4_SemanticAnalyser):
     tok_variadic: TokenAst
     name: TypeAst
     constraints: GenericTypeParameterInlineConstraintsAst
@@ -27,6 +28,7 @@ class GenericTypeParameterVariadicAst(Ast, Stage2_SymbolGenerator, Stage4_Semant
         # Convert the name to a TypeAst, and create defaults.
         self.name = TypeAst.from_identifier(self.name)
         self.constraints = self.constraints or GenericTypeParameterInlineConstraintsAst.default()
+        self._variant = "Variadic"
 
     def __eq__(self, other: GenericTypeParameterVariadicAst) -> bool:
         # Check both ASTs are the same type and have the same name.

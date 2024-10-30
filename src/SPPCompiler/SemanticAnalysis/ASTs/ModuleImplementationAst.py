@@ -26,6 +26,7 @@ class ModuleImplementationAst(Ast, Stage4_SemanticAnalyser):
         return self.members.print(printer, "\n")
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Analyse the members.
         self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
 
 

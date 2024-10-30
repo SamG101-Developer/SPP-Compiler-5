@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.Utils.Sequence import Seq
@@ -32,6 +33,13 @@ class GenericParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         self.parameters = Seq(self.parameters)
         self.type_parameters = self.parameters.filter_to_type(*GenericTypeParameterAst.__value__.__args__)
         self.comp_parameters = self.parameters.filter_to_type(*GenericCompParameterAst.__value__.__args__)
+
+    def __copy__(self) -> GenericParameterGroupAst:
+        return GenericParameterGroupAst.default(self.parameters.copy())
+
+    def __eq__(self, other: GenericParameterGroupAst) -> bool:
+        # Check both ASTs are the same type and have the same parameters.
+        return isinstance(other, GenericParameterGroupAst) and self.parameters == other.parameters
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -67,6 +75,18 @@ class GenericParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         return self.parameters.filter_to_type(GenericCompParameterVariadicAst, GenericTypeParameterVariadicAst)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # Check there are no duplicate generic parameter names.
+        generic_parameter_names = self.parameters.map(lambda parameter: parameter.name).flat()
+        if duplicate_generic_parameters := generic_parameter_names.non_unique():
+            raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_generic_parameters[0][0], duplicate_generic_parameters[0][1], "generic parameter")
+
+        # Check the generic parameters are in the correct order.
+        if difference := AstOrdering.order_args(self.parameters):
+            raise AstErrors.INVALID_ORDER(difference[0], difference[1], "generic parameter")
+
+        # Analyse the parameters.
         self.parameters.for_each(lambda p: p.analyse_semantics(scope_manager, **kwargs))
 
 

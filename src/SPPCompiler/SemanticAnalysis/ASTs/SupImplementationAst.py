@@ -26,13 +26,6 @@ class SupImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGener
         # Convert the members into a sequence.
         self.members = Seq(self.members)
 
-    @staticmethod
-    def default(members: Seq[SupMemberAst] = None) -> SupImplementationAst:
-        # Create a default class implementation AST.
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return SupImplementationAst(-1, TokenAst.default(TokenType.TkBraceL), members or Seq(), TokenAst.default(TokenType.TkBraceR))
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -46,6 +39,13 @@ class SupImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGener
                 self.tok_left_brace.print(printer),
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
+
+    @staticmethod
+    def default(members: Seq[SupMemberAst] = None) -> SupImplementationAst:
+        # Create a default class implementation AST.
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+        return SupImplementationAst(-1, TokenAst.default(TokenType.TkBraceL), members or Seq(), TokenAst.default(TokenType.TkBraceR))
 
     def pre_process(self, context: PreProcessingContext) -> None:
         self.members.for_each(lambda member: member.pre_process(context))

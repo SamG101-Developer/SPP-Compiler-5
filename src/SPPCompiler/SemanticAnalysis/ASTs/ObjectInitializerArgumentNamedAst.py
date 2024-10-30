@@ -29,6 +29,13 @@ class ObjectInitializerArgumentNamedAst(Ast, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
+        if isinstance(self.value, (TokenAst, TypeAst)):
+            raise AstErrors.INVALID_EXPRESSION(self.value)
+
         self.value.analyse_semantics(scope_manager, **kwargs)
 
 

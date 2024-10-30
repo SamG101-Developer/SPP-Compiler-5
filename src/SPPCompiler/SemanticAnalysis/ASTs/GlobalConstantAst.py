@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.AstVisibility import VisibilityEnabled
+from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
@@ -60,8 +60,23 @@ class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
+
+        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
+        if isinstance(self.value, (TokenAst, TypeAst)):
+            raise AstErrors.INVALID_EXPRESSION(self.value)
+
+        # Analyse the type and value.
         self.type.analyse_semantics(scope_manager, **kwargs)
         self.value.analyse_semantics(scope_manager, **kwargs)
+
+        # Check the value's type is the same as the type.
+        expected_type = InferredType.from_type(self.type)
+        given_type = self.value.infer_type(scope_manager, **kwargs)
+        if not expected_type.symbolic_eq(given_type, scope_manager.current_scope, scope_manager.current_scope):
+            raise AstErrors.TYPE_MISMATCH(self.name, self.type, self.value, given_type.type)
 
 
 __all__ = ["GlobalConstantAst"]

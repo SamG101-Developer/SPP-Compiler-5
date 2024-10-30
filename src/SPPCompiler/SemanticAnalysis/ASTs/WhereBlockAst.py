@@ -17,12 +17,6 @@ class WhereBlockAst(Ast, Default, Stage4_SemanticAnalyser):
     tok_where: TokenAst
     constraint_group: WhereConstraintsGroupAst
 
-    @staticmethod
-    def default() -> WhereBlockAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        from SPPCompiler.SemanticAnalysis import WhereConstraintsGroupAst, TokenAst
-        return WhereBlockAst(-1, TokenAst.default(TokenType.KwWhere), WhereConstraintsGroupAst.default())
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -33,6 +27,12 @@ class WhereBlockAst(Ast, Default, Stage4_SemanticAnalyser):
         else:
             string = []
         return "".join(string)
+
+    @staticmethod
+    def default() -> WhereBlockAst:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import WhereConstraintsGroupAst, TokenAst
+        return WhereBlockAst(-1, TokenAst.default(TokenType.KwWhere), WhereConstraintsGroupAst.default())
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...

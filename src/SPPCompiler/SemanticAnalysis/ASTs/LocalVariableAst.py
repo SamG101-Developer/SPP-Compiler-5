@@ -26,8 +26,7 @@ type LocalVariableNestedForDestructureTupleAst = Union[
 
 type LocalVariableNestedForAttributeBindingAst = Union[
     LocalVariableDestructureTupleAst,
-    LocalVariableDestructureObjectAst,
-    LocalVariableSingleIdentifierAst]
+    LocalVariableDestructureObjectAst]
 
 __all__ = [
     "LocalVariableAst",

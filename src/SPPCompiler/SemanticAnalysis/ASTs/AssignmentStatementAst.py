@@ -3,8 +3,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -35,13 +36,54 @@ class AssignmentStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+        # Assignments do not return a value, as they are modelled as a statement, not an expression.
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        return CommonTypes.Void(self.pos)
+        void_type = CommonTypes.Void(self.pos)
+        return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, PostfixExpressionAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
         # Ensure the LHS and RHS are semantically valid.
         self.lhs.for_each(lambda e: e.analyse_semantics(scope_manager, **kwargs))
         self.rhs.for_each(lambda e: e.analyse_semantics(scope_manager, **kwargs))
+
+        # Ensure the lhs targets are all symbolic (assignable to).
+        lhs_syms = self.lhs.map(lambda e: scope_manager.current_scope.get_variable_symbol_outermost_part(e))
+        if non_symbolic := lhs_syms.filter(lambda s: not s):
+            raise AstErrors.INVALID_ASSIGNMENT_LHS_EXPR(non_symbolic)
+
+        # For each assignment, check mutability, types compatibility, and resolve partial moves.
+        for (lhs_expr, rhs_expr), lhs_sym in self.lhs.zip(self.rhs).zip(lhs_syms):
+
+            # Ensure the memory status of the left and right hand side.
+            AstMemoryHandler.enforce_memory_integrity(lhs_sym.name, self.op, scope_manager, update_memory_info=False)
+            AstMemoryHandler.enforce_memory_integrity(rhs_expr, self.op, scope_manager)
+
+            # Full assignment (ie "x = y") requires the "x" symbol to be marked as "mut".
+            if isinstance(lhs_expr, IdentifierAst) and not lhs_sym.is_mutable:
+                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_expr, self.op, lhs_sym.memory_info.ast_initialization)
+
+            # Attribute assignment (ie "x.y = z"), for a non-borrowed symbol, requires an outermost "mut" symbol.
+            elif isinstance(lhs_expr, PostfixExpressionAst) and (not lhs_sym.memory_info.ast_borrowed and not lhs_sym.is_mutable):
+                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_expr, self.op, lhs_sym.memory_info.ast_initialization)
+
+            # Attribute assignment (ie "x.y = z"), for a borrowed symbol, requires an outermost mutable borrow.
+            elif isinstance(lhs_expr, PostfixExpressionAst) and (lhs_sym.memory_info.ast_borrowed and not lhs_sym.memory_info.is_borrow_mut):
+                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_expr, self.op, lhs_sym.memory_info.ast_initialization)
+
+            # Ensure the lhs and rhs have the same type and convention (cannot do "Str = &Str" for example).
+            lhs_type = lhs_expr.infer_type(scope_manager, **kwargs)
+            rhs_type = rhs_expr.infer_type(scope_manager, **kwargs)
+            if not lhs_type.symbolic_eq(rhs_type, scope_manager.current_scope, scope_manager.current_scope):
+                raise AstErrors.TYPE_MISMATCH(lhs_expr, lhs_type.type, rhs_expr, rhs_type.type)
+
+            # Resolve memory status, by marking lhs identifiers as initialised, or removing partial moves.
+            if isinstance(lhs_expr, IdentifierAst):
+                lhs_sym.memory_info.initialized_by(self)
+            elif isinstance(lhs_expr, PostfixExpressionAst):
+                lhs_sym.memory_info.remove_partial_move(lhs_expr)
 
 
 __all__ = ["AssignmentStatementAst"]

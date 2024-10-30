@@ -4,7 +4,7 @@ from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
@@ -37,11 +37,32 @@ class LoopExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+
+        # Get the loop type set by exit expressions inside the loop.
+        loop_type = self._loop_type_info.get(self._loop_type_index, (None, None))[1]
+        if not loop_type:
+            void_type = CommonTypes.Void(self.pos)
+            loop_type = InferredType.from_type(void_type)
+        return loop_type
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Analyse the condition outside the new scope.
+        self.condition.analyse_semantics(scope_manager, **kwargs)
+
+        # Create a new scope for the loop body.
         scope_manager.create_and_move_into_new_scope(f"<loop:{self.pos}>")
-        self.body.analyse_semantics(scope_manager, **kwargs)
+
+        # Analyse twice (for memory checks).
+        for i in range(("loop_count" not in kwargs) + 1):
+            kwargs["loop_count"] = kwargs.get("loop_count", 0) + 1
+            kwargs["loop_types"] = kwargs.get("loop_types", {})
+            self._loop_type_info = kwargs["loop_types"]
+            self._loop_type_index = kwargs["loop_count"]
+            self.body.analyse_semantics(scope_manager, **kwargs)
+            kwargs["loop_count"] -= 1
+
+        # Move out of the loop scope.
         scope_manager.move_out_of_current_scope()
 
 

@@ -12,6 +12,9 @@ if TYPE_CHECKING:
     from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
 
+# Todo: add newlines after multi-expression/statement blocks (ie between multiple ret/gen/let etc)
+
+
 # Decorator that wraps the function in a ParserRuleHandler
 def parser_rule(func) -> Callable[..., ParserRuleHandler]:
     @functools.wraps(func)
@@ -235,12 +238,12 @@ class Parser:
     @parser_rule
     def parse_function_call_argument(self) -> FunctionCallArgumentAst:
         p1 = self.parse_function_call_argument_named()
-        p2 = self.parse_function_call_argument_normal()
+        p2 = self.parse_function_call_argument_unnamed()
         p3 = (p1 | p2).parse_once()
         return p3
 
     @parser_rule
-    def parse_function_call_argument_normal(self) -> FunctionCallArgumentUnnamedAst:
+    def parse_function_call_argument_unnamed(self) -> FunctionCallArgumentUnnamedAst:
         c1 = self.current_pos()
         p1 = self.parse_convention().parse_once()
         p2 = self.parse_token(TokenType.TkVariadic).parse_optional()
@@ -324,9 +327,9 @@ class Parser:
     @parser_rule
     def parse_generic_argument(self) -> GenericArgumentAst:
         p1 = self.parse_generic_type_argument_named()
-        p2 = self.parse_generic_type_argument_normal()
+        p2 = self.parse_generic_type_argument_unnamed()
         p3 = self.parse_generic_comp_argument_named()
-        p4 = self.parse_generic_comp_argument_normal()
+        p4 = self.parse_generic_comp_argument_unnamed()
         p5 = (p1 | p2 | p3 | p4).parse_once()
         return p5
 
@@ -339,7 +342,7 @@ class Parser:
         return GenericTypeArgumentNamedAst(c1, p1, p2, p3)
 
     @parser_rule
-    def parse_generic_type_argument_normal(self) -> GenericTypeArgumentUnnamedAst:
+    def parse_generic_type_argument_unnamed(self) -> GenericTypeArgumentUnnamedAst:
         c1 = self.current_pos()
         p1 = self.parse_type().parse_once()
         return GenericTypeArgumentUnnamedAst(c1, p1)
@@ -353,7 +356,7 @@ class Parser:
         return GenericCompArgumentNamedAst(c1, p1, p2, p3)
 
     @parser_rule
-    def parse_generic_comp_argument_normal(self) -> GenericCompArgumentUnnamedAst:
+    def parse_generic_comp_argument_unnamed(self) -> GenericCompArgumentUnnamedAst:
         c1 = self.current_pos()
         p1 = self.parse_global_constant_value().parse_once()
         return GenericCompArgumentUnnamedAst(c1, p1)
@@ -631,10 +634,23 @@ class Parser:
 
     @parser_rule
     def parse_gen_expression_normal(self) -> GenExpressionAst:
+        p1 = self.parse_gen_expression_normal_with_expression()
+        p2 = self.parse_gen_expression_normal_no_expression()
+        p3 = (p1 | p2).parse_once()
+        return p3
+
+    @parser_rule
+    def parse_gen_expression_normal_no_expression(self) -> GenExpressionAst:
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.KwGen).parse_once()
+        return GenExpressionAst(c1, p1, None, None, None)
+
+    @parser_rule
+    def parse_gen_expression_normal_with_expression(self) -> GenExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwGen).parse_once()
         p2 = self.parse_convention().parse_once()
-        p3 = self.parse_expression().parse_optional()
+        p3 = self.parse_expression().parse_once()
         return GenExpressionAst(c1, p1, None, p2, p3)
 
     @parser_rule
@@ -919,8 +935,7 @@ class Parser:
     def parse_local_variable_nested_for_attribute_binding(self) -> LocalVariableNestedForAttributeBindingAst:
         p1 = self.parse_local_variable_object_destructure()
         p2 = self.parse_local_variable_tuple_destructure()
-        p3 = self.parse_local_variable_single_identifier()  # todo
-        p4 = (p1 | p2 | p3).parse_once()
+        p4 = (p1 | p2).parse_once()
         return p4
 
     # ===== ASSIGNMENT =====
@@ -1265,12 +1280,12 @@ class Parser:
     @parser_rule
     def parse_object_initializer_argument(self) -> ObjectInitializerArgumentAst:
         p1 = self.parse_object_initializer_argument_named()
-        p2 = self.parse_object_initializer_argument_normal()
+        p2 = self.parse_object_initializer_argument_unnamed()
         p3 = (p1 | p2).parse_once()
         return p3
 
     @parser_rule
-    def parse_object_initializer_argument_normal(self) -> ObjectInitializerArgumentUnnamedAst:
+    def parse_object_initializer_argument_unnamed(self) -> ObjectInitializerArgumentUnnamedAst:
         c1 = self.current_pos()
         p1 = self.parse_identifier().parse_once()
         return ObjectInitializerArgumentUnnamedAst(c1, p1)

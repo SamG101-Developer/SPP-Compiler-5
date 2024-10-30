@@ -1,22 +1,23 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
+import functools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
+    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableSingleIdentifierAst import LocalVariableSingleIdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class LocalVariableDestructureSkipNArgumentsAst(Ast, Stage4_SemanticAnalyser):
+class LocalVariableDestructureSkipNArgumentsAst(Ast, VariableNameExtraction):
     variadic_token: TokenAst
     binding: Optional[LocalVariableSingleIdentifierAst]
-    _num_skipped: int = field(default=0, init=False, repr=False)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -26,8 +27,9 @@ class LocalVariableDestructureSkipNArgumentsAst(Ast, Stage4_SemanticAnalyser):
             self.binding.print(printer) if self.binding else ""]
         return "".join(string)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+    @functools.cached_property
+    def extract_names(self) -> Seq[IdentifierAst]:
+        return self.binding.extract_names if self.binding else Seq()
 
 
 __all__ = ["LocalVariableDestructureSkipNArgumentsAst"]

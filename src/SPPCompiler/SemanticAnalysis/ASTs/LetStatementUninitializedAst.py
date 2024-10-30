@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ class LetStatementUninitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser)
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        # Return the void type.
+        # All statements are inferred as "void".
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
@@ -44,7 +44,8 @@ class LetStatementUninitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser)
         self.type.analyse_semantics(scope_manager, **kwargs)
 
         # Check the type isn't the void type.
-        if self.type.symbolic_eq(CommonTypes.Void(), scope_manager.current_scope, scope_manager.current_scope):
+        void_type = CommonTypes.Void(self.pos)
+        if self.type.symbolic_eq(void_type, scope_manager.current_scope, scope_manager.current_scope):
             raise AstErrors.INVALID_VOID_USE(self.type)
 
         # Recursively analyse the variable.

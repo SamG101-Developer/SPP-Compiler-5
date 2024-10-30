@@ -1,13 +1,24 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Type, TYPE_CHECKING
 
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
+    from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
 
 
 class CommonTypes:
+    @staticmethod
+    def type_variant_to_convention(type: TypeAst) -> Type[ConventionAst]:
+        from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst
+
+        match type.types[-1].value[:-3].lower():
+            case "mov": return ConventionMovAst
+            case "mut": return ConventionMutAst
+            case "ref": return ConventionRefAst
+            case _: raise ValueError(f"Invalid type variant: {type.types[-1].value}")
+
     @staticmethod
     def U8(pos: int = -1):
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
@@ -233,31 +244,43 @@ class CommonTypes:
         generics = GenericArgumentGroupAst.default(Seq([param_types_generic, return_type_generic]))
         return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "FunMov", generics)]))
 
-    """
     @staticmethod
     def GenRef(gen_type=None, ret_type=None, send_type=None, pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst, TokenAst
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        gen_type = GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.void())
-        send_type = GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.void())
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "GenRef", GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), [gen_type, send_type], TokenAst.default(TokenType.TkBrackR)))])
+        # Import ASTs needed for the type and generic argument creation.
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
+
+        # Convert the gen/send type(s) into generic arguments and load them into a group for the generator type.
+        gen_type = GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
+        send_type = GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
+        generics = GenericArgumentGroupAst.default(Seq([gen_type, send_type]))
+        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "GenRef", generics)]))
 
     @staticmethod
     def GenMut(gen_type=None, ret_type=None, send_type=None, pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst, TokenAst
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        gen_type = GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.void())
-        send_type = GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.void())
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "GenMut", GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), [gen_type, send_type], TokenAst.default(TokenType.TkBrackR)))])
+        # Import ASTs needed for the type and generic argument creation.
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
+
+        # Convert the gen/send type(s) into generic arguments and load them into a group for the generator type.
+        gen_type = GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
+        send_type = GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
+        generics = GenericArgumentGroupAst.default(Seq([gen_type, send_type]))
+        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "GenMut", generics)]))
 
     @staticmethod
     def GenMov(gen_type=None, ret_type=None, send_type=None, pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst, TokenAst
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        gen_type = GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.void())
-        send_type = GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.void())
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "GenMov", GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), [gen_type, send_type], TokenAst.default(TokenType.TkBrackR)))])
+        # Import ASTs needed for the type and generic argument creation.
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
 
+        # Convert the gen/send type(s) into generic arguments and load them into a group for the generator type.
+        gen_type = GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
+        send_type = GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
+        generics = GenericArgumentGroupAst.default(Seq([gen_type, send_type]))
+        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "GenMov", generics)]))
+
+    """
     @staticmethod
     def Copy(pos: int = -1):
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst

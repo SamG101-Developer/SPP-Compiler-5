@@ -5,8 +5,8 @@ import copy, functools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.AstVisibility import VisibilityEnabled
-from SPPCompiler.SemanticAnalysis.Meta.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
@@ -134,9 +134,17 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         scope_manager.move_to_next_scope()
+
+        # Analyse the semantics of everything except the body (subclasses handle this).
+        self.annotations.for_each(lambda a: a.analyse_semantics(scope_manager))
         self.generic_parameter_group.analyse_semantics(scope_manager)
         self.function_parameter_group.analyse_semantics(scope_manager)
         self.return_type.analyse_semantics(scope_manager)
+        self.where_block.analyse_semantics(scope_manager)
+
+        # Add a tag into the kwargs marking a subroutine or coroutine.
+        kwargs["function_type"] = self.tok_fun
+        kwargs["function_ret_type"] = self.return_type
 
         # Subclasses will finish analysis and exit the scope.
 

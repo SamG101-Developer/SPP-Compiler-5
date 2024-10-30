@@ -5,7 +5,7 @@ from typing import Dict, Optional, TYPE_CHECKING
 import copy, json
 
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import MemoryInfo
-from SPPCompiler.SemanticAnalysis.Meta.AstVisibility import AstVisibility
+from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ClassPrototypeAst import ClassPrototypeAst

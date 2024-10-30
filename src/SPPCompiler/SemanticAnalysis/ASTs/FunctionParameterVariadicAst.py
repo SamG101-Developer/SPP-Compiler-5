@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.AstParameterNameExtraction import AstParameterNameExtraction
+from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
+from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
@@ -16,13 +17,15 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class FunctionParameterVariadicAst(Ast, AstParameterNameExtraction, Stage4_SemanticAnalyser):
+class FunctionParameterVariadicAst(Ast, Ordered, Stage4_SemanticAnalyser):
     tok_variadic: TokenAst
     variable: LocalVariableAst
     tok_colon: TokenAst
     convention: ConventionAst
     type: TypeAst
-    _variant: str = field(init=False, default="Variadic", repr=False)
+
+    def __post_init__(self) -> None:
+        self._variant = "Variadic"
 
     def __eq__(self, other: FunctionParameterVariadicAst) -> bool:
         # Check both ASTs are the same type and have the same variable.
@@ -40,7 +43,24 @@ class FunctionParameterVariadicAst(Ast, AstParameterNameExtraction, Stage4_Seman
         return "".join(string)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import ConventionMutAst, ConventionRefAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
+        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+
+        # Analyse the type.
         self.type.analyse_semantics(scope_manager, **kwargs)
+
+        # Create the variable for the parameter.
+        ast = AstMutation.inject_code(f"let {self.variable}: {self.type}", Parser.parse_let_statement_uninitialized)
+        ast.analyse_semantics(scope_manager, **kwargs)
+
+        # Mark the symbol as initialized.
+        for name in self.variable.extract_names:
+            symbol = scope_manager.current_scope.get_symbol(name)
+            symbol.memory_info.borrow_ast = self.convention
+            symbol.memory_info.is_borrow_mut = isinstance(self.convention, ConventionMutAst)
+            symbol.memory_info.is_borrow_ref = isinstance(self.convention, ConventionRefAst)
+            symbol.memory_info.initialized_by(self)
 
 
 __all__ = ["FunctionParameterVariadicAst"]

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.AstVisibility import VisibilityEnabled
+from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
@@ -52,8 +52,17 @@ class ClassAttributeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         scope_manager.current_scope.add_symbol(symbol)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # Analyse the semantics of the annotations and the type of the attribute.
         self.annotations.for_each(lambda a: a.analyse_semantics(scope_manager, **kwargs))
         self.type.analyse_semantics(scope_manager, **kwargs)
+
+        # Ensure the attribute type is not void.
+        void_type = CommonTypes.Void(self.pos)
+        if self.type.symbolic_eq(void_type, scope_manager.current_scope, scope_manager.current_scope):
+            raise AstErrors.INVALID_VOID_USE(self.type)
 
 
 __all__ = ["ClassAttributeAst"]

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -26,6 +27,9 @@ class FunctionParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
     def __post_init__(self) -> None:
         # Convert the parameters into a sequence.
         self.parameters = Seq(self.parameters)
+
+    def __copy__(self) -> FunctionParameterGroupAst:
+        return FunctionParameterGroupAst.default(self.parameters.copy())
 
     def __eq__(self, other: FunctionParameterGroupAst) -> bool:
         # Check both ASTs are the same type and have the same parameters.
@@ -76,17 +80,13 @@ class FunctionParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
         # Check there are no duplicate parameter names.
-        parameter_names = self.parameters.map(lambda parameter: parameter.extract_names).flat()
+        parameter_names = self.parameters.map(lambda parameter: parameter.variable.extract_names).flat()
         if duplicate_parameters := parameter_names.non_unique():
             raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_parameters[0][0], duplicate_parameters[0][1], "parameter")
 
         # Check the parameters are in the correct order.
-        ordering = ["Self", "Required", "Optional", "Variadic"]
-        current = self.parameters.map_attr("_variant").zip(self.parameters)
-        ordered = current.sort(key=lambda x: ordering.index(x[0]))
-        if current != ordered:
-            difference = current.ordered_difference(ordered)
-            raise AstErrors.INVALID_PARAMETER_ORDER(difference[0][1], difference[1][1])
+        if difference := AstOrdering.order_args(self.parameters):
+            raise AstErrors.INVALID_ORDER(difference[0], difference[1], "parameter")
 
         # Check there is only 1 "self" parameter.
         self_parameters = self.parameters.filter_to_type(FunctionParameterSelfAst)

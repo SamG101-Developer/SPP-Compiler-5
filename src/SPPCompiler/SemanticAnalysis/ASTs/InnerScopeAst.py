@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -55,4 +55,13 @@ class InnerScopeAst[T](Ast, Default, TypeInferrable, Stage4_SemanticAnalyser):
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, inline: bool = False, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis import RetStatementAst
+
+        # Check there is no code after a "ret" statement, as this is unreachable.
+        for i, member in self.members.enumerate():
+            if isinstance(member, RetStatementAst) and member is not self.members[-1]:
+                raise AstErrors.UNREACHABLE_CODE(member, self.members[i + 1])
+
+        # Analyse the semantics of each member.
         self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))

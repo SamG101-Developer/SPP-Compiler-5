@@ -55,7 +55,15 @@ class ClassImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGen
         self.members.for_each(lambda m: m.generate_symbols(scope_manager))
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # Analyse the semantics of the members.
         self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
+
+        # Check there are no duplicate attribute names.
+        attribute_names = self.members.map_attr("name").flat()
+        if duplicate_attributes := attribute_names.non_unique():
+            raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_attributes[0][0], duplicate_attributes[0][1], "attribute")
 
 
 __all__ = ["ClassImplementationAst"]

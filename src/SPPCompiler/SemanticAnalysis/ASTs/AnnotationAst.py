@@ -47,7 +47,7 @@ class AnnotationAst(Ast, Stage1_PreProcessor, Stage4_SemanticAnalyser):
     def pre_process(self, context: PreProcessingContext) -> None:
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
         from SPPCompiler.SemanticAnalysis import FunctionPrototypeAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstVisibility import VisibilityEnabled, AstVisibility
+        from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled, AstVisibility
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
         # Pre-process the name of this annotation.

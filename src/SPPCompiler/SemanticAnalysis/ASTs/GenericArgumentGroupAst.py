@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.Utils.Sequence import Seq
@@ -32,6 +33,9 @@ class GenericArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         self.arguments = Seq(self.arguments)
         self.type_arguments = self.arguments.filter_to_type(*GenericTypeArgumentAst.__value__.__args__)
         self.comp_arguments = self.arguments.filter_to_type(*GenericCompArgumentAst.__value__.__args__)
+
+    def __copy__(self) -> GenericArgumentGroupAst:
+        return GenericArgumentGroupAst.default(self.arguments.copy())
 
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
@@ -64,6 +68,20 @@ class GenericArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         return self.arguments.filter_to_type(GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Code that is run before the overload is selected.
+        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # Check there are no duplicate argument names.
+        generic_argument_names = self.arguments.filter_to_type(FunctionCallArgumentNamedAst).map(lambda a: a.name).flat()
+        if duplicate_generic_arguments := generic_argument_names.non_unique():
+            raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_generic_arguments[0][0], duplicate_generic_arguments[0][1], "named generic arguments")
+
+        # Check the generic arguments are in the correct order.
+        if difference := AstOrdering.order_args(self.arguments):
+            raise AstErrors.INVALID_ORDER(difference[0], difference[1], "generic argument")
+
+        # Analyse the arguments.
         self.arguments.for_each(lambda arg: arg.analyse_semantics(scope_manager, **kwargs))
 
 

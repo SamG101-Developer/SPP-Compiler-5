@@ -1,9 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
@@ -12,8 +13,11 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericTypeArgumentUnnamedAst(Ast, Stage4_SemanticAnalyser):
+class GenericTypeArgumentUnnamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
     value: TypeAst
+
+    def __post_init__(self) -> None:
+        self._variant = "Unnamed"
 
     def __eq__(self, other: GenericTypeArgumentUnnamedAst) -> bool:
         # Check both ASTs are the same type and have the same value.

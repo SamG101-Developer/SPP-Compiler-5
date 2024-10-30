@@ -1,12 +1,15 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
+import functools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Meta.AstVisibility import AstVisibility
+from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
+from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
@@ -15,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class LocalVariableSingleIdentifierAst(Ast, Stage4_SemanticAnalyser):
+class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, Stage4_SemanticAnalyser):
     tok_mut: Optional[TokenAst]
     name: IdentifierAst
 
@@ -26,6 +29,10 @@ class LocalVariableSingleIdentifierAst(Ast, Stage4_SemanticAnalyser):
             self.tok_mut.print(printer) + " " if self.tok_mut else "",
             self.name.print(printer)]
         return "".join(string)
+
+    @functools.cached_property
+    def extract_names(self) -> Seq[IdentifierAst]:
+        return Seq([self.name])
 
     def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol, MemoryInfo
