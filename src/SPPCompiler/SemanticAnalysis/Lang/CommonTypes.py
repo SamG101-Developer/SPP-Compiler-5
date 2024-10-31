@@ -160,13 +160,18 @@ class CommonTypes:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "CtxMut", None)])
 
+    """
+
     @staticmethod
     def Fut(inner_type, pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst, TokenAst
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        inner_type = GenericTypeArgumentUnnamedAst(-1, inner_type)
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Fut", GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), [inner_type], TokenAst.default(TokenType.TkBrackR)))])
-    """
+        # Import ASTs needed for the type and generic argument creation.
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
+
+        # Convert the inner type into a generic argument and load it into a group for the optional type.
+        inner_type_generic = GenericTypeArgumentUnnamedAst(-1, inner_type)
+        generics = GenericArgumentGroupAst.default(Seq([inner_type_generic]))
+        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Fut", generics)]))
 
     @staticmethod
     def Arr(elem_type, size, pos: int = -1):
@@ -203,13 +208,13 @@ class CommonTypes:
         return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Tup", generics)]))
 
     @staticmethod
-    def Var(inner_types, pos: int = -1):
+    def Var(inner_types: Seq = None, pos: int = -1):
         # Import ASTs needed for the type and generic argument creation.
         from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
 
         # Convert the inner types into generic arguments and load them into a group for the variant type.
-        inner_type_generics = inner_types.map(lambda x: GenericTypeArgumentUnnamedAst(-1, x))
+        inner_type_generics = (inner_types or Seq()).map(lambda x: GenericTypeArgumentUnnamedAst(-1, x))
         generics = GenericArgumentGroupAst.default(inner_type_generics)
         return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Var", generics)]))
 

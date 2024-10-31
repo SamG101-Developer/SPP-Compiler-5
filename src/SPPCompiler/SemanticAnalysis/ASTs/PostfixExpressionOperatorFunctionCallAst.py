@@ -169,7 +169,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
         self.function_argument_group.analyse_pre_semantics(scope_manager, **kwargs)
         self.determine_overload(scope_manager, lhs, **kwargs)  # Also adds the "self" argument if needed.
         self.generic_argument_group.analyse_semantics(scope_manager, **kwargs)
-        self.function_argument_group.analyse_semantics(scope_manager, **kwargs)
+        self.function_argument_group.analyse_semantics(scope_manager, target=self._overload[0], is_async=self._is_async, **kwargs)
 
 
 __all__ = ["PostfixExpressionOperatorFunctionCallAst"]

@@ -46,16 +46,19 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, Stage1_PreProcesso
         self.annotations.for_each(lambda a: a.pre_process(self))
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # All statements are inferred as "void".
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        void_type = CommonTypes.Void(self.pos)
+        return InferredType.from_type(void_type)
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         self.body.generate_symbols(scope_manager)  # , visibility=self._visibility)
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        ...
+        self.body.load_sup_scopes(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
+        self.body.analyse_semantics(scope_manager)
 
 
 __all__ = ["UseStatementAst"]

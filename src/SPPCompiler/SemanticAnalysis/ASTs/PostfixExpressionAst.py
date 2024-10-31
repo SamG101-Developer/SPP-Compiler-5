@@ -43,7 +43,7 @@ class PostfixExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
         # Analyse the "lhs" and "op".
         self.lhs.analyse_semantics(scope_manager, **kwargs)
-        self.op.analyse_semantics(scope_manager, **kwargs)
+        self.op.analyse_semantics(scope_manager, lhs=self.lhs, **kwargs)
 
 
 __all__ = ["PostfixExpressionAst"]

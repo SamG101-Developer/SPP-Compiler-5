@@ -27,7 +27,8 @@ class UnaryExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        # Infer the type of the unary operation being applied to the "rhs".
+        return self.op.infer_type(scope_manager, rhs=self.rhs, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
@@ -37,7 +38,8 @@ class UnaryExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         if isinstance(self.rhs, (TokenAst, TypeAst)):
             raise AstErrors.INVALID_EXPRESSION(self.rhs)
 
-        self.op.analyse_semantics(scope_manager, **kwargs)
+        # Analyse the "op" and the "rhs".
+        self.op.analyse_semantics(scope_manager, rhs=self.rhs, **kwargs)
         self.rhs.analyse_semantics(scope_manager, **kwargs)
 
 
