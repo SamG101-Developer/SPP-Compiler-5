@@ -145,6 +145,10 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
                 if pins_required and not (overlap := symbol.memory_info.ast_pinned.find(lambda p: AstMemoryHandler.left_overlap(p, argument.value))):
                     raise AstErrors.UNPINNED_BORROW(argument.value, pin_error_ast, is_async is not None)
 
+                # No error with pinning -> mark the pin target.
+                elif pins_required and (target := kwargs["assignment"]):
+                    symbol.memory_info.sym_pin_target = target
+
                 # Add the mutable borrow to the mutable borrow set.
                 borrows_mut.append(argument.value)
 
@@ -156,6 +160,10 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
                 # If the target requires pinning, ensure the borrow is pinned.
                 if pins_required and not (overlap := symbol.memory_info.ast_pinned.find(lambda p: AstMemoryHandler.left_overlap(p, argument.value))):
                     raise AstErrors.UNPINNED_BORROW(argument.value, pin_error_ast, is_async is not None)
+
+                # No error with pinning -> mark the pin target.
+                elif pins_required and (target := kwargs["assignment"]):
+                    symbol.memory_info.sym_pin_target = target
 
                 # Add the immutable borrow to the immutable borrow set.
                 borrows_ref.append(argument.value)

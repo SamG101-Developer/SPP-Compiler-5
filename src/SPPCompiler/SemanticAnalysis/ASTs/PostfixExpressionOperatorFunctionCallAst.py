@@ -109,7 +109,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
                 # Infer generic arguments and inherit from the function owner block.
                 generic_arguments = AstFunctions.inherit_generic_arguments(
-                    generic_parameters=function_overload.generic_parameter_group.get_req().map_attr("name"),
+                    generic_parameters=function_overload.generic_parameter_group.get_req(),
                     explicit_generic_arguments=generic_arguments + owner_scope_generic_arguments,
                     infer_source=arguments.map(lambda a: (a.name, a.infer_type(scope_manager, **kwargs).type)).dict(),
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
@@ -119,8 +119,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
                 if generic_arguments:
                     new_overload = copy.deepcopy(function_overload)
                     new_overload.generic_parameter_group.parameters = Seq()
-                    new_overload.function_parameter_group.parameters.for_each(lambda p: p.type.sub_gen(generic_arguments))
-                    new_overload.return_type.sub_gen(generic_arguments)
+                    new_overload.function_parameter_group.parameters.for_each(lambda p: p.type.sub_generics(generic_arguments))
+                    new_overload.return_type.sub_generics(generic_arguments)
                     parameters = new_overload.function_parameter_group.parameters.copy()
                     function_overload = new_overload
 

@@ -164,7 +164,7 @@ class AstErrors:
     # IDENTIFIER ERRORS
 
     @staticmethod
-    def UNDEFINED_IDENTIFIER(identifier: IdentifierAst, closest_match: Optional[str]) -> SemanticError:
+    def UNDEFINED_IDENTIFIER(identifier: IdentifierAst | GenericIdentifierAst, closest_match: Optional[str]) -> SemanticError:
         e = SemanticError()
         e.add_error(
             pos=identifier.pos,

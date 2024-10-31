@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.ASTs.PatternBlockAst import PatternBlockAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 
 
 @dataclass(kw_only=True)
@@ -31,8 +32,13 @@ class MemoryInfo:
 
         is_borrow_ref: If the memory is borrowed as an immutable reference.
         is_borrow_mut: If the memory is borrowed as a mutable reference.
+        is_comptime_const: If the memory is a compile-time constant (global constant or generic constant).
+        is_inconsistently_initialized: If the memory is inconsistently initialized from branches => (branch, is_initialized).
         is_inconsistently_moved: If the memory is inconsistently moved from branches => (branch, is_moved).
+        is_inconsistently_partially_moved: If the memory is inconsistently partially moved from branches => (branch, is_partially_moved).
         is_inconsistently_pinned: If the memory is inconsistently pinned from branches => (branch, is_pinned).
+
+        sym_pin_target: The symbol that this memory is pinned for (async/coroutine call etc)
     """
 
     ast_initialization: Optional[Ast] = field(default=None)
@@ -43,12 +49,14 @@ class MemoryInfo:
 
     is_borrow_mut: bool = field(default=False)
     is_borrow_ref: bool = field(default=False)
+    is_comptime_const: bool = field(default=False)
 
     is_inconsistently_initialized: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)
     is_inconsistently_moved: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)
     is_inconsistently_partially_moved: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)
     is_inconsistently_pinned: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)
-    is_comptime_const: bool = field(default=False)
+
+    sym_pin_target: Optional[VariableSymbol] = field(default=None)
 
     def moved_by(self, ast: Ast) -> None:
         # If a symbol's contents is moved, mark the symbol as moved and non-initialized.
