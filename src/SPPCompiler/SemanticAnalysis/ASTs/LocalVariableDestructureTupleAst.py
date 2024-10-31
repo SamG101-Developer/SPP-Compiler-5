@@ -40,6 +40,10 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, Stage4_Seman
     def extract_names(self) -> Seq[IdentifierAst]:
         return self.elements.map(lambda e: e.extract_names).flat()
 
+    @functools.cached_property
+    def extract_name(self) -> IdentifierAst:
+        return IdentifierAst(-1, "_Unmatchable")
+
     def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkip1ArgumentAst
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst

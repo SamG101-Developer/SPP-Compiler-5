@@ -54,6 +54,9 @@ class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         # Create a type symbol for this type in the current scope (class / function).
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility)
+        symbol.memory_info.ast_pinned.append(self.name)
+        symbol.memory_info.is_comptime_const = True
+        symbol.memory_info.initialized_by(self)
         scope_manager.current_scope.add_symbol(symbol)
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:

@@ -48,11 +48,84 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         super().pre_process(context)
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        super().load_sup_scopes(scope_manager)
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        scope_manager.move_to_next_scope()
+
+        # Get the class and super class symbols.
+        cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
+        sup_symbol = scope_manager.current_scope.get_symbol(self.super_class)
+
+        # Cannot superimpose over a generic type.
+        if cls_symbol.is_generic:
+            raise AstErrors.SUP_OVER_GENERIC_TYPE(self.name, "superimpose over a generic type")
+
+        # Register the superimposition as a "sup scope", and the "sub scopes".
+        cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
+        sup_symbol.scope._direct_sub_scopes.append(scope_manager.current_scope)
+        sup_symbol.scope._direct_sub_scopes.append(cls_symbol.scope)
+
+        # Mark the class as copyable if the Copy type is the super class.
+        if self.super_class.symbolic_eq(CommonTypes.Copy(), scope_manager.current_scope):
+            cls_symbol.is_copyable = True
+
+        # Run the load steps for the body.
+        self.body.load_sup_scopes(scope_manager)
+        scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
+
+        # Move to the next scope.
         scope_manager.move_to_next_scope()
+
+        # Get the class and super class symbols.
+        cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
+        sup_symbol = scope_manager.current_scope.get_symbol(self.super_class)
+
+        # Analyse the generic parameter group.
+        self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
+
+        # Check every generic parameter is constrained by the type.
+        if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
+            raise AstErrors.SUP_UNCONSTRAINED_GENERIC_PARAMETER(unconstrained)
+
+        # Check there are no optional generic parameters.
+        if optional := self.generic_parameter_group.get_opt():
+            raise AstErrors.SUP_OPTIONAL_GENERIC_PARAMETER(optional[0])
+
+        # Analyse the name, where block, and body.
+        self.name.analyse_semantics(scope_manager, **kwargs)
+        self.super_class.analyse_semantics(scope_manager, **kwargs)
+        self.where_block.analyse_semantics(scope_manager, **kwargs)
         self.body.analyse_semantics(scope_manager, **kwargs)
+
+        # Check every member on the superimposition exists on the super class.
+        # Todo: Add support for type aliasing in the superimposition.
+        for member in self.body.members.filter_to_type(SupPrototypeInheritanceAst):
+            this_method = member.body.members[-1]
+            base_method = AstFunctions.check_for_conlicting_method(scope_manager, sup_symbol.scope, this_method, FunctionConflictCheckType.InvalidOverride)
+
+            # Check the base method exists.
+            if not base_method:
+                raise AstErrors.SUP_MEMBER_INVALID(this_method, self.super_class)
+
+            # Check the base method is virtual.
+            if not base_method._virtual:
+                raise AstErrors.SUP_MEMBER_NOT_VIRTUAL(this_method, self.super_class)
+
+        # Check every abstract method on the super class is implemented.
+        for base_member in cls_symbol.scope._direct_sup_scopes.map(lambda s: s.body.members).flat():
+            base_method = base_member.body.members[-1]
+            this_method = AstFunctions.check_for_conlicting_method(scope_manager, cls_symbol.scope, base_method, FunctionConflictCheckType.InvalidOverride)
+
+            # Check the abstract methods are overridden.
+            if base_method._abstract and not this_method:
+                raise AstErrors.SUP_ABSTRACT_MEMBER_NOT_OVERRIDEN(base_method, self.name)
+
+        # Move out of the current scope.
         scope_manager.move_out_of_current_scope()
 
 

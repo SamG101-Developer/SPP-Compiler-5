@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass
+@dataclass(kw_only=True)
 class InferredType:
     convention: Type[ConventionAst]
     type: TypeAst

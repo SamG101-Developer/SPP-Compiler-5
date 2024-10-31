@@ -4,14 +4,16 @@ from typing import Any, Optional, Tuple, TYPE_CHECKING
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
+    from SPPCompiler.SemanticAnalysis.ASTs.ClassPrototypeAst import ClassPrototypeAst
+    from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionAst import PostfixExpressionAst
+    from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeAst import SupPrototypeAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
     from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol, VariableSymbol, Symbol
 
 
 class Scope:
@@ -32,7 +34,7 @@ class Scope:
     _parent: Optional[Scope]
     _children: Seq[Scope]
     _symbol_table: SymbolTable
-    _ast: Optional[Ast]
+    _ast: Optional[FunctionPrototypeAst | ClassPrototypeAst | SupPrototypeAst]
 
     _direct_sup_scopes: Seq[Scope]
     _direct_sub_scopes: Seq[Scope]
@@ -69,8 +71,11 @@ class Scope:
     def get_symbol(self, name: IdentifierAst | TypeAst | GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
 
+        # Ensure the name is a valid type.
+        if not isinstance(name, (IdentifierAst, TypeAst, GenericIdentifierAst)):
+            raise
+
         # Get the symbol from the symbol table if it exists.
-        if not isinstance(name, (IdentifierAst, TypeAst, GenericIdentifierAst)): return None
         scope = self
         if isinstance(name, TypeAst):
             scope, name = shift_scope_for_namespaced_type(self, name)
@@ -87,16 +92,21 @@ class Scope:
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
 
+    def get_multiple_symbols(self, name: IdentifierAst, original_scope: Scope = None) -> Seq[Tuple[Symbol, Scope, int]]:
+        # Get all the symbols with the given name (ambiguity checks, function overloads etc), and their "depth".
+        symbols = Seq([(self._symbol_table.get(name), self, self.depth_difference(original_scope or self))])
+        symbols.extend(search_super_scopes_multiple(original_scope or self, self, name))
+        return symbols
+
     def get_variable_symbol_outermost_part(self, name: IdentifierAst | PostfixExpressionAst) -> Optional[VariableSymbol]:
         # There is no symbol for non-identifiers.
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import PostfixExpressionAst, PostfixExpressionOperatorMemberAccessAst
 
         # Define a helper lambda that validates a postfix expression.
         is_valid_postfix = lambda p: all([
             isinstance(p, PostfixExpressionAst),
             isinstance(p.op, PostfixExpressionOperatorMemberAccessAst),
-            p.op.tok_access.token.token_type == TokenType.TkDot])
+            p.op.is_runtime_access()])
 
         # Shift to the leftmost identifier and get the symbol from the symbol table.
         if is_valid_postfix(name):
@@ -106,6 +116,19 @@ class Scope:
         # Identifiers or non-symbolic expressions can use the symbol table directly.
         else:
             return self.get_symbol(name)
+
+    def depth_difference(self, scope: Scope) -> int:
+        # Get the number of sup scopes between two scopes.
+
+        def _depth_difference(source: Scope, target: Scope, depth: int) -> int:
+            # Recursively get the depth difference between two scopes.
+            if source == target: return depth
+            for sup_scope in source._direct_sup_scopes:
+                if (result := _depth_difference(sup_scope, target, depth + 1)) >= 0:
+                    return result
+            return -1
+
+        return _depth_difference(self, scope, 0)
 
     def __json__(self) -> dict:
         return {
@@ -180,9 +203,18 @@ def search_super_scopes(scope: Scope, name: IdentifierAst | GenericIdentifierAst
     # Recursively search the super scopes for a variable symbol.
     symbol = None
     for super_scope, _ in scope._direct_sup_scopes:
-        symbol = search_super_scopes(super_scope, name)
+        symbol = super_scope.get_symbol(name)
         if symbol: break
     return symbol
+
+
+def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: IdentifierAst) -> Seq[Tuple[VariableSymbol, Scope, int]]:
+    # Recursively search the super scopes for variable symbols with the given name.
+    symbols = Seq()
+    for super_scope, _ in scope._direct_sup_scopes:
+        new_symbols = super_scope.get_multiple_symbols(name, original_scope)
+        symbols.extend(new_symbols)
+    return symbols
 
 
 def confirm_type_with_alias(scope: Scope, symbol: Symbol, ignore_alias: bool) -> Optional[Symbol]:

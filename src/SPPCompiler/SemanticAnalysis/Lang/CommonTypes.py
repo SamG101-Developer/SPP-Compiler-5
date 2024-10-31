@@ -144,6 +144,11 @@ class CommonTypes:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
         return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Rgx", None)])
 
+    @staticmethod
+    def Copy(pos: int = -1):
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
+        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Copy", None)]))
+
     """
     @staticmethod
     def CtxRef(pos: int = -1):
@@ -279,10 +284,3 @@ class CommonTypes:
         send_type = GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
         generics = GenericArgumentGroupAst.default(Seq([gen_type, send_type]))
         return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "GenMov", generics)]))
-
-    """
-    @staticmethod
-    def Copy(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Copy", None)])
-    """

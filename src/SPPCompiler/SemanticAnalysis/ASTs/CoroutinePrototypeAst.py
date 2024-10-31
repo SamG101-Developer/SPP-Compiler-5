@@ -27,6 +27,8 @@ class CoroutinePrototypeAst(FunctionPrototypeAst):
 
         # Analyse the semantics of the function body.
         self.body.analyse_semantics(scope_manager, **kwargs)
+
+        # Move out of the current scope.
         scope_manager.move_out_of_current_scope()
 
 

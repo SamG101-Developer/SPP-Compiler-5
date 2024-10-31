@@ -402,3 +402,35 @@ class AstErrors:
             msg="Generic types do not support member access.",
             tip="Use a concrete type instead of a generic type.")
         return e
+
+    @staticmethod
+    def AMBIGUOUS_MEMBER_ACCESS(member: IdentifierAst, scopes: Seq[IdentifierAst]) -> SemanticError:
+        e = SemanticError()
+        e.add_error(
+            pos=member.pos,
+            tag=f"Ambiguous member access: {scopes.join(", ")}",
+            msg="The member access is ambiguous.",
+            tip="Use 'std::upcast[T](...)' to select the base class.")
+        return e
+
+    @staticmethod
+    def MEMBER_ACCESS_NON_INDEXABLE(lhs: Ast, lhs_type: TypeAst, access_token: TokenAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(lhs.pos, f"Type '{lhs_type}' inferred here.")
+        e.add_error(
+            pos=access_token.pos,
+            tag="Member access on non-indexable type.",
+            msg="The type does not support member access.",
+            tip="Use a type that supports member access.")
+        return e
+
+    @staticmethod
+    def MEMBER_ACCESS_OUT_OF_BOUNDS(lhs: Ast, lhs_type: TypeAst, number_token: TokenAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(lhs.pos, f"{lhs_type.types[-1].generic_argument_group.arguments.length}-tuple inferred here.")
+        e.add_error(
+            pos=number_token.pos,
+            tag="Member access out of bounds.",
+            msg="The member access is out of bounds.",
+            tip="Use a valid member access.")
+        return e

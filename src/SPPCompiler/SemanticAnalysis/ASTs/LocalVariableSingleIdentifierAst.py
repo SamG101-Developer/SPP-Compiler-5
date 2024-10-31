@@ -34,6 +34,10 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, Stage4_Seman
     def extract_names(self) -> Seq[IdentifierAst]:
         return Seq([self.name])
 
+    @functools.cached_property
+    def extract_name(self) -> IdentifierAst:
+        return self.name
+
     def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol, MemoryInfo
 

@@ -48,6 +48,7 @@ class MemoryInfo:
     is_inconsistently_moved: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)
     is_inconsistently_partially_moved: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)
     is_inconsistently_pinned: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)
+    is_comptime_const: bool = field(default=False)
 
     def moved_by(self, ast: Ast) -> None:
         # If a symbol's contents is moved, mark the symbol as moved and non-initialized.

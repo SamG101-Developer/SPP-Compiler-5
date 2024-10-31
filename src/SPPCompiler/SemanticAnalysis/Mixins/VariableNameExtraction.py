@@ -15,3 +15,7 @@ class VariableNameExtraction(ABC):
     @abstractmethod
     def extract_names(self) -> Seq[IdentifierAst]:
         ...
+
+    @functools.cached_property
+    def extract_name(self) -> IdentifierAst:
+        raise

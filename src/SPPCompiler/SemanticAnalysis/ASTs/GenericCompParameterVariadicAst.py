@@ -47,11 +47,15 @@ class GenericCompParameterVariadicAst(Ast, Ordered, Stage2_SymbolGenerator, Stag
         return "".join(string)
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
-        # Create a variable symbol for this constant in the current scope (class / function).
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
         from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
+
+        # Create a variable symbol for this constant in the current scope (class / function).
         symbol = VariableSymbol(name=IdentifierAst.from_type(self.name), type=self.type, visibility=AstVisibility.Public)
+        symbol.memory_info.ast_pinned.append(self.name)
+        symbol.memory_info.is_comptime_const = True
+        symbol.memory_info.initialized_by(self)
         scope_manager.current_scope.add_symbol(symbol)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

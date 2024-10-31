@@ -180,7 +180,7 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
             copy.deepcopy(self.name), copy.deepcopy(self.generic_parameter_group),
             copy.deepcopy(self.function_parameter_group), copy.deepcopy(self.tok_arrow),
             copy.deepcopy(self.return_type), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
-            _ctx=self._ctx, _orig=self._orig, _abstract=self._abstract, _virtual=self._virtual)
+            _ctx=self._ctx, _orig=self._orig, _scope=None, _abstract=self._abstract, _virtual=self._virtual)
 
 
 __all__ = ["FunctionPrototypeAst"]

@@ -18,6 +18,9 @@ class PostfixExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     lhs: ExpressionAst
     op: PostfixExpressionOperatorAst
 
+    def __eq__(self, other: PostfixExpressionAst) -> bool:
+        return self.lhs == other.lhs and self.op == other.op
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

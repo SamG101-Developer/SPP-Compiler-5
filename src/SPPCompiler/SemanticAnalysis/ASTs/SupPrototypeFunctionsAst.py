@@ -67,12 +67,38 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
+
+        # Cannot superimpose over a generic type.
+        cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
+        if cls_symbol.is_generic:
+            raise AstErrors.SUP_OVER_GENERIC_TYPE(self.name, "superimpose over a generic type")
+
+        # Register the superimposition as a "sup scope" and run the load steps for the body.
+        cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
         self.body.load_sup_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Move to the next scope.
         scope_manager.move_to_next_scope()
+
+        # Analyse the generic parameter group.
+        self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
+
+        # Check every generic parameter is constrained by the type.
+        if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
+            raise AstErrors.SUP_UNCONSTRAINED_GENERIC_PARAMETER(unconstrained)
+
+        # Check there are no optional generic parameters.
+        if optional := self.generic_parameter_group.get_opt():
+            raise AstErrors.SUP_OPTIONAL_GENERIC_PARAMETER(optional[0])
+
+        # Analyse the name, where block, and body.
+        self.name.analyse_semantics(scope_manager, **kwargs)
+        self.where_block.analyse_semantics(scope_manager, **kwargs)
         self.body.analyse_semantics(scope_manager, **kwargs)
+
+        # Move out of the current scope.
         scope_manager.move_out_of_current_scope()
 
 

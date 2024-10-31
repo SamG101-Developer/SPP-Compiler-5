@@ -38,7 +38,34 @@ class RelStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
+
+        # Analyse the expressions.
         self.expressions.for_each(lambda expression: expression.analyse_semantics(scope_manager, **kwargs))
+
+        # Check each expression is symbolic.
+        symbols = self.expressions.map(scope_manager.current_scope.get_variable_symbol_outermost_part)
+        if symbols.filter_out_none().length < self.expressions.length:
+            raise AstErrors.INVALID_PIN_TARGET(self, self.expressions[symbols.index(None)])
+
+        # Prevent overlapping symbols from being created.
+        symbols.remove_none()
+        for rel_target, symbol in self.expressions.zip(symbols):
+            pins = symbol.memory_info.ast_pinned
+
+            # Check for a direct match in the pin list.
+            if not pins.find(lambda pin: str(rel_target) == str(pin)):
+                raise AstErrors.UNPINNING_NON_PINNED(self, rel_target)
+
+            # Check the rel target isn't a compile-time constant.
+            if symbol.memory_info.is_comptime_const:
+                raise AstErrors.UNPINNING_CONSTANT(rel_target, symbol.memory_info.ast_initialization)
+
+            # Todo: cause a pinned generator/future to unpin?
+
+            # Remove the pin.
+            symbol.memory_info.ast_pinned.remove(rel_target)
 
 
 __all__ = ["RelStatementAst"]
