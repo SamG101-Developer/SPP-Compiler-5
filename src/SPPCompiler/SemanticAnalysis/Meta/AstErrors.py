@@ -196,6 +196,16 @@ class AstErrors:
             tip="Change the type to match the expected type.")
         return e
 
+    @staticmethod
+    def UNINFERRED_GENERIC_PARAMETER(generic_parameter: GenericParameterAst) -> SemanticError:
+        e = SemanticError()
+        e.add_error(
+            pos=generic_parameter.pos,
+            tag="Uninferred generic parameter.",
+            msg="The generic parameter is not inferred.",
+            tip="Infer the generic parameter.")
+        return e
+
     # ARRAY ERRORS
 
     @staticmethod

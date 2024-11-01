@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from SPPCompiler.LexicalAnalysis.TokenType import TokenType
@@ -56,6 +57,8 @@ class AstBinUtils:
         The parser uses right-hand recursive parsing to mitigate left-hand-recursion in the binary operator parsing.
         This means the operators are in a reverse precedence order, and need to be re-arranged.
         """
+
+        from SPPCompiler.SemanticAnalysis import BinaryExpressionAst
 
         # If the rhs isn't a binary expression, then there is no handling needed.
         if not isinstance(ast.rhs, BinaryExpressionAst):
@@ -121,6 +124,8 @@ class AstBinUtils:
         """
         Convert the binary expression into a postfix expression, with the binary operator being a function call.
         """
+
+        from SPPCompiler.SemanticAnalysis import BinaryExpressionAst
 
         # Nested parts of the binary expressions could be any expression.
         if not isinstance(ast, BinaryExpressionAst):

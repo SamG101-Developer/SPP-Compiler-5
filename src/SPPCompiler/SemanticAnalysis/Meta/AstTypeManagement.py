@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import copy
 from typing import TYPE_CHECKING
 import difflib
 
@@ -6,6 +9,7 @@ from SPPCompiler.Utils.Sequence import Seq
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
+    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
     from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
@@ -48,3 +52,20 @@ class AstTypeManagement:
 
         # Return the type part's scope from the symbol.
         return type_symbol
+
+    @staticmethod
+    def create_generic_scope(scope_manager: ScopeManager, type: TypeAst, type_part: GenericIdentifierAst, base_symbol: TypeSymbol) -> Scope:
+        from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+
+        new_scope = Scope(type_part, base_symbol.scope.parent)
+        new_cls_proto = copy.deepcopy(base_symbol.type)
+        new_symbol = TypeSymbol(name=type_part, type=new_cls_proto, scope=new_scope)
+        new_scope.parent.add_symbol(new_symbol)
+
+        for generic_argument in type_part.generic_argument_group.arguments:
+            generic_class_proto = scope_manager.current_scope.get_symbol(generic_argument.value).type
+            generic_symbol = TypeSymbol(name=generic_argument.name.types[-1], type=generic_class_proto, scope=new_scope)
+            new_scope.add_symbol(generic_symbol)
+
+        return new_scope

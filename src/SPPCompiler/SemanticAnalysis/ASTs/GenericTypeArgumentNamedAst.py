@@ -20,7 +20,9 @@ class GenericTypeArgumentNamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
     value: TypeAst
 
     def __post_init__(self) -> None:
+        from SPPCompiler.SemanticAnalysis import TypeAst
         self._variant = "Named"
+        self.name = TypeAst.from_identifier(self.name)
 
     def __eq__(self, other: GenericTypeArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.

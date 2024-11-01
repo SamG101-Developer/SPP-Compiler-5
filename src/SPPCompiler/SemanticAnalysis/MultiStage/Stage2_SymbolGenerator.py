@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class Stage2_SymbolGenerator(ABC):
-    _scope: Optional[Scope] = field(default=None, init=False, repr=False)
+    _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
 
     @abstractmethod
     def generate_symbols(self, scope_manager: ScopeManager) -> None:

@@ -17,7 +17,7 @@ class AstVisibility(Enum):
 
 @dataclass
 class VisibilityEnabled(ABC):
-    _visibility: AstVisibility = field(default=AstVisibility.Private, init=False)
+    _visibility: AstVisibility = field(default=AstVisibility.Private, kw_only=True, repr=False)
 
 
 # Decorator to apply the VisibilityEnabled class to a class.

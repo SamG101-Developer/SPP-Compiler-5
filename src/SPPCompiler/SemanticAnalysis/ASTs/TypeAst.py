@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericParameterAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypePartAst import TypePartAst
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -56,6 +55,11 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
         return TypeAst(identifier.pos, Seq(), Seq([GenericIdentifierAst.from_identifier(identifier)]))
 
     @staticmethod
+    def from_generic_identifier(identifier: GenericIdentifierAst) -> TypeAst:
+        # Create a TypeAst from a GenericIdentifierAst.
+        return TypeAst(identifier.pos, Seq(), Seq([identifier]))
+
+    @staticmethod
     def from_function_identifier(identifier: IdentifierAst) -> TypeAst:
         # Create a TypeAst from a function IdentifierAst ($PascalCase mapping too).
         from SPPCompiler.SemanticAnalysis import IdentifierAst
@@ -91,7 +95,7 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
         # Return the modified type.
         return self
 
-    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None) -> bool:
+    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
         # Get the symbols for each type, based on the scopes.
@@ -100,7 +104,7 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
         that_symbol = that_scope.get_symbol(that)
 
         # Special case for Variant types (can match any of the alternative types).
-        if self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var()):
+        if check_variant and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, check_variant=False):
             if Seq(self_symbol.name.generic_argument_group.arguments).any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope)):
                 return True
 
@@ -108,6 +112,7 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
         return self_symbol.type is that_symbol.type
 
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source=None, generic_infer_target=None, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
@@ -129,9 +134,12 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
                 if type_symbol.is_generic: continue
 
                 # Name all the generic arguments.
+                print("-" * 100)
+                print(self)
                 AstFunctions.name_generic_arguments(
                     type_part.generic_argument_group.arguments,
-                    type_symbol.type.generic_parameter_group.parameters)
+                    type_symbol.type.generic_parameter_group.parameters,
+                    self)
 
                 # Infer generic arguments from information given from object initialization.
                 type_part.generic_argument_group.generic_arguments = AstFunctions.inherit_generic_arguments(

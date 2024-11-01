@@ -57,10 +57,10 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # Create a class ast for the aliased type, and generate it.
-        cls_ast = AstMutation.inject_code(f"cls {self.new_type}", Parser.parse_class_prototype)
+        cls_ast = AstMutation.inject_code(f"cls {self.new_type} {{}}", Parser.parse_class_prototype)
         cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
         cls_ast._visibility = visibility
-        cls_ast.generate_symbols(scope_manager, alias=True)
+        cls_ast.generate_symbols(scope_manager, is_alias=True)
 
         # Create a scope for the alias, allowing its generic arguments to not leak.
         scope_manager.create_and_move_into_new_scope(f"<type-alias:{self.new_type}:{self.pos}>")

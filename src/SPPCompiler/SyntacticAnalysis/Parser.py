@@ -680,7 +680,7 @@ class Parser:
     # ===== STATEMENTS =====
 
     @parser_rule
-    def parse_return_statement(self) -> RetStatementAst:
+    def parse_ret_statement(self) -> RetStatementAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwRet).parse_once()
         p2 = self.parse_expression().parse_optional()
@@ -727,7 +727,7 @@ class Parser:
     def parse_statement(self) -> StatementAst:
         p1 = self.parse_use_statement()
         p2 = self.parse_let_statement()
-        p3 = self.parse_return_statement()
+        p3 = self.parse_ret_statement()
         p4 = self.parse_exit_statement()
         p5 = self.parse_skip_statement()
         p6 = self.parse_pin_statement()
@@ -1306,7 +1306,7 @@ class Parser:
         return p4
 
     # ===== LAMBDAS =====
-    #
+
     # @parser_rule
     # def parse_lambda_prototype(self) -> LambdaPrototypeAst:
     #     c1 = self.current_pos()
@@ -1563,7 +1563,6 @@ class Parser:
 
     @parser_rule
     def parse_integer_postfix_type(self) -> TokenType:
-        p0  = self.parse_token(TokenType.TkUnderscore).parse_once()
         p1  = self.parse_token(TokenType.TkUnderscore).parse_once()
         p2  = self.parse_characters("i8")
         p3  = self.parse_characters("i16")
@@ -1582,15 +1581,15 @@ class Parser:
 
     @parser_rule
     def parse_float_postfix_type(self) -> TokenType:
-        p0 = self.parse_token(TokenType.TkUnderscore).parse_once()
-        p1 = self.parse_characters("f8")
-        p2 = self.parse_characters("f16")
-        p3 = self.parse_characters("f32")
-        p4 = self.parse_characters("f64")
-        p5 = self.parse_characters("f128")
-        p6 = self.parse_characters("f256")
-        p7 = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
-        return p7
+        p1 = self.parse_token(TokenType.TkUnderscore).parse_once()
+        p2 = self.parse_characters("f8")
+        p3 = self.parse_characters("f16")
+        p4 = self.parse_characters("f32")
+        p5 = self.parse_characters("f64")
+        p6 = self.parse_characters("f128")
+        p7 = self.parse_characters("f256")
+        p8 = (p2 | p3 | p4 | p5 | p6 | p7).parse_once()
+        return p8
 
     # ===== TUPLES =====
 

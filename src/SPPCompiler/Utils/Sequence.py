@@ -173,6 +173,9 @@ class Seq[T]:
     def pop(self, index: int = -1) -> T:
         return self._value.pop(index)
 
+    def pop_n(self, index: int = -1, n: int = 1) -> Seq[T]:
+        return Seq([self._value.pop(index) for _ in range(n)])
+
     def count(self, item: T) -> int:
         return self._value.count(item)
 

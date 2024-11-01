@@ -76,7 +76,7 @@ class SemanticError(Exception):
         for error in self.error_info:
             formatted_message, is_minimal = self._format_message(error)
             error_message += error_formatter.error(error.pos, formatted_message, error.tag, is_minimal)
-        raise SemanticError(error_message) from None
+        raise SystemError(error_message)
 
 
 __all__ = ["ParserError"]

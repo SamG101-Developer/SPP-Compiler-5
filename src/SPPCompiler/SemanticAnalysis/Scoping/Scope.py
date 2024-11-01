@@ -191,7 +191,7 @@ def shift_scope_for_namespaced_type(scope: Scope, type: TypeAst) -> Tuple[Scope,
     # For TypeAsts, move through each namespace/type part accessing the namespace scope.#
     for part in type.namespace + type.types[:-1]:
         # Get the next type/namespace symbol from the scope.
-        inner_symbol = scope.get_type_symbol(part)
+        inner_symbol = scope.get_symbol(part)
         match inner_symbol:
             case None: break
             case _: scope = inner_symbol.scope

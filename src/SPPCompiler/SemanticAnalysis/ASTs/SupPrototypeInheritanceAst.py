@@ -54,6 +54,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         scope_manager.move_to_next_scope()
 
         # Get the class and super class symbols.
+        self.super_class.analyse_semantics(scope_manager)
         cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
         sup_symbol = scope_manager.current_scope.get_symbol(self.super_class)
 

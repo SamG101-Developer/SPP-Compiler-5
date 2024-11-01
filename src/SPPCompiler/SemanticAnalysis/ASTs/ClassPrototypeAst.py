@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import copy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -45,6 +47,13 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
     def __json__(self):
         return f"{self.name}{self.generic_parameter_group}"
 
+    def __deepcopy__(self, memodict={}):
+        from SPPCompiler.SemanticAnalysis import IdentifierAst
+        return ClassPrototypeAst(
+            self.pos, copy.deepcopy(self.annotations), copy.deepcopy(self.tok_cls), IdentifierAst.from_type(self.name),
+            copy.deepcopy(self.generic_parameter_group), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
+            _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -75,6 +84,8 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         symbol_type = TypeSymbol if not is_alias else AliasSymbol
         symbol = symbol_type(name=self.name.types[-1], type=self, scope=scope_manager.current_scope, visibility=self._visibility)
         scope_manager.current_scope.parent.add_symbol(symbol)
+
+        # print(f"Added '{symbol.name}' to '{scope_manager.current_scope.parent}'")
 
         # Generate the generic parameters and attributes of the class.
         self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))

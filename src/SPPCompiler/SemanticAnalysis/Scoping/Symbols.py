@@ -100,11 +100,27 @@ class TypeSymbol:
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
             is_copyable=self.is_copyable, visibility=self.visibility)
 
+    @property
+    def fq_name(self) -> TypeAst:
+        from SPPCompiler.SemanticAnalysis import TypeAst
+
+        fq_name = TypeAst.from_generic_identifier(self.name)
+        if self.is_generic:
+            return fq_name
+        if isinstance(self, AliasSymbol):
+            return self.old_type
+
+        scope = self.scope.parent
+        while scope.parent:
+            fq_name.types.insert(0, scope.name)
+            scope = scope.parent
+        return fq_name
+
 
 @dataclass(kw_only=True)
 class AliasSymbol(TypeSymbol):
-    old_type: TypeAst
-    old_scope: Optional[Scope]
+    old_type: TypeAst = field(default=None)
+    old_scope: Optional[Scope] = field(default=None)
 
     def __json__(self) -> Dict:
         # Dump the AliasSymbol as a JSON object.
