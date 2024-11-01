@@ -149,18 +149,15 @@ class CommonTypes:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
         return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Copy", None)]))
 
-    """
     @staticmethod
     def CtxRef(pos: int = -1):
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "CtxRef", None)])
+        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "CtxRef", None)]))
 
     @staticmethod
     def CtxMut(pos: int = -1):
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "CtxMut", None)])
-
-    """
+        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "CtxMut", None)]))
 
     @staticmethod
     def Fut(inner_type, pos: int = -1):

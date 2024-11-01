@@ -170,7 +170,7 @@ class Seq[T]:
                     break
         return self
 
-    def pop(self, index: int) -> T:
+    def pop(self, index: int = -1) -> T:
         return self._value.pop(index)
 
     def count(self, item: T) -> int:

@@ -119,7 +119,7 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
 
         # Create a new scope for the function.
-        scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}>", self)
+        scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
         super().generate_symbols(scope_manager)
 
         # Generate the generic parameters and attributes of the function.
