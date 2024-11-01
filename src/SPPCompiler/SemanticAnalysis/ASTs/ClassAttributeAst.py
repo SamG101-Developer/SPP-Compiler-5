@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import copy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -28,6 +30,11 @@ class ClassAttributeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
     def __post_init__(self) -> None:
         # Convert the annotations into a sequence.
         self.annotations = Seq(self.annotations)
+
+    def __deepcopy__(self, memodict={}):
+        return ClassAttributeAst(
+            self.pos, copy.deepcopy(self.annotations), copy.deepcopy(self.name), copy.deepcopy(self.tok_colon),
+            copy.deepcopy(self.type), _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

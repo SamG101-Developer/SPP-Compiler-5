@@ -37,7 +37,14 @@ class GenericTypeArgumentNamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
             self.value.print(printer)]
         return "".join(string)
 
+    @staticmethod
+    def from_name_value(name: TypeAst, value: TypeAst) -> GenericTypeArgumentNamedAst:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
+        return GenericTypeArgumentNamedAst(-1, IdentifierAst.from_type(name), TokenAst.default(TokenType.TkAssign), value)
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Analyse the name and value of the generic type argument.
         self.value.analyse_semantics(scope_manager, **kwargs)
 
 

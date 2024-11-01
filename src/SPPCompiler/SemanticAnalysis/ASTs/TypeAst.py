@@ -134,8 +134,6 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
                 if type_symbol.is_generic: continue
 
                 # Name all the generic arguments.
-                print("-" * 100)
-                print(self)
                 AstFunctions.name_generic_arguments(
                     type_part.generic_argument_group.arguments,
                     type_symbol.type.generic_parameter_group.parameters,
@@ -147,7 +145,7 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
                     explicit_generic_arguments=type_part.generic_argument_group.arguments,
                     infer_source=generic_infer_source or {},
                     infer_target=generic_infer_target or {},
-                    scope_manager=scope_manager, **kwargs)
+                    scope_manager=scope_manager, owner_type=self, **kwargs)
 
                 # Analyse the semantics of the generic arguments.
                 type_part.generic_argument_group.analyse_semantics(scope_manager)

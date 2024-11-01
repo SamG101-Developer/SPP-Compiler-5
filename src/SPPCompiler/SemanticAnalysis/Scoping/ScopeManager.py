@@ -79,7 +79,7 @@ class ScopeManager:
         if namespace_symbol:
             scope = namespace_symbol.scope
             for part in namespace[1:]:
-                namespace_symbol = scope.get_type_symbol(part)
+                namespace_symbol = scope.get_symbol(part)
                 if not namespace_symbol: return None
                 scope = namespace_symbol.scope
 

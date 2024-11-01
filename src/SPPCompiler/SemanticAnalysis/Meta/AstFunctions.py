@@ -137,7 +137,7 @@ class AstFunctions:
                 named_argument = f"{parameter_names.pop(0)}=({arguments[i:].join(", ")})"
                 named_argument = AstMutation.inject_code(named_argument, Parser.parse_function_call_argument_named)
                 arguments.replace(unnamed_argument, named_argument, 1)
-                arguments.pop_n(arguments.length - i - 1)
+                arguments.pop_n(-1, arguments.length - i - 1)
                 break
 
             # Normal named argument assignment.
@@ -183,7 +183,7 @@ class AstFunctions:
                 named_argument = f"{parameter_names.pop(0)}=({arguments[i:].join(", ")})"
                 named_argument = AstMutation.inject_code(named_argument, GenericArgumentCTor[type(unnamed_argument)])
                 arguments.replace(unnamed_argument, named_argument, 1)
-                arguments.pop_n(arguments.length - i - 1)
+                arguments.pop_n(-1, arguments.length - i - 1)
                 break
 
             # Normal named argument assignment.
@@ -192,15 +192,15 @@ class AstFunctions:
                 named_argument = AstMutation.inject_code(named_argument, GenericArgumentCTor[type(unnamed_argument)])
                 arguments.replace(unnamed_argument, named_argument, 1)
 
-        print(arguments)
-
     @staticmethod
     def inherit_generic_arguments(
             generic_parameters: Seq[GenericParameterAst],
             explicit_generic_arguments: Seq[GenericArgumentAst],
             infer_source: Dict[IdentifierAst, TypeAst],
             infer_target: Dict[IdentifierAst, TypeAst],
-            scope_manager: ScopeManager, **kwargs)\
+            scope_manager: ScopeManager,
+            owner_type: TypeAst = None,
+            **kwargs)\
             -> Seq[GenericArgumentAst]:
 
         """
@@ -220,9 +220,14 @@ class AstFunctions:
         """
 
         from SPPCompiler.SemanticAnalysis import TypeAst
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
+
+        # Special case for tuples to prevent infinite-recursion.
+        if owner_type and owner_type.without_generics() == CommonTypes.Tup().without_generics():
+            return explicit_generic_arguments
 
         # The inferred generics map is: {TypeAst: [TypeAst]}
         inferred_generic_arguments = defaultdict(Seq)

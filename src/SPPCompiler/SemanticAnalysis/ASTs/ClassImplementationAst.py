@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import copy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -24,6 +26,11 @@ class ClassImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGen
     def __post_init__(self) -> None:
         # Convert the members into a sequence.
         self.members = Seq(self.members)
+
+    def __deepcopy__(self, memodict={}):
+        return ClassImplementationAst(
+            self.pos, copy.deepcopy(self.tok_left_brace), copy.deepcopy(self.members),
+            copy.deepcopy(self.tok_right_brace), _ctx=self._ctx, _scope=self._scope)
 
     @staticmethod
     def default() -> ClassImplementationAst:

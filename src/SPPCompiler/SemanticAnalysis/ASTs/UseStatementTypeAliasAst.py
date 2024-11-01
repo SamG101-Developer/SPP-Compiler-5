@@ -73,6 +73,7 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
         self._generated = True
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        from SPPCompiler.SemanticAnalysis import TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -82,7 +83,7 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
             scope_manager.move_to_next_scope()
 
         # Create a sup ast to allow the attribute and method access.
-        sup_ast = AstMutation.inject_code(f"sup {self.new_type} ext {self.old_type}", Parser.parse_sup_prototype_inheritance)
+        sup_ast = AstMutation.inject_code(f"sup {self.new_type} ext {self.old_type} {{}}", Parser.parse_sup_prototype_inheritance)
         sup_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
         sup_ast.generate_symbols(scope_manager)
 

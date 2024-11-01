@@ -41,6 +41,12 @@ class GenericCompArgumentNamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
             self.value.print(printer)]
         return " ".join(string)
 
+    @staticmethod
+    def from_name_value(name: TypeAst, value: ExpressionAst) -> GenericCompArgumentNamedAst:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
+        return GenericCompArgumentNamedAst(-1, IdentifierAst.from_type(name), TokenAst.default(TokenType.TkAssign), value)
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors

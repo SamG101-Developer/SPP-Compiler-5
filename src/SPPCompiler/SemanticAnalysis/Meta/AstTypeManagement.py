@@ -55,6 +55,7 @@ class AstTypeManagement:
 
     @staticmethod
     def create_generic_scope(scope_manager: ScopeManager, type: TypeAst, type_part: GenericIdentifierAst, base_symbol: TypeSymbol) -> Scope:
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
@@ -62,6 +63,10 @@ class AstTypeManagement:
         new_cls_proto = copy.deepcopy(base_symbol.type)
         new_symbol = TypeSymbol(name=type_part, type=new_cls_proto, scope=new_scope)
         new_scope.parent.add_symbol(new_symbol)
+        new_scope._ast = new_cls_proto
+
+        if type.without_generics() == CommonTypes.Tup().without_generics():
+            return new_scope
 
         for generic_argument in type_part.generic_argument_group.arguments:
             generic_class_proto = scope_manager.current_scope.get_symbol(generic_argument.value).type
