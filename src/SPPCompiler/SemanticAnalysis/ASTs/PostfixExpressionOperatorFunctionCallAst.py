@@ -94,18 +94,18 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
                 if arguments.length > parameters.length and not is_variadic:
                     ...
 
-                # Check if there are too few arguments for the function.
-                if arguments.length < parameter_names_req.length:
-                    ...
-
                 # Check for any named arguments without a corresponding parameter.
-                if not argument_names.set_subtract(parameter_names).is_empty():
+                if invalid_arguments := argument_names.set_subtract(parameter_names):
                     ...
 
                 # Remove all the used parameters names from the set of parameter names, and name the unnamed arguments.
                 AstFunctions.name_function_arguments(arguments, parameters)
                 AstFunctions.name_generic_arguments(generic_arguments, generic_parameters)
                 argument_names = arguments.map_attr("name")
+
+                # Check if there are too few arguments for the function (by missing names).
+                if missing_parameters := parameter_names_req.set_subtract(argument_names):
+                    ...
 
                 # Infer generic arguments and inherit from the function owner block.
                 generic_arguments = AstFunctions.inherit_generic_arguments(
@@ -126,7 +126,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
                 # Type check the arguments against the parameters.
                 sorted_arguments = arguments.sort(key=lambda a: parameter_names.index(a.name))
-                for i, (argument, parameter) in sorted_arguments.zip(parameters).enumerate():
+                for argument, parameter in sorted_arguments.zip(parameters):
                     argument_type = argument.infer_type(scope_manager, **kwargs)
                     parameter_type = InferredType(convention=type(parameter.convention), type=parameter.type)
 

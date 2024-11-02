@@ -172,7 +172,7 @@ class Scope:
     def sup_scopes(self) -> Seq[Scope]:
         # Get all the super scopes recursively.
         all_sup_scopes = Seq()
-        for sup_scope, ast in self._direct_sup_scopes:
+        for sup_scope in self._direct_sup_scopes:
             all_sup_scopes.append(sup_scope)
             all_sup_scopes.extend(sup_scope.sup_scopes)
         return all_sup_scopes

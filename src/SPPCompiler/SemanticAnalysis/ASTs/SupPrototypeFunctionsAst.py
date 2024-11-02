@@ -71,7 +71,7 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
         # Cannot superimpose over a generic type.
         cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
         if cls_symbol.is_generic:
-            raise AstErrors.SUP_OVER_GENERIC_TYPE(self.name, "superimpose over a generic type")
+            raise AstErrors.INVALID_PLACE_FOR_GENERIC(self.name, "superimpose over a generic type")
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)

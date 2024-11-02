@@ -80,7 +80,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_Seman
             
             # Check the lhs isn't a generic type.
             if lhs_symbol.is_generic:
-                raise AstErrors.MEMBER_ACCESS_GENERIC_TYPE(lhs, lhs_type, self.tok_access)
+                raise AstErrors.INVALID_PLACE_FOR_GENERIC(lhs, lhs_type, self.tok_access)
         
             # Check the lhs is a tuple (only indexable type).
             if not lhs_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
@@ -97,7 +97,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_Seman
             
             # Check the lhs isn't a generic type.
             if lhs_symbol.is_generic:
-                raise AstErrors.MEMBER_ACCESS_GENERIC_TYPE(lhs, lhs_type, self.tok_access)
+                raise AstErrors.INVALID_PLACE_FOR_GENERIC(lhs, lhs_type, self.tok_access)
             
             # Check the lhs is a variable and not a namespace.
             if isinstance(lhs_symbol, NamespaceSymbol):

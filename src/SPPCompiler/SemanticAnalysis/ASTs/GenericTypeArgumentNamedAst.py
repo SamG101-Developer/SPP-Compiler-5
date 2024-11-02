@@ -32,8 +32,8 @@ class GenericTypeArgumentNamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.name.print(printer) + " ",
-            self.tok_assign.print(printer) + " ",
+            self.name.print(printer),
+            self.tok_assign.print(printer),
             self.value.print(printer)]
         return "".join(string)
 

@@ -62,7 +62,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
         # Cannot superimpose over a generic type.
         if cls_symbol.is_generic:
-            raise AstErrors.SUP_OVER_GENERIC_TYPE(self.name, "superimpose over a generic type")
+            raise AstErrors.INVALID_PLACE_FOR_GENERIC(self.name, "superimpose over a generic type")
 
         # Register the superimposition as a "sup scope", and the "sub scopes".
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
@@ -120,9 +120,8 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
                 raise AstErrors.SUP_MEMBER_NOT_VIRTUAL(this_method, self.super_class)
 
         # Check every abstract method on the super class is implemented.
-        for base_member in cls_symbol.scope._direct_sup_scopes.map(lambda s: s.body.members).flat():
-            base_method = base_member.body.members[-1]
-            this_method = AstFunctions.check_for_conlicting_method(scope_manager, cls_symbol.scope, base_method, FunctionConflictCheckType.InvalidOverride)
+        for base_method in cls_symbol.scope._direct_sup_scopes.map(lambda s: s._ast.body.members).flat():
+            this_method = AstFunctions.check_for_conflicting_method(scope_manager, cls_symbol.scope, base_method, FunctionConflictCheckType.InvalidOverride)
 
             # Check the abstract methods are overridden.
             if base_method._abstract and not this_method:

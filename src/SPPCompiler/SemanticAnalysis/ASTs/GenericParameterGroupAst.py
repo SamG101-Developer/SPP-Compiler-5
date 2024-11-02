@@ -78,12 +78,12 @@ class GenericParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
         # Check there are no duplicate generic parameter names.
-        generic_parameter_names = self.parameters.map(lambda parameter: parameter.name).flat()
+        generic_parameter_names = self.parameters.map(lambda parameter: parameter.name)
         if duplicate_generic_parameters := generic_parameter_names.non_unique():
             raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_generic_parameters[0][0], duplicate_generic_parameters[0][1], "generic parameter")
 
         # Check the generic parameters are in the correct order.
-        if difference := AstOrdering.order_args(self.parameters):
+        if difference := AstOrdering.order_params(self.parameters):
             raise AstErrors.INVALID_ORDER(difference[0], difference[1], "generic parameter")
 
         # Analyse the parameters.

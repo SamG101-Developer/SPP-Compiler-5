@@ -8,8 +8,11 @@ from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stag
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
+    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.ASTs.ObjectInitializerArgumentAst import ObjectInitializerArgumentAst
+    from SPPCompiler.SemanticAnalysis.ASTs.ObjectInitializerArgumentNamedAst import ObjectInitializerArgumentNamedAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -46,8 +49,101 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
         return ObjectInitializerArgumentGroupAst(-1, TokenAst.default(TokenType.TkParenL), arguments or Seq(), TokenAst.default(TokenType.TkParenR))
 
-    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        self.arguments.for_each(lambda arg: arg.analyse_semantics(scope_manager, **kwargs))
+    @staticmethod
+    def get_arg_val(argument: ObjectInitializerArgumentAst) -> ExpressionAst:
+        from SPPCompiler.SemanticAnalysis import ObjectInitializerArgumentNamedAst
+        return argument.name if isinstance(argument, ObjectInitializerArgumentNamedAst) else argument.value
+
+    def get_def_args(self) -> Seq[ObjectInitializerArgumentNamedAst]:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import ObjectInitializerArgumentNamedAst, TokenAst
+
+        # Filter the arguments to token arguments that are "else=".
+        named_args = self.arguments.filter_to_type(ObjectInitializerArgumentNamedAst)
+        token_args = named_args.filter(lambda arg: isinstance(arg.name, TokenAst))
+        return token_args.filter(lambda arg: arg.name.token.token_type == TokenType.KwElse)
+
+    def get_sup_args(self) -> Seq[ObjectInitializerArgumentNamedAst]:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import ObjectInitializerArgumentNamedAst, TokenAst
+
+        # Filter the arguments to token arguments that are "sup=".
+        named_args = self.arguments.filter_to_type(ObjectInitializerArgumentNamedAst)
+        token_args = named_args.filter(lambda arg: isinstance(arg.name, TokenAst))
+        return token_args.filter(lambda arg: arg.name.token.token_type == TokenType.KwSup)
+
+    def analyse_semantics(self, scope_manager: ScopeManager, class_type: TypeAst = None, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, ObjectInitializerArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
+        from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
+
+        # Get symbol and attribute information from the class type.
+        class_symbol = scope_manager.current_scope.get_symbol(class_type)
+        attributes = class_symbol.scope._ast.body.members
+        attribute_names = attributes.map_attr("name")
+        super_classes = class_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s.name, TypeAst))
+
+        # Analyse the arguments and enforce memory integrity.
+        for argument in self.arguments:
+            argument.analyse_semantics(scope_manager, **kwargs)
+            AstMemoryHandler.enforce_memory_integrity(self.get_arg_val(argument), argument, scope_manager)
+
+        # Check there are no duplicate argument names.
+        argument_names = self.arguments.filter_to_type(ObjectInitializerArgumentNamedAst).map(lambda a: a.name).flat()
+        if duplicate_arguments := argument_names.non_unique():
+            raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_arguments[0][0], duplicate_arguments[0][1], "named object arguments")
+
+        # Check there is at most 1 default argument.
+        if self.get_def_args().length > 1:
+            raise AstErrors.TOO_MANY_DEFAULT_ARGUMENTS(self.get_def_args()[0], self.get_def_args()[1])
+        def_argument = self.get_def_args().first()
+
+        # Check there is at most 1 super argument.
+        if self.get_sup_args().length > 1:
+            raise AstErrors.TOO_MANY_SUPER_ARGUMENTS(self.get_sup_args()[0], self.get_sup_args()[1])
+        sup_argument = self.get_sup_args().first()
+
+        # Check every attribute has been assigned a value (unless the default argument is present).
+        if not def_argument and (missing_attributes := attribute_names.set_subtract(argument_names)):
+            raise AstErrors.MISSING_ARGUMENTS(missing_attributes)
+
+        # Check there are no invalidly named arguments.
+        if invalid_arguments := argument_names.set_subtract(attribute_names):
+            raise AstErrors.INVALID_ARGUMENTS(invalid_arguments)
+
+        # Type check the regular arguments against the class attributes.
+        sorted_arguments = self.arguments.filter(lambda a: isinstance(a.name, IdentifierAst)).sort(key=lambda a: attributes.index(a.name))
+        for argument, attribute in sorted_arguments.zip(attributes):
+            argument_type = argument.infer_type(scope_manager, **kwargs)
+            attribute_type = InferredType.from_type(attribute.type)
+
+            if not attribute_type.symbolic_eq(argument_type, class_symbol.scope, scope_manager.current_scope):
+                raise AstErrors.TYPE_MISMATCH(attribute, attribute_type, argument, argument_type)
+
+        # Type check the default argument if it exists.
+        def_argument_type = def_argument.value.infer_type(scope_manager, **kwargs) if def_argument else None
+        target_def_type = InferredType.from_type(class_type)
+        if def_argument and not def_argument_type.symbolic_eq(target_def_type, class_symbol.scope, scope_manager.current_scope):
+            raise AstErrors.TYPE_MISMATCH(class_type, target_def_type, def_argument, def_argument_type)
+
+        # Check the "sup=" argument provides a tuple.
+        sup_argument_type = sup_argument.value.infer_type(scope_manager, **kwargs) if sup_argument else None
+        target_sup_type = InferredType.from_type(CommonTypes.Tup().without_generics())
+        if sup_argument and not sup_argument_type.symbolic_eq(target_sup_type, class_symbol.scope, scope_manager.current_scope):
+            raise AstErrors.TYPE_MISMATCH(class_type, target_sup_type, sup_argument, sup_argument_type)
+
+        if sup_argument:
+            given_sup_types = sup_argument_type.type.types[-1].generic_argument_group.arguments.map_attr("value")
+
+            # Check if there are any missing types in the "sup=" tuple.
+            if sup_argument and (missing_superclasses := super_classes.set_subtract(given_sup_types)):
+                raise AstErrors.MISSING_SUPERCLASSES(missing_superclasses)
+
+            # Check if there are any extra invalid types in the "sup=" tuple.
+            if sup_argument and (invalid_superclasses := given_sup_types.set_subtract(super_classes)):
+                raise AstErrors.INVALID_SUPERCLASSES(invalid_superclasses)
 
 
 __all__ = ["ObjectInitializerArgumentGroupAst"]

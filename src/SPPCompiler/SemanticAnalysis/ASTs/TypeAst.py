@@ -167,7 +167,7 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
 
                 # Check the lhs isn't a generic type.
                 if type_symbol.is_generic:
-                    raise AstErrors.MEMBER_ACCESS_GENERIC_TYPE(prev_type, prev_type, type_part)
+                    raise AstErrors.INVALID_PLACE_FOR_GENERIC(prev_type, prev_type, type_part)
 
                 # Check the lhs is a tuple (only indexable type).
                 if not prev_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):

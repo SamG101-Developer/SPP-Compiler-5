@@ -1,6 +1,8 @@
 from __future__ import annotations
 from collections import defaultdict
+from fastenum import Enum
 from typing import Dict, Optional, Tuple, TYPE_CHECKING
+import copy, itertools, operator
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -9,6 +11,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentAst import FunctionCallArgumentAst
     from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentNamedAst import FunctionCallArgumentNamedAst
     from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterAst import FunctionParameterAst
+    from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentAst, GenericArgumentNamedAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentGroupAst import GenericArgumentGroupAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericParameterAst
@@ -19,6 +22,11 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+
+
+class FunctionConflictCheckType(Enum):
+    InvalidOverload = 0
+    InvalidOverride = 1
 
 
 class AstFunctions:
@@ -86,7 +94,8 @@ class AstFunctions:
 
     @staticmethod
     def get_all_function_scopes(function_name: IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, GenericArgumentGroupAst]]:
-        from SPPCompiler.SemanticAnalysis import TypeAst
+        from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst, TypeAst
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
         converted_identifier = TypeAst.from_function_identifier(function_name)
         overload_scopes_and_info = Seq()
@@ -102,7 +111,7 @@ class AstFunctions:
         # Functions in a superimposition block: will have inheritable generics from "sup [...] ... { ... }".
         else:
             for sup_scope in function_owner_scope._direct_sup_scopes if exclusive else function_owner_scope.sup_scopes:
-                if fun_scope := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritance).filter(lambda m: m.name == function_name):
+                if fun_scope := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst).filter(lambda m: m.name == function_name):
                     generics = sup_scope._symbol_table.all().filter_to_type(TypeSymbol).filter(lambda t: t.is_generic and t.scope)
                     generics = generics.map(GenericArgumentNamedAst.from_symbol)
                     generics = GenericArgumentGroupAst.default(generics)
@@ -110,6 +119,47 @@ class AstFunctions:
 
         # Return the overload scopes, and their generic argument groups.
         return overload_scopes_and_info
+
+    @staticmethod
+    def check_for_conflicting_method(scope_manager: ScopeManager, type_scope: Scope, new_function: FunctionPrototypeAst, conflict_type: FunctionConflictCheckType) -> Optional[FunctionPrototypeAst]:
+        """
+        Check fir conflicting methods between the new function, anf functions in the type scope. This is used to check
+        overrides are valid, and there aren't conflicting overloads.
+        """
+
+        # Get the existing superimpositions and data, and split them into scopes, functions and generics.
+        existing = AstFunctions.get_all_function_scopes(new_function._orig, type_scope, conflict_type == FunctionConflictCheckType.InvalidOverload)
+        existing_scopes = existing.map(operator.itemgetter(0))
+        existing_functions = existing.map(operator.itemgetter(1)).map(lambda s: s.body.members[0])
+        existing_generics = existing.map(operator.itemgetter(2))
+
+        # For overloads, the required parameters must have different types or conventions.
+        if conflict_type == FunctionConflictCheckType.InvalidOverload:
+            parameter_filter = lambda f: f.function_parameter_group.get_req()
+            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.convention == p2.convention
+            extra_check      = lambda f1, f2, s1, s2: f1.tok_fun == f2.tok_fun
+
+        # For overrides, all parameters must be direct matches (type and convention). Todo: Self convention check
+        else:
+            parameter_filter = lambda f: f.function_parameter_group.get_non_self()
+            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.convention == p2.convention and p1.extract_names == p2.extract_names and type(p1) is type(p2)
+            extra_check      = lambda f1, f2, s1, s2: f1.return_type.symbolic_eq(f2.return_type, s1, s2) and f1.tok_fun == f2.tok_fun
+
+        # Check each parameter set for each overload: 1 match is a conflict.
+        for (existing_scope, existing_function), existing_generics in existing_scopes.zip(existing_functions).zip(existing_generics):
+            # Filter the parameters and substitute the generics.
+            parameter_set_1 = parameter_filter(existing_function).deepcopy()
+            parameter_set_2 = parameter_filter(new_function)
+            parameter_set_1.for_each(lambda p: p.type.sub_generics(existing_generics))
+
+            # Pre-checks: parameter lengths are the sane, and the extra check passes.
+            if parameter_set_1.length != parameter_set_2.length: continue
+            if not extra_check(existing_function, new_function, existing_scope, scope_manager.current_scope): continue
+            if existing_function is new_function: continue
+
+            # Type check the parameters (0-parameter functions auto-match).
+            if parameter_set_1.length + parameter_set_2.length == 0: return existing_function
+            if parameter_set_1.zip(parameter_set_2).all(lambda p1, p2: parameter_comp(p1, p2, existing_scope, scope_manager.current_scope)): return existing_function
 
     @staticmethod
     def name_function_arguments(arguments: Seq[FunctionCallArgumentAst], parameters: Seq[FunctionParameterAst]) -> None:
