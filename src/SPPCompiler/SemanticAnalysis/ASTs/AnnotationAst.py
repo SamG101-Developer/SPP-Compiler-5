@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import copy
 from dataclasses import dataclass
 from fastenum import Enum
 from typing import TYPE_CHECKING
@@ -36,6 +38,10 @@ class AnnotationAst(Ast, Stage1_PreProcessor, Stage4_SemanticAnalyser):
     tok_at: TokenAst
     name: IdentifierAst
 
+    def __deepcopy__(self, memodict={}):
+        # Create a deep copy of the AST.
+        return AnnotationAst(self.pos, copy.deepcopy(self.tok_at), copy.deepcopy(self.name), _ctx=self._ctx)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -49,6 +55,7 @@ class AnnotationAst(Ast, Stage1_PreProcessor, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis import FunctionPrototypeAst
         from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled, AstVisibility
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        super().pre_process(context)
 
         # Pre-process the name of this annotation.
         if self.name.value == _Annotations.VirtualMethod.value:
@@ -89,7 +96,7 @@ class AnnotationAst(Ast, Stage1_PreProcessor, Stage4_SemanticAnalyser):
 
         # Prevent duplicate annotations from being applied to an AST.
         annotation_names = self._ctx.annotations.map_attr("name")
-        if duplicate_annotations := annotation_names.filter(lambda a: a.name == self.name).remove(self.name):
+        if duplicate_annotations := annotation_names.filter(lambda a: a == self.name).remove(self.name):
             raise AstErrors.DUPLICATE_ANNOTATION(self.name, duplicate_annotations[0])
 
 

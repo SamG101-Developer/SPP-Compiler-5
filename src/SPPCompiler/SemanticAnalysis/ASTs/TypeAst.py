@@ -1,11 +1,12 @@
 from __future__ import annotations
 from convert_case import pascal_case
 from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
+from typing import Iterator, Optional, TYPE_CHECKING
 import hashlib
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class TypeAst(Ast, Stage4_SemanticAnalyser):
+class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     namespace: Seq[IdentifierAst]
     types: Seq[TypePartAst]
 
@@ -36,6 +37,15 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
     def __hash__(self) -> int:
         # Hash the namespace and types into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.md5("".join([str(p) for p in self.namespace + self.types]).encode()).digest())
+
+    def __iter__(self) -> Iterator[TypePartAst]:
+        # Iterate over the type parts and generics.
+        def internal_iteration(t: TypeAst):
+            for part in t.types:
+                yield part
+                for g in part.generic_argument_group.arguments:
+                    yield from internal_iteration(g.value)
+        return internal_iteration(self)
 
     def __json__(self) -> str:
         return f"cls {self.print(AstPrinter())}"
@@ -67,11 +77,21 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
         return TypeAst.from_identifier(mock_type_name)
 
     def without_generics(self) -> TypeAst:
-        # Return the type without its generic arguments.
         from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
+
+        # Return the type without its generic arguments.
         match self.types[-1]:
             case GenericIdentifierAst(): return TypeAst(self.pos, self.namespace, self.types[:-1] + [self.types[-1].without_generics()])
             case _: return TypeAst(self.pos, self.namespace.copy(), self.types.copy())
+
+    def contains_generic(self, generic_name: TypeAst) -> bool:
+        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
+
+        # Check if there is a generic name in this type (at any nested argument level)
+        generic_name = GenericIdentifierAst.from_type(generic_name)
+        for part in self:
+            if part == generic_name: return True
+        return False
 
     def sub_generics(self, generic_arguments: Seq[GenericArgumentAst]) -> TypeAst:
         from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
@@ -103,6 +123,10 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
         self_symbol = self_scope.get_symbol(self)
         that_symbol = that_scope.get_symbol(that)
 
+        print("-" * 100)
+        print(self, self_scope, self_symbol)
+        print(that, that_scope, that_symbol)
+
         # Special case for Variant types (can match any of the alternative types).
         if check_variant and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, check_variant=False):
             if Seq(self_symbol.name.generic_argument_group.arguments).any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope)):
@@ -110,6 +134,9 @@ class TypeAst(Ast, Stage4_SemanticAnalyser):
 
         # Compare each type's class prototype.
         return self_symbol.type is that_symbol.type
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+        return InferredType.from_type(self)
 
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source=None, generic_infer_target=None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import GenericIdentifierAst

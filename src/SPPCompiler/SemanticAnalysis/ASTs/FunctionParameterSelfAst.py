@@ -52,24 +52,25 @@ class FunctionParameterSelfAst(Ast, Ordered, Stage4_SemanticAnalyser):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import ConventionMutAst, ConventionRefAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SemanticAnalysis import LetStatementUninitializedAst, LocalVariableSingleIdentifierAst
 
         # Analyse the type.
         self.type.analyse_semantics(scope_manager, **kwargs)
 
-        # Create the variable for the parameter.
-        ast = AstMutation.inject_code(f"let {self.name}: {self.type}", Parser.parse_let_statement_uninitialized)
+        # Create the variable using ASTs, because "let self: ..." will be a parse error.
+        ast = LetStatementUninitializedAst.from_variable_and_type(
+            variable=LocalVariableSingleIdentifierAst(-1, self.tok_mut, self.name),
+            type=self.type)
         ast.analyse_semantics(scope_manager, **kwargs)
+        print(ast)
 
         # Mark the symbol as initialized.
-        for name in self.variable.extract_names:
-            symbol = scope_manager.current_scope.get_symbol(name)
-            symbol.is_mutable = self.tok_mut is not None
-            symbol.memory_info.borrow_ast = self.convention
-            symbol.memory_info.is_borrow_mut = isinstance(self.convention, ConventionMutAst)
-            symbol.memory_info.is_borrow_ref = isinstance(self.convention, ConventionRefAst)
-            symbol.memory_info.initialized_by(self)
+        symbol = scope_manager.current_scope.get_symbol(self.name)
+        symbol.is_mutable = self.tok_mut is not None
+        symbol.memory_info.borrow_ast = self.convention
+        symbol.memory_info.is_borrow_mut = isinstance(self.convention, ConventionMutAst)
+        symbol.memory_info.is_borrow_ref = isinstance(self.convention, ConventionRefAst)
+        symbol.memory_info.initialized_by(self)
 
 
 __all__ = ["FunctionParameterSelfAst"]

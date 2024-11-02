@@ -73,7 +73,7 @@ class Scope:
 
         # Ensure the name is a valid type.
         if not isinstance(name, (IdentifierAst, TypeAst, GenericIdentifierAst)):
-            raise
+            raise Exception(f"Invalid name type: {name} ({type(name)})")
 
         # Get the symbol from the symbol table if it exists.
         scope = self

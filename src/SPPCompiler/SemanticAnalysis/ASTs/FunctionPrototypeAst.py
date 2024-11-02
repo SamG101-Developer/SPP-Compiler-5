@@ -93,6 +93,9 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
         if not isinstance(context, ModulePrototypeAst) and self.function_parameter_group.get_self():
             self.function_parameter_group.get_self().type = context.name
 
+        # Pre-process the annotations.
+        self.annotations.for_each(lambda a: a.pre_process(self))
+
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
         mock_class_name = TypeAst.from_function_identifier(self.name)
         function_type = self._deduce_mock_class_type()
@@ -114,7 +117,7 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
         context.body.members.remove(self)
 
         # Pre-process the annotations of this function's duplicate.
-        self.annotations.for_each(lambda a: a.pre_process(function_ast))
+        function_ast.annotations.for_each(lambda a: a.pre_process(function_ast))
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
 

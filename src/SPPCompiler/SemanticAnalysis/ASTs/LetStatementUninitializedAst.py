@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 @dataclass
 class LetStatementUninitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     tok_let: TokenAst
-    variable: LocalVariableAst
+    assign_to: LocalVariableAst
     tok_colon: TokenAst
     type: TypeAst
 
@@ -25,10 +25,16 @@ class LetStatementUninitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser)
     def print(self, printer: AstPrinter) -> str:
         string = [
             self.tok_let.print(printer) + " ",
-            self.variable.print(printer),
+            self.assign_to.print(printer),
             self.tok_colon.print(printer) + " ",
             self.type.print(printer)]
         return "".join(string)
+
+    @staticmethod
+    def from_variable_and_type(variable: LocalVariableAst, type: TypeAst) -> LetStatementUninitializedAst:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import TokenAst
+        return LetStatementUninitializedAst(-1, TokenAst.default(TokenType.KwLet), variable, TokenAst.default(TokenType.TkColon), type)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
@@ -49,6 +55,7 @@ class LetStatementUninitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser)
             raise AstErrors.INVALID_VOID_USE(self.type)
 
         # Recursively analyse the variable.
+        self.assign_to.analyse_semantics(scope_manager, value=self.type, **kwargs)
 
 
 __all__ = ["LetStatementUninitializedAst"]
