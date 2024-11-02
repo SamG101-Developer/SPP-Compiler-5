@@ -51,9 +51,8 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
+        # Move to the next scope.
         scope_manager.move_to_next_scope()
-
-        # print(self)
 
         # Get the class and super class symbols.
         self.super_class.analyse_semantics(scope_manager)
@@ -109,11 +108,11 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         # Todo: Add support for type aliasing in the superimposition.
         for member in self.body.members.filter_to_type(SupPrototypeInheritanceAst):
             this_method = member.body.members[-1]
-            base_method = AstFunctions.check_for_conlicting_method(scope_manager, sup_symbol.scope, this_method, FunctionConflictCheckType.InvalidOverride)
+            base_method = AstFunctions.check_for_conflicting_method(scope_manager, sup_symbol.scope, this_method, FunctionConflictCheckType.InvalidOverride)
 
             # Check the base method exists.
             if not base_method:
-                raise AstErrors.SUP_MEMBER_INVALID(this_method, self.super_class)
+                raise AstErrors.SUP_MEMBER_INVALID(this_method.name, self.super_class)
 
             # Check the base method is virtual.
             if not base_method._virtual:

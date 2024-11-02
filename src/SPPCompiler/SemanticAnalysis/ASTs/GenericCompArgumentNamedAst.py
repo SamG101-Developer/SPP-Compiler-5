@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 
 
 @dataclass
@@ -46,6 +47,12 @@ class GenericCompArgumentNamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
         return GenericCompArgumentNamedAst(-1, IdentifierAst.from_type(name), TokenAst.default(TokenType.TkAssign), value)
+
+    @staticmethod
+    def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
+        return GenericCompArgumentNamedAst(-1, symbol.name, TokenAst.default(TokenType.TkAssign), symbol.memory_info.ast_comptime_const)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst

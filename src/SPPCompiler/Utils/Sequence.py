@@ -40,10 +40,10 @@ class Seq[T]:
     def filter(self, func: Callable[[T], bool]) -> Seq[T]:
         return Seq([v for v in self._value if func(v)])
 
-    def filter_to_type(self, *types: type) -> Seq[T]:
+    def filter_to_type[*Ts](self, *types: Ts) -> Seq[Ts]:
         return Seq([v for v in self._value if type(v) in types])
 
-    def filter_not_type(self, *types: type) -> Seq[T]:
+    def filter_not_type[*Ts](self, *types: Ts) -> Seq[T]:
         return Seq([v for v in self._value if type(v) not in types])
 
     def filter_out_none(self) -> Seq[T]:

@@ -136,6 +136,28 @@ class AstErrors:
             tip="Use a subroutine instead of a coroutine.")
         return e
 
+    @staticmethod
+    def MISSING_RETURN_STATEMENT(final_member: Ast, function_return_type: TypeAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(function_return_type.pos, f"Function return type '{function_return_type}' defined here")
+        e.add_error(
+            pos=final_member.pos,
+            tag="Missing return statement.",
+            msg="The function does not have a return statement.",
+            tip="Add a return statement to the function.")
+        return e
+
+    @staticmethod
+    def INVALID_ARGUMENT_NAMES(parameter_names: Seq[Ast], invalid_argument: Ast) -> SemanticError:
+        e = SemanticError()
+        e.add_info(parameter_names[0].pos, f"Parameter names defined here")
+        e.add_error(
+            pos=invalid_argument.pos,
+            tag="Invalid argument name.",
+            msg="The argument name is not valid.",
+            tip="Use a valid argument name.")
+        return e
+
     # GENERAL SCOPE ERRORS
 
     @staticmethod
@@ -443,4 +465,17 @@ class AstErrors:
             tag="Member access out of bounds.",
             msg="The member access is out of bounds.",
             tip="Use a valid member access.")
+        return e
+
+    # SUPERIMPOSITION ERRORS
+
+    @staticmethod
+    def SUP_MEMBER_INVALID(new_method: IdentifierAst, super_class: TypeAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(super_class.pos, f"Super class '{super_class}' extended here")
+        e.add_error(
+            pos=new_method.pos,
+            tag="Invalid super member.",
+            msg=f"The super member '{new_method}' does not exist in the super class '{super_class}'.",
+            tip="Use a valid super member.")
         return e

@@ -90,6 +90,10 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
                 if function_overload._abstract:
                     ...
 
+                # Can't call non-implemented functions (dummy functions).
+                if function_overload._non_implemented:
+                    ...
+
                 # Check if there are too many arguments for the function (non-variadic).
                 if arguments.length > parameters.length and not is_variadic:
                     ...

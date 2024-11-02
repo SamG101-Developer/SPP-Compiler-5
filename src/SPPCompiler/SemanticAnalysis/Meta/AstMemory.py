@@ -32,7 +32,7 @@ class MemoryInfo:
 
         is_borrow_ref: If the memory is borrowed as an immutable reference.
         is_borrow_mut: If the memory is borrowed as a mutable reference.
-        is_comptime_const: If the memory is a compile-time constant (global constant or generic constant).
+        ast_comptime_const: If the memory is a compile-time constant (global constant or generic constant).
         is_inconsistently_initialized: If the memory is inconsistently initialized from branches => (branch, is_initialized).
         is_inconsistently_moved: If the memory is inconsistently moved from branches => (branch, is_moved).
         is_inconsistently_partially_moved: If the memory is inconsistently partially moved from branches => (branch, is_partially_moved).
@@ -46,10 +46,10 @@ class MemoryInfo:
     ast_borrowed: Optional[Ast] = field(default=None)
     ast_partially_moved: Seq[Ast] = field(default_factory=Seq)
     ast_pinned: Seq[Ast] = field(default_factory=Seq)
+    ast_comptime_const: Optional[Ast] = field(default=None)
 
     is_borrow_mut: bool = field(default=False)
     is_borrow_ref: bool = field(default=False)
-    is_comptime_const: bool = field(default=False)
 
     is_inconsistently_initialized: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)
     is_inconsistently_moved: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)

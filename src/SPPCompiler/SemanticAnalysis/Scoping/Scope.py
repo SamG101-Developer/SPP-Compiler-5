@@ -83,7 +83,7 @@ class Scope:
 
         # If this is not an exclusive search, search the parent scope.
         if not symbol and scope._parent and not exclusive:
-            symbol = scope._parent.get_symbol(name)
+            symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
         if not symbol and (isinstance(name, IdentifierAst) or name.value.startswith("$")):
@@ -156,7 +156,8 @@ class Scope:
     @property
     def parent_module(self) -> Scope:
         # Get the ancestor module scope.
-        return self.ancestors.filter_to_type(IdentifierAst).first()
+        from SPPCompiler.SemanticAnalysis import IdentifierAst
+        return self.ancestors.filter(lambda s: isinstance(s.name, IdentifierAst))[0]
 
     @property
     def children(self) -> Seq[Scope]:

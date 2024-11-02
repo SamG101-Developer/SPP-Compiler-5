@@ -22,8 +22,10 @@ class SubroutinePrototypeAst(FunctionPrototypeAst):
         self.body.analyse_semantics(scope_manager, **kwargs)
 
         # Check there is a return statement at the end (for non-void functions).
-        if not self.return_type.symbolic_eq(CommonTypes.Void(), scope_manager.current_scope) and not isinstance(self.body.members[-1], RetStatementAst):
-            raise AstErrors.MISSING_RETURN_STATEMENT(self.body.members[-1], self.return_type)
+        non_void_return_type = not self.return_type.symbolic_eq(CommonTypes.Void(), scope_manager.current_scope)
+        if non_void_return_type and not (self._non_implemented or self._abstract) and not (self.body.members and isinstance(self.body.members[-1], RetStatementAst)):
+            final_member = self.body.members[-1] if self.body.members else self.body.tok_right_brace
+            raise AstErrors.MISSING_RETURN_STATEMENT(final_member, self.return_type)
 
         # Move out of the current scope.
         scope_manager.move_out_of_current_scope()

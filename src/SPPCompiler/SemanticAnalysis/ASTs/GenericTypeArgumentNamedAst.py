@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
 
 @dataclass
@@ -42,6 +43,12 @@ class GenericTypeArgumentNamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
         return GenericTypeArgumentNamedAst(-1, IdentifierAst.from_type(name), TokenAst.default(TokenType.TkAssign), value)
+
+    @staticmethod
+    def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
+        return GenericTypeArgumentNamedAst(-1, IdentifierAst.from_generic_identifier(symbol.name), TokenAst.default(TokenType.TkAssign), symbol.fq_name)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the name and value of the generic type argument.

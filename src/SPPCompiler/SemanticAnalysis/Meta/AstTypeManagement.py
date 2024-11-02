@@ -39,12 +39,12 @@ class AstTypeManagement:
         return namespace_scope
 
     @staticmethod
-    def get_type_part_symbol_with_error(scope: Scope, type_part: GenericIdentifierAst, **kwargs) -> TypeSymbol:
+    def get_type_part_symbol_with_error(scope: Scope, type_part: GenericIdentifierAst, ignore_alias: bool = False, **kwargs) -> TypeSymbol:
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
         # Get the type part's symbol, and raise an error if it does not exist.
-        type_symbol = scope.get_symbol(type_part, **kwargs)
+        type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
         if not type_symbol:
             alternatives = scope.all_symbols().filter_to_type(TypeSymbol).map_attr("name")
             closest_match = difflib.get_close_matches(type_part.value, alternatives.map_attr("value"), n=1, cutoff=0)
@@ -64,6 +64,8 @@ class AstTypeManagement:
         new_symbol = TypeSymbol(name=type_part, type=new_cls_proto, scope=new_scope)
         new_scope.parent.add_symbol(new_symbol)
         new_scope._ast = new_cls_proto
+        new_scope._direct_sup_scopes = base_symbol.scope._direct_sup_scopes
+        new_scope._direct_sub_scopes = base_symbol.scope._direct_sub_scopes
 
         if type.without_generics() == CommonTypes.Tup().without_generics():
             return new_scope

@@ -41,6 +41,7 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
     _orig: IdentifierAst = field(default=None, kw_only=True, repr=False)
     _abstract: bool = field(default=False, kw_only=True, repr=False)
     _virtual: bool = field(default=False, kw_only=True, repr=False)
+    _non_implemented: bool = field(default=False, kw_only=True, repr=False)
 
     def __post_init__(self) -> None:
         # Import the necessary classes to create default instances.
@@ -183,7 +184,8 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
             copy.deepcopy(self.name), copy.deepcopy(self.generic_parameter_group),
             copy.deepcopy(self.function_parameter_group), copy.deepcopy(self.tok_arrow),
             copy.deepcopy(self.return_type), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
-            _ctx=self._ctx, _orig=self._orig, _scope=None, _abstract=self._abstract, _virtual=self._virtual)
+            _ctx=self._ctx, _orig=self._orig, _scope=None, _abstract=self._abstract, _virtual=self._virtual,
+            _non_implemented=self._non_implemented)
 
 
 __all__ = ["FunctionPrototypeAst"]

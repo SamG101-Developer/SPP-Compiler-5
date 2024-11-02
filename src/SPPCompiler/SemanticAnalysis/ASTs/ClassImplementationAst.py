@@ -68,7 +68,7 @@ class ClassImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGen
         self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
 
         # Check there are no duplicate attribute names.
-        attribute_names = self.members.map_attr("name").flat()
+        attribute_names = self.members.map_attr("name")
         if duplicate_attributes := attribute_names.non_unique():
             raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_attributes[0][0], duplicate_attributes[0][1], "attribute")
 

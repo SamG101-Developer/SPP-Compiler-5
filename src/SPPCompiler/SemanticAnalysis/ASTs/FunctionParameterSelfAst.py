@@ -62,7 +62,6 @@ class FunctionParameterSelfAst(Ast, Ordered, Stage4_SemanticAnalyser):
             variable=LocalVariableSingleIdentifierAst(-1, self.tok_mut, self.name),
             type=self.type)
         ast.analyse_semantics(scope_manager, **kwargs)
-        print(ast)
 
         # Mark the symbol as initialized.
         symbol = scope_manager.current_scope.get_symbol(self.name)

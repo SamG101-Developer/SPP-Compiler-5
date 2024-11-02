@@ -59,7 +59,7 @@ class RelStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
                 raise AstErrors.UNPINNING_NON_PINNED(self, rel_target)
 
             # Check the rel target isn't a compile-time constant.
-            if symbol.memory_info.is_comptime_const:
+            if symbol.memory_info.ast_comptime_const:
                 raise AstErrors.UNPINNING_CONSTANT(rel_target, symbol.memory_info.ast_initialization)
 
             # Cause a pinned generator/future to be invalidated.

@@ -109,8 +109,10 @@ class TypeSymbol:
             return fq_name
         if isinstance(self, AliasSymbol):
             return self.old_type
+        if self.name.value[0] == "$":
+            return fq_name
 
-        scope = self.scope.parent
+        scope = self.scope.parent_module
         while scope.parent:
             fq_name.types.insert(0, scope.name)
             scope = scope.parent

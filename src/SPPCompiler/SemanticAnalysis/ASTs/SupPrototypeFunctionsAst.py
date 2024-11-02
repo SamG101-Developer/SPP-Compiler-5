@@ -45,7 +45,7 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
         string = [
             self.tok_sup.print(printer) + " ",
             self.generic_parameter_group.print(printer),
-            self.name.print(printer),
+            self.name.print(printer) + " ",
             self.where_block.print(printer),
             self.body.print(printer)]
         return "".join(string)
@@ -57,8 +57,8 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
         self.body.pre_process(self)
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
-        super().generate_symbols(scope_manager)
         scope_manager.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
+        super().generate_symbols(scope_manager)
 
         self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))
         self.body.generate_symbols(scope_manager)

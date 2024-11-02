@@ -94,28 +94,40 @@ class AstFunctions:
 
     @staticmethod
     def get_all_function_scopes(function_name: IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, GenericArgumentGroupAst]]:
-        from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+        from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst, IdentifierAst, TypeAst
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
 
         converted_identifier = TypeAst.from_function_identifier(function_name)
         overload_scopes_and_info = Seq()
 
+        print("\tCheck", function_name, "in", function_owner_scope)
+
         # Functions at the module level: will have no inheritable generics (no enclosing superimposition).
-        if isinstance(function_name, TypeAst):
+        if isinstance(function_owner_scope.name, IdentifierAst):
             for scope in function_owner_scope.ancestors:
                 if scope.children.map_attr("name").contains(converted_identifier):
-                    sup_scope = scope.children.find(lambda s: s.name == converted_identifier)
-                    empty_generic_group = GenericArgumentGroupAst.default()
-                    overload_scopes_and_info.append((sup_scope, empty_generic_group))
+                    for sup_scope in scope.children.find(lambda s: s.name == converted_identifier)._direct_sup_scopes:
+                        empty_generic_group = GenericArgumentGroupAst.default()
+                        overload_scopes_and_info.append((sup_scope, empty_generic_group))
 
         # Functions in a superimposition block: will have inheritable generics from "sup [...] ... { ... }".
         else:
             for sup_scope in function_owner_scope._direct_sup_scopes if exclusive else function_owner_scope.sup_scopes:
-                if fun_scope := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst).filter(lambda m: m.name == function_name):
-                    generics = sup_scope._symbol_table.all().filter_to_type(TypeSymbol).filter(lambda t: t.is_generic and t.scope)
-                    generics = generics.map(GenericArgumentNamedAst.from_symbol)
+                print(f"\tSup scope: {sup_scope.name}")
+                print(f"{sup_scope._ast}")
+
+                function_name = TypeAst.from_function_identifier(function_name)
+                GenericArgumentCTor = {
+                    VariableSymbol: GenericCompArgumentNamedAst,
+                    TypeSymbol: GenericTypeArgumentNamedAst}
+
+                if sup_ast := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst).find(lambda m: m.name == function_name):
+                    generics = sup_scope._symbol_table.all().filter(lambda s: isinstance(s, TypeSymbol) and s.is_generic or isinstance(s, VariableSymbol) and s.memory_info.ast_comptime_const)
+                    generics = generics.map(lambda s: GenericArgumentCTor[type(s)].from_symbol(s))
                     generics = GenericArgumentGroupAst.default(generics)
-                    overload_scopes_and_info.append((fun_scope, generics))
+                    overload_scopes_and_info.append((sup_ast._scope, generics))
 
         # Return the overload scopes, and their generic argument groups.
         return overload_scopes_and_info
@@ -123,15 +135,25 @@ class AstFunctions:
     @staticmethod
     def check_for_conflicting_method(scope_manager: ScopeManager, type_scope: Scope, new_function: FunctionPrototypeAst, conflict_type: FunctionConflictCheckType) -> Optional[FunctionPrototypeAst]:
         """
-        Check fir conflicting methods between the new function, anf functions in the type scope. This is used to check
+        Check for conflicting methods between the new function, anf functions in the type scope. This is used to check
         overrides are valid, and there aren't conflicting overloads.
         """
+
+        import inspect
+        frame = inspect.stack()[1]
+
+        print("-" * 100)
+        print(f"{frame.filename}:{frame.lineno}")
+        print("Checking for conflicting methods")
+        print("New method:", new_function)
+        print("Check type:", conflict_type.name)
+        print("Type scope:", type_scope, " <- ", type_scope.parent)
 
         # Get the existing superimpositions and data, and split them into scopes, functions and generics.
         existing = AstFunctions.get_all_function_scopes(new_function._orig, type_scope, conflict_type == FunctionConflictCheckType.InvalidOverload)
         existing_scopes = existing.map(operator.itemgetter(0))
-        existing_functions = existing.map(operator.itemgetter(1)).map(lambda s: s.body.members[0])
-        existing_generics = existing.map(operator.itemgetter(2))
+        existing_generics = existing.map(operator.itemgetter(1))
+        existing_functions = existing_scopes.map(lambda sc: sc._ast.body.members[0])
 
         # For overloads, the required parameters must have different types or conventions.
         if conflict_type == FunctionConflictCheckType.InvalidOverload:
@@ -147,10 +169,16 @@ class AstFunctions:
 
         # Check each parameter set for each overload: 1 match is a conflict.
         for (existing_scope, existing_function), existing_generics in existing_scopes.zip(existing_functions).zip(existing_generics):
+
+            print("****")
+            print(existing_function)
+            print(new_function)
+            print("****")
+
             # Filter the parameters and substitute the generics.
             parameter_set_1 = parameter_filter(existing_function).deepcopy()
             parameter_set_2 = parameter_filter(new_function)
-            parameter_set_1.for_each(lambda p: p.type.sub_generics(existing_generics))
+            parameter_set_1.for_each(lambda p: p.type.sub_generics(existing_generics.arguments))
 
             # Pre-checks: parameter lengths are the sane, and the extra check passes.
             if parameter_set_1.length != parameter_set_2.length: continue
@@ -159,7 +187,7 @@ class AstFunctions:
 
             # Type check the parameters (0-parameter functions auto-match).
             if parameter_set_1.length + parameter_set_2.length == 0: return existing_function
-            if parameter_set_1.zip(parameter_set_2).all(lambda p1, p2: parameter_comp(p1, p2, existing_scope, scope_manager.current_scope)): return existing_function
+            if parameter_set_1.zip(parameter_set_2).all(lambda p1p2: parameter_comp(*p1p2, existing_scope, scope_manager.current_scope)): return existing_function
 
     @staticmethod
     def name_function_arguments(arguments: Seq[FunctionCallArgumentAst], parameters: Seq[FunctionParameterAst]) -> None:
@@ -176,7 +204,7 @@ class AstFunctions:
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
-            raise AstErrors.INVALID_ARGUMENT_NAMES(invalid_argument_names)
+            raise AstErrors.INVALID_ARGUMENT_NAMES(parameter_names, invalid_argument_names[0])
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
@@ -217,7 +245,8 @@ class AstFunctions:
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
-            raise AstErrors.INVALID_ARGUMENT_NAMES(invalid_argument_names)
+            print(argument_names, parameter_names)
+            raise AstErrors.INVALID_ARGUMENT_NAMES(parameter_names, invalid_argument_names[0])
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).

@@ -28,6 +28,7 @@ Ideas:
 class _Annotations(Enum):
     VirtualMethod = "virtual_method"
     AbstractMethod = "abstract_method"
+    NonImplementedMethod = "non_implemented_method"
     Public = "public"
     Protected = "protected"
     Private = "private"
@@ -69,6 +70,12 @@ class AnnotationAst(Ast, Stage1_PreProcessor, Stage4_SemanticAnalyser):
             if not isinstance(context, FunctionPrototypeAst):
                 raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "function")
             context._abstract = True
+
+        elif self.name.value == _Annotations.NonImplementedMethod.value:
+            # The "non_implemented_method" annotation can only be applied to functions.
+            if not isinstance(context, FunctionPrototypeAst):
+                raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "function")
+            context._non_implemented = True
 
         elif self.name.value == _Annotations.Public.value:
             # The "public", access modifier annotation can only be applied to visibility enabled objects.
