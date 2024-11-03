@@ -39,7 +39,7 @@ class ScopeManager:
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         # Create a new scope (parent is the current scope) and move into it.
-        scope = Scope(name, self._current_scope, ast)
+        scope = Scope(name, self._current_scope, ast=ast)
         self._current_scope._children.append(scope)
 
         # Set the new scope as the current scope, and advance the iterator to match.

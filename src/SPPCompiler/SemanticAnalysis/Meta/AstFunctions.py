@@ -95,33 +95,26 @@ class AstFunctions:
     @staticmethod
     def get_all_function_scopes(function_name: IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, GenericArgumentGroupAst]]:
         from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst, IdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
         from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
 
-        converted_identifier = TypeAst.from_function_identifier(function_name)
+        function_name = TypeAst.from_function_identifier(function_name)
         overload_scopes_and_info = Seq()
-
-        print("\tCheck", function_name, "in", function_owner_scope)
 
         # Functions at the module level: will have no inheritable generics (no enclosing superimposition).
         if isinstance(function_owner_scope.name, IdentifierAst):
             for scope in function_owner_scope.ancestors:
-                if scope.children.map_attr("name").contains(converted_identifier):
-                    for sup_scope in scope.children.find(lambda s: s.name == converted_identifier)._direct_sup_scopes:
+                if scope.children.map_attr("name").contains(function_name):
+                    for sup_scope in scope.children.find(lambda s: s.name == function_name)._direct_sup_scopes:
                         empty_generic_group = GenericArgumentGroupAst.default()
                         overload_scopes_and_info.append((sup_scope, empty_generic_group))
 
         # Functions in a superimposition block: will have inheritable generics from "sup [...] ... { ... }".
         else:
+            print("Direct sup scopes:", function_owner_scope._direct_sup_scopes)
             for sup_scope in function_owner_scope._direct_sup_scopes if exclusive else function_owner_scope.sup_scopes:
-                print(f"\tSup scope: {sup_scope.name}")
-                print(f"{sup_scope._ast}")
-
-                function_name = TypeAst.from_function_identifier(function_name)
-                GenericArgumentCTor = {
-                    VariableSymbol: GenericCompArgumentNamedAst,
-                    TypeSymbol: GenericTypeArgumentNamedAst}
+                GenericArgumentCTor = {VariableSymbol: GenericCompArgumentNamedAst, TypeSymbol: GenericTypeArgumentNamedAst}
 
                 if sup_ast := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst).find(lambda m: m.name == function_name):
                     generics = sup_scope._symbol_table.all().filter(lambda s: isinstance(s, TypeSymbol) and s.is_generic or isinstance(s, VariableSymbol) and s.memory_info.ast_comptime_const)
@@ -147,13 +140,15 @@ class AstFunctions:
         print("Checking for conflicting methods")
         print("New method:", new_function)
         print("Check type:", conflict_type.name)
-        print("Type scope:", type_scope, " <- ", type_scope.parent)
+        print("Type scope:", type_scope, "<-", type_scope.parent)
 
         # Get the existing superimpositions and data, and split them into scopes, functions and generics.
         existing = AstFunctions.get_all_function_scopes(new_function._orig, type_scope, conflict_type == FunctionConflictCheckType.InvalidOverload)
         existing_scopes = existing.map(operator.itemgetter(0))
         existing_generics = existing.map(operator.itemgetter(1))
         existing_functions = existing_scopes.map(lambda sc: sc._ast.body.members[0])
+
+        print("Existing scopes:", existing_scopes)
 
         # For overloads, the required parameters must have different types or conventions.
         if conflict_type == FunctionConflictCheckType.InvalidOverload:

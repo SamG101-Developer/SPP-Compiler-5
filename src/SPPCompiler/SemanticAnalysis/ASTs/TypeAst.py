@@ -76,6 +76,9 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         mock_type_name = IdentifierAst(identifier.pos, f"${pascal_case(identifier.value.replace("_", " "))}")
         return TypeAst.from_identifier(mock_type_name)
 
+    def without_namespace(self) -> TypeAst:
+        return TypeAst(self.pos, Seq(), self.types.copy())
+
     def without_generics(self) -> TypeAst:
         from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
 
@@ -102,10 +105,10 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Iterate over the generic parameters, and substitute the generic arguments into the type parts.
         for generic_name, generic_type in generic_arguments.map(lambda a: (a.name, a.value)):
 
-            # Direct match => change "T" to "U32" for example.
+            # Direct match => change "T" to "U32" for example. Todo: Doe these need to be deep-copied?
             if self.without_generics() == generic_name.without_generics():
-                self.namespace = generic_type.namespace
-                self.types = generic_type.types
+                self.namespace = generic_type.namespace.copy()
+                self.types = generic_type.types.copy()
 
             # Otherwise, iterate over the type parts and substitute their generic arguments.
             else:
@@ -139,7 +142,7 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return InferredType.from_type(self)
 
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source=None, generic_infer_target=None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
+        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, TokenAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
@@ -208,6 +211,11 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
                 new_type = prev_type_part.generic_argument_group.arguments[int(type_part.token.token_metadata)].value
                 type_scope = type_scope.get_symbol(new_type).scope
+
+            else:
+                raise Exception(f"Invalid type part: {type_part} ({type(type_part)})")
+
+        return type_scope
 
 
 __all__ = ["TypeAst"]

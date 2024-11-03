@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentNamedAst, GenericArgumentUnnamedAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericCompArgumentAst, GenericTypeArgumentAst
+    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericParameterAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
@@ -46,6 +47,18 @@ class GenericArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
         return GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), arguments or Seq(), TokenAst.default(TokenType.TkBrackR))
+
+    @staticmethod
+    def from_parameter_group(parameters: Seq[GenericParameterAst]) -> GenericArgumentGroupAst:
+        from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericCompParameterAst
+        from SPPCompiler.SemanticAnalysis import GenericTypeArgumentNamedAst, GenericTypeParameterAst
+
+        GenericArgumentCTor = {
+            **{g: GenericCompArgumentNamedAst for g in GenericCompParameterAst.__value__.__args__},
+            **{g: GenericTypeArgumentNamedAst for g in GenericTypeParameterAst.__value__.__args__}}
+
+        arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)].from_name_value(p.name, p.name))
+        return GenericArgumentGroupAst.default(arguments)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

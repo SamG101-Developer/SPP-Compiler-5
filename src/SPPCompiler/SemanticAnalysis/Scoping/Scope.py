@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, Optional, Tuple, TYPE_CHECKING
+import copy
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -40,7 +41,7 @@ class Scope:
     _direct_sub_scopes: Seq[Scope]
     _type_symbol: Optional[TypeSymbol]
 
-    def __init__(self, name: Any, parent: Optional[Scope] = None, ast: Optional[Ast] = None) -> None:
+    def __init__(self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Ast] = None) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
 
         # Initialize the scope with the given name, parent, and AST.
@@ -54,6 +55,14 @@ class Scope:
         self._direct_sup_scopes = Seq()
         self._direct_sub_scopes = Seq()
         self._type_symbol = None
+
+    def __json__(self) -> dict:
+        return {
+            "name": self._name, "parent": self._parent.name if self._parent else "", "children": self._children, "symbol_table": self._symbol_table,
+        }
+
+    def __str__(self) -> str:
+        return str(self._name)
 
     def add_symbol(self, symbol: Symbol) -> None:
         self._symbol_table.add(symbol)
@@ -129,14 +138,6 @@ class Scope:
             return -1
 
         return _depth_difference(self, scope, 0)
-
-    def __json__(self) -> dict:
-        return {
-            "name": self._name, "parent": self._parent.name if self._parent else "", "children": self._children, "symbol_table": self._symbol_table,
-        }
-
-    def __str__(self) -> str:
-        return str(self._name)
 
     @property
     def name(self) -> Any:

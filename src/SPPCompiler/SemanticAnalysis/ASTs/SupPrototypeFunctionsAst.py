@@ -56,8 +56,8 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
         # Pre-process the members of this superimposition.
         self.body.pre_process(self)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
-        scope_manager.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
+    def generate_symbols(self, scope_manager: ScopeManager, name_override: str = None) -> None:
+        scope_manager.create_and_move_into_new_scope(name_override or f"<sup:{self.name}:{self.pos}>", self)
         super().generate_symbols(scope_manager)
 
         self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))

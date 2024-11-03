@@ -47,6 +47,9 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         if self.name.types[-1].value[0] == "$": return
         super().pre_process(context)
 
+    def generate_symbols(self, scope_manager: ScopeManager, name_override: str = None) -> None:
+        super().generate_symbols(scope_manager, f"<sup:{self.name} ext {self.super_class}:{self.pos}>")
+
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
@@ -66,6 +69,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         # Register the superimposition as a "sup scope", and the "sub scopes".
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
         sup_symbol.scope._direct_sub_scopes.append(scope_manager.current_scope)
+        cls_symbol.scope._direct_sup_scopes.append(sup_symbol.scope)
         sup_symbol.scope._direct_sub_scopes.append(cls_symbol.scope)
 
         # Mark the class as copyable if the Copy type is the super class.

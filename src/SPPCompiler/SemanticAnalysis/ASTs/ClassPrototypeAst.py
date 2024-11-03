@@ -74,6 +74,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         self.body.pre_process(self)
 
     def generate_symbols(self, scope_manager: ScopeManager, is_alias: bool = False) -> None:
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 
         # Create a new scope for the class.
@@ -82,10 +83,15 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
 
         # Create a new symbol for the class.
         symbol_type = TypeSymbol if not is_alias else AliasSymbol
-        symbol = symbol_type(name=self.name.types[-1], type=self, scope=scope_manager.current_scope, visibility=self._visibility)
-        scope_manager.current_scope.parent.add_symbol(symbol)
+        symbol_name = copy.deepcopy(self.name.types[-1])
+        symbol_name.generic_argument_group = GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)
 
-        # print(f"Added '{symbol.name}' to '{scope_manager.current_scope.parent}'")
+        symbol_1 = symbol_type(name=symbol_name, type=self, scope=scope_manager.current_scope, visibility=self._visibility)
+        symbol_2 = symbol_type(name=self.name.types[-1], type=self, scope=scope_manager.current_scope, visibility=self._visibility)
+        scope_manager.current_scope.parent.add_symbol(symbol_1)
+        scope_manager.current_scope.parent.add_symbol(symbol_2)
+
+        print(f"Added '{symbol_1.name}' and '{symbol_2.name}' to '{scope_manager.current_scope.parent}'")
 
         # Generate the generic parameters and attributes of the class.
         self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))
