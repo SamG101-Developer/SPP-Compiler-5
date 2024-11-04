@@ -57,6 +57,9 @@ class VariableSymbol:
         # Dump the VariableSymbol as a JSON object.
         return {"what": "var", "name": self.name, "type": self.type}
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
     def __str__(self) -> str:
         # Dump the VariableSymbol as a JSON string.
         return json.dumps(self)

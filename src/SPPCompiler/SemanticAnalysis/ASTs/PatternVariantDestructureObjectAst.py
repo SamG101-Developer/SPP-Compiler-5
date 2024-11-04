@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import copy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -18,7 +20,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PatternVariantDestructureObjectAst(Ast, PatternMapping,Stage4_SemanticAnalyser):
+class PatternVariantDestructureObjectAst(Ast, PatternMapping, Stage4_SemanticAnalyser):
     type: TypeAst
     tok_left_paren: TokenAst
     elements: Seq[PatternVariantNestedForDestructureObjectAst]
@@ -40,14 +42,26 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping,Stage4_SemanticAnal
 
     def convert_to_variable(self, **kwargs) -> LocalVariableDestructureObjectAst:
         # Convert the object destructuring into a local variable object destructuring.
-        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureObjectAst
+        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureObjectAst, PatternVariantNestedForDestructureObjectAst
         elements = self.elements.filter_to_type(*PatternVariantNestedForDestructureObjectAst.__value__.__args__)
         converted_elements = elements.map(lambda e: e.convert_to_variable(**kwargs))
         return LocalVariableDestructureObjectAst(self.pos, self.type, self.tok_left_paren, converted_elements, self.tok_right_paren)
 
     def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
-        # Todo: flow typing with the symbol
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis import LetStatementInitializedAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
+        # Flow type the condition symbol if necessary.
+        condition_symbol = scope_manager.current_scope.get_symbol(condition)
+        is_condition_symbol_variant = condition_symbol and condition_symbol.type.without_generics().symbolic_eq(CommonTypes.Var().without_generics(), scope_manager.current_scope)
+        if condition_symbol and is_condition_symbol_variant:
+            if not condition_symbol.type.symbolic_eq(self.type, scope_manager.current_scope):
+                raise AstErrors.INVALID_PATTERN_DESTRUCTOR_OBJECT(condition, condition_symbol.type, self.type)
+
+            flow_symbol = copy.deepcopy(condition_symbol)
+            flow_symbol.type = self.type
+            scope_manager.current_scope.add_symbol(flow_symbol)
 
         # Create the new variables from the pattern in the patterns scope.
         variable = self.convert_to_variable(**kwargs)

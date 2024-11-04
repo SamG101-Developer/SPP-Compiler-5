@@ -117,6 +117,8 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
             AstMemoryHandler.enforce_memory_integrity(
                 argument.value, argument, scope_manager,
                 check_move_from_borrowed_context=False, check_pins=False, update_memory_info=False)
+            if not symbol:
+                continue
 
             if isinstance(argument.convention, ConventionMovAst):
                 # Don't recheck the moves or partial moves, but ensure the pins are maintained here.

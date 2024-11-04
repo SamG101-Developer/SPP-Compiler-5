@@ -70,7 +70,7 @@ class GenExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Determine the yield's convention (based on convention token and symbol information)
         match self.convention, expression_type.convention:
             case ConventionMovAst(), symbol_convention: expression_type.convention = symbol_convention
-            case _: expression_type.convention = self.convention
+            case _: expression_type.convention = type(self.convention)
 
         # Determine the yield type of the enclosing function.
         expected_type = InferredType(

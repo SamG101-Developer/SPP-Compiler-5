@@ -67,6 +67,7 @@ class CaseExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis import BinaryExpressionAst, PatternVariantElseAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
         if isinstance(self.condition, (TokenAst, TypeAst)):
@@ -88,9 +89,9 @@ class CaseExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
                 raise AstErrors.MULTIPLE_PATTERNS_IN_DESTRUCTURE(branch.pos)
 
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
-            symbols_in_scope = scope_manager.current_scope.all_symbols()
+            symbols_in_scope = scope_manager.current_scope.all_symbols().filter_to_type(VariableSymbol)
             old_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, copy.copy(s.memory_info.ast_partially_moved), copy.copy(s.memory_info.ast_pinned), s.memory_info.initialization_counter) for s in symbols_in_scope}
-            branch.analyse_semantics(scope_manager, **kwargs)
+            branch.analyse_semantics(scope_manager, condition=self.condition, **kwargs)
             new_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, copy.copy(s.memory_info.ast_partially_moved), copy.copy(s.memory_info.ast_pinned), s.memory_info.initialization_counter) for s in symbols_in_scope}
 
             # Reset the memory status of the symbols for the next branch to be analysed in the same state.

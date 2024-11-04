@@ -44,7 +44,7 @@ class FunctionCallArgumentUnnamedAst(Ast, Ordered, TypeInferrable, Stage4_Semant
         # The convention is either from the convention attribute or the symbol information.
         match self.convention, inferred_type.convention:
             case ConventionMovAst(), symbol_convention: convention = symbol_convention
-            case _: convention = self.convention
+            case _: convention = type(self.convention)
         return InferredType(convention=convention, type=inferred_type.type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

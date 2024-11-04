@@ -138,8 +138,9 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # print(f"{that}, {that_scope}, {that_symbol}")
 
         # Special case for Variant types (can match any of the alternative types).
-        if check_variant and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, check_variant=False):
-            if Seq(self_symbol.name.generic_argument_group.arguments).any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope)):
+        # Todo: Tidy this up.
+        if check_variant and self_symbol.fq_name.types[-1].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, check_variant=False):
+            if Seq(self_symbol.name.generic_argument_group.arguments[0].value.types[-1].generic_argument_group.arguments).any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope)):
                 return True
 
         # Compare each type's class prototype.

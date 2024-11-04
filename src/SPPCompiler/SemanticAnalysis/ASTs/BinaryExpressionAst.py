@@ -49,6 +49,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return self._as_func.infer_type(scope_manager, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
@@ -61,12 +62,17 @@ class BinaryExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         if isinstance(self.rhs, TypeAst):
             raise AstErrors.INVALID_EXPRESSION(self.rhs)
 
-        # Ensure the LHS and RHS are semantically valid.
+        # Analyse the LHS of the binary expression.
         self.lhs.analyse_semantics(scope_manager, **kwargs)
-        self.rhs.analyse_semantics(scope_manager, **kwargs)
+        AstMemoryHandler.enforce_memory_integrity(self.lhs, self.op, scope_manager, update_memory_info=False)
+
+        # If the RHS is a destructure, then analysis stops here (after analysing the conversion).
+        if self.op.token.token_type == TokenType.KwIs:
+            self._as_func.analyse_semantics(scope_manager, **kwargs)
+            return
 
         # Ensure the memory status of the left and right hand side.
-        AstMemoryHandler.enforce_memory_integrity(self.lhs, self.op, scope_manager, update_memory_info=False)
+        self.rhs.analyse_semantics(scope_manager, **kwargs)
         AstMemoryHandler.enforce_memory_integrity(self.rhs, self.op, scope_manager)
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.

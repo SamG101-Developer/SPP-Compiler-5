@@ -543,3 +543,16 @@ class AstErrors:
             msg=f"The generic parameter '{unconstrained_parameter.name}' is unconstrained.",
             tip="Remove this generic parameter")
         return e
+
+    # PATTERN ERRORS
+
+    @staticmethod
+    def INVALID_PATTERN_DESTRUCTOR_OBJECT(condition: ExpressionAst, condition_type: TypeAst, destructured_type: TypeAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(condition.pos, f"Condition inferred as '{condition_type}' here")
+        e.add_error(
+            pos=destructured_type.pos,
+            tag=f"Invalid pattern destructure type '{destructured_type}'.",
+            msg="The pattern destructor object is not valid.",
+            tip="Use a valid pattern destructor object.")
+        return e

@@ -136,7 +136,6 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
                     parameter_type = InferredType(convention=type(parameter.convention), type=parameter.type)
 
                     if isinstance(parameter, FunctionParameterSelfAst):
-                        argument_type.convention = parameter_type.convention
                         argument.convention = parameter.convention
 
                     elif not parameter_type.symbolic_eq(argument_type, function_scope, scope_manager.current_scope):
