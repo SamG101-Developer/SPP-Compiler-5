@@ -8,12 +8,13 @@ from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
+    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentGroupAst import GenericArgumentGroupAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol, Symbol
 
 
 class AstTypeManagement:
@@ -76,9 +77,9 @@ class AstTypeManagement:
             return new_scope
 
         # Register the generic arguments as type symbols in the new scope.
+        # TypeSymbol(name=generic_argument.name.types[-1], type=true_value_symbol.type, scope=true_value_symbol.scope, is_generic=True)
         for generic_argument in type_part.generic_argument_group.arguments:
-            true_value_symbol = scope_manager.current_scope.get_symbol(generic_argument.value)
-            generic_symbol = TypeSymbol(name=generic_argument.name.types[-1], type=true_value_symbol.type, scope=true_value_symbol.scope, is_generic=True)
+            generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
             new_scope.add_symbol(generic_symbol)
 
         # Return the new scope.
@@ -88,11 +89,8 @@ class AstTypeManagement:
     def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: GenericArgumentGroupAst) -> Seq[Scope]:
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
         old_scopes = base_scope._direct_sup_scopes
-        # print(f"\tOld scopes of {base_scope} ({id(base_scope)}): {old_scopes}")
         new_scopes = Seq()
 
         for scope in old_scopes:
@@ -122,8 +120,7 @@ class AstTypeManagement:
                 new_scope._symbol_table = copy.copy(scope._symbol_table)
 
                 for generic_argument in generic_arguments.arguments:
-                    true_value_symbol = scope_manager.current_scope.get_symbol(generic_argument.value)
-                    generic_symbol = TypeSymbol(name=generic_argument.name.types[-1], type=true_value_symbol.type, scope=true_value_symbol.scope, is_generic=True)
+                    generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
                     new_scope.add_symbol(generic_symbol)
 
             # Add the new scope to the list of new scopes.
@@ -131,3 +128,25 @@ class AstTypeManagement:
 
         # Return the new scopes.
         return new_scopes
+
+    @staticmethod
+    def create_generic_symbol(scope_manager: ScopeManager, generic_argument: GenericArgumentAst) -> TypeSymbol | VariableSymbol:
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
+
+        true_value_symbol = scope_manager.current_scope.get_symbol(generic_argument.value)
+        if isinstance(generic_argument, GenericTypeArgumentNamedAst):
+            return TypeSymbol(
+                name=generic_argument.name.types[-1],
+                type=true_value_symbol.type,
+                scope=true_value_symbol.scope,
+                is_generic=True)
+
+        elif isinstance(generic_argument, GenericCompArgumentNamedAst):
+            return VariableSymbol(
+                name=IdentifierAst.from_type(generic_argument.name),
+                type=generic_argument.value.infer_type(scope_manager).type,
+                is_generic=True)
+
+        else:
+            raise Exception(type(true_value_symbol))

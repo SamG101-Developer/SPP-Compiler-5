@@ -40,6 +40,7 @@ class ArrayLiteral0ElementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Create the size literal, and use the provided element type.
         size = IntegerLiteralAst.from_token(self.size, self.size.pos)
         array_type = CommonTypes.Arr(self.element_type, size, self.pos)
+        array_type.analyse_semantics(scope_manager, **kwargs)
         return InferredType.from_type(array_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

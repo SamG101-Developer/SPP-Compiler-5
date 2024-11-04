@@ -27,13 +27,16 @@ class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupSco
     def print(self, printer: AstPrinter) -> str:
         return ""
 
-    def pre_process(self, context: PreProcessingContext) -> None:
+    def pre_process(self, context: PreProcessingContext, module_tree: ModuleTree = None) -> None:
         # Pre-process all the modules.
         for module in self.modules:
+            module_in_tree = module_tree.modules.find(lambda m: m.module_ast is module)
+            module._name = module_in_tree.path
             self._current = module
             module.body.members.for_each(lambda m: m.pre_process(module))
 
-    def generate_symbols(self, scope_manager: ScopeManager, module_tree: Optional[ModuleTree] = None) -> None:
+    def generate_symbols(self, scope_manager: ScopeManager, module_tree: ModuleTree = None) -> None:
+
         # Generate symbols for all the modules, including namespaces in the scope manager.
         for module in self.modules:
             self._move_scope_manager_to_namespace(scope_manager, module_tree.modules.find(lambda m: m.module_ast is module))

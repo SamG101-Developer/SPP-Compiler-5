@@ -78,7 +78,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
             raise AstErrors.INVALID_ORDER(difference[0], difference[1], "argument")
 
         # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ...").
-        for i, argument in self.arguments.filter_to_type(FunctionCallArgumentUnnamedAst).filter(lambda a: a.unpack_token).enumerate():
+        for i, argument in self.arguments.filter_to_type(FunctionCallArgumentUnnamedAst).filter(lambda a: a.tok_unpack).enumerate():
 
             # Check the argument type is a tuple
             tuple_argument_type = argument.infer_type(scope_manager, **kwargs).type

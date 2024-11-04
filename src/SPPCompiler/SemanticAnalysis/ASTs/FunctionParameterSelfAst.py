@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class FunctionParameterSelfAst(Ast, Ordered, Stage4_SemanticAnalyser):
+class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction, Stage4_SemanticAnalyser):
     tok_mut: Optional[TokenAst]
     convention: ConventionAst
     name: IdentifierAst

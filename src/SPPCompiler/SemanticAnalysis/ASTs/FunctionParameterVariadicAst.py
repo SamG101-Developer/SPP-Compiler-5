@@ -1,15 +1,18 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
+import functools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
+    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
@@ -17,7 +20,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class FunctionParameterVariadicAst(Ast, Ordered, Stage4_SemanticAnalyser):
+class FunctionParameterVariadicAst(Ast, Ordered, VariableNameExtraction, Stage4_SemanticAnalyser):
     tok_variadic: TokenAst
     variable: LocalVariableAst
     tok_colon: TokenAst
@@ -41,6 +44,14 @@ class FunctionParameterVariadicAst(Ast, Ordered, Stage4_SemanticAnalyser):
             self.convention.print(printer),
             self.type.print(printer)]
         return "".join(string)
+
+    @functools.cached_property
+    def extract_names(self) -> Seq[IdentifierAst]:
+        return self.variable.extract_names
+
+    @functools.cached_property
+    def extract_name(self) -> IdentifierAst:
+        return self.variable.extract_name
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import ConventionMutAst, ConventionRefAst

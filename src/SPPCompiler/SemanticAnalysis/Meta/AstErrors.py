@@ -159,6 +159,16 @@ class AstErrors:
         return e
 
     @staticmethod
+    def MISSING_ARGUMENT_NAMES(missing_arguments: Seq[Ast], what: str, what_singular: str) -> SemanticError:
+        e = SemanticError()
+        e.add_error(
+            pos=missing_arguments[0].pos,
+            tag="Missing argument names.",
+            msg=f"The {what} is missing the {what_singular} '{missing_arguments.join(", ")}'.",
+            tip=f"Add the missing {what_singular} names.")
+        return e
+
+    @staticmethod
     def NO_VALID_FUNCTION_SIGNATURES(function_call: Ast, signatures: str) -> SemanticError:
         e = SemanticError()
         e.add_error(
@@ -521,4 +531,15 @@ class AstErrors:
             tag="Abstract method on base class",
             msg=f"The super member '{base_method}' has not been overridden in the subclass",
             tip="Override the super member in the subclass")
+        return e
+
+    @staticmethod
+    def SUP_UNCONSTRAINED_GENERIC_PARAMETER(unconstrained_parameter: GenericParameterAst, type: TypeAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(type.pos, "Type defined here")
+        e.add_error(
+            pos=unconstrained_parameter.pos,
+            tag="Unconstrained generic parameter",
+            msg=f"The generic parameter '{unconstrained_parameter.name}' is unconstrained.",
+            tip="Remove this generic parameter")
         return e

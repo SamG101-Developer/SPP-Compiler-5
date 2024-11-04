@@ -29,5 +29,7 @@ type GenericArgumentUnnamedAst = Union[
 
 __all__ = [
     "GenericArgumentAst",
+    "GenericCompArgumentAst",
+    "GenericTypeArgumentAst",
     "GenericArgumentNamedAst",
     "GenericArgumentUnnamedAst"]

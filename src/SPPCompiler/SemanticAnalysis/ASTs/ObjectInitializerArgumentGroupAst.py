@@ -107,11 +107,11 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
 
         # Check every attribute has been assigned a value (unless the default argument is present).
         if not def_argument and (missing_attributes := attribute_names.set_subtract(argument_names)):
-            raise AstErrors.MISSING_ARGUMENTS(missing_attributes)
+            raise AstErrors.MISSING_ARGUMENT_NAMES(missing_attributes, "object initialization", "attribute")
 
         # Check there are no invalidly named arguments.
         if invalid_arguments := argument_names.set_subtract(attribute_names):
-            raise AstErrors.INVALID_ARGUMENTS(invalid_arguments)
+            raise AstErrors.INVALID_ARGUMENT_NAMES(attribute_names, invalid_arguments[0])
 
         # Type check the regular arguments against the class attributes.
         sorted_arguments = self.arguments.filter(lambda a: isinstance(a.name, IdentifierAst)).sort(key=lambda a: attribute_names.index(a.name))

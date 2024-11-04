@@ -39,11 +39,15 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return int.from_bytes(hashlib.md5("".join([str(p) for p in self.namespace + self.types]).encode()).digest())
 
     def __iter__(self) -> Iterator[TypePartAst]:
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst
+
         # Iterate over the type parts and generics.
         def internal_iteration(t: TypeAst):
+            if isinstance(t, IdentifierAst):
+                yield GenericIdentifierAst.from_identifier(t)
             for part in t.types:
                 yield part
-                for g in part.generic_argument_group.arguments:
+                for g in part.generic_argument_group.arguments:  # .filter_to_type(*GenericTypeArgumentAst.__value__.__args__):
                     yield from internal_iteration(g.value)
         return internal_iteration(self)
 
@@ -126,10 +130,12 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         self_symbol = self_scope.get_symbol(self)
         that_symbol = that_scope.get_symbol(that)
 
-        # Debug
-        print("-" * 100)
-        print(self, self_scope, self_symbol)
-        print(that, that_scope, that_symbol)
+        # Debug.
+        # import inspect
+        # print("-" * 100)
+        # print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
+        # print(f"{self}, {self_scope}, {self_symbol}")
+        # print(f"{that}, {that_scope}, {that_symbol}")
 
         # Special case for Variant types (can match any of the alternative types).
         if check_variant and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, check_variant=False):

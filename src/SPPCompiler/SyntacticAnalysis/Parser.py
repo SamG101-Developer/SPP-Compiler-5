@@ -1650,8 +1650,9 @@ class Parser:
         p6 = self.parse_literal_regex()
         p7 = self.parse_literal_boolean()
         p8 = self.parse_global_object_initialization()
-        p9 = (p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8).parse_once()
-        return p9
+        p9 = self.parse_identifier()
+        p10 = (p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8 | p9).parse_once()
+        return p10
 
     @parser_rule
     def parse_global_object_initialization(self) -> ObjectInitializerAst:

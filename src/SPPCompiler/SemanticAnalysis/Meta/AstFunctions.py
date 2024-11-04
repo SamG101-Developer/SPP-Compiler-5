@@ -178,7 +178,7 @@ class AstFunctions:
 
         # Get the argument names and parameter names, and check for variadic parameters.
         argument_names = arguments.filter_to_type(FunctionCallArgumentNamedAst).map_attr("name")
-        parameter_names = parameters.map_attr("name")
+        parameter_names = parameters.map_attr("extract_name")
         is_variadic = parameters and isinstance(parameters[-1], FunctionParameterVariadicAst)
 
         # Check for invalid argument names against parameter names, then remove the valid ones.

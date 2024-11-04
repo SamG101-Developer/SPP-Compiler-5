@@ -84,6 +84,8 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
         # Move to the next scope.
         scope_manager.move_to_next_scope()
 
@@ -92,7 +94,7 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
 
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
-            raise AstErrors.SUP_UNCONSTRAINED_GENERIC_PARAMETER(unconstrained)
+            raise AstErrors.SUP_UNCONSTRAINED_GENERIC_PARAMETER(unconstrained[0], self.name)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_opt():

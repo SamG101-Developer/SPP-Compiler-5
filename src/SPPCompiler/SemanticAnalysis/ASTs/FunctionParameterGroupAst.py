@@ -80,7 +80,7 @@ class FunctionParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
         # Check there are no duplicate parameter names.
-        parameter_names = self.get_non_self().map(lambda parameter: parameter.variable.extract_names).flat()
+        parameter_names = self.get_non_self().map_attr("extract_names").flat()
         if duplicate_parameters := parameter_names.non_unique():
             raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_parameters[0][0], duplicate_parameters[0][1], "parameter")
 

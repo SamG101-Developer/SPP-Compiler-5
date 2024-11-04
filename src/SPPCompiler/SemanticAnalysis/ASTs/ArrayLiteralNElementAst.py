@@ -46,6 +46,7 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         size = IntegerLiteralAst.from_python_literal(self.elements.length)
         element_type = self.elements[0].infer_type(scope_manager, **kwargs).type
         array_type = CommonTypes.Arr(element_type, size, self.pos)
+        array_type.analyse_semantics(scope_manager, **kwargs)
         return InferredType.from_type(array_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

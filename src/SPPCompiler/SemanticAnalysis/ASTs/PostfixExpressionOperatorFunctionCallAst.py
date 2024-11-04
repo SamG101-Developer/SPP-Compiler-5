@@ -76,7 +76,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
             # Extract generic/function parameter information from the overload.
             parameters = function_overload.function_parameter_group.parameters.copy()
             parameter_names = parameters.map_attr("extract_name")
-            parameter_names_req = function_overload.function_parameter_group.get_req().map_attr("name")
+            parameter_names_req = function_overload.function_parameter_group.get_req().map_attr("extract_name")
             generic_parameters = function_overload.generic_parameter_group.parameters.map_attr("name")
             is_variadic = function_overload.function_parameter_group.get_var() is not None
 
@@ -110,7 +110,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
                 # Check if there are too few arguments for the function (by missing names).
                 if missing_parameters := parameter_names_req.set_subtract(argument_names):
-                    raise AstErrors.MISSING_ARGUMENT_NAMED()
+                    raise AstErrors.MISSING_ARGUMENT_NAMES(missing_parameters, "function call", "argument")
 
                 # Infer generic arguments and inherit from the function owner block.
                 generic_arguments = AstFunctions.inherit_generic_arguments(
@@ -152,7 +152,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
         # If there are no pass overloads, raise an error.
         if pass_overloads.is_empty():
-            failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {f[2].tag}").join("\n")
+            failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {f[2].error_info[0].tag}").join("\n")
             raise AstErrors.NO_VALID_FUNCTION_SIGNATURES(self, failed_signatures_and_errors)
 
         # If there are multiple pass overloads, raise an error.

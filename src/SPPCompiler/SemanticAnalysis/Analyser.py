@@ -41,7 +41,7 @@ class Analyser:
         self._scope_manager = ScopeManager(global_scope=create_global(module_tree.modules[0]))
 
         try:
-            self._ast.pre_process(None)
+            self._ast.pre_process(None, module_tree)
             self._ast.generate_symbols(self._scope_manager, module_tree)
             self._ast.load_sup_scopes(self._scope_manager)
             self._ast.inject_sup_scopes(self._scope_manager)

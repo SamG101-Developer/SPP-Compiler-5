@@ -27,9 +27,13 @@ class UnaryExpressionOperatorAsyncAst(Ast, TypeInferrable, Stage4_SemanticAnalys
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         inner_type = rhs.infer_type(scope_manager).type
         future_type = CommonTypes.Fut(inner_type)
+        future_type.analyse_semantics(scope_manager)
         return InferredType.from_type(future_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, rhs: ExpressionAst = None, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import PostfixExpressionAst, PostfixExpressionOperatorFunctionCallAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+
         # Check the rhs is a postfix function call.
         if not (isinstance(rhs, PostfixExpressionAst) and isinstance(rhs.op, PostfixExpressionOperatorFunctionCallAst)):
             raise AstErrors.INVALID_ASYNC_TARGET(self.pos, rhs)

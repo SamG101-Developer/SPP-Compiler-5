@@ -25,6 +25,7 @@ class ConventionRefAst(Ast, Default):
     @staticmethod
     def default() -> ConventionRefAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import TokenAst
         return ConventionRefAst(-1, TokenAst.default(TokenType.TkBorrow))
 
 
