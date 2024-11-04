@@ -18,6 +18,8 @@ class CoroutinePrototypeAst(FunctionPrototypeAst):
 
         # Perform default function prototype semantic analysis.
         super().analyse_semantics(scope_manager, **kwargs)
+        kwargs["function_type"] = self.tok_fun
+        kwargs["function_ret_type"] = self.return_type
 
         # Check the return type is a generator type.
         # Todo: Check the type superimposes a Gen type rather that is a Gen type.

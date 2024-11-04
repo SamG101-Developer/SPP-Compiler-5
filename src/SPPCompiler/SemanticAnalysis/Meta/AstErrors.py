@@ -250,8 +250,9 @@ class AstErrors:
         return e
 
     @staticmethod
-    def UNINFERRED_GENERIC_PARAMETER(generic_parameter: GenericParameterAst) -> SemanticError:
+    def UNINFERRED_GENERIC_PARAMETER(generic_parameter: GenericParameterAst, type: TypeAst) -> SemanticError:
         e = SemanticError()
+        e.add_info(type.pos, "Type created here")
         e.add_error(
             pos=generic_parameter.pos,
             tag="Uninferred generic parameter.",

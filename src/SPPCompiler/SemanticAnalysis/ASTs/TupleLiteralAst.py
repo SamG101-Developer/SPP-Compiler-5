@@ -50,8 +50,9 @@ class TupleLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Check all elements are "owned", and not "borrowed".
         borrowed_elements = self.elements.filter(lambda e: e.infer_type(scope_manager, **kwargs).convention == ConventionMovAst)
         if borrowed_elements:
-            borrow_ast = scope_manager.current_scope.get_symbol(borrowed_elements[0]).memory_info.ast_borrowed
-            raise AstErrors.TUPLE_BORROWED_ELEMENT(borrowed_elements[0], borrow_ast)
+            if borrow_symbol := scope_manager.current_scope.get_variable_symbol_outermost_part(borrowed_elements[0]):
+                if borrow_ast := borrow_symbol.memory_info.ast_borrowed:
+                    raise AstErrors.TUPLE_BORROWED_ELEMENT(borrowed_elements[0], borrow_ast)
 
 
 __all__ = ["TupleLiteralAst"]

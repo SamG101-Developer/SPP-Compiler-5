@@ -62,7 +62,7 @@ class AssignmentStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             AstMemoryHandler.enforce_memory_integrity(rhs_expr, self.op, scope_manager)
 
             # Full assignment (ie "x = y") requires the "x" symbol to be marked as "mut".
-            if isinstance(lhs_expr, IdentifierAst) and not lhs_sym.is_mutable:
+            if isinstance(lhs_expr, IdentifierAst) and not (lhs_sym.is_mutable or lhs_sym.memory_info.initialization_counter == 0):
                 raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_expr, self.op, lhs_sym.memory_info.ast_initialization)
 
             # Attribute assignment (ie "x.y = z"), for a non-borrowed symbol, requires an outermost "mut" symbol.

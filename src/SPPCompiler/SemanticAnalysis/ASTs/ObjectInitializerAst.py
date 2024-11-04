@@ -41,7 +41,7 @@ class ObjectInitializerAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
         # Determine the generic inference source and target
         generic_infer_source = {
-            a.name: self.object_argument_group.get_arg_val(a) for a in self.object_argument_group.arguments.filter(lambda a: isinstance(a.name, IdentifierAst))}
+            a.name: self.object_argument_group.get_arg_val(a).infer_type(scope_manager, **kwargs).type for a in self.object_argument_group.arguments.filter(lambda a: isinstance(a.name, IdentifierAst))}
         generic_infer_target = {
             a.name: a.type for a in base_symbol.type.body.members}
 

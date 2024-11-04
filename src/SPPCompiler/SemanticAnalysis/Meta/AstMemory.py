@@ -49,6 +49,7 @@ class MemoryInfo:
     ast_pinned: Seq[Ast] = field(default_factory=Seq)
     ast_comptime_const: Optional[Ast] = field(default=None)
 
+    initialization_counter: int = field(default=0, init=False)
     is_borrow_mut: bool = field(default=False)
     is_borrow_ref: bool = field(default=False)
 
@@ -68,6 +69,7 @@ class MemoryInfo:
         # If a symbol's contents is initialized, mark the symbol as initialized and non-moved.
         self.ast_initialization = ast
         self.ast_moved = None
+        self.initialization_counter += 1
 
     def remove_partial_move(self, ast: Ast) -> None:
         # Remove the partial move from the list, and mark the symbol as initialized if there are no more partial moves.

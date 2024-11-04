@@ -159,10 +159,6 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_S
         self.function_parameter_group.analyse_semantics(scope_manager, **kwargs)
         self.where_block.analyse_semantics(scope_manager, **kwargs)
 
-        # Add a tag into the kwargs marking a subroutine or coroutine.
-        kwargs["function_type"] = self.tok_fun
-        kwargs["function_ret_type"] = self.return_type
-
         # Subclasses will finish analysis and exit the scope.
 
     def _deduce_mock_class_type(self) -> TypeAst:

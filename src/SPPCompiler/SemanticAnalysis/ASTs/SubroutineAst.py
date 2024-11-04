@@ -17,6 +17,8 @@ class SubroutinePrototypeAst(FunctionPrototypeAst):
 
         # Perform default function prototype semantic analysis.
         super().analyse_semantics(scope_manager, **kwargs)
+        kwargs["function_type"] = self.tok_fun
+        kwargs["function_ret_type"] = self.return_type
 
         # Analyse the semantics of the function body.
         self.body.analyse_semantics(scope_manager, **kwargs)

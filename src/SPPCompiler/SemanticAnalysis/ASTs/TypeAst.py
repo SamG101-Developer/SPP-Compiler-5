@@ -127,9 +127,9 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         that_symbol = that_scope.get_symbol(that)
 
         # Debug
-        # print("-" * 100)
-        # print(self, self_scope, self_symbol)
-        # print(that, that_scope, that_symbol)
+        print("-" * 100)
+        print(self, self_scope, self_symbol)
+        print(that, that_scope, that_symbol)
 
         # Special case for Variant types (can match any of the alternative types).
         if check_variant and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, check_variant=False):

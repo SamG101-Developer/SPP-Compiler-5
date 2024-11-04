@@ -84,7 +84,7 @@ class FloatLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
         # No analysis needs to be done for the BigDec automatically inferred type.
-        if self.type.types[-1].value == "BigDec":
+        if not self.type:
             return
 
         # Check if the value is within the bounds.

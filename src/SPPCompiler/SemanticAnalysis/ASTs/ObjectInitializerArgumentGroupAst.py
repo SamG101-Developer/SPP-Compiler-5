@@ -52,7 +52,7 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
     @staticmethod
     def get_arg_val(argument: ObjectInitializerArgumentAst) -> ExpressionAst:
         from SPPCompiler.SemanticAnalysis import ObjectInitializerArgumentNamedAst
-        return argument.name if isinstance(argument, ObjectInitializerArgumentNamedAst) else argument.value
+        return argument.value if isinstance(argument, ObjectInitializerArgumentNamedAst) else argument.name
 
     def get_def_args(self) -> Seq[ObjectInitializerArgumentNamedAst]:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
@@ -91,7 +91,7 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
             AstMemoryHandler.enforce_memory_integrity(self.get_arg_val(argument), argument, scope_manager)
 
         # Check there are no duplicate argument names.
-        argument_names = self.arguments.filter_to_type(ObjectInitializerArgumentNamedAst).map(lambda a: a.name).flat()
+        argument_names = self.arguments.filter_to_type(ObjectInitializerArgumentNamedAst).map(lambda a: a.name)
         if duplicate_arguments := argument_names.non_unique():
             raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_arguments[0][0], duplicate_arguments[0][1], "named object arguments")
 
@@ -114,7 +114,7 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
             raise AstErrors.INVALID_ARGUMENTS(invalid_arguments)
 
         # Type check the regular arguments against the class attributes.
-        sorted_arguments = self.arguments.filter(lambda a: isinstance(a.name, IdentifierAst)).sort(key=lambda a: attributes.index(a.name))
+        sorted_arguments = self.arguments.filter(lambda a: isinstance(a.name, IdentifierAst)).sort(key=lambda a: attribute_names.index(a.name))
         for argument, attribute in sorted_arguments.zip(attributes):
             argument_type = argument.infer_type(scope_manager, **kwargs)
             attribute_type = InferredType.from_type(attribute.type)

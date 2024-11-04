@@ -89,9 +89,9 @@ class CaseExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
             symbols_in_scope = scope_manager.current_scope.all_symbols()
-            old_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, copy.copy(s.memory_info.ast_partially_moved), copy.copy(s.memory_info.ast_pinned)) for s in symbols_in_scope}
+            old_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, copy.copy(s.memory_info.ast_partially_moved), copy.copy(s.memory_info.ast_pinned), s.memory_info.initialization_counter) for s in symbols_in_scope}
             branch.analyse_semantics(scope_manager, **kwargs)
-            new_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, copy.copy(s.memory_info.ast_partially_moved), copy.copy(s.memory_info.ast_pinned)) for s in symbols_in_scope}
+            new_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, copy.copy(s.memory_info.ast_partially_moved), copy.copy(s.memory_info.ast_pinned), s.memory_info.initialization_counter) for s in symbols_in_scope}
 
             # Reset the memory status of the symbols for the next branch to be analysed in the same state.
             for symbol, old_memory_status in old_symbol_mem_info.items():
@@ -99,6 +99,7 @@ class CaseExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
                 symbol.memory_info.ast_moved = old_memory_status[1]
                 symbol.memory_info.ast_partially_moved = old_memory_status[2]
                 symbol.memory_info.ast_pinned = old_memory_status[3]
+                symbol.memory_info.initialization_counter = old_memory_status[4]
 
                 # Insert or append the new memory status of the symbol.
                 symbol_mem_info[symbol].append((branch, new_symbol_mem_info[symbol]))

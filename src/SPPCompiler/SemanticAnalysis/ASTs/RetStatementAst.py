@@ -41,7 +41,7 @@ class RetStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token.token_type != TokenType.KwFun:
-            raise AstErrors.RET_OUTSIDE_SUBROUTINE(self, kwargs["function_type"])
+            raise AstErrors.RET_OUTSIDE_SUBROUTINE(self.tok_ret, kwargs["function_type"])
         self._func_ret_type = kwargs["function_ret_type"]
 
         # Analyse the expression if it exists, and determine the type of the expression.

@@ -278,12 +278,6 @@ class AstFunctions:
             infer_target: {x: T, y: U, z: V}
         """
 
-        # print("Performing generic inference")
-        # print(f"\tGeneric parameters: {generic_parameters}")
-        # print(f"\tExplicit generic arguments: {explicit_generic_arguments}")
-        # print(f"\tInfer source: {infer_source}")
-        # print(f"\tInfer target: {infer_target}")
-
         from SPPCompiler.SemanticAnalysis import TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
@@ -304,7 +298,8 @@ class AstFunctions:
         # Infer the generic arguments from the source to the target.
         for infer_source_name, infer_source_type in infer_source.items():
             infer_target_type = infer_target.get(infer_source_name, None)
-            infer_target_type and inferred_generic_arguments[infer_target_type].append(infer_source_type)
+            if infer_target_type in generic_parameters.map_attr("name"):
+                infer_target_type and inferred_generic_arguments[infer_target_type].append(infer_source_type)
 
         # Check each generic argument name only has one unique inferred type.
         for inferred_generic_argument in inferred_generic_arguments.copy().values():
@@ -319,7 +314,7 @@ class AstFunctions:
         # Check all the generic parameters have been inferred.
         for generic_parameter in generic_parameters:
             if generic_parameter.name not in inferred_generic_arguments:
-                raise AstErrors.UNINFERRED_GENERIC_PARAMETER(generic_parameter)
+                raise AstErrors.UNINFERRED_GENERIC_PARAMETER(generic_parameter, owner_type)
 
         # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
         GenericArgumentCTor = defaultdict(

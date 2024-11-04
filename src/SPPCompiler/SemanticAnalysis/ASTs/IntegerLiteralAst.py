@@ -58,8 +58,11 @@ class IntegerLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
     @staticmethod
     def from_python_literal(value: int) -> IntegerLiteralAst:
-        from SPPCompiler.LexicalAnalysis.Token import Token, TokenType
-        token = TokenAst(-1, Token(str(value), TokenType.CmDecInteger))
+        from SPPCompiler.LexicalAnalysis.Token import Token
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import TokenAst
+
+        token = TokenAst(-1, Token(str(value), TokenType.CmLxDecInteger))
         return IntegerLiteralAst.from_token(token)
 
     @ast_printer_method
@@ -99,7 +102,7 @@ class IntegerLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
         # No analysis needs to be done for the BigInt automatically inferred type.
-        if self.type.types[-1].value == "BigDec":
+        if not self.type:
             return
 
         # Check if the value is within the bounds.
