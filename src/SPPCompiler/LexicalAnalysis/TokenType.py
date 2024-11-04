@@ -125,7 +125,7 @@ class TokenType(Enum, metaclass=TokenTypeMeta):
 
     # Lexemes
     LxRegex = r"r\".*\""
-    LxIdentifier = r"[a-z][_a-z0-9]*"
+    LxIdentifier = r"\$?[a-z][_a-z0-9]*"
     LxUpperIdentifier = r"\$?[A-Z][_a-zA-Z0-9]*"
     LxBinDigits = r"0b[01]+"
     LxHexDigits = r"0x[0-9a-fA-F]+"

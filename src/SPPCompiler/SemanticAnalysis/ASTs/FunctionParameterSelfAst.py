@@ -50,6 +50,10 @@ class FunctionParameterSelfAst(Ast, Ordered, Stage4_SemanticAnalyser):
     def extract_names(self) -> Seq[IdentifierAst]:
         return Seq([self.name])
 
+    @functools.cached_property
+    def extract_name(self) -> IdentifierAst:
+        return self.name
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import ConventionMutAst, ConventionRefAst
         from SPPCompiler.SemanticAnalysis import LetStatementUninitializedAst, LocalVariableSingleIdentifierAst

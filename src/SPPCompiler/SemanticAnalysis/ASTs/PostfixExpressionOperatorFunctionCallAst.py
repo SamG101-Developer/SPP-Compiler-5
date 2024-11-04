@@ -61,8 +61,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, PostfixExpressionAst) and lhs.op.is_runtime_access():
-            AstFunctions.convert_function_to_type_access(scope_manager, function_owner_type, function_name, lhs, self, **kwargs)
-            return
+            self._overload = AstFunctions.convert_function_to_type_access(scope_manager, function_owner_type, function_name, lhs, self, **kwargs)
+            return self._overload
 
         # Record the "pass" and "fail" overloads
         all_overloads = AstFunctions.get_all_function_scopes(function_name, function_owner_scope)
@@ -70,6 +70,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
         fail_overloads = Seq()
 
         for function_scope, function_overload, owner_scope_generic_arguments in all_overloads:
+
+            owner_scope_generic_arguments = owner_scope_generic_arguments.arguments
 
             # Extract generic/function parameter information from the overload.
             parameters = function_overload.function_parameter_group.parameters.copy()
@@ -160,6 +162,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
         # Set the overload to the only pass overload.
         self._overload = pass_overloads[0]
+        return self._overload
 
     def infer_type(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> InferredType:
         # Expand the return type from the scope it was defined in => comparisons won't require function scope knowledge.

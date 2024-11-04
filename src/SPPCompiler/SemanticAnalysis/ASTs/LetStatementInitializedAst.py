@@ -26,7 +26,7 @@ class LetStatementInitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Print the AST with auto-formatting.
         string = [
             self.let_keyword.print(printer) + " ",
-            self.assign_to.print(printer),
+            self.assign_to.print(printer) + " ",
             self.assign_token.print(printer) + " ",
             self.value.print(printer)]
         return "".join(string)

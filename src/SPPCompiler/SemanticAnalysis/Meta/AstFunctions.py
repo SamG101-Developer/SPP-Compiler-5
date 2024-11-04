@@ -40,9 +40,9 @@ class AstFunctions:
 
         # Runtime access into an object: "object.method()"
         if isinstance(lhs, PostfixExpressionAst) and lhs.op.is_runtime_access():
-            function_owner_type = lhs.lhs.infer_type(scope_manager)
+            function_owner_type = lhs.lhs.infer_type(scope_manager).type
             function_name = lhs.op.field
-            function_owner_scope = None
+            function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Static access into a type: "Type::method()"
         elif isinstance(lhs, PostfixExpressionAst) and lhs.op.is_static_access():
@@ -70,7 +70,7 @@ class AstFunctions:
             scope_manager: ScopeManager,
             function_owner_type: Ast, function_name: IdentifierAst, lhs: ExpressionAst,
             fn: PostfixExpressionOperatorFunctionCallAst, **kwargs)\
-            -> None:
+            -> Tuple[FunctionPrototypeAst, Scope]:
 
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
@@ -86,11 +86,13 @@ class AstFunctions:
             Parser.parse_postfix_expression)
 
         new_function_call = AstMutation.inject_code(
-            f"{fn.generic_argument_group}{fn.function_argument_group}{fn.fold_token or ""}",
+            f"{fn.generic_argument_group}({function_arguments.join(", ")}){fn.fold_token or ""}",
             Parser.parse_postfix_op_function_call)
 
         # Get the overload from the uniform function call.
-        fn._overload = new_function_call.determine_overload(scope_manager, new_function_access, **kwargs)
+        overload = new_function_call.determine_overload(scope_manager, new_function_access, **kwargs)
+        fn._overload = overload
+        return overload
 
     @staticmethod
     def get_all_function_scopes(function_name: IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, FunctionPrototypeAst, GenericArgumentGroupAst]]:
@@ -107,13 +109,14 @@ class AstFunctions:
         if isinstance(function_owner_scope.name, IdentifierAst):
             for ancestor_scope in function_owner_scope.ancestors:
                 for sup_scope in ancestor_scope._children.filter(lambda c: isinstance(c._ast, SupPrototypeInheritanceAst) and c._ast.name == function_name):
-                    overload_scopes_and_info.append((ancestor_scope, sup_scope._ast.body.members[0], Seq()))
+                    generics = GenericArgumentGroupAst.default()
+                    overload_scopes_and_info.append((ancestor_scope, sup_scope._ast.body.members[0], generics))
 
         # Functions in a superimposition block: will have inheritable generics from "sup [...] ... { ... }".
         else:
             for sup_scope in function_owner_scope._direct_sup_scopes if exclusive else function_owner_scope.sup_scopes:
                 if sup_ast := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst).find(lambda m: m.name == function_name):
-                    generics = sup_scope.all_symbols().filter(lambda s: isinstance(s, TypeSymbol) and s.is_generic or isinstance(s, VariableSymbol) and s.memory_info.ast_comptime_const)
+                    generics = sup_scope.all_symbols().filter(lambda s: isinstance(s, (TypeSymbol, VariableSymbol)) and s.is_generic)
                     generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
                     generics = GenericArgumentGroupAst.default(generics)
                     overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))
@@ -192,8 +195,10 @@ class AstFunctions:
 
             # Normal named argument assignment.
             else:
-                named_argument = f"{parameter_names.pop(0)}={unnamed_argument}"
+                parameter_name = parameter_names.pop(0)
+                named_argument = f"${parameter_name}={unnamed_argument}"
                 named_argument = AstMutation.inject_code(named_argument, Parser.parse_function_call_argument_named)
+                named_argument.name = parameter_name
                 arguments.replace(unnamed_argument, named_argument, 1)
 
     @staticmethod
@@ -269,6 +274,12 @@ class AstFunctions:
             infer_target: {x: T, y: U, z: V}
         """
 
+        # print("Performing generic inference")
+        # print(f"\tGeneric parameters: {generic_parameters}")
+        # print(f"\tExplicit generic arguments: {explicit_generic_arguments}")
+        # print(f"\tInfer source: {infer_source}")
+        # print(f"\tInfer target: {infer_target}")
+
         from SPPCompiler.SemanticAnalysis import TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
@@ -288,8 +299,8 @@ class AstFunctions:
 
         # Infer the generic arguments from the source to the target.
         for infer_source_name, infer_source_type in infer_source.items():
-            infer_target_type = infer_target[infer_source_name]
-            inferred_generic_arguments[infer_target_type].append(infer_source_type)
+            infer_target_type = infer_target.get(infer_source_name, None)
+            infer_target_type and inferred_generic_arguments[infer_target_type].append(infer_source_type)
 
         # Check each generic argument name only has one unique inferred type.
         for inferred_generic_argument in inferred_generic_arguments.copy().values():

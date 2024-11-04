@@ -55,7 +55,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered, Stage2_SymbolGenerator, Stag
         from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
 
         # Create a variable symbol for this constant in the current scope (class / function).
-        symbol = VariableSymbol(name=IdentifierAst.from_type(self.name), type=self.type, visibility=AstVisibility.Public)
+        symbol = VariableSymbol(name=IdentifierAst.from_type(self.name), type=self.type, visibility=AstVisibility.Public, is_generic=True)
         symbol.memory_info.ast_pinned.append(self.name)
         symbol.memory_info.ast_comptime_const = self
         symbol.memory_info.initialized_by(self)

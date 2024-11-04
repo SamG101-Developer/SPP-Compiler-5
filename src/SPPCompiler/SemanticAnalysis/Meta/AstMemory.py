@@ -5,6 +5,7 @@ from typing import Optional, Tuple, Type, TYPE_CHECKING
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
+    from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
     from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.ASTs.PatternBlockAst import PatternBlockAst

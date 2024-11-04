@@ -43,6 +43,7 @@ class VariableSymbol:
     name: IdentifierAst
     type: TypeAst
     is_mutable: bool = field(default=False)
+    is_generic: bool = field(default=False)
     memory_info: MemoryInfo = field(default_factory=MemoryInfo)
     visibility: AstVisibility = field(default=AstVisibility.Public)
 
