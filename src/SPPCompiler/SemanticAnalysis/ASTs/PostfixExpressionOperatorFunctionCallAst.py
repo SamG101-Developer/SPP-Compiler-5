@@ -69,8 +69,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
         pass_overloads = Seq()
         fail_overloads = Seq()
 
-        for function_scope, owner_scope_generic_arguments in all_overloads:
-            function_overload: FunctionPrototypeAst = function_scope._ast
+        for function_scope, function_overload, owner_scope_generic_arguments in all_overloads:
 
             # Extract generic/function parameter information from the overload.
             parameters = function_overload.function_parameter_group.parameters.copy()
@@ -88,19 +87,19 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
             try:
                 # Can't call an abstract function.
                 if function_overload._abstract:
-                    ...
+                    raise AstErrors.CANNOT_CALL_ABSTRACT_METHOD()
 
                 # Can't call non-implemented functions (dummy functions).
                 if function_overload._non_implemented:
-                    ...
+                    raise AstErrors.CANNOT_CALL_NON_IMPLEMENTED_METHOD()
 
                 # Check if there are too many arguments for the function (non-variadic).
                 if arguments.length > parameters.length and not is_variadic:
-                    ...
+                    raise AstErrors.TOO_MANY_ARGUMENTS()
 
                 # Check for any named arguments without a corresponding parameter.
                 if invalid_arguments := argument_names.set_subtract(parameter_names):
-                    ...
+                    raise AstErrors.INVALID_ARGUMENT_NAMES()
 
                 # Remove all the used parameters names from the set of parameter names, and name the unnamed arguments.
                 AstFunctions.name_function_arguments(arguments, parameters)
@@ -109,7 +108,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
                 # Check if there are too few arguments for the function (by missing names).
                 if missing_parameters := parameter_names_req.set_subtract(argument_names):
-                    ...
+                    raise AstErrors.MISSING_ARGUMENT_NAMED()
 
                 # Infer generic arguments and inherit from the function owner block.
                 generic_arguments = AstFunctions.inherit_generic_arguments(
@@ -166,7 +165,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
         # Expand the return type from the scope it was defined in => comparisons won't require function scope knowledge.
         _, function_owner_scope, _ = AstFunctions.get_function_owner_type_and_function_name(scope_manager, lhs)
         return_type = self._overload[1].return_type
-        return_type = function_owner_scope.get_symbol(return_type).fully_qualified
+        return_type = function_owner_scope.get_symbol(return_type).fq_name
         return InferredType.from_type(return_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:

@@ -11,5 +11,9 @@ class Stage3_SupScopeLoader(ABC):
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         ...
 
+    @abstractmethod
+    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        ...
+
 
 __all__ = ["Stage3_SupScopeLoader"]

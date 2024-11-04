@@ -79,7 +79,7 @@ class GenExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
         # Check the expression type matches the expected type.
         if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
-            raise AstErrors.TYPE_MISMATCH(expression_type.type, expected_type.type, self.expression, expected_type.type)
+            raise AstErrors.TYPE_MISMATCH(expression_type.type, expected_type, self.expression, expected_type)
 
         # Apply the function argument law of exclusivity checks to the expression.
         ast = AstMutation.inject_code(f"({self.expression})", Parser.parse_function_call_arguments)

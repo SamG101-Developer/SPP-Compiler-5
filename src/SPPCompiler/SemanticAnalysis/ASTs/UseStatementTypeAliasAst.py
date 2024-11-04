@@ -63,7 +63,7 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
         cls_ast.generate_symbols(scope_manager, is_alias=True)
 
         # Create a scope for the alias, allowing its generic arguments to not leak.
-        scope_manager.create_and_move_into_new_scope(f"<type-alias:{self.new_type}:{self.pos}>")
+        scope_manager.create_and_move_into_new_scope(f"<type-alias:{self.new_type}:{self.pos}>", self)
         for generic_parameter in self.generic_parameter_group.parameters:
             type_symbol = TypeSymbol(name=generic_parameter.name.types[-1], type=None, is_generic=True)
             scope_manager.current_scope.add_symbol(type_symbol)
@@ -73,14 +73,12 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
         self._generated = True
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        from SPPCompiler.SemanticAnalysis import TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
-        # Skip the scopes that represents the class introduced by this type alias.
+        # Skip the class scope and move into the type-alias scope (generic access)
         scope_manager.move_to_next_scope()
-        while isinstance(scope_manager.current_scope.name, TypeAst):
-            scope_manager.move_to_next_scope()
+        scope_manager.move_to_next_scope()
 
         # Create a sup ast to allow the attribute and method access.
         sup_ast = AstMutation.inject_code(f"sup {self.new_type} ext {self.old_type} {{}}", Parser.parse_sup_prototype_inheritance)
@@ -99,12 +97,21 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
         # Move out of the current scope.
         scope_manager.move_out_of_current_scope()
 
+    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        # Skip the class, sup and type-alias scope
+        scope_manager.move_to_next_scope()
+        scope_manager.move_to_next_scope()
+        scope_manager.move_to_next_scope()
+        scope_manager.move_out_of_current_scope()
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+
         # If the symbol has already been generated (module/sup level, skip the scopes).
         if self._generated:
             scope_manager.move_to_next_scope()
-            while isinstance(scope_manager.current_scope.name, TypeAst):
-                scope_manager.move_to_next_scope()
+            scope_manager.move_to_next_scope()
+            scope_manager.move_to_next_scope()
+            scope_manager.move_out_of_current_scope()
 
         # Otherwise, run all the generation and analysis stages, resetting the scope each time.
         else:
@@ -113,6 +120,9 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
 
             scope_manager.reset(current_scope)
             self.load_sup_scopes(scope_manager)
+
+            scope_manager.reset(current_scope)
+            self.inject_sup_scopes(scope_manager)
 
             scope_manager.reset(current_scope)
             self.analyse_semantics(scope_manager, **kwargs)

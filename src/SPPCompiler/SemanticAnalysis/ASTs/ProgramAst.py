@@ -48,6 +48,13 @@ class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupSco
             module.body.members.for_each(lambda m: m.load_sup_scopes(scope_manager))
         scope_manager.reset()
 
+    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        # Inject the super scopes for all the modules.
+        for module in self.modules:
+            self._current = module
+            module.body.members.for_each(lambda m: m.inject_sup_scopes(scope_manager))
+        scope_manager.reset()
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the semantics for all the modules.
         for module in self.modules:
@@ -77,6 +84,7 @@ class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupSco
                 scope = scope_manager.create_and_move_into_new_scope(part)
                 namespace_symbol.scope = scope
                 namespace_symbol.scope._type_symbol = namespace_symbol
+                namespace_symbol.scope._ast = module.module_ast
 
 
 __all__ = ["ProgramAst"]

@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-import functools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -34,7 +33,6 @@ class TupleLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    @functools.cache
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Create the standard "std::Tup[..Items]" type, with generic items.
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes

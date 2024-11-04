@@ -16,6 +16,9 @@ class InferredType:
     convention: Type[ConventionAst]
     type: TypeAst
 
+    def __str__(self) -> str:
+        return f"{self.convention.default()}{self.type}"
+
     def symbolic_eq(self, that: InferredType, self_scope: Scope, that_scope: Scope = None) -> bool:
         return self.convention is that.convention and self.type.symbolic_eq(that.type, self_scope, that_scope)
 

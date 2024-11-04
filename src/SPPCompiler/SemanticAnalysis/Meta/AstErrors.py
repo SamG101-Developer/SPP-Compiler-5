@@ -158,6 +158,16 @@ class AstErrors:
             tip="Use a valid argument name.")
         return e
 
+    @staticmethod
+    def NO_VALID_FUNCTION_SIGNATURES(function_call: Ast, signatures: str) -> SemanticError:
+        e = SemanticError()
+        e.add_error(
+            pos=function_call.pos,
+            tag="Invalid arguments for function call",
+            msg="There are no overloads accepting the given arguments",
+            tip=signatures)
+        return e
+
     # GENERAL SCOPE ERRORS
 
     @staticmethod
@@ -210,11 +220,11 @@ class AstErrors:
     @staticmethod
     def TYPE_MISMATCH(existing_ast: Ast, existing_type: InferredType, incoming_ast: Ast, incoming_type: InferredType) -> SemanticError:
         e = SemanticError()
-        e.add_info(existing_ast.pos, f"Type inferred as '{existing_type}' here")
+        e.add_info(existing_ast.pos, f"Type declared as '{existing_type}' here")
         e.add_error(
             pos=incoming_ast.pos,
-            tag="Type mismatch.",
-            msg=f"The type '{incoming_type}' does not match the expected type '{existing_type}'.",
+            tag=f"The type '{incoming_type}' does not match the expected type '{existing_type}'.",
+            msg="Type mismatch.",
             tip="Change the type to match the expected type.")
         return e
 

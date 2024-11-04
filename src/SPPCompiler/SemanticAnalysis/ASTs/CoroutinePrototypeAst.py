@@ -22,7 +22,7 @@ class CoroutinePrototypeAst(FunctionPrototypeAst):
         # Check the return type is a generator type.
         # Todo: Check the type superimposes a Gen type rather that is a Gen type.
         allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics)
-        if not allowed_types.any(lambda t: t.symbolic_eq(self.return_type, scope_manager.current_scope)):
+        if not allowed_types.any(lambda t: t.symbolic_eq(self.return_type.without_generics(), scope_manager.current_scope)):
             raise AstErrors.INVALID_COROUTINE_RETURN_TYPE(self.return_type)
 
         # Analyse the semantics of the function body.

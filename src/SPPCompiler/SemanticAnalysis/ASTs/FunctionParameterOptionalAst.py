@@ -1,11 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
@@ -64,9 +64,10 @@ class FunctionParameterOptionalAst(Ast, Ordered, Stage4_SemanticAnalyser):
             raise AstErrors.OPTIONAL_PARAM_REQUIRES_NON_BORROW(self.convention)
 
         # Make sure the default expression is of the correct type.
-        default_type = self.default.infer_type(scope_manager).type
-        if not self.type.symbolic_eq(default_type, scope_manager.current_scope):
-            raise AstErrors.TYPE_MISMATCH(self.variable.extract_names[0], self.type, self.default, default_type)
+        default_type = self.default.infer_type(scope_manager)
+        target_type = InferredType.from_type(self.type)
+        if not target_type.symbolic_eq(default_type, scope_manager.current_scope):
+            raise AstErrors.TYPE_MISMATCH(self.variable.extract_names[0], target_type, self.default, default_type)
 
         # Create the variable for the parameter.
         ast = AstMutation.inject_code(f"let {self.variable}: {self.type}", Parser.parse_let_statement_uninitialized)

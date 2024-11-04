@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
-import functools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -72,28 +71,29 @@ class IntegerLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             self.type.print(printer) if self.type else ""]
         return " ".join(string)
 
-    @functools.cache
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Create an integer type based on the (optional) type postfix.
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
         # Match the type against the allowed type postfixes (no postfix is BigInt).
         match self.type:
-            case None: float_type = CommonTypes.BigInt(self.pos)
-            case type if type.types[-1].value == "i8": CommonTypes.F8(self.pos)
-            case type if type.types[-1].value == "u8": CommonTypes.F8(self.pos)
-            case type if type.types[-1].value == "i16": CommonTypes.F16(self.pos)
-            case type if type.types[-1].value == "u16": CommonTypes.F16(self.pos)
-            case type if type.types[-1].value == "i32": CommonTypes.F32(self.pos)
-            case type if type.types[-1].value == "u32": CommonTypes.F32(self.pos)
-            case type if type.types[-1].value == "i64": CommonTypes.F64(self.pos)
-            case type if type.types[-1].value == "u64": CommonTypes.F64(self.pos)
-            case type if type.types[-1].value == "i128": CommonTypes.F128(self.pos)
-            case type if type.types[-1].value == "u128": CommonTypes.F128(self.pos)
-            case type if type.types[-1].value == "i256": CommonTypes.F256(self.pos)
-            case type if type.types[-1].value == "u256": CommonTypes.F256(self.pos)
+            case None: integer_type = CommonTypes.BigInt(self.pos)
+            case type if type.types[-1].value == "i8": integer_type = CommonTypes.I8(self.pos)
+            case type if type.types[-1].value == "u8": integer_type = CommonTypes.U8(self.pos)
+            case type if type.types[-1].value == "i16": integer_type = CommonTypes.I16(self.pos)
+            case type if type.types[-1].value == "u16": integer_type = CommonTypes.U16(self.pos)
+            case type if type.types[-1].value == "i32": integer_type = CommonTypes.I32(self.pos)
+            case type if type.types[-1].value == "u32": integer_type = CommonTypes.U32(self.pos)
+            case type if type.types[-1].value == "i64": integer_type = CommonTypes.I64(self.pos)
+            case type if type.types[-1].value == "u64": integer_type = CommonTypes.U64(self.pos)
+            case type if type.types[-1].value == "i128": integer_type = CommonTypes.I128(self.pos)
+            case type if type.types[-1].value == "u128": integer_type = CommonTypes.U128(self.pos)
+            case type if type.types[-1].value == "i256": integer_type = CommonTypes.I256(self.pos)
+            case type if type.types[-1].value == "u256": integer_type = CommonTypes.U256(self.pos)
+            case _:
+                raise
 
-        return InferredType.from_type(float_type)
+        return InferredType.from_type(integer_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors

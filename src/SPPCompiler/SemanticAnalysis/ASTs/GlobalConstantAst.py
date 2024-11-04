@@ -55,12 +55,15 @@ class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility)
         symbol.memory_info.ast_pinned.append(self.name)
-        symbol.memory_info.ast_comptime_const = True
+        symbol.memory_info.ast_comptime_const = self
         symbol.memory_info.initialized_by(self)
         scope_manager.current_scope.add_symbol(symbol)
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        ...
+        pass
+
+    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        pass
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
@@ -79,7 +82,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         expected_type = InferredType.from_type(self.type)
         given_type = self.value.infer_type(scope_manager, **kwargs)
         if not expected_type.symbolic_eq(given_type, scope_manager.current_scope):
-            raise AstErrors.TYPE_MISMATCH(self.name, self.type, self.value, given_type.type)
+            raise AstErrors.TYPE_MISMATCH(self.name, expected_type, self.value, given_type)
 
 
 __all__ = ["GlobalConstantAst"]

@@ -92,6 +92,10 @@ class UseStatementNamespaceReductionAst(Ast, Stage2_SymbolGenerator, Stage3_SupS
         # Load the sup scopes of the new type aliases.
         self._new_asts.for_each(lambda ast: ast.load_sup_scopes(scope_manager))
 
+    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        # Inject the sup scopes of the new type aliases.
+        self._new_asts.for_each(lambda ast: ast.inject_sup_scopes(scope_manager))
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the new type aliases.
         self._new_asts.for_each(lambda ast: ast.analyse_semantics(scope_manager, **kwargs))

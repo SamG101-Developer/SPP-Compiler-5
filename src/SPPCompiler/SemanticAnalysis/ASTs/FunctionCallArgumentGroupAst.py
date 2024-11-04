@@ -62,7 +62,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
 
     def analyse_pre_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Code that is run before the overload is selected.
-        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, FunctionCallArgumentUnnamedAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
@@ -97,7 +97,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
 
     def analyse_semantics(self, scope_manager: ScopeManager, target: FunctionPrototypeAst = None, is_async: TokenAst = None, **kwargs) -> None:
         # Code that is run after the overload is selected.
-        from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst
+        from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst, CoroutinePrototypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 

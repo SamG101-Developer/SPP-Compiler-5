@@ -91,8 +91,6 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         scope_manager.current_scope.parent.add_symbol(symbol_1)
         scope_manager.current_scope.parent.add_symbol(symbol_2)
 
-        print(f"Added '{symbol_1.name}' and '{symbol_2.name}' to '{scope_manager.current_scope.parent}'")
-
         # Generate the generic parameters and attributes of the class.
         self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))
         self.body.generate_symbols(scope_manager)
@@ -101,6 +99,11 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         scope_manager.move_out_of_current_scope()
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        # Skip the class scope (no sup-scope work to do).
+        scope_manager.move_to_next_scope()
+        scope_manager.move_out_of_current_scope()
+
+    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()

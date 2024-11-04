@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, TYPE_CHECKING
-import functools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -63,7 +62,6 @@ class FloatLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             self.type.print(printer) if self.type else ""]
         return "".join(string)
 
-    @functools.cache
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Create a float type based on the (optional) type postfix.
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
@@ -71,12 +69,14 @@ class FloatLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Match the type against the allowed type postfixes (no postfix is BigDec).
         match self.type:
             case None: float_type = CommonTypes.BigDec(self.pos)
-            case type if type.types[-1].value == "f8": CommonTypes.F8(self.pos)
-            case type if type.types[-1].value == "f16": CommonTypes.F16(self.pos)
-            case type if type.types[-1].value == "f32": CommonTypes.F32(self.pos)
-            case type if type.types[-1].value == "f64": CommonTypes.F64(self.pos)
-            case type if type.types[-1].value == "f128": CommonTypes.F128(self.pos)
-            case type if type.types[-1].value == "f256": CommonTypes.F256(self.pos)
+            case type if type.types[-1].value == "f8": float_type = CommonTypes.F8(self.pos)
+            case type if type.types[-1].value == "f16": float_type = CommonTypes.F16(self.pos)
+            case type if type.types[-1].value == "f32": float_type = CommonTypes.F32(self.pos)
+            case type if type.types[-1].value == "f64": float_type = CommonTypes.F64(self.pos)
+            case type if type.types[-1].value == "f128": float_type = CommonTypes.F128(self.pos)
+            case type if type.types[-1].value == "f256": float_type = CommonTypes.F256(self.pos)
+            case _:
+                raise
 
         return InferredType.from_type(float_type)
 

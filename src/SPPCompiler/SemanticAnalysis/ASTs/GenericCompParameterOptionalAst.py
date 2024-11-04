@@ -1,10 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
@@ -56,7 +57,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered, Stage2_SymbolGenerator, Stag
         # Create a variable symbol for this constant in the current scope (class / function).
         symbol = VariableSymbol(name=IdentifierAst.from_type(self.name), type=self.type, visibility=AstVisibility.Public)
         symbol.memory_info.ast_pinned.append(self.name)
-        symbol.memory_info.ast_comptime_const = True
+        symbol.memory_info.ast_comptime_const = self
         symbol.memory_info.initialized_by(self)
         scope_manager.current_scope.add_symbol(symbol)
 
@@ -75,9 +76,10 @@ class GenericCompParameterOptionalAst(Ast, Ordered, Stage2_SymbolGenerator, Stag
         self.default.analyse_semantics(scope_manager)
 
         # Make sure the default expression is of the correct type.
-        default_type = self.default.infer_type(scope_manager).type
-        if not self.type.symbolic_eq(default_type, scope_manager.current_scope):
-            raise AstErrors.TYPE_MISMATCH(self.name, self.type, self.default, default_type)
+        default_type = self.default.infer_type(scope_manager)
+        target_type = InferredType.from_type(self.type)
+        if not target_type.symbolic_eq(default_type, scope_manager.current_scope):
+            raise AstErrors.TYPE_MISMATCH(self.name, target_type, self.default, default_type)
 
         # Create the variable for the const parameter.
         ast = AstMutation.inject_code(f"let {self.name}: {self.type}", Parser.parse_let_statement_uninitialized)

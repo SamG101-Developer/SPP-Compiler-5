@@ -204,7 +204,7 @@ def shift_scope_for_namespaced_type(scope: Scope, type: TypeAst) -> Tuple[Scope,
 def search_super_scopes(scope: Scope, name: IdentifierAst | GenericIdentifierAst) -> Optional[VariableSymbol]:
     # Recursively search the super scopes for a variable symbol.
     symbol = None
-    for super_scope, _ in scope._direct_sup_scopes:
+    for super_scope in scope._direct_sup_scopes:
         symbol = super_scope.get_symbol(name)
         if symbol: break
     return symbol
@@ -213,7 +213,7 @@ def search_super_scopes(scope: Scope, name: IdentifierAst | GenericIdentifierAst
 def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: IdentifierAst) -> Seq[Tuple[VariableSymbol, Scope, int]]:
     # Recursively search the super scopes for variable symbols with the given name.
     symbols = Seq()
-    for super_scope, _ in scope._direct_sup_scopes:
+    for super_scope in scope._direct_sup_scopes:
         new_symbols = super_scope.get_multiple_symbols(name, original_scope)
         symbols.extend(new_symbols)
     return symbols

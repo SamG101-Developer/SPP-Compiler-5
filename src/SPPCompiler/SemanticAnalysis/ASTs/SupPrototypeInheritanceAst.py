@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import copy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -50,7 +52,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
     def generate_symbols(self, scope_manager: ScopeManager, name_override: str = None) -> None:
         super().generate_symbols(scope_manager, f"<sup:{self.name} ext {self.super_class}:{self.pos}>")
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
@@ -63,8 +65,8 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         sup_symbol = scope_manager.current_scope.get_symbol(self.super_class)
 
         # Cannot superimpose over a generic type.
-        if cls_symbol.is_generic:
-            raise AstErrors.INVALID_PLACE_FOR_GENERIC(self.name, "superimpose over a generic type")
+        if sup_symbol.is_generic:
+            raise AstErrors.INVALID_PLACE_FOR_GENERIC(self.name, "extend a generic type")
 
         # Register the superimposition as a "sup scope", and the "sub scopes".
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
@@ -76,8 +78,8 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         if self.super_class.symbolic_eq(CommonTypes.Copy(), scope_manager.current_scope):
             cls_symbol.is_copyable = True
 
-        # Run the load steps for the body.
-        self.body.load_sup_scopes(scope_manager)
+        # Run the inject steps for the body.
+        self.body.inject_sup_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
@@ -112,7 +114,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         # Todo: Add support for type aliasing in the superimposition.
         for member in self.body.members.filter_to_type(SupPrototypeInheritanceAst):
             this_method = member.body.members[-1]
-            base_method = AstFunctions.check_for_conflicting_method(scope_manager, sup_symbol.scope, this_method, FunctionConflictCheckType.InvalidOverride)
+            base_method = AstFunctions.check_for_conflicting_method(scope_manager.current_scope, sup_symbol.scope, this_method, FunctionConflictCheckType.InvalidOverride)
 
             # Check the base method exists.
             if not base_method:
@@ -123,8 +125,9 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
                 raise AstErrors.SUP_MEMBER_NOT_VIRTUAL(this_method, self.super_class)
 
         # Check every abstract method on the super class is implemented.
-        for base_method in cls_symbol.scope._direct_sup_scopes.map(lambda s: s._ast.body.members).flat():
-            this_method = AstFunctions.check_for_conflicting_method(scope_manager, cls_symbol.scope, base_method, FunctionConflictCheckType.InvalidOverride)
+        for base_member in sup_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s._ast, SupPrototypeFunctionsAst)).map(lambda s: s._ast.body.members).flat().filter_to_type(SupPrototypeInheritanceAst):
+            base_method = base_member.body.members[-1]
+            this_method = AstFunctions.check_for_conflicting_method(cls_symbol.scope, scope_manager.current_scope, base_method, FunctionConflictCheckType.InvalidOverride)
 
             # Check the abstract methods are overridden.
             if base_method._abstract and not this_method:

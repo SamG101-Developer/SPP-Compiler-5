@@ -67,9 +67,17 @@ class AstTypeManagement:
         new_scope._children = base_symbol.scope._children
         new_scope._symbol_table = copy.copy(base_symbol.scope._symbol_table)
 
+        import inspect
+
         # Set the direct super/sub scopes with generic injection.
+        # print(f"Setting super scopes of {new_scope}...")
+        # print(f"{inspect.stack()[0].filename}:{inspect.stack()[0].lineno}")
+        # print(f"{inspect.stack()[1].filename}:{inspect.stack()[1].lineno}")
+        # print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
         new_scope._direct_sup_scopes = AstTypeManagement.substitute_generic_sup_scopes(scope_manager, base_symbol.scope, type_part.generic_argument_group)
+        # new_scope._direct_sup_scopes = base_symbol.scope._direct_sup_scopes
         new_scope._direct_sub_scopes = base_symbol.scope._direct_sub_scopes
+        # print(f"\tSet super scopes of {new_scope} to {new_scope._direct_sup_scopes}")
 
         # No more checks for the tuple type (avoid recursion).
         if type and type.without_generics() == CommonTypes.Tup().without_generics():
@@ -77,8 +85,8 @@ class AstTypeManagement:
 
         # Register the generic arguments as type symbols in the new scope.
         for generic_argument in type_part.generic_argument_group.arguments:
-            generic_class_proto = scope_manager.current_scope.get_symbol(generic_argument.value).type
-            generic_symbol = TypeSymbol(name=generic_argument.name.types[-1], type=generic_class_proto, scope=new_scope)
+            true_value_symbol = scope_manager.current_scope.get_symbol(generic_argument.value)
+            generic_symbol = TypeSymbol(name=generic_argument.name.types[-1], type=true_value_symbol.type, scope=true_value_symbol.scope, is_generic=True)
             new_scope.add_symbol(generic_symbol)
 
         # Return the new scope.
@@ -89,8 +97,10 @@ class AstTypeManagement:
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
         from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
         old_scopes = base_scope._direct_sup_scopes
+        # print(f"\tOld scopes of {base_scope} ({id(base_scope)}): {old_scopes}")
         new_scopes = Seq()
 
         for scope in old_scopes:
@@ -118,6 +128,11 @@ class AstTypeManagement:
                 new_scope = Scope(scope.name, scope.parent, ast=scope._ast)
                 new_scope._children = scope._children
                 new_scope._symbol_table = copy.copy(scope._symbol_table)
+
+                for generic_argument in generic_arguments.arguments:
+                    true_value_symbol = scope_manager.current_scope.get_symbol(generic_argument.value)
+                    generic_symbol = TypeSymbol(name=generic_argument.name.types[-1], type=true_value_symbol.type, scope=true_value_symbol.scope, is_generic=True)
+                    new_scope.add_symbol(generic_symbol)
 
             # Add the new scope to the list of new scopes.
             new_scopes.append(new_scope)

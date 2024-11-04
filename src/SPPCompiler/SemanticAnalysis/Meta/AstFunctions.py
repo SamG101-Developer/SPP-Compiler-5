@@ -36,7 +36,7 @@ class AstFunctions:
             -> Tuple[Ast, Optional[Scope], IdentifierAst]:
 
         # Todo: Change to look for FunMov/FunMut/FunRef implementations over the $Field type?
-        from SPPCompiler.SemanticAnalysis import PostfixExpressionAst
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, PostfixExpressionAst
 
         # Runtime access into an object: "object.method()"
         if isinstance(lhs, PostfixExpressionAst) and lhs.op.is_runtime_access():
@@ -93,62 +93,45 @@ class AstFunctions:
         fn._overload = new_function_call.determine_overload(scope_manager, new_function_access, **kwargs)
 
     @staticmethod
-    def get_all_function_scopes(function_name: IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, GenericArgumentGroupAst]]:
+    def get_all_function_scopes(function_name: IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, FunctionPrototypeAst, GenericArgumentGroupAst]]:
         from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst, IdentifierAst, TypeAst
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
         from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
 
         function_name = TypeAst.from_function_identifier(function_name)
+        generic_argument_ctor = {VariableSymbol: GenericCompArgumentNamedAst, TypeSymbol: GenericTypeArgumentNamedAst}
         overload_scopes_and_info = Seq()
 
         # Functions at the module level: will have no inheritable generics (no enclosing superimposition).
         if isinstance(function_owner_scope.name, IdentifierAst):
-            for scope in function_owner_scope.ancestors:
-                if scope.children.map_attr("name").contains(function_name):
-                    for sup_scope in scope.children.find(lambda s: s.name == function_name)._direct_sup_scopes:
-                        empty_generic_group = GenericArgumentGroupAst.default()
-                        overload_scopes_and_info.append((sup_scope, empty_generic_group))
+            for ancestor_scope in function_owner_scope.ancestors:
+                for sup_scope in ancestor_scope._children.filter(lambda c: isinstance(c._ast, SupPrototypeInheritanceAst) and c._ast.name == function_name):
+                    overload_scopes_and_info.append((ancestor_scope, sup_scope._ast.body.members[0], Seq()))
 
         # Functions in a superimposition block: will have inheritable generics from "sup [...] ... { ... }".
         else:
-            print("Direct sup scopes:", function_owner_scope._direct_sup_scopes)
             for sup_scope in function_owner_scope._direct_sup_scopes if exclusive else function_owner_scope.sup_scopes:
-                GenericArgumentCTor = {VariableSymbol: GenericCompArgumentNamedAst, TypeSymbol: GenericTypeArgumentNamedAst}
-
                 if sup_ast := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst).find(lambda m: m.name == function_name):
-                    generics = sup_scope._symbol_table.all().filter(lambda s: isinstance(s, TypeSymbol) and s.is_generic or isinstance(s, VariableSymbol) and s.memory_info.ast_comptime_const)
-                    generics = generics.map(lambda s: GenericArgumentCTor[type(s)].from_symbol(s))
+                    generics = sup_scope.all_symbols().filter(lambda s: isinstance(s, TypeSymbol) and s.is_generic or isinstance(s, VariableSymbol) and s.memory_info.ast_comptime_const)
+                    generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
                     generics = GenericArgumentGroupAst.default(generics)
-                    overload_scopes_and_info.append((sup_ast._scope, generics))
+                    overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))
 
         # Return the overload scopes, and their generic argument groups.
         return overload_scopes_and_info
 
     @staticmethod
-    def check_for_conflicting_method(scope_manager: ScopeManager, type_scope: Scope, new_function: FunctionPrototypeAst, conflict_type: FunctionConflictCheckType) -> Optional[FunctionPrototypeAst]:
+    def check_for_conflicting_method(this_scope: Scope, target_scope: Scope, new_function: FunctionPrototypeAst, conflict_type: FunctionConflictCheckType) -> Optional[FunctionPrototypeAst]:
         """
         Check for conflicting methods between the new function, anf functions in the type scope. This is used to check
         overrides are valid, and there aren't conflicting overloads.
         """
 
-        import inspect
-        frame = inspect.stack()[1]
-
-        print("-" * 100)
-        print(f"{frame.filename}:{frame.lineno}")
-        print("Checking for conflicting methods")
-        print("New method:", new_function)
-        print("Check type:", conflict_type.name)
-        print("Type scope:", type_scope, "<-", type_scope.parent)
-
         # Get the existing superimpositions and data, and split them into scopes, functions and generics.
-        existing = AstFunctions.get_all_function_scopes(new_function._orig, type_scope, conflict_type == FunctionConflictCheckType.InvalidOverload)
+        existing = AstFunctions.get_all_function_scopes(new_function._orig, target_scope, conflict_type == FunctionConflictCheckType.InvalidOverload)
         existing_scopes = existing.map(operator.itemgetter(0))
-        existing_generics = existing.map(operator.itemgetter(1))
-        existing_functions = existing_scopes.map(lambda sc: sc._ast.body.members[0])
-
-        print("Existing scopes:", existing_scopes)
+        existing_functions = existing.map(operator.itemgetter(1))
 
         # For overloads, the required parameters must have different types or conventions.
         if conflict_type == FunctionConflictCheckType.InvalidOverload:
@@ -159,30 +142,24 @@ class AstFunctions:
         # For overrides, all parameters must be direct matches (type and convention). Todo: Self convention check
         else:
             parameter_filter = lambda f: f.function_parameter_group.get_non_self()
-            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.convention == p2.convention and p1.extract_names == p2.extract_names and type(p1) is type(p2)
+            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.convention == p2.convention and p1.variable.extract_names == p2.variable.extract_names and type(p1) is type(p2)
             extra_check      = lambda f1, f2, s1, s2: f1.return_type.symbolic_eq(f2.return_type, s1, s2) and f1.tok_fun == f2.tok_fun
 
         # Check each parameter set for each overload: 1 match is a conflict.
-        for (existing_scope, existing_function), existing_generics in existing_scopes.zip(existing_functions).zip(existing_generics):
-
-            print("****")
-            print(existing_function)
-            print(new_function)
-            print("****")
+        for existing_scope, existing_function in existing_scopes.zip(existing_functions):
 
             # Filter the parameters and substitute the generics.
             parameter_set_1 = parameter_filter(existing_function).deepcopy()
             parameter_set_2 = parameter_filter(new_function)
-            parameter_set_1.for_each(lambda p: p.type.sub_generics(existing_generics.arguments))
 
             # Pre-checks: parameter lengths are the sane, and the extra check passes.
             if parameter_set_1.length != parameter_set_2.length: continue
-            if not extra_check(existing_function, new_function, existing_scope, scope_manager.current_scope): continue
+            if not extra_check(existing_function, new_function, existing_scope, this_scope): continue
             if existing_function is new_function: continue
 
             # Type check the parameters (0-parameter functions auto-match).
             if parameter_set_1.length + parameter_set_2.length == 0: return existing_function
-            if parameter_set_1.zip(parameter_set_2).all(lambda p1p2: parameter_comp(*p1p2, existing_scope, scope_manager.current_scope)): return existing_function
+            if parameter_set_1.zip(parameter_set_2).all(lambda p1p2: parameter_comp(*p1p2, existing_scope, this_scope)): return existing_function
 
     @staticmethod
     def name_function_arguments(arguments: Seq[FunctionCallArgumentAst], parameters: Seq[FunctionParameterAst]) -> None:
@@ -240,7 +217,6 @@ class AstFunctions:
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
-            print(argument_names, parameter_names)
             raise AstErrors.INVALID_ARGUMENT_NAMES(parameter_names, invalid_argument_names[0])
         parameter_names = parameter_names.set_subtract(argument_names)
 

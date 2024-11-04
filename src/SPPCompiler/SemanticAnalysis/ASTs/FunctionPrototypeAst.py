@@ -6,7 +6,6 @@ import copy, functools
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
@@ -27,7 +26,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupScopeLoader, Stage4_SemanticAnalyser):
+class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupScopeLoader, Stage4_SemanticAnalyser):
     annotations: Seq[AnnotationAst]
     tok_fun: TokenAst
     name: IdentifierAst
@@ -79,10 +78,6 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
             self.body.print(printer)]
         return "".join(string)
 
-    @functools.cache
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
-
     def pre_process(self, context: PreProcessingContext) -> None:
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, ModulePrototypeAst, SupPrototypeInheritanceAst
         from SPPCompiler.SemanticAnalysis import TypeAst, SupImplementationAst
@@ -133,18 +128,23 @@ class FunctionPrototypeAst(Ast, TypeInferrable, VisibilityEnabled, Stage1_PrePro
         scope_manager.move_out_of_current_scope()
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        # Todo: Function conflict checker
         scope_manager.move_to_next_scope()
+        scope_manager.move_out_of_current_scope()
+
+    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        scope_manager.move_to_next_scope()
+        self.return_type.analyse_semantics(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         scope_manager.move_to_next_scope()
 
         # Analyse the semantics of everything except the body (subclasses handle this).
-        self.annotations.for_each(lambda a: a.analyse_semantics(scope_manager))
-        self.generic_parameter_group.analyse_semantics(scope_manager)
-        self.function_parameter_group.analyse_semantics(scope_manager)
-        self.return_type.analyse_semantics(scope_manager)
-        self.where_block.analyse_semantics(scope_manager)
+        self.annotations.for_each(lambda a: a.analyse_semantics(scope_manager, **kwargs))
+        self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
+        self.function_parameter_group.analyse_semantics(scope_manager, **kwargs)
+        self.where_block.analyse_semantics(scope_manager, **kwargs)
 
         # Add a tag into the kwargs marking a subroutine or coroutine.
         kwargs["function_type"] = self.tok_fun

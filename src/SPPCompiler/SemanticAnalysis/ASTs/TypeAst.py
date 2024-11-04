@@ -126,6 +126,7 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         self_symbol = self_scope.get_symbol(self)
         that_symbol = that_scope.get_symbol(that)
 
+        # Debug
         # print("-" * 100)
         # print(self, self_scope, self_symbol)
         # print(that, that_scope, that_symbol)
@@ -153,8 +154,6 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         match self.namespace.length:
             case 0: type_scope = scope_manager.current_scope
             case _: type_scope = AstTypeManagement.get_namespaced_scope_with_error(scope_manager, self.namespace)
-
-        # print("Analyse type", self, type_scope)
 
         # Move through each type, ensuring (at minimum) its non-generic form exists.
         for i, type_part in self.types.enumerate():

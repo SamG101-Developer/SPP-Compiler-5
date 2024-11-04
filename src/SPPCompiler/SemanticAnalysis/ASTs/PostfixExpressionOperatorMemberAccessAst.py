@@ -40,6 +40,8 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_Seman
         return self.tok_access.token.token_type == TokenType.TkDblColon
 
     def infer_type(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> InferredType:
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
+
         lhs_type = lhs.infer_type(scope_manager)
         lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type.type)
 
@@ -54,7 +56,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_Seman
             return InferredType.from_type(attribute_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TypeAst
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol

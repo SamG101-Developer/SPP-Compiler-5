@@ -78,6 +78,11 @@ class SupPrototypeFunctionsAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator,
         self.body.load_sup_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
+    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        scope_manager.move_to_next_scope()
+        self.body.inject_sup_scopes(scope_manager)
+        scope_manager.move_out_of_current_scope()
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Move to the next scope.
         scope_manager.move_to_next_scope()
