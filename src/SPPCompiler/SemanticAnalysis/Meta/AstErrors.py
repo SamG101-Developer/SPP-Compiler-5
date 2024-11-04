@@ -165,7 +165,28 @@ class AstErrors:
             pos=function_call.pos,
             tag="Invalid arguments for function call",
             msg="There are no overloads accepting the given arguments",
-            tip=signatures)
+            tip=f"\n\t{signatures.replace("\n", "\n\t")}")
+        return e
+
+    @staticmethod
+    def AMBIGUOUS_FUNCTION_SIGNATURES(function_call: Ast, signatures: str) -> SemanticError:
+        e = SemanticError()
+        e.add_error(
+            pos=function_call.pos,
+            tag="Ambiguous function call",
+            msg="There are multiple overloads accepting the given arguments",
+            tip=f"\n\t{signatures.replace("\n", "\n\t")}")
+        return e
+
+    @staticmethod
+    def CANNOT_CALL_ABSTRACT_METHOD(function: IdentifierAst, function_call: PostfixExpressionOperatorFunctionCallAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(function.pos, "Function annotated as abstract")
+        e.add_error(
+            pos=function_call.pos,
+            tag="Abstract method called here.",
+            msg="Cannot call abstract methods.",
+            tip="Call the method on a subtype")
         return e
 
     # GENERAL SCOPE ERRORS
@@ -485,7 +506,18 @@ class AstErrors:
         e.add_info(super_class.pos, f"Super class '{super_class}' extended here")
         e.add_error(
             pos=new_method.pos,
-            tag="Invalid super member.",
-            msg=f"The super member '{new_method}' does not exist in the super class '{super_class}'.",
+            tag="Invalid member.",
+            msg=f"The subclass member '{new_method}' does not exist in the superclass '{super_class}'.",
             tip="Use a valid super member.")
+        return e
+
+    @staticmethod
+    def SUP_ABSTRACT_MEMBER_NOT_OVERRIDEN(base_method: IdentifierAst, super_class: TypeAst) -> SemanticError:
+        e = SemanticError()
+        e.add_info(super_class.pos, f"Super class '{super_class}' extended here")
+        e.add_error(
+            pos=base_method.pos,
+            tag="Abstract method on base class",
+            msg=f"The super member '{base_method}' has not been overridden in the subclass",
+            tip="Override the super member in the subclass")
         return e

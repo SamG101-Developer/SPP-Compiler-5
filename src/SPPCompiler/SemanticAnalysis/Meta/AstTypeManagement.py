@@ -64,20 +64,12 @@ class AstTypeManagement:
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.type))
         new_symbol = TypeSymbol(name=type_part, type=new_scope._ast, scope=new_scope)
         new_scope.parent.add_symbol(new_symbol)
+
         new_scope._children = base_symbol.scope._children
         new_scope._symbol_table = copy.copy(base_symbol.scope._symbol_table)
 
-        import inspect
-
-        # Set the direct super/sub scopes with generic injection.
-        # print(f"Setting super scopes of {new_scope}...")
-        # print(f"{inspect.stack()[0].filename}:{inspect.stack()[0].lineno}")
-        # print(f"{inspect.stack()[1].filename}:{inspect.stack()[1].lineno}")
-        # print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
         new_scope._direct_sup_scopes = AstTypeManagement.substitute_generic_sup_scopes(scope_manager, base_symbol.scope, type_part.generic_argument_group)
-        # new_scope._direct_sup_scopes = base_symbol.scope._direct_sup_scopes
         new_scope._direct_sub_scopes = base_symbol.scope._direct_sub_scopes
-        # print(f"\tSet super scopes of {new_scope} to {new_scope._direct_sup_scopes}")
 
         # No more checks for the tuple type (avoid recursion).
         if type and type.without_generics() == CommonTypes.Tup().without_generics():

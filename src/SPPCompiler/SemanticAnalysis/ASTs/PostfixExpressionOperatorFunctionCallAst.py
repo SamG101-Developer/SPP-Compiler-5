@@ -89,11 +89,11 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
             try:
                 # Can't call an abstract function.
                 if function_overload._abstract:
-                    raise AstErrors.CANNOT_CALL_ABSTRACT_METHOD()
+                    raise AstErrors.CANNOT_CALL_ABSTRACT_METHOD(function_overload.name, self)
 
                 # Can't call non-implemented functions (dummy functions).
                 if function_overload._non_implemented:
-                    raise AstErrors.CANNOT_CALL_NON_IMPLEMENTED_METHOD()
+                    ...  # Todo: raise AstErrors.CANNOT_CALL_NON_IMPLEMENTED_METHOD()
 
                 # Check if there are too many arguments for the function (non-variadic).
                 if arguments.length > parameters.length and not is_variadic:
@@ -152,12 +152,12 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
         # If there are no pass overloads, raise an error.
         if pass_overloads.is_empty():
-            failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature() + f" - {f[2].tag}").join("\n")
+            failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter()) + f" - {f[2].tag}").join("\n")
             raise AstErrors.NO_VALID_FUNCTION_SIGNATURES(self, failed_signatures_and_errors)
 
         # If there are multiple pass overloads, raise an error.
         elif pass_overloads.length > 1:
-            passed_signatures = pass_overloads.map(lambda f: f[1].print_signature()).join("\n")
+            passed_signatures = pass_overloads.map(lambda f: f[1].print_signature(AstPrinter())).join("\n")
             raise AstErrors.AMBIGUOUS_FUNCTION_SIGNATURES(self, passed_signatures)
 
         # Set the overload to the only pass overload.

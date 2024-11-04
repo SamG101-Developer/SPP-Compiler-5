@@ -78,6 +78,16 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_S
             self.body.print(printer)]
         return "".join(string)
 
+    @ast_printer_method
+    def print_signature(self, printer: AstPrinter) -> str:
+        string = [
+            self.generic_parameter_group.print(printer),
+            self.function_parameter_group.print(printer) + " ",
+            self.tok_arrow.print(printer) + " ",
+            self.return_type.print(printer),
+            self.where_block.print(printer)]
+        return "".join(string)
+
     def pre_process(self, context: PreProcessingContext) -> None:
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, ModulePrototypeAst, SupPrototypeInheritanceAst
         from SPPCompiler.SemanticAnalysis import TypeAst, SupImplementationAst

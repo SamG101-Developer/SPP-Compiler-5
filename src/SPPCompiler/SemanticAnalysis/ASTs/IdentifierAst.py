@@ -55,7 +55,7 @@ class IdentifierAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
         # If the symbol is a variable, then get its type.
         if isinstance(symbol, VariableSymbol):
-            return InferredType(symbol.memory_info.convention, symbol.type)
+            return InferredType(convention=symbol.memory_info.convention, type=symbol.type)
 
         # If the symbol is a namespace, then return "self" as the type.
         elif isinstance(symbol, NamespaceSymbol):

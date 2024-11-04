@@ -69,7 +69,7 @@ class AnnotationAst(Ast, Stage1_PreProcessor, Stage4_SemanticAnalyser):
             # The "abstract_method" annotation can only be applied to functions.
             if not isinstance(context, FunctionPrototypeAst):
                 raise AstErrors.INVALID_ANNOTATION_APPLICATION(self.name, context, "function")
-            context._abstract = True
+            context._abstract = context._virtual = True
 
         elif self.name.value == _Annotations.NonImplementedMethod.value:
             # The "non_implemented_method" annotation can only be applied to functions.

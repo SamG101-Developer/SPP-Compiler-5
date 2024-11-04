@@ -96,7 +96,7 @@ class AstFunctions:
 
     @staticmethod
     def get_all_function_scopes(function_name: IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, FunctionPrototypeAst, GenericArgumentGroupAst]]:
-        from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst, IdentifierAst, TypeAst
+        from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst, IdentifierAst, TypeAst, ClassPrototypeAst
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
         from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
@@ -114,8 +114,18 @@ class AstFunctions:
 
         # Functions in a superimposition block: will have inheritable generics from "sup [...] ... { ... }".
         else:
-            for sup_scope in function_owner_scope._direct_sup_scopes if exclusive else function_owner_scope.sup_scopes:
+            if isinstance(function_owner_scope._ast, ClassPrototypeAst):
+                sup_scopes = function_owner_scope._direct_sup_scopes if exclusive else function_owner_scope.sup_scopes
+            else:
+                sup_scopes = Seq([function_owner_scope])
+            print(f"Sup scopes: {sup_scopes.map_attr("name")}")
+
+            for sup_scope in sup_scopes:  # function_owner_scope._direct_sup_scopes if exclusive else function_owner_scope.sup_scopes:
+                print(f"\tsup scope: {sup_scope}")
+                print(f"\t\tfunction name: {function_name}")
+                print(f"\t\tsup functions: {sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst)}")
                 if sup_ast := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst).find(lambda m: m.name == function_name):
+                    print(f"\tmatch: {sup_ast}")
                     generics = sup_scope.all_symbols().filter(lambda s: isinstance(s, (TypeSymbol, VariableSymbol)) and s.is_generic)
                     generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
                     generics = GenericArgumentGroupAst.default(generics)
@@ -150,7 +160,6 @@ class AstFunctions:
 
         # Check each parameter set for each overload: 1 match is a conflict.
         for existing_scope, existing_function in existing_scopes.zip(existing_functions):
-
             # Filter the parameters and substitute the generics.
             parameter_set_1 = parameter_filter(existing_function).deepcopy()
             parameter_set_2 = parameter_filter(new_function)

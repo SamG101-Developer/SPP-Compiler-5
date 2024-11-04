@@ -110,6 +110,10 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         self.where_block.analyse_semantics(scope_manager, **kwargs)
         self.body.analyse_semantics(scope_manager, **kwargs)
 
+        # Todo: Check the same superclass isn't extended twice.
+
+        print(self)
+
         # Check every member on the superimposition exists on the super class.
         # Todo: Add support for type aliasing in the superimposition.
         for member in self.body.members.filter_to_type(SupPrototypeInheritanceAst):
@@ -120,18 +124,18 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
             if not base_method:
                 raise AstErrors.SUP_MEMBER_INVALID(this_method.name, self.super_class)
 
-            # Check the base method is virtual.
+            # Check the base method is virtual or abstract.
             if not base_method._virtual:
                 raise AstErrors.SUP_MEMBER_NOT_VIRTUAL(this_method, self.super_class)
 
         # Check every abstract method on the super class is implemented.
         for base_member in sup_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s._ast, SupPrototypeFunctionsAst)).map(lambda s: s._ast.body.members).flat().filter_to_type(SupPrototypeInheritanceAst):
             base_method = base_member.body.members[-1]
-            this_method = AstFunctions.check_for_conflicting_method(cls_symbol.scope, scope_manager.current_scope, base_method, FunctionConflictCheckType.InvalidOverride)
+            this_method = AstFunctions.check_for_conflicting_method(sup_symbol.scope, scope_manager.current_scope, base_method, FunctionConflictCheckType.InvalidOverride)
 
             # Check the abstract methods are overridden.
             if base_method._abstract and not this_method:
-                raise AstErrors.SUP_ABSTRACT_MEMBER_NOT_OVERRIDEN(base_method, self.name)
+                raise AstErrors.SUP_ABSTRACT_MEMBER_NOT_OVERRIDEN(base_method.name, self.name)
 
         # Move out of the current scope.
         scope_manager.move_out_of_current_scope()
