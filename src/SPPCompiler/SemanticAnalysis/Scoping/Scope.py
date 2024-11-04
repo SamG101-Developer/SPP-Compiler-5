@@ -82,7 +82,7 @@ class Scope:
 
         # Ensure the name is a valid type.
         if not isinstance(name, (IdentifierAst, TypeAst, GenericIdentifierAst)):
-            raise Exception(f"Invalid name type: {name} ({type(name)})")
+            return None
 
         # Get the symbol from the symbol table if it exists.
         scope = self
@@ -112,10 +112,10 @@ class Scope:
         from SPPCompiler.SemanticAnalysis import PostfixExpressionAst, PostfixExpressionOperatorMemberAccessAst
 
         # Define a helper lambda that validates a postfix expression.
-        is_valid_postfix = lambda p: all([
-            isinstance(p, PostfixExpressionAst),
-            isinstance(p.op, PostfixExpressionOperatorMemberAccessAst),
-            p.op.is_runtime_access()])
+        is_valid_postfix = lambda p:\
+            isinstance(p, PostfixExpressionAst) and\
+            isinstance(p.op, PostfixExpressionOperatorMemberAccessAst) and\
+            p.op.is_runtime_access()
 
         # Shift to the leftmost identifier and get the symbol from the symbol table.
         if is_valid_postfix(name):

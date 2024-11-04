@@ -130,7 +130,11 @@ class AstMemoryHandler:
 
         # Get the symbol representing the expression being moved.
         symbol = scope_manager.current_scope.get_variable_symbol_outermost_part(value_ast)
+        if not symbol:
+            return
         copies = scope_manager.current_scope.get_symbol(symbol.type).is_copyable
+
+        # An identifier that is a namespace cannot be used as an expression.
         if isinstance(symbol, NamespaceSymbol):
             raise AstErrors.INVALID_EXPRESSION(value_ast)
 

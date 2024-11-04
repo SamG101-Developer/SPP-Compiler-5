@@ -112,8 +112,6 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
         # Todo: Check the same superclass isn't extended twice.
 
-        print(self)
-
         # Check every member on the superimposition exists on the super class.
         # Todo: Add support for type aliasing in the superimposition.
         for member in self.body.members.filter_to_type(SupPrototypeInheritanceAst):

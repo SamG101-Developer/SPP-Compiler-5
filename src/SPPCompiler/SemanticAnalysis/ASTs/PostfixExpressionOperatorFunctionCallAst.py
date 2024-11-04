@@ -152,12 +152,12 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
         # If there are no pass overloads, raise an error.
         if pass_overloads.is_empty():
-            failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter()) + f" - {f[2].tag}").join("\n")
+            failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {f[2].tag}").join("\n")
             raise AstErrors.NO_VALID_FUNCTION_SIGNATURES(self, failed_signatures_and_errors)
 
         # If there are multiple pass overloads, raise an error.
         elif pass_overloads.length > 1:
-            passed_signatures = pass_overloads.map(lambda f: f[1].print_signature(AstPrinter())).join("\n")
+            passed_signatures = pass_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name)).join("\n")
             raise AstErrors.AMBIGUOUS_FUNCTION_SIGNATURES(self, passed_signatures)
 
         # Set the overload to the only pass overload.

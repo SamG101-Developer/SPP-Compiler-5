@@ -79,13 +79,16 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_S
         return "".join(string)
 
     @ast_printer_method
-    def print_signature(self, printer: AstPrinter) -> str:
+    def print_signature(self, printer: AstPrinter, owner: TypeAst = None) -> str:
         string = [
+            self._orig.print(printer),
             self.generic_parameter_group.print(printer),
             self.function_parameter_group.print(printer) + " ",
             self.tok_arrow.print(printer) + " ",
             self.return_type.print(printer),
             self.where_block.print(printer)]
+        if owner:
+            string.insert(0, owner.print(printer) + "::")
         return "".join(string)
 
     def pre_process(self, context: PreProcessingContext) -> None:
