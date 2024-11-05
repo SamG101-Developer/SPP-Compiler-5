@@ -13,7 +13,7 @@ class CommonTypes:
     def type_variant_to_convention(type: TypeAst) -> Type[ConventionAst]:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst
 
-        match type.types[-1].value[:-3].lower():
+        match type.types[-1].value[-3:].lower():
             case "mov": return ConventionMovAst
             case "mut": return ConventionMutAst
             case "ref": return ConventionRefAst

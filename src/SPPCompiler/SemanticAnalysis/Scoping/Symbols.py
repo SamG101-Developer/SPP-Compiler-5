@@ -106,7 +106,7 @@ class TypeSymbol:
 
     @property
     def fq_name(self) -> TypeAst:
-        from SPPCompiler.SemanticAnalysis import TypeAst
+        from SPPCompiler.SemanticAnalysis import TypeAst, IdentifierAst
 
         fq_name = TypeAst.from_generic_identifier(self.name)
         if self.is_generic:
@@ -118,7 +118,10 @@ class TypeSymbol:
 
         scope = self.scope.parent_module
         while scope.parent:
-            fq_name.types.insert(0, scope.name)
+            if isinstance(scope.name, IdentifierAst):
+                fq_name.namespace.insert(0, scope.name)
+            else:
+                fq_name.types.insert(0, scope.name)
             scope = scope.parent
         return fq_name
 
