@@ -64,11 +64,12 @@ class AstTypeManagement:
         # Create a new scope for the generic substituted type.
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.type))
         new_symbol = TypeSymbol(name=type_part, type=new_scope._ast, scope=new_scope)
+        if scope_manager.current_scope.has_symbol(new_symbol.name):
+            return scope_manager.current_scope.get_symbol(new_symbol.name).scope
+
         new_scope.parent.add_symbol(new_symbol)
-
         new_scope._children = base_symbol.scope._children
-        new_scope._symbol_table = copy.copy(base_symbol.scope._symbol_table)
-
+        new_scope._symbol_table = copy.deepcopy(base_symbol.scope._symbol_table)
         new_scope._direct_sup_scopes = AstTypeManagement.substitute_generic_sup_scopes(scope_manager, base_symbol.scope, type_part.generic_argument_group)
         new_scope._direct_sub_scopes = base_symbol.scope._direct_sub_scopes
 
@@ -77,7 +78,6 @@ class AstTypeManagement:
             return new_scope
 
         # Register the generic arguments as type symbols in the new scope.
-        # TypeSymbol(name=generic_argument.name.types[-1], type=true_value_symbol.type, scope=true_value_symbol.scope, is_generic=True)
         for generic_argument in type_part.generic_argument_group.arguments:
             generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
             new_scope.add_symbol(generic_symbol)

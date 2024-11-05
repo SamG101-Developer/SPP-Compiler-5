@@ -113,12 +113,14 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_Seman
         
             # Check for ambiguous symbol access (unless for function call).
             if not lhs_symbol.scope.get_symbol(self.field).type.types[-1].value.startswith("$"):
-                all_matching_fields = lhs_symbol.scope.get_multiple_symbols(self.field)
-                closest_depth = all_matching_fields.map(operator.itemgetter(2)).min()
-                symbols_at_closest_depth = all_matching_fields.filter(lambda s: s[2] == closest_depth)
-                if symbols_at_closest_depth.length > 1:
-                    scope_names = symbols_at_closest_depth.map(operator.itemgetter(1)).map_attr("name")
-                    raise AstErrors.AMBIGUOUS_MEMBER_ACCESS(self.field, scope_names)
+                ...
+                # Todo
+                # all_matching_fields = lhs_symbol.scope.get_multiple_symbols(self.field)
+                # closest_depth = all_matching_fields.map(operator.itemgetter(2)).min()
+                # symbols_at_closest_depth = all_matching_fields.filter(lambda s: s[2] == closest_depth)
+                # if symbols_at_closest_depth.length > 1:
+                #     scope_names = symbols_at_closest_depth.map(operator.itemgetter(1)).map_attr("name")
+                #     raise AstErrors.AMBIGUOUS_MEMBER_ACCESS(self.field, scope_names)
         
         # Accessing a namespaced constant, such as "std::pi".
         elif isinstance(self.field, IdentifierAst) and self.is_static_access():

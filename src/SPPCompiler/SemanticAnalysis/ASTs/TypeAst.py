@@ -109,7 +109,7 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Iterate over the generic parameters, and substitute the generic arguments into the type parts.
         for generic_name, generic_type in generic_arguments.map(lambda a: (a.name, a.value)):
 
-            # Direct match => change "T" to "U32" for example. Todo: Doe these need to be deep-copied?
+            # Direct match => change "T" to "U32" for example. Todo: Does these need to be deep-copied?
             if self.without_generics() == generic_name.without_generics():
                 self.namespace = generic_type.namespace.copy()
                 self.types = generic_type.types.copy()
@@ -129,13 +129,6 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         that_scope = that_scope or self_scope
         self_symbol = self_scope.get_symbol(self)
         that_symbol = that_scope.get_symbol(that)
-
-        # Debug.
-        # import inspect
-        # print("-" * 100)
-        # print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
-        # print(f"{self}, {self_scope}, {self_symbol}")
-        # print(f"{that}, {that_scope}, {that_symbol}")
 
         # Special case for Variant types (can match any of the alternative types).
         # Todo: Tidy this up.
