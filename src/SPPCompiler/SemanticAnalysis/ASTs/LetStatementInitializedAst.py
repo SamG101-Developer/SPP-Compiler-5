@@ -51,8 +51,6 @@ class LetStatementInitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         if isinstance(self.value, (TokenAst, TypeAst)):
             raise AstErrors.INVALID_EXPRESSION(self.value)
 
-        print(self, scope_manager.current_scope)
-
         # Analyse the assign_to and value of the let statement.
         self.value.analyse_semantics(scope_manager, **kwargs)
         self.assign_to.analyse_semantics(scope_manager, value=self.value, **kwargs)

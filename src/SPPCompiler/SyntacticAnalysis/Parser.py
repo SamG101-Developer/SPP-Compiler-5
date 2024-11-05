@@ -1494,10 +1494,10 @@ class Parser:
         return StringLiteralAst(c1, p1)
 
     @parser_rule
-    def parse_literal_tuple(self, item) -> TupleLiteralAst:
+    def parse_literal_tuple(self, item=None) -> TupleLiteralAst:
         p1 = self.parse_literal_tuple_0_items()
-        p2 = self.parse_literal_tuple_1_items(item)
-        p3 = self.parse_literal_tuple_n_items(item)
+        p2 = self.parse_literal_tuple_1_items(item or self.parse_expression)
+        p3 = self.parse_literal_tuple_n_items(item or self.parse_expression)
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 

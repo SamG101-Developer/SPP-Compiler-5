@@ -36,7 +36,7 @@ class TupleLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Create the standard "std::Tup[..Items]" type, with generic items.
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        inner_types = self.elements.map(lambda element: element.infer_type(scope_manager, **kwargs).element_type)
+        inner_types = self.elements.map(lambda element: element.infer_type(scope_manager, **kwargs).type)
         tuple_type = CommonTypes.Tup(inner_types, self.pos)
         return InferredType.from_type(tuple_type)
 

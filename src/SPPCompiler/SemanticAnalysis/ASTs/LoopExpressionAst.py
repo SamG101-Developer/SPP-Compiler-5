@@ -47,16 +47,15 @@ class LoopExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return loop_type
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        # Analyse the condition outside the new scope.
-        self.condition.analyse_semantics(scope_manager, **kwargs)
-
         # Create a new scope for the loop body.
         scope_manager.create_and_move_into_new_scope(f"<loop:{self.pos}>")
+        self.condition.analyse_semantics(scope_manager, **kwargs)
 
         # Analyse twice (for memory checks).
         for i in range(("loop_count" not in kwargs) + 1):
             kwargs["loop_count"] = kwargs.get("loop_count", 0) + 1
             kwargs["loop_types"] = kwargs.get("loop_types", {})
+            kwargs["loop_ast"] = self
             self._loop_type_info = kwargs["loop_types"]
             self._loop_type_index = kwargs["loop_count"]
             self.body.analyse_semantics(scope_manager, **kwargs)

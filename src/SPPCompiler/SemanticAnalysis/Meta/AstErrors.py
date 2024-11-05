@@ -556,3 +556,16 @@ class AstErrors:
             msg="The pattern destructor object is not valid.",
             tip="Use a valid pattern destructor object.")
         return e
+
+    # LOOP ERRORS
+
+    @staticmethod
+    def CONTROL_FLOW_TOO_MANY_CONTROLS(loop: LoopExpressionAst, loop_control: LoopControlFlowStatementAst, number_of_controls: int, depth_of_loop: int) -> SemanticError:
+        e = SemanticError()
+        e.add_info(loop.pos, f"Loop defined here")
+        e.add_error(
+            pos=loop_control.pos,
+            tag="Too many control flow statements.",
+            msg=f"The loop has {number_of_controls} control flow statements, but the loop depth is only {depth_of_loop}.",
+            tip="Remove some control flow statements from the loop.")
+        return e

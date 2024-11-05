@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Callable, Iterator, Optional, Iterable, Dict
+from typing import List, Callable, Iterator, Optional, Iterable, Dict, Type, Union
 from ordered_set import OrderedSet
 import copy
 
@@ -40,10 +40,10 @@ class Seq[T]:
     def filter(self, func: Callable[[T], bool]) -> Seq[T]:
         return Seq([v for v in self._value if func(v)])
 
-    def filter_to_type[*Ts](self, *types: Ts) -> Seq[Ts]:
+    def filter_to_type[Ts](self, *types: Type[Ts]) -> Seq[Union[*Ts]]:
         return Seq([v for v in self._value if type(v) in types])
 
-    def filter_not_type[*Ts](self, *types: Ts) -> Seq[T]:
+    def filter_not_type[Ts](self, *types: Type[Ts]) -> Seq[T]:
         return Seq([v for v in self._value if type(v) not in types])
 
     def filter_out_none(self) -> Seq[T]:

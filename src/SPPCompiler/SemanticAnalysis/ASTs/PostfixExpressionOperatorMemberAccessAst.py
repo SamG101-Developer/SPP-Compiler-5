@@ -78,8 +78,9 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_Seman
         # Numerical access to a tuple, such as "tuple.0".
         elif isinstance(self.field, TokenAst):
             lhs_type = lhs.infer_type(scope_manager).type
+            lhs_type.analyse_semantics(scope_manager)
             lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type)
-            
+
             # Check the lhs isn't a generic type.
             if lhs_symbol.is_generic:
                 raise AstErrors.INVALID_PLACE_FOR_GENERIC(lhs, lhs_type, self.tok_access)

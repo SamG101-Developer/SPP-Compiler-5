@@ -45,24 +45,25 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
-        has_skip = TokenAst.default(TokenType.KwSkip)
+        has_skip = isinstance(self.skip_or_expr, TokenAst) and self.skip_or_expr.token.token_type == TokenType.KwSkip
         if isinstance(self.skip_or_expr, (TokenAst, TypeAst)) and not has_skip:
             raise AstErrors.INVALID_EXPRESSION(self.skip_or_expr)
 
         # Get the number of control flow statement, and the loop's nesting level.
-        number_of_controls = self.tok_seq_exit.length + (has_skip is not None)
-        nested_loop_depth  = kwargs.get("loop_count", 0)
+        number_of_controls = self.tok_seq_exit.length + (has_skip is True)
+        nested_loop_depth  = kwargs["loop_count"]
 
         # Check the depth of the loop is greater than or equal to the number of control statements.
         if number_of_controls > nested_loop_depth:
-            raise AstErrors.CONTROL_FLOW_TOO_MANY_CONTROLS(self, number_of_controls, nested_loop_depth)
+            raise AstErrors.CONTROL_FLOW_TOO_MANY_CONTROLS(kwargs["loop_ast"], self, number_of_controls, nested_loop_depth)
 
         # Save and compare the loop's "exiting" type against other nested loop's exit statement types.
         if not isinstance(self.skip_or_expr, TokenAst):
 
             # Ensure the memory integrity of the expression.
-            self.skip_or_expr.analyse_semantics(scope_manager, **kwargs)
-            AstMemoryHandler.enforce_memory_integrity(self.skip_or_expr, self.skip_or_expr, scope_manager, update_memory_info=False)
+            if self.skip_or_expr:
+                self.skip_or_expr.analyse_semantics(scope_manager, **kwargs)
+                AstMemoryHandler.enforce_memory_integrity(self.skip_or_expr, self.skip_or_expr, scope_manager, update_memory_info=False)
 
             # Infer the exit type of this loop control flow statement.
             match self.skip_or_expr:
