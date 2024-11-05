@@ -23,17 +23,9 @@ class GenericArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
     arguments: Seq[GenericArgumentAst]
     tok_right_bracket: TokenAst
 
-    type_arguments: Seq[GenericTypeArgumentAst] = field(default_factory=Seq, init=False, repr=False)
-    comp_arguments: Seq[GenericCompArgumentAst] = field(default_factory=Seq, init=False, repr=False)
-
     def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericTypeArgumentAst, GenericCompArgumentAst
-
         # Convert the arguments into a sequence, and other defaults.
         self.arguments = Seq(self.arguments)
-        self.type_arguments = self.arguments.filter_to_type(*GenericTypeArgumentAst.__value__.__args__)
-        self.comp_arguments = self.arguments.filter_to_type(*GenericCompArgumentAst.__value__.__args__)
 
     def __copy__(self) -> GenericArgumentGroupAst:
         return GenericArgumentGroupAst.default(self.arguments.copy())
@@ -46,6 +38,16 @@ class GenericArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis import IdentifierAst
         assert isinstance(item, str)
         return self.arguments.find(lambda a: IdentifierAst.from_type(a.name).value == item)
+
+    @property
+    def type_arguments(self) -> Seq[GenericTypeArgumentAst]:
+        from SPPCompiler.SemanticAnalysis import GenericTypeArgumentAst
+        return self.arguments.filter_to_type(*GenericTypeArgumentAst.__value__.__args__)
+
+    @property
+    def comp_arguments(self) -> Seq[GenericCompArgumentAst]:
+        from SPPCompiler.SemanticAnalysis import GenericCompArgumentAst
+        return self.arguments.filter_to_type(*GenericCompArgumentAst.__value__.__args__)
 
     @staticmethod
     def default(arguments: Seq[GenericArgumentAst] = None) -> GenericArgumentGroupAst:

@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import builtins
 from typing import TYPE_CHECKING
 import copy, difflib
 
@@ -102,7 +104,6 @@ class AstTypeManagement:
             # Create the scope with the generic arguments injected. This will handle recursive scope creation.
             if isinstance(scope._ast, ClassPrototypeAst):
                 new_fq_type = copy.deepcopy(scope.type_symbol.fq_name)
-                new_fq_type.sub_generics(generic_arguments.arguments)
                 new_fq_type.types[-1].generic_argument_group = generic_arguments
                 new_scope = AstTypeManagement.create_generic_scope(scope_manager, new_fq_type, new_fq_type.types[-1], scope.type_symbol)
 
@@ -136,6 +137,7 @@ class AstTypeManagement:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
 
         true_value_symbol = scope_manager.current_scope.get_symbol(generic_argument.value)
+        # print(generic_argument.value, scope_manager.current_scope, true_value_symbol)
         if isinstance(generic_argument, GenericTypeArgumentNamedAst):
             return TypeSymbol(
                 name=generic_argument.name.types[-1],

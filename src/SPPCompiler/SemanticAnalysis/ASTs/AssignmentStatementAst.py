@@ -77,7 +77,7 @@ class AssignmentStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             lhs_type = lhs_expr.infer_type(scope_manager, **kwargs)
             rhs_type = rhs_expr.infer_type(scope_manager, **kwargs)
             if not lhs_type.symbolic_eq(rhs_type, scope_manager.current_scope):
-                raise AstErrors.TYPE_MISMATCH(lhs_expr, lhs_type, rhs_expr, rhs_type)
+                raise AstErrors.TYPE_MISMATCH(lhs_sym.memory_info.ast_initialization, lhs_type, rhs_expr, rhs_type)
 
             # Resolve memory status, by marking lhs identifiers as initialised, or removing partial moves.
             if isinstance(lhs_expr, IdentifierAst):
