@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
@@ -41,6 +41,11 @@ class GenericArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
         return isinstance(other, GenericArgumentGroupAst) and self.arguments == other.arguments
+
+    def __getitem__(self, item: str) -> Optional[GenericArgumentAst]:
+        from SPPCompiler.SemanticAnalysis import IdentifierAst
+        assert isinstance(item, str)
+        return self.arguments.find(lambda a: IdentifierAst.from_type(a.name).value == item)
 
     @staticmethod
     def default(arguments: Seq[GenericArgumentAst] = None) -> GenericArgumentGroupAst:
