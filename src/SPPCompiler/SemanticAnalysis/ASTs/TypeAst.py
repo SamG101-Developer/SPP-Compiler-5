@@ -101,7 +101,7 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return False
 
     def sub_generics(self, generic_arguments: Seq[GenericArgumentAst]) -> TypeAst:
-        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
+        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, GenericTypeArgumentAst
 
         # Get all the substitutable parts of this type (GenericIdentifierAst parts)
         type_parts = self.types.filter_to_type(GenericIdentifierAst)
@@ -117,7 +117,7 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             # Otherwise, iterate over the type parts and substitute their generic arguments.
             else:
                 for type_part in type_parts:
-                    type_part.generic_argument_group.arguments.for_each(lambda g: g.value.sub_generics(generic_arguments))
+                    type_part.generic_argument_group.type_arguments.for_each(lambda g: g.value.sub_generics(generic_arguments))
 
         # Return the modified type.
         return self

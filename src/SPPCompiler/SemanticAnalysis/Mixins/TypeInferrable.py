@@ -23,8 +23,7 @@ class InferredType:
         return self.convention is that.convention and self.type.symbolic_eq(that.type, self_scope, that_scope)
 
     def without_generics(self) -> InferredType:
-        self.type = self.type.without_generics()
-        return self
+        return InferredType(convention=self.convention, type=self.type.without_generics())
 
     @staticmethod
     def from_type(type: TypeAst) -> InferredType:

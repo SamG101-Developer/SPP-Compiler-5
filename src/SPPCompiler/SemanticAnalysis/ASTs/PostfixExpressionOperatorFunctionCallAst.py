@@ -27,7 +27,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
     function_argument_group: FunctionCallArgumentGroupAst
     fold_token: Optional[TokenAst]
 
-    _overload: Optional[Tuple[FunctionPrototypeAst, Scope]] = field(default=None, init=False, repr=False)
+    _overload: Optional[Tuple[Scope, FunctionPrototypeAst]] = field(default=None, init=False, repr=False)
     _is_async: Optional[Ast] = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -173,9 +173,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
             self.analyse_semantics(scope_manager, lhs, **kwargs)
 
         # Expand the return type from the scope it was defined in => comparisons won't require function scope knowledge.
-        _, function_owner_scope, _ = AstFunctions.get_function_owner_type_and_function_name(scope_manager, lhs)
         return_type = self._overload[1].return_type
-        return_type = function_owner_scope.get_symbol(return_type).fq_name
+        return_type = self._overload[0].get_symbol(return_type).fq_name
         return InferredType.from_type(return_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:

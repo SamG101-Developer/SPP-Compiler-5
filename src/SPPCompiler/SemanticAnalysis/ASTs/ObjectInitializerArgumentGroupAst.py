@@ -79,7 +79,7 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
         return self.arguments.filter(lambda arg: not isinstance(arg.name, TokenAst))
 
     def analyse_semantics(self, scope_manager: ScopeManager, class_type: TypeAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, ObjectInitializerArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, ClassPrototypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
@@ -89,7 +89,7 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
         class_symbol = scope_manager.current_scope.get_symbol(class_type)
         attributes = class_symbol.type.body.members
         attribute_names = attributes.map_attr("name")
-        super_classes = class_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s.name, TypeAst))
+        super_classes = class_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s._ast, ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name)
 
         # Analyse the arguments and enforce memory integrity.
         for argument in self.arguments:
@@ -141,15 +141,17 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
             raise AstErrors.TYPE_MISMATCH(class_type, target_sup_type, sup_argument, sup_argument_type)
 
         if sup_argument:
+            # Todo: Switch comparisons to symbolic_eq (remove fq_name)
             given_sup_types = sup_argument_type.type.types[-1].generic_argument_group.arguments.map_attr("value")
+            given_sup_types = given_sup_types.map(lambda s: scope_manager.current_scope.get_symbol(s).fq_name)
 
             # Check if there are any missing types in the "sup=" tuple.
             if sup_argument and (missing_superclasses := super_classes.set_subtract(given_sup_types)):
-                raise AstErrors.MISSING_SUPERCLASSES(missing_superclasses)
+                raise AstErrors.MISSING_ARGUMENT_NAMES(missing_superclasses, "object initialization", "superclass")
 
             # Check if there are any extra invalid types in the "sup=" tuple.
             if sup_argument and (invalid_superclasses := given_sup_types.set_subtract(super_classes)):
-                raise AstErrors.INVALID_SUPERCLASSES(invalid_superclasses)
+                raise AstErrors.INVALID_ARGUMENT_NAMES(super_classes, invalid_superclasses[0])
 
 
 __all__ = ["ObjectInitializerArgumentGroupAst"]

@@ -53,22 +53,23 @@ class LoopConditionIterableAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Check the iterable is a generator type.
         # Todo: Check the type superimposes a Gen type rather that is a Gen type.
         # Todo: Generator has to be owned? If so, change to InferredType checks.
-        allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics).map(InferredType.from_type)
         iterable_type = self.iterable.infer_type(scope_manager, **kwargs)
-        if not allowed_types.any(lambda t: t.symbolic_eq(iterable_type, scope_manager.current_scope)):
+        allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics).map(InferredType.from_type)
+        if not allowed_types.any(lambda t: t.symbolic_eq(iterable_type.without_generics(), scope_manager.current_scope)):
             raise AstErrors.INVALID_ITERABLE_TYPE(self.iterable, iterable_type)
 
         # Create a "let" statement to introduce the loop variable into the scope.
-        gen_type = iterable_type.types[-1].generic_argument_group["Gen"].value
+        gen_type = iterable_type.type.types[-1].generic_argument_group["Gen"].value
         let_ast = AstMutation.inject_code(f"let {self.variable}: {gen_type}", Parser.parse_let_statement_uninitialized)
         let_ast.analyse_semantics(scope_manager, **kwargs)
 
         # Set the memory information of the symbol based on the type of iteration.
+        # Todo: Use symbolic eq once the superimpose check is used rather than direct comparison.
         symbols = self.variable.extract_names.map(lambda n: scope_manager.current_scope.get_symbol(n))
         for symbol in symbols:
-            symbol.memory_info.ast_borrowed = self if iterable_type.types[-1].value in ["GenMut", "GenRef"] else None
-            symbol.memory_info.is_borrow_mut = iterable_type.types[-1].value == "GenMut"
-            symbol.memory_info.is_borrow_ref = iterable_type.types[-1].value == "GenRef"
+            symbol.memory_info.ast_borrowed = self if iterable_type.type.types[-1].value in ["GenMut", "GenRef"] else None
+            symbol.memory_info.is_borrow_mut = iterable_type.type.types[-1].value == "GenMut"
+            symbol.memory_info.is_borrow_ref = iterable_type.type.types[-1].value == "GenRef"
             symbol.memory_info.initialized_by(self)
 
 
