@@ -1,8 +1,6 @@
 from __future__ import annotations
-
-import copy
 from typing import TYPE_CHECKING
-import difflib
+import copy, difflib
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -72,6 +70,7 @@ class AstTypeManagement:
         new_scope._symbol_table = copy.deepcopy(base_symbol.scope._symbol_table)
         new_scope._direct_sup_scopes = AstTypeManagement.substitute_generic_sup_scopes(scope_manager, base_symbol.scope, type_part.generic_argument_group)
         new_scope._direct_sub_scopes = base_symbol.scope._direct_sub_scopes
+        new_scope._non_generic_scope = base_symbol.scope
 
         # No more checks for the tuple type (avoid recursion).
         if type and type.without_generics() == CommonTypes.Tup().without_generics():
@@ -118,6 +117,7 @@ class AstTypeManagement:
                 new_scope = Scope(scope.name, scope.parent, ast=scope._ast)
                 new_scope._children = scope._children
                 new_scope._symbol_table = copy.copy(scope._symbol_table)
+                new_scope._non_generic_scope = scope
 
                 for generic_argument in generic_arguments.arguments:
                     generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)

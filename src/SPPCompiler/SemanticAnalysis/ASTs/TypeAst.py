@@ -130,6 +130,13 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         self_symbol = self_scope.get_symbol(self)
         that_symbol = that_scope.get_symbol(that)
 
+        # Debug.
+        # import inspect
+        # print("-" * 100)
+        # print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
+        # print(f"{self}, {self_scope}, {self_symbol}")
+        # print(f"{that}, {that_scope}, {that_symbol}")
+
         # Special case for Variant types (can match any of the alternative types).
         # Todo: Tidy this up.
         if check_variant and self_symbol.fq_name.types[-1].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, check_variant=False):

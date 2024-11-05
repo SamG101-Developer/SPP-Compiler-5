@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any, Optional, Tuple, TYPE_CHECKING
-import copy
+import copy, warnings
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -40,6 +40,7 @@ class Scope:
     _direct_sup_scopes: Seq[Scope]
     _direct_sub_scopes: Seq[Scope]
     _type_symbol: Optional[TypeSymbol]
+    _non_generic_scope: Optional[Scope]
 
     def __init__(self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Ast] = None) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
@@ -55,6 +56,7 @@ class Scope:
         self._direct_sup_scopes = Seq()
         self._direct_sub_scopes = Seq()
         self._type_symbol = None
+        self._non_generic_scope = self
 
     def __json__(self) -> dict:
         return {
@@ -63,6 +65,26 @@ class Scope:
 
     def __str__(self) -> str:
         return str(self._name)
+
+    def _translate_symbol(self, symbol: Symbol) -> Symbol:
+        from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol, TypeSymbol
+
+        generic_argument_ctor = {VariableSymbol: GenericCompArgumentNamedAst, TypeSymbol: GenericTypeArgumentNamedAst}
+        generics = self.all_symbols(exclusive=True)
+        generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
+
+        if isinstance(symbol, VariableSymbol):
+            new_symbol = copy.deepcopy(symbol)
+            new_symbol.type = symbol.type.sub_generics(generics)
+            return new_symbol
+
+        elif isinstance(symbol, TypeSymbol):
+            new_fq_name = symbol.fq_name.sub_generics(generics)
+            new_symbol = self._non_generic_scope.get_symbol(new_fq_name)
+            return new_symbol
+
+        return symbol
 
     def add_symbol(self, symbol: Symbol) -> None:
         self._symbol_table.add(symbol)
@@ -78,11 +100,15 @@ class Scope:
         return self.get_symbol(name, exclusive) is not None
 
     def get_symbol(self, name: IdentifierAst | TypeAst | GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, SupPrototypeInheritanceAst
 
         # Ensure the name is a valid type.
         if not isinstance(name, (IdentifierAst, TypeAst, GenericIdentifierAst)):
             return None
+
+        # Handle generic translation.
+        if self != self._non_generic_scope:
+            return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias))
 
         # Get the symbol from the symbol table if it exists.
         scope = self
@@ -112,9 +138,9 @@ class Scope:
         from SPPCompiler.SemanticAnalysis import PostfixExpressionAst, PostfixExpressionOperatorMemberAccessAst
 
         # Define a helper lambda that validates a postfix expression.
-        is_valid_postfix = lambda p:\
-            isinstance(p, PostfixExpressionAst) and\
-            isinstance(p.op, PostfixExpressionOperatorMemberAccessAst) and\
+        is_valid_postfix = lambda p: \
+            isinstance(p, PostfixExpressionAst) and \
+            isinstance(p.op, PostfixExpressionOperatorMemberAccessAst) and \
             p.op.is_runtime_access()
 
         # Shift to the leftmost identifier and get the symbol from the symbol table.
@@ -224,8 +250,8 @@ def confirm_type_with_alias(scope: Scope, symbol: Symbol, ignore_alias: bool) ->
 
     # Get the alias symbol's old type if aliases are being ignored.
     match symbol:
-        case AliasSymbol() if symbol.old_type and not ignore_alias: return scope.get_symbol(symbol.old_type)
-        case _: return symbol
+        case AliasSymbol() if symbol.old_type and not ignore_alias: symbol = scope.get_symbol(symbol.old_type)
+    return symbol
 
 
 """

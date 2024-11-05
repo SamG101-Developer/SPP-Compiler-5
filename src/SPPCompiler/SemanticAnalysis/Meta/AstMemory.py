@@ -73,8 +73,9 @@ class MemoryInfo:
 
     def remove_partial_move(self, ast: Ast) -> None:
         # Remove the partial move from the list, and mark the symbol as initialized if there are no more partial moves.
-        self.ast_partially_moved.remove(ast)
-        self.ast_partially_moved.is_empty() and self.initialized_by(ast)
+        if ast in self.ast_partially_moved:
+            self.ast_partially_moved.remove(ast)
+            self.ast_partially_moved.is_empty() and self.initialized_by(ast)
 
     @property
     def convention(self) -> Type[ConventionAst]:
