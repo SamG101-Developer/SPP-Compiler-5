@@ -201,6 +201,7 @@ class AstFunctions:
             else:
                 parameter_name = parameter_names.pop(0)
                 named_argument = f"${parameter_name}={unnamed_argument}"
+                print(f"Named arg: {named_argument}")
                 named_argument = AstMutation.inject_code(named_argument, Parser.parse_function_call_argument_named)
                 named_argument.name = parameter_name
                 arguments.replace(unnamed_argument, named_argument, 1)

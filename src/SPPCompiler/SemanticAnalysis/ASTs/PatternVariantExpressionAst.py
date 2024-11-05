@@ -20,7 +20,7 @@ class PatternVariantExpressionAst(Ast, Stage4_SemanticAnalyser):
         # Print the AST with auto-formatting.
         return self.expression.print(printer)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler

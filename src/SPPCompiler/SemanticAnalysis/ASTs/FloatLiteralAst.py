@@ -32,7 +32,9 @@ SIZE_MAPPING = {
 @dataclass
 class FloatLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     tok_sign: Optional[TokenAst]
-    value: TokenAst
+    integer_value: TokenAst
+    tok_dot: TokenAst
+    decimal_value: TokenAst
     type: Optional[TypeAst]
 
     def __post_init__(self) -> None:
@@ -50,7 +52,8 @@ class FloatLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return all([
             isinstance(other, FloatLiteralAst),
             self.tok_sign == other.tok_sign,
-            self.value.token.token_metadata == other.value.token.token_metadata,
+            self.integer_value.token.token_metadata == other.integer_value.token.token_metadata,
+            self.decimal_value.token.token_metadata == other.decimal_value.token.token_metadata,
             self.type == other.type])
 
     @ast_printer_method
@@ -58,7 +61,9 @@ class FloatLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Print the AST with auto-formatting.
         string = [
             self.tok_sign.print(printer) if self.tok_sign else "",
-            self.value.print(printer),
+            self.integer_value.print(printer),
+            self.tok_dot.print(printer),
+            self.decimal_value.print(printer),
             self.type.print(printer) if self.type else ""]
         return "".join(string)
 
@@ -89,7 +94,7 @@ class FloatLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
         # Check if the value is within the bounds.
         lower, upper = SIZE_MAPPING[self.type.types[-1].value]
-        if not (lower <= float(self.value.token.token_metadata) <= upper):
+        if not (lower <= float(self.integer_value.token.token_metadata + "." + self.decimal_value.token.token_metadata) <= upper):
             raise AstErrors.NUMBER_OUT_OF_RANGE(self, lower, upper, "float")
 
 

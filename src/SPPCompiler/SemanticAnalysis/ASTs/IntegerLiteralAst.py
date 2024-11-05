@@ -72,7 +72,7 @@ class IntegerLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             self.tok_sign.print(printer) if self.tok_sign else "",
             self.value.print(printer),
             self.type.print(printer) if self.type else ""]
-        return " ".join(string)
+        return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Create an integer type based on the (optional) type postfix.

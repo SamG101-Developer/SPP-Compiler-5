@@ -50,7 +50,7 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, Stage4_Sema
 
     def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import LocalVariableSingleIdentifierAst, LocalVariableAttributeBindingAst
-        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst
+        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst, IdentifierAst
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -75,6 +75,9 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, Stage4_Sema
             elif isinstance(element, LocalVariableSingleIdentifierAst):
                 new_ast = AstMutation.inject_code(f"let {element} = {value}.{element.name}", Parser.parse_let_statement_initialized)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
+
+            elif isinstance(element, LocalVariableAttributeBindingAst) and isinstance(element.value, LocalVariableSingleIdentifierAst):
+                continue
 
             elif isinstance(element, LocalVariableAttributeBindingAst):
                 new_ast = AstMutation.inject_code(f"let {element.value} = {value}.{element.name}", Parser.parse_let_statement_initialized)

@@ -85,7 +85,7 @@ class CaseExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         for branch in self.branches:
 
             # Destructures can only use 1 pattern.
-            if branch.comp_operator.token.token_type == TokenType.KwIs and branch.patterns.length > 1:
+            if branch.comp_operator and branch.comp_operator.token.token_type == TokenType.KwIs and branch.patterns.length > 1:
                 raise AstErrors.MULTIPLE_PATTERNS_IN_DESTRUCTURE(branch.pos)
 
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
@@ -110,7 +110,7 @@ class CaseExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
                 raise AstErrors.ELSE_BRANCH_NOT_LAST(branch.pos)
 
             # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
-            if branch.comp_operator.token.token_type != TokenType.KwIs:
+            if branch.comp_operator and branch.comp_operator.token.token_type != TokenType.KwIs:
                 for pattern in branch.patterns:
 
                     # Check the function exists.

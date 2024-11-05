@@ -38,6 +38,7 @@ class TupleLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         inner_types = self.elements.map(lambda element: element.infer_type(scope_manager, **kwargs).type)
         tuple_type = CommonTypes.Tup(inner_types, self.pos)
+        tuple_type.analyse_semantics(scope_manager, **kwargs)
         return InferredType.from_type(tuple_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

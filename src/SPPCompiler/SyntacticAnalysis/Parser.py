@@ -935,7 +935,8 @@ class Parser:
     def parse_local_variable_nested_for_attribute_binding(self) -> LocalVariableNestedForAttributeBindingAst:
         p1 = self.parse_local_variable_object_destructure()
         p2 = self.parse_local_variable_tuple_destructure()
-        p4 = (p1 | p2).parse_once()
+        p3 = self.parse_local_variable_single_identifier()
+        p4 = (p1 | p2 | p3).parse_once()
         return p4
 
     # ===== ASSIGNMENT =====
@@ -1528,9 +1529,11 @@ class Parser:
     def parse_literal_float_b10(self) -> FloatLiteralAst:
         c1 = self.current_pos()
         p1 = self.parse_numeric_prefix_op().parse_optional()
-        p2 = self.parse_lexeme(TokenType.LxDecDecimal).parse_once()
-        p3 = self.parse_float_postfix_type().parse_optional()
-        return FloatLiteralAst(c1, p1, p2, p3)
+        p2 = self.parse_lexeme(TokenType.LxDecInteger).parse_once()
+        p3 = self.parse_token(TokenType.TkDot).parse_once()
+        p4 = self.parse_lexeme(TokenType.LxDecInteger).parse_once()
+        p5 = self.parse_float_postfix_type().parse_optional()
+        return FloatLiteralAst(c1, p1, p2, p3, p4, p5)
 
     @parser_rule
     def parse_literal_integer_b10(self) -> IntegerLiteralAst:

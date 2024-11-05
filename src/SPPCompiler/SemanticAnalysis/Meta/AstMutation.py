@@ -10,4 +10,4 @@ class AstMutation:
     def inject_code[T](code: str, parsing_function: Callable[..., ParserRuleHandler[T]]) -> T:
         from SPPCompiler.LexicalAnalysis.Lexer import Lexer
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
-        return parsing_function(Parser(Lexer(code).lex(code_injection=True))).parse_once()  # Todo: parse an <EOF> after
+        return parsing_function(Parser(Lexer(code + "\n").lex(code_injection=True))).parse_once()  # Todo: parse an <EOF> after

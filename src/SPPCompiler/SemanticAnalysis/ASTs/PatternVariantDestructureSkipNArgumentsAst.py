@@ -26,6 +26,8 @@ class PatternVariantDestructureSkipNArgumentsAst(Ast, PatternMapping):
         return "".join(string)
 
     def convert_to_variable(self, **kwargs) -> LocalVariableDestructureSkipNArgumentsAst:
+        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst
+
         # Convert the skip n arguments destructuring into a local variable skip n arguments destructuring.
         converted_binding = self.binding.convert_to_variable(**kwargs) if self.binding else None
         return LocalVariableDestructureSkipNArgumentsAst(self.pos, self.tok_variadic, converted_binding)

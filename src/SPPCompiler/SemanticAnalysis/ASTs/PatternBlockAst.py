@@ -4,6 +4,7 @@ from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PatternBlockAst(Ast, Stage4_SemanticAnalyser):
+class PatternBlockAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     comp_operator: Optional[TokenAst]
     patterns: Seq[PatternVariantAst]
     guard: Optional[PatternGuardAst]
@@ -37,6 +38,10 @@ class PatternBlockAst(Ast, Stage4_SemanticAnalyser):
             self.guard.print(printer) if self.guard else "",
             self.body.print(printer) if self.body else ""]
         return "".join(string)
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+        # Infer the type of the body.
+        return self.body.infer_type(scope_manager, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
         # Create a new scope for the pattern block.

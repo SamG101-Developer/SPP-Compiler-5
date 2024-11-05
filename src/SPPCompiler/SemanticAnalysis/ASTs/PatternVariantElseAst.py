@@ -7,6 +7,7 @@ from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, Ast
 from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
 
 if TYPE_CHECKING:
+    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
@@ -20,7 +21,7 @@ class PatternVariantElseAst(Ast, Stage4_SemanticAnalyser):
         # Print the AST with auto-formatting.
         return self.tok_else.print(printer)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
         # Nothing to do here.
         ...
 

@@ -37,7 +37,7 @@ class PatternVariantDestructureTupleAst(Ast, PatternMapping, Stage4_SemanticAnal
 
     def convert_to_variable(self, **kwargs) -> LocalVariableDestructureTupleAst:
         # Convert the tuple destructuring into a local variable tuple destructuring.
-        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureTupleAst
+        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureTupleAst, PatternVariantNestedForDestructureTupleAst
         elements = self.elements.filter_to_type(*PatternVariantNestedForDestructureTupleAst.__value__.__args__)
         converted_elements = elements.map(lambda e: e.convert_to_variable(**kwargs))
         return LocalVariableDestructureTupleAst(self.pos, self.tok_left_paren, converted_elements, self.tok_right_paren)

@@ -8,6 +8,7 @@ from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stag
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.CaseExpressionAst import CaseExpressionAst
+    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
@@ -25,7 +26,7 @@ class PatternVariantElseCaseAst(Ast, Stage4_SemanticAnalyser):
             self.case_expression.print(printer)]
         return "".join(string)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
         # Analyse the case expression.
         self.case_expression.analyse_semantics(scope_manager, **kwargs)
 

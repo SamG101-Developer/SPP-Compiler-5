@@ -48,6 +48,7 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, Stage4_Seman
     def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkip1ArgumentAst
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -71,17 +72,17 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, Stage4_Seman
             bound_multi_skip = new_ast
 
         # Create new indexes like [0, 1, 2, 6, 7] if elements 3->5 are skipped (and possibly bound).
-        indexes  = Seq([*range(0, self.elements.index(multi_arg_skips[0]) + 1)])
+        indexes  = Seq([*range(0, (self.elements.index(multi_arg_skips[0]) if multi_arg_skips else self.elements.length - 1) + 1)])
         indexes += Seq([*range(num_lhs_tuple_elements, num_rhs_tuple_elements)])
 
         # Create expanded "let" statements for each part of the destructure.
         for i, element in indexes.zip(self.elements):
-            if isinstance(element, (LocalVariableDestructureSkip1ArgumentAst, LocalVariableDestructureSkipNArgumentsAst)):
-                continue
-
-            elif isinstance(element, LocalVariableDestructureSkipNArgumentsAst) and multi_arg_skips[0].binding:
+            if isinstance(element, LocalVariableDestructureSkipNArgumentsAst) and multi_arg_skips[0].binding:
                 new_ast = AstMutation.inject_code(f"let {element.binding} = {bound_multi_skip}", Parser.parse_let_statement_initialized)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
+
+            elif isinstance(element, (LocalVariableDestructureSkip1ArgumentAst, LocalVariableDestructureSkipNArgumentsAst)):
+                continue
 
             else:
                 new_ast = AstMutation.inject_code(f"let {element} = {value}.{i}", Parser.parse_let_statement_initialized)

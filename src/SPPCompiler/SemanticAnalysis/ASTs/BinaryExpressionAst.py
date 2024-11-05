@@ -50,7 +50,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        from SPPCompiler.SemanticAnalysis import TypeAst
+        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
