@@ -71,13 +71,19 @@ class Scope:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol, TypeSymbol
 
         generic_argument_ctor = {VariableSymbol: GenericCompArgumentNamedAst, TypeSymbol: GenericTypeArgumentNamedAst}
-        generics = self.all_symbols(exclusive=True)
+        generics = self._symbol_table.all()
         generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
 
         if isinstance(symbol, VariableSymbol):
             new_symbol = copy.deepcopy(symbol)
             new_symbol.type = symbol.type.sub_generics(generics)
             return new_symbol
+
+        # elif isinstance(symbol, TypeSymbol) and symbol.name in generics.map(lambda g: g.name.types[-1]):
+        #     new_fq_name = symbol.fq_name.sub_generics(generics)
+        #     new_symbol = copy.deepcopy(self._non_generic_scope.get_symbol(new_fq_name))
+        #     new_symbol.name = symbol.name
+        #     return new_symbol
 
         elif isinstance(symbol, TypeSymbol):
             new_fq_name = symbol.fq_name.sub_generics(generics)
@@ -94,6 +100,11 @@ class Scope:
         symbols = self._symbol_table.all()
         if not exclusive and self._parent:
             symbols.extend(self._parent.all_symbols())
+
+        # Translate the symbols if this is a generic scope.
+        if self != self._non_generic_scope:
+            symbols = symbols.map(self._translate_symbol)
+
         return symbols
 
     def has_symbol(self, name: IdentifierAst | TypeAst | GenericIdentifierAst, exclusive: bool = False) -> bool:

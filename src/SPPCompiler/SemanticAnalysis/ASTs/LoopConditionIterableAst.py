@@ -53,8 +53,8 @@ class LoopConditionIterableAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Check the iterable is a generator type.
         # Todo: Check the type superimposes a Gen type rather that is a Gen type.
         # Todo: Generator has to be owned? If so, change to InferredType checks.
-        allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics)
-        iterable_type = self.iterable.infer_type(scope_manager, **kwargs).type
+        allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics).map(InferredType.from_type)
+        iterable_type = self.iterable.infer_type(scope_manager, **kwargs)
         if not allowed_types.any(lambda t: t.symbolic_eq(iterable_type, scope_manager.current_scope)):
             raise AstErrors.INVALID_ITERABLE_TYPE(self.iterable, iterable_type)
 

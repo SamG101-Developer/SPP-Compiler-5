@@ -569,3 +569,13 @@ class AstErrors:
             msg=f"The loop has {number_of_controls} control flow statements, but the loop depth is only {depth_of_loop}.",
             tip="Remove some control flow statements from the loop.")
         return e
+
+    @staticmethod
+    def INVALID_ITERABLE_TYPE(iterable: ExpressionAst, type: InferredType) -> SemanticError:
+        e = SemanticError()
+        e.add_error(
+            pos=iterable.pos,
+            tag=f"Iterable inferred as '{type}'",
+            msg="The iterable type is not valid.",
+            tip="Use a generator type.")
+        return e

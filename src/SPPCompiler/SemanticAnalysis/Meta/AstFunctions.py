@@ -120,8 +120,7 @@ class AstFunctions:
 
             for sup_scope in sup_scopes.unique():
                 if sup_ast := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst).find(lambda m: m.name == function_name):
-                    generics = sup_scope.all_symbols().filter(lambda s: isinstance(s, (TypeSymbol, VariableSymbol)) and s.is_generic)
-                    print("GENERICS", sup_scope, generics)
+                    generics = sup_scope.all_symbols(exclusive=True).filter(lambda s: s.is_generic)
                     generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
                     generics = GenericArgumentGroupAst.default(generics)
                     overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))

@@ -91,7 +91,7 @@ class AstTypeManagement:
 
     @staticmethod
     def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: GenericArgumentGroupAst) -> Seq[Scope]:
-        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst, TypeAst, IdentifierAst
+        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         old_scopes = base_scope._direct_sup_scopes
@@ -102,20 +102,16 @@ class AstTypeManagement:
             # Create the scope with the generic arguments injected. This will handle recursive scope creation.
             if isinstance(scope._ast, ClassPrototypeAst):
                 new_fq_type = copy.deepcopy(scope.type_symbol.fq_name)
-                for a in new_fq_type.types[-1].generic_argument_group.arguments:
-                    a.value = a.value.sub_generics(generic_arguments.arguments)
+                new_fq_type.sub_generics(generic_arguments.arguments)
+                new_fq_type.types[-1].generic_argument_group = generic_arguments
                 new_scope = AstTypeManagement.create_generic_scope(scope_manager, new_fq_type, new_fq_type.types[-1], scope.type_symbol)
-                # new_scope = new_fq_type.without_namespace().analyse_semantics(scope_manager)
 
             # Create the scope for the new super class type. This will handle recursive sup-scope creation.
             elif isinstance(scope._ast, SupPrototypeInheritanceAst):
                 new_fq_super_type = copy.deepcopy(scope._ast.super_class)
                 super_type_symbol = base_scope.get_symbol(new_fq_super_type)
-                for a in new_fq_super_type.types[-1].generic_argument_group.arguments:
-                    a.value = a.value.sub_generics(generic_arguments.arguments)
+                new_fq_super_type.sub_generics(generic_arguments.arguments)
                 AstTypeManagement.create_generic_scope(scope_manager, new_fq_super_type, new_fq_super_type.types[-1], super_type_symbol)
-                # temp_manager = ScopeManager(scope_manager.global_scope, super_type_symbol.scope)
-                # new_scope = new_fq_super_type.without_namespace().analyse_semantics(temp_manager)
 
             # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
             if isinstance(scope._ast, SupPrototypeFunctionsAst):
