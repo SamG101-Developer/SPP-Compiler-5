@@ -61,8 +61,10 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, PostfixExpressionAst) and lhs.op.is_runtime_access():
-            self._overload = AstFunctions.convert_function_to_type_access(scope_manager, function_owner_type, function_name, lhs, self, **kwargs)
-            return self._overload
+            transformed_lhs, transformed_function_call = AstFunctions.convert_function_to_type_access(scope_manager, function_owner_type, function_name, lhs, self, **kwargs)
+            transformed_function_call.determine_overload(scope_manager, transformed_lhs, **kwargs)
+            self._overload = transformed_function_call._overload
+            return
 
         # Record the "pass" and "fail" overloads
         all_overloads = AstFunctions.get_all_function_scopes(function_name, function_owner_scope)
@@ -77,7 +79,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
             parameters = function_overload.function_parameter_group.parameters.copy()
             parameter_names = parameters.map_attr("extract_name")
             parameter_names_req = function_overload.function_parameter_group.get_req().map_attr("extract_name")
-            generic_parameters = function_overload.generic_parameter_group.parameters.map_attr("name")
+            generic_parameters = function_overload.generic_parameter_group.parameters
             is_variadic = function_overload.function_parameter_group.get_var() is not None
 
             # Extract generic/function argument information from this AST.
@@ -161,9 +163,15 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
         # Set the overload to the only pass overload.
         self._overload = pass_overloads[0]
-        return self._overload
+        return
 
     def infer_type(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> InferredType:
+        # Todo: Hacky workaround - see why having a function call as a "self" argument doesn't use its "analyse
+        #  semantics" as the same object. it calls the analyse_semantics method, but on another instance of the AST -
+        #  being copied somewhere, maybe in a code injection.
+        if not self._overload:
+            self.analyse_semantics(scope_manager, lhs, **kwargs)
+
         # Expand the return type from the scope it was defined in => comparisons won't require function scope knowledge.
         _, function_owner_scope, _ = AstFunctions.get_function_owner_type_and_function_name(scope_manager, lhs)
         return_type = self._overload[1].return_type
@@ -171,6 +179,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
         return InferredType.from_type(return_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
+        # Analyse the function and generic arguments, and determine the overload.
         self.function_argument_group.analyse_pre_semantics(scope_manager, **kwargs)
         self.determine_overload(scope_manager, lhs, **kwargs)  # Also adds the "self" argument if needed.
         self.generic_argument_group.analyse_semantics(scope_manager, **kwargs)

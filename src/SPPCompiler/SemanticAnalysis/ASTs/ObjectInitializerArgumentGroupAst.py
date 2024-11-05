@@ -81,7 +81,7 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
 
         # Get symbol and attribute information from the class type.
         class_symbol = scope_manager.current_scope.get_symbol(class_type)
-        attributes = class_symbol.scope._ast.body.members
+        attributes = class_symbol.type.body.members
         attribute_names = attributes.map_attr("name")
         super_classes = class_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s.name, TypeAst))
 

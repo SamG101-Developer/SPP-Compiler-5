@@ -70,13 +70,14 @@ class AstFunctions:
             scope_manager: ScopeManager,
             function_owner_type: Ast, function_name: IdentifierAst, lhs: ExpressionAst,
             fn: PostfixExpressionOperatorFunctionCallAst, **kwargs)\
-            -> Tuple[FunctionPrototypeAst, Scope]:
+            -> Tuple[PostfixExpressionAst, PostfixExpressionOperatorFunctionCallAst]:
 
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # Create an argument for self, which is the object being called (convention tested later).
         self_argument = AstMutation.inject_code(f"{lhs.lhs}", Parser.parse_function_call_argument_unnamed)
+        self_argument.analyse_semantics(scope_manager, **kwargs)
         function_arguments = fn.function_argument_group.arguments.copy()
         function_arguments.insert(0, self_argument)
 
@@ -90,9 +91,7 @@ class AstFunctions:
             Parser.parse_postfix_op_function_call)
 
         # Get the overload from the uniform function call.
-        overload = new_function_call.determine_overload(scope_manager, new_function_access, **kwargs)
-        fn._overload = overload
-        return overload
+        return new_function_access, new_function_call
 
     @staticmethod
     def get_all_function_scopes(function_name: IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, FunctionPrototypeAst, GenericArgumentGroupAst]]:
@@ -201,7 +200,6 @@ class AstFunctions:
             else:
                 parameter_name = parameter_names.pop(0)
                 named_argument = f"${parameter_name}={unnamed_argument}"
-                print(f"Named arg: {named_argument}")
                 named_argument = AstMutation.inject_code(named_argument, Parser.parse_function_call_argument_named)
                 named_argument.name = parameter_name
                 arguments.replace(unnamed_argument, named_argument, 1)

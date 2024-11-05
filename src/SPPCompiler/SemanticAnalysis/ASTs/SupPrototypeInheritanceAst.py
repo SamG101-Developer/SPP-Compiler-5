@@ -86,6 +86,9 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
 
+        # Todo: Check the same superclass isn't extended twice.
+        # Todo: Add support for type aliasing in the superimposition.
+
         # Move to the next scope.
         scope_manager.move_to_next_scope()
 
@@ -98,7 +101,8 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
-            raise AstErrors.SUP_UNCONSTRAINED_GENERIC_PARAMETER(unconstrained[0], self.name)
+            if not self.name.types[-1].value.startswith("$"):
+                raise AstErrors.SUP_UNCONSTRAINED_GENERIC_PARAMETER(unconstrained[0], self.name)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_opt():
@@ -110,10 +114,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         self.where_block.analyse_semantics(scope_manager, **kwargs)
         self.body.analyse_semantics(scope_manager, **kwargs)
 
-        # Todo: Check the same superclass isn't extended twice.
-
         # Check every member on the superimposition exists on the super class.
-        # Todo: Add support for type aliasing in the superimposition.
         for member in self.body.members.filter_to_type(SupPrototypeInheritanceAst):
             this_method = member.body.members[-1]
             base_method = AstFunctions.check_for_conflicting_method(scope_manager.current_scope, sup_symbol.scope, this_method, FunctionConflictCheckType.InvalidOverride)

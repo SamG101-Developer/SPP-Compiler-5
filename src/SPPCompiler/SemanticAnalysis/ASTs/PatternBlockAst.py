@@ -26,8 +26,11 @@ class PatternBlockAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     body: Optional[InnerScopeAst[StatementAst]]
 
     def __post_init__(self) -> None:
+        from SPPCompiler.SemanticAnalysis import InnerScopeAst
+
         # Convert the patterns into a sequence.
         self.patterns = Seq(self.patterns)
+        self.body = self.body or InnerScopeAst.default()
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

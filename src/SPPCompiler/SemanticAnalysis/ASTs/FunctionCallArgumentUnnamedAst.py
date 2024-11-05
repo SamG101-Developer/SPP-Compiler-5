@@ -37,6 +37,11 @@ class FunctionCallArgumentUnnamedAst(Ast, Ordered, TypeInferrable, Stage4_Semant
             self.value.print(printer)]
         return "".join(string)
 
+    @staticmethod
+    def from_value(value: ExpressionAst) -> FunctionCallArgumentUnnamedAst:
+        from SPPCompiler.SemanticAnalysis import ConventionMovAst
+        return FunctionCallArgumentUnnamedAst(-1, ConventionMovAst.default(), None, value)
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst
         inferred_type = self.value.infer_type(scope_manager, **kwargs)

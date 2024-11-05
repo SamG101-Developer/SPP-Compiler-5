@@ -178,7 +178,7 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
                     self)
 
                 # Infer generic arguments from information given from object initialization.
-                type_part.generic_argument_group.generic_arguments = AstFunctions.inherit_generic_arguments(
+                type_part.generic_argument_group.arguments = AstFunctions.inherit_generic_arguments(
                     generic_parameters=type_symbol.type.generic_parameter_group.get_req(),
                     explicit_generic_arguments=type_part.generic_argument_group.arguments,
                     infer_source=generic_infer_source or {},
