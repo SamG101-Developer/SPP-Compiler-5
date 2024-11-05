@@ -22,6 +22,10 @@ class InferredType:
     def symbolic_eq(self, that: InferredType, self_scope: Scope, that_scope: Scope = None) -> bool:
         return self.convention is that.convention and self.type.symbolic_eq(that.type, self_scope, that_scope)
 
+    def without_generics(self) -> InferredType:
+        self.type = self.type.without_generics()
+        return self
+
     @staticmethod
     def from_type(type: TypeAst) -> InferredType:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst

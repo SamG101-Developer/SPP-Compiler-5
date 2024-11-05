@@ -76,6 +76,11 @@ class AstTypeManagement:
         if type and type.without_generics() == CommonTypes.Tup().without_generics():
             return new_scope
 
+        # Substitute the generics of the attribute types in teh new class prototype.
+        for attribute in new_scope._ast.body.members:
+            attribute.type = attribute.type.sub_generics(type_part.generic_argument_group.arguments)
+            attribute.type.analyse_semantics(scope_manager)
+
         # Register the generic arguments as type symbols in the new scope.
         for generic_argument in type_part.generic_argument_group.arguments:
             generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
@@ -86,7 +91,7 @@ class AstTypeManagement:
 
     @staticmethod
     def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: GenericArgumentGroupAst) -> Seq[Scope]:
-        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst
+        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst, TypeAst, IdentifierAst
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         old_scopes = base_scope._direct_sup_scopes

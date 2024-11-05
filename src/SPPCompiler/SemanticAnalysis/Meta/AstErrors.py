@@ -402,7 +402,7 @@ class AstErrors:
     @staticmethod
     def CANNOT_MUTATE_IMMUTABLE_SYMBOL(ast: ExpressionAst, move_location: Ast, immutable_definition: Ast) -> SemanticError:
         e = SemanticError()
-        e.add_info(immutable_definition.pos, f"Symbol {ast} defined as immutable here")
+        e.add_info(immutable_definition.pos, f"Symbol '{ast}' defined as immutable here")
         e.add_error(
             pos=move_location.pos,
             tag="Attempting to mutate immutable symbol.",

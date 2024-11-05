@@ -63,15 +63,15 @@ class AssignmentStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
             # Full assignment (ie "x = y") requires the "x" symbol to be marked as "mut".
             if isinstance(lhs_expr, IdentifierAst) and not (lhs_sym.is_mutable or lhs_sym.memory_info.initialization_counter == 0):
-                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_expr, self.op, lhs_sym.memory_info.ast_initialization)
+                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
 
             # Attribute assignment (ie "x.y = z"), for a non-borrowed symbol, requires an outermost "mut" symbol.
             elif isinstance(lhs_expr, PostfixExpressionAst) and (not lhs_sym.memory_info.ast_borrowed and not lhs_sym.is_mutable):
-                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_expr, self.op, lhs_sym.memory_info.ast_initialization)
+                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
 
             # Attribute assignment (ie "x.y = z"), for a borrowed symbol, requires an outermost mutable borrow.
-            elif isinstance(lhs_expr, PostfixExpressionAst) and (lhs_sym.memory_info.ast_borrowed and not lhs_sym.memory_info.is_borrow_mut):
-                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_expr, self.op, lhs_sym.memory_info.ast_initialization)
+            elif isinstance(lhs_expr, PostfixExpressionAst) and (lhs_sym.memory_info.ast_borrowed and lhs_sym.memory_info.is_borrow_ref):
+                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
 
             # Ensure the lhs and rhs have the same type and convention (cannot do "Str = &Str" for example).
             lhs_type = lhs_expr.infer_type(scope_manager, **kwargs)

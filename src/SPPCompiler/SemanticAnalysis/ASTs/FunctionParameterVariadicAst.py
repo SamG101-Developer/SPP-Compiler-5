@@ -68,7 +68,7 @@ class FunctionParameterVariadicAst(Ast, Ordered, VariableNameExtraction, Stage4_
         # Mark the symbol as initialized.
         for name in self.variable.extract_names:
             symbol = scope_manager.current_scope.get_symbol(name)
-            symbol.memory_info.borrow_ast = self.convention
+            symbol.memory_info.ast_borrowed = self.convention
             symbol.memory_info.is_borrow_mut = isinstance(self.convention, ConventionMutAst)
             symbol.memory_info.is_borrow_ref = isinstance(self.convention, ConventionRefAst)
             symbol.memory_info.initialized_by(self)

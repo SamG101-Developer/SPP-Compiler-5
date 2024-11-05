@@ -70,7 +70,7 @@ class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction, Stage4_Sema
         # Mark the symbol as initialized.
         symbol = scope_manager.current_scope.get_symbol(self.name)
         symbol.is_mutable = self.tok_mut is not None
-        symbol.memory_info.borrow_ast = self.convention
+        symbol.memory_info.ast_borrowed = self.convention
         symbol.memory_info.is_borrow_mut = isinstance(self.convention, ConventionMutAst)
         symbol.memory_info.is_borrow_ref = isinstance(self.convention, ConventionRefAst)
         symbol.memory_info.initialized_by(self)

@@ -77,9 +77,13 @@ class GenExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             convention=CommonTypes.type_variant_to_convention(kwargs["function_ret_type"]),
             type=kwargs["function_ret_type"].types[-1].generic_argument_group["Gen"].value)
 
+        # If the "with" keyword is being used, the expression type is the Gen generic type parameter.
+        if self.tok_with:
+            expression_type.type = expression_type.type.types[-1].generic_argument_group["Gen"].value
+
         # Check the expression type matches the expected type.
         if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
-            raise AstErrors.TYPE_MISMATCH(expression_type.type, expected_type, self.expression, expected_type)
+            raise AstErrors.TYPE_MISMATCH(expression_type.type, expected_type, self.expression, expression_type)
 
         # Apply the function argument law of exclusivity checks to the expression.
         ast = AstMutation.inject_code(f"({self.expression})", Parser.parse_function_call_arguments)

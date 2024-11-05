@@ -66,6 +66,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
             self._overload = transformed_function_call._overload
             return
 
+        print(f"FUNC CALL {lhs}{self}")
+
         # Record the "pass" and "fail" overloads
         all_overloads = AstFunctions.get_all_function_scopes(function_name, function_owner_scope)
         pass_overloads = Seq()

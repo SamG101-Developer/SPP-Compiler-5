@@ -72,6 +72,12 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
         token_args = named_args.filter(lambda arg: isinstance(arg.name, TokenAst))
         return token_args.filter(lambda arg: arg.name.token.token_type == TokenType.KwSup)
 
+    def get_val_args(self) -> Seq[ObjectInitializerArgumentAst]:
+        from SPPCompiler.SemanticAnalysis import TokenAst
+
+        # Filter the arguments to non-token arguments.
+        return self.arguments.filter(lambda arg: not isinstance(arg.name, TokenAst))
+
     def analyse_semantics(self, scope_manager: ScopeManager, class_type: TypeAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, ObjectInitializerArgumentNamedAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
@@ -91,7 +97,7 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
             AstMemoryHandler.enforce_memory_integrity(self.get_arg_val(argument), argument, scope_manager)
 
         # Check there are no duplicate argument names.
-        argument_names = self.arguments.filter_to_type(ObjectInitializerArgumentNamedAst).map(lambda a: a.name)
+        argument_names = self.get_val_args().map(lambda a: a.name)
         if duplicate_arguments := argument_names.non_unique():
             raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_arguments[0][0], duplicate_arguments[0][1], "named object arguments")
 
@@ -131,7 +137,7 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
         # Check the "sup=" argument provides a tuple.
         sup_argument_type = sup_argument.value.infer_type(scope_manager, **kwargs) if sup_argument else None
         target_sup_type = InferredType.from_type(CommonTypes.Tup().without_generics())
-        if sup_argument and not sup_argument_type.symbolic_eq(target_sup_type, class_symbol.scope, scope_manager.current_scope):
+        if sup_argument and not sup_argument_type.without_generics().symbolic_eq(target_sup_type, class_symbol.scope, scope_manager.current_scope):
             raise AstErrors.TYPE_MISMATCH(class_type, target_sup_type, sup_argument, sup_argument_type)
 
         if sup_argument:
