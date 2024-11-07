@@ -92,7 +92,7 @@ class TypeSymbol:
 
     def __json__(self) -> Dict:
         # Dump the TypeSymbol as a JSON object.
-        return {"what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if not self.is_generic else ""}
+        return {"what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else ""}
 
     def __str__(self) -> str:
         # Dump the TypeSymbol as a JSON string.

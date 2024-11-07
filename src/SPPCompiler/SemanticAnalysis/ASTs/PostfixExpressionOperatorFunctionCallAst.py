@@ -135,7 +135,6 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
                     # for generic_argument in generic_arguments:
                     #     generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
-                    #     print("GGG", generic_symbol)
                     #     new_scope.add_symbol(generic_symbol)
 
                     # print("NNN", new_scope, new_scope.all_symbols(True))
