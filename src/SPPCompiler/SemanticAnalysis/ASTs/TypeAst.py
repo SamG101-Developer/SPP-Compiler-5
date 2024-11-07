@@ -158,14 +158,14 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         that_symbol = that_scope.get_symbol(that)
 
         # Debug.
-        import inspect
-        print("-" * 100)
-        print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
-        print(f"{self}, {self_scope}, {self_symbol}")
-        print(f"{that}, {that_scope}, {that_symbol}")
+        # import inspect
+        # print("-" * 100)
+        # print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
+        # print(f"{self}, {self_scope}, {self_symbol}")
+        # print(f"{that}, {that_scope}, {that_symbol}")
 
         # Special case for Variant types (can match any of the alternative types).
-        # Todo: Tidy this up.
+        # Todo: Tidy this up?
         if check_variant and self_symbol.fq_name.types[-1].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, check_variant=False):
             if Seq(self_symbol.name.generic_argument_group.arguments[0].value.types[-1].generic_argument_group.arguments).any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope)):
                 return True
@@ -177,7 +177,7 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return InferredType.from_type(self)
 
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source=None, generic_infer_target=None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, TokenAst
+        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, TokenAst, IdentifierAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
@@ -195,6 +195,7 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
                 # Determine the type scope and type symbol.
                 type_symbol = AstTypeManagement.get_type_part_symbol_with_error(type_scope, type_part.without_generics(), ignore_alias=True)
+                type_scope_alias_bypass = AstTypeManagement.get_type_part_symbol_with_error(type_scope, type_part.without_generics(), ignore_alias=False).scope
                 type_scope = type_symbol.scope
                 if type_symbol.is_generic: continue
 
@@ -247,6 +248,14 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
             else:
                 raise Exception(f"Invalid type part: {type_part} ({type(type_part)})")
+
+        # Unfortuntately this code is required to extend namespaces of generic arguments (for variants especially)
+        if not any([
+                type_symbol.is_generic,
+                isinstance(type_symbol, AliasSymbol),
+                self.types[-1].value.startswith("$"),
+                self.types[-1].value == "Self"]):
+            self.namespace = type_scope_alias_bypass.to_namespace()
 
         return type_scope
 

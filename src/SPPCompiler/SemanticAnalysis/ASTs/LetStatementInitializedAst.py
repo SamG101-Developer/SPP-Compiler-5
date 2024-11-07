@@ -52,7 +52,7 @@ class LetStatementInitializedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             raise AstErrors.INVALID_EXPRESSION(self.value)
 
         # Analyse the assign_to and value of the let statement.
-        self.value.analyse_semantics(scope_manager, **kwargs)
+        self.value.analyse_semantics(scope_manager, **(kwargs | {"assignment": self.assign_to.extract_names}))
         self.assign_to.analyse_semantics(scope_manager, value=self.value, **kwargs)
 
 

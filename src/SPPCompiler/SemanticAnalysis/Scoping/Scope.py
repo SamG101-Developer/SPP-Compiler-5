@@ -176,6 +176,11 @@ class Scope:
 
         return _depth_difference(self, scope, 0)
 
+    def to_namespace(self) -> Seq[IdentifierAst]:
+        # Convert the scope to a namespace.
+        from SPPCompiler.SemanticAnalysis import IdentifierAst
+        return Seq([node.name for node in self.ancestors.reverse()[1:] if isinstance(node.name, IdentifierAst)])
+
     @property
     def name(self) -> Any:
         # Get the name of the scope.

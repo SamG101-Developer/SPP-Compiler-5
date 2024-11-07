@@ -39,7 +39,7 @@ class MemoryInfo:
         is_inconsistently_partially_moved: If the memory is inconsistently partially moved from branches => (branch, is_partially_moved).
         is_inconsistently_pinned: If the memory is inconsistently pinned from branches => (branch, is_pinned).
 
-        sym_pin_target: The symbol that this memory is pinned for (async/coroutine call etc)
+        pin_target: The symbol that this memory is pinned for (async/coroutine call etc)
     """
 
     ast_initialization: Optional[Ast] = field(default=None)
@@ -58,7 +58,7 @@ class MemoryInfo:
     is_inconsistently_partially_moved: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)
     is_inconsistently_pinned: Tuple[Tuple[PatternBlockAst, bool], Tuple[PatternBlockAst, bool]] = field(default=False)
 
-    sym_pin_target: Optional[VariableSymbol] = field(default=None)
+    pin_target: Optional[Seq[Ast]] = field(default_factory=Seq)
 
     def moved_by(self, ast: Ast) -> None:
         # If a symbol's contents is moved, mark the symbol as moved and non-initialized.

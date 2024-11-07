@@ -63,8 +63,9 @@ class RelStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
                 raise AstErrors.UNPINNING_CONSTANT(rel_target, symbol.memory_info.ast_initialization)
 
             # Cause a pinned generator/future to be invalidated.
-            if symbol.memory_info.sym_pin_target:
-                symbol.memory_info.sym_pin_target.memory_info.moved_by(self)
+            for pin_target in symbol.memory_info.pin_target:
+                pin_ast = scope_manager.current_scope.get_symbol(pin_target)
+                pin_ast.memory_info.moved_by(self)
 
             # Remove the pin.
             symbol.memory_info.ast_pinned.remove(rel_target)

@@ -149,7 +149,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
 
                 # No error with pinning -> mark the pin target.
                 elif pins_required and (target := kwargs["assignment"]):
-                    symbol.memory_info.sym_pin_target = target
+                    symbol.memory_info.pin_target = target
 
                 # Add the mutable borrow to the mutable borrow set.
                 borrows_mut.append(argument.value)
@@ -165,7 +165,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
 
                 # No error with pinning -> mark the pin target.
                 elif pins_required and (target := kwargs["assignment"]):
-                    symbol.memory_info.sym_pin_target = target
+                    symbol.memory_info.pin_target = target
 
                 # Add the immutable borrow to the immutable borrow set.
                 borrows_ref.append(argument.value)

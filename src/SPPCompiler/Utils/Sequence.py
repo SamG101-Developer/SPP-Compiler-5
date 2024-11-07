@@ -95,7 +95,7 @@ class Seq[T]:
         return Seq(sorted(self._value, key=key, reverse=reverse))
 
     def reverse(self) -> Seq[T]:
-        return Seq(reversed(self._value))
+        return Seq([*reversed(self._value)])
 
     def is_sorted(self, key: Callable[[T], any] = None, reverse: bool = False) -> bool:
         return self.sort(key=key, reverse=reverse) == self

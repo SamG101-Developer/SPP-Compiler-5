@@ -52,6 +52,8 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping, Stage4_SemanticAna
         from SPPCompiler.SemanticAnalysis import LetStatementInitializedAst
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
+        self.type.analyse_semantics(scope_manager, **kwargs)
+
         # Flow type the condition symbol if necessary.
         condition_symbol = scope_manager.current_scope.get_symbol(condition)
         is_condition_symbol_variant = condition_symbol and condition_symbol.type.without_generics().symbolic_eq(CommonTypes.Var().without_generics(), scope_manager.current_scope)
