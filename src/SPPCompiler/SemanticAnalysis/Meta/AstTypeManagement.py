@@ -104,7 +104,7 @@ class AstTypeManagement:
             # Create the scope with the generic arguments injected. This will handle recursive scope creation.
             if isinstance(scope._ast, ClassPrototypeAst):
                 new_fq_type = copy.deepcopy(scope.type_symbol.fq_name)
-                new_fq_type.types[-1].generic_argument_group.arguments = generic_arguments.arguments.copy()
+                new_fq_type.sub_generics(generic_arguments.arguments)
                 new_scope = AstTypeManagement.create_generic_scope(scope_manager, new_fq_type, new_fq_type.types[-1], scope.type_symbol)
 
             # Create the scope for the new super class type. This will handle recursive sup-scope creation.

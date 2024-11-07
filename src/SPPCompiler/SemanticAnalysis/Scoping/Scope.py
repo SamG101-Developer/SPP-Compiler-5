@@ -74,8 +74,6 @@ class Scope:
         generics = self._symbol_table.all()
         generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
 
-        # print(f"Translating {symbol} to", end=" ")
-
         new_symbol = symbol
 
         if isinstance(symbol, VariableSymbol):
