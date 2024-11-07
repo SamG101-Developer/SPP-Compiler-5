@@ -163,7 +163,7 @@ class AstErrors:
         e = SemanticError()
         e.add_error(
             pos=missing_arguments[0].pos,
-            tag="Missing argument names.",
+            tag=f"Missing {what_singular} names.",
             msg=f"The {what} is missing the {what_singular} '{missing_arguments.join(", ")}'.",
             tip=f"Add the missing {what_singular} names.")
         return e
