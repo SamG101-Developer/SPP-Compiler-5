@@ -58,6 +58,7 @@ class FunctionParameterRequiredAst(Ast, Ordered, VariableNameExtraction, Stage4_
 
         # Analyse the type.
         self.type.analyse_semantics(scope_manager, **kwargs)
+        # print("TYPE AST", self.type)
 
         # Create the variable for the parameter.
         ast = AstMutation.inject_code(f"let {self.variable}: {self.type}", Parser.parse_let_statement_uninitialized)

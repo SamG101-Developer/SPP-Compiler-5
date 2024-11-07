@@ -278,6 +278,13 @@ class AstFunctions:
             infer_target: {x: T, y: U, z: V}
         """
 
+        # print("-" * 100)
+        # print("generic_parameters:", generic_parameters)
+        # print("explicit_generic_arguments:", explicit_generic_arguments)
+        # print("infer_source:", [f"{k}={v}" for k, v in infer_source.items()])
+        # print("infer_target:", [f"{k}={v}" for k, v in infer_target.items()])
+        # print("owner_type:", owner_type)
+
         from SPPCompiler.SemanticAnalysis import TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
@@ -296,13 +303,24 @@ class AstFunctions:
             inferred_generic_arguments[explicit_generic_argument.name].append(explicit_generic_argument.value)
 
         # Infer the generic arguments from the source to the target.
-        for infer_source_name, infer_source_type in infer_source.items():
-            infer_target_type = infer_target.get(infer_source_name, None)
-            if infer_target_type in generic_parameters.map_attr("name"):
-                infer_target_type and inferred_generic_arguments[infer_target_type].append(infer_source_type)
+        for generic_parameter_name in generic_parameters.map_attr("name"):
+            for infer_target_name, infer_target_type in infer_target.items():
+
+                # Check for direct match (a: T vs a: BigInt).
+                if infer_target_type == generic_parameter_name:
+                    inferred_generic_argument = infer_source[infer_target_name]
+
+                # Check for inner match (a: Vec[T] vs a: Vec[BigInt]).
+                else:
+                    corresponding_generic_parameter = infer_target_type.get_generic_parameter_for_argument(generic_parameter_name)
+                    inferred_generic_argument = infer_source[infer_target_name].get_generic(corresponding_generic_parameter)
+
+                # Handle the match if it exists.
+                if inferred_generic_argument:
+                    inferred_generic_arguments[generic_parameter_name].append(inferred_generic_argument)
 
         # Check each generic argument name only has one unique inferred type.
-        for inferred_generic_argument in inferred_generic_arguments.copy().values():
+        for inferred_generic_argument in inferred_generic_arguments.values():
             if mismatch := Seq(inferred_generic_arguments.copy()[1:].values()).find(lambda t: not t.symbolic_eq(inferred_generic_argument[0], scope_manager.current_scope)):
                 raise AstErrors.CONFLICTING_GENERIC_INFERENCE(inferred_generic_arguments[0], mismatch)
 
@@ -310,6 +328,8 @@ class AstFunctions:
         for inferred_generic_argument_name, inferred_generic_argument_type in inferred_generic_arguments.items():
             if inferred_generic_argument_name in explicit_generic_arguments and inferred_generic_argument_type.length > 1:
                 raise AstErrors.EXPLICIT_GENERIC_INFERENCE(inferred_generic_argument_name)
+
+        # print("inferred_generic_arguments:", [f"{k}={v}" for k, v in inferred_generic_arguments.items()])
 
         # Check all the generic parameters have been inferred.
         for generic_parameter in generic_parameters:

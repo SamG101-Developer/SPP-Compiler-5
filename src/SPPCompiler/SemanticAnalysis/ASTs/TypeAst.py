@@ -100,6 +100,33 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             if part == generic_name: return True
         return False
 
+    def get_generic(self, generic_name: TypeAst) -> Optional[TypeAst]:
+        # Custom iterator to iterate over the type parts and their generic arguments.
+        def custom_iterate(t: TypeAst) -> Iterator[GenericArgumentAst]:
+            for p in t.types:
+                for g in p.generic_argument_group.type_arguments:
+                    yield g
+                    yield from custom_iterate(g.value)
+
+        # Check if there is a generic name in this type (at any nested argument level)
+        for generic in custom_iterate(self):
+            if generic.name == generic_name: return generic.value
+        return None
+
+    def get_generic_parameter_for_argument(self, generic_argument: TypeAst) -> Optional[TypeAst]:
+
+        # Custom iterator to iterate over the type parts and their generic arguments.
+        def custom_iterate(t: TypeAst) -> Iterator[GenericArgumentAst]:
+            for p in t.types:
+                for g in p.generic_argument_group.type_arguments:
+                    yield g
+                    yield from custom_iterate(g.value)
+
+        # Check if there is a generic name in this type (at any nested argument level)
+        for generic in custom_iterate(self):
+            if generic.value == generic_argument: return generic.name
+        return None
+
     def sub_generics(self, generic_arguments: Seq[GenericArgumentAst]) -> TypeAst:
         from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, GenericTypeArgumentAst
 
@@ -131,11 +158,11 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         that_symbol = that_scope.get_symbol(that)
 
         # Debug.
-        # import inspect
-        # print("-" * 100)
-        # print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
-        # print(f"{self}, {self_scope}, {self_symbol}")
-        # print(f"{that}, {that_scope}, {that_symbol}")
+        import inspect
+        print("-" * 100)
+        print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
+        print(f"{self}, {self_scope}, {self_symbol}")
+        print(f"{that}, {that_scope}, {that_symbol}")
 
         # Special case for Variant types (can match any of the alternative types).
         # Todo: Tidy this up.

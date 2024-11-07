@@ -33,11 +33,14 @@ class ObjectInitializerAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         # Get the base symbol and make sure it isn't generic.
         base_symbol = scope_manager.current_scope.get_symbol(self.class_type.without_generics())
         if base_symbol.is_generic:
             raise AstErrors.INVALID_PLACE_FOR_GENERIC()
+
+        self.object_argument_group.pre_analyse_semantics(scope_manager, **kwargs)
 
         # Determine the generic inference source and target
         generic_infer_source = {
@@ -46,6 +49,7 @@ class ObjectInitializerAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             a.name: a.type for a in base_symbol.type.body.members}
 
         # Analyse the type and object argument group.
+        base_symbol.type.body.analyse_semantics(ScopeManager(scope_manager.current_scope, base_symbol.scope), **kwargs)
         self.class_type.analyse_semantics(scope_manager, generic_infer_source, generic_infer_target, **kwargs)
         self.object_argument_group.analyse_semantics(scope_manager, class_type=self.class_type, **kwargs)
 

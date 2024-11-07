@@ -148,6 +148,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_S
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         self.return_type.analyse_semantics(scope_manager)
+        self.function_parameter_group.parameters.map_attr("type").for_each(lambda t: t.analyse_semantics(scope_manager))
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

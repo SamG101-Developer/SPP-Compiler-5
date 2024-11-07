@@ -26,6 +26,10 @@ class IdentifierAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Hash the value into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.md5(self.value.encode()).digest())
 
+    def __add__(self, other):
+        if isinstance(other, str):
+            self.value += other
+
     def __json__(self) -> str:
         # Return the internal string as the JSON formatted IdentifierAst.
         return self.value

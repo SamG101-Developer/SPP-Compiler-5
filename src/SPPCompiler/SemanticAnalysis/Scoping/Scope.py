@@ -74,23 +74,23 @@ class Scope:
         generics = self._symbol_table.all()
         generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
 
+        # print(f"Translating {symbol} to", end=" ")
+
+        new_symbol = symbol
+
         if isinstance(symbol, VariableSymbol):
             new_symbol = copy.deepcopy(symbol)
             new_symbol.type = symbol.type.sub_generics(generics)
-            return new_symbol
 
-        # elif isinstance(symbol, TypeSymbol) and symbol.name in generics.map(lambda g: g.name.types[-1]):
-        #     new_fq_name = symbol.fq_name.sub_generics(generics)
-        #     new_symbol = copy.deepcopy(self._non_generic_scope.get_symbol(new_fq_name))
-        #     new_symbol.name = symbol.name
-        #     return new_symbol
+        # elif isinstance(symbol, TypeSymbol) and symbol.scope and symbol.name in generics.map(lambda g: g.name.types[-1]):
+        #     pass
 
         elif isinstance(symbol, TypeSymbol):
             new_fq_name = symbol.fq_name.sub_generics(generics)
             new_symbol = self._non_generic_scope.get_symbol(new_fq_name)
-            return new_symbol
 
-        return symbol
+        # print(new_symbol)
+        return new_symbol
 
     def add_symbol(self, symbol: Symbol) -> None:
         self._symbol_table.add(symbol)

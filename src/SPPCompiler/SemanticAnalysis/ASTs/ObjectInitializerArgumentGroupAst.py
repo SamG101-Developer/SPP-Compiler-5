@@ -78,11 +78,18 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
         # Filter the arguments to non-token arguments.
         return self.arguments.filter(lambda arg: not isinstance(arg.name, TokenAst))
 
+    def pre_analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
+
+        # Analyse the arguments and enforce memory integrity.
+        for argument in self.arguments:
+            argument.analyse_semantics(scope_manager, **kwargs)
+            AstMemoryHandler.enforce_memory_integrity(self.get_arg_val(argument), argument, scope_manager)
+
     def analyse_semantics(self, scope_manager: ScopeManager, class_type: TypeAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, ClassPrototypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
         from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 
         # Get symbol and attribute information from the class type.
@@ -90,11 +97,6 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
         attributes = class_symbol.type.body.members
         attribute_names = attributes.map_attr("name")
         super_classes = class_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s._ast, ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name)
-
-        # Analyse the arguments and enforce memory integrity.
-        for argument in self.arguments:
-            argument.analyse_semantics(scope_manager, **kwargs)
-            AstMemoryHandler.enforce_memory_integrity(self.get_arg_val(argument), argument, scope_manager)
 
         # Check there are no duplicate argument names.
         argument_names = self.get_val_args().map(lambda a: a.name)

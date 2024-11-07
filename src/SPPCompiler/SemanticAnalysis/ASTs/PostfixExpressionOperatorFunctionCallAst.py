@@ -51,6 +51,9 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
         from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, PostfixExpressionAst
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst, FunctionParameterVariadicAst
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
+        from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
         from SPPCompiler.Utils.Errors import SemanticError
 
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
@@ -122,20 +125,41 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
                     scope_manager=scope_manager, **kwargs)
 
+                # print("HERE", f"{lhs}{self}", parameters, generic_arguments)
+
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
+                    # new_scope = Scope(copy.deepcopy(function_scope.name), function_scope.parent)
+                    # new_scope._name += f"#generic{id(new_scope)}"
+                    # new_scope._non_generic_scope = function_scope
+
+                    # for generic_argument in generic_arguments:
+                    #     generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
+                    #     print("GGG", generic_symbol)
+                    #     new_scope.add_symbol(generic_symbol)
+
+                    # print("NNN", new_scope, new_scope.all_symbols(True))
+
+                    # temp_manager = ScopeManager(scope_manager.global_scope, new_scope)
+
                     new_overload = copy.deepcopy(function_overload)
                     new_overload.generic_parameter_group.parameters = Seq()
                     new_overload.function_parameter_group.parameters.for_each(lambda p: p.type.sub_generics(generic_arguments))
+                    new_overload.function_parameter_group.parameters.for_each(lambda p: p.type.analyse_semantics(scope_manager, **kwargs))
                     new_overload.return_type.sub_generics(generic_arguments)
+                    new_overload.return_type.analyse_semantics(scope_manager, **kwargs)
+
                     parameters = new_overload.function_parameter_group.parameters.copy()
                     function_overload = new_overload
+                    # function_scope = new_scope
 
                 # Type check the arguments against the parameters.
                 sorted_arguments = arguments.sort(key=lambda a: parameter_names.index(a.name))
                 for argument, parameter in sorted_arguments.zip(parameters):
                     argument_type = argument.infer_type(scope_manager, **kwargs)
                     parameter_type = InferredType(convention=type(parameter.convention), type=parameter.type)
+
+                    # print("PPP", function_scope, function_scope.all_symbols(True))
 
                     if isinstance(parameter, FunctionParameterSelfAst):
                         argument.convention = parameter.convention
