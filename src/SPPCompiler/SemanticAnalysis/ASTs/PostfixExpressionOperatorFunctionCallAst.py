@@ -51,9 +51,9 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
         from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, PostfixExpressionAst
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst, FunctionParameterVariadicAst
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-        from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+        # from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
+        # from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+        # from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
         from SPPCompiler.Utils.Errors import SemanticError
 
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
@@ -125,8 +125,6 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
                     scope_manager=scope_manager, **kwargs)
 
-                # print("HERE", f"{lhs}{self}", parameters, generic_arguments)
-
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
                     # new_scope = Scope(copy.deepcopy(function_scope.name), function_scope.parent)
@@ -177,7 +175,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
         # If there are no pass overloads, raise an error.
         if pass_overloads.is_empty():
             failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {f[2].error_info[0].tag}").join("\n")
-            raise AstErrors.NO_VALID_FUNCTION_SIGNATURES(self, failed_signatures_and_errors)
+            argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(scope_manager, **kwargs).type).join(", ")})"
+            raise AstErrors.NO_VALID_FUNCTION_SIGNATURES(self, failed_signatures_and_errors, argument_usage_signature)
 
         # If there are multiple pass overloads, raise an error.
         elif pass_overloads.length > 1:

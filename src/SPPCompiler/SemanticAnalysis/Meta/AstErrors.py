@@ -169,13 +169,13 @@ class AstErrors:
         return e
 
     @staticmethod
-    def NO_VALID_FUNCTION_SIGNATURES(function_call: Ast, signatures: str) -> SemanticError:
+    def NO_VALID_FUNCTION_SIGNATURES(function_call: Ast, signatures: str, attempted: str) -> SemanticError:
         e = SemanticError()
         e.add_error(
             pos=function_call.pos,
             tag="Invalid arguments for function call",
             msg="There are no overloads accepting the given arguments",
-            tip=f"\n\t{signatures.replace("\n", "\n\t")}")
+            tip=f"\n\t{signatures.replace("\n", "\n\t")}\n\nAttempted signature:\n\t{attempted}")
         return e
 
     @staticmethod

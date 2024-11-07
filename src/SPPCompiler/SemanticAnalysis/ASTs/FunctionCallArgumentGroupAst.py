@@ -78,19 +78,20 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
             raise AstErrors.INVALID_ORDER(difference[0], difference[1], "argument")
 
         # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ...").
-        for i, argument in self.arguments.filter_to_type(FunctionCallArgumentUnnamedAst).filter(lambda a: a.tok_unpack).enumerate():
+        for i, argument in self.arguments.enumerate():
+            if argument.tok_unpack:
 
-            # Check the argument type is a tuple
-            tuple_argument_type = argument.infer_type(scope_manager, **kwargs).type
-            if not tuple_argument_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
-                raise AstErrors.UNPACKING_NON_TUPLE_TYPE(argument.value, tuple_argument_type)
+                # Check the argument type is a tuple
+                tuple_argument_type = argument.infer_type(scope_manager, **kwargs).type
+                if not tuple_argument_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
+                    raise AstErrors.UNPACKING_NON_TUPLE_TYPE(argument.value, tuple_argument_type)
 
-            # Replace the tuple-expansion argument with the expanded arguments
-            self.arguments.remove(argument)
-            for j in range(tuple_argument_type.types[-1].generic_argument_group.arguments.length):
-                new_argument = AstMutation.inject_code(f"{argument.value}.{j}", Parser.parse_function_call_argument_unnamed)
-                new_argument.convention = argument.convention
-                self.arguments.insert(i + j, new_argument)
+                # Replace the tuple-expansion argument with the expanded arguments
+                self.arguments.pop(i)
+                for j in range(tuple_argument_type.types[-1].generic_argument_group.arguments.length - 1, -1, -1):
+                    new_argument = AstMutation.inject_code(f"{argument.value}.{j}", Parser.parse_function_call_argument_unnamed)
+                    new_argument.convention = argument.convention
+                    self.arguments.insert(i, new_argument)
 
         # Analyse the arguments.
         self.arguments.for_each(lambda a: a.analyse_semantics(scope_manager, **kwargs))
