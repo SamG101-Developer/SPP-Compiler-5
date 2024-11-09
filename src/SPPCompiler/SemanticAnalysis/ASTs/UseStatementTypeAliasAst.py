@@ -40,8 +40,8 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
         # Print the AST with auto-formatting.
         string = [
             self.new_type.print(printer),
-            self.generic_parameter_group.print(printer),
-            self.tok_assign.print(printer),
+            self.generic_parameter_group.print(printer) or " ",
+            self.tok_assign.print(printer) + " ",
             self.old_type.print(printer)]
         return "".join(string)
 
@@ -92,7 +92,6 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
         # Register the old type against the new alias symbol.
         alias_symbol = scope_manager.current_scope.get_symbol(self.new_type)
         alias_symbol.old_type = old_type_symbol.fq_name
-        alias_symbol.old_scope = old_type_symbol.scope
 
         # Move out of the current scope.
         scope_manager.move_out_of_current_scope()
@@ -105,6 +104,7 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # print(f"use {self}")
 
         # If the symbol has already been generated (module/sup level, skip the scopes).
         if self._generated:
@@ -124,8 +124,8 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
             scope_manager.reset(current_scope)
             self.inject_sup_scopes(scope_manager)
 
-            scope_manager.reset(current_scope)
-            self.analyse_semantics(scope_manager, **kwargs)
+            # scope_manager.reset(current_scope)
+            # self.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["UseStatementTypeAliasAst"]

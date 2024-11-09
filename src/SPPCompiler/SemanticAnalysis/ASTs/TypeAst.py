@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import copy
+
 from convert_case import pascal_case
 from dataclasses import dataclass
 from typing import Iterator, Optional, TYPE_CHECKING
@@ -161,8 +164,8 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # import inspect
         # print("-" * 100)
         # print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
-        # print(f"{self}, {self_scope}, {self_symbol}")
-        # print(f"{that}, {that_scope}, {that_symbol}")
+        # print(f"{self}, {self_scope.parent_module}, {self_symbol}")
+        # print(f"{that}, {that_scope.parent_module}, {that_symbol}")
 
         # Special case for Variant types (can match any of the alternative types).
         # Todo: Tidy this up?
@@ -192,10 +195,14 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Move through each type, ensuring (at minimum) its non-generic form exists.
         for i, type_part in self.types.enumerate():
             if isinstance(type_part, GenericIdentifierAst):
+                # import inspect
+                # print("-" * 100)
+                # print(f"{inspect.stack()[1].filename}:{inspect.stack()[1].lineno}")
+                # print("looking for", type_part.without_generics(), "in", type_scope)
 
                 # Determine the type scope and type symbol.
                 type_symbol = AstTypeManagement.get_type_part_symbol_with_error(type_scope, type_part.without_generics(), ignore_alias=True)
-                type_scope_alias_bypass = AstTypeManagement.get_type_part_symbol_with_error(type_scope, type_part.without_generics(), ignore_alias=False).scope
+                type_scope_alias_bypass = type_scope.get_symbol(type_part.without_generics(), ignore_alias=False).scope
                 type_scope = type_symbol.scope
                 if type_symbol.is_generic: continue
 
@@ -222,8 +229,14 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
                     # Handle type aliasing (providing generics to the original type).
                     if isinstance(new_scope.type_symbol, AliasSymbol):
+                        new_scope.type_symbol.old_type = copy.deepcopy(new_scope.type_symbol.old_type)
                         new_scope.type_symbol.old_type.sub_generics(type_part.generic_argument_group.arguments)
                         new_scope.type_symbol.old_type.analyse_semantics(scope_manager, **kwargs)
+
+                    type_scope = new_scope
+
+                else:
+                    type_scope = type_scope.parent.get_symbol(type_part).scope
 
             elif isinstance(type_part, TokenAst):
                 # Determine the type scope and type symbol.
@@ -249,15 +262,14 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
             else:
                 raise Exception(f"Invalid type part: {type_part} ({type(type_part)})")
 
-        # Unfortuntately this code is required to extend namespaces of generic arguments (for variants especially)
-        if not any([
-                type_symbol.is_generic,
-                isinstance(type_symbol, AliasSymbol),
-                self.types[-1].value.startswith("$"),
-                self.types[-1].value == "Self"]):
+        # Unfortunately this code is required to extend namespaces of generic arguments (for variants especially)
+        # print("END", self, type_symbol.is_generic, type(type_symbol))
+        if all([
+                not type_symbol.is_generic,
+                not isinstance(type_symbol, AliasSymbol),
+                not self.types[-1].value.startswith("$"),
+                not self.types[-1].value == "Self"]):
             self.namespace = type_scope_alias_bypass.to_namespace()
-
-        return type_scope
 
 
 __all__ = ["TypeAst"]

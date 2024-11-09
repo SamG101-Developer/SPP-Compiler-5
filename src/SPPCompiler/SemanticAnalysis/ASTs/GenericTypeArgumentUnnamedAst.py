@@ -29,7 +29,9 @@ class GenericTypeArgumentUnnamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
         return self.value.print(printer)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Analyse the value of the generic type argument.
         self.value.analyse_semantics(scope_manager, **kwargs)
+        self.value = scope_manager.current_scope.get_symbol(self.value).fq_name
 
 
 __all__ = ["GenericTypeArgumentUnnamedAst"]

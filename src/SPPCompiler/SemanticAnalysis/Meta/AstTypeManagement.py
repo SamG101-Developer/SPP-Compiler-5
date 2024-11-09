@@ -59,13 +59,13 @@ class AstTypeManagement:
     def create_generic_scope(scope_manager: ScopeManager, type: TypeAst, type_part: GenericIdentifierAst, base_symbol: TypeSymbol) -> Scope:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
 
         # Create a new scope for the generic substituted type.
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.type))
-        new_symbol = TypeSymbol(name=type_part, type=new_scope._ast, scope=new_scope)
-        if scope_manager.current_scope.has_symbol(new_symbol.name):
-            return scope_manager.current_scope.get_symbol(new_symbol.name).scope
+        new_symbol = builtins.type(base_symbol)(name=type_part, type=new_scope._ast, scope=new_scope)
+        if isinstance(base_symbol, AliasSymbol):
+            new_symbol.old_type = base_symbol.old_type
 
         new_scope.parent.add_symbol(new_symbol)
         new_scope._children = base_symbol.scope._children
@@ -78,7 +78,7 @@ class AstTypeManagement:
         if type and type.without_generics() == CommonTypes.Tup().without_generics():
             return new_scope
 
-        # Substitute the generics of the attribute types in teh new class prototype.
+        # Substitute the generics of the attribute types in the new class prototype.
         for attribute in new_scope._ast.body.members:
             attribute.type = attribute.type.sub_generics(type_part.generic_argument_group.arguments)
             attribute.type.analyse_semantics(scope_manager)
@@ -95,6 +95,7 @@ class AstTypeManagement:
     def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: GenericArgumentGroupAst) -> Seq[Scope]:
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         old_scopes = base_scope._direct_sup_scopes
         new_scopes = Seq()
@@ -103,17 +104,19 @@ class AstTypeManagement:
 
             # Create the scope with the generic arguments injected. This will handle recursive scope creation.
             if isinstance(scope._ast, ClassPrototypeAst):
+                temp_manager = ScopeManager(scope_manager.global_scope, base_scope.parent)
                 new_fq_type = copy.deepcopy(scope.type_symbol.fq_name)
                 new_fq_type.sub_generics(generic_arguments.arguments)
-                new_fq_type.analyse_semantics(scope_manager)
+                new_fq_type.analyse_semantics(temp_manager)
                 new_scope = scope_manager.current_scope.get_symbol(new_fq_type).scope
 
             # Create the scope for the new super class type. This will handle recursive sup-scope creation.
             elif isinstance(scope._ast, SupPrototypeInheritanceAst):
                 new_fq_super_type = copy.deepcopy(scope._ast.super_class)
                 super_type_symbol = base_scope.get_symbol(new_fq_super_type)
+                temp_manager = ScopeManager(scope_manager.global_scope, super_type_symbol.scope.parent)
                 new_fq_super_type.sub_generics(generic_arguments.arguments)
-                new_fq_super_type.analyse_semantics(scope_manager)
+                new_fq_super_type.analyse_semantics(temp_manager)
 
             # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
             if isinstance(scope._ast, SupPrototypeFunctionsAst):

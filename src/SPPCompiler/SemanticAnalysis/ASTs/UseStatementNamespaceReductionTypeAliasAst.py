@@ -26,6 +26,7 @@ class UseStatementNamespaceReductionTypeAliasAst(Ast):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
+            " ",
             self.tok_as.print(printer) + " ",
             self.type.print(printer)]
         return "".join(string)

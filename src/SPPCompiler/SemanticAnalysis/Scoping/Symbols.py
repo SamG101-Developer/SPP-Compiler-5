@@ -129,18 +129,16 @@ class TypeSymbol:
 @dataclass(kw_only=True)
 class AliasSymbol(TypeSymbol):
     old_type: TypeAst = field(default=None)
-    old_scope: Optional[Scope] = field(default=None)
 
     def __json__(self) -> Dict:
         # Dump the AliasSymbol as a JSON object.
-        return super().__json__() | {"old_type": self.old_type, "old_scope": self.old_scope}
+        return super().__json__() | {"old_type": self.old_type}
 
     def __deepcopy__(self, memodict={}):
         # Copy all the attributes of the AliasSymbol, but link the old scope.
         return AliasSymbol(
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, old_type=copy.deepcopy(self.old_type),
-            old_scope=self.old_scope)
+            is_copyable=self.is_copyable, visibility=self.visibility, old_type=copy.deepcopy(self.old_type))
 
 
 type Symbol = NamespaceSymbol | VariableSymbol | TypeSymbol | AliasSymbol

@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 class UseStatementNamespaceReductionAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoader, Stage4_SemanticAnalyser):
     body: UseStatementNamespaceReductionBodyAst
 
-    _generated: bool = field(default=False, init=False, repr=False)
     _new_asts: Seq[UseStatementTypeAliasAst] = field(default_factory=Seq, init=False, repr=False)
 
     @ast_printer_method
@@ -80,8 +79,8 @@ class UseStatementNamespaceReductionAst(Ast, Stage2_SymbolGenerator, Stage3_SupS
             generic_arguments = GenericArgumentGroupAst.default(generic_arguments)
             new_type.types[-1].generic_argument_group = generic_arguments
             new_ast = UseStatementTypeAliasAst.from_types(IdentifierAst.from_type(alias or new_type), generic_parameters, new_type)
+
             self._new_asts.append(new_ast)
-        self._generated = True
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         # Convert the import aliases to type aliases: "use std::Str" => "use std::Str as Str".

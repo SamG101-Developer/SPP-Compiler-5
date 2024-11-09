@@ -75,7 +75,6 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
         fail_overloads = Seq()
 
         for function_scope, function_overload, owner_scope_generic_arguments in all_overloads:
-
             owner_scope_generic_arguments = owner_scope_generic_arguments.arguments
 
             # Extract generic/function parameter information from the overload.
@@ -160,6 +159,12 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
 
                     if isinstance(parameter, FunctionParameterSelfAst):
                         argument.convention = parameter.convention
+
+                    elif isinstance(parameter, FunctionParameterVariadicAst):
+                        for inner_type in argument_type.type.types[-1].generic_argument_group.arguments:
+                            inner_type = InferredType(convention=type(parameter.convention), type=inner_type.value)
+                            if not parameter_type.symbolic_eq(inner_type, function_scope, scope_manager.current_scope):
+                                raise AstErrors.TYPE_MISMATCH(parameter, parameter_type, argument, inner_type)
 
                     elif not parameter_type.symbolic_eq(argument_type, function_scope, scope_manager.current_scope):
                         raise AstErrors.TYPE_MISMATCH(parameter, parameter_type, argument, argument_type)

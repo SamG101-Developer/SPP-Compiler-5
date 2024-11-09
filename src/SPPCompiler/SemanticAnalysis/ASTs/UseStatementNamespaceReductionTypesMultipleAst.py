@@ -30,7 +30,7 @@ class UseStatementNamespaceReductionTypesMultipleAst(Ast):
         string = [
             self.namespace.print(printer, "::") + "::" if self.namespace else "",
             self.tok_left_brace.print(printer),
-            self.types.print(printer),
+            self.types.print(printer, ", "),
             self.tok_right_brace.print(printer)]
         return "".join(string)
 

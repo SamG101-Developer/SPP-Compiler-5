@@ -80,17 +80,15 @@ class Scope:
             new_symbol = copy.deepcopy(symbol)
             new_symbol.type = symbol.type.sub_generics(generics)
 
-        # elif isinstance(symbol, TypeSymbol) and symbol.scope and symbol.name in generics.map(lambda g: g.name.types[-1]):
-        #     pass
-
         elif isinstance(symbol, TypeSymbol):
             new_fq_name = symbol.fq_name.sub_generics(generics)
             new_symbol = self._non_generic_scope.get_symbol(new_fq_name)
 
-        # print(new_symbol)
         return new_symbol
 
     def add_symbol(self, symbol: Symbol) -> None:
+        # Add a symbol to the scope.
+        # print("A:", symbol.name, "to scope:", self, f"({symbol})")
         self._symbol_table.add(symbol)
 
     def all_symbols(self, exclusive: bool = False) -> Seq[Symbol]:
@@ -109,7 +107,7 @@ class Scope:
         return self.get_symbol(name, exclusive) is not None
 
     def get_symbol(self, name: IdentifierAst | TypeAst | GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, SupPrototypeInheritanceAst
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
 
         # Ensure the name is a valid type.
         if not isinstance(name, (IdentifierAst, TypeAst, GenericIdentifierAst)):
@@ -124,6 +122,7 @@ class Scope:
         if isinstance(name, TypeAst):
             scope, name = shift_scope_for_namespaced_type(self, name)
         symbol = scope._symbol_table.get(name)
+        # print("G:", name, "from scope:", self, f"({symbol})")
 
         # If this is not an exclusive search, search the parent scope.
         if not symbol and scope._parent and not exclusive:
@@ -264,7 +263,8 @@ def confirm_type_with_alias(scope: Scope, symbol: Symbol, ignore_alias: bool) ->
 
     # Get the alias symbol's old type if aliases are being ignored.
     match symbol:
-        case AliasSymbol() if symbol.old_type and not ignore_alias: symbol = scope.get_symbol(symbol.old_type)
+        case AliasSymbol() if symbol.old_type and not ignore_alias:
+            symbol = scope.get_symbol(symbol.old_type)
     return symbol
 
 

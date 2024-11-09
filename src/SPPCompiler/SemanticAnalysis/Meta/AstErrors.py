@@ -251,10 +251,10 @@ class AstErrors:
     @staticmethod
     def TYPE_MISMATCH(existing_ast: Ast, existing_type: InferredType, incoming_ast: Ast, incoming_type: InferredType) -> SemanticError:
         e = SemanticError()
-        e.add_info(existing_ast.pos, f"Type declared as '{existing_type}' here")
+        e.add_info(existing_ast.pos, f"Type inferred as '{existing_type}' here")  # todo: add potential alias's old type
         e.add_error(
             pos=incoming_ast.pos,
-            tag=f"The type '{incoming_type}' does not match the expected type '{existing_type}'.",
+            tag=f"Type inferred as '{incoming_type}' here",
             msg="Type mismatch.",
             tip="Change the type to match the expected type.")
         return e

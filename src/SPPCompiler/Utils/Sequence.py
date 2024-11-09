@@ -228,13 +228,13 @@ class Seq[T]:
     def __add__(self, other):
         return self.set_union(other)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self._value == other._value
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return self.not_empty()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"[{self.map(str).join(", ")}]" if self.not_empty() else "<empty>"
 
     def __json__(self):

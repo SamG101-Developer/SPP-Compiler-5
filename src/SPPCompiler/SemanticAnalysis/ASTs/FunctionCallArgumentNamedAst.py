@@ -35,8 +35,8 @@ class FunctionCallArgumentNamedAst(Ast, Ordered, TypeInferrable, Stage4_Semantic
         # Print the AST with auto-formatting.
         string = [
             self.name.print(printer),
-            self.tok_assign.print(printer) + " ",
-            self.convention.print(printer) + " ",
+            self.tok_assign.print(printer),
+            self.convention.print(printer),
             self.value.print(printer)]
         return "".join(string)
 

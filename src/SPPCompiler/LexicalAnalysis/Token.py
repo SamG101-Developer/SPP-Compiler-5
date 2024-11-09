@@ -11,7 +11,7 @@ class Token:
     token_metadata: str
     token_type: TokenType
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.token_metadata
 
     def __eq__(self, other: Token) -> bool:
