@@ -22,6 +22,7 @@ class UseStatementNamespaceReductionAst(Ast, Stage2_SymbolGenerator, Stage3_SupS
     body: UseStatementNamespaceReductionBodyAst
 
     _new_asts: Seq[UseStatementTypeAliasAst] = field(default_factory=Seq, init=False, repr=False)
+    _generated: bool = field(default=False, init=False, repr=False)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -81,6 +82,7 @@ class UseStatementNamespaceReductionAst(Ast, Stage2_SymbolGenerator, Stage3_SupS
             new_ast = UseStatementTypeAliasAst.from_types(IdentifierAst.from_type(alias or new_type), generic_parameters, new_type)
 
             self._new_asts.append(new_ast)
+        self._generated = True
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         # Convert the import aliases to type aliases: "use std::Str" => "use std::Str as Str".
@@ -97,6 +99,8 @@ class UseStatementNamespaceReductionAst(Ast, Stage2_SymbolGenerator, Stage3_SupS
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the new type aliases.
+        if not self._generated:
+            self._convert_to_type_aliases(scope_manager)
         self._new_asts.for_each(lambda ast: ast.analyse_semantics(scope_manager, **kwargs))
 
 

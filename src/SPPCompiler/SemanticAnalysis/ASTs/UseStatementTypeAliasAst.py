@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
-import copy
+import copy, itertools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -95,6 +95,7 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
 
         # Move out of the current scope.
         scope_manager.move_out_of_current_scope()
+        scope_manager.move_out_of_current_scope()
 
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip the class, sup and type-alias scope
@@ -102,30 +103,34 @@ class UseStatementTypeAliasAst(Ast, Stage2_SymbolGenerator, Stage3_SupScopeLoade
         scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
+        scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        # print(f"use {self}")
-
         # If the symbol has already been generated (module/sup level, skip the scopes).
         if self._generated:
+            # print(f"-" * 100)
+            # print(f"alias {self}")
+            # print(f"current scope: {scope_manager.current_scope}")
+            # print(f"child scopes: {scope_manager.current_scope.children}")
+
             scope_manager.move_to_next_scope()
             scope_manager.move_to_next_scope()
             scope_manager.move_to_next_scope()
+            scope_manager.move_out_of_current_scope()
             scope_manager.move_out_of_current_scope()
 
         # Otherwise, run all the generation and analysis stages, resetting the scope each time.
         else:
             current_scope = scope_manager.current_scope
+            scope_manager._iterator, new_iterator = itertools.tee(scope_manager._iterator)
             self.generate_symbols(scope_manager, **kwargs)
 
-            scope_manager.reset(current_scope)
+            scope_manager.reset(current_scope, new_iterator)
+            scope_manager._iterator, new_iterator = itertools.tee(scope_manager._iterator)
             self.load_sup_scopes(scope_manager)
 
-            scope_manager.reset(current_scope)
+            scope_manager.reset(current_scope, new_iterator)
             self.inject_sup_scopes(scope_manager)
-
-            # scope_manager.reset(current_scope)
-            # self.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["UseStatementTypeAliasAst"]

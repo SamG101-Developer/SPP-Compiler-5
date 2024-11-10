@@ -37,15 +37,23 @@ class Analyser:
     def analyse(self, module_tree: ModuleTree) -> None:
         from SPPCompiler.Utils.Errors import SemanticError
         from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+        from SPPCompiler.Utils.ProgressBar import ProgressBar
 
         self._scope_manager = ScopeManager(global_scope=create_global(module_tree.modules[0]))
 
+        program_bars = [
+            ProgressBar("Pre-processing.........", module_tree.modules.length),
+            ProgressBar("Generating symbols.....", module_tree.modules.length),
+            ProgressBar("Loading sup scopes.....", module_tree.modules.length),
+            ProgressBar("Injecting sup scopes...", module_tree.modules.length),
+            ProgressBar("Analysing semantics....", module_tree.modules.length)]
+
         try:
-            self._ast.pre_process(None, module_tree)
-            self._ast.generate_symbols(self._scope_manager, module_tree)
-            self._ast.load_sup_scopes(self._scope_manager)
-            self._ast.inject_sup_scopes(self._scope_manager)
-            self._ast.analyse_semantics(self._scope_manager)
+            self._ast.pre_process(None, program_bars[0], module_tree)
+            self._ast.generate_symbols(self._scope_manager, program_bars[1], module_tree)
+            self._ast.load_sup_scopes(self._scope_manager, program_bars[2])
+            self._ast.inject_sup_scopes(self._scope_manager, program_bars[3])
+            self._ast.analyse_semantics(self._scope_manager, program_bars[4])
         except SemanticError as error:
             errored_module = module_tree.modules.find(lambda module: self._ast.current() == module.module_ast)
             error.throw(errored_module.error_formatter)

@@ -41,14 +41,14 @@ class IdentifierAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
     @staticmethod
     def from_type(type: TypeAst) -> IdentifierAst:
-        if type.namespace or type.types.length > 1:
-            warnings.warn(f"Type {type} has a namespace or nested types, which will be ignored.")
+        # if type.namespace or type.types.length > 1:
+        #     warnings.warn(f"Type {type} has a namespace or nested types, which will be ignored.")
         return IdentifierAst.from_generic_identifier(type.types[-1])
 
     @staticmethod
     def from_generic_identifier(identifier: GenericIdentifierAst) -> IdentifierAst:
-        if identifier.generic_argument_group.arguments:
-            warnings.warn(f"Generic identifier {identifier} has generic arguments, which will be ignored.")
+        # if identifier.generic_argument_group.arguments:
+        #     warnings.warn(f"Generic identifier {identifier} has generic arguments, which will be ignored.")
         return IdentifierAst(identifier.pos, identifier.value)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
