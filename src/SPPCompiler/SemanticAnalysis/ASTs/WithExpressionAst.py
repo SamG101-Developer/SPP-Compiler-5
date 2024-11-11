@@ -38,7 +38,7 @@ class WithExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         ...
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
+        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
@@ -52,14 +52,17 @@ class WithExpressionAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
         # Check a Ctx type is superimposed over the type of the expression.
         expression_type = self.expression.infer_type(scope_manager, **kwargs).type
-        expression_sup_types = scope_manager.current_scope.get_symbol(expression_type).scope.sup_scopes.map(lambda s: s.type_symbol.name)
+        expression_sup_types = scope_manager.current_scope.get_symbol(expression_type).scope.sup_scopes
+        expression_sup_types = expression_sup_types.filter(lambda s: isinstance(s._ast, ClassPrototypeAst))
+        expression_sup_types = expression_sup_types.map(lambda s: s.type_symbol.fq_name.without_generics())
+
         context_types = Seq([CommonTypes.CtxRef(), CommonTypes.CtxMut()]).map(TypeAst.without_generics)
         if not context_types.any(lambda t: expression_sup_types.any(lambda s: s.symbolic_eq(t, scope_manager.current_scope))):
             raise AstErrors.INVALID_WITH_EXPRESSION(self, self.expression)
 
         # Analyse the alias, if it exists.
         if self.alias:
-            self.alias.analyse_semantics(scope_manager, **kwargs)
+            self.alias.analyse_semantics(scope_manager, with_expression=self.expression, **kwargs)
 
         # Analyse the body of the with expression and move out of the current scope.
         self.body.analyse_semantics(scope_manager, **kwargs)

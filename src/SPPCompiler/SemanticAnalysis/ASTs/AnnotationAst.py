@@ -28,7 +28,7 @@ Ideas:
 class _Annotations(Enum):
     VirtualMethod = "virtual_method"
     AbstractMethod = "abstract_method"
-    NonImplementedMethod = "non_implemented_method"
+    NonImplementedMethod = "no_impl"
     Public = "public"
     Protected = "protected"
     Private = "private"

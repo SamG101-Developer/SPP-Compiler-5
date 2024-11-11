@@ -3,7 +3,7 @@ import os
 
 import colorama
 
-SHOW_PROGRESS_BARS = 1
+SHOW_PROGRESS_BARS = 0
 
 
 class ProgressBar:

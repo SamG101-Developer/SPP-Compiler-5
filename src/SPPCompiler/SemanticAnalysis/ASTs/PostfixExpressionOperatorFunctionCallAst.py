@@ -4,6 +4,7 @@ import copy
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, TYPE_CHECKING
 
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
@@ -122,7 +123,9 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
                     explicit_generic_arguments=generic_arguments + owner_scope_generic_arguments,
                     infer_source=arguments.map(lambda a: (a.name, a.infer_type(scope_manager, **kwargs).type)).dict(),
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
-                    scope_manager=scope_manager, **kwargs)
+                    scope_manager=scope_manager,
+                    variadic_parameter_identifier=function_overload.function_parameter_group.get_var().extract_name if is_variadic else None,
+                    **kwargs)
 
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
@@ -155,16 +158,12 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
                     argument_type = argument.infer_type(scope_manager, **kwargs)
                     parameter_type = InferredType(convention=type(parameter.convention), type=parameter.type)
 
-                    # print("PPP", function_scope, function_scope.all_symbols(True))
+                    if isinstance(parameter, FunctionParameterVariadicAst):
+                        parameter_type.type = CommonTypes.Tup(Seq([parameter_type.type] * argument_type.type.types[-1].generic_argument_group.arguments.length))
+                        parameter_type.type.analyse_semantics(scope_manager, **kwargs)
 
                     if isinstance(parameter, FunctionParameterSelfAst):
                         argument.convention = parameter.convention
-
-                    elif isinstance(parameter, FunctionParameterVariadicAst):
-                        for inner_type in argument_type.type.types[-1].generic_argument_group.arguments:
-                            inner_type = InferredType(convention=type(parameter.convention), type=inner_type.value)
-                            if not parameter_type.symbolic_eq(inner_type, function_scope, scope_manager.current_scope):
-                                raise AstErrors.TYPE_MISMATCH(parameter, parameter_type, argument, inner_type)
 
                     elif not parameter_type.symbolic_eq(argument_type, function_scope, scope_manager.current_scope):
                         raise AstErrors.TYPE_MISMATCH(parameter, parameter_type, argument, argument_type)
