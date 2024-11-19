@@ -21,7 +21,7 @@ class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
         return self
 
     def parse_once(self) -> T:
-        from SPPCompiler.Utils.Errors import ParserError
+        from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
 
         for parser_rule_handler in self._parser_rule_handlers:
             parser_index = self._parser._index
@@ -36,7 +36,7 @@ class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
         raise self._parser._error
 
     def parse_optional(self) -> Optional[T]:
-        from SPPCompiler.Utils.Errors import ParserError
+        from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
 
         for parser_rule_handler in self._parser_rule_handlers:
             parser_index = self._parser._index

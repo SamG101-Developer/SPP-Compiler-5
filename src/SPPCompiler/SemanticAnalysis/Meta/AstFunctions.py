@@ -2,7 +2,7 @@ from __future__ import annotations
 from collections import defaultdict
 from fastenum import Enum
 from typing import Dict, Optional, Tuple, TYPE_CHECKING
-import copy, itertools, operator
+import operator
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -172,7 +172,7 @@ class AstFunctions:
     def name_function_arguments(arguments: Seq[FunctionCallArgumentAst], parameters: Seq[FunctionParameterAst]) -> None:
         from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, FunctionCallArgumentUnnamedAst
         from SPPCompiler.SemanticAnalysis import FunctionParameterVariadicAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -211,7 +211,7 @@ class AstFunctions:
         from SPPCompiler.SemanticAnalysis import GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst
         from SPPCompiler.SemanticAnalysis import GenericParameterVariadicAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -288,7 +288,7 @@ class AstFunctions:
 
         from SPPCompiler.SemanticAnalysis import TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 

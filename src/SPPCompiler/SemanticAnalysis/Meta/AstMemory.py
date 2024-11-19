@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.ASTs.PatternBlockAst import PatternBlockAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 
 
 @dataclass(kw_only=True)
@@ -122,7 +121,7 @@ class AstMemoryHandler:
         """
 
         from SPPCompiler.SemanticAnalysis import TupleLiteralAst, ArrayLiteralNElementAst, IdentifierAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
         # For tuple and array literals, analyse each element.

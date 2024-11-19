@@ -1,47 +1,160 @@
 from __future__ import annotations
-from typing import Optional, Tuple, TYPE_CHECKING
+from abc import ABC, abstractmethod
+from colorama import Fore, Style
+from dataclasses import dataclass
+from fastenum import Enum
+from typing import List, NoReturn, Optional, Tuple, TYPE_CHECKING
 
-from SPPCompiler.Utils.Errors import SemanticError
+from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
+
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis import *
 
 
+class SemanticError(ABC, BaseException):
+    class Format(Enum):
+        NORMAL = 0
+        MINIMAL = 1
+        NONE = 2
+
+    @dataclass
+    class ErrorInfo:
+        pos: int
+        tag: str
+        msg: str
+        tip: str
+        fmt: SemanticError.Format
+
+    error_info: List[ErrorInfo]
+
+    def __init__(self, *args) -> None:
+        super().__init__(args)
+        self.error_info = []
+
+    @abstractmethod
+    def add(*args, **kwargs) -> None:
+        ...
+
+    def add_error(self, pos: int, tag: str, msg: str, tip: str, fmt: Format = Format.NORMAL) -> SemanticError:
+        # Add an error into the output list.
+        self.error_info.append(SemanticError.ErrorInfo(pos, tag, msg, tip, fmt))
+        return self
+
+    def add_info(self, pos: int, tag: str) -> SemanticError:
+        # Add an info message (minimal error metadata) into the output list.
+        self.add_error(pos, tag, "", "", SemanticError.Format.MINIMAL)
+        return self
+
+    def _format_message(self, error_info: ErrorInfo) -> (str, bool):
+        # For minimal formatting, the message remains empty, as a "tag" is provided.
+        if error_info.fmt == SemanticError.Format.MINIMAL:
+            return "", True
+
+        # Otherwise, combine the message and tip into a single color-formatted string.
+        f = f"\n{Style.BRIGHT}{type(self).__name__}: {Style.NORMAL}{error_info.msg}\n{Fore.LIGHTCYAN_EX}{Style.BRIGHT}Tip: {Style.NORMAL}{error_info.tip}{Fore.RESET}"
+        return f, False
+
+    def throw(self, error_formatter: ErrorFormatter) -> NoReturn:
+        # Format the error messages and raise the error.
+        error_message = ""
+        for error in self.error_info:
+            formatted_message, is_minimal = self._format_message(error)
+            error_message += error_formatter.error(error.pos, formatted_message, error.tag, is_minimal)
+        print(error_message)
+        raise type(self)()
+
+
+class SemanticErrors:
+
+    class AnnotationInvalidApplicationError(SemanticError):
+        """
+        The AnnotationInvalidApplicationError is raised if a standard annotation is applied to a non-compatible AST.
+        This includes applying the "@public" annotation to a superimposition, or the "@no_impl" method annotation to a
+        class. An allowlist of valid ASTs for the annotation is provided in the error message.
+        """
+
+        def add(self, annotation: IdentifierAst, applied_to: Ast, allow_list: str) -> None:
+            self.add_info(
+                pos=annotation.pos,
+                tag=f"Annotation '{annotation}' defined here")
+
+            self.add_error(
+                pos=applied_to.pos,
+                tag=f"Non-{allow_list} AST defined here.",
+                msg=f"The '{annotation}' annotation can only be applied to {allow_list} ASTs.",
+                tip=f"Remove the annotation from here.")
+
+    class AnnotationInvalidError(SemanticError):
+        """
+        The AnnotationInvalidError is raised if a non-standard annotation is used in the code. This includes using the
+        "@foo" annotation, which is not a valid annotation in the language. Only standard annotations are allowed, such
+        as "@public", "@no_impl" etc.
+        """
+
+        def add(self, annotation: IdentifierAst) -> None:
+            self.add_error(
+                pos=annotation.pos,
+                tag="Invalid annotation.",
+                msg=f"The annotation '{annotation}' is not a valid annotation.",
+                tip=f"Remove the annotation from here.")
+
+    class AnnotationDuplicateError(SemanticError):
+        """
+        The AnnotationDuplicateError is raised if the same annotation is applied multiple times to the same AST. Because
+        the standard annotations modify ASTs before symbol generation, applying the same annotation twice is redundant
+        and therefore not allowed.
+        """
+
+        def add(self, first_annotation: IdentifierAst, second_annotation: IdentifierAst) -> None:
+            self.add_info(
+                pos=first_annotation.pos,
+                tag=f"Annotation '{first_annotation}' applied here")
+
+            self.add_error(
+                pos=second_annotation.pos,
+                tag="Duplicate annotation.",
+                msg=f"The annotation '{second_annotation}' is already applied.",
+                tip=f"Remove the duplicate annotation.")
+
+    class AnnotationConflictError(SemanticError):
+        """
+        The AnnotationConflictError is raised if there are 2 annotations on the same object that either have conflicting
+        behaviour / are mutually exclusive. For example, using "@hot" and "@cold" on the same function would raise this
+        error.
+        """
+
+        def add(self, first_annotation: IdentifierAst, conflicting_annotation: IdentifierAst) -> None:
+            self.add_info(
+                pos=first_annotation.pos,
+                tag=f"Annotation '{first_annotation}' applied here")
+
+            self.add_error(
+                pos=conflicting_annotation.pos,
+                tag="Conflicting annotation.",
+                msg=f"The annotation '{conflicting_annotation}' conflicts with the first annotation.",
+                tip=f"Remove the conflicting annotation.")
+
+    class AnnotationRedundantError(SemanticError):
+        """
+        The AnnotationRedundantError is raised if there are 2 annotations on the same object and one makes the other
+        redundant. For example, using "@abstractmethod" makes @virtualmethod" redundant as an abstract method is
+        automatically virtual.
+        """
+
+        def add(self, first_annotation: IdentifierAst, redundant_annotation: IdentifierAst) -> None:
+            self.add_info(
+                pos=first_annotation.pos,
+                tag=f"Annotation '{first_annotation}' applied here")
+
+            self.add_error(
+                pos=redundant_annotation.pos,
+                tag="Redundant annotation.",
+                msg=f"The annotation '{redundant_annotation}' is made redundant by the '{first_annotation}' annotation.",
+                tip=f"Remove the redundant annotation.")
+
+
 class AstErrors:
-    # ANNOTATION ERRORS
-
-    @staticmethod
-    def INVALID_ANNOTATION_APPLICATION(annotation: IdentifierAst, applied_to: Ast, white_list: str) -> SemanticError:
-        e = SemanticError()
-        e.add_info(annotation.pos, f"Annotation '{annotation}' defined here")
-        e.add_error(
-            pos=applied_to.pos,
-            tag=f"Non-{white_list} AST defined here.",
-            msg=f"The '{annotation}' annotation can only be applied to {white_list} ASTs.",
-            tip=f"Remove the annotation from here.")
-        return e
-
-    @staticmethod
-    def UNKNOWN_ANNOTATION(annotation: IdentifierAst) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=annotation.pos,
-            tag="Unknown annotation.",
-            msg=f"The annotation '{annotation}' is not a valid annotation.",
-            tip=f"Remove the annotation from here.")
-        return e
-
-    @staticmethod
-    def DUPLICATE_ANNOTATION(first_annotation: IdentifierAst, second_annotation: IdentifierAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(first_annotation.pos, f"Annotation '{first_annotation}' applied here")
-        e.add_error(
-            pos=second_annotation.pos,
-            tag="Duplicate annotation.",
-            msg=f"The annotation '{second_annotation}' is already applied.",
-            tip=f"Remove the duplicate annotation.")
-        return e
-
     # IDENTIFIER ERRORS
 
     @staticmethod

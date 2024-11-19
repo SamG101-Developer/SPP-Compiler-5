@@ -1,8 +1,6 @@
 from __future__ import annotations
-
-import builtins
-from typing import TYPE_CHECKING
-import copy, difflib
+from typing import Optional, TYPE_CHECKING
+import builtins, copy, difflib
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -14,13 +12,13 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol, Symbol
+    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
 
 
 class AstTypeManagement:
     @staticmethod
     def get_namespaced_scope_with_error(scope_manager: ScopeManager, namespace: Seq[IdentifierAst]) -> Scope:
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
         # Work through each cumulative namespace, checking if the namespace exists.
@@ -42,7 +40,7 @@ class AstTypeManagement:
 
     @staticmethod
     def get_type_part_symbol_with_error(scope: Scope, type_part: GenericIdentifierAst, ignore_alias: bool = False, **kwargs) -> TypeSymbol:
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
         # Get the type part's symbol, and raise an error if it does not exist.
@@ -112,9 +110,9 @@ class AstTypeManagement:
 
             # Create the scope for the new super class type. This will handle recursive sup-scope creation.
             elif isinstance(scope._ast, SupPrototypeInheritanceAst):
+                temp_manager = ScopeManager(scope_manager.global_scope, base_scope)
                 new_fq_super_type = copy.deepcopy(scope._ast.super_class)
                 super_type_symbol = base_scope.get_symbol(new_fq_super_type)
-                temp_manager = ScopeManager(scope_manager.global_scope, super_type_symbol.scope.parent)
                 new_fq_super_type.sub_generics(generic_arguments.arguments)
                 new_fq_super_type.analyse_semantics(temp_manager)
 

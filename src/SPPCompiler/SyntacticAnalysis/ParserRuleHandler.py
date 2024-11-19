@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from SPPCompiler.LexicalAnalysis.TokenType import TokenType
     from SPPCompiler.SyntacticAnalysis.Parser import Parser
     from SPPCompiler.SyntacticAnalysis.ParserAlternateRulesHandler import ParserAlternateRulesHandler
-    from SPPCompiler.Utils.Errors import ParserError
+    from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
 
 
 class ParserRuleHandler[T]:
@@ -26,7 +26,7 @@ class ParserRuleHandler[T]:
         return ast
 
     def parse_optional(self) -> Optional[T]:
-        from SPPCompiler.Utils.Errors import ParserError
+        from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
 
         parser_index = self._parser._index
         try:
@@ -38,7 +38,7 @@ class ParserRuleHandler[T]:
 
     def parse_zero_or_more(self, separator: TokenType, *, propagate_error: bool = False) -> Seq[T] | Tuple[Seq[T], ParserError]:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        from SPPCompiler.Utils.Errors import ParserError
+        from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
 
         successful_parses, result = 0, Seq()
         parsed_sep, error = False, None

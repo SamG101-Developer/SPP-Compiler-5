@@ -8,7 +8,7 @@ from SPPCompiler.SyntacticAnalysis.ParserRuleHandler import ParserRuleHandler
 from SPPCompiler.SemanticAnalysis import *
 
 if TYPE_CHECKING:
-    from SPPCompiler.Utils.Errors import ParserError
+    from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
     from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
 
@@ -32,14 +32,14 @@ class Parser:
     _error: Optional[ParserError]
 
     def __init__(self, tokens: List[Token], file_name: str = "", error_formatter: Optional[ErrorFormatter] = None) -> None:
-        from SPPCompiler.Utils.Errors import ParserError
+        from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserErrors
         from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
         self._tokens = tokens
         self._name = file_name
         self._index = 0
         self._err_fmt = error_formatter or ErrorFormatter(self._tokens, file_name)
-        self._error = ParserError()
+        self._error = ParserErrors.SyntaxError()
 
     def current_pos(self) -> int:
         return self._index
@@ -50,7 +50,7 @@ class Parser:
     # ===== PARSING =====
 
     def parse(self) -> ProgramAst:
-        from SPPCompiler.Utils.Errors import ParserError
+        from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
 
         try:
             ast = self.parse_module_prototype().parse_once()
@@ -753,10 +753,10 @@ class Parser:
     def parse_use_statement(self) -> UseStatementAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwUse).parse_once()
-        p2 = self.parse_use_statement_type_alias()
-        p3 = self.parse_use_statement_namespace_reduction()
-        p4 = (p2 | p3).parse_once()
-        return UseStatementAst(c1, [], p1, p4)
+        p2 = self.parse_use_statement_type_alias().parse_once()
+        # p3 = self.parse_use_statement_namespace_reduction()
+        # p4 = (p2 | p3).parse_once()
+        return UseStatementAst(c1, [], p1, p2)
 
     @parser_rule
     def parse_use_statement_namespace_reduction(self) -> UseStatementNamespaceReductionAst:
