@@ -1,5 +1,4 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Type, TYPE_CHECKING
 
@@ -32,7 +31,6 @@ class InferredType:
 
 
 @dataclass
-class TypeInferrable(ABC):
-    @abstractmethod
+class TypeInferrable:
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         ...

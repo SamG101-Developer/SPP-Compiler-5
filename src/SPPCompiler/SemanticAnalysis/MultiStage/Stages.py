@@ -1,5 +1,4 @@
 from __future__ import annotations
-from abc import ABC
 from dataclasses import dataclass, field
 from typing import Any, Optional, Union, TYPE_CHECKING
 
@@ -20,7 +19,7 @@ type PreProcessingContext = Union[
 
 
 @dataclass
-class CompilerStages(ABC):
+class CompilerStages:
     _ctx: PreProcessingContext = field(default=None, kw_only=True, repr=False)
     _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
 

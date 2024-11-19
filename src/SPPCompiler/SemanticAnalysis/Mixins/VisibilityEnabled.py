@@ -1,4 +1,3 @@
-from abc import ABC
 from dataclasses import dataclass, field
 from fastenum import Enum
 
@@ -16,7 +15,7 @@ class AstVisibility(Enum):
 
 
 @dataclass
-class VisibilityEnabled(ABC):
+class VisibilityEnabled:
     _visibility: AstVisibility = field(default=AstVisibility.Private, kw_only=True, repr=False)
 
 
