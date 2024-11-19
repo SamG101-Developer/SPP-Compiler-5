@@ -142,28 +142,16 @@ class TokenType(Enum, metaclass=TokenTypeMeta):
     def print(self) -> str:
         return f"<{self.name[2:]}>" if self.name[:2] == "Cm" else self.value
 
-    @staticmethod
-    def tokens() -> List[TokenType]:
-        return sorted([tok for tok in TokenType if tok.name.startswith("Tk")], key=lambda t: len(t.value), reverse=True)
-
-    @staticmethod
-    def keywords() -> List[TokenType]:
-        return sorted([tok for tok in TokenType if tok.name.startswith("Kw")], key=lambda t: len(t.value), reverse=True)
-
-    @staticmethod
-    def lexemes() -> List[TokenType]:
-        return [tok for tok in TokenType if tok.name.startswith("Lx")]
-
-    @staticmethod
-    def compiled_lexemes() -> List[TokenType]:
-        return [tok for tok in TokenType if tok.name.startswith("Cm")]
-
-    @staticmethod
-    def all_tokens() -> List[TokenType]:
-        return TokenType.keywords() + TokenType.compiled_lexemes() + TokenType.tokens()
-
     def __json__(self) -> str:
         return self.value
+
+
+class TokenTypeSet:
+    TOKENS = sorted([tok for tok in TokenType if tok.name.startswith("Tk")], key=lambda t: len(t.value), reverse=True)
+    KEYWORDS = sorted([tok for tok in TokenType if tok.name.startswith("Kw")], key=lambda t: len(t.value), reverse=True)
+    LEXEMES = [tok for tok in TokenType if tok.name.startswith("Lx")]
+    COMPILED_LEXEMES = [tok for tok in TokenType if tok.name.startswith("Cm")]
+    ALL = KEYWORDS + COMPILED_LEXEMES + TOKENS
 
 
 __all__ = ["TokenType"]

@@ -22,14 +22,14 @@ class Lexer:
         self._multi_line_comment_lexemes = [TokenType.LxMultiLineComment]
 
     def lex(self, code_injection: bool = False) -> List[Token]:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType, TokenTypeSet
         from SPPCompiler.LexicalAnalysis.Token import Token
 
         i = 0
         token_stream = []
 
         # The "$" is only allowed in code injection (from semantic analysis).
-        all_tokens = TokenType.all_tokens()
+        all_tokens = TokenTypeSet.ALL.copy()
         if not code_injection:
             all_tokens.remove(TokenType.TkDollar)
 
