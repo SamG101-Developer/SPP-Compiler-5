@@ -137,12 +137,25 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         # Move out of the function scope.
         scope_manager.move_out_of_current_scope()
 
+    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Skip the class scope (no sup-scope work to do).
+        scope_manager.move_to_next_scope()
+        scope_manager.move_out_of_current_scope()
+
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         # Todo: Function conflict checker
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        scope_manager.move_to_next_scope()
+        scope_manager.move_out_of_current_scope()
+
+    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+        scope_manager.move_to_next_scope()
+        scope_manager.move_out_of_current_scope()
+
+    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         self.return_type.analyse_semantics(scope_manager)
         self.function_parameter_group.parameters.map_attr("type").for_each(lambda t: t.analyse_semantics(scope_manager))
