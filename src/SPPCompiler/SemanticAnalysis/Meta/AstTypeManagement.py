@@ -118,7 +118,8 @@ class AstTypeManagement:
 
             # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
             if isinstance(scope._ast, SupPrototypeFunctionsAst):
-                new_scope = Scope(scope.name, scope.parent, ast=scope._ast)
+                new_scope_name = AstTypeManagement.generic_convert_sup_scope_name(scope.name, generic_arguments)
+                new_scope = Scope(new_scope_name, scope.parent, ast=scope._ast)
                 new_scope._children = scope._children
                 new_scope._symbol_table = copy.copy(scope._symbol_table)
                 new_scope._non_generic_scope = scope
@@ -155,3 +156,21 @@ class AstTypeManagement:
 
         else:
             raise Exception(type(true_value_symbol))
+
+    @staticmethod
+    def generic_convert_sup_scope_name(name: str, generics: GenericArgumentGroupAst) -> str:
+        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
+        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+
+        parts = name.split(":")
+        if " ext " not in parts:
+            t = AstMutation.inject_code(parts[1], Parser.parse_type)
+            t.sub_generics(generics.arguments)
+            return f"{parts[0]}:{t}:{parts[2]}"
+
+        else:
+            t = AstMutation.inject_code(parts[1].split(" ext ")[0], Parser.parse_type)
+            u = AstMutation.inject_code(parts[1].split(" ext ")[1], Parser.parse_type)
+            t.sub_generics(generics.arguments)
+            u.sub_generics(generics.arguments)
+            return f"{parts[0]}:{t} ext {u}:{parts[2]}"
