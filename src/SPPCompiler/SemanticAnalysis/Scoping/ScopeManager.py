@@ -47,7 +47,6 @@ class ScopeManager:
         next(self._iterator)
 
         # Return the new scope.
-        # print("MOVED TO NEXT SCOPE:", self._current_scope)
         return scope
 
     def move_out_of_current_scope(self) -> Scope:
@@ -67,8 +66,6 @@ class ScopeManager:
         # If the old and new scopes are namespace scopes, then move to the next scope (inside new namespace).
         if is_old_scope_namespace_scope and is_new_scope_namespace_scope:
             self._current_scope = self.move_to_next_scope()
-
-        # print("MOVED TO NEXT SCOPE:", self._current_scope)
 
         # Return the new scope.
         return self._current_scope
