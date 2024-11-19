@@ -22,24 +22,18 @@ class Compiler:
     _ast: ProgramAst
     _analyser: Analyser
 
-    def __init__(self, src_path: str, mode: Mode, standalone: bool = False) -> None:
+    def __init__(self, mode: Mode) -> None:
         from SPPCompiler.Compiler.ModuleTree import ModuleTree
         from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import ProgramAst
 
         # Register the parameters against the instance.
-        self._src_path = src_path
-        self._module_tree = ModuleTree(src_path, standalone)
+        self._src_path = os.path.join(os.getcwd(), "src")
+        self._module_tree = ModuleTree(os.getcwd())
         self._mode = mode
         self._ast = ProgramAst(0, Seq())
 
         # Compile the modules.
         self.compile()
-
-    @staticmethod
-    def standalone(code: str) -> None:
-        with open(f"..\\tmp\\src\\{os.urandom(16).hex()}.spp", "w") as file:
-            file.write(code)
-        Compiler(file.name, Compiler.Mode.Release, True).compile()
 
     def compile(self) -> None:
         from SPPCompiler.LexicalAnalysis.Lexer import Lexer
@@ -50,14 +44,20 @@ class Compiler:
 
         # Lexing stage.
         for module in self._module_tree.modules:
-            with open(module.path) as fo:
+            with open(".\\" + module.path) as fo:
                 module.code = fo.read()
             module.token_stream = Lexer(module.code).lex()
             module.error_formatter = ErrorFormatter(module.token_stream, module.path)
 
         # Parsing stage.
-        for module in self._module_tree.modules:
+        for module in self._module_tree.modules.copy():
             module.module_ast = Parser(module.token_stream, module.path, module.error_formatter).parse()
+
+            # Remove vcs "main.spp" files.
+            module_namespace = module.path.split(os.path.sep)
+            module_namespace = module_namespace[module_namespace.index("src") + 1 : -1]
+            if module.path.startswith(os.path.sep + "vcs") and not module_namespace:
+                self._module_tree.modules.remove(module)
 
         # Save the modules into the ProgramAst
         self._ast.modules = Seq([module.module_ast for module in self._module_tree.modules])
@@ -79,6 +79,3 @@ class Compiler:
                 os.makedirs(out_scope_manager_path)
             with open(out_scope_manager_path + "/scope_manager.json", "w") as file:
                 file.write(json.dumps(self._analyser._scope_manager.global_scope, indent=4))
-
-    def output_process(self) -> None:
-        ...

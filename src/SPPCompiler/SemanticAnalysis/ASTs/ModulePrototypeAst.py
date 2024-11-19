@@ -30,7 +30,8 @@ class ModulePrototypeAst(Ast, CompilerStages):
     def name(self) -> IdentifierAst:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
 
-        parts = self._name.split(os.path.sep)[2:]
+        parts = self._name.split(os.path.sep)
+        parts = parts[parts.index("src") + 1 :]
         name = "::".join(parts)
         return IdentifierAst(self.pos, name)
 
