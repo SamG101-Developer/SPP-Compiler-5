@@ -60,7 +60,9 @@ class Scope:
 
     def __json__(self) -> dict:
         return {
-            "name": self._name, "parent": self._parent.name if self._parent else "", "children": self._children, "symbol_table": self._symbol_table,
+            "scope_name": self._name, "parent": self._parent.name if self._parent else "", "children": self._children,
+            "symbol_table": self._symbol_table, "sup_scopes": [s.name for s in self._direct_sup_scopes],
+            "sub_scopes": [s.name for s in self._direct_sub_scopes], "type_symbol": self._type_symbol.name if self._type_symbol else "",
         }
 
     def __str__(self) -> str:
@@ -88,8 +90,11 @@ class Scope:
 
     def add_symbol(self, symbol: Symbol) -> None:
         # Add a symbol to the scope.
-        # print("A:", symbol.name, "to scope:", self, f"({symbol})")
         self._symbol_table.add(symbol)
+
+    def rem_symbol(self, symbol: Symbol) -> None:
+        # Remove a symbol from the scope.
+        self._symbol_table.rem(symbol)
 
     def all_symbols(self, exclusive: bool = False) -> Seq[Symbol]:
         # Get all the symbols in the scope.
