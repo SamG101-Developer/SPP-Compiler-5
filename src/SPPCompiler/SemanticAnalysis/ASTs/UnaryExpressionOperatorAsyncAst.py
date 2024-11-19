@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class UnaryExpressionOperatorAsyncAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class UnaryExpressionOperatorAsyncAst(Ast, TypeInferrable, CompilerStages):
     tok_async: TokenAst
 
     @ast_printer_method
@@ -32,7 +32,7 @@ class UnaryExpressionOperatorAsyncAst(Ast, TypeInferrable, Stage4_SemanticAnalys
 
     def analyse_semantics(self, scope_manager: ScopeManager, rhs: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import PostfixExpressionAst, PostfixExpressionOperatorFunctionCallAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         # Check the rhs is a postfix function call.
         if not (isinstance(rhs, PostfixExpressionAst) and isinstance(rhs.op, PostfixExpressionOperatorFunctionCallAst)):

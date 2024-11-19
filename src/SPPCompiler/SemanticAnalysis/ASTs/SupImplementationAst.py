@@ -4,10 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -17,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class SupImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupScopeLoader, Stage4_SemanticAnalyser):
+class SupImplementationAst(Ast, Default, CompilerStages):
     tok_left_brace: TokenAst
     members: Seq[SupMemberAst]
     tok_right_brace: TokenAst
@@ -53,11 +50,20 @@ class SupImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGener
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         self.members.for_each(lambda member: member.generate_symbols(scope_manager))
 
+    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+        self.members.for_each(lambda member: member.alias_types(scope_manager, **kwargs))
+
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         self.members.for_each(lambda member: member.load_sup_scopes(scope_manager))
 
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
         self.members.for_each(lambda member: member.inject_sup_scopes(scope_manager))
+
+    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+        self.members.for_each(lambda member: member.alias_types_regeneration(scope_manager))
+
+    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+        self.members.for_each(lambda member: member.regenerate_generic_types(scope_manager))
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))

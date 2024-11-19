@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericTypeParameterInlineConstraintsAst(Ast, Default, Stage4_SemanticAnalyser):
+class GenericTypeParameterInlineConstraintsAst(Ast, Default, CompilerStages):
     tok_colon: TokenAst
     constraints: Seq[TypeAst]
 

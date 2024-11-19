@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.LexicalAnalysis.TokenType import TokenType
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
@@ -50,42 +49,46 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         super().pre_process(context)
 
     def generate_symbols(self, scope_manager: ScopeManager, name_override: str = None) -> None:
-        super().generate_symbols(scope_manager, f"<sup:{self.name} ext {self.super_class}:{self.pos}>")
+        super().generate_symbols(scope_manager, name_override=f"<sup:{self.name} ext {self.super_class}:{self.pos}>")
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def load_sup_scopes(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
 
-        # Move to the next scope.
         scope_manager.move_to_next_scope()
 
-        # print(self)
-
-        # Get the class and super class symbols.
         self.super_class.analyse_semantics(scope_manager)
+        sup_symbol = scope_manager.current_scope.get_symbol(self.super_class.without_generics())
         cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
-        sup_symbol = scope_manager.current_scope.get_symbol(self.super_class)
 
-        # Cannot superimpose over a generic type.
+        # Cannot superimpose with a generic super class.
+        if cls_symbol.is_generic:
+            raise AstErrors.INVALID_PLACE_FOR_GENERIC(self.name, "superimpose over a generic type")
         if sup_symbol.is_generic:
             raise AstErrors.INVALID_PLACE_FOR_GENERIC(self.name, "extend a generic type")
 
-        # Register the superimposition as a "sup scope", and the "sub scopes".
+        # Register the superimposition as a "sup scope" and run the load steps for the body.
+        sup_symbol = scope_manager.current_scope.get_symbol(self.super_class)
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
-        sup_symbol.scope._direct_sub_scopes.append(scope_manager.current_scope)
         cls_symbol.scope._direct_sup_scopes.append(sup_symbol.scope)
         sup_symbol.scope._direct_sub_scopes.append(cls_symbol.scope)
+        sup_symbol.scope._direct_sub_scopes.append(scope_manager.current_scope)
 
         # Mark the class as copyable if the Copy type is the super class.
         if self.super_class.symbolic_eq(CommonTypes.Copy(), scope_manager.current_scope):
             cls_symbol.is_copyable = True
 
         # Run the inject steps for the body.
-        self.body.inject_sup_scopes(scope_manager)
+        self.body.load_sup_scopes(scope_manager)
+        scope_manager.move_out_of_current_scope()
+
+    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+        scope_manager.move_to_next_scope()
+        self.super_class.analyse_semantics(scope_manager)
+        self.body.regenerate_generic_types(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
 
         # Todo: Check the same superclass isn't extended twice.

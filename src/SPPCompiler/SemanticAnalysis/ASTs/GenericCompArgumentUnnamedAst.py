@@ -1,11 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericCompArgumentUnnamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
+class GenericCompArgumentUnnamedAst(Ast, Ordered, CompilerStages):
     value: ExpressionAst
 
     def __post_init__(self) -> None:
@@ -30,7 +30,7 @@ class GenericCompArgumentUnnamedAst(Ast, Ordered, Stage4_SemanticAnalyser):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (TokenAst, TypeAst)):

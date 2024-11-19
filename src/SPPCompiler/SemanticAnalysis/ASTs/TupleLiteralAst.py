@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class TupleLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class TupleLiteralAst(Ast, TypeInferrable, CompilerStages):
     tok_left_paren: TokenAst
     elements: Seq[ExpressionAst]
     tok_right_paren: TokenAst
@@ -43,7 +43,7 @@ class TupleLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.ASTs import ConventionMovAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         # Analyse the elements in the tuple.
         self.elements.for_each(lambda element: element.analyse_semantics(scope_manager, **kwargs))

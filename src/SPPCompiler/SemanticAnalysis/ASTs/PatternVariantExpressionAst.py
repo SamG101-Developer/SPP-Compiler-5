@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PatternVariantExpressionAst(Ast, Stage4_SemanticAnalyser):
+class PatternVariantExpressionAst(Ast, CompilerStages):
     expression: ExpressionAst
 
     @ast_printer_method
@@ -22,7 +22,7 @@ class PatternVariantExpressionAst(Ast, Stage4_SemanticAnalyser):
 
     def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the expression.

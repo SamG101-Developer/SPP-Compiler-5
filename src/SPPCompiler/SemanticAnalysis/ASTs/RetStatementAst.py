@@ -5,7 +5,7 @@ from typing import Optional, TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class RetStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class RetStatementAst(Ast, TypeInferrable, CompilerStages):
     tok_ret: TokenAst
     expression: Optional[ExpressionAst]
     _func_ret_type: Optional[TypeAst] = field(default=None, init=False, repr=False)
@@ -37,7 +37,7 @@ class RetStatementAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token.token_type != TokenType.KwFun:

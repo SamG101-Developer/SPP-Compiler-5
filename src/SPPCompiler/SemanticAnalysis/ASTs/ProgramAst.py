@@ -1,15 +1,13 @@
 from __future__ import annotations
 
+import json
 import os.path
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
 from SPPCompiler.Utils.ProgressBar import ProgressBar
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -20,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupScopeLoader, Stage4_SemanticAnalyser):
+class ProgramAst(Ast, CompilerStages):
     modules: Seq[ModulePrototypeAst]
     _current: Optional[ModulePrototypeAst] = field(default=None, init=False, repr=False)
 
@@ -46,6 +44,14 @@ class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupSco
             module.body.members.for_each(lambda m: m.generate_symbols(scope_manager))
             scope_manager.reset()
 
+    def alias_types(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None, **kwargs) -> None:
+        # Alias types for all the modules.
+        for module in self.modules:
+            progress_bar.next(module.name.value)
+            self._current = module
+            module.body.members.for_each(lambda m: m.alias_types(scope_manager, **kwargs))
+        scope_manager.reset()
+
     def load_sup_scopes(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
         # Load the super scopes for all the modules.
         for module in self.modules:
@@ -60,6 +66,31 @@ class ProgramAst(Ast, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupSco
             progress_bar.next(module.name.value)
             self._current = module
             module.body.members.for_each(lambda m: m.inject_sup_scopes(scope_manager))
+        scope_manager.reset()
+
+        # Prune the generic scopes of the scope tree.
+        # Todo: move into scope class
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol
+        for scope in scope_manager:
+            for symbol in scope.all_symbols(exclusive=True).filter_to_type(TypeSymbol, AliasSymbol).filter(lambda t: not t.is_generic):
+                if symbol.name.generic_argument_group.arguments and symbol.scope._non_generic_scope is not symbol.scope:
+                    scope.rem_symbol(symbol)
+        scope_manager.reset()
+
+    def alias_types_regeneration(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
+        # Generate generic types for all the modules.
+        for module in self.modules:
+            progress_bar.next(module.name.value)
+            self._current = module
+            module.body.members.for_each(lambda m: m.alias_types_regeneration(scope_manager))
+        scope_manager.reset()
+
+    def regenerate_generic_types(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
+        # Regenerate generic types for all the modules.
+        for module in self.modules:
+            progress_bar.next(module.name.value)
+            self._current = module
+            module.body.members.for_each(lambda m: m.regenerate_generic_types(scope_manager))
         scope_manager.reset()
 
     def analyse_semantics(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None, **kwargs) -> None:

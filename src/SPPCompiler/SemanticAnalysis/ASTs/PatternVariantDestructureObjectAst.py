@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.PatternMapping import PatternMapping
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PatternVariantDestructureObjectAst(Ast, PatternMapping, Stage4_SemanticAnalyser):
+class PatternVariantDestructureObjectAst(Ast, PatternMapping, CompilerStages):
     type: TypeAst
     tok_left_paren: TokenAst
     elements: Seq[PatternVariantNestedForDestructureObjectAst]
@@ -50,7 +50,7 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping, Stage4_SemanticAna
     def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis import LetStatementInitializedAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         self.type.analyse_semantics(scope_manager, **kwargs)
 

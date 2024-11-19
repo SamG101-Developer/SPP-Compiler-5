@@ -5,7 +5,7 @@ from typing import Optional, TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class FunctionParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
+class FunctionParameterGroupAst(Ast, Default, CompilerStages):
     tok_left_paren: TokenAst
     parameters: Seq[FunctionParameterAst]
     tok_right_paren: TokenAst
@@ -77,7 +77,7 @@ class FunctionParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst, FunctionParameterVariadicAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         # Check there are no duplicate parameter names.
         parameter_names = self.get_non_self().map_attr("extract_names").flat()

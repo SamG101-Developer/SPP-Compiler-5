@@ -1,12 +1,12 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-import difflib, operator
+import difflib
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStages):
     tok_access: TokenAst
     field: IdentifierAst | TokenAst
 
@@ -58,7 +58,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, Stage4_Seman
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
         
         # Accessing static methods off of a type, such as "Str::new()".

@@ -6,7 +6,7 @@ import functools
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, Stage4_SemanticAnalyser):
+class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, CompilerStages):
     tok_left_paren: TokenAst
     elements: Seq[LocalVariableNestedForDestructureTupleAst]
     tok_right_paren: TokenAst
@@ -48,7 +48,7 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, Stage4_Seman
     def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkip1ArgumentAst
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 

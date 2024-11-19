@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
+class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
     tok_left_paren: TokenAst
     arguments: Seq[FunctionCallArgumentAst]
     tok_right_paren: TokenAst
@@ -62,9 +62,9 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
 
     def analyse_pre_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Code that is run before the overload is selected.
-        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, FunctionCallArgumentUnnamedAst
+        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -99,7 +99,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, Stage4_SemanticAnalyser):
     def analyse_semantics(self, scope_manager: ScopeManager, target: FunctionPrototypeAst = None, is_async: TokenAst = None, **kwargs) -> None:
         # Code that is run after the overload is selected.
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst, CoroutinePrototypeAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 
         # Mark if pins are required, and the ast to mark as errored if required.

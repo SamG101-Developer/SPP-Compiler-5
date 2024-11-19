@@ -13,7 +13,7 @@ class SubroutinePrototypeAst(FunctionPrototypeAst):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import RetStatementAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         # Perform default function prototype semantic analysis.
         super().analyse_semantics(scope_manager, **kwargs)

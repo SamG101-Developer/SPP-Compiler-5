@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
+class GenericParameterGroupAst(Ast, Default, CompilerStages):
     tok_left_bracket: TokenAst
     parameters: Seq[GenericParameterAst]
     tok_right_bracket: TokenAst
@@ -75,7 +75,7 @@ class GenericParameterGroupAst(Ast, Default, Stage4_SemanticAnalyser):
         return self.parameters.filter_to_type(GenericCompParameterVariadicAst, GenericTypeParameterVariadicAst)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         # Check there are no duplicate generic parameter names.
         generic_parameter_names = self.parameters.map(lambda parameter: parameter.name)

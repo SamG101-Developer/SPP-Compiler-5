@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class InnerScopeAst[T](Ast, Default, TypeInferrable, Stage4_SemanticAnalyser):
+class InnerScopeAst[T](Ast, Default, TypeInferrable, CompilerStages):
     tok_left_brace: TokenAst
     members: Seq[T]
     tok_right_brace: TokenAst
@@ -55,7 +55,7 @@ class InnerScopeAst[T](Ast, Default, TypeInferrable, Stage4_SemanticAnalyser):
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, inline: bool = False, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis import RetStatementAst
 
         # Check there is no code after a "ret" statement, as this is unreachable.

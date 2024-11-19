@@ -5,7 +5,7 @@ from typing import Optional, TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
@@ -30,7 +30,7 @@ SIZE_MAPPING = {
 
 
 @dataclass
-class FloatLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class FloatLiteralAst(Ast, TypeInferrable, CompilerStages):
     tok_sign: Optional[TokenAst]
     integer_value: TokenAst
     tok_dot: TokenAst
@@ -86,7 +86,7 @@ class FloatLiteralAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return InferredType.from_type(float_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         # No analysis needs to be done for the BigDec automatically inferred type.
         if not self.type:

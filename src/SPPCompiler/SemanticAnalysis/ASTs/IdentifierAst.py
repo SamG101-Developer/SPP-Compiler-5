@@ -1,12 +1,12 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-import difflib, hashlib, warnings
+import difflib, hashlib
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class IdentifierAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class IdentifierAst(Ast, TypeInferrable, CompilerStages):
     value: str
 
     def __eq__(self, other: IdentifierAst) -> bool:
@@ -67,7 +67,7 @@ class IdentifierAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         # Check there is a symbol with the same name in the current scope.
         if not scope_manager.current_scope.has_symbol(self):

@@ -6,8 +6,7 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
@@ -17,7 +16,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericCompParameterOptionalAst(Ast, Ordered, Stage2_SymbolGenerator, Stage4_SemanticAnalyser):
+class GenericCompParameterOptionalAst(Ast, Ordered, CompilerStages):
     tok_cmp: TokenAst
     name: TypeAst
     tok_colon: TokenAst
@@ -64,7 +63,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered, Stage2_SymbolGenerator, Stag
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default.

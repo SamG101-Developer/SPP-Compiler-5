@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.GenericTypeParameterInlineConstraintsAst import GenericTypeParameterInlineConstraintsAst
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericTypeParameterVariadicAst(Ast, Ordered, Stage2_SymbolGenerator, Stage4_SemanticAnalyser):
+class GenericTypeParameterVariadicAst(Ast, Ordered, CompilerStages):
     tok_variadic: TokenAst
     name: TypeAst
     constraints: GenericTypeParameterInlineConstraintsAst

@@ -1,16 +1,12 @@
 from __future__ import annotations
-
-import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import copy
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -24,13 +20,15 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupScopeLoader, Stage4_SemanticAnalyser):
+class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
     annotations: Seq[AnnotationAst]
     tok_cls: TokenAst
     name: TypeAst
     generic_parameter_group: GenericParameterGroupAst
     where_block: WhereBlockAst
     body: ClassImplementationAst
+
+    _is_alias: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
         # Import the necessary classes to create default instances.
@@ -44,7 +42,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         self.where_block = self.where_block or WhereBlockAst.default()
         self.body = self.body or ClassImplementationAst.default()
 
-    def __json__(self):
+    def __json__(self) -> str:
         return f"{self.name}{self.generic_parameter_group}"
 
     def __deepcopy__(self, memodict={}):
@@ -100,6 +98,12 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         # Move out of the type scope.
         scope_manager.move_out_of_current_scope()
 
+    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Skip the class scope (no sup-scope work to do).
+        scope_manager.move_to_next_scope()
+        self.body.alias_types(scope_manager)
+        scope_manager.move_out_of_current_scope()
+
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
@@ -110,6 +114,18 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, Stage1_PreProcessor, Stage2_Symb
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.inject_sup_scopes(scope_manager)
+        scope_manager.move_out_of_current_scope()
+
+    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+        # Skip the class scope (no sup-scope work to do).
+        scope_manager.move_to_next_scope()
+        self.body.alias_types(scope_manager)
+        scope_manager.move_out_of_current_scope()
+
+    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+        # Skip the class scope (no sup-scope work to do).
+        scope_manager.move_to_next_scope()
+        self.body.regenerate_generic_types(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

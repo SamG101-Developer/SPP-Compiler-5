@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PostfixExpressionOperatorNotKeywordAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class PostfixExpressionOperatorNotKeywordAst(Ast, TypeInferrable, CompilerStages):
     tok_dot: TokenAst
     tok_not: TokenAst
 
@@ -33,7 +33,7 @@ class PostfixExpressionOperatorNotKeywordAst(Ast, TypeInferrable, Stage4_Semanti
         return InferredType.from_type(bool_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         
         # Check the loop condition is boolean.

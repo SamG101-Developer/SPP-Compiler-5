@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
+class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
     tok_left_paren: TokenAst
     arguments: Seq[ObjectInitializerArgumentAst]
     tok_right_paren: TokenAst
@@ -89,7 +89,7 @@ class ObjectInitializerArgumentGroupAst(Ast, Stage4_SemanticAnalyser):
     def analyse_semantics(self, scope_manager: ScopeManager, class_type: TypeAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, ClassPrototypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 
         # Get symbol and attribute information from the class type.

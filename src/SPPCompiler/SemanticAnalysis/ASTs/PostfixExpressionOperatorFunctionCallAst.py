@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStages):
     generic_argument_group: GenericArgumentGroupAst
     function_argument_group: FunctionCallArgumentGroupAst
     fold_token: Optional[TokenAst]
@@ -51,14 +51,15 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, Stage4_Seman
     def determine_overload(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, PostfixExpressionAst
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst, FunctionParameterVariadicAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         # from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
         # from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
         # from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-        from SPPCompiler.Utils.Errors import SemanticError
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticError
 
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
         # function's name and its owner type/namespace.
+
         function_owner_type, function_owner_scope, function_name = AstFunctions.get_function_owner_type_and_function_name(scope_manager, lhs)
         if not function_name:
             raise AstErrors.UNCALLABLE_AST(lhs)

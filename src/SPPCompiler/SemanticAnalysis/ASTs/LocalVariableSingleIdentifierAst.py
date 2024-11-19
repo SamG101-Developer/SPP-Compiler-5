@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, Stage4_SemanticAnalyser):
+class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, CompilerStages):
     tok_mut: Optional[TokenAst]
     name: IdentifierAst
 

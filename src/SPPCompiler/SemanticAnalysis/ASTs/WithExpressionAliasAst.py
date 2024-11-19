@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class WithExpressionAliasAst(Ast, Stage4_SemanticAnalyser):
+class WithExpressionAliasAst(Ast, CompilerStages):
     variable: LocalVariableAst
     tok_assign: TokenAst
 

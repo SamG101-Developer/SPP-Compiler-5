@@ -10,7 +10,7 @@ import hashlib
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class TypeAst(Ast, TypeInferrable, CompilerStages):
     namespace: Seq[IdentifierAst]
     types: Seq[TypePartAst]
 
@@ -131,7 +131,7 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         return None
 
     def sub_generics(self, generic_arguments: Seq[GenericArgumentAst]) -> TypeAst:
-        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, GenericTypeArgumentAst
+        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
 
         # Get all the substitutable parts of this type (GenericIdentifierAst parts)
         type_parts = self.types.filter_to_type(GenericIdentifierAst)
@@ -160,13 +160,6 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         self_symbol = self_scope.get_symbol(self)
         that_symbol = that_scope.get_symbol(that)
 
-        # Debug.
-        # import inspect
-        # print("-" * 100)
-        # print(f"{inspect.stack()[2].filename}:{inspect.stack()[2].lineno}")
-        # print(f"{self}, {self_scope.parent_module}, {self_symbol}")
-        # print(f"{that}, {that_scope.parent_module}, {that_symbol}")
-
         # Special case for Variant types (can match any of the alternative types).
         # Todo: Tidy this up?
         if check_variant and self_symbol.fq_name.types[-1].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, check_variant=False):
@@ -179,10 +172,10 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         return InferredType.from_type(self)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source=None, generic_infer_target=None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, TokenAst, IdentifierAst
+    def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source=None, generic_infer_target=None, force: bool = False, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, TokenAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
@@ -195,16 +188,15 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
         # Move through each type, ensuring (at minimum) its non-generic form exists.
         for i, type_part in self.types.enumerate():
             if isinstance(type_part, GenericIdentifierAst):
-                # import inspect
-                # print("-" * 100)
-                # print(f"{inspect.stack()[1].filename}:{inspect.stack()[1].lineno}")
-                # print("looking for", type_part.without_generics(), "in", type_scope)
 
                 # Determine the type scope and type symbol.
                 type_symbol = AstTypeManagement.get_type_part_symbol_with_error(type_scope, type_part.without_generics(), ignore_alias=True)
-                type_scope_alias_bypass = type_scope.get_symbol(type_part.without_generics(), ignore_alias=False).scope
+                type_symbol_alias_bypass = type_scope.get_symbol(type_part.without_generics(), ignore_alias=False)
                 type_scope = type_symbol.scope
+                type_scope_alias_bypass = type_symbol_alias_bypass.scope
                 if type_symbol.is_generic: continue
+
+                # print("NAMING", type_part)
 
                 # Name all the generic arguments.
                 AstFunctions.name_generic_arguments(
@@ -224,7 +216,7 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
                 type_part.generic_argument_group.analyse_semantics(scope_manager)
 
                 # If the generically filled type doesn't exist (Vec[Str]), but teh base does (Vec[T]), create it.
-                if not type_scope.parent.has_symbol(type_part):
+                if force or not type_scope.parent.has_symbol(type_part):
                     new_scope = AstTypeManagement.create_generic_scope(scope_manager, self, type_part, type_symbol)
 
                     # Handle type aliasing (providing generics to the original type).
@@ -234,9 +226,6 @@ class TypeAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
                         new_scope.type_symbol.old_type.analyse_semantics(scope_manager, **kwargs)
 
                     type_scope = new_scope
-
-                else:
-                    type_scope = type_scope.parent.get_symbol(type_part).scope
 
             elif isinstance(type_part, TokenAst):
                 # Determine the type scope and type symbol.

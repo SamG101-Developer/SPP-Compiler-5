@@ -6,10 +6,7 @@ from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage1_PreProcessor import Stage1_PreProcessor, PreProcessingContext
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage2_SymbolGenerator import Stage2_SymbolGenerator
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage3_SupScopeLoader import Stage3_SupScopeLoader
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -19,7 +16,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ClassImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGenerator, Stage3_SupScopeLoader, Stage4_SemanticAnalyser):
+class ClassImplementationAst(Ast, Default, CompilerStages):
     tok_left_brace: TokenAst
     members: Seq[ClassMemberAst]
     tok_right_brace: TokenAst
@@ -62,16 +59,16 @@ class ClassImplementationAst(Ast, Default, Stage1_PreProcessor, Stage2_SymbolGen
         # Generate the symbols for the members.
         self.members.for_each(lambda m: m.generate_symbols(scope_manager))
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        # Load the super scopes for the members.
-        self.members.for_each(lambda m: m.load_sup_scopes(scope_manager))
-
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
         # Inject the super scopes for the members.
         self.members.for_each(lambda m: m.inject_sup_scopes(scope_manager))
 
+    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+        # Regenerate the generic types for the members.
+        self.members.for_each(lambda m: m.regenerate_generic_types(scope_manager))
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Meta.AstErrors import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
 
         # Analyse the semantics of the members.
         self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))

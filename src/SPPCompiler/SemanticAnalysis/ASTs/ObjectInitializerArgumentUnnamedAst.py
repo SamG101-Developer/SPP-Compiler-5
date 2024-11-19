@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stage4_SemanticAnalyser import Stage4_SemanticAnalyser
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ObjectInitializerArgumentUnnamedAst(Ast, TypeInferrable, Stage4_SemanticAnalyser):
+class ObjectInitializerArgumentUnnamedAst(Ast, TypeInferrable, CompilerStages):
     name: IdentifierAst
 
     @ast_printer_method
