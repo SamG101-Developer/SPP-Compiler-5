@@ -20,8 +20,8 @@ class SymbolTable:
         self._table[symbol.name] = symbol
 
     def rem(self, symbol: Symbol) -> None:
-        # Remove a symbol from the table.
-        del self._table[symbol.name]
+        # Remove a symbol from the table by symbol not symbol name.
+        self._table = {k: v for k, v in self._table.items() if v != symbol}
 
     def get(self, name: IdentifierAst | GenericIdentifierAst, default=None) -> Symbol:
         # Get a symbol from the table.
