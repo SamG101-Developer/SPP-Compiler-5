@@ -47,7 +47,7 @@ class Analyser:
             ProgressBar("Aliasing types..........", module_tree.modules.length),
             ProgressBar("Loading sup scopes......", module_tree.modules.length),
             ProgressBar("Injecting sup scopes....", module_tree.modules.length),
-            ProgressBar("Regenerating aliases...", module_tree.modules.length),
+            ProgressBar("Regenerating aliases....", module_tree.modules.length),
             ProgressBar("Regenerating generics...", module_tree.modules.length),
             ProgressBar("Analysing semantics.....", module_tree.modules.length)]
 
