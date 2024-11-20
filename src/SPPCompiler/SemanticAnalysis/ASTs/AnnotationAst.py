@@ -54,59 +54,77 @@ class AnnotationAst(Ast, CompilerStages):
 
     def pre_process(self, context: PreProcessingContext) -> None:
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
-        from SPPCompiler.SemanticAnalysis import FunctionPrototypeAst
+        from SPPCompiler.SemanticAnalysis import FunctionPrototypeAst, ModulePrototypeAst
         from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled, AstVisibility
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         super().pre_process(context)
 
         # Pre-process the name of this annotation.
         if self.name.value == _Annotations.VirtualMethod.value:
-            # The "virtual_method" annotation can only be applied to functions.
+            # The "virtual_method" annotation can only be applied to class method.
             if not isinstance(context, FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context, "function")
-            context._virtual = True
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
+            if isinstance(context._ctx, ModulePrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "class-method")
+            if context._abstract:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, context._abstract.name)
+            context._virtual = self
 
         elif self.name.value == _Annotations.AbstractMethod.value:
-            # The "abstract_method" annotation can only be applied to functions.
+            # The "abstract_method" annotation can only be applied to class method.
             if not isinstance(context, FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context, "function")
-            context._abstract = context._virtual = True
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
+            if isinstance(context._ctx, ModulePrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "class-method")
+            if context._virtual:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, context._virtual.name)
+            context._abstract = self
 
         elif self.name.value == _Annotations.NonImplementedMethod.value:
             # The "non_implemented_method" annotation can only be applied to functions.
             if not isinstance(context, FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context, "function")
-            context._non_implemented = True
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
+            context._non_implemented = self
 
         elif self.name.value == _Annotations.Public.value:
             # The "public", access modifier annotation can only be applied to visibility enabled objects.
             if not isinstance(context, VisibilityEnabled):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context, "visibility-enabled")
-            context.visibility = AstVisibility.Public
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "visibility-enabled")
+            if context._visibility[1] and context._visibility[0] != AstVisibility.Public:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, context._visibility[1].name)
+            context._visibility = (AstVisibility.Public, self)
 
         elif self.name.value == _Annotations.Protected.value:
             # The "protected", access modifier annotation can only be applied to visibility enabled objects.
             if not isinstance(context, VisibilityEnabled):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context, "visibility-enabled")
-            context.visibility = AstVisibility.Protected
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "visibility-enabled")
+            if context._visibility[1] and context._visibility[0] != AstVisibility.Protected:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, context._visibility[1].name)
+            context._visibility = (AstVisibility.Protected, self)
 
         elif self.name.value == _Annotations.Private.value:
             # The "private", access modifier annotation can only be applied to visibility enabled objects.
             if not isinstance(context, VisibilityEnabled):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context, "visibility-enabled")
-            context.visibility = AstVisibility.Private
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "visibility-enabled")
+            if context._visibility[1] and context._visibility[0] != AstVisibility.Private:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, context._visibility[1].name)
+            context._visibility = (AstVisibility.Private, self)
 
         elif self.name.value == _Annotations.Cold.value:
             # The "cold" annotation can only be applied to functions.
             if not isinstance(context, FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context, "function")
-            context._cold = True
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
+            if context._hot:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, context._hot.name)
+            context._cold = self
 
         elif self.name.value == _Annotations.Hot.value:
             # The "hot" annotation can only be applied to functions.
             if not isinstance(context, FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context, "function")
-            context._hot = True
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
+            if context._cold:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, context._cold.name)
+            context._hot = self
 
         else:
             raise SemanticErrors.AnnotationInvalidError().add(self.name)
