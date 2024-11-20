@@ -25,7 +25,7 @@ class CoroutinePrototypeAst(FunctionPrototypeAst):
         # Todo: Check the type superimposes a Gen type rather that is a Gen type?
         allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics)
         if not allowed_types.any(lambda t: t.symbolic_eq(self.return_type.without_generics(), scope_manager.current_scope)):
-            return SemanticErrors.FunctionCoroutineInvalidReturnTypeError().add(self.return_type)
+            raise SemanticErrors.FunctionCoroutineInvalidReturnTypeError().add(self.return_type)
 
         # Analyse the semantics of the function body.
         self.body.analyse_semantics(scope_manager, **kwargs)
