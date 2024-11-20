@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestAnnotationAst(TestCase):
+class TestBinaryExpressionAst(TestCase):
     @should_pass_compilation()
     def test_valid_binary_operation(self):
         """

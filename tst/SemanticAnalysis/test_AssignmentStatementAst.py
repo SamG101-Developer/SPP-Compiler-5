@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestAnnotationAst(TestCase):
+class TestAssignmentStatementAst(TestCase):
     @should_pass_compilation()
     def test_valid_assignment_variable(self):
         """

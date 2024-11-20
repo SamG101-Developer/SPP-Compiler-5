@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestAnnotationAst(TestCase):
+class TestCaseExpressionAst(TestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_case_expression(self):
         """

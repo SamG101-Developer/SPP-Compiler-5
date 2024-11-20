@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestAnnotationAst(TestCase):
+class TestArrayLiteral0ElementAst(TestCase):
     @should_pass_compilation()
     def test_valid_array_empty_array_literal(self):
         """
