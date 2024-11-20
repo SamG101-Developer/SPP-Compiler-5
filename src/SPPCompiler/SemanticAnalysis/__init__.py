@@ -79,7 +79,7 @@ from SPPCompiler.SemanticAnalysis.ASTs.ObjectInitializerArgumentUnnamedAst impor
 from SPPCompiler.SemanticAnalysis.ASTs.ObjectInitializerArgumentAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ObjectInitializerAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ParenthesizedExpressionAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.PatternBlockAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.CaseExpressionBranchAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PatternGuardAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantAttributeBindingAst import *

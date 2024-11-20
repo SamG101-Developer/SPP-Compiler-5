@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PatternBlockAst(Ast, TypeInferrable, CompilerStages):
+class CaseExpressionBranchAst(Ast, TypeInferrable, CompilerStages):
     comp_operator: Optional[TokenAst]
     patterns: Seq[PatternVariantAst]
     guard: Optional[PatternGuardAst]
@@ -60,4 +60,4 @@ class PatternBlockAst(Ast, TypeInferrable, CompilerStages):
         scope_manager.move_out_of_current_scope()
 
 
-__all__ = ["PatternBlockAst"]
+__all__ = ["CaseExpressionBranchAst"]
