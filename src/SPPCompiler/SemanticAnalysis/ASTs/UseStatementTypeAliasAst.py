@@ -61,7 +61,7 @@ class UseStatementTypeAliasAst(Ast, CompilerStages):
         cls_ast = AstMutation.inject_code(f"cls {self.new_type} {{}}", Parser.parse_class_prototype)
         cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
         cls_ast._is_alias = True
-        cls_ast._visibility = visibility
+        cls_ast._visibility = (visibility, None)
         cls_ast.generate_symbols(scope_manager)
 
         # Create a scope for the alias' generics, so analysing can be done with the generics, without them leaking.

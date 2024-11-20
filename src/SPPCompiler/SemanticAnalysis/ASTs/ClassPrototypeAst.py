@@ -72,11 +72,11 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         symbol_name = copy.deepcopy(self.name.types[-1])
         symbol_name.generic_argument_group = GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)
 
-        symbol_1 = symbol_type(name=symbol_name, type=self, scope=scope_manager.current_scope, visibility=self._visibility)
+        symbol_1 = symbol_type(name=symbol_name, type=self, scope=scope_manager.current_scope, visibility=self._visibility[0])
         scope_manager.current_scope.parent.add_symbol(symbol_1)
         scope_manager.current_scope._type_symbol = symbol_1
         if self.generic_parameter_group.parameters:
-            symbol_2 = symbol_type(name=self.name.types[-1], type=self, visibility=self._visibility)
+            symbol_2 = symbol_type(name=self.name.types[-1], type=self, visibility=self._visibility[0])
             symbol_2.scope = scope_manager.current_scope
             scope_manager.current_scope.parent.add_symbol(symbol_2)
 

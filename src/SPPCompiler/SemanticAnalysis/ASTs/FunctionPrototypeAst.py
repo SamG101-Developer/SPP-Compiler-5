@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
-import copy, functools
+import copy
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -34,10 +34,12 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
     where_block: Optional[WhereBlockAst]
     body: FunctionImplementationAst
 
-    _orig: IdentifierAst = field(default=None, kw_only=True, repr=False)
-    _abstract: bool = field(default=False, kw_only=True, repr=False)
-    _virtual: bool = field(default=False, kw_only=True, repr=False)
-    _non_implemented: bool = field(default=False, kw_only=True, repr=False)
+    _orig: Optional[IdentifierAst] = field(default=None, kw_only=True, repr=False)
+    _abstract: Optional[AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _virtual: Optional[AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _non_implemented: Optional[AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _cold: Optional[AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _hot: Optional[AnnotationAst] = field(default=None, kw_only=True, repr=False)
 
     def __post_init__(self) -> None:
         # Import the necessary classes to create default instances.

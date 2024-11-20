@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
 from fastenum import Enum
+from typing import Optional, Tuple
+
+from SPPCompiler.SemanticAnalysis.ASTs.AnnotationAst import AnnotationAst
 
 
 class AstVisibility(Enum):
@@ -16,7 +19,7 @@ class AstVisibility(Enum):
 
 @dataclass
 class VisibilityEnabled:
-    _visibility: AstVisibility = field(default=AstVisibility.Private, kw_only=True, repr=False)
+    _visibility: Tuple[AstVisibility, Optional[AnnotationAst]] = field(default=(AstVisibility.Private, None), kw_only=True, repr=False)
 
 
 # Decorator to apply the VisibilityEnabled class to a class.

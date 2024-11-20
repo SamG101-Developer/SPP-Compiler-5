@@ -50,7 +50,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled, CompilerStages):
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
-        symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility)
+        symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         symbol.memory_info.ast_pinned.append(self.name)
         symbol.memory_info.ast_comptime_const = self
         symbol.memory_info.initialized_by(self)

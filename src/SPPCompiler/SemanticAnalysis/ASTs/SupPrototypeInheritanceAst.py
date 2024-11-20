@@ -130,7 +130,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
                 raise SemanticErrors.SuperimpositionInheritanceMethodInvalidError().add(this_method.name, self.super_class)
 
             # Check the base method is virtual or abstract.
-            if not base_method._virtual:
+            if not (base_method._virtual or base_method._abstract):
                 raise SemanticErrors.SuperimpositionInheritanceNonVirtualMethodOverriddenError().add(base_method.name, self.super_class)
 
         # Check every abstract method on the super class is implemented.

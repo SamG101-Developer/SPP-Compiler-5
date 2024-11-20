@@ -53,7 +53,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         # Create a variable symbol for this attribute in the current scope (class).
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
-        symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility)
+        symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         scope_manager.current_scope.add_symbol(symbol)
 
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
