@@ -1,9 +1,8 @@
 from __future__ import annotations
-
-import copy
 from dataclasses import dataclass
 from fastenum import Enum
 from typing import TYPE_CHECKING
+import copy
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
