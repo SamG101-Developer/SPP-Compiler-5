@@ -31,8 +31,5 @@ class BooleanLiteralAst(Ast, TypeInferrable, CompilerStages):
         bool_type = CommonTypes.Bool(self.pos)
         return InferredType.from_type(bool_type)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
-
 
 __all__ = ["BooleanLiteralAst"]

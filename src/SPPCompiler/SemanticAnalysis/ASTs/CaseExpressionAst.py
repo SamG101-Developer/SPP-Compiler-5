@@ -118,6 +118,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
                     binary_ast.analyse_semantics(scope_manager, **kwargs)
 
                     # Check the function's return type is boolean.
+                    # Todo: is it possible it is non-boolean? comparisons are forced, and they all have Bool return.
                     target_type = CommonTypes.Bool(self.pos)
                     return_type = binary_ast.infer_type(scope_manager).type
                     if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
