@@ -55,7 +55,7 @@ class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction, CompilerSta
         return self.name
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import ConventionMutAst, ConventionRefAst
+        from SPPCompiler.SemanticAnalysis import ConventionMutAst, ConventionRefAst, ConventionMovAst
         from SPPCompiler.SemanticAnalysis import LetStatementUninitializedAst, LocalVariableSingleIdentifierAst
 
         # Analyse the type.
@@ -70,7 +70,7 @@ class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction, CompilerSta
         # Mark the symbol as initialized.
         symbol = scope_manager.current_scope.get_symbol(self.name)
         symbol.is_mutable = self.tok_mut is not None
-        symbol.memory_info.ast_borrowed = self.convention
+        symbol.memory_info.ast_borrowed = self.convention if type(self.convention) is not ConventionMovAst else None
         symbol.memory_info.is_borrow_mut = isinstance(self.convention, ConventionMutAst)
         symbol.memory_info.is_borrow_ref = isinstance(self.convention, ConventionRefAst)
         symbol.memory_info.initialized_by(self)
