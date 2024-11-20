@@ -11,26 +11,30 @@ from spp import handle_init, handle_build
 def _build_temp_project(project_name, code):
     restore = os.getcwd()
 
-    if not os.path.exists(f"../tmp/{project_name}"):
-        os.mkdir(f"../tmp/{project_name}")
-        os.chdir(f"../tmp/{project_name}")
-        handle_init(Namespace())
-        with open("src/main.spp", "a") as f:
-            f.write(code)
-        handle_build(Namespace(mode="release"))
+    try:
+        if not os.path.exists(f"../tmp/{project_name}"):
+            os.mkdir(f"../tmp/{project_name}")
+            os.chdir(f"../tmp/{project_name}")
+            handle_init(Namespace())
+            with open("src/main.spp", "a") as f:
+                f.write(code)
+            handle_build(Namespace(mode="release"))
 
-    else:
-        os.chdir(f"../tmp/{project_name}")
-        handle_build(Namespace(mode="release"))
+        else:
+            os.chdir(f"../tmp/{project_name}")
+            handle_build(Namespace(mode="release"))
 
-    os.chdir(restore)
+    finally:
+        os.chdir(restore)
 
 
-def should_pass_compilation(test_func):
-    def wrapper(self):
-        code = test_func.__doc__
-        _build_temp_project(test_func.__name__, code)
-    return wrapper
+def should_pass_compilation():
+    def inner(test_func):
+        def wrapper(self):
+            code = test_func.__doc__
+            _build_temp_project(test_func.__name__, code)
+        return wrapper
+    return inner
 
 
 def should_fail_compilation(expected_error):
