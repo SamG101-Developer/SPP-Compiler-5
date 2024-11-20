@@ -48,7 +48,7 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, CompilerStag
     def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkip1ArgumentAst
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -59,11 +59,11 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, CompilerStag
         # Only 1 "multi-skip" allowed in a destructure.
         multi_arg_skips = self.elements.filter_to_type(LocalVariableDestructureSkipNArgumentsAst)
         if multi_arg_skips.length > 1:
-            raise AstErrors.MULTI_SKIP_N_IN_DESTRUCTURE(multi_arg_skips[0], multi_arg_skips[1])
+            raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1])
 
         # Ensure the lhs and rhs tuples have the same number of elements unless a multi-skip is present.
         if num_lhs_tuple_elements < num_lhs_tuple_elements and not multi_arg_skips or num_lhs_tuple_elements > num_rhs_tuple_elements:
-            raise AstErrors.TUPLE_SIZE_MISSMATCH(self, num_lhs_tuple_elements, num_rhs_tuple_elements)
+            raise SemanticErrors.VariableTupleDestructureTupleSizeMismatchError().add(self, num_lhs_tuple_elements, value, num_rhs_tuple_elements)
 
         # For a binding ".." destructure, ie "let (a, ..b, c) = t", create an intermediary rhs tuple.
         if multi_arg_skips and multi_arg_skips[0].binding:

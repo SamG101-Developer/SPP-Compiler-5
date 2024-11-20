@@ -68,12 +68,14 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         scope_manager.move_out_of_current_scope()
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+
         scope_manager.move_to_next_scope()
 
         # Cannot superimpose over a generic type.
         cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
         if cls_symbol.is_generic:
-            raise AstErrors.INVALID_PLACE_FOR_GENERIC(self.name, "superimpose over a generic type")
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type")
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
@@ -96,7 +98,7 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Move to the next scope.
         scope_manager.move_to_next_scope()
@@ -106,11 +108,11 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
 
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
-            raise AstErrors.SUP_UNCONSTRAINED_GENERIC_PARAMETER(unconstrained[0], self.name)
+            raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(unconstrained[0], self.name)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_opt():
-            raise AstErrors.SUP_OPTIONAL_GENERIC_PARAMETER(optional[0])
+            raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(optional[0])
 
         # Analyse the name, where block, and body.
         self.name.analyse_semantics(scope_manager, **kwargs)

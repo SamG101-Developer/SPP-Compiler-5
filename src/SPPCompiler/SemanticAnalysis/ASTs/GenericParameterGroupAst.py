@@ -75,16 +75,16 @@ class GenericParameterGroupAst(Ast, Default, CompilerStages):
         return self.parameters.filter_to_type(GenericCompParameterVariadicAst, GenericTypeParameterVariadicAst)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Check there are no duplicate generic parameter names.
         generic_parameter_names = self.parameters.map(lambda parameter: parameter.name)
-        if duplicate_generic_parameters := generic_parameter_names.non_unique():
-            raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_generic_parameters[0][0], duplicate_generic_parameters[0][1], "generic parameter")
+        if duplicates := generic_parameter_names.non_unique():
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "generic parameter")
 
         # Check the generic parameters are in the correct order.
         if difference := AstOrdering.order_params(self.parameters):
-            raise AstErrors.INVALID_ORDER(difference[0], difference[1], "generic parameter")
+            raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "generic parameter")
 
         # Analyse the parameters.
         self.parameters.for_each(lambda p: p.analyse_semantics(scope_manager, **kwargs))

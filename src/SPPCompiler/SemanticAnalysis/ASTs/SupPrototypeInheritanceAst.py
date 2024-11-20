@@ -53,6 +53,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
     def load_sup_scopes(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         scope_manager.move_to_next_scope()
 
@@ -62,9 +63,9 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
         # Cannot superimpose with a generic super class.
         if cls_symbol.is_generic:
-            raise AstErrors.INVALID_PLACE_FOR_GENERIC(self.name, "superimpose over a generic type")
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type")
         if sup_symbol.is_generic:
-            raise AstErrors.INVALID_PLACE_FOR_GENERIC(self.name, "extend a generic type")
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.super_class, self.super_class, "superimposition supertype")
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         sup_symbol = scope_manager.current_scope.get_symbol(self.super_class)
@@ -88,7 +89,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
 
         # Todo: Check the same superclass isn't extended twice.
@@ -107,11 +108,11 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
             if not self.name.types[-1].value.startswith("$"):
-                raise AstErrors.SUP_UNCONSTRAINED_GENERIC_PARAMETER(unconstrained[0], self.name)
+                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(unconstrained[0], self.name)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_opt():
-            raise AstErrors.SUP_OPTIONAL_GENERIC_PARAMETER(optional[0])
+            raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(optional[0])
 
         # Analyse the name, where block, and body.
         self.name.analyse_semantics(scope_manager, **kwargs)
@@ -126,11 +127,11 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
             # Check the base method exists.
             if not base_method:
-                raise AstErrors.SUP_MEMBER_INVALID(this_method.name, self.super_class)
+                raise SemanticErrors.SuperimpositionInheritanceMethodInvalidError().add(this_method.name, self.super_class)
 
             # Check the base method is virtual or abstract.
             if not base_method._virtual:
-                raise AstErrors.SUP_MEMBER_NOT_VIRTUAL(this_method, self.super_class)
+                raise SemanticErrors.SuperimpositionInheritanceNonVirtualMethodOverriddenError().add(base_method.name, self.super_class)
 
         # Check every abstract method on the super class is implemented.
         for base_member in sup_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s._ast, SupPrototypeFunctionsAst)).map(lambda s: s._ast.body.members).flat().filter_to_type(SupPrototypeInheritanceAst):
@@ -139,7 +140,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
             # Check the abstract methods are overridden.
             if base_method._abstract and not this_method:
-                raise AstErrors.SUP_ABSTRACT_MEMBER_NOT_OVERRIDEN(base_method.name, self.name)
+                raise SemanticErrors.SuperimpositionInheritanceAbstractMethodNotOverriddenError().add(base_method.name, self.super_class)
 
         # Move out of the current scope.
         scope_manager.move_out_of_current_scope()

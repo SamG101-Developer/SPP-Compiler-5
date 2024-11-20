@@ -109,7 +109,7 @@ class AnnotationAst(Ast, CompilerStages):
             context._hot = True
 
         else:
-            raise SemanticErrors.AnnotationInvalidError(self.name)
+            raise SemanticErrors.AnnotationInvalidError().add(self.name)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -117,7 +117,7 @@ class AnnotationAst(Ast, CompilerStages):
         # Prevent duplicate annotations from being applied to an AST.
         annotation_names = self._ctx.annotations.map_attr("name")
         if duplicate_annotations := annotation_names.filter(lambda a: a == self.name).remove(self.name):
-            raise SemanticErrors.AnnotationDuplicateError(self.name, duplicate_annotations[0])
+            raise SemanticErrors.AnnotationDuplicateError().add(self.name, duplicate_annotations[0])
 
 
 __all__ = ["AnnotationAst"]

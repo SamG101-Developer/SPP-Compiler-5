@@ -38,7 +38,7 @@ class RelStatementAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Analyse the expressions.
         self.expressions.for_each(lambda expression: expression.analyse_semantics(scope_manager, **kwargs))
@@ -46,7 +46,8 @@ class RelStatementAst(Ast, TypeInferrable, CompilerStages):
         # Check each expression is symbolic.
         symbols = self.expressions.map(scope_manager.current_scope.get_variable_symbol_outermost_part)
         if symbols.filter_out_none().length < self.expressions.length:
-            raise AstErrors.INVALID_PIN_TARGET(self, self.expressions[symbols.index(None)])
+            non_symbolic_pin_target = self.expressions[symbols.index(None)]
+            raise SemanticErrors.MemoryPinTargetInvalidError().add(self, non_symbolic_pin_target)
 
         # Prevent overlapping symbols from being created.
         symbols.remove_none()
@@ -55,11 +56,11 @@ class RelStatementAst(Ast, TypeInferrable, CompilerStages):
 
             # Check for a direct match in the pin list.
             if not pins.find(lambda pin: str(rel_target) == str(pin)):
-                raise AstErrors.UNPINNING_NON_PINNED(self, rel_target)
+                raise SemanticErrors.MemoryReleasingNonPinnedSymbolError().add(self, rel_target)
 
             # Check the rel target isn't a compile-time constant.
             if symbol.memory_info.ast_comptime_const:
-                raise AstErrors.UNPINNING_CONSTANT(rel_target, symbol.memory_info.ast_initialization)
+                raise SemanticErrors.MemoryReleasingConstantSymbolError().add(self, rel_target, symbol.memory_info.ast_initialization)
 
             # Cause a pinned generator/future to be invalidated.
             for pin_target in symbol.memory_info.pin_target:

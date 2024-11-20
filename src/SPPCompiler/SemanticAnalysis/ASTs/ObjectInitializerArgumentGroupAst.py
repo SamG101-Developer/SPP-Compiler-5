@@ -89,7 +89,7 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, class_type: TypeAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, ClassPrototypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 
         # Get symbol and attribute information from the class type.
@@ -100,26 +100,29 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
 
         # Check there are no duplicate argument names.
         argument_names = self.get_val_args().map(lambda a: a.name)
-        if duplicate_arguments := argument_names.non_unique():
-            raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_arguments[0][0], duplicate_arguments[0][1], "named object arguments")
+        if duplicates := argument_names.non_unique():
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named object arguments")
 
         # Check there is at most 1 default argument.
         if self.get_def_args().length > 1:
-            raise AstErrors.TOO_MANY_DEFAULT_ARGUMENTS(self.get_def_args()[0], self.get_def_args()[1])
+            default_arguments = self.get_def_args()
+            raise SemanticErrors.ObjectInitializerMultipleSupArgumentsError().add(default_arguments[0], default_arguments[1])
         def_argument = self.get_def_args().first()
 
         # Check there is at most 1 super argument.
         if self.get_sup_args().length > 1:
-            raise AstErrors.TOO_MANY_SUPER_ARGUMENTS(self.get_sup_args()[0], self.get_sup_args()[1])
+            sup_arguments = self.get_sup_args()
+            raise SemanticErrors.ObjectInitializerMultipleSupArgumentsError().add(sup_arguments[0], sup_arguments[1])
         sup_argument = self.get_sup_args().first()
 
         # Check every attribute has been assigned a value (unless the default argument is present).
         if not def_argument and (missing_attributes := attribute_names.set_subtract(argument_names)):
-            raise AstErrors.MISSING_ARGUMENT_NAMES(missing_attributes, "object initialization", "attribute")
+            raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_attributes[0], "attribute", "object initialization argument")
 
         # Check there are no invalidly named arguments.
         if invalid_arguments := argument_names.set_subtract(attribute_names):
-            raise AstErrors.INVALID_ARGUMENT_NAMES(attribute_names, invalid_arguments[0])
+            missing_arguments = attribute_names.set_subtract(argument_names)
+            raise SemanticErrors.ArgumentNameInvalidError().add(missing_arguments[0], "attribute", invalid_arguments[0], "object initialization argument")
 
         # Type check the regular arguments against the class attributes.
         sorted_arguments = self.arguments.filter(lambda a: isinstance(a.name, IdentifierAst)).sort(key=lambda a: attribute_names.index(a.name))
@@ -128,19 +131,19 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
             attribute_type = InferredType.from_type(attribute.type)
 
             if not attribute_type.symbolic_eq(argument_type, class_symbol.scope, scope_manager.current_scope):
-                raise AstErrors.TYPE_MISMATCH(attribute, attribute_type, argument, argument_type)
+                raise SemanticErrors.TypeMismatchError().add(attribute, attribute_type, argument, argument_type)
 
         # Type check the default argument if it exists.
         def_argument_type = def_argument.value.infer_type(scope_manager, **kwargs) if def_argument else None
         target_def_type = InferredType.from_type(class_type)
         if def_argument and not def_argument_type.symbolic_eq(target_def_type, class_symbol.scope, scope_manager.current_scope):
-            raise AstErrors.TYPE_MISMATCH(class_type, target_def_type, def_argument, def_argument_type)
+            raise SemanticErrors.TypeMismatchError().add(class_type, target_def_type, def_argument, def_argument_type)
 
         # Check the "sup=" argument provides a tuple.
         sup_argument_type = sup_argument.value.infer_type(scope_manager, **kwargs) if sup_argument else None
         target_sup_type = InferredType.from_type(CommonTypes.Tup().without_generics())
         if sup_argument and not sup_argument_type.without_generics().symbolic_eq(target_sup_type, class_symbol.scope, scope_manager.current_scope):
-            raise AstErrors.TYPE_MISMATCH(class_type, target_sup_type, sup_argument, sup_argument_type)
+            raise SemanticErrors.TypeMismatchError().add(class_type, target_sup_type, sup_argument, sup_argument_type)
 
         if sup_argument:
             # Todo: Switch comparisons to symbolic_eq (remove fq_name)
@@ -149,11 +152,12 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
 
             # Check if there are any missing types in the "sup=" tuple.
             if sup_argument and (missing_superclasses := super_classes.set_subtract(given_sup_types)):
-                raise AstErrors.MISSING_ARGUMENT_NAMES(missing_superclasses, "object initialization", "superclass")
+                raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_superclasses[0], "superclass", "object initialization sup argument")
 
             # Check if there are any extra invalid types in the "sup=" tuple.
             if sup_argument and (invalid_superclasses := given_sup_types.set_subtract(super_classes)):
-                raise AstErrors.INVALID_ARGUMENT_NAMES(super_classes, invalid_superclasses[0])
+                missing_superclasses = super_classes.set_subtract(given_sup_types)
+                raise SemanticErrors.ArgumentNameInvalidError().add(missing_superclasses[0], "superclass", invalid_superclasses[0], "object initialization sup argument")
 
 
 __all__ = ["ObjectInitializerArgumentGroupAst"]

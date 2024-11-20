@@ -43,7 +43,7 @@ class TupleLiteralAst(Ast, TypeInferrable, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.ASTs import ConventionMovAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Analyse the elements in the tuple.
         self.elements.for_each(lambda element: element.analyse_semantics(scope_manager, **kwargs))
@@ -53,7 +53,7 @@ class TupleLiteralAst(Ast, TypeInferrable, CompilerStages):
         if borrowed_elements:
             if borrow_symbol := scope_manager.current_scope.get_variable_symbol_outermost_part(borrowed_elements[0]):
                 if borrow_ast := borrow_symbol.memory_info.ast_borrowed:
-                    raise AstErrors.TUPLE_BORROWED_ELEMENT(borrowed_elements[0], borrow_ast)
+                    raise SemanticErrors.TupleElementBorrowedError().add(borrowed_elements[0], borrow_ast)
 
 
 __all__ = ["TupleLiteralAst"]

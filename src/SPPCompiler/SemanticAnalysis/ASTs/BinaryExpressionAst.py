@@ -51,16 +51,16 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # The TypeAst cannot be used as an expression for a binary operation.
         if isinstance(self.lhs, TypeAst):
-            raise AstErrors.INVALID_EXPRESSION(self.lhs)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs)
         if isinstance(self.rhs, TypeAst):
-            raise AstErrors.INVALID_EXPRESSION(self.rhs)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs)
 
         # Analyse the LHS of the binary expression.
         self.lhs.analyse_semantics(scope_manager, **kwargs)
@@ -80,7 +80,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
         if self.op.token.token_type.name.endswith("Assign") and not scope_manager.current_scope.get_variable_symbol_outermost_part(self.lhs):
-            raise AstErrors.INVALID_COMPOUND_ASSIGNMENT_LHS_EXPR(self.lhs)
+            raise SemanticErrors.AssignmentInvalidCompoundLhsError().add(self.lhs)
 
         # Handle lhs-folding
         if isinstance(self.lhs, TokenAst):

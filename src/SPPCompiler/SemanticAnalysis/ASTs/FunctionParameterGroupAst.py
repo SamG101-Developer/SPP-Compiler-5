@@ -77,26 +77,26 @@ class FunctionParameterGroupAst(Ast, Default, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst, FunctionParameterVariadicAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Check there are no duplicate parameter names.
         parameter_names = self.get_non_self().map_attr("extract_names").flat()
-        if duplicate_parameters := parameter_names.non_unique():
-            raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_parameters[0][0], duplicate_parameters[0][1], "parameter")
+        if duplicates := parameter_names.non_unique():
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "parameter")
 
         # Check the parameters are in the correct order.
         if difference := AstOrdering.order_params(self.parameters):
-            raise AstErrors.INVALID_ORDER(difference[0], difference[1], "parameter")
+            raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "parameter")
 
         # Check there is only 1 "self" parameter.
         self_parameters = self.parameters.filter_to_type(FunctionParameterSelfAst)
         if self_parameters.length > 1:
-            raise AstErrors.MULTIPLE_SELF_PARAMETERS(self_parameters[0], self_parameters[1])
+            raise SemanticErrors.ParameterMultipleSelfError().add(self_parameters[0], self_parameters[1])
 
         # Check there is only 1 variadic parameter.
         variadic_parameters = self.parameters.filter_to_type(FunctionParameterVariadicAst)
         if variadic_parameters.length > 1:
-            raise AstErrors.MULTIPLE_VARIADIC_PARAMETERS(variadic_parameters[0], variadic_parameters[1])
+            raise SemanticErrors.ParameterMultipleVariadicError().add(variadic_parameters[0], variadic_parameters[1])
 
         # Analyse the parameters.
         self.parameters.for_each(lambda p: p.analyse_semantics(scope_manager, **kwargs))

@@ -40,11 +40,11 @@ class WithExpressionAst(Ast, TypeInferrable, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the expression.
         if isinstance(self.expression, (TokenAst, TypeAst)):
-            raise AstErrors.INVALID_EXPRESSION(self.expression)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.expression)
 
         # Create a new scope for the with block and move into it.
         scope_manager.create_and_move_into_new_scope(f"<with:{self.pos}>")
@@ -58,7 +58,7 @@ class WithExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         context_types = Seq([CommonTypes.CtxRef(), CommonTypes.CtxMut()]).map(TypeAst.without_generics)
         if not context_types.any(lambda t: expression_sup_types.any(lambda s: s.symbolic_eq(t, scope_manager.current_scope))):
-            raise AstErrors.INVALID_WITH_EXPRESSION(self, self.expression)
+            raise SemanticErrors.WithExpressionNonContextualConditionError().add(self.expression)
 
         # Analyse the alias, if it exists.
         if self.alias:

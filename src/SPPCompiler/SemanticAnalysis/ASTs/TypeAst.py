@@ -175,7 +175,7 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source=None, generic_infer_target=None, force: bool = False, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, TokenAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
@@ -235,15 +235,15 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
 
                 # Check the lhs isn't a generic type.
                 if type_symbol.is_generic:
-                    raise AstErrors.INVALID_PLACE_FOR_GENERIC(prev_type, prev_type, type_part)
+                    raise SemanticErrors.GenericTypeInvalidUsageError().add(prev_type, prev_type, "<TODO: LABEL>")
 
                 # Check the lhs is a tuple (only indexable type).
                 if not prev_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
-                    raise AstErrors.MEMBER_ACCESS_NON_INDEXABLE(prev_type, prev_type, type_part)
+                    raise SemanticErrors.MemberAccessNonIndexableError().add(prev_type, prev_type, type_part)
 
                 # Check the index is within the bounds of the tuple.
                 if int(type_part.token.token_metadata) >= prev_type_part.generic_argument_group.arguments.length:
-                    raise AstErrors.MEMBER_ACCESS_OUT_OF_BOUNDS(prev_type, prev_type, type_part)
+                    raise SemanticErrors.MemberAccessIndexOutOfBoundsError().add(prev_type, prev_type, type_part)
 
                 new_type = prev_type_part.generic_argument_group.arguments[int(type_part.token.token_metadata)].value
                 type_scope = type_scope.get_symbol(new_type).scope

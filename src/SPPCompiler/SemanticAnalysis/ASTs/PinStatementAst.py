@@ -38,7 +38,7 @@ class PinStatementAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 
         # Analyse the expressions.
@@ -47,13 +47,14 @@ class PinStatementAst(Ast, TypeInferrable, CompilerStages):
         # Check each expression is symbolic.
         symbols = self.expressions.map(scope_manager.current_scope.get_variable_symbol_outermost_part)
         if symbols.filter_out_none().length < self.expressions.length:
-            raise AstErrors.INVALID_PIN_TARGET(self, self.expressions[symbols.index(None)])
+            non_symbolic_pin_target = self.expressions[symbols.index(None)]
+            raise SemanticErrors.MemoryPinTargetInvalidError().add(self, non_symbolic_pin_target)
 
         # Prevent overlapping symbols from being created.
         symbols.remove_none()
         for pin_target, symbol in self.expressions.zip(symbols):
             if overlap := symbol.memory_info.ast_pinned.filter(lambda p: AstMemoryHandler.overlaps(p, pin_target)):
-                raise AstErrors.PIN_OVERLAP_CONFLICT(overlap, pin_target)
+                raise SemanticErrors.MemoryPinOverlapError().add(pin_target, overlap[0])
             symbol.memory_info.ast_pinned.append(pin_target)
 
 

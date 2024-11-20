@@ -50,7 +50,8 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis import LetStatementInitializedAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+        from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 
         self.type.analyse_semantics(scope_manager, **kwargs)
 
@@ -59,7 +60,7 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping, CompilerStages):
         is_condition_symbol_variant = condition_symbol and condition_symbol.type.without_generics().symbolic_eq(CommonTypes.Var().without_generics(), scope_manager.current_scope)
         if condition_symbol and is_condition_symbol_variant:
             if not condition_symbol.type.symbolic_eq(self.type, scope_manager.current_scope):
-                raise AstErrors.INVALID_PATTERN_DESTRUCTOR_OBJECT(condition, condition_symbol.type, self.type)
+                raise SemanticErrors.TypeMismatchError().add(condition, InferredType.from_type(condition_symbol.type), self.type, InferredType.from_type(self.type))
 
             flow_symbol = copy.deepcopy(condition_symbol)
             flow_symbol.type = self.type

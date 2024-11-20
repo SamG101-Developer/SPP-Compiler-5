@@ -1,5 +1,4 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
 from colorama import Fore, Style
 from dataclasses import dataclass
 from fastenum import Enum
@@ -12,7 +11,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis import *
 
 
-class SemanticError(ABC, BaseException):
+class SemanticError(BaseException):
     class Format(Enum):
         NORMAL = 0
         MINIMAL = 1
@@ -28,12 +27,11 @@ class SemanticError(ABC, BaseException):
 
     error_info: List[ErrorInfo]
 
-    def __init__(self, *args) -> None:
+    def __init__(self, *args) -> SemanticError:
         super().__init__(args)
         self.error_info = []
 
-    @abstractmethod
-    def add(*args, **kwargs) -> None:
+    def add(self, *args, **kwargs) -> SemanticError:
         ...
 
     def add_error(self, pos: int, tag: str, msg: str, tip: str, fmt: Format = Format.NORMAL) -> SemanticError:
@@ -74,7 +72,7 @@ class SemanticErrors:
         class. An allowlist of valid ASTs for the annotation is provided in the error message.
         """
 
-        def add(self, annotation: IdentifierAst, applied_to: Ast, allow_list: str) -> None:
+        def add(self, annotation: IdentifierAst, applied_to: Ast, allow_list: str) -> SemanticError:
             self.add_info(
                 pos=annotation.pos,
                 tag=f"Annotation '{annotation}' defined here")
@@ -85,6 +83,8 @@ class SemanticErrors:
                 msg=f"The '{annotation}' annotation can only be applied to {allow_list} ASTs.",
                 tip=f"Remove the annotation from here.")
 
+            return self
+
     class AnnotationInvalidError(SemanticError):
         """
         The AnnotationInvalidError is raised if a non-standard annotation is used in the code. This includes using the
@@ -92,12 +92,14 @@ class SemanticErrors:
         as "@public", "@no_impl" etc.
         """
 
-        def add(self, annotation: IdentifierAst) -> None:
+        def add(self, annotation: IdentifierAst) -> SemanticError:
             self.add_error(
                 pos=annotation.pos,
                 tag="Invalid annotation.",
                 msg=f"The annotation '{annotation}' is not a valid annotation.",
                 tip=f"Remove the annotation from here.")
+
+            return self
 
     class AnnotationDuplicateError(SemanticError):
         """
@@ -106,7 +108,7 @@ class SemanticErrors:
         and therefore not allowed.
         """
 
-        def add(self, first_annotation: IdentifierAst, second_annotation: IdentifierAst) -> None:
+        def add(self, first_annotation: IdentifierAst, second_annotation: IdentifierAst) -> SemanticError:
             self.add_info(
                 pos=first_annotation.pos,
                 tag=f"Annotation '{first_annotation}' applied here")
@@ -117,6 +119,8 @@ class SemanticErrors:
                 msg=f"The annotation '{second_annotation}' is already applied.",
                 tip=f"Remove the duplicate annotation.")
 
+            return self
+
     class AnnotationConflictError(SemanticError):
         """
         The AnnotationConflictError is raised if there are 2 annotations on the same object that either have conflicting
@@ -124,7 +128,7 @@ class SemanticErrors:
         error.
         """
 
-        def add(self, first_annotation: IdentifierAst, conflicting_annotation: IdentifierAst) -> None:
+        def add(self, first_annotation: IdentifierAst, conflicting_annotation: IdentifierAst) -> SemanticError:
             self.add_info(
                 pos=first_annotation.pos,
                 tag=f"Annotation '{first_annotation}' applied here")
@@ -135,6 +139,8 @@ class SemanticErrors:
                 msg=f"The annotation '{conflicting_annotation}' conflicts with the first annotation.",
                 tip=f"Remove the conflicting annotation.")
 
+            return self
+
     class AnnotationRedundantError(SemanticError):
         """
         The AnnotationRedundantError is raised if there are 2 annotations on the same object and one makes the other
@@ -142,7 +148,7 @@ class SemanticErrors:
         automatically virtual.
         """
 
-        def add(self, first_annotation: IdentifierAst, redundant_annotation: IdentifierAst) -> None:
+        def add(self, first_annotation: IdentifierAst, redundant_annotation: IdentifierAst) -> SemanticError:
             self.add_info(
                 pos=first_annotation.pos,
                 tag=f"Annotation '{first_annotation}' applied here")
@@ -153,542 +159,1267 @@ class SemanticErrors:
                 msg=f"The annotation '{redundant_annotation}' is made redundant by the '{first_annotation}' annotation.",
                 tip=f"Remove the redundant annotation.")
 
+            return self
 
-class AstErrors:
-    # IDENTIFIER ERRORS
+    class IdentifierDuplicationError(SemanticError):
+        """
+        The IdentifierDuplicationError is raised if the same identifier is defined multiple times in the same context.
+        This could be for class attributes, function parameter names, generic parameter names etc.
+        """
 
-    @staticmethod
-    def DUPLICATE_IDENTIFIER(first_identifier: IdentifierAst, second_identifier: IdentifierAst, what: str) -> SemanticError:
-        e = SemanticError()
-        e.add_info(first_identifier.pos, f"{what.capitalize()} '{first_identifier}' defined here")
-        e.add_error(
-            pos=second_identifier.pos,
-            tag=f"Duplicate {what}.",
-            msg=f"The {what} '{second_identifier}' is already defined.",
-            tip=f"Remove or rename the duplicate {what}.")
-        return e
+        def add(self, first_occurrence: IdentifierAst, second_occurrence: IdentifierAst, what: str) -> SemanticError:
+            self.add_info(
+                pos=first_occurrence.pos,
+                tag=f"{what.capitalize()} '{first_occurrence}' defined here")
 
-    # ORDER ERRORS
+            self.add_error(
+                pos=second_occurrence.pos,
+                tag=f"Duplicate {what}.",
+                msg=f"The {what} '{second_occurrence}' is already defined.",
+                tip=f"Remove or rename the duplicate {what}.")
 
-    @staticmethod
-    def INVALID_ORDER(first: Ast, second: Ast, what: str) -> SemanticError:
-        e = SemanticError()
-        e.add_info(first.pos, f"{what.capitalize()} '{first}' defined here")
-        e.add_error(
-            pos=second.pos,
-            tag=f"Invalid {what} order.",
-            msg=f"The {what} '{second}' is in the wrong position.",
-            tip=f"Move the {what} to the correct position.")
-        return e
+            return self
 
-    # PARAMETER ERRORS
+    class OrderInvalidError(SemanticError):
+        """
+        The OrderInvalidError is raised if a collection of ASTs is in the wrong order. This includes optional parameters
+        before required parameters, or named arguments before unnamed arguments.
+        """
 
-    @staticmethod
-    def MULTIPLE_SELF_PARAMETERS(first_parameter: FunctionParameterAst, second_parameter: FunctionParameterAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(first_parameter.pos, f"Parameter '{first_parameter}' defined here")
-        e.add_error(
-            pos=second_parameter.pos,
-            tag="Multiple 'self' parameters.",
-            msg=f"Only one 'self' parameter is allowed.",
-            tip=f"Remove the duplicate 'self' parameter.")
-        return e
+        def add(self, first_what: str, first: Ast, second_what: str, second: Ast, what: str) -> SemanticError:
+            self.add_info(
+                pos=first.pos,
+                tag=f"{first_what.capitalize()} {what} '{first}' defined here")
 
-    @staticmethod
-    def MULTIPLE_VARIADIC_PARAMETERS(first_parameter: FunctionParameterAst, second_parameter: FunctionParameterAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(first_parameter.pos, f"Parameter '{first_parameter}' defined here")
-        e.add_error(
-            pos=second_parameter.pos,
-            tag="Multiple variadic parameters.",
-            msg=f"Only one variadic parameter is allowed.",
-            tip=f"Remove the duplicate variadic parameter.")
-        return e
+            self.add_error(
+                pos=second.pos,
+                tag=f"Invalid {what} order.",
+                msg=f"The {second_what.lower()} {what} '{second}' is in the wrong position.",
+                tip=f"Move the {second_what.lower()} {what} to after the {first_what.lower()} {what}.")
 
-    @staticmethod
-    def OPTIONAL_PARAM_REQUIRES_NON_BORROW(convention: ConventionAst) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=convention.pos,
-            tag="Optional parameter requires non-borrow convention.",
-            msg="Optional parameters cannot have borrow conventions.",
-            tip="Change the convention to a move convention.")
-        return e
+            return self
 
-    # FUNCTION ERRORS
+    class ParameterMultipleSelfError(SemanticError):
+        """
+        The ParameterMultipleSelfError is raised if there are multiple "self" parameters in a function definition. A
+        maximum one "self" parameter is allowed per function.
+        """
 
-    @staticmethod
-    def INVALID_COROUTINE_RETURN_TYPE(return_type: TypeAst) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=return_type.pos,
-            tag="Invalid coroutine return type.",
-            msg="The return type of a coroutine must be a generator.",
-            tip="Change the return type to one of 'GenMov', 'GenMut' or 'GenRef'.")
-        return e
+        def add(self, first_self_parameter: FunctionParameterAst, second_self_parameter: FunctionParameterAst) -> SemanticError:
+            self.add_info(
+                pos=first_self_parameter.pos,
+                tag=f"Self parameter defined here")
 
-    @staticmethod
-    def GEN_OUTSIDE_COROUTINE(tok_gen: TokenAst, tok_fun: TokenAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(tok_fun.pos, f"Subroutine defined here")
-        e.add_error(
-            pos=tok_gen.pos,
-            tag="Yielding outside coroutine.",
-            msg="The 'gen' keyword can only be used inside a coroutine.",
-            tip="Use a coroutine instead of a subroutine.")
-        return e
+            self.add_error(
+                pos=second_self_parameter.pos,
+                tag=f"Second 'self' parameter.",
+                msg="Only one 'self' parameter is allowed.",
+                tip="Remove the second 'self' parameter.")
 
-    @staticmethod
-    def RET_OUTSIDE_SUBROUTINE(tok_ret: TokenAst, tok_cor: TokenAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(tok_cor.pos, f"Coroutine defined here")
-        e.add_error(
-            pos=tok_ret.pos,
-            tag="Returning outside subroutine.",
-            msg="The 'ret' keyword can only be used inside a subroutine.",
-            tip="Use a subroutine instead of a coroutine.")
-        return e
+            return self
 
-    @staticmethod
-    def MISSING_RETURN_STATEMENT(final_member: Ast, function_return_type: TypeAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(function_return_type.pos, f"Function return type '{function_return_type}' defined here")
-        e.add_error(
-            pos=final_member.pos,
-            tag="Missing return statement.",
-            msg="The function does not have a return statement.",
-            tip="Add a return statement to the function.")
-        return e
+    class ParameterMultipleVariadicError(SemanticError):
+        """
+        The ParameterMultipleVariadicError is raised if there are multiple variadic parameters in a function definition.
+        A maximum one variadic parameter is allowed per function.
+        """
 
-    @staticmethod
-    def INVALID_ARGUMENT_NAMES(parameter_names: Seq[Ast], invalid_argument: Ast) -> SemanticError:
-        e = SemanticError()
-        e.add_info(parameter_names[0].pos, f"Parameter names defined here")
-        e.add_error(
-            pos=invalid_argument.pos,
-            tag="Invalid argument name.",
-            msg="The argument name is not valid.",
-            tip="Use a valid argument name.")
-        return e
+        def add(self, first_variadic_parameter: FunctionParameterAst, second_variadic_parameter: FunctionParameterAst) -> SemanticError:
+            self.add_info(
+                pos=first_variadic_parameter.pos,
+                tag=f"Variadic parameter '{first_variadic_parameter}' defined here")
 
-    @staticmethod
-    def MISSING_ARGUMENT_NAMES(missing_arguments: Seq[Ast], what: str, what_singular: str) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=missing_arguments[0].pos,
-            tag=f"Missing {what_singular} names.",
-            msg=f"The {what} is missing the {what_singular} '{missing_arguments.join(", ")}'.",
-            tip=f"Add the missing {what_singular} names.")
-        return e
+            self.add_error(
+                pos=second_variadic_parameter.pos,
+                tag=f"Second variadic parameter '{second_variadic_parameter}.",
+                msg="Only one variadic parameter is allowed.",
+                tip="Remove the second variadic parameter.")
 
-    @staticmethod
-    def NO_VALID_FUNCTION_SIGNATURES(function_call: Ast, signatures: str, attempted: str) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=function_call.pos,
-            tag="Invalid arguments for function call",
-            msg="There are no overloads accepting the given arguments",
-            tip=f"\n\t{signatures.replace("\n", "\n\t")}\n\nAttempted signature:\n\t{attempted}")
-        return e
+            return self
 
-    @staticmethod
-    def AMBIGUOUS_FUNCTION_SIGNATURES(function_call: Ast, signatures: str) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=function_call.pos,
-            tag="Ambiguous function call",
-            msg="There are multiple overloads accepting the given arguments",
-            tip=f"\n\t{signatures.replace("\n", "\n\t")}")
-        return e
+    class ParameterOptionalNonBorrowTypeError(SemanticError):
+        """
+        The ParameterOptionalNonBorrowTypeError is raised if an optional parameter has a borrow convention. Optional
+        parameters cannot have borrow conventions, as borrows cannot be taken as part of an expression, only as a
+        function argument. Therefore there is no way to give a default value that is a borrow.
 
-    @staticmethod
-    def CANNOT_CALL_ABSTRACT_METHOD(function: IdentifierAst, function_call: PostfixExpressionOperatorFunctionCallAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(function.pos, "Function annotated as abstract")
-        e.add_error(
-            pos=function_call.pos,
-            tag="Abstract method called here.",
-            msg="Cannot call abstract methods.",
-            tip="Call the method on a subtype")
-        return e
+        Todo: In the future, borrow conventions may be allowed as optional parameter expression prefixes.
+        """
 
-    # GENERAL SCOPE ERRORS
+        def add(self, convention: ConventionAst) -> SemanticError:
+            self.add_error(
+                pos=convention.pos,
+                tag="Borrow convention on optional parameter.",
+                msg="Optional parameters cannot have borrow conventions.",
+                tip="Change the convention to a move convention, or remove the default value.")
 
-    @staticmethod
-    def UNREACHABLE_CODE(return_ast: RetStatementAst, next_ast: Ast) -> SemanticError:
-        e = SemanticError()
-        e.add_info(return_ast.pos, f"Return statement defined here")
-        e.add_error(
-            pos=next_ast.pos,
-            tag="Unreachable code.",
-            msg="The code after the return statement is unreachable.",
-            tip="Remove the unreachable code or move the return statement.")
-        return e
+            return self
 
-    # NUMER ERRORS
+    class FunctionCoroutineInvalidReturnTypeError(SemanticError):
+        """
+        The FunctionCoroutineInvalidReturnTypeError is raised if a coroutine has a return type that is not a generator.
+        All coroutines must return either GenMov, GenMut or GenRef (with optional generic type parameters).
+        """
 
-    @staticmethod
-    def NUMBER_OUT_OF_RANGE(number: IntegerLiteralAst | FloatLiteralAst, min: int, max: int, what: str) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=number.pos,
-            tag=f"{what.capitalize()} out of range.",
-            msg=f"The {what} '{number}' is out of range [{min}, {max}].",
-            tip=f"Change the number to be within the range, or change the type specifier.")
-        return e
+        def add(self, return_type: TypeAst) -> SemanticError:
+            self.add_error(
+                pos=return_type.pos,
+                tag="Invalid coroutine return type.",
+                msg="The return type of a coroutine must be a generator.",
+                tip="Change the return type to one of 'GenMov', 'GenMut' or 'GenRef'.")
 
-    # IDENTIFIER ERRORS
+            return self
 
-    @staticmethod
-    def UNDEFINED_IDENTIFIER(identifier: IdentifierAst | GenericIdentifierAst, closest_match: Optional[str]) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=identifier.pos,
-            tag="Undefined identifier.",
-            msg=f"The identifier '{identifier}' is not defined.",
-            tip=f"Did you mean '{closest_match}'?" if closest_match else "Define the identifier.")
-        return e
+    class FunctionCoroutineContainsReturnStatementError(SemanticError):
+        """
+        The FunctionCoroutineContainsRetError is raised if a coroutine contains a return statement. Coroutines cannot
+        contain "ret" statements, only "gen" expressions, which yield a value. The actual generator is implicitly
+        returned as soon as the function is called.
+        """
 
-    # TYPE ERRORS
+        def add(self, coroutine_definition: TokenAst, return_statement: TokenAst) -> SemanticError:
+            self.add_info(
+                pos=coroutine_definition.pos,
+                tag="Coroutine defined here")
 
-    @staticmethod
-    def INVALID_VOID_USE(type: TypeAst) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=type.pos,
-            tag="Invalid use of void.",
-            msg="The void type cannot be used in this context.",
-            tip="Change the type to a valid type.")
-        return e
+            self.add_error(
+                pos=return_statement.pos,
+                tag="Return statement in coroutine.",
+                msg="Coroutines cannot contain return statements.",
+                tip="Remove the return statement.")
 
-    @staticmethod
-    def TYPE_MISMATCH(existing_ast: Ast, existing_type: InferredType, incoming_ast: Ast, incoming_type: InferredType) -> SemanticError:
-        e = SemanticError()
-        e.add_info(existing_ast.pos, f"Type inferred as '{existing_type}' here")  # todo: add potential alias's old type
-        e.add_error(
-            pos=incoming_ast.pos,
-            tag=f"Type inferred as '{incoming_type}' here",
-            msg="Type mismatch.",
-            tip="Change the type to match the expected type.")
-        return e
+            return self
 
-    @staticmethod
-    def UNINFERRED_GENERIC_PARAMETER(generic_parameter: GenericParameterAst, type: TypeAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(type.pos, "Type created here")
-        e.add_error(
-            pos=generic_parameter.pos,
-            tag="Uninferred generic parameter.",
-            msg="The generic parameter is not inferred.",
-            tip="Infer the generic parameter.")
-        return e
+    class FunctionSubroutineContainsGenExpressionError(SemanticError):
+        """
+        The FunctionSubroutineContainsGenError is raised if a subroutine contains a "gen" expression. Subroutines cannot
+        contain "gen" expressions, only "ret" statements, which return a value.
+        """
 
-    @staticmethod
-    def INVALID_PLACE_FOR_GENERIC(lhs: Ast, lhs_type: TypeAst, access_token: TokenAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(lhs.pos, f"Generic type '{lhs_type}' inferred here.")
-        e.add_error(
-            pos=access_token.pos,
-            tag="Member access on generic type.",
-            msg="Generic types do not support member access.",
-            tip="Use a concrete type instead of a generic type.")
-        return e
+        def add(self, subroutine_definition: TokenAst, gen_expression: TokenAst) -> SemanticError:
+            self.add_info(
+                pos=subroutine_definition.pos,
+                tag="Subroutine defined here")
 
-    # ARRAY ERRORS
+            self.add_error(
+                pos=gen_expression.pos,
+                tag="Gen expression in subroutine.",
+                msg="Subroutines cannot contain gen expressions.",
+                tip="Remove the gen expression.")
 
-    @staticmethod
-    def ARRAY_ELEMENTS_DIFFERENT_TYPES(element_type_1: TypeAst, element_type_2: TypeAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(element_type_1.pos, f"Element type '{element_type_1}' defined here")
-        e.add_error(
-            pos=element_type_2.pos,
-            tag="Array elements have different types.",
-            msg="All elements in an array must have the same type.",
-            tip="Change the element types to be the same.")
-        return e
+            return self
 
-    @staticmethod
-    def ARRAY_BORROWED_ELEMENT(element: ExpressionAst, borrow_location: Ast) -> SemanticError:
-        e = SemanticError()
-        e.add_info(borrow_location.pos, f"Array element borrowed here")
-        e.add_error(
-            pos=element.pos,
-            tag="Array element borrowed.",
-            msg="Array elements cannot be borrowed.",
-            tip="Remove the borrow from the array element.")
-        return e
+    class FunctionSubroutineMissingReturnStatementError(SemanticError):
+        """
+        The FunctionSubroutineMissingRetError is raised if a non-void-returning subroutine does not contain a return
+        statement.
+        """
 
-    # MEMORY ERRORS
+        def add(self, final_member: TokenAst, return_type: TypeAst) -> SemanticError:
+            self.add_info(
+                pos=final_member.pos,
+                tag="Non-ret statement found here")
 
-    @staticmethod
-    def INCONSISTENTLY_INITIALIZED_MEMORY(ast: ExpressionAst, branch_1: Tuple[PatternBlockAst, bool], branch_2: Tuple[PatternBlockAst, bool]) -> SemanticError:
-        e = SemanticError()
-        e.add_info(branch_1[0].pos, f"Symbol {ast} {"initialized" if branch_1[1] else "moved"} in this branch")
-        e.add_info(branch_2[0].pos, f"Symbol {ast} {"initialized" if branch_2[1] else "moved"} in this branch")
-        e.add_error(
-            pos=ast.pos,
-            tag="Inconsistently initialized symbol.",
-            msg="Branches inconsistently initialize the symbol.",
-            tip="Ensure the symbol is consistently initialized.")
-        return e
+            self.add_error(
+                pos=return_type.pos,
+                tag="Missing return statement.",
+                msg="Non-void subroutines must return a value.",
+                tip="Add a return statement to the subroutine.")
 
-    @staticmethod
-    def INCONSISTENT_PINNED_MEMORY(ast: ExpressionAst, branch_1: Tuple[PatternBlockAst, bool], branch_2: Tuple[PatternBlockAst, bool]) -> SemanticError:
-        e = SemanticError()
-        e.add_info(branch_1[0].pos, f"Symbol {ast} {"not" if branch_1[1] else "is"} pinned in this branch")
-        e.add_info(branch_2[0].pos, f"Symbol {ast} {"not" if branch_2[1] else "is"} pinned in this branch")
-        e.add_error(
-            pos=ast.pos,
-            tag="Inconsistently pinned symbol.",
-            msg="Branches inconsistently pin the symbol.",
-            tip="Ensure the symbol is consistently pinned.")
-        return e
+            return self
 
-    @staticmethod
-    def USING_UNINITIALIZED_MEMORY(ast: ExpressionAst, move_location: Ast) -> SemanticError:
-        e = SemanticError()
-        e.add_info(move_location.pos, f"Symbol {ast} moved here")
-        e.add_error(
-            pos=ast.pos,
-            tag="Using uninitialized memory.",
-            msg="The memory has already been moved.",
-            tip="Ensure the memory is initialized before use.")
-        return e
+    class ArgumentNameInvalidError(SemanticError):
+        """
+        The ArgumentNameInvalidError is raised if a named argument has been provided with a name that is not valid based
+        on the target. This would be parameter vs argument name or attribute vs object initialization argument name. The
+        source is the parameter/attribute, and the target is the argument.
+        """
 
-    @staticmethod
-    def USING_PARTIALLY_INITIALIZED_MEMORY(ast: ExpressionAst, partial_move_location: Ast) -> SemanticError:
-        e = SemanticError()
-        e.add_info(partial_move_location.pos, f"Symbol {ast} partially moved here")
-        e.add_error(
-            pos=ast.pos,
-            tag="Using partially initialized memory.",
-            msg="The memory has already been partially moved.",
-            tip="Ensure the memory is fully initialized before use.")
-        return e
+        def add(self, target: Ast, what_target: str, source: Ast, what_source: str) -> SemanticError:
+            self.add_info(
+                pos=target.pos,
+                tag=f"{what_target.capitalize()}'s defined here")
 
-    @staticmethod
-    def MOVING_FROM_BORROWED_CONTEXT(move_location: Ast, borrow_location: Ast) -> SemanticError:
-        e = SemanticError()
-        e.add_info(borrow_location.pos, f"Symbol borrowed here")
-        e.add_error(
-            pos=move_location.pos,
-            tag="Moving from borrowed context.",
-            msg="The memory is borrowed and cannot be moved.",
-            tip="Remove the move operation.")
-        return e
+            self.add_error(
+                pos=source.pos,
+                tag=f"Invalid {what_source} name.",
+                msg=f"{what_target}/{what_source} name mismatch.",
+                tip="Use a name found on the target.")
 
-    @staticmethod
-    def MOVING_PINNED_MEMORY(move_location: Ast, pin_location: Ast) -> SemanticError:
-        e = SemanticError()
-        e.add_info(pin_location.pos, f"Symbol pinned here")
-        e.add_error(
-            pos=move_location.pos,
-            tag="Moving pinned memory.",
-            msg="The memory is pinned and cannot be moved.",
-            tip="Remove the move operation.")
-        return e
+            return self
 
-    @staticmethod
-    def MEMORY_OVERLAP_CONFLICT(overlap: Ast, ast: Ast) -> SemanticError:
-        e = SemanticError()
-        e.add_info(overlap.pos, f"Memory overlap defined here")
-        e.add_error(
-            pos=ast.pos,
-            tag="Memory overlap conflict.",
-            msg="The memory overlap conflicts with another memory use.",
-            tip="Remove the memory overlap conflict.")
-        return e
+    class ArgumentRequiredNameMissingError(SemanticError):
+        """
+        The ArgumentRequiredNameMissingError is raised if a required named argument is missing from a function call or
+        object initialization. This would be a parameter vs argument name or attribute vs object initialization argument
+        name. The source is the parameter/attribute, and the target is the argument.
+        """
 
-    @staticmethod
-    def UNPINNED_BORROW(ast: Ast, async_or_coro_definition: Ast, is_async: bool) -> SemanticError:
-        e = SemanticError()
-        e.add_info(async_or_coro_definition.pos, f"{"Async" if is_async else "Coroutine"} definition here")
-        e.add_error(
-            pos=ast.pos,
-            tag="Unpinned borrow.",
-            msg=f"A{"n asynchronous call" if is_async else " coroutine"} cannot take an unpinned borrow.",
-            tip="Pin the borrow.")
-        return e
+        def add(self, where: Ast, target: Ast, what_target: str, what_source: str) -> SemanticError:
+            self.add_info(
+                pos=target.pos,
+                tag=f"{what_target.capitalize()} defined here")
 
-    # ASSIGNMENT ERRORS
+            self.add_error(
+                pos=where.pos,
+                tag=f"Missing {what_source} name.",
+                msg=f"Missing the {what_source} '{target}'.",
+                tip=f"Add the missing {what_target} name.")
 
-    @staticmethod
-    def CANNOT_MUTATE_IMMUTABLE_SYMBOL(ast: ExpressionAst, move_location: Ast, immutable_definition: Ast) -> SemanticError:
-        e = SemanticError()
-        e.add_info(immutable_definition.pos, f"Symbol '{ast}' defined as immutable here")
-        e.add_error(
-            pos=move_location.pos,
-            tag="Attempting to mutate immutable symbol.",
-            msg="The symbol is immutable and cannot be mutated.",
-            tip="Change the symbol to be mutable.")
-        return e
+            return self
 
-    @staticmethod
-    def INVALID_ASSIGNMENT_LHS_EXPR(lhs: ExpressionAst) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=lhs.pos,
-            tag="Invalid assignment LHS expression.",
-            msg="The expression is not valid for assignment.",
-            tip="Use a valid expression for assignment.")
-        return e
+    class ArgumentTupleExpansionOfNonTupleError(SemanticError):
+        """
+        The ArgumentTupleExpansionOfNonTupleError is raised if a tuple expansion is used on a non-tuple type. Tuple
+        expansions can only be used on tuples, such as "f(..tuple_argument)".
+        """
 
-    @staticmethod
-    def INVALID_COMPOUND_ASSIGNMENT_LHS_EXPR(lhs: ExpressionAst) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=lhs.pos,
-            tag="Invalid compound assignment LHS expression.",
-            msg="The expression is not valid for compound assignment.",
-            tip="Use a valid expression for compound assignment.")
-        return e
+        def add(self, expansion_arg: Ast, arg_type: TypeAst) -> SemanticError:
+            self.add_error(
+                pos=expansion_arg.pos,
+                tag=f"Type inferred as '{arg_type}' here",
+                msg="Tuple expansions can only be used on tuples.",
+                tip="Remove the '..' from the argument.")
 
-    # EXPRESSION ERRORS
+            return self
 
-    @staticmethod
-    def INVALID_EXPRESSION(expression: ExpressionAst) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=expression.pos,
-            tag="Invalid expression.",
-            msg="The expression is not valid.",
-            tip="Use a non-type and non-token expression.")
-        return e
+    class FunctionCallNoValidSignaturesError(SemanticError):
+        """
+        The FunctionCallNoValidSignaturesError is raised if a function call has no valid signatures that match the
+        arguments provided. A list of valid signatures is provided in the error message.
+        """
 
-    @staticmethod
-    def CONDITION_NOT_BOOLEAN(condition: ExpressionAst, type: TypeAst, what: str) -> SemanticError:
-        e = SemanticError()
-        e.add_info(condition.pos, f"{what.capitalize()} condition defined as '{type}' here")
-        e.add_error(
-            pos=condition.pos,
-            tag="Condition not boolean.",
-            msg=f"The condition for a {what} must be a boolean type.",
-            tip="Change the condition to be a boolean type.")
-        return e
+        def add(self, function_call: Ast, signatures: str, attempted: str) -> SemanticError:
+            self.add_error(
+                pos=function_call.pos,
+                tag="Invalid arguments for function call",
+                msg="There are no overloads accepting the given arguments",
+                tip=f"\n\t{signatures.replace("\n", "\n\t")}\n\nAttempted signature:\n\t{attempted}")
 
-    # MEMBER ACCESS ERRORS
+            return self
 
-    @staticmethod
-    def STATIC_MEMBER_ACCESS_EXPECTED(lhs: Ast, access_token: TokenAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(lhs.pos, f"Static expression defined here")
-        e.add_error(
-            pos=access_token.pos,
-            tag="Runtime member access found.",
-            msg="The member access operator '.' can only be used on runtime expressions.",
-            tip="Use the member access operator '::' instead of '.'.")
-        return e
+    class FunctionCallAmbiguousSignaturesError(SemanticError):
+        """
+        The FunctionCallAmbiguousSignaturesError is raised if a function call has multiple valid signatures that match
+        the arguments provided. This is caused by generic substitution causing a match with multiple overloads. Concrete
+        types signature conflicts are detected on function prototype analysis.
+        """
 
-    @staticmethod
-    def RUNTIME_MEMBER_ACCESS_EXPECTED(lhs: Ast, access_token: TokenAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(lhs.pos, f"Runtime expression defined here")
-        e.add_error(
-            pos=access_token.pos,
-            tag="Static member access found.",
-            msg="The member access operator '::' can only be used on static expressions.",
-            tip="Use the member access operator '.' instead of '::'.")
-        return e
+        def add(self, function_call: Ast, signatures: str, attempted: str) -> SemanticError:
+            self.add_error(
+                pos=function_call.pos,
+                tag="Ambiguous function call",
+                msg="There are multiple overloads accepting the given arguments",
+                tip=f"\n\t{signatures.replace("\n", "\n\t")}\n\nAttempted signature:\n\t{attempted}")
 
-    @staticmethod
-    def AMBIGUOUS_MEMBER_ACCESS(member: IdentifierAst, scopes: Seq[IdentifierAst]) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=member.pos,
-            tag=f"Ambiguous member access: {scopes.join(", ")}",
-            msg="The member access is ambiguous.",
-            tip="Use 'std::upcast[T](...)' to select the base class.")
-        return e
+            return self
 
-    @staticmethod
-    def MEMBER_ACCESS_NON_INDEXABLE(lhs: Ast, lhs_type: TypeAst, access_token: TokenAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(lhs.pos, f"Type '{lhs_type}' inferred here.")
-        e.add_error(
-            pos=access_token.pos,
-            tag="Member access on non-indexable type.",
-            msg="The type does not support member access.",
-            tip="Use a type that supports member access.")
-        return e
+    class FunctionCallAbstractFunctionError(SemanticError):
+        """
+        The FunctionCallAbstractFunctionError is raised if an abstract function is called. Abstract functions cannot be
+        called directly, as they have no implementation. Instead, they must be called on a subtype that provides an
+        implementation.
+        """
 
-    @staticmethod
-    def MEMBER_ACCESS_OUT_OF_BOUNDS(lhs: Ast, lhs_type: TypeAst, number_token: TokenAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(lhs.pos, f"{lhs_type.types[-1].generic_argument_group.arguments.length}-tuple inferred here.")
-        e.add_error(
-            pos=number_token.pos,
-            tag="Member access out of bounds.",
-            msg="The member access is out of bounds.",
-            tip="Use a valid member access.")
-        return e
+        def add(self, function: IdentifierAst, function_call: PostfixExpressionOperatorFunctionCallAst) -> SemanticError:
+            self.add_info(
+                pos=function.pos,
+                tag="Function annotated as abstract")
 
-    # SUPERIMPOSITION ERRORS
+            self.add_error(
+                pos=function_call.pos,
+                tag="Abstract method called here.",
+                msg="Cannot call abstract methods.",
+                tip="Call the method on a subtype")
 
-    @staticmethod
-    def SUP_MEMBER_INVALID(new_method: IdentifierAst, super_class: TypeAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(super_class.pos, f"Super class '{super_class}' extended here")
-        e.add_error(
-            pos=new_method.pos,
-            tag="Invalid member.",
-            msg=f"The subclass member '{new_method}' does not exist in the superclass '{super_class}'.",
-            tip="Use a valid super member.")
-        return e
+            return self
 
-    @staticmethod
-    def SUP_ABSTRACT_MEMBER_NOT_OVERRIDEN(base_method: IdentifierAst, super_class: TypeAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(super_class.pos, f"Super class '{super_class}' extended here")
-        e.add_error(
-            pos=base_method.pos,
-            tag="Abstract method on base class",
-            msg=f"The super member '{base_method}' has not been overridden in the subclass",
-            tip="Override the super member in the subclass")
-        return e
+    class FunctionCallOnNoncallableTypeError(SemanticError):
+        """
+        The FunctionCallOnNoncallableTypeError is raised if a non-callable type is called as a function. This could be a
+        literal like "5()".
+        """
 
-    @staticmethod
-    def SUP_UNCONSTRAINED_GENERIC_PARAMETER(unconstrained_parameter: GenericParameterAst, type: TypeAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(type.pos, "Type defined here")
-        e.add_error(
-            pos=unconstrained_parameter.pos,
-            tag="Unconstrained generic parameter",
-            msg=f"The generic parameter '{unconstrained_parameter.name}' is unconstrained.",
-            tip="Remove this generic parameter")
-        return e
+        def add(self, function_call: PostfixExpressionOperatorFunctionCallAst) -> SemanticError:
+            self.add_error(
+                pos=function_call.pos,
+                tag="Non-callable inferred here.",
+                msg="The type is not callable.",
+                tip="Change the type to a callable type.")
 
-    # PATTERN ERRORS
+            return self
+            
+    class FunctionCallTooManyArgumentsError(SemanticError):
+        """
+        The FunctionCallTooManyArgumentsError is raised if a function call has too many arguments.
+        Todo: add more info?
+        """
 
-    @staticmethod
-    def INVALID_PATTERN_DESTRUCTOR_OBJECT(condition: ExpressionAst, condition_type: TypeAst, destructured_type: TypeAst) -> SemanticError:
-        e = SemanticError()
-        e.add_info(condition.pos, f"Condition inferred as '{condition_type}' here")
-        e.add_error(
-            pos=destructured_type.pos,
-            tag=f"Invalid pattern destructure type '{destructured_type}'.",
-            msg="The pattern destructor object is not valid.",
-            tip="Use a valid pattern destructor object.")
-        return e
+        def add(self, function_call: PostfixExpressionOperatorFunctionCallAst, function_definition: FunctionPrototypeAst) -> SemanticError:
+            self.add_info(
+                pos=function_definition.pos,
+                tag="Function defined here")
 
-    # LOOP ERRORS
+            self.add_error(
+                pos=function_call.pos,
+                tag="Too many arguments.",
+                msg="The function call has too many arguments.",
+                tip="Remove the extra arguments.")
 
-    @staticmethod
-    def CONTROL_FLOW_TOO_MANY_CONTROLS(loop: LoopExpressionAst, loop_control: LoopControlFlowStatementAst, number_of_controls: int, depth_of_loop: int) -> SemanticError:
-        e = SemanticError()
-        e.add_info(loop.pos, f"Loop defined here")
-        e.add_error(
-            pos=loop_control.pos,
-            tag="Too many control flow statements.",
-            msg=f"The loop has {number_of_controls} control flow statements, but the loop depth is only {depth_of_loop}.",
-            tip="Remove some control flow statements from the loop.")
-        return e
+            return self
 
-    @staticmethod
-    def INVALID_ITERABLE_TYPE(iterable: ExpressionAst, type: InferredType) -> SemanticError:
-        e = SemanticError()
-        e.add_error(
-            pos=iterable.pos,
-            tag=f"Iterable inferred as '{type}'",
-            msg="The iterable type is not valid.",
-            tip="Use a generator type.")
-        return e
+    class UnreachableCodeError(SemanticError):
+        """
+        The UnreachableCodeError is raised if there is code after a return statement in the same scope. This code is
+        unreachable as the return statement will always exit the function.
+        """
+
+        def add(self, return_ast: RetStatementAst, next_ast: Ast) -> SemanticError:
+            self.add_info(
+                pos=return_ast.pos,
+                tag="Return statement defined here")
+
+            self.add_error(
+                pos=next_ast.pos,
+                tag="Unreachable code.",
+                msg="The code after the return statement is unreachable.",
+                tip="Remove the unreachable code or move the return statement.")
+
+            return self
+
+    class NumberOutOfBoundsError(SemanticError):
+        """
+        The NumberOutOfBoundsError is raised if a number is out of the valid range for the type. This includes integer
+        literals that are too large or too small, and float literals that are too large or too small.
+        """
+
+        def add(self, number: IntegerLiteralAst | FloatLiteralAst, minimum: int, maximum: int, what: str) -> SemanticError:
+            self.add_error(
+                pos=number.pos,
+                tag=f"{what.capitalize()} out of range.",
+                msg=f"The {what} '{number}' is out of range [{minimum}, {maximum}].",
+                tip=f"Change the number to be within the range, or change the type specifier.")
+
+            return self
+
+    class IdentifierUnknownError(SemanticError):
+        """
+        The IdentifierUnknownError is raised if an identifier is used that is not defined in the current scope. This
+        could be a variable, attribute, namespace, type etc.
+        """
+
+        def add(self, identifier: IdentifierAst | GenericIdentifierAst, what: str, closest_match: Optional[str]) -> SemanticError:
+            self.add_error(
+                pos=identifier.pos,
+                tag=f"Undefined {what}.",
+                msg=f"The {what} '{identifier}' is not defined.",
+                tip=f"Did you mean '{closest_match}'?" if closest_match else f"Define the {what}.")
+
+            return self
+
+    class TypeVoidInvalidUsageError(SemanticError):
+        """
+        The TypeVoidInvalidUsageError is raised if the void type is used in an invalid context. The void type cannot be
+        used as a variable type, function return type, function parameter type etc.
+        """
+
+        def add(self, type: TypeAst) -> SemanticError:
+            self.add_error(
+                pos=type.pos,
+                tag="Invalid use of void.",
+                msg="The void type cannot be used in this context.",
+                tip="Change the type to a valid type.")
+
+            return self
+
+    class TypeMismatchError(SemanticError):
+        """
+        The TypeMismatchError is raised if 2 types are different when they should not be. This could be in a variable
+        assignment, function call, function return type etc.
+
+        Todo: add potential alias's old type: (... aka: ...)
+        """
+
+        def add(self, existing_ast: Ast, existing_type: InferredType, incoming_ast: Ast, incoming_type: InferredType) -> SemanticError:
+            self.add_info(
+                pos=existing_ast.pos,
+                tag=f"Type inferred as '{existing_type}' here")
+
+            self.add_error(
+                pos=incoming_ast.pos,
+                tag=f"Type inferred as '{incoming_type}' here",
+                msg="Type mismatch.",
+                tip="Change the rhs type to match the lhs type.")
+
+            return self
+
+    class GenericParameterNotInferredError(SemanticError):
+        """
+        The GenericParameterNotInferredError is raised if a generic parameter is not inferred from its caller context.
+        Inference comes from arguments.
+        """
+
+        def add(self, generic_parameter: GenericParameterAst, type: TypeAst) -> SemanticError:
+            self.add_info(
+                pos=type.pos,
+                tag="Type created here")
+
+            self.add_error(
+                pos=generic_parameter.pos,
+                tag="Non-inferred generic parameter.",
+                msg="Non-inferred generic parameters must be passed explicitly.",
+                tip="Pass the missing generic argument into the call.")
+
+            return self
+
+    class GenericParameterInferredConflictInferredError(SemanticError):
+        """
+        The GenericParameterInferenceConflictError is raised if a generic parameter is inferred from multiple contexts,
+        with different types. For example, "f[T](a: T, b: T)" called as "f(1, true)" would infer T as both BigInt and Bool.
+        """
+            
+        def add(self, generic_parameter: GenericParameterAst, inferred_1: Ast, inferred_2: Ast) -> SemanticError:
+            self.add_info(
+                pos=inferred_1.pos,
+                tag=f"Generic inferred as '{inferred_1}' here")
+
+            self.add_error(
+                pos=inferred_2.pos,
+                tag=f"Generic inferred as '{inferred_2}' here",
+                msg="Generic parameter inferred as multiple types.",
+                tip="Ensure the generic parameter is inferred as a single type.")
+
+            return self
+            
+    class GenericParameterInferredConflictExplicitError(SemanticError):
+        """
+        The GenericParameterInferencePassesExplicitlyError is raised if a generic parameter is inferred from its caller
+        context, but is also passed explicitly. This is redundant and should be removed. For example, "f[T](a: T)" being
+        called as "f[Bool](true)" contains the redundant explicit generic argument, even if the type is correct.
+        """
+
+        def add(self, generic_parameter: GenericParameterAst, explicit: Ast, inferred: Ast) -> SemanticError:
+            self.add_info(
+                pos=inferred.pos,
+                tag=f"Generic parameter {generic_parameter} inferred from here")
+
+            self.add_error(
+                pos=explicit.pos,
+                tag=f"Explicit generic argument '{explicit}'",
+                msg="Explicit generic argument is redundant.",
+                tip="Remove the explicit generic argument.")
+
+            return self
+
+    class GenericTypeInvalidUsageError(SemanticError):
+        """
+        The GenericTypeInvalidUsageError is raised if a generic type is used in an invalid context. An example would be
+        trying to initialize a generic type.
+        """
+
+        def add(self, generic_value: Ast, generic_type: TypeAst, context: str) -> SemanticError:
+            self.add_error(
+                pos=generic_value.pos,
+                tag=f"Type inferred as the generic type {generic_type} here.",
+                msg=f"Generic types cannot be used in a {context}.",
+                tip=f"Change the generic type to a concrete type.")
+
+            return self
+
+    class ArrayElementsDifferentTypesError(SemanticError):
+        """
+        The ArrayElementsDifferentTypesError is raised if the elements of an array have different types. All elements in
+        an array must have the same type.
+        """
+
+        def add(self, element_type_1: TypeAst, element_type_2: TypeAst) -> SemanticError:
+            self.add_info(
+                pos=element_type_1.pos,
+                tag=f"Element inferred as '{element_type_1}'")
+
+            self.add_error(
+                pos=element_type_2.pos,
+                tag=f"Element inferred as '{element_type_2}'",
+                msg="All elements in an array must have the same type.",
+                tip="Change the element types to be the same.")
+
+            return self
+
+    class ArrayElementBorrowedError(SemanticError):
+        """
+        The ArrayElementBorrowedError is raised if an element in an array is borrowed. Array elements cannot be
+        borrowed, and must all be owned.
+        """
+
+        def add(self, element: ExpressionAst, borrow_location: Ast) -> SemanticError:
+            self.add_info(
+                pos=borrow_location.pos,
+                tag="Array element borrowed here")
+
+            self.add_error(
+                pos=element.pos,
+                tag="Array element borrowed.",
+                msg="Array elements cannot be borrowed.",
+                tip="Remove the borrow from the array element.")
+
+            return self
+
+    class MemoryInconsistentlyInitializedError(SemanticError):
+        """
+        The MemoryInconsistentlyInitializedError is raised if a memory symbol is inconsistently initialized in different
+        branches of the code. This could be a move in one branch and not in another.
+        """
+
+        def add(self, ast: ExpressionAst, branch_1: Tuple[CaseExpressionBranchAst, bool], branch_2: Tuple[CaseExpressionBranchAst, bool]) -> SemanticError:
+            self.add_info(
+                pos=branch_1[0].pos,
+                tag=f"Symbol {ast} {'initialized' if branch_1[1] else 'moved'} in this branch")
+
+            self.add_info(
+                pos=branch_2[0].pos,
+                tag=f"Symbol {ast} {'initialized' if branch_2[1] else 'moved'} in this branch")
+
+            self.add_error(
+                pos=ast.pos,
+                tag="Inconsistently initialized symbol.",
+                msg="Branches inconsistently initialize the symbol.",
+                tip="Ensure the symbol is consistently initialized.")
+
+            return self
+
+    class MemoryInconsistentlyPinnedError(SemanticError):
+        """
+        The MemoryInconsistentlyPinnedError is raised if a memory symbol is inconsistently pinned in different branches
+        of the code. This could be pinned in one branch and not in another.
+        """
+
+        def add(self, ast: ExpressionAst, branch_1: Tuple[CaseExpressionBranchAst, bool], branch_2: Tuple[CaseExpressionBranchAst, bool]) -> SemanticError:
+            self.add_info(
+                pos=branch_1[0].pos,
+                tag=f"Symbol {ast} {'pinned' if branch_1[1] else 'not pinned'} in this branch")
+
+            self.add_info(
+                pos=branch_2[0].pos,
+                tag=f"Symbol {ast} {'pinned' if branch_2[1] else 'not pinned'} in this branch")
+
+            self.add_error(
+                pos=ast.pos,
+                tag="Inconsistently pinned symbol.",
+                msg="Branches inconsistently pin the symbol.",
+                tip="Ensure the symbol is consistently pinned.")
+
+            return self
+
+    class MemoryNotInitializedUsageError(SemanticError):
+        """
+        The MemoryNotInitializedUsageError is raised if a memory symbol is used before it is initialized / after it has
+        been moved.
+        """
+
+        def add(self, ast: ExpressionAst, move_location: Ast) -> SemanticError:
+            self.add_info(
+                pos=move_location.pos,
+                tag=f"Symbol {ast} moved here")
+
+            self.add_error(
+                pos=ast.pos,
+                tag="Uninitialized memory used here.",
+                msg="The memory has not been initialized or has been moved.",
+                tip="Ensure the memory is initialized before use.")
+
+            return self
+
+    class MemoryPartiallyInitialisedUsageError(SemanticError):
+        """
+        The MemoryPartiallyInitialisedUsageError is raised if a memory symbol is used before it is fully initialized.
+        Partially initialized objects have missing attributes.
+        """
+
+        def add(self, ast: ExpressionAst, partial_move_location: Ast) -> SemanticError:
+            self.add_info(
+                pos=partial_move_location.pos,
+                tag=f"Symbol {ast} partially moved here")
+
+            self.add_error(
+                pos=ast.pos,
+                tag="Partially initialized memory used here.",
+                msg="The memory has already been partially moved.",
+                tip="Ensure the memory is fully initialized before use.")
+
+            return self
+
+    class MemoryMovedFromBorrowedContextError(SemanticError):
+        """
+        The MemoryMovedFromBorrowedContextError is raised if a memory symbol is moved from a borrowed context. This
+        occurs when a attribute is moved of a &T type or a method consumes an attribute of the T type.
+        """
+
+        def add(self, move_location: Ast, borrow_location: Ast) -> SemanticError:
+            self.add_info(
+                pos=borrow_location.pos,
+                tag="Symbol borrowed here")
+
+            self.add_error(
+                pos=move_location.pos,
+                tag="Moving from borrowed context.",
+                msg="The memory is borrowed and cannot be moved.",
+                tip="Remove the move operation.")
+
+            return self
+
+    class MemoryMovedWhilstPinnedError(SemanticError):
+        """
+        The MemoryMovedWhilstPinnedError is raised if a memory symbol is moved whilst it is pinned. This occurs when a
+        pinned memory is moved.
+        """
+
+        def add(self, move_location: Ast, pin_location: Ast) -> SemanticError:
+            self.add_info(
+                pos=pin_location.pos,
+                tag="Symbol pinned here")
+
+            self.add_error(
+                pos=move_location.pos,
+                tag="Moving pinned memory.",
+                msg="The memory is pinned and cannot be moved.",
+                tip="Remove the move operation.")
+
+            return self
+
+    class MemoryOverlapUsageError(SemanticError):
+        """
+        The MemoryOverlapUsageError is raised if a memory symbol is used whilst it overlaps with another memory symbol.
+        This occurs when in a function call such as "f(a.b, a.b.c)" where "a.b" and "a.b.c" overlap.
+        """
+
+        def add(self, overlap: Ast, ast: Ast) -> SemanticError:
+            self.add_info(
+                pos=overlap.pos,
+                tag="Memory overlap defined here")
+
+            self.add_error(
+                pos=ast.pos,
+                tag="Memory overlap conflict.",
+                msg="The memory overlap conflicts with another memory use.",
+                tip="Remove the memory overlap conflict.")
+
+            return self
+
+    class MemoryUsageOfUnpinnedBorrowError(SemanticError):
+        """
+        The MemoryUsageOfUnpinnedBorrowError is raised if a memory symbol is used whilst it is an unpinned
+        borrow. This occurs when a borrow is used without being pinned.
+        """
+
+        def add(self, ast: Ast, pinned_required_ast: Ast) -> SemanticError:
+            self.add_info(
+                pos=pinned_required_ast.pos,
+                tag="Context declared where pins are required.")
+
+            self.add_error(
+                pos=ast.pos,
+                tag="Unpinned borrow used.",
+                msg="Borrow must be pinned for use in this.",
+                tip="Pin the borrow.")
+
+            return self
+
+    class MemoryPinTargetInvalidError(SemanticError):
+        """
+        The MemoryPinTargetInvalidError is raised if a memory symbol is pinned to an invalid target. This occurs when a
+        non-symbolic value, ie "1" is used as the pin target.
+        """
+
+        def add(self, pin_rel_statement: PinStatementAst | RelStatementAst, pin_target: Ast) -> SemanticError:
+            self.add_info(
+                pos=pin_rel_statement.pos,
+                tag=f"{"Pin" if isinstance(pin_rel_statement, PinStatementAst) else "Rel"} statement defined here")
+
+            self.add_error(
+                pos=pin_target.pos,
+                tag="Invalid pin target.",
+                msg="The pin target must be a symbolic.",
+                tip="Change the pin target to a symbolic value.")
+
+            return self
+            
+    class MemoryPinOverlapError(SemanticError):
+        """
+        The MemoryPinOverlapError is raised if 2 memory pins overlap. For example, "pin a" and "pin a.b" would overlap,
+        and therefore raise this error.
+        """
+        
+        def add(self, pin_1: Ast, pin_2: Ast) -> SemanticError:
+            self.add_info(
+                pos=pin_1.pos,
+                tag="Pin target pinned here")
+
+            self.add_error(
+                pos=pin_2.pos,
+                tag="Second pin target pinned here",
+                msg="Memory pins overlap.",
+                tip="Remove the more refined pin target.")
+
+            return self
+
+    class MemoryReleasingNonPinnedSymbolError(SemanticError):
+        """
+        The MemoryReleasingNonPinnedSymbolError is raised if a memory symbol is released without being pinned.
+        """
+
+        def add(self, rel_statement: RelStatementAst, release_target: Ast) -> SemanticError:
+            self.add_info(
+                pos=rel_statement.pos,
+                tag="Release statement defined here")
+
+            self.add_error(
+                pos=release_target.pos,
+                tag="Non-pinned memory released.",
+                msg="Memory must be pinned before being released.",
+                tip="Remove the rel target.")
+
+            return self
+
+    class MemoryReleasingConstantSymbolError(SemanticError):
+        """
+        The MemoryReleasingConstantSymbolError is raised if a constant memory symbol is released. Constants cannot be
+        released as they must be statically pinned (ie permanently pinned).
+        """
+
+        def add(self, rel_statement: RelStatementAst, release_target: Ast, target_initialization_ast: Ast) -> SemanticError:
+            self.add_info(
+                pos=rel_statement.pos,
+                tag="Release statement defined here")
+
+            self.add_info(
+                pos=target_initialization_ast.pos,
+                tag="Constant memory defined here")
+
+            self.add_error(
+                pos=release_target.pos,
+                tag="Constant memory released.",
+                msg="Constants cannot be released.",
+                tip="Remove the rel target.")
+
+            return self
+
+    class MutabilityInvalidMutationError(SemanticError):
+        """
+        The MutabilityInvalidMutationError is raised if an immutable symbol is mutated. This occurs when a symbol is
+        defined as immutable "let x = 4" and then mutated "x = 5".
+        """
+
+        def add(self, ast: ExpressionAst, move_location: Ast, immutable_definition: Ast) -> SemanticError:
+            self.add_info(
+                pos=immutable_definition.pos,
+                tag="Symbol defined as immutable here")
+
+            self.add_error(
+                pos=move_location.pos,
+                tag="Attempting to mutate immutable symbol.",
+                msg="The symbol is immutable and cannot be mutated.",
+                tip="Change the symbol to be mutable.")
+
+            return self
+
+    class AssignmentInvalidLhsError(SemanticError):
+        """
+        The AssignmentInvalidLhsError is raised if the left-hand-side of an assignment is invalid. For example "1 = 2"
+        would be an invalid assignment as the left-hand-side is a literal.
+        """
+
+        def add(self, lhs: Ast) -> SemanticError:
+            self.add_error(
+                pos=lhs.pos,
+                tag="Invalid assignment left-hand-side expression.",
+                msg="The LHS of the assignment is invalid.",
+                tip="Use a valid LHS for the assignment.")
+
+            return self
+
+    class AssignmentInvalidCompoundLhsError(SemanticError):
+        """
+        The AssignmentInvalidCompoundLhsError is raised if the left-hand-side of a compound assignment is invalid. For
+        example "1 += 2" would be an invalid compound assignment as the left-hand-side is a literal.
+        """
+
+        def add(self, lhs: Ast) -> SemanticError:
+            self.add_error(
+                pos=lhs.pos,
+                tag="Invalid compound assignment left-hand-side expression.",
+                msg="The LHS of the compound assignment is invalid.",
+                tip="Use a valid LHS for the compound assignment.")
+
+            return self
+
+    class ExpressionTypeInvalidError(SemanticError):
+        """
+        The ExpressionTypeInvalidError is raised if an expression is of an invalid AST. For example, types can be used
+        as the lhs of a postfix member access ("Type::static_method()"), but not as an argument for example "f(Type)".
+        """
+
+        def add(self, expression: ExpressionAst) -> SemanticError:
+            self.add_error(
+                pos=expression.pos,
+                tag="Invalid expression.",
+                msg="The expression is not valid.",
+                tip="Use a non-type and non-token expression.")
+
+            return self
+
+    class ExpressionNotBooleanError(SemanticError):
+        """
+        The ExpressionNotBooleanError is raised if an expression is not a boolean type when it is expected to be. This
+        could be in a conditional statement, a loop condition etc.
+        """
+
+        def add(self, expression: ExpressionAst, type: TypeAst, what: str) -> SemanticError:
+            self.add_error(
+                pos=expression.pos,
+                tag=f"{what.capitalize()} expression inferred as '{type}'",
+                msg=f"A {what} expression must be a boolean type.",
+                tip="Change the expression to be a boolean type.")
+
+            return self
+
+    class MemberAccessStaticOperatorExpectedError(SemanticError):
+        """
+        The MemberAccessStaticOperatorExpectedError is raised if a static member access is expected, but a runtime
+        member access is found. Static member access uses "::" and runtime member access uses ".".
+        """
+
+        def add(self, lhs: Ast, access_token: TokenAst) -> SemanticError:
+            self.add_info(
+                pos=lhs.pos,
+                tag="Static expression defined here")
+
+            self.add_error(
+                pos=access_token.pos,
+                tag="Runtime member access found.",
+                msg="The member access operator '.' can only be used on runtime expressions.",
+                tip="Use the member access operator '::' instead of '.'.")
+
+            return self
+
+    class MemberAccessRuntimeOperatorExpectedError(SemanticError):
+        """
+        The MemberAccessRuntimeOperatorExpectedError is raised if a runtime member access is expected, but a static
+        member access is found. Static member access uses "::" and runtime member access uses ".".
+        """
+
+        def add(self, lhs: Ast, access_token: TokenAst) -> SemanticError:
+            self.add_info(
+                pos=lhs.pos,
+                tag="Runtime expression defined here")
+
+            self.add_error(
+                pos=access_token.pos,
+                tag="Static member access found.",
+                msg="The member access operator '::' can only be used on static expressions.",
+                tip="Use the member access operator '.' instead of '::'.")
+
+            return self
+
+    class MemberAccessAmbiguousError(SemanticError):
+        """
+        The MemberAccessAmbiguousError is raised if a member access is ambiguous. This occurs when there are multiple
+        possible member accesses for the same expression.
+        """
+
+        def add(self, member: IdentifierAst, scopes: Seq[IdentifierAst]) -> SemanticError:
+            self.add_error(
+                pos=member.pos,
+                tag=f"Ambiguous member access: {scopes.join(", ")}",
+                msg="The member access is ambiguous.",
+                tip="Use 'std::upcast[T](...)' to select the base class.")
+
+            return self
+
+    class MemberAccessNonIndexableError(SemanticError):
+        """
+        The MemberAccessNonIndexableError is raised if a member access is performed on a non-indexable type. For
+        example, "let x = 5" followed by "x.4" would raise this error.
+        """
+
+        def add(self, lhs: Ast, lhs_type: TypeAst, access_token: TokenAst) -> SemanticError:
+            self.add_info(
+                pos=lhs.pos,
+                tag=f"Type '{lhs_type}' inferred here")
+
+            self.add_error(
+                pos=access_token.pos,
+                tag="Member access on non-indexable type.",
+                msg="The type does not support member access.",
+                tip="Use a type that supports member access.")
+
+            return self
+
+    class MemberAccessIndexOutOfBoundsError(SemanticError):
+        """
+        The MemberAccessIndexOutOfBoundsError is raised if a member access is out of bounds for the type. For example,
+        accessing the 4th element of a 3-tuple.
+        """
+
+        def add(self, lhs: Ast, lhs_type: TypeAst, number_token: TokenAst) -> SemanticError:
+            self.add_info(
+                pos=lhs.pos,
+                tag=f"Type '{lhs_type}' inferred here")
+
+            self.add_error(
+                pos=number_token.pos,
+                tag="Member access out of bounds.",
+                msg="The member access is out of bounds.",
+                tip="Use a valid member access.")
+
+            return self
+
+    class SuperimpositionInheritanceMethodInvalidError(SemanticError):
+        """
+        The SuperimpositionInheritanceMethodInvalidError is raised if a subclass method does not exist on the
+        superclass. The signature of the superclass method and subclass method must match exactly.
+        """
+
+        def add(self, new_method: IdentifierAst, super_class: TypeAst) -> SemanticError:
+            self.add_info(
+                pos=super_class.pos,
+                tag=f"Super class '{super_class}' extended here")
+
+            self.add_error(
+                pos=new_method.pos,
+                tag="Invalid member.",
+                msg=f"The subclass member '{new_method}' does not exist in the superclass '{super_class}'.",
+                tip="Use a valid super member.")
+
+            return self
+
+    class SuperimpositionInheritanceAbstractMethodNotOverriddenError(SemanticError):
+        """
+        The SuperimpositionInheritanceBaseAbstractMethodNotOverriddenError is raised if an abstract method on the base
+        class is not overridden in the subclass.
+        """
+
+        def add(self, base_method: IdentifierAst, super_class: TypeAst) -> SemanticError:
+            self.add_info(
+                pos=super_class.pos,
+                tag=f"Super class '{super_class}' extended here")
+
+            self.add_error(
+                pos=base_method.pos,
+                tag="Abstract method on base class.",
+                msg=f"The super member '{base_method}' has not been overridden in the subclass.",
+                tip="Override the super member in the subclass.")
+
+            return self
+
+    class SuperimpositionInheritanceNonVirtualMethodOverriddenError(SemanticError):
+        """
+        The SuperimpositionInheritanceNonVirtualMethodOverriddenError is raised if a non-virtual method on the base
+        class is overridden in the subclass. Non-virtual methods cannot be overridden.
+        """
+
+        def add(self, base_method: IdentifierAst, super_class: TypeAst) -> SemanticError:
+            self.add_info(
+                pos=super_class.pos,
+                tag=f"Super class '{super_class}' extended here")
+
+            self.add_error(
+                pos=base_method.pos,
+                tag="Non-virtual method on base class.",
+                msg=f"The super member '{base_method}' is not virtual and cannot be overridden in the subclass.",
+                tip="Use a virtual method.")
+
+            return self
+
+    class SuperimpositionUnconstrainedGenericParameterError(SemanticError):
+        """
+        The SuperimpositionUnconstrainedGenericParameterError is raised if a generic parameter is unconstrained in a
+        superimposition. All generic parameters must be constrained to the overridden type, as there is no way to pass a
+        generic argument into a superimposition. Same as "non-inferrable" generic parameters.
+        """
+
+        def add(self, unconstrained_generic_parameter: GenericParameterAst, type: TypeAst) -> SemanticError:
+            self.add_info(
+                pos=type.pos,
+                tag="Type defined here")
+
+            self.add_error(
+                pos=unconstrained_generic_parameter.pos,
+                tag="Unconstrained generic parameter.",
+                msg=f"The generic parameter '{unconstrained_generic_parameter}' is unconstrained.",
+                tip="Remove the generic parameter.")
+
+            return self
+
+    class SuperimpositionOptionalGenericParameterError(SemanticError):
+        """
+        The SuperimpositionOptionalGenericParameterError is raised if a generic parameter is optional in a
+        superimposition. As all generic parameters are inferrable in a superimposition, they cannot be optional.
+        """
+
+        def add(self, optional_generic_parameter: GenericParameterAst) -> SemanticError:
+            self.add_error(
+                pos=optional_generic_parameter.pos,
+                tag="Optional generic parameter.",
+                msg=f"The generic parameter '{optional_generic_parameter}' is optional.",
+                tip="Remove the optional generic parameter.")
+
+            return self
+
+    class LoopTooManyControlFlowStatementsError(SemanticError):
+        """
+        The LoopTooManyControlFlowStatementsError is raised if a loop has too many control flow statements. The maximum
+        number of control flow statements is equal to the loop depth.
+        """
+
+        def add(self, loop: LoopExpressionAst, loop_control: LoopControlFlowStatementAst, number_of_controls: int, depth_of_loop: int) -> SemanticError:
+            self.add_info(
+                pos=loop.pos,
+                tag="Loop defined here")
+
+            self.add_error(
+                pos=loop_control.pos,
+                tag="Too many control flow statements.",
+                msg=f"The loop has {number_of_controls} control flow statements, but the loop depth is only {depth_of_loop}.",
+                tip="Remove some control flow statements from the loop.")
+
+            return self
+
+    class LoopIterableInvalidTypeError(SemanticError):
+        """
+        The LoopIterableInvalidTypeError is raised if the iterable of a loop is not a valid type. The iterable must be a
+        generator type.
+        """
+
+        def add(self, iterable: ExpressionAst, type: TypeAst) -> SemanticError:
+            self.add_error(
+                pos=iterable.pos,
+                tag=f"Iterable inferred as '{type}'",
+                msg="The iterable type is not valid.",
+                tip="Use a generator type.")
+
+            return self
+
+    class TupleElementBorrowedError(SemanticError):
+        """
+        The TupleElementBorrowedError is raised if an element in a tuple is borrowed. Array elements cannot be borrowed,
+        and must all be owned.
+        """
+
+        def add(self, element: ExpressionAst, borrow_location: Ast) -> SemanticError:
+            self.add_info(
+                pos=borrow_location.pos,
+                tag="Tuple element borrowed here")
+
+            self.add_error(
+                pos=element.pos,
+                tag="Tuple element borrowed.",
+                msg="Tuple elements cannot be borrowed.",
+                tip="Remove the borrow from the tuple element.")
+
+            return self
+
+    class CaseBranchesConflictingTypesError(SemanticError):
+        """
+        The CaseBranchesConflictingTypesError is raised if the branches in a case statement return conflicting types,
+        and the case expression is being used for assignment.
+        """
+
+        def add(self, return_type_1: InferredType, return_type_2: InferredType) -> SemanticError:
+            self.add_info(
+                pos=return_type_1.type.pos,
+                tag=f"Branch inferred as '{return_type_1}'")
+
+            self.add_error(
+                pos=return_type_2.type.pos,
+                tag=f"Branch inferred as '{return_type_2}'",
+                msg="The branches return conflicting types.",
+                tip="Ensure the branches return the same type.")
+
+            return self
+
+    class CaseBranchesMissingElseBranchError(SemanticError):
+        """
+        The CaseBranchesMissingElseBranchError is raised if a case statement is missing an else branch, and the case
+        expression is being used for assignment.
+        """
+
+        def add(self, condition: ExpressionAst, final_branch: CaseExpressionBranchAst) -> SemanticError:
+            self.add_info(
+                pos=condition.pos,
+                tag="Case expression defined here")
+
+            self.add_error(
+                pos=final_branch.pos,
+                tag="Missing else branch.",
+                msg="The case statement is missing an else branch.",
+                tip="Add an else branch to the case statement.")
+
+            return self
+
+    class CaseBranchesElseBranchNotLastError(SemanticError):
+        """
+        The CaseBranchesElseBranchNotLastError is raised if the else branch is not the last branch in a case statement.
+        """
+
+        def add(self, else_branch: CaseExpressionBranchAst, last_branch: CaseExpressionBranchAst) -> SemanticError:
+            self.add_info(
+                pos=else_branch.pos,
+                tag="Else branch defined here")
+
+            self.add_error(
+                pos=last_branch.pos,
+                tag="Branch defined after else branch.",
+                msg="The else branch must be the last branch in the case statement.",
+                tip="Move the else branch to the end of the case statement.")
+
+            return self
+
+    class CaseBranchMultipleDestructurePatternsError(SemanticError):
+        """
+        The CaseBranchMultipleDestructurePatternsError is raised if a case branch has multiple destructure patterns. A
+        case branch can only have one destructure pattern.
+        """
+
+        def add(self, first_pattern: PatternVariantAst, second_pattern: PatternVariantAst) -> SemanticError:
+            self.add_info(
+                pos=first_pattern.pos,
+                tag="First destructure pattern defined here")
+
+            self.add_error(
+                pos=second_pattern.pos,
+                tag="Second destructure pattern defined here",
+                msg="The case branch can only have one destructure pattern.",
+                tip="Remove the second destructure pattern, or move it into another branch.")
+
+            return self
+
+    class VariableDestructureContainsMultipleMultiSkipsError(SemanticError):
+        """
+        The VariableDestructureContainsMultipleMultiSkipsError is raised if a variable destructure contains multiple
+        multi-skips. A maximum of one multi-skip is allowed per destructure. The destructure "let (.., a, ..) = x" is
+        invalid.
+        """
+
+        def add(self, first_multi_skip: PatternVariantDestructureSkipNArgumentsAst, second_multi_skip: PatternVariantDestructureSkipNArgumentsAst) -> SemanticError:
+            self.add_info(
+                pos=first_multi_skip.pos,
+                tag="First multi-skip defined here")
+
+            self.add_error(
+                pos=second_multi_skip.pos,
+                tag="Second multi-skip defined here.",
+                msg="Only one multi-skip is allowed per destructure.",
+                tip="Remove the one of the multi-skip tokens.")
+
+            return self
+
+    class VariableObjectDestructureWithBoundMultiSkipError(SemanticError):
+        """
+        The VariableObjectDestructureWithBoundMultiSkipError is raised if a variable object-destructure contains a
+        multi-skip with a binding. For example, "let Point(x, y, ..) = p" is fine, but "let Point(..values) = p" is
+        invalid.
+        """
+
+        def add(self, object_destructure: LocalVariableDestructureObjectAst, bound_multi_skip: PatternVariantDestructureSkipNArgumentsAst) -> SemanticError:
+            self.add_info(
+                pos=object_destructure.pos,
+                tag="Object destructure defined here")
+
+            self.add_error(
+                pos=bound_multi_skip.pos,
+                tag="Multi-skip with binding found.",
+                msg="Multi-skip cannot contain a binding.",
+                tip="Remove the binding from the multi-skip.")
+
+            return self
+
+    class VariableTupleDestructureTupleSizeMismatchError(SemanticError):
+        """
+        The VariableTupleDestructureTupleSizeMismatchError is raised if a variable tuple-destructure has a different
+        number of elements than the tuple being destructured. For example, "let (a, b) = (1, 2, 3)" is invalid.
+        """
+
+        def add(self, lhs: LocalVariableDestructureTupleAst, lhs_count: int, rhs: Ast, rhs_count: int) -> SemanticError:
+            self.add_info(
+                pos=lhs.pos,
+                tag=f"{lhs_count}-tuple destructure defined here")
+
+            self.add_error(
+                pos=rhs.pos,
+                tag=f"Type inferred as a {rhs_count}-tuple here",
+                msg="The tuple destructure has a different number of elements than the tuple being destructure.",
+                tip="Change the tuple destructure to have the same number of elements as the tuple.")
+
+            return self
+
+    class WithExpressionNonContextualConditionError(SemanticError):
+        """
+        The WithExpressionNonContextualConditionError is raised if the condition in a with expression is not a
+        contextual condition. A contextual condition is an expression that superimposes either "CtxMut" or "CtxRef".
+        """
+
+        def add(self, condition: ExpressionAst) -> SemanticError:
+            self.add_error(
+                pos=condition.pos,
+                tag="Non-contextual condition.",
+                msg="The condition in a with expression must superimpose 'CtxMut' or 'CtxRef'.",
+                tip="Use a contextual condition in the with expression.")
+
+            return self
+
+    class AsyncFunctionCallInvalidTargetError(SemanticError):
+        """
+        The AsyncFunctionCallInvalidTargetError is raised if the target of an async function call is not a function. For
+        example, whilst "async f()" is valid, "async 5" is not.
+        """
+
+        def add(self, async_modifier: Ast, target: Ast) -> SemanticError:
+            self.add_info(
+                pos=async_modifier.pos,
+                tag="Async modifier used here")
+
+            self.add_error(
+                pos=target.pos,
+                tag="Invalid async function call target.",
+                msg="The target of an async function call must be a function.",
+                tip="Remove the async call modifier, or change the target to a function.")
+
+            return self
+            
+    class ObjectInitializerMultipleSupArgumentsError(SemanticError):
+        """
+        The ObjectInitializerMultipleSupArgumentsError is raised if an object initializer has multiple super arguments.
+        Only one super argument is allowed. For example, "Type(sup=(a,), sup=(b,))" is invalid => use "Type(sup=(A, B)).
+        """
+
+        def add(self, first_sup: Ast, second_sup: Ast) -> SemanticError:
+            self.add_info(
+                pos=first_sup.pos,
+                tag="First super argument defined here")
+
+            self.add_error(
+                pos=second_sup.pos,
+                tag="Second super argument defined here",
+                msg="Only one super argument is allowed in an object initializer.",
+                tip="Remove the second super argument / merge tuples.")
+
+            return self
+
+    class ObjectInitializerMultipleDefArgumentsError(SemanticError):
+        """
+        The ObjectInitializerMultipleDefArgumentsError is raised if an object initializer has multiple default
+        arguments. Only one default argument is allowed. For example, "Type(else=a, else=b" is invalid".
+        """
+
+        def add(self, first_else: Ast, second_else: Ast) -> SemanticError:
+            self.add_info(
+                pos=first_else.pos,
+                tag="First default argument defined here")
+
+            self.add_error(
+                pos=second_else.pos,
+                tag="Second default argument defined here",
+                msg="Only one default argument is allowed in an object initializer.",
+                tip="Remove the second default argument.")
+
+            return self

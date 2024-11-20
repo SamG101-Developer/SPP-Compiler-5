@@ -43,7 +43,7 @@ class AssignmentStatementAst(Ast, TypeInferrable, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, PostfixExpressionAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Ensure the LHS and RHS are semantically valid.
         self.lhs.for_each(lambda e: e.analyse_semantics(scope_manager, **kwargs))
@@ -51,8 +51,8 @@ class AssignmentStatementAst(Ast, TypeInferrable, CompilerStages):
 
         # Ensure the lhs targets are all symbolic (assignable to).
         lhs_syms = self.lhs.map(lambda e: scope_manager.current_scope.get_variable_symbol_outermost_part(e))
-        if non_symbolic := lhs_syms.filter(lambda s: not s):
-            raise AstErrors.INVALID_ASSIGNMENT_LHS_EXPR(non_symbolic)
+        if non_symbolic := lhs_syms.zip(self.lhs).find(lambda s: not s[0]):
+            raise SemanticErrors.AssignmentInvalidLhsError().add(non_symbolic[1])
 
         # For each assignment, check mutability, types compatibility, and resolve partial moves.
         for (lhs_expr, rhs_expr), lhs_sym in self.lhs.zip(self.rhs).zip(lhs_syms):
@@ -63,21 +63,21 @@ class AssignmentStatementAst(Ast, TypeInferrable, CompilerStages):
 
             # Full assignment (ie "x = y") requires the "x" symbol to be marked as "mut".
             if isinstance(lhs_expr, IdentifierAst) and not (lhs_sym.is_mutable or lhs_sym.memory_info.initialization_counter == 0):
-                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
+                raise SemanticErrors.MutabilityInvalidMutationError().add(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
 
             # Attribute assignment (ie "x.y = z"), for a non-borrowed symbol, requires an outermost "mut" symbol.
             elif isinstance(lhs_expr, PostfixExpressionAst) and (not lhs_sym.memory_info.ast_borrowed and not lhs_sym.is_mutable):
-                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
+                raise SemanticErrors.MutabilityInvalidMutationError().add(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
 
             # Attribute assignment (ie "x.y = z"), for a borrowed symbol, requires an outermost mutable borrow.
             elif isinstance(lhs_expr, PostfixExpressionAst) and (lhs_sym.memory_info.ast_borrowed and lhs_sym.memory_info.is_borrow_ref):
-                raise AstErrors.CANNOT_MUTATE_IMMUTABLE_SYMBOL(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
+                raise SemanticErrors.MutabilityInvalidMutationError().add(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
 
             # Ensure the lhs and rhs have the same type and convention (cannot do "Str = &Str" for example).
             lhs_type = lhs_expr.infer_type(scope_manager, **kwargs)
             rhs_type = rhs_expr.infer_type(scope_manager, **kwargs)
             if not lhs_type.symbolic_eq(rhs_type, scope_manager.current_scope):
-                raise AstErrors.TYPE_MISMATCH(lhs_sym.memory_info.ast_initialization, lhs_type, rhs_expr, rhs_type)
+                raise SemanticErrors.TypeMismatchError(lhs_sym.memory_info.ast_initialization, lhs_type, rhs_expr, rhs_type)
 
             # Resolve memory status, by marking lhs identifiers as initialised, or removing partial moves.
             if isinstance(lhs_expr, IdentifierAst):

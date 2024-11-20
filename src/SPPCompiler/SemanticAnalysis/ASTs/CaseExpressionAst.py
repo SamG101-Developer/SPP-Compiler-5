@@ -13,7 +13,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PatternBlockAst import PatternBlockAst
+    from SPPCompiler.SemanticAnalysis.ASTs.CaseExpressionBranchAst import CaseExpressionBranchAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
@@ -23,7 +23,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
     tok_case: TokenAst
     condition: ExpressionAst
     tok_then: TokenAst
-    branches: Seq[PatternBlockAst]
+    branches: Seq[CaseExpressionBranchAst]
 
     def __post_init__(self) -> None:
         # Convert the branches into a sequence.
@@ -42,21 +42,21 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # The checks here only apply when assigning from this expression.
         from SPPCompiler.SemanticAnalysis import PatternVariantElseAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        branch_inferred_types = self.branches.map(lambda x: x.infer_type(scope_manager).type).unique()
+        branch_inferred_types = self.branches.map(lambda x: x.infer_type(scope_manager)).unique()
 
         # All branches must return the same type.
         if branch_inferred_types.length > 1:
-            raise AstErrors.CONFLICTING_BRANCH_TYPES(branch_inferred_types[0], branch_inferred_types[1])
+            raise SemanticErrors.CaseBranchesConflictingTypesError().add(branch_inferred_types[0], branch_inferred_types[1])
 
         # Ensure there is an "else" branch if the branches are not exhaustive.
         if not isinstance(self.branches[-1].patterns[0], PatternVariantElseAst):
-            raise AstErrors.MISSING_ELSE_BRANCH(self.branches[-1].pos)
+            raise SemanticErrors.CaseBranchesMissingElseBranchError().add(self.condition, self.branches[-1])
 
         # Return the branches' return type, if there are any branches.
         if self.branches.length > 0:
-            return InferredType.from_type(branch_inferred_types[0])
+            return branch_inferred_types[0]
 
         # Otherwise, return the void type.
         void_type = CommonTypes.Void(self.pos)
@@ -66,12 +66,12 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import BinaryExpressionAst, PatternVariantElseAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
         if isinstance(self.condition, (TokenAst, TypeAst)):
-            raise AstErrors.INVALID_EXPRESSION(self.condition)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.condition)
 
         # Analyse the condition and enforce memory integrity (outside the new scope).
         self.condition.analyse_semantics(scope_manager)
@@ -86,7 +86,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
 
             # Destructures can only use 1 pattern.
             if branch.comp_operator and branch.comp_operator.token.token_type == TokenType.KwIs and branch.patterns.length > 1:
-                raise AstErrors.MULTIPLE_PATTERNS_IN_DESTRUCTURE(branch.pos)
+                raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1])
 
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
             symbols_in_scope = scope_manager.current_scope.all_symbols().filter_to_type(VariableSymbol)
@@ -107,7 +107,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
 
             # Check the "else" branch is the final branch (also ensures there is only 1).
             if isinstance(branch.patterns[0], PatternVariantElseAst) and branch != self.branches[-1]:
-                raise AstErrors.ELSE_BRANCH_NOT_LAST(branch.pos)
+                raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch, self.branches[-1])
 
             # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
             if branch.comp_operator and branch.comp_operator.token.token_type != TokenType.KwIs:
@@ -121,7 +121,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
                     target_type = CommonTypes.Bool(self.pos)
                     return_type = binary_ast.infer_type(scope_manager).type
                     if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
-                        raise AstErrors.CONDITION_NOT_BOOLEAN(self.condition, return_type, "case")
+                        raise SemanticErrors.ExpressionNotBooleanError().add(self.condition, return_type, "case")
 
         # Update the memory status of the symbols.
         for symbol, new_memory_info_list in symbol_mem_info.items():

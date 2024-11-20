@@ -34,11 +34,11 @@ class ParenthesizedExpressionAst(Ast, TypeInferrable, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the expression.
         if isinstance(self.expression, (TokenAst, TypeAst)):
-            raise AstErrors.INVALID_EXPRESSION(self.expression)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.expression)
 
         # Analyse the expression.
         self.expression.analyse_semantics(scope_manager, **kwargs)

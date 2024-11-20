@@ -86,7 +86,7 @@ class FloatLiteralAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(float_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # No analysis needs to be done for the BigDec automatically inferred type.
         if not self.type:
@@ -95,7 +95,7 @@ class FloatLiteralAst(Ast, TypeInferrable, CompilerStages):
         # Check if the value is within the bounds.
         lower, upper = SIZE_MAPPING[self.type.types[-1].value]
         if not (lower <= float(self.integer_value.token.token_metadata + "." + self.decimal_value.token.token_metadata) <= upper):
-            raise AstErrors.NUMBER_OUT_OF_RANGE(self, lower, upper, "float")
+            raise SemanticErrors.NumberOutOfBoundsError(self, lower, upper, "float")
 
 
 __all__ = ["FloatLiteralAst"]

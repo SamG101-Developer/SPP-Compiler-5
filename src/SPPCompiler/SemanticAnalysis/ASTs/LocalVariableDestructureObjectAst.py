@@ -50,7 +50,8 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, CompilerSta
 
     def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import LocalVariableSingleIdentifierAst, LocalVariableAttributeBindingAst
-        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst, IdentifierAst
+        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -61,11 +62,11 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, CompilerSta
         # Only 1 "multi-skip" allowed in a destructure.
         multi_arg_skips = self.elements.filter_to_type(LocalVariableDestructureSkipNArgumentsAst)
         if multi_arg_skips.length > 1:
-            raise AstErrors.MULTI_SKIP_N_IN_DESTRUCTURE(multi_arg_skips[0], multi_arg_skips[1])
+            raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1])
 
         # Multi-skip cannot contain a binding for object destructuring.
         if multi_arg_skips and multi_arg_skips[0].binding:
-            raise AstErrors.MULTI_SKIP_N_CANNOT_HAVE_BINDING(multi_arg_skips[0])
+            raise SemanticErrors.VariableObjectDestructureWithBoundMultiSkipError().add(self, multi_arg_skips[0])
 
         # Create expanded "let" statements for each part of the destructure.
         for element in self.elements:

@@ -32,13 +32,13 @@ class ObjectInitializerAst(Ast, TypeInferrable, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         # Get the base symbol and make sure it isn't generic.
         base_symbol = scope_manager.current_scope.get_symbol(self.class_type.without_generics())
         if base_symbol.is_generic:
-            raise AstErrors.INVALID_PLACE_FOR_GENERIC()
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.class_type, self.class_type, "object initializer")
 
         self.object_argument_group.pre_analyse_semantics(scope_manager, **kwargs)
 

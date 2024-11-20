@@ -32,11 +32,11 @@ class UnaryExpressionOperatorAsyncAst(Ast, TypeInferrable, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, rhs: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import PostfixExpressionAst, PostfixExpressionOperatorFunctionCallAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Check the rhs is a postfix function call.
         if not (isinstance(rhs, PostfixExpressionAst) and isinstance(rhs.op, PostfixExpressionOperatorFunctionCallAst)):
-            raise AstErrors.INVALID_ASYNC_TARGET(self.pos, rhs)
+            raise SemanticErrors.AsyncFunctionCallInvalidTargetError().add(self, rhs)
 
         # Mark the function call as async.
         rhs.op._is_async = self

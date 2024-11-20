@@ -64,7 +64,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Analyse the semantics of the annotations and the type of the attribute.
         self.annotations.for_each(lambda a: a.analyse_semantics(scope_manager, **kwargs))
@@ -72,7 +72,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
         # Ensure the attribute type is not void.
         void_type = CommonTypes.Void(self.pos)
         if self.type.symbolic_eq(void_type, scope_manager.current_scope):
-            raise AstErrors.INVALID_VOID_USE(self.type)
+            raise SemanticErrors.TypeVoidInvalidUsageError().add(self.type)
 
 
 __all__ = ["ClassAttributeAst"]

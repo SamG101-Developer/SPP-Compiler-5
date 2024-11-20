@@ -45,11 +45,11 @@ class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (TokenAst, TypeAst)):
-            raise AstErrors.INVALID_EXPRESSION(self.value)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.value)
 
         # Analyse the assign_to and value of the let statement.
         self.value.analyse_semantics(scope_manager, **(kwargs | {"assignment": self.assign_to.extract_names}))

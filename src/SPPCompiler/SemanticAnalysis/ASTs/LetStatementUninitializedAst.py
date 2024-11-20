@@ -44,7 +44,7 @@ class LetStatementUninitializedAst(Ast, TypeInferrable, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Analyse the variable's type.
         self.type.analyse_semantics(scope_manager, **kwargs)
@@ -52,7 +52,7 @@ class LetStatementUninitializedAst(Ast, TypeInferrable, CompilerStages):
         # Check the type isn't the void type.
         void_type = CommonTypes.Void(self.pos)
         if self.type.symbolic_eq(void_type, scope_manager.current_scope):
-            raise AstErrors.INVALID_VOID_USE(self.type)
+            raise SemanticErrors.TypeVoidInvalidUsageError().add(self.type)
 
         # Recursively analyse the variable.
         self.assign_to.analyse_semantics(scope_manager, value=self.type, **kwargs)

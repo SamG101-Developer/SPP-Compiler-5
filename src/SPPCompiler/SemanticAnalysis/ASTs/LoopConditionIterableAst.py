@@ -37,14 +37,14 @@ class LoopConditionIterableAst(Ast, TypeInferrable, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.iterable, (TokenAst, TypeAst)):
-            raise AstErrors.INVALID_EXPRESSION(self.iterable)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.iterable)
 
         # Analyse the iterable.
         self.iterable.analyse_semantics(scope_manager, **kwargs)
@@ -56,7 +56,7 @@ class LoopConditionIterableAst(Ast, TypeInferrable, CompilerStages):
         iterable_type = self.iterable.infer_type(scope_manager, **kwargs)
         allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics).map(InferredType.from_type)
         if not allowed_types.any(lambda t: t.symbolic_eq(iterable_type.without_generics(), scope_manager.current_scope)):
-            raise AstErrors.INVALID_ITERABLE_TYPE(self.iterable, iterable_type)
+            raise SemanticErrors.LoopIterableInvalidTypeError().add(self.iterable, iterable_type.type)
 
         # Create a "let" statement to introduce the loop variable into the scope.
         gen_type = iterable_type.type.types[-1].generic_argument_group["Gen"].value

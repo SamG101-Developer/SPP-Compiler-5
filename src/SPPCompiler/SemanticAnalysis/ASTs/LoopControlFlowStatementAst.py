@@ -41,13 +41,13 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         has_skip = isinstance(self.skip_or_expr, TokenAst) and self.skip_or_expr.token.token_type == TokenType.KwSkip
         if isinstance(self.skip_or_expr, (TokenAst, TypeAst)) and not has_skip:
-            raise AstErrors.INVALID_EXPRESSION(self.skip_or_expr)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.skip_or_expr)
 
         # Get the number of control flow statement, and the loop's nesting level.
         number_of_controls = self.tok_seq_exit.length + (has_skip is True)
@@ -55,7 +55,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
 
         # Check the depth of the loop is greater than or equal to the number of control statements.
         if number_of_controls > nested_loop_depth:
-            raise AstErrors.CONTROL_FLOW_TOO_MANY_CONTROLS(kwargs["loop_ast"], self, number_of_controls, nested_loop_depth)
+            raise SemanticErrors.LoopTooManyControlFlowStatementsError().add(kwargs["loop_ast"], self, number_of_controls, nested_loop_depth)
 
         # Save and compare the loop's "exiting" type against other nested loop's exit statement types.
         if not isinstance(self.skip_or_expr, TokenAst):
@@ -77,7 +77,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
             else:
                 that_expr, that_exit_type = kwargs["loop_types"][depth]
                 if not exit_type.symbolic_eq(that_exit_type, scope_manager.current_scope):
-                    raise AstErrors.TYPE_MISMATCH(that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type)
+                    raise SemanticErrors.TypeMismatchError().add(that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type)
 
 
 __all__ = ["LoopControlFlowStatementAst"]

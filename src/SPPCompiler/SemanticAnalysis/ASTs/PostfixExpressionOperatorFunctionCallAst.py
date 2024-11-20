@@ -51,7 +51,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
     def determine_overload(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, PostfixExpressionAst
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst, FunctionParameterVariadicAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         # from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
         # from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
         # from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -62,7 +62,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
 
         function_owner_type, function_owner_scope, function_name = AstFunctions.get_function_owner_type_and_function_name(scope_manager, lhs)
         if not function_name:
-            raise AstErrors.UNCALLABLE_AST(lhs)
+            raise SemanticErrors.FunctionCallOnNoncallableTypeError().add(lhs)
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, PostfixExpressionAst) and lhs.op.is_runtime_access():
@@ -95,19 +95,20 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
             try:
                 # Can't call an abstract function.
                 if function_overload._abstract:
-                    raise AstErrors.CANNOT_CALL_ABSTRACT_METHOD(function_overload.name, self)
+                    raise SemanticErrors.FunctionCallAbstractFunctionError().add(function_overload.name, self)
 
                 # Can't call non-implemented functions (dummy functions).
                 if function_overload._non_implemented:
-                    ...  # Todo: raise AstErrors.CANNOT_CALL_NON_IMPLEMENTED_METHOD()
+                    ...  # Todo: raise SemanticErrors.FunctionCallNonImplementedMethodError()
 
                 # Check if there are too many arguments for the function (non-variadic).
                 if arguments.length > parameters.length and not is_variadic:
-                    raise AstErrors.TOO_MANY_ARGUMENTS()
+                    raise SemanticErrors.FunctionCallTooManyArgumentsError().add(self, function_overload.name, "argument")
 
                 # Check for any named arguments without a corresponding parameter.
                 if invalid_arguments := argument_names.set_subtract(parameter_names):
-                    raise AstErrors.INVALID_ARGUMENT_NAMES()
+                    missing_arguments = parameter_names.set_subtract(argument_names)
+                    raise SemanticErrors.ArgumentNameInvalidError().add(missing_arguments[0], "parameter", invalid_arguments[0], "argument")
 
                 # Remove all the used parameters names from the set of parameter names, and name the unnamed arguments.
                 AstFunctions.name_function_arguments(arguments, parameters)
@@ -116,7 +117,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
 
                 # Check if there are too few arguments for the function (by missing names).
                 if missing_parameters := parameter_names_req.set_subtract(argument_names):
-                    raise AstErrors.MISSING_ARGUMENT_NAMES(missing_parameters, "function call", "argument")
+                    raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_parameters[0], "parameter", "argument")
 
                 # Infer generic arguments and inherit from the function owner block.
                 generic_arguments = AstFunctions.inherit_generic_arguments(
@@ -137,8 +138,6 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
                     # for generic_argument in generic_arguments:
                     #     generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
                     #     new_scope.add_symbol(generic_symbol)
-
-                    # print("NNN", new_scope, new_scope.all_symbols(True))
 
                     # temp_manager = ScopeManager(scope_manager.global_scope, new_scope)
 
@@ -167,7 +166,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
                         argument.convention = parameter.convention
 
                     elif not parameter_type.symbolic_eq(argument_type, function_scope, scope_manager.current_scope):
-                        raise AstErrors.TYPE_MISMATCH(parameter, parameter_type, argument, argument_type)
+                        raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
                 # Mark the overload as a pass.
                 pass_overloads.append((function_scope, function_overload))
@@ -181,12 +180,13 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
         if pass_overloads.is_empty():
             failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {f[2].error_info[0].tag}").join("\n")
             argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(scope_manager, **kwargs).type).join(", ")})"
-            raise AstErrors.NO_VALID_FUNCTION_SIGNATURES(self, failed_signatures_and_errors, argument_usage_signature)
+            raise SemanticErrors.FunctionCallNoValidSignaturesError().add(self, failed_signatures_and_errors, argument_usage_signature)
 
         # If there are multiple pass overloads, raise an error.
         elif pass_overloads.length > 1:
             passed_signatures = pass_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name)).join("\n")
-            raise AstErrors.AMBIGUOUS_FUNCTION_SIGNATURES(self, passed_signatures)
+            argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(scope_manager, **kwargs).type).join(", ")})"
+            raise SemanticErrors.FunctionCallAmbiguousSignaturesError().add(self, passed_signatures, argument_usage_signature)
 
         # Set the overload to the only pass overload.
         self._overload = pass_overloads[0]

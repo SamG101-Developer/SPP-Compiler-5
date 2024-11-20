@@ -59,27 +59,27 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction, Compile
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst, TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default value.
         if isinstance(self.default, (TokenAst, TypeAst)):
-            raise AstErrors.INVALID_EXPRESSION(self.default)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.default)
 
         # Analyse the type of the default expression.
         self.type.analyse_semantics(scope_manager, **kwargs)
         self.default.analyse_semantics(scope_manager, **kwargs)
 
-        # Check that the convention is not a borrow.
+        # Check the convention is not a borrow (no way to give a default value as a borrow).
         if not isinstance(self.convention, ConventionMovAst):
-            raise AstErrors.OPTIONAL_PARAM_REQUIRES_NON_BORROW(self.convention)
+            raise SemanticErrors.ParameterOptionalNonBorrowTypeError().add(self.convention)
 
         # Make sure the default expression is of the correct type.
         default_type = self.default.infer_type(scope_manager)
         target_type = InferredType.from_type(self.type)
         if not target_type.symbolic_eq(default_type, scope_manager.current_scope):
-            raise AstErrors.TYPE_MISMATCH(self.extract_name, target_type, self.default, default_type)
+            raise SemanticErrors.TypeMismatchError().add(self.extract_name, target_type, self.default, default_type)
 
         # Create the variable for the parameter.
         ast = AstMutation.inject_code(f"let {self.variable}: {self.type}", Parser.parse_let_statement_uninitialized)

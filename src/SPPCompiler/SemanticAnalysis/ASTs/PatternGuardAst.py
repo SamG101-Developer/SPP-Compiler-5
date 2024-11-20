@@ -32,11 +32,11 @@ class PatternGuardAst(Ast, TypeInferrable, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the expression.
         if isinstance(self.expression, (TokenAst, TypeAst)):
-            raise AstErrors.INVALID_EXPRESSION(self.expression)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.expression)
 
         # Analyse the expression.
         self.expression.analyse_semantics(scope_manager, **kwargs)
@@ -45,7 +45,7 @@ class PatternGuardAst(Ast, TypeInferrable, CompilerStages):
         target_type = CommonTypes.Bool(self.pos)
         return_type = self.expression.infer_type(scope_manager).type
         if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
-            raise AstErrors.CONDITION_NOT_BOOLEAN(self.expression, return_type, "pattern guard")
+            return SemanticErrors.ExpressionNotBooleanError().add(self.expression, return_type, "pattern guard")
 
 
 __all__ = ["PatternGuardAst"]

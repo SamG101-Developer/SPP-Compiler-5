@@ -172,7 +172,7 @@ class AstFunctions:
     def name_function_arguments(arguments: Seq[FunctionCallArgumentAst], parameters: Seq[FunctionParameterAst]) -> None:
         from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, FunctionCallArgumentUnnamedAst
         from SPPCompiler.SemanticAnalysis import FunctionParameterVariadicAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -183,7 +183,8 @@ class AstFunctions:
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
-            raise AstErrors.INVALID_ARGUMENT_NAMES(parameter_names, invalid_argument_names[0])
+            missing_arguments = parameter_names.set_subtract(argument_names)
+            raise SemanticErrors.ArgumentNameInvalidError().add(missing_arguments[0], "parameter", invalid_argument_names[0], "argument")
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
@@ -211,7 +212,7 @@ class AstFunctions:
         from SPPCompiler.SemanticAnalysis import GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst
         from SPPCompiler.SemanticAnalysis import GenericParameterVariadicAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -226,7 +227,8 @@ class AstFunctions:
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
-            raise AstErrors.INVALID_ARGUMENT_NAMES(parameter_names, invalid_argument_names[0])
+            missing_arguments = parameter_names.set_subtract(argument_names)
+            raise SemanticErrors.ArgumentNameInvalidError().add(missing_arguments[0], "parameter", invalid_argument_names[0], "argument")
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
@@ -279,16 +281,9 @@ class AstFunctions:
             infer_target: {x: T, y: U, z: V}
         """
 
-        # print("-" * 100)
-        # print("generic_parameters:", generic_parameters)
-        # print("explicit_generic_arguments:", explicit_generic_arguments)
-        # print("infer_source:", [f"{k}={v}" for k, v in infer_source.items()])
-        # print("infer_target:", [f"{k}={v}" for k, v in infer_target.items()])
-        # print("owner_type:", owner_type)
-
         from SPPCompiler.SemanticAnalysis import TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
@@ -325,21 +320,19 @@ class AstFunctions:
                     inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].types[-1].generic_argument_group.arguments[0].value
 
         # Check each generic argument name only has one unique inferred type.
-        for inferred_generic_argument in inferred_generic_arguments.values():
-            if mismatch := Seq(inferred_generic_arguments.copy()[1:].values()).find(lambda t: not t.symbolic_eq(inferred_generic_argument[0], scope_manager.current_scope)):
-                raise AstErrors.CONFLICTING_GENERIC_INFERENCE(inferred_generic_arguments[0], mismatch)
+        for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
+            if mismatch := Seq(inferred_generic_arguments.copy()[1:].values()).find(lambda t: not t.symbolic_eq(inferred_generic_argument_value[0], scope_manager.current_scope)):
+                raise SemanticErrors.GenericParameterInferredConflictInferredError().add(inferred_generic_argument_name, inferred_generic_argument_value[0], mismatch)
 
         # Check inferred generics aren't passed explicitly.
-        for inferred_generic_argument_name, inferred_generic_argument_type in inferred_generic_arguments.items():
-            if inferred_generic_argument_name in explicit_generic_arguments and inferred_generic_argument_type.length > 1:
-                raise AstErrors.EXPLICIT_GENERIC_INFERENCE(inferred_generic_argument_name)
-
-        # print("inferred_generic_arguments:", [f"{k}={v}" for k, v in inferred_generic_arguments.items()])
+        for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
+            if inferred_generic_argument_name in explicit_generic_arguments and inferred_generic_argument_value.length > 1:
+                raise SemanticErrors.GenericParameterInferredConflictExplicitError().add(inferred_generic_argument_name, inferred_generic_argument_value[0], explicit_generic_arguments[inferred_generic_argument_name])
 
         # Check all the generic parameters have been inferred.
         for generic_parameter in generic_parameters:
             if generic_parameter.name not in inferred_generic_arguments:
-                raise AstErrors.UNINFERRED_GENERIC_PARAMETER(generic_parameter, owner_type)
+                raise SemanticErrors.GenericParameterNotInferredError().add(generic_parameter, owner_type)
 
         # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
         GenericArgumentCTor = defaultdict(

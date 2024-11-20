@@ -90,16 +90,16 @@ class GenericArgumentGroupAst(Ast, Default, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Code that is run before the overload is selected.
         from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Check there are no duplicate argument names.
         generic_argument_names = self.arguments.filter_to_type(FunctionCallArgumentNamedAst).map(lambda a: a.name).flat()
-        if duplicate_generic_arguments := generic_argument_names.non_unique():
-            raise AstErrors.DUPLICATE_IDENTIFIER(duplicate_generic_arguments[0][0], duplicate_generic_arguments[0][1], "named generic arguments")
+        if duplicates := generic_argument_names.non_unique():
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named generic argument")
 
         # Check the generic arguments are in the correct order.
         if difference := AstOrdering.order_args(self.arguments):
-            raise AstErrors.INVALID_ORDER(difference[0], difference[1], "generic argument")
+            raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "generic argument")
 
         # Analyse the arguments.
         self.arguments.for_each(lambda arg: arg.analyse_semantics(scope_manager, **kwargs))

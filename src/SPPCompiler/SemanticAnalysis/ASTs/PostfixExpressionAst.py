@@ -35,11 +35,11 @@ class PostfixExpressionAst(Ast, TypeInferrable, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # The ".." TokenAst cannot be used as an expression for the lhs.
         if isinstance(self.lhs, TokenAst):
-            raise AstErrors.INVALID_EXPRESSION(self.lhs)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs)
 
         # Analyse the "lhs" and "op".
         self.lhs.analyse_semantics(scope_manager, **kwargs)

@@ -37,11 +37,11 @@ class RetStatementAst(Ast, TypeInferrable, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token.token_type != TokenType.KwFun:
-            raise AstErrors.RET_OUTSIDE_SUBROUTINE(self.tok_ret, kwargs["function_type"])
+            raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(kwargs["function_type"], self.tok_ret)
         self._func_ret_type = kwargs["function_ret_type"]
 
         # Analyse the expression if it exists, and determine the type of the expression.
@@ -57,7 +57,7 @@ class RetStatementAst(Ast, TypeInferrable, CompilerStages):
 
         # Check the expression type matches the expected type.
         if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
-            raise AstErrors.TYPE_MISMATCH(expression_type.type, expected_type.type, self.expression, expected_type.type)
+            raise SemanticErrors.TypeMismatchError().add(expression_type.type, expected_type, self.expression, expected_type)
 
 
 __all__ = ["RetStatementAst"]

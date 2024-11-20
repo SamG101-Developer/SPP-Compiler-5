@@ -63,12 +63,12 @@ class GenericCompParameterOptionalAst(Ast, Ordered, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import AstErrors
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default.
         if isinstance(self.default, (TokenAst, TypeAst)):
-            raise AstErrors.INVALID_EXPRESSION(self.default)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.default)
 
         # Analyse the type of the default expression.
         self.type.analyse_semantics(scope_manager)
@@ -78,7 +78,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered, CompilerStages):
         default_type = self.default.infer_type(scope_manager)
         target_type = InferredType.from_type(self.type)
         if not target_type.symbolic_eq(default_type, scope_manager.current_scope):
-            raise AstErrors.TYPE_MISMATCH(self.name, target_type, self.default, default_type)
+            raise SemanticErrors.TypeMismatchError().add(self.name, target_type, self.default, default_type)
 
         # Create the variable for the const parameter.
         ast = AstMutation.inject_code(f"let {self.name}: {self.type}", Parser.parse_let_statement_uninitialized)
