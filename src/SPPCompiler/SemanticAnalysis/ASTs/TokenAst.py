@@ -6,10 +6,12 @@ from SPPCompiler.LexicalAnalysis.Token import Token
 from SPPCompiler.LexicalAnalysis.TokenType import TokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class TokenAst(Ast, Default):
+class TokenAst(Ast, Default, CompilerStages):
     token: Token
 
     def __eq__(self, other: TokenAst) -> bool:
@@ -27,6 +29,10 @@ class TokenAst(Ast, Default):
     @staticmethod
     def default(token_type: TokenType = TokenType.NO_TOK, info: str = "", pos: int = -1) -> TokenAst:
         return TokenAst(pos, Token(info or token_type.value, token_type))
+
+    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Required for ".." being used as an expression in binary folding.
+        pass
 
 
 __all__ = ["TokenAst"]
