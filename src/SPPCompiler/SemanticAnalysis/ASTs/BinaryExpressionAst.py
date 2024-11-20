@@ -24,16 +24,13 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
     rhs: ExpressionAst
     _as_func: Optional[PostfixExpressionAst | CaseExpressionAst] = field(default=None, init=False, repr=False)
 
-    def __post_init__(self) -> None:
-        self._as_func = AstBinUtils.convert_to_function_call(self)
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.lhs.print(printer) + " ",
+            "(" + self.lhs.print(printer) + " ",
             self.op.print(printer) + " ",
-            self.rhs.print(printer)]
+            self.rhs.print(printer) + ")"]
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
@@ -52,8 +49,9 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
+        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # The TypeAst cannot be used as an expression for a binary operation.
@@ -84,40 +82,54 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         # Handle lhs-folding
         if isinstance(self.lhs, TokenAst):
+            # Check the rhs is a tuple.
             rhs_tuple_type = self.rhs.infer_type(scope_manager, **kwargs).type
+            if not rhs_tuple_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
+                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, rhs_tuple_type, self.lhs)
+
             rhs_num_elements = rhs_tuple_type.types[-1].generic_argument_group.arguments.length
 
-            # Convert "a + .." into "a.0 + a.1 + a.2" etc up to "rhs_num_elements".
+            # Get the parts of the tuple.
             new_asts = Seq()
             for i in range(rhs_num_elements):
                 new_ast = AstMutation.inject_code(f"{self.rhs}.{i}", Parser.parse_postfix_expression)
+                new_ast.analyse_semantics(scope_manager, **kwargs)
                 new_asts.append(new_ast)
 
-            # Change the "lhs" and "rhs" to a combination of the new elements.
-            self.lhs, self.rhs = new_asts[1], new_asts[0]
+            # Convert "t = (0, 1, 2, 3)", ".. + t" into "(((t.0 + t.1) + t.2) + t.3)".
+            self.lhs, self.rhs = new_asts[0], new_asts[1]
             for new_ast in new_asts[2:]:
-                self.lhs = new_ast
-                self.rhs = BinaryExpressionAst(self.pos, self.lhs, self.op, self.rhs)
+                self.lhs, self.rhs = BinaryExpressionAst(self.pos, self.lhs, self.op, self.rhs), new_ast
+            self._as_func = AstBinUtils.convert_to_function_call(self)
+            self._as_func.analyse_semantics(scope_manager, **kwargs)
 
         # Handle rhs-folding
-        if isinstance(self.rhs, TokenAst):
+        elif isinstance(self.rhs, TokenAst):
+            # Check the rhs is a tuple.
             lhs_tuple_type = self.lhs.infer_type(scope_manager, **kwargs).type
+            if not lhs_tuple_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
+                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, lhs_tuple_type, self.lhs)
+
             lhs_num_elements = lhs_tuple_type.types[-1].generic_argument_group.arguments.length
 
-            # Convert ".. + a" into "a.0 + a.1 + a.2" etc up to "lhs_num_elements".
+            # Get the parts of the tuple.
             new_asts = Seq()
             for i in range(lhs_num_elements):
                 new_ast = AstMutation.inject_code(f"{self.lhs}.{i}", Parser.parse_postfix_expression)
+                new_ast.analyse_semantics(scope_manager, **kwargs)
                 new_asts.append(new_ast)
 
-            # Change the "lhs" and "rhs" to a combination of the new elements.
-            self.lhs, self.rhs = new_asts[0], new_asts[1]
-            for new_ast in new_asts[2:]:
-                self.lhs = BinaryExpressionAst(self.pos, self.lhs, self.op, self.rhs)
-                self.rhs = new_ast
+            # Convert "t = (0, 1, 2, 3)", "t + .." into "(t.0 + (t.1 + (t.2 + t.3)))".
+            self.lhs, self.rhs = new_asts[-2], new_asts[-1]
+            for new_ast in new_asts[:-2].reverse():
+                self.lhs, self.rhs = new_ast, BinaryExpressionAst(self.pos, self.lhs, self.op, self.rhs)
+            self._as_func = AstBinUtils.convert_to_function_call(self)
+            self._as_func.analyse_semantics(scope_manager, **kwargs)
 
         # Analyse the function equivalent of the binary expression.
-        self._as_func.analyse_semantics(scope_manager, **kwargs)
+        else:
+            self._as_func = AstBinUtils.convert_to_function_call(self)
+            self._as_func.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["BinaryExpressionAst"]
