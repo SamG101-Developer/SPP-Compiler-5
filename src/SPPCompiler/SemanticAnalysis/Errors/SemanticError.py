@@ -141,26 +141,6 @@ class SemanticErrors:
 
             return self
 
-    class AnnotationRedundantError(SemanticError):
-        """
-        The AnnotationRedundantError is raised if there are 2 annotations on the same object and one makes the other
-        redundant. For example, using "@abstractmethod" makes @virtualmethod" redundant as an abstract method is
-        automatically virtual.
-        """
-
-        def add(self, first_annotation: IdentifierAst, redundant_annotation: IdentifierAst) -> SemanticError:
-            self.add_info(
-                pos=first_annotation.pos,
-                tag=f"Annotation '{first_annotation}' applied here")
-
-            self.add_error(
-                pos=redundant_annotation.pos,
-                tag="Redundant annotation.",
-                msg=f"The annotation '{redundant_annotation}' is made redundant by the '{first_annotation}' annotation.",
-                tip=f"Remove the redundant annotation.")
-
-            return self
-
     class IdentifierDuplicationError(SemanticError):
         """
         The IdentifierDuplicationError is raised if the same identifier is defined multiple times in the same context.
