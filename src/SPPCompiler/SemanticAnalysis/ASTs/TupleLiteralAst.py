@@ -42,11 +42,14 @@ class TupleLiteralAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(tuple_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.ASTs import ConventionMovAst
+        from SPPCompiler.SemanticAnalysis import ConventionMovAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Analyse the elements in the tuple.
-        self.elements.for_each(lambda element: element.analyse_semantics(scope_manager, **kwargs))
+        for element in self.elements:
+            element.analyse_semantics(scope_manager, **kwargs)
+            if isinstance(element, (TokenAst, TypeAst)):
+                raise SemanticErrors.ExpressionTypeInvalidError().add(element)
 
         # Check all elements are "owned", and not "borrowed".
         borrowed_elements = self.elements.filter(lambda e: e.infer_type(scope_manager, **kwargs).convention == ConventionMovAst)

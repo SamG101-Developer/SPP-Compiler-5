@@ -50,20 +50,23 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(array_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import ConventionMovAst
+        from SPPCompiler.SemanticAnalysis import ConventionMovAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Analyse the elements in the array.
-        self.elements.for_each(lambda element: element.analyse_semantics(scope_manager, **kwargs))
-        element_types = self.elements.map(lambda e: e.infer_type(scope_manager, **kwargs))
+        for element in self.elements:
+            element.analyse_semantics(scope_manager, **kwargs)
+            if isinstance(element, (TokenAst, TypeAst)):
+                raise SemanticErrors.ExpressionTypeInvalidError().add(element)
 
         # Check all elements have the same type as the 0th element.
-        unique_types = element_types.map_attr("type").unique()
-        if unique_types.length > 1:
-            raise SemanticErrors.ArrayElementsDifferentTypesError().add(unique_types[0], unique_types[1])
+        element_types = self.elements.map(lambda e: e.infer_type(scope_manager, **kwargs).type)
+        for element_type in element_types[1:]:
+            if not element_types[0].symbolic_eq(element_type, scope_manager.current_scope):
+                raise SemanticErrors.ArrayElementsDifferentTypesError().add(element_types[0], element_type)
 
         # Check all elements are "owned", and not "borrowed".
-        borrowed_elements = self.elements.filter(lambda e: e.infer_type(scope_manager, **kwargs).convention == ConventionMovAst)
+        borrowed_elements = self.elements.filter(lambda e: e.infer_type(scope_manager, **kwargs).convention is not ConventionMovAst)
         if borrowed_elements:
             if borrow_symbol := scope_manager.current_scope.get_variable_symbol_outermost_part(borrowed_elements[0]):
                 if borrow_ast := borrow_symbol.memory_info.ast_borrowed:
