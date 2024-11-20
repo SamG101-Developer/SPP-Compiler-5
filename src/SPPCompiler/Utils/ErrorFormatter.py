@@ -36,12 +36,13 @@ class ErrorFormatter:
         carets = carets[l1 - len(error_line_as_string):] + f"{Fore.LIGHTWHITE_EX}{Style.BRIGHT} <- {tag_message}"
 
         left_padding = " " * len(str(error_line_number))
+        bar_character = "|"
         final_error_message = "\n".join([
             f"{Fore.LIGHTWHITE_EX}{Style.BRIGHT}",
             f"Error in file '{self._file_path}', on line {error_line_number}:" if not minimal else f"Context from file '{self._file_path}', on line {error_line_number}:",
-            f"{Fore.LIGHTWHITE_EX}{left_padding} |",
-            f"{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{error_line_number} | {error_line_as_string}",
-            f"{Fore.LIGHTWHITE_EX}{left_padding} | {Style.NORMAL}{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{carets}\n",
+            f"{Fore.LIGHTWHITE_EX}{left_padding} {bar_character}",
+            f"{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{error_line_number} {bar_character} {error_line_as_string}",
+            f"{Fore.LIGHTWHITE_EX}{left_padding} {bar_character} {Style.NORMAL}{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{carets}\n",
             f"{Style.RESET_ALL}{Fore.LIGHTRED_EX}{message}" * (not minimal)])
 
         return final_error_message

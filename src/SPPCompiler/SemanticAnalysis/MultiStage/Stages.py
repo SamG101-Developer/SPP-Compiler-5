@@ -24,9 +24,11 @@ class CompilerStages:
     _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
 
     def pre_process(self, context: PreProcessingContext) -> None:
+        # Preprocess the AST by reconfiguring it before any scoping or symbol generation is performed.
         self._ctx = context
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
+        # Generate scopes for all prototypes, (not inside function scopes: see analyse_semantics).
         self._scope = scope_manager.current_scope
 
     def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
