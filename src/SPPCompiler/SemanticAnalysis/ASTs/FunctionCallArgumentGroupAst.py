@@ -69,7 +69,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # Check there are no duplicate argument names.
-        argument_names = self.arguments.filter_to_type(FunctionCallArgumentNamedAst).map(lambda a: a.name).flat()
+        argument_names = self.arguments.filter_to_type(FunctionCallArgumentNamedAst).map(lambda a: a.name)
         if duplicates := argument_names.non_unique():
             raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named arguments")
 

@@ -14,7 +14,8 @@ if TYPE_CHECKING:
 
 
 def float_limits(*, e: int, m: int) -> tuple[int, int]:
-    upper = pow(2, 2 ** (e - 1)) - pow(2, 2 ** (e - 1) - m - 1)
+    b = pow(2, e) - 1
+    upper = (1 + (1 - pow(2, -m))) * pow(2, pow(2, e - 1 - b - 1))
     lower = -upper
     return lower, upper
 
