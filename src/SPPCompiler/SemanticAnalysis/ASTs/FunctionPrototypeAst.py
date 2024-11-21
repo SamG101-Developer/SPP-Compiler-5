@@ -145,12 +145,25 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         scope_manager.move_out_of_current_scope()
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        # Todo: Function conflict checker
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+
         scope_manager.move_to_next_scope()
+
+        # Get the owner scope for function conflict checking.
+        match self._ctx:
+            case ModulePrototypeAst(): type_scope = scope_manager.current_scope.parent_module
+            case _: type_scope = self._ctx._scope
+
+        # Check for function conflicts.
+        if conflict := AstFunctions.check_for_conflicting_method(scope_manager.current_scope, type_scope, self, FunctionConflictCheckType.InvalidOverload):
+            raise SemanticErrors.FunctionPrototypeConflictError().add(self._orig, conflict._orig)
+
         scope_manager.move_out_of_current_scope()
 
     def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:

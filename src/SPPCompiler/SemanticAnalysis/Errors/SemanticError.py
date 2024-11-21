@@ -308,6 +308,26 @@ class SemanticErrors:
 
             return self
 
+    class FunctionPrototypeConflictError(SemanticError):
+        """
+        The FunctionPrototypeConflictError is raised if there are multiple function prototypes with an equal signature.
+        There are certain criteria such as conventions and parameter types that have to match for a function to be
+        considered a duplicate.
+        """
+
+        def add(self, first_prototype: IdentifierAst, second_prototype: IdentifierAst) -> SemanticError:
+            self.add_info(
+                pos=first_prototype.pos,
+                tag="First prototype defined here")
+
+            self.add_error(
+                pos=second_prototype.pos,
+                tag="Duplicate prototype.",
+                msg="The function prototype is a duplicate of another prototype.",
+                tip="Remove the duplicate prototype.")
+
+            return self
+
     class ArgumentNameInvalidError(SemanticError):
         """
         The ArgumentNameInvalidError is raised if a named argument has been provided with a name that is not valid based
