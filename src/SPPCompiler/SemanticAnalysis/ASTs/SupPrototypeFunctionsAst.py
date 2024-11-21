@@ -1,6 +1,5 @@
 from __future__ import annotations
-
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.LexicalAnalysis.TokenType import TokenType
@@ -15,6 +14,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.ASTs.WhereBlockAst import WhereBlockAst
+    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
 @dataclass
@@ -24,6 +24,8 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
     name: TypeAst
     where_block: Optional[WhereBlockAst]
     body: SupImplementationAst
+
+    _scope_cls: Optional[Scope] = field(init=False, default=None)
 
     def __post_init__(self) -> None:
         # Import the necessary classes to create default instances.
@@ -79,6 +81,7 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
+        self._scope_cls = cls_symbol.scope
         self.body.load_sup_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 

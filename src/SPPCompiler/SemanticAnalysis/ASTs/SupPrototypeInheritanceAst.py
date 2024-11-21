@@ -79,6 +79,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
             cls_symbol.is_copyable = True
 
         # Run the inject steps for the body.
+        self._scope_cls = cls_symbol.scope
         self.body.load_sup_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
