@@ -33,6 +33,13 @@ class TestFunctionPrototypeAst(TestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
+    def test_invalid_function_prototype_conflict_different_param_variation(self):
+        """
+        fun f(&self, a: std::Bool = false) -> std::Void { }
+        fun f(&self, a: std::Bool) -> std::Void { }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
     def test_invalid_function_prototype_conflicts_self_convention(self):
         """
         cls A { }
@@ -48,7 +55,7 @@ class TestFunctionPrototypeAst(TestCase):
         cls A { }
         sup A {
             fun f(&self, a: std::Bool = false) -> std::Void { }
-            fun f(&mut self, a: std::Bool) -> std::Void { }
+            fun f(&self) -> std::Void { }
         }
         """
 
@@ -60,7 +67,7 @@ class TestFunctionPrototypeAst(TestCase):
             fun f(&self, a: std::Bool = false) -> std::Void { }
         }
         sup A {
-            fun f(&mut self, a: std::Bool) -> std::Void { }
+            fun f(&self) -> std::Void { }
         }
         """
 

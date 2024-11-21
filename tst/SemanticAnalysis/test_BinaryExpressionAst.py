@@ -3,6 +3,9 @@ from unittest import TestCase
 from tst._Utils import *
 
 
+# Todo: invalid and valid testing of binary "is" operation
+
+
 class TestBinaryExpressionAst(TestCase):
     @should_pass_compilation()
     def test_valid_binary_operation(self):
