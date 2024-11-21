@@ -62,7 +62,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
 
     def analyse_pre_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Code that is run before the overload is selected.
-        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, FunctionCallArgumentUnnamedAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
@@ -79,7 +79,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
 
         # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ...").
         for i, argument in self.arguments.enumerate():
-            if argument.tok_unpack:
+            if isinstance(argument, FunctionCallArgumentUnnamedAst) and argument.tok_unpack:
 
                 # Check the argument type is a tuple
                 tuple_argument_type = argument.infer_type(scope_manager, **kwargs).type
@@ -145,6 +145,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
                     raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value)
 
                 # If the target requires pinning, ensure the borrow is pinned.
+                # Todo: Untested code.
                 if pins_required and not (overlap := symbol.memory_info.ast_pinned.find(lambda p: AstMemoryHandler.left_overlap(p, argument.value))):
                     raise SemanticErrors.MemoryUsageOfUnpinnedBorrowError().add(argument.value, pin_error_ast)
 
@@ -161,6 +162,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
                     raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value)
 
                 # If the target requires pinning, ensure the borrow is pinned.
+                # Todo: Untested code.
                 if pins_required and not (overlap := symbol.memory_info.ast_pinned.find(lambda p: AstMemoryHandler.left_overlap(p, argument.value))):
                     raise SemanticErrors.MemoryUsageOfUnpinnedBorrowError().add(argument.value, pin_error_ast)
 
