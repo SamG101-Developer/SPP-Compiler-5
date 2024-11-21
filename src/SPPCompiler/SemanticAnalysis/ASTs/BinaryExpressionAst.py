@@ -66,6 +66,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         # If the RHS is a destructure, then analysis stops here (after analysing the conversion).
         if self.op.token.token_type == TokenType.KwIs:
+            self._as_func = AstBinUtils.convert_to_function_call(self)
             self._as_func.analyse_semantics(scope_manager, **kwargs)
             destructures_symbols = scope_manager.current_scope.children[0].children[0].all_symbols(exclusive=True)
             for symbol in destructures_symbols:
