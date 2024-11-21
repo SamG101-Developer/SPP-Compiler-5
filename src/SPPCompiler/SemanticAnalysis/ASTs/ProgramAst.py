@@ -33,7 +33,7 @@ class ProgramAst(Ast, CompilerStages):
             module._name = module_in_tree.path
             progress_bar.next(module.name.value)
             self._current = module
-            module.body.members.for_each(lambda m: m.pre_process(module))
+            module.pre_process(module)
 
     def generate_symbols(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None, module_tree: ModuleTree = None) -> None:
         # Generate symbols for all the modules, including namespaces in the scope manager.
@@ -41,7 +41,7 @@ class ProgramAst(Ast, CompilerStages):
             progress_bar.next(module.name.value)
             self._move_scope_manager_to_namespace(scope_manager, module_tree.modules.find(lambda m: m.module_ast is module))
             self._current = module
-            module.body.members.for_each(lambda m: m.generate_symbols(scope_manager))
+            module.generate_symbols(scope_manager)
             scope_manager.reset()
 
     def alias_types(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None, **kwargs) -> None:
@@ -49,7 +49,7 @@ class ProgramAst(Ast, CompilerStages):
         for module in self.modules:
             progress_bar.next(module.name.value)
             self._current = module
-            module.body.members.for_each(lambda m: m.alias_types(scope_manager, **kwargs))
+            module.alias_types(scope_manager, **kwargs)
         scope_manager.reset()
 
     def load_sup_scopes(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
@@ -57,7 +57,7 @@ class ProgramAst(Ast, CompilerStages):
         for module in self.modules:
             progress_bar.next(module.name.value)
             self._current = module
-            module.body.members.for_each(lambda m: m.load_sup_scopes(scope_manager))
+            module.load_sup_scopes(scope_manager)
         scope_manager.reset()
 
     def inject_sup_scopes(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
@@ -65,7 +65,7 @@ class ProgramAst(Ast, CompilerStages):
         for module in self.modules:
             progress_bar.next(module.name.value)
             self._current = module
-            module.body.members.for_each(lambda m: m.inject_sup_scopes(scope_manager))
+            module.inject_sup_scopes(scope_manager)
         scope_manager.reset()
 
         # Prune the generic scopes of the scope tree.
@@ -82,7 +82,7 @@ class ProgramAst(Ast, CompilerStages):
         for module in self.modules:
             progress_bar.next(module.name.value)
             self._current = module
-            module.body.members.for_each(lambda m: m.alias_types_regeneration(scope_manager))
+            module.alias_types_regeneration(scope_manager)
         scope_manager.reset()
 
     def regenerate_generic_types(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
@@ -90,7 +90,7 @@ class ProgramAst(Ast, CompilerStages):
         for module in self.modules:
             progress_bar.next(module.name.value)
             self._current = module
-            module.body.members.for_each(lambda m: m.regenerate_generic_types(scope_manager))
+            module.regenerate_generic_types(scope_manager)
         scope_manager.reset()
 
     def analyse_semantics(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None, **kwargs) -> None:
