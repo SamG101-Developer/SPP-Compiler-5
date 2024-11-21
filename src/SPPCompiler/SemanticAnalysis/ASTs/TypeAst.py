@@ -210,7 +210,7 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
                     explicit_generic_arguments=type_part.generic_argument_group.arguments,
                     infer_source=generic_infer_source or {},
                     infer_target=generic_infer_target or {},
-                    scope_manager=scope_manager, owner_type=self, **kwargs)
+                    scope_manager=scope_manager, owner=self, **kwargs)
 
                 # Analyse the semantics of the generic arguments.
                 type_part.generic_argument_group.analyse_semantics(scope_manager)

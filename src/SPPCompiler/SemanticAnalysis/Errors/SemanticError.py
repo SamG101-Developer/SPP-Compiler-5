@@ -440,7 +440,7 @@ class SemanticErrors:
         literal like "5()".
         """
 
-        def add(self, function_call: PostfixExpressionOperatorFunctionCallAst) -> SemanticError:
+        def add(self, function_call: ExpressionAst) -> SemanticError:
             self.add_error(
                 pos=function_call.pos,
                 tag="Non-callable inferred here.",
@@ -559,9 +559,9 @@ class SemanticErrors:
         Inference comes from arguments.
         """
 
-        def add(self, generic_parameter: GenericParameterAst, type: TypeAst) -> SemanticError:
+        def add(self, generic_parameter: GenericParameterAst, caller_context: ExpressionAst) -> SemanticError:
             self.add_info(
-                pos=type.pos,
+                pos=caller_context.pos,
                 tag="Type created here")
 
             self.add_error(

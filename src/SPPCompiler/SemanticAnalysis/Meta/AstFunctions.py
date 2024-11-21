@@ -260,7 +260,7 @@ class AstFunctions:
             infer_source: Dict[IdentifierAst, TypeAst],
             infer_target: Dict[IdentifierAst, TypeAst],
             scope_manager: ScopeManager,
-            owner_type: TypeAst = None,
+            owner: TypeAst | ExpressionAst = None,
             variadic_parameter_identifier: Optional[IdentifierAst] = None,
             **kwargs)\
             -> Seq[GenericArgumentAst]:
@@ -288,7 +288,7 @@ class AstFunctions:
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # Special case for tuples to prevent infinite-recursion.
-        if owner_type and owner_type.without_generics() == CommonTypes.Tup().without_generics():
+        if isinstance(owner, TypeAst) and owner.without_generics() == CommonTypes.Tup().without_generics():
             return explicit_generic_arguments
 
         # The inferred generics map is: {TypeAst: [TypeAst]}
@@ -332,7 +332,7 @@ class AstFunctions:
         # Check all the generic parameters have been inferred.
         for generic_parameter in generic_parameters:
             if generic_parameter.name not in inferred_generic_arguments:
-                raise SemanticErrors.GenericParameterNotInferredError().add(generic_parameter, owner_type)
+                raise SemanticErrors.GenericParameterNotInferredError().add(generic_parameter, owner)
 
         # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
         GenericArgumentCTor = defaultdict(

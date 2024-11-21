@@ -126,6 +126,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
                     infer_source=arguments.map(lambda a: (a.name, a.infer_type(scope_manager, **kwargs).type)).dict(),
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
                     scope_manager=scope_manager,
+                    owner=lhs,
                     variadic_parameter_identifier=function_overload.function_parameter_group.get_var().extract_name if is_variadic else None,
                     **kwargs)
 
@@ -207,8 +208,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
         # Analyse the function and generic arguments, and determine the overload.
         self.function_argument_group.analyse_pre_semantics(scope_manager, **kwargs)
-        self.determine_overload(scope_manager, lhs, **kwargs)  # Also adds the "self" argument if needed.
         self.generic_argument_group.analyse_semantics(scope_manager, **kwargs)
+        self.determine_overload(scope_manager, lhs, **kwargs)  # Also adds the "self" argument if needed.
         self.function_argument_group.analyse_semantics(scope_manager, target=self._overload[0], is_async=self._is_async, **kwargs)
 
 
