@@ -158,7 +158,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         # Get the owner scope for function conflict checking.
         match self._ctx:
             case ModulePrototypeAst(): type_scope = scope_manager.current_scope.parent_module
-            case _: type_scope = self._ctx._scope
+            case _: type_scope = self._ctx._scope_cls
 
         # Check for function conflicts.
         if conflict := AstFunctions.check_for_conflicting_method(scope_manager.current_scope, type_scope, self, FunctionConflictCheckType.InvalidOverload):

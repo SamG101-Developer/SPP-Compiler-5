@@ -157,7 +157,7 @@ class AstFunctions:
 
             # Filter the parameters and substitute the generics.
             parameter_set_1 = parameter_filter(existing_function).deepcopy()
-            parameter_set_2 = parameter_filter(new_function)
+            parameter_set_2 = parameter_filter(new_function).deepcopy()
 
             # Pre-checks: parameter lengths are the sane, and the extra check passes.
             if parameter_set_1.length != parameter_set_2.length: continue
