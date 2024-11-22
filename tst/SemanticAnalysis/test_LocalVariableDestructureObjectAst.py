@@ -113,7 +113,7 @@ class TestLocalVariableDestructureObjectAst(TestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_local_variable_destructure_nested_object(self):
+    def test_valid_local_variable_destructure_object_nested_object(self):
         """
         cls Point {
             x: std::BigInt
@@ -166,5 +166,18 @@ class TestLocalVariableDestructureObjectAst(TestCase):
             let Line(start=Point(x, y), ..) = l
             let mut t = 100
             t = y
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_local_variable_destructure_object_nested_tuple(self):
+        """
+        cls TestType {
+            a: (std::Bool, std::BigInt)
+        }
+
+        fun f(t: TestType) -> std::Void {
+            let TestType(a=(b, mut other_variable)) = t
+            other_variable = 2
         }
         """

@@ -94,3 +94,18 @@ class TestLocalVariableDestructureTupleAst(TestCase):
             b = "4"
         }
         """
+
+    @should_pass_compilation()
+    def test_valid_local_variable_destructure_tuple_nested_object(self):
+        """
+        cls Point {
+            x: std::BigInt
+            y: std::BigInt
+        }
+
+        fun f() -> std::Void {
+            let points = (Point(x=1, y=2), Point(x=3, y=4))
+            let (Point(x, mut y), ..) = points
+            y = 5
+        }
+        """
