@@ -876,8 +876,8 @@ class Parser:
 
     @parser_rule
     def parse_local_variable_skip_arguments(self) -> LocalVariableDestructureSkipNArgumentsAst:
-        p1 = self.parse_local_variable_skip_arguments_unbound()
-        p2 = self.parse_local_variable_skip_arguments_bound()
+        p1 = self.parse_local_variable_skip_arguments_bound()
+        p2 = self.parse_local_variable_skip_arguments_unbound()
         p3 = (p1 | p2).parse_once()
         return p3
 
