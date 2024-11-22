@@ -45,7 +45,7 @@ class PatternGuardAst(Ast, TypeInferrable, CompilerStages):
         target_type = CommonTypes.Bool(self.pos)
         return_type = self.expression.infer_type(scope_manager).type
         if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
-            return SemanticErrors.ExpressionNotBooleanError().add(self.expression, return_type, "pattern guard")
+            raise SemanticErrors.ExpressionNotBooleanError().add(self.expression, return_type, "pattern guard")
 
 
 __all__ = ["PatternGuardAst"]

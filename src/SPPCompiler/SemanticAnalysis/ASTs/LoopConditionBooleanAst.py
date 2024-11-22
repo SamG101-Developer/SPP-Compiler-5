@@ -45,7 +45,7 @@ class LoopConditionBooleanAst(Ast, TypeInferrable, CompilerStages):
         target_type = CommonTypes.Bool(self.pos)
         return_type = self.condition.infer_type(scope_manager).type
         if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
-            return SemanticErrors.ExpressionNotBooleanError().add(self.condition, return_type, "loop")
+            raise SemanticErrors.ExpressionNotBooleanError().add(self.condition, return_type, "loop")
 
 
 __all__ = ["LoopConditionBooleanAst"]
