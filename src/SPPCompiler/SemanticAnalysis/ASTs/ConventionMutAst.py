@@ -29,6 +29,7 @@ class ConventionMutAst(Ast, Default):
     @staticmethod
     def default() -> ConventionMutAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import TokenAst
         return ConventionMutAst(-1, TokenAst.default(TokenType.TkBorrow), TokenAst.default(TokenType.KwMut))
 
 
