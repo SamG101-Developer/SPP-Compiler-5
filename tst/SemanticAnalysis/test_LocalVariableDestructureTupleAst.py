@@ -3,10 +3,6 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class DummyException(BaseException):
-    pass
-
-
 class TestLocalVariableDestructureTupleAst(TestCase):
     @should_fail_compilation(SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError)
     def test_invalid_local_variable_destructure_object_multiple_multi_skip(self):
