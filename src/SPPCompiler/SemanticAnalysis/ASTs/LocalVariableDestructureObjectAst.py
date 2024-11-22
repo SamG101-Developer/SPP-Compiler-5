@@ -84,5 +84,12 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, CompilerSta
                 new_ast = AstMutation.inject_code(f"let {element.value} = {value}.{element.name}", Parser.parse_let_statement_initialized)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
+        # Check for any missing attributes in the destructure, unless a multi-skip is present.
+        if not multi_arg_skips:
+            assigned_attributes = self.elements.filter_not_type(LocalVariableDestructureSkipNArgumentsAst).map(lambda e: e.name)
+            missing_attributes = attributes.filter(lambda a: a.name not in assigned_attributes)
+            if missing_attributes:
+                raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_attributes[0], "attribute", "destructure argument")
+
 
 __all__ = ["LocalVariableDestructureObjectAst"]

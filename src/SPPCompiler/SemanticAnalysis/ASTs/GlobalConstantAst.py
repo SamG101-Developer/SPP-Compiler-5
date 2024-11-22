@@ -77,7 +77,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled, CompilerStages):
         given_type = self.value.infer_type(scope_manager, **kwargs)
 
         if not expected_type.symbolic_eq(given_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(self.name, expected_type, self.value, given_type)
+            raise SemanticErrors.TypeMismatchError().add(self.type, expected_type, self.value, given_type)
 
 
 __all__ = ["GlobalConstantAst"]
