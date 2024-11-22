@@ -62,12 +62,12 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, CompilerStag
             raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1])
 
         # Ensure the lhs and rhs tuples have the same number of elements unless a multi-skip is present.
-        if num_lhs_tuple_elements < num_lhs_tuple_elements and not multi_arg_skips or num_lhs_tuple_elements > num_rhs_tuple_elements:
+        if (num_lhs_tuple_elements < num_rhs_tuple_elements and not multi_arg_skips) or num_lhs_tuple_elements > num_rhs_tuple_elements:
             raise SemanticErrors.VariableTupleDestructureTupleSizeMismatchError().add(self, num_lhs_tuple_elements, value, num_rhs_tuple_elements)
 
         # For a binding ".." destructure, ie "let (a, ..b, c) = t", create an intermediary rhs tuple.
         if multi_arg_skips and multi_arg_skips[0].binding:
-            indexes = [i - self.elements.index(multi_arg_skips[0]) for i in range(num_lhs_tuple_elements, num_rhs_tuple_elements + 1)]
+            indexes = [i - self.elements.index(multi_arg_skips[0]) - 1 for i in range(num_lhs_tuple_elements, num_rhs_tuple_elements + 1)]
             new_ast = AstMutation.inject_code(f"({", ".join([f"{value}.{i}" for i in indexes])})", Parser.parse_literal_tuple)
             bound_multi_skip = new_ast
 

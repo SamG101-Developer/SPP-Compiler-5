@@ -876,10 +876,24 @@ class Parser:
 
     @parser_rule
     def parse_local_variable_skip_arguments(self) -> LocalVariableDestructureSkipNArgumentsAst:
+        p1 = self.parse_local_variable_skip_arguments_unbound()
+        p2 = self.parse_local_variable_skip_arguments_bound()
+        p3 = (p1 | p2).parse_once()
+        return p3
+
+    @parser_rule
+    def parse_local_variable_skip_arguments_bound(self) -> LocalVariableDestructureSkipNArgumentsAst:
         c1 = self.current_pos()
-        p1 = self.parse_token(TokenType.TkVariadic).parse_once()
-        p2 = self.parse_local_variable_single_identifier().parse_optional()
-        return LocalVariableDestructureSkipNArgumentsAst(c1, p1, p2)
+        p1 = self.parse_token(TokenType.KwMut).parse_optional()
+        p2 = self.parse_token(TokenType.TkVariadic).parse_once()
+        p3 = self.parse_identifier().parse_once()
+        return LocalVariableDestructureSkipNArgumentsAst(c1, p2, LocalVariableSingleIdentifierAst(c1, p1, p3))
+
+    @parser_rule
+    def parse_local_variable_skip_arguments_unbound(self) -> LocalVariableDestructureSkipNArgumentsAst:
+        c1 = self.current_pos()
+        p2 = self.parse_token(TokenType.TkVariadic).parse_once()
+        return LocalVariableDestructureSkipNArgumentsAst(c1, p2, None)
 
     @parser_rule
     def parse_local_variable_single_identifier(self) -> LocalVariableSingleIdentifierAst:
