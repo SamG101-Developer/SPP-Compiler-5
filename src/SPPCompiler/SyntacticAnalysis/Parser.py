@@ -8,7 +8,7 @@ from SPPCompiler.SyntacticAnalysis.ParserRuleHandler import ParserRuleHandler
 from SPPCompiler.SemanticAnalysis import *
 
 if TYPE_CHECKING:
-    from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
+    from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError, ParserErrors
     from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
 
@@ -29,7 +29,7 @@ class Parser:
     _name: str
     _index: int
     _err_fmt: ErrorFormatter
-    _error: Optional[ParserError]
+    _error: Optional[ParserErrors.SyntaxError]
 
     def __init__(self, tokens: List[Token], file_name: str = "", error_formatter: Optional[ErrorFormatter] = None) -> None:
         from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserErrors
@@ -690,10 +690,15 @@ class Parser:
     def parse_exit_statement(self) -> LoopControlFlowStatementAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwExit).parse_one_or_more(TokenType.TkWhitespace)
-        p2 = self.parse_token(TokenType.KwSkip)
-        p3 = self.parse_expression()
-        p4 = (p2 | p3).parse_optional()
-        return LoopControlFlowStatementAst(c1, p1, p4)
+        p2 = self.parse_exit_statement_final_action().parse_optional()
+        return LoopControlFlowStatementAst(c1, p1, p2)
+
+    @parser_rule
+    def parse_exit_statement_final_action(self) -> TokenAst | ExpressionAst:
+        p1 = self.parse_token(TokenType.KwSkip)
+        p2 = self.parse_expression()
+        p3 = (p1 | p2).parse_once()
+        return p3
 
     @parser_rule
     def parse_skip_statement(self) -> LoopControlFlowStatementAst:

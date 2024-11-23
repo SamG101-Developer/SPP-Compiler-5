@@ -1,7 +1,11 @@
 from __future__ import annotations
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, Tuple
+
+from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
 
 from SPPCompiler.SyntacticAnalysis.ParserRuleHandler import ParserRuleHandler
+from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -47,6 +51,15 @@ class ParserAlternateRulesHandler[T](ParserRuleHandler[T]):
                 self._parser._index = parser_index
                 continue
         return None
+
+    def parse_zero_or_more(self, separator: TokenType, *, propagate_error: bool = False) -> Seq[T] | Tuple[Seq[T], ParserError]:
+        raise NotImplementedError()
+
+    def parse_one_or_more(self, separator: TokenType) -> Seq[T] | Tuple[Seq[T], ParserError]:
+        raise NotImplementedError()
+
+    def parse_two_or_more(self, separator: TokenType) -> Seq[T]:
+        raise NotImplementedError()
 
     def __or__(self, that) -> ParserAlternateRulesHandler:
         return self.add_parser_rule_handler(that)

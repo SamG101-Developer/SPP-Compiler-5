@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.ASTs.RelStatementAst import RelStatementAst
 from SPPCompiler.SemanticAnalysis.ASTs.RetStatementAst import RetStatementAst
 from SPPCompiler.SemanticAnalysis.ASTs.UseStatementAst import UseStatementAst
 
-StatementAst = Union[
+type StatementAst = Union[
     AssignmentStatementAst,
     ExpressionAst,
     LetStatementAst,

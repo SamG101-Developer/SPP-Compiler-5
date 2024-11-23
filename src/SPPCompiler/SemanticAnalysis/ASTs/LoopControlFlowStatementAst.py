@@ -76,6 +76,8 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
                 kwargs["loop_types"][depth] = (self.skip_or_expr or self.tok_seq_exit[-1], exit_type)
             else:
                 that_expr, that_exit_type = kwargs["loop_types"][depth]
+
+                # Todo: should be 2 different scopes in case of a typedef inside 1 of the scopes
                 if not exit_type.symbolic_eq(that_exit_type, scope_manager.current_scope):
                     raise SemanticErrors.TypeMismatchError().add(that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type)
 
