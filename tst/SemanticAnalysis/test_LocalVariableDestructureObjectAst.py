@@ -56,6 +56,14 @@ class TestLocalVariableDestructureObjectAst(TestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_local_variable_destructure_object_variant_type_1(self):
+        """
+        fun f(o: std::Opt[std::Str]) -> std::Void {
+            let std::Pass(val) = o
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_local_variable_destructure_object(self):
         """
@@ -175,5 +183,32 @@ class TestLocalVariableDestructureObjectAst(TestCase):
         fun f(t: TestType) -> std::Void {
             let TestType(a=(b, mut other_variable)) = t
             other_variable = 2
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_local_variable_destructure_object_variant_type_1(self):
+        """
+        fun f(o: std::Opt[std::Str]) -> std::Void {
+            let std::Some(mut val) = o
+            val = "hello world"
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_local_variable_destructure_object_variant_type_2(self):
+        """
+        cls Point1 {
+            x: std::BigInt
+            y: std::BigInt
+        }
+
+        cls Point2 {
+            x: std::BigInt
+            y: std::BigInt
+        }
+
+        fun f(p: Point1 | Point2) -> std::Void {
+            let Point1(x, y) = p
         }
         """

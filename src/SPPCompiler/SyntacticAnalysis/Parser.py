@@ -867,9 +867,9 @@ class Parser:
 
     @parser_rule
     def parse_local_variable(self) -> LocalVariableAst:
-        p1 = self.parse_local_variable_single_identifier()
-        p2 = self.parse_local_variable_tuple_destructure()
-        p3 = self.parse_local_variable_object_destructure()
+        p1 = self.parse_local_variable_tuple_destructure()
+        p2 = self.parse_local_variable_object_destructure()
+        p3 = self.parse_local_variable_single_identifier()
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
@@ -952,8 +952,8 @@ class Parser:
 
     @parser_rule
     def parse_local_variable_nested_for_attribute_binding(self) -> LocalVariableNestedForAttributeBindingAst:
-        p1 = self.parse_local_variable_object_destructure()
-        p2 = self.parse_local_variable_tuple_destructure()
+        p1 = self.parse_local_variable_tuple_destructure()
+        p2 = self.parse_local_variable_object_destructure()
         p3 = self.parse_local_variable_single_identifier()
         p4 = (p1 | p2 | p3).parse_once()
         return p4
