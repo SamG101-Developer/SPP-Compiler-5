@@ -122,7 +122,7 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
         # Check there are no invalidly named arguments.
         if invalid_arguments := argument_names.set_subtract(attribute_names):
             missing_arguments = attribute_names.set_subtract(argument_names)
-            raise SemanticErrors.ArgumentNameInvalidError().add(missing_arguments[0], "attribute", invalid_arguments[0], "object initialization argument")
+            raise SemanticErrors.ArgumentNameInvalidError().add(self, "attribute", invalid_arguments[0], "object initialization argument")
 
         # Type check the regular arguments against the class attributes.
         sorted_arguments = self.arguments.filter(lambda a: isinstance(a.name, IdentifierAst)).sort(key=lambda a: attribute_names.index(a.name))
@@ -137,7 +137,7 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
         def_argument_type = def_argument.value.infer_type(scope_manager, **kwargs) if def_argument else None
         target_def_type = InferredType.from_type(class_type)
         if def_argument and not def_argument_type.symbolic_eq(target_def_type, class_symbol.scope, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(class_type, target_def_type, def_argument, def_argument_type)
+            raise SemanticErrors.TypeMismatchError().add(class_type, target_def_type, def_argument.value, def_argument_type)
 
         # Check the "sup=" argument provides a tuple.
         sup_argument_type = sup_argument.value.infer_type(scope_manager, **kwargs) if sup_argument else None
@@ -157,7 +157,7 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
             # Check if there are any extra invalid types in the "sup=" tuple.
             if sup_argument and (invalid_superclasses := given_sup_types.set_subtract(super_classes)):
                 missing_superclasses = super_classes.set_subtract(given_sup_types)
-                raise SemanticErrors.ArgumentNameInvalidError().add(missing_superclasses[0], "superclass", invalid_superclasses[0], "object initialization sup argument")
+                raise SemanticErrors.ArgumentNameInvalidError().add(self, "superclass", invalid_superclasses[0], "object initialization sup argument")
 
 
 __all__ = ["ObjectInitializerArgumentGroupAst"]
