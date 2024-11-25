@@ -620,7 +620,7 @@ class SemanticErrors:
         def add(self, generic_value: Ast, generic_type: TypeAst, context: str) -> SemanticError:
             self.add_error(
                 pos=generic_value.pos,
-                tag=f"Type inferred as the generic type {generic_type} here.",
+                tag=f"Type inferred as {generic_type} (generic) here.",
                 msg=f"Generic types cannot be used in a {context}.",
                 tip=f"Change the generic type to a concrete type.")
 

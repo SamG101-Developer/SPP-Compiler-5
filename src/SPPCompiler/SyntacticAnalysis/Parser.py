@@ -1637,7 +1637,7 @@ class Parser:
     def parse_literal_tuple_n_items(self, item) -> TupleLiteralAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.TkParenL).parse_once()
-        p2 = item().parse_one_or_more(TokenType.TkComma)
+        p2 = item().parse_two_or_more(TokenType.TkComma)
         p3 = self.parse_token(TokenType.TkParenR).parse_once()
         return TupleLiteralAst(c1, p1, p2, p3)
 
