@@ -24,7 +24,7 @@ class LoopExpressionAst(Ast, TypeInferrable, CompilerStages):
     else_block: Optional[LoopElseStatementAst]
 
     _loop_type_info: dict = field(default_factory=dict, init=False, repr=False)
-    _loop_type_index: int = field(default=0, init=False, repr=False)
+    _loop_level: int = field(default=0, init=False, repr=False)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -40,7 +40,7 @@ class LoopExpressionAst(Ast, TypeInferrable, CompilerStages):
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
         # Get the loop type set by exit expressions inside the loop.
-        loop_type = self._loop_type_info.get(self._loop_type_index, (None, None))[1]
+        loop_type = self._loop_type_info.get(self._loop_level, (None, None))[1]
         if not loop_type:
             void_type = CommonTypes.Void(self.pos)
             loop_type = InferredType.from_type(void_type)
@@ -52,14 +52,20 @@ class LoopExpressionAst(Ast, TypeInferrable, CompilerStages):
         self.condition.analyse_semantics(scope_manager, **kwargs)
 
         # Analyse twice (for memory checks).
-        for i in range(("loop_count" not in kwargs) + 1):
-            kwargs["loop_count"] = kwargs.get("loop_count", 0) + 1
-            kwargs["loop_types"] = kwargs.get("loop_types", {})
-            kwargs["loop_ast"] = self
-            self._loop_type_info = kwargs["loop_types"]
-            self._loop_type_index = kwargs["loop_count"]
-            self.body.analyse_semantics(scope_manager, **kwargs)
-            kwargs["loop_count"] -= 1
+        # for i in range(("loop_level" not in kwargs) + 1):
+
+        # For the top level loop, set the count to 0, and create empty dictionaries for the loop types and ASTs.
+        kwargs["loop_level"] = kwargs.get("loop_level", 0)
+        kwargs["loop_types"] = kwargs.get("loop_types", {})
+        kwargs["loop_ast"] = self
+
+        # Save the loop AST into the ASTs dictionary, and save the type information for the type inference.
+        self._loop_type_info = kwargs["loop_types"]
+        self._loop_level = kwargs["loop_level"]
+
+        # Analyse the loop body and reduce the loop count.
+        kwargs["loop_level"] += 1
+        self.body.analyse_semantics(scope_manager, **kwargs)
 
         # Move out of the loop scope.
         scope_manager.move_out_of_current_scope()

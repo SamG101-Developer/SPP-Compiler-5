@@ -27,7 +27,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.tok_seq_exit.print(printer, " "),
+            self.tok_seq_exit.print(printer, " ") + " " if self.tok_seq_exit else "",
             self.skip_or_expr.print(printer) if self.skip_or_expr else ""]
         return "".join(string)
 
@@ -51,7 +51,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
 
         # Get the number of control flow statement, and the loop's nesting level.
         number_of_controls = self.tok_seq_exit.length + (has_skip is True)
-        nested_loop_depth  = kwargs["loop_count"]
+        nested_loop_depth  = kwargs["loop_level"]
 
         # Check the depth of the loop is greater than or equal to the number of control statements.
         if number_of_controls > nested_loop_depth:
@@ -71,7 +71,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
                 case _   : exit_type = self.skip_or_expr.infer_type(scope_manager, **kwargs)
 
             # Insert or check the depth's corresponding exit type.
-            depth = nested_loop_depth - number_of_controls + 1
+            depth = nested_loop_depth - number_of_controls
             if depth not in kwargs["loop_types"]:
                 kwargs["loop_types"][depth] = (self.skip_or_expr or self.tok_seq_exit[-1], exit_type)
             else:

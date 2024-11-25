@@ -689,7 +689,7 @@ class Parser:
     @parser_rule
     def parse_exit_statement(self) -> LoopControlFlowStatementAst:
         c1 = self.current_pos()
-        p1 = self.parse_token(TokenType.KwExit).parse_one_or_more(TokenType.TkWhitespace)
+        p1 = self.parse_token(TokenType.KwExit).parse_one_or_more(TokenType.NO_TOK)
         p2 = self.parse_exit_statement_final_action().parse_optional()
         return LoopControlFlowStatementAst(c1, p1, p2)
 
