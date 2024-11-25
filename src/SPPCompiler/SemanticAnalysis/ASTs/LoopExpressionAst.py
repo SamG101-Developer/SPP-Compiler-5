@@ -38,12 +38,20 @@ class LoopExpressionAst(Ast, TypeInferrable, CompilerStages):
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Get the loop type set by exit expressions inside the loop.
         loop_type = self._loop_type_info.get(self._loop_level, (None, None))[1]
         if not loop_type:
             void_type = CommonTypes.Void(self.pos)
             loop_type = InferredType.from_type(void_type)
+
+        # Check the else block's type if it exists and match it against the loop type.
+        if self.else_block:
+            else_type = self.else_block.infer_type(scope_manager, **kwargs)
+            if not loop_type.symbolic_eq(else_type, scope_manager.current_scope):
+                raise SemanticErrors.TypeMismatchError().add(self, loop_type, self.else_block.body.members[-1] or self.else_block.body.tok_right_brace, else_type)
+
         return loop_type
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
@@ -66,6 +74,10 @@ class LoopExpressionAst(Ast, TypeInferrable, CompilerStages):
         # Analyse the loop body and reduce the loop count.
         kwargs["loop_level"] += 1
         self.body.analyse_semantics(scope_manager, **kwargs)
+
+        # Analyse the else block if it exists.
+        if self.else_block:
+            self.else_block.analyse_semantics(scope_manager, **kwargs)
 
         # Move out of the loop scope.
         scope_manager.move_out_of_current_scope()
