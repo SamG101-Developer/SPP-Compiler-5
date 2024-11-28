@@ -187,6 +187,19 @@ class TestLocalVariableDestructureObjectAst(TestCase):
         """
 
     @should_pass_compilation()
+    def test_valid_local_variable_destructure_object_nested_array(self):
+        """
+        cls TestType {
+            a: std::Arr[std::Bool, 2]
+        }
+
+        fun f(t: TestType) -> std::Void {
+            let TestType(a=[b, mut other_variable]) = t
+            other_variable = true
+        }
+        """
+
+    @should_pass_compilation()
     def test_valid_local_variable_destructure_object_variant_type_1(self):
         """
         fun f(o: std::Opt[std::Str]) -> std::Void {
