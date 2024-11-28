@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 @dataclass
 class GenericTypeParameterRequiredAst(Ast, Ordered, CompilerStages):
     name: TypeAst
-    inline_constraints: GenericTypeParameterInlineConstraintsAst
+    constraints: GenericTypeParameterInlineConstraintsAst
 
     def __post_init__(self) -> None:
         # Import the necessary classes to create default instances.
@@ -24,7 +24,7 @@ class GenericTypeParameterRequiredAst(Ast, Ordered, CompilerStages):
 
         # Convert the name to a TypeAst, and create defaults.
         self.name = TypeAst.from_identifier(self.name)
-        self.inline_constraints = self.inline_constraints or GenericTypeParameterInlineConstraintsAst.default()
+        self.constraints = self.constraints or GenericTypeParameterInlineConstraintsAst.default()
         self._variant = "Required"
 
     def __eq__(self, other: GenericTypeParameterRequiredAst) -> bool:
@@ -36,7 +36,7 @@ class GenericTypeParameterRequiredAst(Ast, Ordered, CompilerStages):
         # Print the AST with auto-formatting.
         string = [
             self.name.print(printer),
-            self.inline_constraints.print(printer)]
+            self.constraints.print(printer)]
         return "".join(string)
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
@@ -47,7 +47,7 @@ class GenericTypeParameterRequiredAst(Ast, Ordered, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         self.name.analyse_semantics(scope_manager, **kwargs)
-        self.inline_constraints.analyse_semantics(scope_manager, **kwargs)
+        self.constraints.analyse_semantics(scope_manager, **kwargs)
     
     
 __all__ = ["GenericTypeParameterRequiredAst"]
