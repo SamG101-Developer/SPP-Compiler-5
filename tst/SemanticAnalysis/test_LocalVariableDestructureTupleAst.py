@@ -4,8 +4,16 @@ from tst._Utils import *
 
 
 class TestLocalVariableDestructureTupleAst(TestCase):
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_local_variable_destructure_tuple_non_tuple(self):
+        """
+        fun f() -> std::Void {
+            let (a, b) = 1
+        }
+        """
+
     @should_fail_compilation(SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError)
-    def test_invalid_local_variable_destructure_object_multiple_multi_skip(self):
+    def test_invalid_local_variable_destructure_tuple_multiple_multi_skip(self):
         """
         fun f() -> std::Void {
             let (a, .., .., b) = (1, 2, 3, 4)
@@ -88,6 +96,16 @@ class TestLocalVariableDestructureTupleAst(TestCase):
             let t = (1, "2")
             let ((a, mut b), c) = (t, 3)
             b = "4"
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_local_variable_destructure_tuple_nested_array(self):
+        """
+        fun f() -> std::Void {
+            let t = [1, 2]
+            let ([a, mut b], c) = (t, 3)
+            b = 4
         }
         """
 
