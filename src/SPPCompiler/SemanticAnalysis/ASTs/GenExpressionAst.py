@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class GenExpressionAst(Ast, TypeInferrable, CompilerStages):
     tok_gen: TokenAst
     tok_with: Optional[TokenAst]
-    convention: ConventionAst
+    convention: Optional[ConventionAst]
     expression: Optional[ExpressionAst]
     _func_ret_type: Optional[TypeAst] = field(default=None, init=False, repr=False)
 
