@@ -1352,6 +1352,25 @@ class SemanticErrors:
 
             return self
 
+    class VariableArrayDestructureArraySizeMismatchError(SemanticError):
+        """
+        The VariableArrayDestructureArraySizeMismatchError is raised if a variable array-destructure has a different
+        number of elements than the array being destructured. For example, "let [a, b] = [1, 2, 3]" is invalid.
+        """
+
+        def add(self, lhs: LocalVariableDestructureArrayAst, lhs_count: int, rhs: Ast, rhs_count: int) -> SemanticError:
+            self.add_info(
+                pos=lhs.pos,
+                tag=f"{lhs_count}-array destructure defined here")
+
+            self.add_error(
+                pos=rhs.pos,
+                tag=f"Type inferred as a {rhs_count}-array here",
+                msg="The array destructure has a different number of elements than the array being destructure.",
+                tip="Change the array destructure to have the same number of elements as the array.")
+
+            return self
+
     class WithExpressionNonContextualConditionError(SemanticError):
         """
         The WithExpressionNonContextualConditionError is raised if the condition in a with expression is not a
