@@ -36,11 +36,18 @@ class GenericTypeParameterInlineConstraintsAst(Ast, Default, CompilerStages):
     @staticmethod
     def default() -> GenericTypeParameterInlineConstraintsAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+        from SPPCompiler.SemanticAnalysis import TokenAst
         return GenericTypeParameterInlineConstraintsAst(-1, TokenAst.default(TokenType.TkColon), Seq())
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         self.constraints.for_each(lambda constraint: constraint.analyse_semantics(scope_manager, **kwargs))
+
+        # Check there are duplicate constraints types.
+        for i, t in self.constraints.enumerate():
+            for j, u in self.constraints[i + 1:].enumerate():
+                if t.symbolic_eq(u, scope_manager.current_scope):
+                    raise SemanticErrors.IdentifierDuplicationError(t, u)
 
 
 __all__ = ["GenericTypeParameterInlineConstraintsAst"]
