@@ -5,6 +5,7 @@ import functools
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
@@ -49,17 +50,24 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, CompilerStag
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkip1ArgumentAst
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import Parser
-
-        # Determine the number of elements in the lhs and rhs tuples.
-        num_lhs_tuple_elements = self.elements.length
-        num_rhs_tuple_elements = value.infer_type(scope_manager, **kwargs).type.types[-1].generic_argument_group.arguments.length
 
         # Only 1 "multi-skip" allowed in a destructure.
         multi_arg_skips = self.elements.filter_to_type(LocalVariableDestructureSkipNArgumentsAst)
         if multi_arg_skips.length > 1:
             raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1])
+
+        # Ensure the rhs value is a tuple.
+        value_type = value.infer_type(scope_manager, **kwargs).without_generics()
+        tuple_type = InferredType.from_type(CommonTypes.Tup().without_generics())
+        if not value_type.symbolic_eq(tuple_type, scope_manager.current_scope):
+            raise SemanticErrors.TypeMismatchError().add(self, tuple_type, value, value_type)
+
+        # Determine the number of elements in the lhs and rhs tuples.
+        num_lhs_tuple_elements = self.elements.length
+        num_rhs_tuple_elements = value.infer_type(scope_manager, **kwargs).type.types[-1].generic_argument_group.arguments.length
 
         # Ensure the lhs and rhs tuples have the same number of elements unless a multi-skip is present.
         if (num_lhs_tuple_elements < num_rhs_tuple_elements and not multi_arg_skips) or num_lhs_tuple_elements > num_rhs_tuple_elements:
