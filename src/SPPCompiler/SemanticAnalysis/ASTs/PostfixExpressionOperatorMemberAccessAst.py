@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-import difflib, operator
+import difflib
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -41,13 +41,14 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
 
     def infer_type(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
 
         lhs_type = lhs.infer_type(scope_manager)
         lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type.type)
 
         # Numerical access -> get the nth generic argument of the tuple.
         if isinstance(self.field, TokenAst):
-            element_type = lhs_type.type.types[-1].generic_argument_group.arguments[int(self.field.token.token_metadata)].value
+            element_type = AstTypeManagement.get_nth_type_of_indexable_type(int(self.field.token.token_metadata), lhs_type.type, scope_manager.current_scope)
             return InferredType.from_type(element_type)
 
         # Accessing a member from the scope by the identifier.
@@ -57,7 +58,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
         
@@ -84,12 +85,12 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
             if lhs_symbol.is_generic:
                 raise SemanticErrors.GenericTypeInvalidUsageError().add(lhs, lhs_type, "member access")
         
-            # Check the lhs is a tuple (only indexable type).
-            if not lhs_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
+            # Check the lhs is a tuple/array (the only indexable types).
+            if not AstTypeManagement.is_type_indexable(lhs_type, scope_manager.current_scope):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(lhs, lhs_type, self.tok_access)
         
-            # Check the index is within the bounds of the tuple.
-            if int(self.field.token.token_metadata) >= lhs_type.types[-1].generic_argument_group.arguments.length:
+            # Check the index is within the bounds of the tuple/array.
+            if not AstTypeManagement.is_index_within_type_bound(int(self.field.token.token_metadata), lhs_type, scope_manager.current_scope):
                 raise SemanticErrors.MemberAccessIndexOutOfBoundsError().add(lhs, lhs_type, self.field)
         
         # Accessing a regular attribute/method, such as "class.attribute".

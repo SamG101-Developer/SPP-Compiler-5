@@ -17,6 +17,39 @@ if TYPE_CHECKING:
 
 class AstTypeManagement:
     @staticmethod
+    def is_type_indexable(type: TypeAst, scope: Scope) -> bool:
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+
+        # Only tuple and array types are indexable.
+        is_tuple = type.without_generics().symbolic_eq(CommonTypes.Tup().without_generics(), scope)
+        is_array = type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope)
+        return is_tuple or is_array
+
+    @staticmethod
+    def is_index_within_type_bound(index: int, type: TypeAst, scope: Scope):
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+
+        # Tuple type: count the number of generic arguments.
+        if type.without_generics().symbolic_eq(CommonTypes.Tup().without_generics(), scope):
+            return index < type.types[-1].generic_argument_group.arguments.length
+
+        # Array type: get the "n" generic comp argument.
+        if type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope):
+            return index < int(type.types[-1].generic_argument_group.arguments[1].value.value.token.token_metadata)
+
+    @staticmethod
+    def get_nth_type_of_indexable_type(index: int, type: TypeAst, scope: Scope) -> TypeAst:
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+
+        # Tuple type: get the nth generic argument.
+        if type.without_generics().symbolic_eq(CommonTypes.Tup().without_generics(), scope):
+            return type.types[-1].generic_argument_group.arguments[index].value
+
+        # Array type: get the first generic argument.
+        if type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope):
+            return type.types[-1].generic_argument_group.arguments[0].value
+
+    @staticmethod
     def get_namespaced_scope_with_error(scope_manager: ScopeManager, namespace: Seq[IdentifierAst]) -> Scope:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
