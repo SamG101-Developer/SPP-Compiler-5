@@ -58,6 +58,7 @@ from SPPCompiler.SemanticAnalysis.ASTs.LetStatementUninitializedAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LiteralAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAttributeBindingAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureArrayAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureObjectAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureSkip1ArgumentAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureSkipNArgumentsAst import *
@@ -83,6 +84,7 @@ from SPPCompiler.SemanticAnalysis.ASTs.CaseExpressionBranchAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PatternGuardAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantAttributeBindingAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantDestructureArrayAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantDestructureObjectAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantDestructureSkip1ArgumentAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantDestructureSkipNArgumentsAst import *
