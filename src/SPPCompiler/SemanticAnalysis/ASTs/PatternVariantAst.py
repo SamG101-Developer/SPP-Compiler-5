@@ -1,5 +1,6 @@
 from typing import Union
 
+from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantDestructureArrayAst import PatternVariantDestructureArrayAst
 from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantElseAst import PatternVariantElseAst
 from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantLiteralAst import PatternVariantLiteralAst
 from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantAttributeBindingAst import PatternVariantAttributeBindingAst
@@ -14,29 +15,43 @@ type PatternVariantAst = Union[
     PatternVariantElseAst,
     PatternVariantExpressionAst,
     PatternVariantLiteralAst,
-    PatternVariantDestructureObjectAst,
     PatternVariantDestructureTupleAst,
+    PatternVariantDestructureArrayAst,
+    PatternVariantDestructureObjectAst,
     PatternVariantSingleIdentifierAst]
 
 type PatternGroupDestructureAst = Union[
-    PatternVariantDestructureObjectAst,
-    PatternVariantDestructureTupleAst]
+    PatternVariantDestructureTupleAst,
+    PatternVariantDestructureArrayAst,
+    PatternVariantDestructureObjectAst]
 
-type PatternVariantNestedForDestructureObjectAst = Union[
-    PatternVariantAttributeBindingAst,
-    PatternVariantDestructureSkipNArgumentsAst,
-    PatternVariantSingleIdentifierAst]
-
-type PatternVariantNestedForDestructureTupleAst = Union[
+type PatternVariantNestedForDestructureArrayAst = Union[
+    PatternVariantDestructureArrayAst,
     PatternVariantDestructureTupleAst,
     PatternVariantDestructureObjectAst,
     PatternVariantDestructureSkipNArgumentsAst,
     PatternVariantDestructureSkip1ArgumentAst,
     PatternVariantExpressionAst,
     PatternVariantLiteralAst,
-    PatternVariantSingleIdentifierAst,]
+    PatternVariantSingleIdentifierAst]
+
+type PatternVariantNestedForDestructureTupleAst = Union[
+    PatternVariantDestructureArrayAst,
+    PatternVariantDestructureTupleAst,
+    PatternVariantDestructureObjectAst,
+    PatternVariantDestructureSkipNArgumentsAst,
+    PatternVariantDestructureSkip1ArgumentAst,
+    PatternVariantExpressionAst,
+    PatternVariantLiteralAst,
+    PatternVariantSingleIdentifierAst]
+
+type PatternVariantNestedForDestructureObjectAst = Union[
+    PatternVariantAttributeBindingAst,
+    PatternVariantDestructureSkipNArgumentsAst,
+    PatternVariantSingleIdentifierAst]
 
 type PatternVariantNestedForAttributeBindingAst = Union[
+    PatternVariantDestructureArrayAst,
     PatternVariantDestructureTupleAst,
     PatternVariantDestructureObjectAst,
     PatternVariantLiteralAst]
@@ -44,6 +59,7 @@ type PatternVariantNestedForAttributeBindingAst = Union[
 __all__ = [
     "PatternVariantAst",
     "PatternGroupDestructureAst",
-    "PatternVariantNestedForDestructureObjectAst",
     "PatternVariantNestedForDestructureTupleAst",
+    "PatternVariantNestedForDestructureArrayAst",
+    "PatternVariantNestedForDestructureObjectAst",
     "PatternVariantNestedForAttributeBindingAst"]
