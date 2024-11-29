@@ -65,6 +65,9 @@ class IdentifierAst(Ast, TypeInferrable, CompilerStages):
         elif isinstance(symbol, NamespaceSymbol):
             return InferredType.from_type(self)
 
+        else:
+            raise ValueError(f"Symbol for {self} is not a variable or namespace.")
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
