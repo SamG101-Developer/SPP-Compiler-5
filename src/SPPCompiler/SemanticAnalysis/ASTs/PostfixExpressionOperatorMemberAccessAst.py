@@ -98,13 +98,13 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
             lhs_type = lhs.infer_type(scope_manager).type
             lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type)
             
-            # Check the lhs isn't a generic type.
-            if lhs_symbol.is_generic:
-                raise SemanticErrors.GenericTypeInvalidUsageError().add(lhs, lhs_type, "member access")
-            
             # Check the lhs is a variable and not a namespace.
             if isinstance(lhs_symbol, NamespaceSymbol):
                 raise SemanticErrors.MemberAccessStaticOperatorExpectedError().add(lhs, self.tok_access)
+
+            # Check the lhs isn't a generic type.
+            if lhs_symbol.is_generic:
+                raise SemanticErrors.GenericTypeInvalidUsageError().add(lhs, lhs_type, "member access")
         
             # Check the attribute exists on the lhs.
             if not lhs_symbol.scope.has_symbol(self.field):
@@ -123,16 +123,17 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
         
         # Accessing a namespaced constant, such as "std::pi".
         elif isinstance(self.field, IdentifierAst) and self.is_static_access():
-            lhs_type = lhs.infer_type(scope_manager).type
-            lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type)
-            
+            lhs_val_symbol = scope_manager.current_scope.get_symbol(lhs)
+
             # Check the lhs is a namespace and not a variable.
-            if isinstance(lhs_symbol, VariableSymbol):
+            if isinstance(lhs_val_symbol, VariableSymbol):
                 raise SemanticErrors.MemberAccessRuntimeOperatorExpectedError().add(lhs, self.tok_access)
         
             # Check the variable exists on the lhs.
-            if not lhs_symbol.scope.has_symbol(self.field):
-                alternatives = lhs_symbol.scope.all_symbols().map_attr("name")
+            lhs_type = lhs.infer_type(scope_manager).type
+            lhs_type_symbol = scope_manager.current_scope.get_symbol(lhs_type)
+            if not lhs_type_symbol.scope.has_symbol(self.field):
+                alternatives = lhs_type_symbol.scope.all_symbols().map_attr("name")
                 closest_match = difflib.get_close_matches(self.field.value, alternatives.map_attr("value"), n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(self.field, "namespace member", closest_match[0] if closest_match else None)
 
