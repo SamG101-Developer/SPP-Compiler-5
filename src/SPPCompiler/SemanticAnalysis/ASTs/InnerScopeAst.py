@@ -45,10 +45,12 @@ class InnerScopeAst[T](Ast, Default, TypeInferrable, CompilerStages):
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         # Return the last member's inferred type, if there are any members.
         if self.members:
-            return self.members[-1].infer_type(scope_manager, **kwargs)
+            temp_manager = ScopeManager(scope_manager.global_scope, self._scope)
+            return self.members[-1].infer_type(temp_manager, **kwargs)
 
         # An empty scope is inferred to have a void type.
         void_type = CommonTypes.Void(self.pos)
@@ -57,6 +59,7 @@ class InnerScopeAst[T](Ast, Default, TypeInferrable, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, inline: bool = False, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis import RetStatementAst
+        self._scope = scope_manager.current_scope
 
         # Check there is no code after a "ret" statement, as this is unreachable.
         for i, member in self.members.enumerate():
