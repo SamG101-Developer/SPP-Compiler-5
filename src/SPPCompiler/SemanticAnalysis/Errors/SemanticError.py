@@ -830,10 +830,10 @@ class SemanticErrors:
         non-symbolic value, ie "1" is used as the pin target.
         """
 
-        def add(self, pin_rel_statement: PinStatementAst | RelStatementAst, pin_target: Ast) -> SemanticError:
+        def add(self, pin_rel_statement: PinStatementAst | RelStatementAst, pin_target: Ast, pin: bool) -> SemanticError:
             self.add_info(
                 pos=pin_rel_statement.pos,
-                tag=f"{"Pin" if isinstance(pin_rel_statement, PinStatementAst) else "Rel"} statement defined here")
+                tag=f"{"Pin" if pin else "Rel"} statement defined here")
 
             self.add_error(
                 pos=pin_target.pos,

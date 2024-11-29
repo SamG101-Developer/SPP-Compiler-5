@@ -47,7 +47,7 @@ class RelStatementAst(Ast, TypeInferrable, CompilerStages):
         symbols = self.expressions.map(scope_manager.current_scope.get_variable_symbol_outermost_part)
         if symbols.filter_out_none().length < self.expressions.length:
             non_symbolic_pin_target = self.expressions[symbols.index(None)]
-            raise SemanticErrors.MemoryPinTargetInvalidError().add(self, non_symbolic_pin_target)
+            raise SemanticErrors.MemoryPinTargetInvalidError().add(self, non_symbolic_pin_target, False)
 
         # Prevent overlapping symbols from being created.
         symbols.remove_none()
