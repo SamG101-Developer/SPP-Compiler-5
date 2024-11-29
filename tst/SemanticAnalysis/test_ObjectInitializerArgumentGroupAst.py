@@ -116,7 +116,7 @@ class ObjectInitializerArgumentGroupAst(TestCase):
             sup Foo ext Bar { }
 
             fun f() -> std::Void {
-                let foo = Foo(sup=())
+                let foo = Foo(a=1, sup=())
             }
         """
 
