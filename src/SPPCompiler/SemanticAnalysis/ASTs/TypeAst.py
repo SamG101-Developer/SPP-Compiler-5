@@ -227,6 +227,7 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
 
                     type_scope = new_scope
 
+            # todo: use AstTypeManager index functions (allows array indexing)
             elif isinstance(type_part, TokenAst):
                 # Determine the type scope and type symbol.
                 prev_type_part = self.types[i - 1]
