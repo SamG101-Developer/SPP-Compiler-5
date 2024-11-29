@@ -116,11 +116,11 @@ class AstBinUtils:
 
         # Convert the "is" expression into a case-pattern block.
         elif ast.op.token.token_type == TokenType.KwIs:
-            case_ast = AstMutation.inject_code(f"case {ast.lhs} then is {ast.rhs} {{}}", Parser.parse_case_expression)
+            case_ast = AstMutation.inject_code(f"case {ast.lhs} of is {ast.rhs} {{}}", Parser.parse_case_expression)
             return case_ast
 
     @staticmethod
-    def _convert_to_function_call(ast: BinaryExpressionAst) -> PostfixExpressionAst:
+    def _convert_to_function_call(ast: BinaryExpressionAst) -> PostfixExpressionAst | BinaryExpressionAst:
         """
         Convert the binary expression into a postfix expression, with the binary operator being a function call.
         """
