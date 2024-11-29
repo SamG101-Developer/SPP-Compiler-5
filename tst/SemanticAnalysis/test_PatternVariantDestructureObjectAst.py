@@ -15,7 +15,7 @@ class TestPatternVariantDestructureObjectAst(TestCase):
         }
 
         fun f(p: Point) -> std::Void {
-            case p then is Point(.., ..) { }
+            case p is Point(.., ..) { }
         }
         """
 
@@ -28,7 +28,7 @@ class TestPatternVariantDestructureObjectAst(TestCase):
         }
 
         fun f(p: Point) -> std::Void {
-            case p then is Point(..x) { }
+            case p is Point(..x) { }
         }
         """
 
@@ -41,7 +41,7 @@ class TestPatternVariantDestructureObjectAst(TestCase):
         }
 
         fun f(p: Point) -> std::Void {
-            case p then is Point(x) { }
+            case p is Point(x) { }
         }
         """
 
@@ -54,7 +54,7 @@ class TestPatternVariantDestructureObjectAst(TestCase):
         }
 
         fun f(p: Point) -> std::Void {
-            case p then is Point(x, y, z) { }
+            case p is Point(x, y, z) { }
         }
         """
 
@@ -67,7 +67,7 @@ class TestPatternVariantDestructureObjectAst(TestCase):
         }
 
         fun f(p: Point) -> std::Void {
-            case p then is Point(x, y) { }
+            case p is Point(x, y) { }
         }
         """
 
@@ -80,11 +80,11 @@ class TestPatternVariantDestructureObjectAst(TestCase):
         }
 
         fun f(p: Point) -> std::Void {
-            case p then is Point(x, ..) { }
+            case p is Point(x, ..) { }
         }
         """
 
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    @should_pass_compilation()
     def test_valid_pattern_variant_destructure_object_variant_type(self):
         """
         cls Point1 {
@@ -98,8 +98,8 @@ class TestPatternVariantDestructureObjectAst(TestCase):
         }
 
         fun f(p: Point1 | Point2) -> std::Void {
-            case p then is
-                Point1(x, y) { }
-                Point2(x, y) { }
+            case p of
+                is Point1(x, y) { }
+                is Point2(x, y) { }
         }
         """
