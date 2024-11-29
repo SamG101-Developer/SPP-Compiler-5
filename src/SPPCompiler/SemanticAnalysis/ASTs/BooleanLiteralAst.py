@@ -20,6 +20,14 @@ class BooleanLiteralAst(Ast, TypeInferrable, CompilerStages):
         # Check both ASTs are the same type and have the same value.
         return self.value == other.value
 
+    @staticmethod
+    def from_python_literal(pos: int, value: bool) -> BooleanLiteralAst:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import TokenAst
+
+        token = TokenAst.default(TokenType.KwTrue if value else TokenType.KwFalse)
+        return BooleanLiteralAst(pos, token)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

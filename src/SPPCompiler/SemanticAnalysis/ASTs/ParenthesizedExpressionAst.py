@@ -19,6 +19,12 @@ class ParenthesizedExpressionAst(Ast, TypeInferrable, CompilerStages):
     expression: ExpressionAst
     tok_right_paren: TokenAst
 
+    @staticmethod
+    def from_expression(expression: ExpressionAst, *, pos: int = -1) -> ParenthesizedExpressionAst:
+        from SPPCompiler.SemanticAnalysis import TokenAst
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        return ParenthesizedExpressionAst(pos, TokenAst.default(TokenType.TkParenL), expression, TokenAst.default(TokenType.TkParenR))
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
