@@ -11,6 +11,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
+    from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantElseCaseAst import PatternVariantElseCaseAst
     from SPPCompiler.SemanticAnalysis.ASTs.PatternGuardAst import PatternGuardAst
     from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantAst import PatternVariantAst
     from SPPCompiler.SemanticAnalysis.ASTs.StatementAst import StatementAst
@@ -31,6 +32,13 @@ class CaseExpressionBranchAst(Ast, TypeInferrable, CompilerStages):
         # Convert the patterns into a sequence.
         self.patterns = Seq(self.patterns)
         self.body = self.body or InnerScopeAst.default()
+
+    @staticmethod
+    def from_else_to_else_case(pos: int, else_case: PatternVariantElseCaseAst) -> CaseExpressionBranchAst:
+        from SPPCompiler.SemanticAnalysis import InnerScopeAst, PatternVariantElseAst
+        else_pattern = PatternVariantElseAst(pos, else_case.tok_else)
+        case_branch  = CaseExpressionBranchAst(pos, None, Seq([else_pattern]), None, InnerScopeAst.default(Seq([else_case.case_expression])))
+        return case_branch
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

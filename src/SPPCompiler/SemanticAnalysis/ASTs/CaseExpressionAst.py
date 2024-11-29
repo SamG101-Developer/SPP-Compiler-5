@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 import copy
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -12,8 +12,9 @@ from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.ASTs.CaseExpressionBranchAst import CaseExpressionBranchAst
+    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
+    from SPPCompiler.SemanticAnalysis.ASTs.InnerScopeAst import InnerScopeAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
@@ -22,12 +23,34 @@ if TYPE_CHECKING:
 class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
     tok_case: TokenAst
     condition: ExpressionAst
-    tok_then: TokenAst
+    kw_of: Optional[TokenAst]
     branches: Seq[CaseExpressionBranchAst]
 
     def __post_init__(self) -> None:
         # Convert the branches into a sequence.
         self.branches = Seq(self.branches)
+
+    @staticmethod
+    def from_condition_and_branches(condition: ExpressionAst, branches: Seq[CaseExpressionBranchAst], *, pos: int) -> CaseExpressionAst:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import TokenAst
+
+        # Create the case expression.
+        return CaseExpressionAst(pos, TokenAst.default(TokenType.KwCase), condition, TokenAst.default(TokenType.KwOf), branches)
+
+    @staticmethod
+    def from_simple(c1: int, p1: TokenAst, p2: ExpressionAst, p3: InnerScopeAst, p4: Seq[CaseExpressionBranchAst]) -> CaseExpressionAst:
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis import BooleanLiteralAst, TokenAst, ParenthesizedExpressionAst
+        from SPPCompiler.SemanticAnalysis import CaseExpressionBranchAst, PatternVariantExpressionAst
+
+        # Convert condition into an "== true" comparison.
+        first_pattern = PatternVariantExpressionAst(c1, BooleanLiteralAst.from_python_literal(c1, True))
+        first_branch = CaseExpressionBranchAst(c1, TokenAst.default(TokenType.TkEq), Seq([first_pattern]), None, p3)
+        branches = Seq([first_branch]) + p4
+
+        # Return the case expression.
+        return CaseExpressionAst(c1, p1, ParenthesizedExpressionAst.from_expression(p2, pos=p2.pos), TokenAst.default(TokenType.KwOf), branches)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -35,7 +58,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
         string = [
             self.tok_case.print(printer) + " ",
             self.condition.print(printer) + " ",
-            self.tok_then.print(printer) + "\n",
+            self.kw_of.print(printer) if self.kw_of else "",
             self.branches.print(printer, "\n")]
         return "".join(string)
 
