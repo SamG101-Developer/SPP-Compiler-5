@@ -156,7 +156,6 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
 
             # Check if there are any extra invalid types in the "sup=" tuple.
             if sup_argument and (invalid_superclasses := given_sup_types.set_subtract(super_classes)):
-                missing_superclasses = super_classes.set_subtract(given_sup_types)
                 raise SemanticErrors.ArgumentNameInvalidError().add(self, "superclass", invalid_superclasses[0], "object initialization sup argument")
 
 

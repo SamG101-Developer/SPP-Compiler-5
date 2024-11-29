@@ -60,6 +60,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
         # function's name and its owner type/namespace.
 
+        # Todo: Change this to detecting FunMov/Mut/Ref superimpositions over the type
         function_owner_type, function_owner_scope, function_name = AstFunctions.get_function_owner_type_and_function_name(scope_manager, lhs)
         if not function_name:
             raise SemanticErrors.FunctionCallOnNoncallableTypeError().add(lhs)
@@ -103,12 +104,11 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
 
                 # Check if there are too many arguments for the function (non-variadic).
                 if arguments.length > parameters.length and not is_variadic:
-                    raise SemanticErrors.FunctionCallTooManyArgumentsError().add(self, function_overload.name, "argument")
+                    raise SemanticErrors.FunctionCallTooManyArgumentsError().add(self, function_overload.name)
 
                 # Check for any named arguments without a corresponding parameter.
                 if invalid_arguments := argument_names.set_subtract(parameter_names):
-                    missing_arguments = parameter_names.set_subtract(argument_names)
-                    raise SemanticErrors.ArgumentNameInvalidError().add(missing_arguments[0], "parameter", invalid_arguments[0], "argument")
+                    raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_arguments[0], "argument")
 
                 # Remove all the used parameters names from the set of parameter names, and name the unnamed arguments.
                 AstFunctions.name_function_arguments(arguments, parameters)

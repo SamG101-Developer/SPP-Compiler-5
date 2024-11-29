@@ -27,7 +27,7 @@ class SemanticError(BaseException):
 
     error_info: List[ErrorInfo]
 
-    def __init__(self, *args) -> SemanticError:
+    def __init__(self, *args) -> None:
         super().__init__(args)
         self.error_info = []
 
@@ -455,7 +455,7 @@ class SemanticErrors:
         Todo: add more info?
         """
 
-        def add(self, function_call: PostfixExpressionOperatorFunctionCallAst, function_definition: FunctionPrototypeAst) -> SemanticError:
+        def add(self, function_call: ExpressionAst, function_definition: IdentifierAst) -> SemanticError:
             self.add_info(
                 pos=function_definition.pos,
                 tag="Function defined here")

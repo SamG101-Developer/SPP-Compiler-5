@@ -183,8 +183,7 @@ class AstFunctions:
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
-            missing_arguments = parameter_names.set_subtract(argument_names)
-            raise SemanticErrors.ArgumentNameInvalidError().add(missing_arguments[0], "parameter", invalid_argument_names[0], "argument")
+            raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_argument_names[0], "argument")
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
@@ -227,8 +226,7 @@ class AstFunctions:
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
-            missing_arguments = parameter_names.set_subtract(argument_names)
-            raise SemanticErrors.ArgumentNameInvalidError().add(missing_arguments[0], "parameter", invalid_argument_names[0], "argument")
+            raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_argument_names[0], "argument")
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
