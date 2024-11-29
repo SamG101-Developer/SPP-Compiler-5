@@ -28,9 +28,9 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            "(" + self.lhs.print(printer) + " ",
+            self.lhs.print(printer) + " ",
             self.op.print(printer) + " ",
-            self.rhs.print(printer) + ")"]
+            self.rhs.print(printer)]
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
@@ -43,6 +43,8 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
             return InferredType.from_type(bool_type)
 
         # Infer the type from the function equivalent of the binary expression.
+        if not self._as_func:
+            self.analyse_semantics(scope_manager, **kwargs)
         return self._as_func.infer_type(scope_manager, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
@@ -66,9 +68,10 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         # If the RHS is a destructure, then analysis stops here (after analysing the conversion).
         if self.op.token.token_type == TokenType.KwIs:
+            n = scope_manager.current_scope.children.length
             self._as_func = AstBinUtils.convert_to_function_call(self)
             self._as_func.analyse_semantics(scope_manager, **kwargs)
-            destructures_symbols = scope_manager.current_scope.children[0].children[0].all_symbols(exclusive=True)
+            destructures_symbols = scope_manager.current_scope.children[n].children[0].all_symbols(exclusive=True)
             for symbol in destructures_symbols:
                 scope_manager.current_scope.add_symbol(symbol)
             return
