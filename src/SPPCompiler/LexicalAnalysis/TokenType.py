@@ -119,9 +119,9 @@ class TokenType(Enum, metaclass=TokenTypeMeta):
     KwNot = "not"
 
     # Misc
+    KwOf = "of"
     KwIn = "in"
     KwAsync = "async"
-    KwThen = "then"
 
     # Lexemes
     LxRegex = r"r\".*\""

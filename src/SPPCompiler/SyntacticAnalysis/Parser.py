@@ -511,7 +511,7 @@ class Parser:
         return self.parse_binary_expression_precedence_level_n(
             self.parse_binary_expression_precedence_level_4,
             self.parse_binary_op_precedence_level_3,
-            self.parse_pattern_variant_destructure_object)  # todo: any type of destructure here?
+            self.parse_pattern_group_destructure)
 
     def parse_binary_expression_precedence_level_4(self) -> ParserRuleHandler:
         return self.parse_binary_expression_precedence_level_n(
@@ -581,12 +581,28 @@ class Parser:
 
     @parser_rule
     def parse_case_expression(self) -> CaseExpressionAst:
+        p1 = self.parse_case_expression_patterns()
+        p2 = self.parse_case_expression_simple()
+        p3 = (p1 | p2).parse_once()
+        return p3
+
+    @parser_rule
+    def parse_case_expression_patterns(self) -> CaseExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwCase).parse_once()
         p2 = self.parse_expression().parse_once()
-        p3 = self.parse_token(TokenType.KwThen).parse_optional()
+        p3 = self.parse_token(TokenType.KwOf).parse_once()
         p4 = self.parse_case_expression_branch().parse_one_or_more(TokenType.NO_TOK)
         return CaseExpressionAst(c1, p1, p2, p3, p4)
+
+    @parser_rule
+    def parse_case_expression_simple(self) -> CaseExpressionAst:
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.KwCase).parse_once()
+        p2 = self.parse_expression().parse_once()
+        p3 = self.parse_inner_scope(self.parse_statement).parse_once()
+        p4 = self.parse_case_expression_branch_simple().parse_zero_or_more(TokenType.NO_TOK)
+        return CaseExpressionAst.from_simple(c1, p1, p2, p3, p4)
 
     @parser_rule
     def parse_loop_expression(self) -> LoopExpressionAst:
@@ -993,6 +1009,13 @@ class Parser:
     # ===== PATTERNS =====
 
     @parser_rule
+    def parse_case_expression_branch_simple(self) -> CaseExpressionBranchAst:
+        p1 = self.parse_pattern_statement_flavour_else_case()
+        p2 = self.parse_pattern_statement_flavour_else()
+        p3 = (p1 | p2).parse_once()
+        return p3
+
+    @parser_rule
     def parse_case_expression_branch(self) -> CaseExpressionBranchAst:
         p1 = self.parse_pattern_statement_flavour_destructuring()
         p2 = self.parse_pattern_statement_flavour_non_destructuring()
@@ -1019,17 +1042,17 @@ class Parser:
         return CaseExpressionBranchAst(c1, p1, p2, None, p3)
 
     @parser_rule
+    def parse_pattern_statement_flavour_else_case(self) -> CaseExpressionBranchAst:
+        c1 = self.current_pos()
+        p1 = self.parse_pattern_variant_else_case().parse_once()
+        return CaseExpressionBranchAst.from_else_to_else_case(c1, p1)
+
+    @parser_rule
     def parse_pattern_statement_flavour_else(self) -> CaseExpressionBranchAst:
         c1 = self.current_pos()
         p1 = self.parse_pattern_variant_else().parse_once()
         p2 = self.parse_inner_scope(self.parse_statement).parse_once()
         return CaseExpressionBranchAst(c1, None, Seq([p1]), None, p2)
-
-    @parser_rule
-    def parse_pattern_statement_flavour_else_case(self) -> CaseExpressionBranchAst:
-        c1 = self.current_pos()
-        p1 = self.parse_pattern_variant_else_case().parse_once()
-        return CaseExpressionBranchAst(c1, None, Seq([p1]), None, None)
 
     @parser_rule
     def parse_pattern_group_destructure(self) -> PatternGroupDestructureAst:
