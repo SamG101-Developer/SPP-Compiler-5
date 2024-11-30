@@ -13,6 +13,10 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
+# TODO
+#  - Prevent abstract types being initialized (types with an abstract method)
+
+
 @dataclass
 class ObjectInitializerAst(Ast, TypeInferrable, CompilerStages):
     class_type: TypeAst
