@@ -128,6 +128,28 @@ class TestPostfixExpressionOperatorFunctionCallAst(TestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
+    def test_invalid_postfix_func_call_coroutine_missing_pins(self):
+        """
+        cor c(a: &std::BigInt) -> std::GenMov[std::BigInt] { }
+
+        fun f() -> std::Void {
+            let x = 123
+            c(&x)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
+    def test_invalid_postfix_func_call_async_missing_pins(self):
+        """
+        fun a(b: &std::BigInt) -> std::Void { }
+
+        fun f() -> std::Void {
+            let x = 123
+            async a(&x)
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_postfix_func_call_no_params(self):
         """
@@ -189,5 +211,29 @@ class TestPostfixExpressionOperatorFunctionCallAst(TestCase):
         """
         fun f[T, U](a: T) -> std::Void {
             f[U=std::Bool](123)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_postfix_func_call_coroutine_correct_pins(self):
+        """
+        cor c(a: &std::BigInt) -> std::GenMov[std::BigInt] { }
+
+        fun f() -> std::Void {
+            let x = 123
+            pin x
+            c(&x)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_postfix_func_call_async_correct_pins(self):
+        """
+        fun a(b: &std::BigInt) -> std::Void { }
+
+        fun f() -> std::Void {
+            let x = 123
+            pin x
+            async a(&x)
         }
         """
