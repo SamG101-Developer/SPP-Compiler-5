@@ -620,7 +620,7 @@ class SemanticErrors:
         def add(self, generic_value: Ast, generic_type: TypeAst, context: str) -> SemanticError:
             self.add_error(
                 pos=generic_value.pos,
-                tag=f"Type inferred as {generic_type} (generic) here.",
+                tag=f"Type inferred as '{generic_type}' (generic) here.",
                 msg=f"Generic types cannot be used in a {context}.",
                 tip=f"Change the generic type to a concrete type.")
 
@@ -1127,6 +1127,44 @@ class SemanticErrors:
                 tag="Non-virtual method on base class.",
                 msg=f"The super member '{base_method}' is not virtual and cannot be overridden in the subclass.",
                 tip="Use a virtual method.")
+
+            return self
+
+    class SuperimpositionInheritanceDuplicateSuperclassError(SemanticError):
+        """
+        The SuperimpositionInheritanceDuplicateSuperclassError is raised if a type is superimposed twice over another
+        type. The 2 matched types are symbolically equal, ie alias-aware, generically matched types.
+        """
+
+        def add(self, first_inheritance: TypeAst, second_inheritance: TypeAst) -> SemanticError:
+            self.add_info(
+                pos=first_inheritance.pos,
+                tag=f"Type '{first_inheritance}' inherited here")
+
+            self.add_error(
+                pos=second_inheritance.pos,
+                tag=f"Duplicate superimposition here",
+                msg="Cannot superimpose the same type twice",
+                tip="Remove the second superimposition definition")
+
+            return self
+
+    class SuperimpositionInheritanceCyclicInheritanceError(SemanticError):
+        """
+        The SuperimpositionInheritanceCyclicSuperclassError is raised two types inherit each other. Inheritance trees,
+        whilst supporting multi-parents, must be loop free.
+        """
+
+        def add(self, first_inheritance: TypeAst, second_inheritance: TypeAst) -> SemanticError:
+            self.add_info(
+                pos=first_inheritance.pos,
+                tag=f"Valid inheritance defined here")
+
+            self.add_error(
+                pos=second_inheritance.pos,
+                tag=f"Cyclic superimposition here",
+                msg="Two types cannot superimpose each other",
+                tip="Remove the second superimposition definition")
 
             return self
 

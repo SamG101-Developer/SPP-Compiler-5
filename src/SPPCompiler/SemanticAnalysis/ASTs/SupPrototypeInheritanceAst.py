@@ -14,6 +14,11 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
+# Todo
+#  - Prevent double inheritance (same type superimposed anywhere in the tree)
+#  - Prevent cyclic inheritance
+
+
 @dataclass
 class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
     tok_ext: TokenAst
@@ -69,6 +74,16 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         sup_symbol = scope_manager.current_scope.get_symbol(self.super_class)
+
+        # Prevent double inheritance by checking if the sup scope is already in the list.
+        if existing_sup_scope := cls_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, SupPrototypeInheritanceAst)).find(lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, scope_manager.current_scope)):
+            raise SemanticErrors.SuperimpositionInheritanceDuplicateSuperclassError(existing_sup_scope._ast.super_class, self.super_class)
+
+        # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
+        if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, SupPrototypeInheritanceAst)).find(lambda s: s._ast.super_class.symbolic_eq(self.name, s, scope_manager.current_scope)):
+            raise SemanticErrors.SuperimpositionInheritanceCyclicInheritanceError(existing_sup_scope._ast.super_class, self.name)
+
+        # Register sup and sub scopes.
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
         cls_symbol.scope._direct_sup_scopes.append(sup_symbol.scope)
         sup_symbol.scope._direct_sub_scopes.append(cls_symbol.scope)
@@ -92,9 +107,6 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
-
-        # Todo: Check the same superclass isn't extended twice.
-        # Todo: Add support for type aliasing in the superimposition.
 
         # Move to the next scope.
         scope_manager.move_to_next_scope()
