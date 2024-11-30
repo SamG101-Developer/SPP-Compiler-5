@@ -145,12 +145,11 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
                     raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value)
 
                 # If the target requires pinning, ensure the borrow is pinned.
-                # Todo: Untested code.
                 if pins_required and not (overlap := symbol.memory_info.ast_pinned.find(lambda p: AstMemoryHandler.left_overlap(p, argument.value))):
                     raise SemanticErrors.MemoryUsageOfUnpinnedBorrowError().add(argument.value, pin_error_ast)
 
                 # No error with pinning -> mark the pin target.
-                elif pins_required and (target := kwargs["assignment"]):
+                elif pins_required and "assignment" in kwargs and (target := kwargs["assignment"]):
                     symbol.memory_info.pin_target = target
 
                 # Add the mutable borrow to the mutable borrow set.
@@ -162,12 +161,11 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
                     raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value)
 
                 # If the target requires pinning, ensure the borrow is pinned.
-                # Todo: Untested code.
                 if pins_required and not (overlap := symbol.memory_info.ast_pinned.find(lambda p: AstMemoryHandler.left_overlap(p, argument.value))):
                     raise SemanticErrors.MemoryUsageOfUnpinnedBorrowError().add(argument.value, pin_error_ast)
 
                 # No error with pinning -> mark the pin target.
-                elif pins_required and (target := kwargs["assignment"]):
+                elif pins_required and "assignment" in kwargs and (target := kwargs["assignment"]):
                     symbol.memory_info.pin_target = target
 
                 # Add the immutable borrow to the immutable borrow set.
