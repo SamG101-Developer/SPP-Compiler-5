@@ -27,8 +27,5 @@ class StringLiteralAst(Ast, TypeInferrable, CompilerStages):
         string_type = CommonTypes.Str(self.pos)
         return InferredType.from_type(string_type)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        ...
-
 
 __all__ = ["StringLiteralAst"]
