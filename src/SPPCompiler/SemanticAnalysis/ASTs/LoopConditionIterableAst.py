@@ -16,6 +16,12 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
+# Todo:
+#  - [1] Relax iterable type to superimpose a GenXXX type, rather than exactly match it
+#  - [1] Does the generator have to be owned? pins would ensure memory safety
+#  - [2] Change the '== "GenXXX"' to symbolic_eq (requires [1])
+
+
 @dataclass
 class LoopConditionIterableAst(Ast, TypeInferrable, CompilerStages):
     variable: LocalVariableAst
@@ -51,8 +57,6 @@ class LoopConditionIterableAst(Ast, TypeInferrable, CompilerStages):
         AstMemoryHandler.enforce_memory_integrity(self.iterable, self.iterable, scope_manager, update_memory_info=False)
 
         # Check the iterable is a generator type.
-        # Todo: Check the type superimposes a Gen type rather that is a Gen type.
-        # Todo: Generator has to be owned? If so, change to InferredType checks.
         iterable_type = self.iterable.infer_type(scope_manager, **kwargs)
         allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics).map(InferredType.from_type)
         if not allowed_types.any(lambda t: t.symbolic_eq(iterable_type.without_generics(), scope_manager.current_scope)):
@@ -64,7 +68,6 @@ class LoopConditionIterableAst(Ast, TypeInferrable, CompilerStages):
         let_ast.analyse_semantics(scope_manager, **kwargs)
 
         # Set the memory information of the symbol based on the type of iteration.
-        # Todo: Use symbolic eq once the superimpose check is used rather than direct comparison.
         symbols = self.variable.extract_names.map(lambda n: scope_manager.current_scope.get_symbol(n))
         for symbol in symbols:
             symbol.memory_info.ast_borrowed = self if iterable_type.type.types[-1].value in ["GenMut", "GenRef"] else None

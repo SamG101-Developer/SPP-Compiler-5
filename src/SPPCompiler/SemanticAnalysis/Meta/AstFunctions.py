@@ -35,7 +35,6 @@ class AstFunctions:
             scope_manager: ScopeManager, lhs: ExpressionAst)\
             -> Tuple[Ast, Optional[Scope], IdentifierAst]:
 
-        # Todo: Change to look for FunMov/FunMut/FunRef implementations over the $Field type?
         from SPPCompiler.SemanticAnalysis import IdentifierAst, PostfixExpressionAst
 
         # Runtime access into an object: "object.method()"

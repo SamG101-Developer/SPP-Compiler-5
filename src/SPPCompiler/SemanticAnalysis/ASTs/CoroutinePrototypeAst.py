@@ -9,6 +9,10 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
+# Todo:
+#  - Relax return type to superimpose a GenXXX type, rather than exactly match it
+
+
 @dataclass
 class CoroutinePrototypeAst(FunctionPrototypeAst):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
@@ -22,7 +26,6 @@ class CoroutinePrototypeAst(FunctionPrototypeAst):
         kwargs["function_ret_type"] = self.return_type
 
         # Check the return type is a generator type.
-        # Todo: Check the type superimposes a Gen type rather that is a Gen type?
         allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics)
         if not allowed_types.any(lambda t: t.symbolic_eq(self.return_type.without_generics(), scope_manager.current_scope)):
             raise SemanticErrors.FunctionCoroutineInvalidReturnTypeError().add(self.return_type)
