@@ -103,7 +103,6 @@ from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorMemberAccessAst 
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorNotKeywordAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PrimaryExpressionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.RegexLiteralAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.RelStatementAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.RetStatementAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.StatementAst import *

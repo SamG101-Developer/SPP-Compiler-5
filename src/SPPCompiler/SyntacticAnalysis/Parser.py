@@ -1557,10 +1557,9 @@ class Parser:
         p3 = self.parse_literal_string()
         p4 = self.parse_literal_tuple(self.parse_expression)
         p5 = self.parse_literal_array(self.parse_expression)
-        p6 = self.parse_literal_regex()
-        p7 = self.parse_literal_boolean()
-        p8 = (p1 | p2 | p3 | p4 | p5 | p6 | p7).parse_once()
-        return p8
+        p6 = self.parse_literal_boolean()
+        p7 = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
+        return p7
 
     @parser_rule
     def parse_literal_float(self) -> FloatLiteralAst:
@@ -1595,12 +1594,6 @@ class Parser:
         p2 = self.parse_literal_array_n_items(item)
         p3 = (p1 | p2).parse_once()
         return p3
-
-    @parser_rule
-    def parse_literal_regex(self) -> RegexLiteralAst:
-        c1 = self.current_pos()
-        p1 = self.parse_lexeme(TokenType.LxRegex).parse_once()
-        return RegexLiteralAst(c1, p1)
 
     @parser_rule
     def parse_literal_boolean(self) -> BooleanLiteralAst:
@@ -1737,12 +1730,11 @@ class Parser:
         p3 = self.parse_literal_string()
         p4 = self.parse_literal_tuple(self.parse_global_constant_value)
         p5 = self.parse_literal_array(self.parse_global_constant_value)
-        p6 = self.parse_literal_regex()
-        p7 = self.parse_literal_boolean()
-        p8 = self.parse_global_object_initialization()
-        p9 = self.parse_identifier()
-        p10 = (p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8 | p9).parse_once()
-        return p10
+        p6 = self.parse_literal_boolean()
+        p7 = self.parse_global_object_initialization()
+        p8 = self.parse_identifier()
+        p9 = (p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8).parse_once()
+        return p9
 
     @parser_rule
     def parse_global_object_initialization(self) -> ObjectInitializerAst:
