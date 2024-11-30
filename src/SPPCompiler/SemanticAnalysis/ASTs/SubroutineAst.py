@@ -27,7 +27,7 @@ class SubroutinePrototypeAst(FunctionPrototypeAst):
         non_void_return_type = not self.return_type.symbolic_eq(CommonTypes.Void(), scope_manager.current_scope)
         if non_void_return_type and not (self._non_implemented or self._abstract) and not (self.body.members and isinstance(self.body.members[-1], RetStatementAst)):
             final_member = self.body.members[-1] if self.body.members else self.body.tok_right_brace
-            return SemanticErrors.FunctionSubroutineMissingReturnStatementError().add(final_member, self.return_type)
+            raise SemanticErrors.FunctionSubroutineMissingReturnStatementError().add(final_member, self.return_type)
 
         # Move out of the current scope.
         scope_manager.move_out_of_current_scope()
