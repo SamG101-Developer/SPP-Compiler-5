@@ -124,12 +124,10 @@ class TokenType(Enum, metaclass=TokenTypeMeta):
     KwAsync = "async"
 
     # Lexemes
-    LxRegex = r"r\".*\""
     LxIdentifier = r"\$?[a-z][_a-z0-9]*"
     LxUpperIdentifier = r"\$?[A-Z][_a-zA-Z0-9]*"
     LxBinDigits = r"0b[01]+"
     LxHexDigits = r"0x[0-9a-fA-F]+"
-    # LxDecDecimal = r"[0-9]([0-9_]*[0-9])?\.[0-9]([0-9]*[0-9])?"
     LxDecInteger = r"[0-9]([0-9_]*[0-9])?"
     LxDoubleQuoteStr = r"\"[^\"]*\""
     LxMultiLineComment = r"##[^#]*##"
