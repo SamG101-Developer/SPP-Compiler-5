@@ -52,7 +52,7 @@ class TupleLiteralAst(Ast, TypeInferrable, CompilerStages):
                 raise SemanticErrors.ExpressionTypeInvalidError().add(element)
 
         # Check all elements are "owned", and not "borrowed".
-        borrowed_elements = self.elements.filter(lambda e: e.infer_type(scope_manager, **kwargs).convention == ConventionMovAst)
+        borrowed_elements = self.elements.filter(lambda e: e.infer_type(scope_manager, **kwargs).convention is not ConventionMovAst)
         if borrowed_elements:
             if borrow_symbol := scope_manager.current_scope.get_variable_symbol_outermost_part(borrowed_elements[0]):
                 if borrow_ast := borrow_symbol.memory_info.ast_borrowed:
