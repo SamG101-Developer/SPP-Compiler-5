@@ -114,11 +114,28 @@ class TestSupPrototypeInheritanceAst(TestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_superimposition_generic_variants(self):
+    def test_valid_superimposition_inheritance_generic_variants(self):
         """
         cls BaseClass[T] { }
 
         cls A { }
         sup A ext BaseClass[std::BigInt] { }
         sup A ext BaseClass[std::Bool] { }
+        """
+
+    @should_pass_compilation()
+    def test_valid_superimposition_inheritance_generics_1(self):
+        """
+        cls A[T] { a: T }
+        cls B[U] { b: U }
+
+        sup [T] A[T] ext B[T] {
+            fun f(mut self) -> std::Void {
+                self.a = self.b
+            }
+        }
+
+        fun f() -> std::Void {
+            let b = B(b=100, sup=(A(a=200),))
+        }
         """
