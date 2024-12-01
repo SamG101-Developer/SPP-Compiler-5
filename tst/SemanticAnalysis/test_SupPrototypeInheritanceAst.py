@@ -112,3 +112,13 @@ class TestSupPrototypeInheritanceAst(TestCase):
         cls B { }
         sup B ext A { }
         """
+
+    @should_pass_compilation()
+    def test_valid_superimposition_generic_variants(self):
+        """
+        cls BaseClass[T] { }
+
+        cls A { }
+        sup A ext BaseClass[std::BigInt] { }
+        sup A ext BaseClass[std::Bool] { }
+        """

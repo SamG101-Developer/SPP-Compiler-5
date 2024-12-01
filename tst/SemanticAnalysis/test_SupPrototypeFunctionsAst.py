@@ -44,3 +44,46 @@ class TestSupPrototypeFunctionsAst(TestCase):
             fun f(&self) -> std::Void { }
         }
         """
+
+    @should_pass_compilation()
+    def test_valid_sup_prototype_functions(self):
+        """
+        cls A { }
+        sup A {
+            fun f(&self) -> std::Void { }
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_sup_prototype_functions_generic_fallthrough_explicit(self):
+        """
+        cls BaseClass[T] { }
+
+        sup [T] BaseClass[T] {
+            @no_impl
+            fun f(&self) -> T { }
+        }
+
+        fun f() -> std::Void {
+            let x = BaseClass[std::Bool] ()
+            let mut y = x.f()
+            y = false
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_sup_prototype_functions_generic_fallthrough_implicit(self):
+        """
+        cls BaseClass[T] { a: T }
+
+        sup [T] BaseClass[T] {
+            @no_impl
+            fun f(&self) -> T { }
+        }
+
+        fun f() -> std::Void {
+            let x = BaseClass(a=false)
+            let mut y = x.f()
+            y = false
+        }
+        """
