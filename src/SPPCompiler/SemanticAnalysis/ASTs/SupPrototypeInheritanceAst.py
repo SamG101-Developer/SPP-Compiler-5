@@ -26,7 +26,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
     def __post_init__(self) -> None:
         # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst, InnerScopeAst
+        from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst, SupImplementationAst
         from SPPCompiler.SemanticAnalysis import WhereBlockAst, TokenAst
 
         # Create default instances.
@@ -34,7 +34,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
         self.where_block = self.where_block or WhereBlockAst.default()
         self.tok_ext = self.tok_ext or TokenAst.default(TokenType.KwExt)
-        self.body = self.body or InnerScopeAst.default()
+        self.body = self.body or SupImplementationAst.default()
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -77,7 +77,8 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
         # Prevent double inheritance by checking if the sup scope is already in the list.
         if existing_sup_scope := cls_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, SupPrototypeInheritanceAst)).find(lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, scope_manager.current_scope)):
-            raise SemanticErrors.SuperimpositionInheritanceDuplicateSuperclassError(existing_sup_scope._ast.super_class, self.super_class)
+            if not cls_symbol.name.value.startswith("$"):
+                raise SemanticErrors.SuperimpositionInheritanceDuplicateSuperclassError(existing_sup_scope._ast.super_class, self.super_class)
 
         # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
         if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, SupPrototypeInheritanceAst)).find(lambda s: s._ast.super_class.symbolic_eq(self.name, s, scope_manager.current_scope)):
