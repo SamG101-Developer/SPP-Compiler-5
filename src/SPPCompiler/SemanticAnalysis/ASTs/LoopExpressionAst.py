@@ -50,7 +50,8 @@ class LoopExpressionAst(Ast, TypeInferrable, CompilerStages):
         if self.else_block:
             else_type = self.else_block.infer_type(scope_manager, **kwargs)
             if not loop_type.symbolic_eq(else_type, scope_manager.current_scope):
-                raise SemanticErrors.TypeMismatchError().add(self, loop_type, self.else_block.body.members[-1] or self.else_block.body.tok_right_brace, else_type)
+                final_member = self.body.members[-1] if self.body.members else self.body.tok_right_brace
+                raise SemanticErrors.TypeMismatchError().add(self, loop_type, final_member, else_type)
 
         return loop_type
 
