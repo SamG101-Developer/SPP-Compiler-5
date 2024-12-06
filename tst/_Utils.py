@@ -1,8 +1,6 @@
 from argparse import Namespace
 import os.path
 
-from SPPCompiler.LexicalAnalysis.Lexer import Lexer
-from SPPCompiler.SyntacticAnalysis.Parser import Parser
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticError, SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
 from spp import handle_init, handle_build
@@ -50,26 +48,6 @@ def should_fail_compilation(expected_error):
     return inner
 
 
-def should_pass_parsing(parser_func):
-    def parser_func_chooser(test_func):
-        def wrapper(self):
-            code = test_func.__doc__
-            parser_func(Parser(Lexer(code).lex()))
-        return wrapper
-    return parser_func_chooser
-
-
-def should_fail_parsing(parser_func):
-    def parser_func_chooser(test_func):
-        def wrapper(self):
-            code = test_func.__doc__
-            with self.assertRaises(ParserError):
-                parser_func(Parser(Lexer(code).lex()))
-        return wrapper
-    return parser_func_chooser
-
-
 __all__ = [
     "should_pass_compilation", "should_fail_compilation",
-    "should_pass_parsing", "should_fail_parsing",
     "ParserError", "SemanticError", "SemanticErrors"]
