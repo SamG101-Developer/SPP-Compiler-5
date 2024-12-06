@@ -19,4 +19,9 @@ class TestClassAttributeAst(TestCase):
             a: std::Str
             b: std::Str
         }
+
+        cls B {
+            a: std::Str
+            b: std::Str
+        }
         """

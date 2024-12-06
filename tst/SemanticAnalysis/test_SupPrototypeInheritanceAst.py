@@ -113,6 +113,27 @@ class TestSupPrototypeInheritanceAst(TestCase):
         sup B ext A { }
         """
 
+    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceNoInitializerError)
+    def test_invalid_superimposition_inheritance_no_initializer(self):
+        """
+        cls A { a: std::Bool }
+        cls B { }
+
+        sup B ext A { }
+        """
+
+    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceMultipleInitializerError)
+    def test_invalid_superimposition_inheritance_multiple_initializer(self):
+        """
+        cls A { a: std::Bool }
+        cls B { }
+
+        sup B ext A {
+            fun sup { ret A(a=true) }
+            fun sup { ret A(a=true) }
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_superimposition_inheritance_generic_variants(self):
         """
@@ -124,18 +145,39 @@ class TestSupPrototypeInheritanceAst(TestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_superimposition_inheritance_generics_1(self):
+    def test_valid_superimposition_inheritance_stateful(self):
         """
-        cls A[T] { a: T }
-        cls B[U] { b: U }
+        cls A { a: std::BigInt }
+        cls B { b: std::BigInt }
 
-        sup [T] A[T] ext B[T] {
+        sup B ext A {
+            fun sup { ret A(a=100) }
+
             fun f(mut self) -> std::Void {
                 self.a = self.b
             }
         }
 
         fun f() -> std::Void {
-            let b = B(b=100, sup=(A(a=200),))
+            let b = B(b=200)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_superimposition_inheritance_generics_1(self):
+        """
+        cls A[T] { a: T }
+        cls B[U] { b: U }
+
+        sup [T] A[T] ext B[T] {
+            fun sup { ret B[T](b=self.a) }
+
+            fun f(mut self) -> std::Void {
+                self.a = self.b
+            }
+        }
+
+        fun f() -> std::Void {
+            let b = B(b=100)
         }
         """

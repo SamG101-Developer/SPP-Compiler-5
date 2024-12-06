@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class ObjectInitializerArgumentAst(TestCase):
+class TestObjectInitializerArgumentAst(TestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_object_initializer_named_argument_expression_type(self):
         """

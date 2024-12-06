@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class ObjectInitializerAst(TestCase):
+class TestObjectInitializerAst(TestCase):
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
     def test_generic_type_invalid_usage(self):
         """

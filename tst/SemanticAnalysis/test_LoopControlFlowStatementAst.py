@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class LoopControlFlowStatementAst(TestCase):
+class TestLoopControlFlowStatementAst(TestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_control_flow_statement_exit_expr(self):
         """
