@@ -1389,9 +1389,8 @@ class Parser:
     def parse_object_initializer_argument_named_key(self) -> IdentifierAst | TokenAst:
         p1 = self.parse_identifier()
         p2 = self.parse_token(TokenType.KwElse)
-        p3 = self.parse_token(TokenType.KwSup)
-        p4 = (p1 | p2 | p3).parse_once()
-        return p4
+        p3 = (p1 | p2).parse_once()
+        return p3
 
     # ===== LAMBDAS =====
 

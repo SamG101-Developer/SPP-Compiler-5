@@ -1442,30 +1442,11 @@ class SemanticErrors:
                 tip="Remove the async call modifier, or change the target to a function.")
 
             return self
-            
-    class ObjectInitializerMultipleSupArgumentsError(SemanticError):
-        """
-        The ObjectInitializerMultipleSupArgumentsError is raised if an object initializer has multiple super arguments.
-        Only one super argument is allowed. For example, "Type(sup=(a,), sup=(b,))" is invalid => use "Type(sup=(A, B)).
-        """
-
-        def add(self, first_sup: Ast, second_sup: Ast) -> SemanticError:
-            self.add_info(
-                pos=first_sup.pos,
-                tag="First super argument defined here")
-
-            self.add_error(
-                pos=second_sup.pos,
-                tag="Second super argument defined here",
-                msg="Only one super argument is allowed in an object initializer.",
-                tip="Remove the second super argument / merge tuples.")
-
-            return self
 
     class ObjectInitializerMultipleDefArgumentsError(SemanticError):
         """
         The ObjectInitializerMultipleDefArgumentsError is raised if an object initializer has multiple default
-        arguments. Only one default argument is allowed. For example, "Type(else=a, else=b" is invalid".
+        arguments. Only one default argument is allowed. For example, "Type(else=a, else=b)" is invalid".
         """
 
         def add(self, first_else: Ast, second_else: Ast) -> SemanticError:
