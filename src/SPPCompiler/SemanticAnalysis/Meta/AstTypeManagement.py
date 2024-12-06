@@ -80,6 +80,7 @@ class AstTypeManagement:
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
         if not type_symbol:
             alternatives = scope.all_symbols().filter_to_type(TypeSymbol).map_attr("name")
+            alternatives.remove_if(lambda a: a.value.startswith("$"))
             closest_match = difflib.get_close_matches(type_part.value, alternatives.map_attr("value"), n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(type_part, "type", closest_match[0] if closest_match else None)
 
