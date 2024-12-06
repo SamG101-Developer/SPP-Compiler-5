@@ -167,15 +167,15 @@ class Parser:
         return p3
 
     @parser_rule
-    def parse_sup_use_statement(self) -> SupUseStatementAst:
-        p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
-        p2 = self.parse_use_statement().parse_once()
-        return SupUseStatementAst(**p2.__dict__, annotations=p1)
-
-    @parser_rule
     def parse_sup_method_prototype(self) -> FunctionPrototypeAst:
         p1 = self.parse_function_prototype().parse_once()
         return p1
+
+    @parser_rule
+    def parse_sup_use_statement(self) -> SupUseStatementAst:
+        p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
+        p2 = self.parse_use_statement().parse_once()
+        return UseStatementAst(**p2.__dict__, annotations=p1)
 
     # ===== FUNCTIONS =====
 
