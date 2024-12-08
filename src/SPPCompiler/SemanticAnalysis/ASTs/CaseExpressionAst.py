@@ -46,7 +46,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         # Convert condition into an "== true" comparison.
         first_pattern = PatternVariantExpressionAst(c1, BooleanLiteralAst.from_python_literal(c1, True))
-        first_branch = CaseExpressionBranchAst(c1, TokenAst.default(TokenType.TkEq), Seq([first_pattern]), None, p3)
+        first_branch = CaseExpressionBranchAst(c1, TokenAst.default(TokenType.TkEq, pos=c1), Seq([first_pattern]), None, p3)
         branches = Seq([first_branch]) + p4
 
         # Return the case expression.

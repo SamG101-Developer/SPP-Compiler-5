@@ -25,7 +25,7 @@ class BooleanLiteralAst(Ast, TypeInferrable, CompilerStages):
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
 
-        token = TokenAst.default(TokenType.KwTrue if value else TokenType.KwFalse)
+        token = TokenAst.default(TokenType.KwTrue if value else TokenType.KwFalse, pos=pos)
         return BooleanLiteralAst(pos, token)
 
     @ast_printer_method
