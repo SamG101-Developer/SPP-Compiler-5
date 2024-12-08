@@ -35,7 +35,7 @@ class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
     def from_variable_and_value(variable: LocalVariableAst, value: ExpressionAst) -> LetStatementInitializedAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
-        return LetStatementInitializedAst(-1, TokenAst.default(TokenType.KwLet), variable, TokenAst.default(TokenType.TkAssign), value)
+        return LetStatementInitializedAst(variable.pos, TokenAst.default(TokenType.KwLet), variable, TokenAst.default(TokenType.TkAssign, pos=variable.pos), value)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
@@ -46,6 +46,7 @@ class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (TokenAst, TypeAst)):
@@ -53,6 +54,7 @@ class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
 
         # Analyse the assign_to and value of the let statement.
         self.value.analyse_semantics(scope_manager, **(kwargs | {"assignment": self.assign_to.extract_names}))
+        AstMemoryHandler.enforce_memory_integrity(self.value, self.assign_token, scope_manager)
         self.assign_to.analyse_semantics(scope_manager, value=self.value, **kwargs)
 
 

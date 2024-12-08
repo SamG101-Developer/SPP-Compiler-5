@@ -670,14 +670,14 @@ class SemanticErrors:
         branches of the code. This could be a move in one branch and not in another.
         """
 
-        def add(self, ast: ExpressionAst, branch_1: Tuple[CaseExpressionBranchAst, bool], branch_2: Tuple[CaseExpressionBranchAst, bool]) -> SemanticError:
+        def add(self, ast: ExpressionAst, branch_1: Tuple[CaseExpressionBranchAst, bool], branch_2: Tuple[CaseExpressionBranchAst, bool], what: str) -> SemanticError:
             self.add_info(
                 pos=branch_1[0].pos,
-                tag=f"Symbol {ast} {'initialized' if branch_1[1] else 'moved'} in this branch")
+                tag=f"Symbol '{ast}' {what} in this branch")
 
             self.add_info(
                 pos=branch_2[0].pos,
-                tag=f"Symbol {ast} {'initialized' if branch_2[1] else 'moved'} in this branch")
+                tag=f"Symbol '{ast}' not {what} in this branch")
 
             self.add_error(
                 pos=ast.pos,
@@ -696,11 +696,11 @@ class SemanticErrors:
         def add(self, ast: ExpressionAst, branch_1: Tuple[CaseExpressionBranchAst, bool], branch_2: Tuple[CaseExpressionBranchAst, bool]) -> SemanticError:
             self.add_info(
                 pos=branch_1[0].pos,
-                tag=f"Symbol {ast} {'pinned' if branch_1[1] else 'not pinned'} in this branch")
+                tag=f"Symbol '{ast}' {'pinned' if branch_1[1] else 'not pinned'} in this branch")
 
             self.add_info(
                 pos=branch_2[0].pos,
-                tag=f"Symbol {ast} {'pinned' if branch_2[1] else 'not pinned'} in this branch")
+                tag=f"Symbol '{ast}' {'pinned' if branch_2[1] else 'not pinned'} in this branch")
 
             self.add_error(
                 pos=ast.pos,
@@ -719,7 +719,7 @@ class SemanticErrors:
         def add(self, ast: ExpressionAst, move_location: Ast) -> SemanticError:
             self.add_info(
                 pos=move_location.pos,
-                tag=f"Symbol {ast} moved here")
+                tag=f"Symbol '{ast}' moved/uninitialized here")
 
             self.add_error(
                 pos=ast.pos,
@@ -729,16 +729,16 @@ class SemanticErrors:
 
             return self
 
-    class MemoryPartiallyInitialisedUsageError(SemanticError):
+    class MemoryPartiallyInitializedUsageError(SemanticError):
         """
-        The MemoryPartiallyInitialisedUsageError is raised if a memory symbol is used before it is fully initialized.
+        The MemoryPartiallyInitializedUsageError is raised if a memory symbol is used before it is fully initialized.
         Partially initialized objects have missing attributes.
         """
 
         def add(self, ast: ExpressionAst, partial_move_location: Ast) -> SemanticError:
             self.add_info(
                 pos=partial_move_location.pos,
-                tag=f"Symbol {ast} partially moved here")
+                tag=f"Symbol '{ast}' partially moved here")
 
             self.add_error(
                 pos=ast.pos,
@@ -1453,7 +1453,7 @@ class SemanticErrors:
         def add(self, class_type: TypeAst) -> SemanticError:
             self.add_error(
                 pos=class_type.pos,
-                tag=f"Abstract type '{class_type}' initialised here",
+                tag=f"Abstract type '{class_type}' initialized here",
                 msg="An abstract class cannot be instantiated.",
                 tip="Use a non-abstract class instead.")
 

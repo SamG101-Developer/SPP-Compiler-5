@@ -54,6 +54,8 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, CompilerStag
         symbol.memory_info.ast_initialization = self.name
         if not isinstance(value, TypeAst):
             symbol.memory_info.initialization_counter = 1
+        else:
+            symbol.memory_info.ast_moved = self
 
         scope_manager.current_scope.add_symbol(symbol)
 

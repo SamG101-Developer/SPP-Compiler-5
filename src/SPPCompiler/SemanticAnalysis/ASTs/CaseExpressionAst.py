@@ -113,9 +113,9 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
 
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
             symbols_in_scope = scope_manager.current_scope.all_symbols().filter_to_type(VariableSymbol)
-            old_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, copy.copy(s.memory_info.ast_partially_moved), copy.copy(s.memory_info.ast_pinned), s.memory_info.initialization_counter) for s in symbols_in_scope}
+            old_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, s.memory_info.ast_partially_moved.copy(), s.memory_info.ast_pinned.copy(), s.memory_info.initialization_counter) for s in symbols_in_scope}
             branch.analyse_semantics(scope_manager, condition=self.condition, **kwargs)
-            new_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, copy.copy(s.memory_info.ast_partially_moved), copy.copy(s.memory_info.ast_pinned), s.memory_info.initialization_counter) for s in symbols_in_scope}
+            new_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, s.memory_info.ast_partially_moved.copy(), s.memory_info.ast_pinned.copy(), s.memory_info.initialization_counter) for s in symbols_in_scope}
 
             # Reset the memory status of the symbols for the next branch to be analysed in the same state.
             for symbol, old_memory_status in old_symbol_mem_info.items():
@@ -149,6 +149,8 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         # Update the memory status of the symbols.
         for symbol, new_memory_info_list in symbol_mem_info.items():
+
+            # Assuming all new memory states are consistent across branches, update to the first "new" state list.
             symbol.memory_info.ast_initialization = new_memory_info_list[0][1][0]
             symbol.memory_info.ast_moved = new_memory_info_list[0][1][1]
             symbol.memory_info.ast_partially_moved = new_memory_info_list[0][1][2]
@@ -167,7 +169,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
 
                 # Check for consistent partial movement.
                 if new_memory_info_list[0][1][2] != memory_info_list[2]:
-                    symbol.memory_info.is_inconsistently_pinned = ((self.branches[0], new_memory_info_list[0][1][2]), (branch, memory_info_list[2]))
+                    symbol.memory_info.is_inconsistently_partially_moved = ((self.branches[0], new_memory_info_list[0][1][2]), (branch, memory_info_list[2]))
 
                 # Check for consistent pinning.
                 if new_memory_info_list[0][1][3] != memory_info_list[3]:

@@ -58,7 +58,7 @@ class AssignmentStatementAst(Ast, TypeInferrable, CompilerStages):
         for (lhs_expr, rhs_expr), lhs_sym in self.lhs.zip(self.rhs).zip(lhs_syms):
 
             # Ensure the memory status of the left and right hand side.
-            AstMemoryHandler.enforce_memory_integrity(lhs_sym.name, self.op, scope_manager, update_memory_info=False)
+            AstMemoryHandler.enforce_memory_integrity(lhs_sym.name, self.op, scope_manager, check_move=False, check_partial_move=False, update_memory_info=False)
             AstMemoryHandler.enforce_memory_integrity(rhs_expr, self.op, scope_manager)
 
             # Full assignment (ie "x = y") requires the "x" symbol to be marked as "mut".
@@ -79,7 +79,7 @@ class AssignmentStatementAst(Ast, TypeInferrable, CompilerStages):
             if not lhs_type.symbolic_eq(rhs_type, scope_manager.current_scope):
                 raise SemanticErrors.TypeMismatchError(lhs_sym.memory_info.ast_initialization, lhs_type, rhs_expr, rhs_type)
 
-            # Resolve memory status, by marking lhs identifiers as initialised, or removing partial moves.
+            # Resolve memory status, by marking lhs identifiers as initialized, or removing partial moves.
             if isinstance(lhs_expr, IdentifierAst):
                 lhs_sym.memory_info.initialized_by(self)
             elif isinstance(lhs_expr, PostfixExpressionAst):

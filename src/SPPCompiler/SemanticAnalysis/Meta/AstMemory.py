@@ -52,10 +52,10 @@ class MemoryInfo:
     is_borrow_mut: bool = field(default=False)
     is_borrow_ref: bool = field(default=False)
 
-    is_inconsistently_initialized: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=False)
-    is_inconsistently_moved: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=False)
-    is_inconsistently_partially_moved: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=False)
-    is_inconsistently_pinned: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=False)
+    is_inconsistently_initialized: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=None)
+    is_inconsistently_moved: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=None)
+    is_inconsistently_partially_moved: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=None)
+    is_inconsistently_pinned: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=None)
 
     pin_target: Optional[Seq[Ast]] = field(default_factory=Seq)
 
@@ -142,24 +142,34 @@ class AstMemoryHandler:
 
         # Check for "inconsistent" memory move status, from branches.
         if check_move and (m := symbol.memory_info.is_inconsistently_moved):
-            raise SemanticErrors.MemoryInconsistentlyInitializedError().add(value_ast, m[0], m[1])
+            raise SemanticErrors.MemoryInconsistentlyInitializedError().add(value_ast, m[0], m[1], "moved")
+
+        # Check for "inconsistent" memory initialization status, from branches.
+        if check_move and (m := symbol.memory_info.is_inconsistently_initialized):
+            raise SemanticErrors.MemoryInconsistentlyInitializedError().add(value_ast, m[0], m[1], "initialized")
+
+        # Check for "inconsistent" memory move status, from branches.
+        if check_move and (m := symbol.memory_info.is_inconsistently_partially_moved):
+            raise SemanticErrors.MemoryInconsistentlyInitializedError().add(value_ast, m[0], m[1], "partially moved")
 
         # Check for "inconsistent" memory pin status, from branches.
         if check_pins and (m := symbol.memory_info.is_inconsistently_pinned):
             raise SemanticErrors.MemoryInconsistentlyPinnedError().add(value_ast, m[0], m[1])
 
         # Check the symbol has not already been moved by another operation.
-        if check_move and symbol.memory_info.ast_moved and isinstance(value_ast, IdentifierAst):
+        if check_move and symbol.memory_info.ast_moved:  # and isinstance(value_ast, IdentifierAst):
             raise SemanticErrors.MemoryNotInitializedUsageError().add(value_ast, symbol.memory_info.ast_moved)
 
         # Check the symbol doesn't have any outstanding partial moves.
         if check_partial_move and symbol.memory_info.ast_partially_moved and isinstance(value_ast, IdentifierAst):
-            raise SemanticErrors.MemoryPartiallyInitialisedUsageError().add(value_ast, symbol.memory_info.ast_partially_moved[0])
+            raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(value_ast, symbol.memory_info.ast_partially_moved[0])
 
         # Check there are overlapping partial moves (for an attribute move)
         if check_partial_move and symbol.memory_info.ast_partially_moved and not isinstance(value_ast, IdentifierAst):
+            if overlaps := symbol.memory_info.ast_partially_moved.filter(lambda p: AstMemoryHandler.left_overlap(p, value_ast)):
+                raise SemanticErrors.MemoryNotInitializedUsageError().add(value_ast, overlaps[0])
             if overlaps := symbol.memory_info.ast_partially_moved.filter(lambda p: AstMemoryHandler.overlaps(p, value_ast)):
-                raise SemanticErrors.MemoryPartiallyInitialisedUsageError().add(value_ast, overlaps[0])
+                raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(value_ast, overlaps[0])
 
         # Check the symbol is not being moved from a borrowed context (for an attribute move).
         if check_move_from_borrowed_context and symbol.memory_info.ast_borrowed and not isinstance(value_ast, IdentifierAst):
