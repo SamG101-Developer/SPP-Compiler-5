@@ -35,7 +35,7 @@ class WithExpressionAst(Ast, TypeInferrable, CompilerStages):
         return "".join(string)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+        return self.body.infer_type(scope_manager, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, TokenAst, TypeAst
