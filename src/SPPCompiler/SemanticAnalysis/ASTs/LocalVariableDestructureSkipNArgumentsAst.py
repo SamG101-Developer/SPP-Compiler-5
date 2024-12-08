@@ -23,8 +23,9 @@ class LocalVariableDestructureSkipNArgumentsAst(Ast, VariableNameExtraction):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
+            self.binding.tok_mut.print(printer) if self.binding is not None else "",
             self.tok_variadic.print(printer),
-            self.binding.print(printer) if self.binding else ""]
+            self.binding.name.print(printer) if self.binding is not None else ""]
         return "".join(string)
 
     @functools.cached_property
