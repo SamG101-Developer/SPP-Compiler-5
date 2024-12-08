@@ -84,6 +84,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
         if self.op.token.token_type.name.endswith("Assign") and not scope_manager.current_scope.get_variable_symbol_outermost_part(self.lhs):
             raise SemanticErrors.AssignmentInvalidCompoundLhsError().add(self.lhs)
 
+        # Todo: Check on the tuple size to be > 1 ?
         # Handle lhs-folding
         if isinstance(self.lhs, TokenAst):
             # Check the rhs is a tuple.
