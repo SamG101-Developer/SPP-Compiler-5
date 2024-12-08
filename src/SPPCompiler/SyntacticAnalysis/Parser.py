@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 # Decorator that wraps the function in a ParserRuleHandler
 def parser_rule(func) -> Callable[..., ParserRuleHandler]:
     @functools.wraps(func)
-    @functools.cache
     def wrapper(self, *args) -> ParserRuleHandler:
         return ParserRuleHandler(self, functools.partial(func, self, *args))
     return wrapper
