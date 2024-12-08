@@ -775,63 +775,7 @@ class Parser:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwUse).parse_once()
         p2 = self.parse_use_statement_type_alias().parse_once()
-        # p3 = self.parse_use_statement_namespace_reduction()
-        # p4 = (p2 | p3).parse_once()
         return UseStatementAst(c1, Seq(), p1, p2)
-
-    # @parser_rule
-    # def parse_use_statement_namespace_reduction(self) -> UseStatementNamespaceReductionAst:
-    #     c1 = self.current_pos()
-    #     p1 = self.parse_use_statement_namespace_reduction_body().parse_once()
-    #     return UseStatementNamespaceReductionAst(c1, p1)
-
-    @parser_rule
-    def parse_use_statement_namespace_reduction_types_multiple(self) -> UseStatementNamespaceReductionTypesMultipleAst:
-        c1 = self.current_pos()
-        p1 = self.parse_identifier().parse_one_or_more(TokenType.TkDblColon)
-        p2 = self.parse_token(TokenType.TkDblColon).parse_once()
-        p3 = self.parse_token(TokenType.TkBraceL).parse_once()
-        p4 = self.parse_use_statement_namespace_reduction_body().parse_one_or_more(TokenType.TkComma)
-        p5 = self.parse_token(TokenType.TkBraceR).parse_once()
-        return UseStatementNamespaceReductionTypesMultipleAst(c1, p1, p3, p4, p5)
-
-    @parser_rule
-    def parse_use_statement_namespace_reduction_types_single(self) -> UseStatementNamespaceReductionTypesSingleAst:
-        p1 = self.parse_use_statement_namespace_reduction_types_single_with_namespace()
-        p2 = self.parse_use_statement_namespace_reduction_types_single_without_namespace()
-        p3 = (p1 | p2).parse_once()
-        return p3
-
-    @parser_rule
-    def parse_use_statement_namespace_reduction_types_single_with_namespace(self) -> UseStatementNamespaceReductionTypesSingleAst:
-        c1 = self.current_pos()
-        p1 = self.parse_identifier().parse_one_or_more(TokenType.TkDblColon)
-        p2 = self.parse_token(TokenType.TkDblColon).parse_once()
-        p3 = self.parse_generic_identifier().parse_one_or_more(TokenType.TkDblColon)  # No generics allowed here
-        p4 = self.parse_use_statement_namespace_reduction_type_alias().parse_optional()
-        return UseStatementNamespaceReductionTypesSingleAst(c1, p1, p3, p4)
-
-    @parser_rule
-    def parse_use_statement_namespace_reduction_types_single_without_namespace(self) -> UseStatementNamespaceReductionTypesSingleAst:
-        c1 = self.current_pos()
-        p1 = self.parse_generic_identifier().parse_one_or_more(TokenType.TkDblColon)  # No generics allowed here
-        p2 = self.parse_use_statement_namespace_reduction_type_alias().parse_optional()
-        return UseStatementNamespaceReductionTypesSingleAst(c1, Seq(), p1, p2)
-
-    @parser_rule
-    def parse_use_statement_namespace_reduction_type_alias(self) -> UseStatementNamespaceReductionTypeAliasAst:
-        c1 = self.current_pos()
-        p1 = self.parse_token(TokenType.KwAs).parse_once()
-        p2 = self.parse_upper_identifier().parse_once()
-        return UseStatementNamespaceReductionTypeAliasAst(c1, p1, p2)
-
-    @parser_rule
-    def parse_use_statement_namespace_reduction_body(self) -> UseStatementNamespaceReductionBodyAst:
-        c1 = self.current_pos()
-        p1 = self.parse_use_statement_namespace_reduction_types_multiple()
-        p2 = self.parse_use_statement_namespace_reduction_types_single()
-        p3 = (p1 | p2).parse_once()
-        return UseStatementNamespaceReductionBodyAst(c1, p3)
 
     @parser_rule
     def parse_use_statement_type_alias(self) -> UseStatementTypeAliasAst:

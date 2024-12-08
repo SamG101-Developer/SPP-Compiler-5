@@ -104,7 +104,6 @@ class TokenType(Enum, metaclass=TokenTypeMeta):
 
     # Type helpers
     KwWhere = "where"
-    KwAs = "as"
     KwIs = "is"
 
     # Types
