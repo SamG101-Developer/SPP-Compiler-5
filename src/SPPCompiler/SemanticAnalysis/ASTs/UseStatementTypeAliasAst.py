@@ -16,6 +16,11 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
+# Todo:
+#  - this class is a major nasty
+#  - it can be in the module/sup scope (all stages normally), or in a runtime block (all stages at once)
+
+
 @dataclass
 class UseStatementTypeAliasAst(Ast, CompilerStages):
     new_type: TypeAst

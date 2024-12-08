@@ -108,7 +108,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         sup_symbol = scope_manager.current_scope.get_symbol(self.super_class.without_generics())
         cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
 
-        # Prevent duplicate attributes by checking if the attributes appear ina any super class.
+        # Prevent duplicate attributes by checking if the attributes appear in any super class.
         super_class_attribute_names = sup_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, ClassPrototypeAst)).map(lambda s: s._ast.body.members).flat().map_attr("name")
         existing_attribute_names = (cls_symbol.scope.sup_scopes + Seq([cls_symbol.scope])).filter(lambda s: isinstance(s._ast, ClassPrototypeAst)).map(lambda s: s._ast.body.members).flat().map_attr("name")
         if duplicates := (existing_attribute_names + super_class_attribute_names).non_unique():

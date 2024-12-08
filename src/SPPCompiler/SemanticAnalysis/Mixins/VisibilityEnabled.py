@@ -20,10 +20,3 @@ class AstVisibility(Enum):
 @dataclass
 class VisibilityEnabled:
     _visibility: Tuple[AstVisibility, Optional[AnnotationAst]] = field(default=(AstVisibility.Private, None), kw_only=True, repr=False)
-
-
-# Decorator to apply the VisibilityEnabled class to a class.
-def visibility_enabled_ast(cls: type) -> type:
-    if VisibilityEnabled not in cls.__bases__:
-        cls.__bases__ = (VisibilityEnabled,) + cls.__bases__
-    return cls
