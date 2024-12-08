@@ -282,6 +282,32 @@ class TestAstMemory(TestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.MemoryMovedFromBorrowedContextError)
+    def test_invalid_memory_moved_from_borrowed_context_1(self):
+        """
+        cls Point {
+            x: std::BigInt
+            y: std::BigInt
+        }
+
+        fun f(p: &Point) -> std::Void {
+            let x = p.x
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryMovedFromBorrowedContextError)
+    def test_invalid_memory_moved_from_borrowed_context_2(self):
+        """
+        cls Point {
+            x: std::BigInt
+            y: std::BigInt
+        }
+
+        fun f(p: &mut Point) -> std::Void {
+            let x = p.x
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_memory_multiple_partial_moves(self):
         """
