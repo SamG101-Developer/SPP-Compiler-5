@@ -7,6 +7,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import TokenType
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
+from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
@@ -57,8 +58,8 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         super().generate_symbols(scope_manager, name_override=f"<sup:{self.name} ext {self.super_class}:{self.pos}>")
 
     def load_sup_scopes(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
         scope_manager.move_to_next_scope()
 
@@ -97,6 +98,24 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         # Run the inject steps for the body.
         self._scope_cls = cls_symbol.scope
         self.body.load_sup_scopes(scope_manager)
+        scope_manager.move_out_of_current_scope()
+
+    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst
+        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+
+        scope_manager.move_to_next_scope()
+        sup_symbol = scope_manager.current_scope.get_symbol(self.super_class.without_generics())
+        cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
+
+        # Prevent duplicate attributes by checking if the attributes appear ina any super class.
+        super_class_attribute_names = sup_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, ClassPrototypeAst)).map(lambda s: s._ast.body.members).flat().map_attr("name")
+        existing_attribute_names = (cls_symbol.scope.sup_scopes + Seq([cls_symbol.scope])).filter(lambda s: isinstance(s._ast, ClassPrototypeAst)).map(lambda s: s._ast.body.members).flat().map_attr("name")
+
+        if duplicates := (existing_attribute_names + super_class_attribute_names).non_unique():
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "attribute")
+
+        self.body.inject_sup_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:

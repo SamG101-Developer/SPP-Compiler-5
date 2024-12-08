@@ -112,15 +112,6 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
                 closest_match = difflib.get_close_matches(self.field.value, alternatives.map_attr("value"), n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(self.field, "runtime member", closest_match[0] if closest_match else None)
         
-            # # Check for ambiguous symbol access (unless for function call). TODO
-            # if not lhs_symbol.scope.get_symbol(self.field).type.types[-1].value.startswith("$"):
-            #     all_matching_fields = lhs_symbol.scope.get_multiple_symbols(self.field)
-            #     closest_depth = all_matching_fields.map(operator.itemgetter(2)).min()
-            #     symbols_at_closest_depth = all_matching_fields.filter(lambda s: s[2] == closest_depth)
-            #     if symbols_at_closest_depth.length > 1:
-            #         scope_names = symbols_at_closest_depth.map(operator.itemgetter(1)).map_attr("name")
-            #         raise SemanticErrors.MemberAccessAmbiguousError().add(self.field, scope_names)
-        
         # Accessing a namespaced constant, such as "std::pi".
         elif isinstance(self.field, IdentifierAst) and self.is_static_access():
             lhs_val_symbol = scope_manager.current_scope.get_symbol(lhs)
