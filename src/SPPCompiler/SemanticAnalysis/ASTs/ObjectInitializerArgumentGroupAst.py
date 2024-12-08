@@ -78,12 +78,16 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
             AstMemoryHandler.enforce_memory_integrity(self.get_arg_val(argument), argument, scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, class_type: TypeAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, ClassPrototypeAst
+        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 
-        # Get symbol and attribute information from the class type.
+        # Get the symbol of the class type, and check it isn't abstract.
         class_symbol = scope_manager.current_scope.get_symbol(class_type)
+        # if class_symbol.is_abstract:
+        #     raise SemanticErrors.ObjectInitializerAbstractClassError().add(class_type)
+
+        # Get the attribute information from the class type.
         all_attributes = Seq([(c, class_symbol.scope) for c in class_symbol.type.body.members])
         for sup_scope in class_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, ClassPrototypeAst)):
             all_attributes += [(c, sup_scope) for c in sup_scope._ast.body.members]

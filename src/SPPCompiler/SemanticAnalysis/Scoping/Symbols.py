@@ -78,6 +78,7 @@ class TypeSymbol:
     scope: Optional[Scope] = field(default=None)
     is_generic: bool = field(default=False)
     is_copyable: bool = field(default=False)
+    is_abstract: bool = field(default=False)
     visibility: AstVisibility = field(default=AstVisibility.Private)
 
     def __post_init__(self) -> None:
@@ -102,7 +103,7 @@ class TypeSymbol:
         # Copy all the attributes of the TypeSymbol, but link the scope.
         return TypeSymbol(
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility)
+            is_copyable=self.is_copyable, is_abstract=self.is_abstract, visibility=self.visibility)
 
     @property
     def fq_name(self) -> TypeAst:
@@ -138,7 +139,8 @@ class AliasSymbol(TypeSymbol):
         # Copy all the attributes of the AliasSymbol, but link the old scope.
         return AliasSymbol(
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, old_type=copy.deepcopy(self.old_type))
+            is_copyable=self.is_copyable, is_abstract=self.is_abstract, visibility=self.visibility,
+            old_type=copy.deepcopy(self.old_type))
 
 
 type Symbol = NamespaceSymbol | VariableSymbol | TypeSymbol | AliasSymbol

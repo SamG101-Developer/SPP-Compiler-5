@@ -1092,25 +1092,6 @@ class SemanticErrors:
 
             return self
 
-    class SuperimpositionInheritanceAbstractMethodNotOverriddenError(SemanticError):
-        """
-        The SuperimpositionInheritanceBaseAbstractMethodNotOverriddenError is raised if an abstract method on the base
-        class is not overridden in the subclass.
-        """
-
-        def add(self, base_method: IdentifierAst, super_class: TypeAst) -> SemanticError:
-            self.add_info(
-                pos=super_class.pos,
-                tag=f"Super class '{super_class}' extended here")
-
-            self.add_error(
-                pos=base_method.pos,
-                tag="Abstract method on base class.",
-                msg=f"The super member '{base_method}' has not been overridden in the subclass.",
-                tip="Override the super member in the subclass.")
-
-            return self
-
     class SuperimpositionInheritanceNonVirtualMethodOverriddenError(SemanticError):
         """
         The SuperimpositionInheritanceNonVirtualMethodOverriddenError is raised if a non-virtual method on the base
@@ -1459,5 +1440,21 @@ class SemanticErrors:
                 tag="Second default argument defined here",
                 msg="Only one default argument is allowed in an object initializer.",
                 tip="Remove the second default argument.")
+
+            return self
+
+    class ObjectInitializerAbstractClassError(SemanticError):
+        """
+        The ObjectInitializerAbstractClassError is raised if an object initializer is used on an abstract class. An
+        abstract class cannot be instantiated. An abstract class is defined as a class with 1 or more non-implemented
+        abstract methods.
+        """
+
+        def add(self, class_type: TypeAst) -> SemanticError:
+            self.add_error(
+                pos=class_type.pos,
+                tag=f"Abstract type '{class_type}' initialised here",
+                msg="An abstract class cannot be instantiated.",
+                tip="Use a non-abstract class instead.")
 
             return self

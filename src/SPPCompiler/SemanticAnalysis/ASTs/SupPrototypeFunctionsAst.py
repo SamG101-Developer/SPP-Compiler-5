@@ -86,7 +86,15 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         scope_manager.move_out_of_current_scope()
 
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst
+
         scope_manager.move_to_next_scope()
+        cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
+
+        # Mark the type as abstract if any of the functions are abstract.
+        if self.body.members.filter_to_type(SupPrototypeInheritanceAst).map(lambda s: s.body.members[-1]).filter(lambda m: m._abstract):
+            cls_symbol.is_abstract = True
+
         self.body.inject_sup_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 

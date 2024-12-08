@@ -111,9 +111,12 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         # Prevent duplicate attributes by checking if the attributes appear ina any super class.
         super_class_attribute_names = sup_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, ClassPrototypeAst)).map(lambda s: s._ast.body.members).flat().map_attr("name")
         existing_attribute_names = (cls_symbol.scope.sup_scopes + Seq([cls_symbol.scope])).filter(lambda s: isinstance(s._ast, ClassPrototypeAst)).map(lambda s: s._ast.body.members).flat().map_attr("name")
-
         if duplicates := (existing_attribute_names + super_class_attribute_names).non_unique():
             raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "attribute")
+
+        # Mark the type as abstract if the superclass is abstract.
+        if sup_symbol.is_abstract:
+            cls_symbol.is_abstract = True
 
         self.body.inject_sup_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
@@ -165,15 +168,6 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
             # Check the base method is virtual or abstract.
             if not (base_method._virtual or base_method._abstract):
                 raise SemanticErrors.SuperimpositionInheritanceNonVirtualMethodOverriddenError().add(base_method.name, self.super_class)
-
-        # Check every abstract method on the super class is implemented.
-        for base_member in sup_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s._ast, SupPrototypeFunctionsAst)).map(lambda s: s._ast.body.members).flat().filter_to_type(SupPrototypeInheritanceAst):
-            base_method = base_member.body.members[-1]
-            this_method = AstFunctions.check_for_conflicting_method(sup_symbol.scope, scope_manager.current_scope, base_method, FunctionConflictCheckType.InvalidOverride)
-
-            # Check the abstract methods are overridden.
-            if base_method._abstract and not this_method:
-                raise SemanticErrors.SuperimpositionInheritanceAbstractMethodNotOverriddenError().add(base_method.name, self.super_class)
 
         # Move out of the current scope.
         scope_manager.move_out_of_current_scope()
