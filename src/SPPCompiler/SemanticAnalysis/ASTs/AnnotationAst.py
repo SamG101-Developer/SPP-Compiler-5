@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 """
-Ideas:
+Todo - ideas:
 - Allow all bocks (loop/case+branches/with) etc to have annotations
 - @inline, @noinline, @hot, @cold for functions
 - @likely, @unlikely, @fallthrough for case branches

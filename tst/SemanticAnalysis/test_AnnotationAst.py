@@ -10,7 +10,7 @@ class TestAnnotationAst(TestCase):
         cls A { }
         sup A {
             @virtual_method
-            fun f() -> A { }
+            fun f() -> std::Void { }
         }
         """
 
@@ -45,11 +45,11 @@ class TestAnnotationAst(TestCase):
 
         sup A {
             @public
-            fun f() -> A { }
+            fun f() -> std::Void { }
         }
 
         @public
-        fun g() -> A { }
+        fun g() -> std::Void { }
         """
 
     @should_pass_compilation()
@@ -60,11 +60,11 @@ class TestAnnotationAst(TestCase):
 
         sup A {
             @protected
-            fun f() -> A { }
+            fun f() -> std::Void { }
         }
 
         @protected
-        fun g() -> A { }
+        fun g() -> std::Void { }
         """
 
     @should_pass_compilation()
@@ -75,11 +75,11 @@ class TestAnnotationAst(TestCase):
 
         sup A {
             @private
-            fun f() -> A { }
+            fun f() -> std::Void { }
         }
 
         @private
-        fun g() -> A { }
+        fun g() -> std::Void { }
         """
 
     @should_pass_compilation()
@@ -89,11 +89,11 @@ class TestAnnotationAst(TestCase):
 
         sup A {
             @cold
-            fun f() -> A { }
+            fun f() -> std::Void { }
         }
 
         @cold
-        fun g() -> A { }
+        fun g() -> std::Void { }
         """
 
     @should_pass_compilation()
@@ -103,11 +103,11 @@ class TestAnnotationAst(TestCase):
 
         sup A {
             @hot
-            fun f() -> A { }
+            fun f() -> std::Void { }
         }
 
         @hot
-        fun g() -> A { }
+        fun g() -> std::Void { }
         """
 
     @should_fail_compilation(SemanticErrors.AnnotationInvalidApplicationError)
