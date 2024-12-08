@@ -26,7 +26,7 @@ class PatternVariantLiteralAst(Ast, PatternMapping, CompilerStages):
     def convert_to_variable(self, **kwargs) -> LocalVariableSingleIdentifierAst:
         # Convert the dummy single identifier into a local variable single identifier.
         from SPPCompiler.SemanticAnalysis import IdentifierAst, LocalVariableSingleIdentifierAst
-        return LocalVariableSingleIdentifierAst(self.pos, None, IdentifierAst(-1, f"$l{id(self)}"))
+        return LocalVariableSingleIdentifierAst(self.pos, None, IdentifierAst(self.pos, f"$l{id(self)}"))
 
     def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
         # Analyse the literal.

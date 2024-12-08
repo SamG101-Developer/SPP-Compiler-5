@@ -19,7 +19,7 @@ class PostfixExpressionAst(Ast, TypeInferrable, CompilerStages):
     op: PostfixExpressionOperatorAst
 
     def __eq__(self, other: PostfixExpressionAst) -> bool:
-        return self.lhs == other.lhs and self.op == other.op
+        return isinstance(other, PostfixExpressionAst) and self.lhs == other.lhs and self.op == other.op
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
