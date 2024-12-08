@@ -62,5 +62,5 @@ class Analyser:
             self._ast.analyse_semantics(self._scope_manager, program_bars[7])
 
         except SemanticError as error:
-            errored_module = module_tree.modules.find(lambda module: self._ast.current() == module.module_ast)
+            errored_module = module_tree.modules.find(lambda module: self._ast.current() is module.module_ast)
             error.throw(errored_module.error_formatter)
