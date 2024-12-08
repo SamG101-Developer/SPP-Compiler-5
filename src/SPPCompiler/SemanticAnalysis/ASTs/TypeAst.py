@@ -173,9 +173,6 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(self)
 
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source=None, generic_infer_target=None, force: bool = False, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, TokenAst
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
@@ -187,70 +184,44 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
 
         # Move through each type, ensuring (at minimum) its non-generic form exists.
         for i, type_part in self.types.enumerate():
-            if isinstance(type_part, GenericIdentifierAst):
 
-                # Determine the type scope and type symbol.
-                type_symbol = AstTypeManagement.get_type_part_symbol_with_error(type_scope, type_part.without_generics(), ignore_alias=True)
-                type_symbol_alias_bypass = type_scope.get_symbol(type_part.without_generics(), ignore_alias=False)
-                type_scope = type_symbol.scope
-                type_scope_alias_bypass = type_symbol_alias_bypass.scope
-                if type_symbol.is_generic: continue
+            # Determine the type scope and type symbol.
+            type_symbol = AstTypeManagement.get_type_part_symbol_with_error(type_scope, type_part.without_generics(), ignore_alias=True)
+            type_symbol_alias_bypass = type_scope.get_symbol(type_part.without_generics(), ignore_alias=False)
+            type_scope = type_symbol.scope
+            type_scope_alias_bypass = type_symbol_alias_bypass.scope
+            if type_symbol.is_generic: continue
 
-                # print("NAMING", type_part)
+            # print("NAMING", type_part)
 
-                # Name all the generic arguments.
-                AstFunctions.name_generic_arguments(
-                    type_part.generic_argument_group.arguments,
-                    type_symbol.type.generic_parameter_group.parameters,
-                    self)
+            # Name all the generic arguments.
+            AstFunctions.name_generic_arguments(
+                type_part.generic_argument_group.arguments,
+                type_symbol.type.generic_parameter_group.parameters,
+                self)
 
-                # Infer generic arguments from information given from object initialization.
-                type_part.generic_argument_group.arguments = AstFunctions.inherit_generic_arguments(
-                    generic_parameters=type_symbol.type.generic_parameter_group.get_req(),
-                    explicit_generic_arguments=type_part.generic_argument_group.arguments,
-                    infer_source=generic_infer_source or {},
-                    infer_target=generic_infer_target or {},
-                    scope_manager=scope_manager, owner=self, **kwargs)
+            # Infer generic arguments from information given from object initialization.
+            type_part.generic_argument_group.arguments = AstFunctions.inherit_generic_arguments(
+                generic_parameters=type_symbol.type.generic_parameter_group.get_req(),
+                explicit_generic_arguments=type_part.generic_argument_group.arguments,
+                infer_source=generic_infer_source or {},
+                infer_target=generic_infer_target or {},
+                scope_manager=scope_manager, owner=self, **kwargs)
 
-                # Analyse the semantics of the generic arguments.
-                type_part.generic_argument_group.analyse_semantics(scope_manager)
+            # Analyse the semantics of the generic arguments.
+            type_part.generic_argument_group.analyse_semantics(scope_manager)
 
-                # If the generically filled type doesn't exist (Vec[Str]), but teh base does (Vec[T]), create it.
-                if force or not type_scope.parent.has_symbol(type_part):
-                    new_scope = AstTypeManagement.create_generic_scope(scope_manager, self, type_part, type_symbol)
+            # If the generically filled type doesn't exist (Vec[Str]), but teh base does (Vec[T]), create it.
+            if force or not type_scope.parent.has_symbol(type_part):
+                new_scope = AstTypeManagement.create_generic_scope(scope_manager, self, type_part, type_symbol)
 
-                    # Handle type aliasing (providing generics to the original type).
-                    if isinstance(new_scope.type_symbol, AliasSymbol):
-                        new_scope.type_symbol.old_type = copy.deepcopy(new_scope.type_symbol.old_type)
-                        new_scope.type_symbol.old_type.sub_generics(type_part.generic_argument_group.arguments)
-                        new_scope.type_symbol.old_type.analyse_semantics(scope_manager, **kwargs)
+                # Handle type aliasing (providing generics to the original type).
+                if isinstance(new_scope.type_symbol, AliasSymbol):
+                    new_scope.type_symbol.old_type = copy.deepcopy(new_scope.type_symbol.old_type)
+                    new_scope.type_symbol.old_type.sub_generics(type_part.generic_argument_group.arguments)
+                    new_scope.type_symbol.old_type.analyse_semantics(scope_manager, **kwargs)
 
-                    type_scope = new_scope
-
-            # todo: use AstTypeManager index functions (allows array indexing)
-            elif isinstance(type_part, TokenAst):
-                # Determine the type scope and type symbol.
-                prev_type_part = self.types[i - 1]
-                type_symbol = AstTypeManagement.get_type_part_symbol_with_error(type_scope, prev_type_part.without_generics(), ignore_alias=True)
-                prev_type = TypeAst(-1, self.namespace, self.types[:i])
-
-                # Check the lhs isn't a generic type.
-                if type_symbol.is_generic:
-                    raise SemanticErrors.GenericTypeInvalidUsageError().add(prev_type, prev_type, "<TODO: LABEL>")
-
-                # Check the lhs is a tuple (only indexable type).
-                if not prev_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
-                    raise SemanticErrors.MemberAccessNonIndexableError().add(prev_type, prev_type, type_part)
-
-                # Check the index is within the bounds of the tuple.
-                if int(type_part.token.token_metadata) >= prev_type_part.generic_argument_group.arguments.length:
-                    raise SemanticErrors.MemberAccessIndexOutOfBoundsError().add(prev_type, prev_type, type_part)
-
-                new_type = prev_type_part.generic_argument_group.arguments[int(type_part.token.token_metadata)].value
-                type_scope = type_scope.get_symbol(new_type).scope
-
-            else:
-                raise Exception(f"Invalid type part: {type_part} ({type(type_part)})")
+                type_scope = new_scope
 
         # Unfortunately this code is required to extend namespaces of generic arguments (for variants especially)
         # print("END", self, type_symbol.is_generic, type(type_symbol))
