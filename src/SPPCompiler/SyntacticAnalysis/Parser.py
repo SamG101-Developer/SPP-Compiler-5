@@ -1013,10 +1013,24 @@ class Parser:
 
     @parser_rule
     def parse_pattern_variant_skip_arguments(self) -> PatternVariantDestructureSkipNArgumentsAst:
+        p1 = self.parse_pattern_variant_skip_arguments_bound()
+        p2 = self.parse_pattern_variant_skip_arguments_unbound()
+        p3 = (p1 | p2).parse_once()
+        return p3
+
+    @parser_rule
+    def parse_pattern_variant_skip_arguments_bound(self) -> PatternVariantDestructureSkipNArgumentsAst:
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.KwMut).parse_optional()
+        p2 = self.parse_token(TokenType.TkVariadic).parse_once()
+        p3 = self.parse_identifier().parse_once()
+        return PatternVariantDestructureSkipNArgumentsAst(c1, p2, PatternVariantSingleIdentifierAst(c1, p1, p3))
+
+    @parser_rule
+    def parse_pattern_variant_skip_arguments_unbound(self) -> PatternVariantDestructureSkipNArgumentsAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.TkVariadic).parse_once()
-        p2 = self.parse_pattern_variant_single_identifier().parse_optional()
-        return PatternVariantDestructureSkipNArgumentsAst(c1, p1, p2)
+        return PatternVariantDestructureSkipNArgumentsAst(c1, p1, None)
 
     @parser_rule
     def parse_pattern_variant_single_identifier(self) -> PatternVariantSingleIdentifierAst:
