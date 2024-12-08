@@ -54,3 +54,39 @@ class TestTypeAst(TestCase):
         """
         fun f() -> std::Void { }
         """
+
+    @should_pass_compilation()
+    def test_valid_type_shorthand_optional(self):
+        """
+        fun f(mut a: ?std::Str) -> std::Void { a = std::Some("hello") }
+        """
+
+    @should_pass_compilation()
+    def test_valid_type_shorthand_optional_default(self):
+        """
+        fun f(a: ?std::Str = std::Some("hello")) -> std::Void { }
+        """
+
+    @should_pass_compilation()
+    def test_valid_type_shorthand_variant(self):
+        """
+        fun f(mut a: std::Str | std::Bool) -> std::Void { a = "hello" }
+        """
+
+    @should_pass_compilation()
+    def test_valid_type_shorthand_variant_default(self):
+        """
+        fun f(a: std::Str | std::Bool = "hello") -> std::Void { }
+        """
+
+    @should_pass_compilation()
+    def test_valid_type_shorthand_variant_tuple(self):
+        """
+        fun f(mut a: (std::Str, std::Bool)) -> std::Void { a = ("hello", true) }
+        """
+
+    @should_pass_compilation()
+    def test_valid_type_shorthand_variant_tuple_default(self):
+        """
+        fun f(a: (std::Str, std::Bool) = ("hello", true)) -> std::Void { }
+        """
