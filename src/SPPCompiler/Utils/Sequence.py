@@ -16,8 +16,9 @@ class Seq[T]:
 
     # Appending operations
 
-    def append(self, item: T) -> None:
+    def append(self, item: T) -> Seq[T]:
         self._value.append(item)
+        return self
 
     def insert(self, index: int, item: T) -> None:
         self._value.insert(index, item)
