@@ -1,5 +1,4 @@
 from __future__ import annotations
-from abc import ABC
 from ordered_set import OrderedSet
 from typing import List, NoReturn
 
@@ -7,7 +6,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import TokenType
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
 
-class ParserError(ABC, Exception):
+class ParserError(Exception):
     def __init__(self, *args) -> None:
         super().__init__(*args)
 
