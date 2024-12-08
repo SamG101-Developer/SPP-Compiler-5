@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestFunctionParameterGroupAst(TestCase):
+class TestFunctionParameterGroupAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
     def test_invalid_function_parameter_group_duplicate_parameter_name(self):
         """

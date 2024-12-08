@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestInnerScopeAst(TestCase):
+class TestInnerScopeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.UnreachableCodeError)
     def test_invalid_unreachable_code_in_function(self):
         """

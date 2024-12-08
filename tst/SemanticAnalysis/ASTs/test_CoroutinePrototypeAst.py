@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestCoroutinePrototypeAst(TestCase):
+class TestCoroutinePrototypeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCoroutineInvalidReturnTypeError)
     def test_invalid_coroutine_invalid_return_type(self):
         """

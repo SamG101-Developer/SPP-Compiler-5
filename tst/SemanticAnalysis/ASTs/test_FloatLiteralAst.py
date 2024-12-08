@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestFloatLiteralAst(TestCase):
+class TestFloatLiteralAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.NumberOutOfBoundsError)
     def test_invalid_float_under_minimum_f8(self):
         """

@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestPostfixExpressionOperatorFunctionCallAst(TestCase):
+class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCallOnNoncallableTypeError)
     def test_invalid_postfix_func_call_on_non_callable(self):
         """
@@ -110,7 +110,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(TestCase):
     def test_invalid_postfix_func_call_ambiguous_1(self):
         """
         fun f(a: std::BigInt) -> std::Void { }
-        fun f(a: T) -> std::Void { }
+        fun f[T](a: T) -> std::Void { }
 
         fun g() -> std::Void {
             f(1)
@@ -120,8 +120,8 @@ class TestPostfixExpressionOperatorFunctionCallAst(TestCase):
     @should_fail_compilation(SemanticErrors.FunctionCallAmbiguousSignaturesError)
     def test_invalid_postfix_func_call_ambiguous_2(self):
         """
-        fun f(a: T, b: std::BigInt) -> std::Void { }
-        fun f(a: std::BigInt, b: T) -> std::Void { }
+        fun f[T](a: T, b: std::BigInt) -> std::Void { }
+        fun f[T](a: std::BigInt, b: T) -> std::Void { }
 
         fun g() -> std::Void {
             f(1, 2)

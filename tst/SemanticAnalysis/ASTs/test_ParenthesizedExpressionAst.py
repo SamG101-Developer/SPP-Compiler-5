@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestParenthesizedExpressionAst(TestCase):
+class TestParenthesizedExpressionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_parenthesized_expression_invalid_expression_type(self):
         """

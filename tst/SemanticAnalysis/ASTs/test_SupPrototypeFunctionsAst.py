@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestSupPrototypeFunctionsAst(TestCase):
+class TestSupPrototypeFunctionsAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.SuperimpositionUnconstrainedGenericParameterError)
     def test_invalid_sup_prototype_functions_unconstrained_generic_parameter_1(self):
         """

@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestRetStatementAst(TestCase):
+class TestRetStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCoroutineContainsReturnStatementError)
     def test_invalid_ret_statement_in_coroutine(self):
         """

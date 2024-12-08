@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestUnaryExpressionOperatorAsyncAst(TestCase):
+class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_async_bad_target_1(self):
         """

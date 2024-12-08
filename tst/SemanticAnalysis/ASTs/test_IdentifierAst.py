@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestIdentifierAst(TestCase):
+class TestIdentifierAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
     def test_invalid_identifier(self):
         """

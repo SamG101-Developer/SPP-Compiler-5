@@ -5,7 +5,7 @@ from tst._Utils import *
 
 # Todo: flush out the test cases
 
-class TestPatternVariantDestructureObjectAst(TestCase):
+class TestPatternVariantDestructureObjectAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError)
     def test_invalid_pattern_variant_destructure_object_multiple_multi_skip(self):
         """

@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestTupleLiteralNElementAst(TestCase):
+class TestTupleLiteralNElementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_tuple_filled_tuple_literal_size_0(self):
         """

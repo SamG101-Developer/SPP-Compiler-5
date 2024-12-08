@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestUseStatementAst(TestCase):
+class TestUseStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_use_statement_simple_alias(self):
         """

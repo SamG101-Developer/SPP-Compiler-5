@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestPostfixExpressionMemberAccessAst(TestCase):
+class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemberAccessStaticOperatorExpectedError)
     def test_invalid_postfix_member_access_static_operator_expected_on_type(self):
         """

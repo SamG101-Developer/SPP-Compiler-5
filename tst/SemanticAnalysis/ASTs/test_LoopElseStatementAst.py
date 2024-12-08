@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestLoopElseStatementAst(TestCase):
+class TestLoopElseStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_loop_else_statement_return_type_assigned_from(self):
         """

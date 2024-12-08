@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestGenExpressionAst(TestCase):
+class TestGenExpressionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionSubroutineContainsGenExpressionError)
     def test_invalid_gen_expression_in_subroutine(self):
         """

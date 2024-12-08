@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestSubroutinePrototypeAst(TestCase):
+class TestSubroutinePrototypeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionSubroutineMissingReturnStatementError)
     def test_invalid_subroutine_missing_ret_statement(self):
         """

@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestGenericArgumentAst(TestCase):
+class TestGenericArgumentAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_generic_comp_argument_unnamed_expression(self):
         """

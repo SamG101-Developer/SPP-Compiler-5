@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestLocalVariableDestructureObjectAst(TestCase):
+class TestLocalVariableDestructureObjectAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError)
     def test_invalid_local_variable_destructure_object_multiple_multi_skip(self):
         """

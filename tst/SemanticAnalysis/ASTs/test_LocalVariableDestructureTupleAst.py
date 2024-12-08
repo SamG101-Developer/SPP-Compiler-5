@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestLocalVariableDestructureTupleAst(TestCase):
+class TestLocalVariableDestructureTupleAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_local_variable_destructure_tuple_non_tuple(self):
         """

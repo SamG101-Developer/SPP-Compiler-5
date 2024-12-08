@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestFunctionCallArgumentGroupAst(TestCase):
+class TestFunctionCallArgumentGroupAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
     def test_invalid_function_call_argument_group_duplicate_named_argument(self):
         """

@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestFunctionPrototypeAst(TestCase):
+class TestFunctionPrototypeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
     def test_invalid_function_prototype_conflict(self):
         """

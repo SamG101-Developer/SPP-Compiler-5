@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestObjectInitializerArgumentGroupAst(TestCase):
+class TestObjectInitializerArgumentGroupAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
     def test_invalid_object_initializer_argument_group_duplicate_argument_names(self):
         """

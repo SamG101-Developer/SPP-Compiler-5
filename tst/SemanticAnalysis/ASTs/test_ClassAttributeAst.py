@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestClassAttributeAst(TestCase):
+class TestClassAttributeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeVoidInvalidUsageError)
     def test_invalid_class_attribute_void_type(self):
         """

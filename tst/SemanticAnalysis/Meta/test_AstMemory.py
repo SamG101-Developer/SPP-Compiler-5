@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestAstMemory(TestCase):
+class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryInconsistentlyInitializedError)
     def test_invalid_memory_inconsistently_initialized_moved(self):
         """

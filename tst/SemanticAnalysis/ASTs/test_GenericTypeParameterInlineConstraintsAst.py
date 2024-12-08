@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestGenericTypeParameterInlineConstraintsAst(TestCase):
+class TestGenericTypeParameterInlineConstraintsAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
     def test_invalid_generic_type_parameter_inline_constraints_duplicate(self):
         """

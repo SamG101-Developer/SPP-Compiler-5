@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestLoopConditionIterableAst(TestCase):
+class TestLoopConditionIterableAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_loop_condition_iterable_invalid_expression(self):
         """

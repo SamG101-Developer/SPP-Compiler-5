@@ -1,9 +1,14 @@
 from argparse import Namespace
+from unittest import TestCase
 import os.path
 
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticError, SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
 from spp import handle_init, handle_build
+
+
+class CustomTestCase(TestCase):
+    ...
 
 
 def _build_temp_project_2(project_dir_name, project_name, code):
@@ -49,5 +54,5 @@ def should_fail_compilation(expected_error):
 
 
 __all__ = [
-    "should_pass_compilation", "should_fail_compilation",
+    "should_pass_compilation", "should_fail_compilation", "CustomTestCase",
     "ParserError", "SemanticError", "SemanticErrors"]

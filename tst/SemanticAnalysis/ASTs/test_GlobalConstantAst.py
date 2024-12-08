@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestGlobalConstantAst(TestCase):
+class TestGlobalConstantAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_global_constant_type_mismatch(self):
         """

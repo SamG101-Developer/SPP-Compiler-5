@@ -6,7 +6,7 @@ from tst._Utils import *
 # Todo: Nested types are not supported yet.
 
 
-class TestTypeAst(TestCase):
+class TestTypeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
     def test_invalid_unknown_type(self):
         """

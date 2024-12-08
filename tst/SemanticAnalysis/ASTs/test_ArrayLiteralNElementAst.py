@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestArrayLiteralNElementAst(TestCase):
+class TestArrayLiteralNElementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_array_filled_array_literal(self):
         """

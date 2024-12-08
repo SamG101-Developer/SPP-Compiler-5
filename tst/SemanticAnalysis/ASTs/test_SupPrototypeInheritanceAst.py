@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestSupPrototypeInheritanceAst(TestCase):
+class TestSupPrototypeInheritanceAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
     def test_invalid_superimposition_inheritance_generic_name(self):
         """

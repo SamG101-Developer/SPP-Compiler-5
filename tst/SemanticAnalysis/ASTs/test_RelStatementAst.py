@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestRelStatementAst(TestCase):
+class TestRelStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryPinTargetInvalidError)
     def test_invalid_pin_statement_non_symbolic_target(self):
         """

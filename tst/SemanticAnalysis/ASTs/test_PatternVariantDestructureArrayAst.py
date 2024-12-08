@@ -3,7 +3,7 @@ from unittest import TestCase
 from tst._Utils import *
 
 
-class TestPatternVariantDestructureArrayAst(TestCase):
+class TestPatternVariantDestructureArrayAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError)
     def test_invalid_pattern_variant_destructure_array_multiple_multi_skip(self):
         """
