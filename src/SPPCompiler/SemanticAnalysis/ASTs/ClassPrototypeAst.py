@@ -75,6 +75,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         symbol_1 = symbol_type(name=symbol_name, type=self, scope=scope_manager.current_scope, visibility=self._visibility[0])
         scope_manager.current_scope.parent.add_symbol(symbol_1)
         scope_manager.current_scope._type_symbol = symbol_1
+
         if self.generic_parameter_group.parameters:
             symbol_2 = symbol_type(name=self.name.types[-1], type=self, visibility=self._visibility[0])
             symbol_2.scope = scope_manager.current_scope

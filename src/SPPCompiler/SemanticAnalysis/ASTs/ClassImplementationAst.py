@@ -59,6 +59,10 @@ class ClassImplementationAst(Ast, Default, CompilerStages):
         # Generate the symbols for the members.
         self.members.for_each(lambda m: m.generate_symbols(scope_manager))
 
+    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        # Load the super scopes for the members.
+        self.members.for_each(lambda m: m.load_sup_scopes(scope_manager))
+
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
         # Inject the super scopes for the members.
         self.members.for_each(lambda m: m.inject_sup_scopes(scope_manager))
