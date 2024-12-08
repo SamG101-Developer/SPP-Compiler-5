@@ -100,40 +100,6 @@ class TestSupPrototypeInheritanceAst(TestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceAbstractMethodNotOverriddenError)
-    def test_invalid_superimposition_inheritance_abstract_method_not_overridden(self):
-        """
-        cls A { }
-        sup A {
-            @abstract_method
-            fun f(&self) -> std::Void { }
-        }
-
-        cls B { }
-        sup B ext A { }
-        """
-
-    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceNoInitializerError)
-    def test_invalid_superimposition_inheritance_no_initializer(self):
-        """
-        cls A { a: std::Bool }
-        cls B { }
-
-        sup B ext A { }
-        """
-
-    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceMultipleInitializerError)
-    def test_invalid_superimposition_inheritance_multiple_initializer(self):
-        """
-        cls A { a: std::Bool }
-        cls B { }
-
-        sup B ext A {
-            fun sup { ret A(a=true) }
-            fun sup { ret A(a=true) }
-        }
-        """
-
     @should_pass_compilation()
     def test_valid_superimposition_inheritance_generic_variants(self):
         """
@@ -150,9 +116,14 @@ class TestSupPrototypeInheritanceAst(TestCase):
         cls A { a: std::BigInt }
         cls B { b: std::BigInt }
 
-        sup B ext A {
-            fun sup { ret A(a=100) }
+        sup A {
+            @virtual_method
+            fun f(mut self) -> std::Void {
+                self.a = 100
+            }
+        }
 
+        sup B ext A {
             fun f(mut self) -> std::Void {
                 self.a = self.b
             }
@@ -167,11 +138,14 @@ class TestSupPrototypeInheritanceAst(TestCase):
     def test_valid_superimposition_inheritance_generics_1(self):
         """
         cls A[T] { a: T }
-        cls B[U] { b: U }
+        cls B[T] { b: T }
 
-        sup [T] A[T] ext B[T] {
-            fun sup { ret B[T](b=self.a) }
+        sup [T] A[T] {
+            @virtual_method
+            fun f(mut self) -> std::Void { }
+        }
 
+        sup [T] B[T] ext A[T] {
             fun f(mut self) -> std::Void {
                 self.a = self.b
             }
