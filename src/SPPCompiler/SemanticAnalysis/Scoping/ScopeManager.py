@@ -52,7 +52,6 @@ class ScopeManager:
     def move_out_of_current_scope(self) -> Scope:
         # Exit the current scope into the parent scope and return the parent scope.
         self._current_scope = self._current_scope._parent
-        # print("MOVED TO NEXT SCOPE:", self._current_scope)
         return self._current_scope
 
     def move_to_next_scope(self) -> Scope:
