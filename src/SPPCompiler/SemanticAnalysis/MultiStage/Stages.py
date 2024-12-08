@@ -18,43 +18,85 @@ type PreProcessingContext = Union[
     SupPrototypeFunctionsAst, UseStatementAst]
 
 
+# Todo:
+#  - Rename functions:
+#  1. pre_process -> pre_process
+#  2. generate_symbols -> generate_exported_symbols
+#  3. alias_types -> link_aliases
+#  4. load_sup_scopes -> link_super_scopes
+#  5. inject_sup_scopes -> postprocess_super_scopes
+#  6. alias_types_regeneration -> generic_regenerate_aliases
+#  7. regenerate_generic_types -> generic_regenerate_types
+#  8. analyse_semantics -> analyse_semantics
+#  9. generate_llvm -> generate_llvm
+
+
 @dataclass
 class CompilerStages:
     _ctx: PreProcessingContext = field(default=None, kw_only=True, repr=False)
     _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
 
     def pre_process(self, context: PreProcessingContext) -> None:
-        # Preprocess the AST by reconfiguring it before any scoping or symbol generation is performed.
+        """
+        The preprocessor stage performs mutations on ASTs, introduces new ASTs, and removes some ASTs. This allows for
+        single-method processing of multiple ASTs, such as functions vs types with function classes superimposed over
+        them. This stage directly affects what symbols are generated.
+        """
+
         self._ctx = context
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
-        # Generate scopes for all prototypes, (not inside function scopes: see analyse_semantics).
+        """
+        The generate symbols stage generates all module and superimposition level symbols. This includes classes,
+        attributes, functions, sup-methods, aliases and global constants. No generation is done for symbols inside
+        functions. The symbols are generated here so that they can be used in any module, allowing for circular imports.
+        """
         self._scope = scope_manager.current_scope
 
     def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
-        # Perform any type-aliasing operations.
-        pass
+        """
+        The alias types stage generates all aliases for the module. This must come after the symbol generation stage,
+        as it requires symbol knowledge to attach the correct "old types". It must also come before the load sup scopes
+        stage, because superimposing over aliases requires the alias to exist beforehand, in any order of compilation.
+        """
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        # Load the super scopes for all prototypes.
-        pass
+        """
+        The load sup scopes stage links all super scopes to classes. This allows a type to know what attributes and
+        methods are on its superclasses, and is requires for symbol resolution.
+        """
 
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        # Load stage 2 of the super scopes for all prototypes. todo: looking to remove
-        pass
+        """
+        The postprocess sup scopes stage performs checks that must happen after the super scopes have been injected, but
+        that are separate from the next stage (type-regeneration). This includes things that require knowledge of all
+        the super scopes.
+        """
 
     def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
-        # Regenerate aliases' generics.
-        pass
+        """
+        The alias types regeneration is the generic type regeneration stage exclusive to type-aliases. This is to ensure
+        the aliases' old type has been generically substituted correctly, and is required before the rest of the regular
+        type's generic substitution is regenerated. This is because regular type regeneration may rely on aliased types.
+        """
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
-        # Regenerate all other generics.
-        pass
+        """
+        The regenerate generic types stage takes all the pruned generic types, and regenerated them with full knowledge
+        of substitutions and inference. This is required as the generic types were placeholders earlier in the
+        compilation stages.
+        """
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        # Analyse the semantics of the AST.
-        pass
+        """
+        The semantic analysis stage is the most complex, and final analysis, stage of the semantic pipeline. This stage
+        performs all the semantic checks, type inference, and type checking. This stage requires all symbols to be
+        generated, and all types to be aliased, loaded, and post-processed. All functions scopes are inspected.
+        """
 
     def generate_llvm(self, scope_handler: ScopeManager, **kwargs) -> Any:
-        # Generate the LLVM IR for the AST.
-        pass
+        """
+        The LLVM generation stage is the final stage of the compiler. This stage generates the LLVM IR for the module,
+        and is the final stage of the compiler. Whilst not part of the "Semantic analysis", it follows directly off the
+        analysed ASTs, and requires AST knowledge, so is included in this pipeline.
+        """
