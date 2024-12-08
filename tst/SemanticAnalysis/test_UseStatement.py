@@ -15,11 +15,33 @@ class TestUseStatementAst(TestCase):
         """
 
     @should_pass_compilation()
+    def test_valid_use_statement_local_simple_alias(self):
+        """
+        fun f() -> std::Void {
+            use MyString = std::Str
+            use MyBool = std::Bool
+
+            let x: (MyString, MyBool)
+            x = ("hello", true)
+        }
+        """
+
+    @should_pass_compilation()
     def test_valid_use_statement_variant(self):
         """
         use SomeType = std::Str | std::Bool
         fun f(a: SomeType) -> std::Void { }
         fun g() -> std::Void { f("hello") }
+        """
+
+    @should_pass_compilation()
+    def test_valid_use_statement_local_variant(self):
+        """
+        fun f() -> std::Void {
+            use SomeType = std::Str | std::Bool
+            let x: SomeType
+            x = "hello"
+        }
         """
 
     @should_pass_compilation()
@@ -35,6 +57,15 @@ class TestUseStatementAst(TestCase):
         fun g() -> std::Void {
             let x = std::Vec[std::Str]()
             f(x, "test")
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_use_statement_local_generics_alias(self):
+        """
+        fun f() -> std::Void {
+            use MyVec[T] = std::Vec[T]
+            let x = MyVec[std::Str]()
         }
         """
 
