@@ -32,22 +32,29 @@ class CompilerStages:
         self._scope = scope_manager.current_scope
 
     def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Perform any type-aliasing operations.
         pass
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        # Load the super scopes for all prototypes.
         pass
 
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+        # Load stage 2 of the super scopes for all prototypes. todo: looking to remove
         pass
 
     def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+        # Regenerate aliases' generics.
         pass
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+        # Regenerate all other generics.
         pass
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Analyse the semantics of the AST.
         pass
 
     def generate_llvm(self, scope_handler: ScopeManager, **kwargs) -> Any:
+        # Generate the LLVM IR for the AST.
         pass
