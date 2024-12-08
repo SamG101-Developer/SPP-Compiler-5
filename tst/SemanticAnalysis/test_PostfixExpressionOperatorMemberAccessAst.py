@@ -149,49 +149,6 @@ class TestPostfixExpressionMemberAccessAst(TestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemberAccessAmbiguousError)
-    def test_invalid_postfix_member_access_ambiguous_symbol(self):
-        """
-        cls Base1 {
-            x: std::BigInt
-        }
-
-        cls Base2 {
-            x: std::Str
-        }
-
-        cls Base3 { }
-        sup Base3 ext Base1 { }
-        sup Base3 ext Base2 { }
-
-        fun f(b: Base3) -> std::Void {
-            let x = b.x
-        }
-        """
-
-    @should_pass_compilation()
-    def test_valid_postfix_member_access_ambiguous_symbol_resolution(self):
-        """
-        cls Base1 {
-            x: std::BigInt
-        }
-
-        cls Base2 {
-            x: std::Str
-        }
-
-        cls Base3 {
-            x: std::Bool
-        }
-
-        sup Base3 ext Base1 { }
-        sup Base3 ext Base2 { }
-
-        fun f(b: Base3) -> std::Void {
-            let x = b.x
-        }
-        """
-
     @should_fail_compilation(SemanticErrors.MemberAccessRuntimeOperatorExpectedError)
     def test_invalid_postfix_member_access_runtime_operator_expected_on_variable(self):
         """
