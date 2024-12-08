@@ -17,21 +17,21 @@ if TYPE_CHECKING:
 
 @dataclass
 class PatternVariantSingleIdentifierAst(Ast, PatternMapping, CompilerStages):
-    mut_tok: Optional[TokenAst]
+    tok_mut: Optional[TokenAst]
     name: IdentifierAst
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.mut_tok.print(printer) if self.mut_tok is not None else "",
+            self.tok_mut.print(printer) if self.tok_mut is not None else "",
             self.name.print(printer)]
         return " ".join(string)
 
     def convert_to_variable(self, **kwargs) -> LocalVariableSingleIdentifierAst:
         # Convert the single identifier into a local variable single identifier.
         from SPPCompiler.SemanticAnalysis import LocalVariableSingleIdentifierAst
-        return LocalVariableSingleIdentifierAst(self.pos, self.mut_tok, self.name)
+        return LocalVariableSingleIdentifierAst(self.pos, self.tok_mut, self.name)
 
     def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import LetStatementInitializedAst
