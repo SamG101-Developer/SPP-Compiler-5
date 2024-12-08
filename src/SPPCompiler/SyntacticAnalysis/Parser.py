@@ -762,29 +762,20 @@ class Parser:
 
     @parser_rule
     def parse_global_use_statement(self) -> UseStatementAst:
-        c1 = self.current_pos()
         p1 = self.parse_annotation().parse_zero_or_more(TokenType.TkNewLine)
-        p2 = self.parse_token(TokenType.KwUse).parse_once()
-        p3 = self.parse_use_statement_type_alias().parse_once()
-        # p4 = self.parse_use_statement_namespace_reduction()
-        # p5 = (p3 | p4).parse_once()
-        return UseStatementAst(c1, p1, p2, p3)
+        p2 = self.parse_use_statement().parse_once()
+        p2.annotations = p1
+        return p2
 
     @parser_rule
     def parse_use_statement(self) -> UseStatementAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwUse).parse_once()
-        p2 = self.parse_use_statement_type_alias().parse_once()
-        return UseStatementAst(c1, Seq(), p1, p2)
-
-    @parser_rule
-    def parse_use_statement_type_alias(self) -> UseStatementTypeAliasAst:
-        c1 = self.current_pos()
-        p1 = self.parse_upper_identifier().parse_once()
-        p2 = self.parse_generic_parameters().parse_optional()
-        p3 = self.parse_token(TokenType.TkAssign).parse_once()
-        p4 = self.parse_type().parse_once()
-        return UseStatementTypeAliasAst(c1, p1, p2, p3, p4)
+        p2 = self.parse_upper_identifier().parse_once()
+        p3 = self.parse_generic_parameters().parse_optional()
+        p4 = self.parse_token(TokenType.TkAssign).parse_once()
+        p5 = self.parse_type().parse_once()
+        return UseStatementAst(c1, Seq(), p1, p2, p3, p4, p5)
 
     # ===== LET-DECLARATIONS =====
 

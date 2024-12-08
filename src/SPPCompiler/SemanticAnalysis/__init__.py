@@ -125,7 +125,7 @@ from SPPCompiler.SemanticAnalysis.ASTs.UnaryExpressionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.UnaryExpressionOperatorAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.UnaryExpressionOperatorAsyncAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.UseStatementAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.UseStatementTypeAliasAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.UseStatementAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.WhereBlockAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.WhereConstraintsAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.WhereConstraintsGroupAst import *
