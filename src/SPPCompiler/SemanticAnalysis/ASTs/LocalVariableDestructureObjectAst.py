@@ -46,7 +46,7 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, CompilerSta
     @functools.cached_property
     def extract_name(self) -> IdentifierAst:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
-        return IdentifierAst(-1, "_Unmatchable")
+        return IdentifierAst(self.pos, "_Unmatchable")
 
     def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import LocalVariableSingleIdentifierAst, LocalVariableAttributeBindingAst

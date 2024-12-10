@@ -34,7 +34,7 @@ class LetStatementUninitializedAst(Ast, TypeInferrable, CompilerStages):
     def from_variable_and_type(variable: LocalVariableAst, type: TypeAst) -> LetStatementUninitializedAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
-        return LetStatementUninitializedAst(-1, TokenAst.default(TokenType.KwLet), variable, TokenAst.default(TokenType.TkColon), type)
+        return LetStatementUninitializedAst(variable.pos, TokenAst.default(TokenType.KwLet), variable, TokenAst.default(TokenType.TkColon), type)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
