@@ -160,6 +160,15 @@ class CommonTypes:
         return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "CtxMut", None)]))
 
     @staticmethod
+    def Box(inner_type=None, pos: int = -1):
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericTypeArgumentUnnamedAst
+        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
+
+        inner_type_generic = GenericTypeArgumentUnnamedAst(-1, inner_type)
+        generics = GenericArgumentGroupAst.default(Seq([inner_type_generic]))
+        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Box", generics)]))
+
+    @staticmethod
     def Fut(inner_type, pos: int = -1):
         # Import ASTs needed for the type and generic argument creation.
         from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
