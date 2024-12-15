@@ -57,13 +57,13 @@ class InnerScopeAst[T](Ast, Default, TypeInferrable, CompilerStages):
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, inline: bool = False, **kwargs) -> None:
+        from SPPCompiler.SemanticAnalysis import LoopControlFlowStatementAst, RetStatementAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis import RetStatementAst
         self._scope = scope_manager.current_scope
 
         # Check there is no code after a "ret" statement, as this is unreachable.
         for i, member in self.members.enumerate():
-            if isinstance(member, RetStatementAst) and member is not self.members[-1]:
+            if isinstance(member, (LoopControlFlowStatementAst, RetStatementAst)) and member is not self.members[-1]:
                 raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1])
 
         # Analyse the semantics of each member.

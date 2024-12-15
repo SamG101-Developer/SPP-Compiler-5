@@ -44,12 +44,12 @@ class FunctionImplementationAst(Ast, Default, CompilerStages):
         return "".join(string)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import RetStatementAst
+        from SPPCompiler.SemanticAnalysis import LoopControlFlowStatementAst, RetStatementAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Check there is no code after a "ret" statement, as this is unreachable.
         for i, member in self.members.enumerate():
-            if isinstance(member, RetStatementAst) and member is not self.members[-1]:
+            if isinstance(member, (LoopControlFlowStatementAst, RetStatementAst)) and member is not self.members[-1]:
                 raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1])
 
         # Analyse each member of the class implementation.
