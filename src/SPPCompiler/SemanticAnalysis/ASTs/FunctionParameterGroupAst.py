@@ -1,6 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Any
+
+from llvmlite import ir as llvm
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
@@ -100,6 +102,12 @@ class FunctionParameterGroupAst(Ast, Default, CompilerStages):
 
         # Analyse the parameters.
         self.parameters.for_each(lambda p: p.analyse_semantics(scope_manager, **kwargs))
+
+    def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+        # Get the parameter's llvm types.
+        parameter_types = self.parameters.map_attr("type")
+        llvm_parameter_types = parameter_types.map(lambda t: t.generate_llvm_definitions(scope_handler, llvm_module, **kwargs))
+        return llvm_parameter_types
 
 
 __all__ = ["FunctionParameterGroupAst"]

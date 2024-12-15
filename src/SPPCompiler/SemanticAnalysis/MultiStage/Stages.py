@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from llvmlite import ir as llvm
 from typing import Any, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -94,9 +95,15 @@ class CompilerStages:
         generated, and all types to be aliased, loaded, and post-processed. All functions scopes are inspected.
         """
 
-    def generate_llvm(self, scope_handler: ScopeManager, **kwargs) -> Any:
+    def generate_llvm_declarations(self, scope_handler: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
         """
-        The LLVM generation stage is the final stage of the compiler. This stage generates the LLVM IR for the module,
-        and is the final stage of the compiler. Whilst not part of the "Semantic analysis", it follows directly off the
-        analysed ASTs, and requires AST knowledge, so is included in this pipeline.
+        The LLVM declaration generation stage is the penultimate stage of the compiler. This stage generates the LLVM IR
+        declarations for the module, with no implementations. This is to load all the symbols into the LLVM context.
+        """
+
+    def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+        """
+        The LLVM definition generation stage is the final stage of the compiler. This stage generates the LLVM IR
+        definitions for the module, with implementations. This is to generate the actual code for the module. All the
+        definitions will have associated declarations from the previous stage.
         """

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from llvmlite import ir as llvm
+from typing import TYPE_CHECKING, Any
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -54,6 +55,18 @@ class FunctionImplementationAst(Ast, Default, CompilerStages):
 
         # Analyse each member of the class implementation.
         self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
+
+    def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+        # Create an entry block to start the function.
+        entry_block = llvm_function.append_basic_block(name="entry")
+        builder = llvm.IRBuilder(entry_block)
+
+        # Generate the LLVM definitions for each member of the class implementation.
+        for member in self.members:
+            member.generate_llvm_definitions(scope_handler, llvm_module, builder, entry_block, **kwargs)
+
+        # Return the entry block to start the function.
+        return entry_block
 
 
 __all__ = ["FunctionImplementationAst"]

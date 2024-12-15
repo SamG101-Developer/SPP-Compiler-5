@@ -470,8 +470,8 @@ class SemanticErrors:
 
     class UnreachableCodeError(SemanticError):
         """
-        The UnreachableCodeError is raised if there is code after a return statement in the same scope. This code is
-        unreachable as the return statement will always exit the function.
+        The UnreachableCodeError is raised if there is code after a skip/exit/ret keyword in the same scope. This code
+        is unreachable as the keyword always exits the scope into the parent scope.
         """
 
         def add(self, return_ast: RetStatementAst, next_ast: Ast) -> SemanticError:

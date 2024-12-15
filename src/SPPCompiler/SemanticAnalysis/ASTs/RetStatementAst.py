@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING
+from llvmlite import ir as llvm
+from typing import Optional, TYPE_CHECKING, Any
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -58,6 +59,15 @@ class RetStatementAst(Ast, TypeInferrable, CompilerStages):
         # Check the expression type matches the expected type.
         if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(expression_type.type, expected_type, self.expression, expected_type)
+
+    def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+        # Create a return instruction with the expression if it exists.
+        if self.expression:
+            return_value = self.expression.generate_llvm_definitions(scope_handler, llvm_module, builder, block, **kwargs)
+            builder.ret(return_value)
+        else:
+            builder.ret_void()
+        return None
 
 
 __all__ = ["RetStatementAst"]

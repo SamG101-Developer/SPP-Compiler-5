@@ -4,8 +4,10 @@ import copy
 
 from convert_case import pascal_case
 from dataclasses import dataclass
-from typing import Iterator, Optional, TYPE_CHECKING
+from typing import Iterator, Optional, TYPE_CHECKING, Any
 import hashlib
+
+from llvmlite import ir as llvm
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -18,7 +20,6 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentAst
     from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.ASTs.TypePartAst import TypePartAst
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
@@ -224,13 +225,20 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
                 type_scope = new_scope
 
         # Unfortunately this code is required to extend namespaces of generic arguments (for variants especially)
-        # print("END", self, type_symbol.is_generic, type(type_symbol))
         if all([
                 not type_symbol.is_generic,
                 not isinstance(type_symbol, AliasSymbol),
                 not self.types[-1].value.startswith("$"),
                 not self.types[-1].value == "Self"]):
             self.namespace = type_scope_alias_bypass.to_namespace()
+
+    def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+
+        type_symbol = scope_handler.current_scope.get_symbol(self)
+        if self.without_generics().symbolic_eq(CommonTypes.Box().without_generics(), scope_handler.current_scope):
+            type_symbol.llvm_info.llvm_type = llvm.PointerType()
+        return type_symbol.llvm_info.llvm_type
 
 
 __all__ = ["TypeAst"]

@@ -1,7 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Any
 import copy
+
+from llvmlite import ir as llvm
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -186,6 +188,19 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         self.where_block.analyse_semantics(scope_manager, **kwargs)
 
         # Subclasses will finish analysis and exit the scope.
+
+    def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+        scope_handler.move_to_next_scope()
+
+        # Generate the LLVM definition for the function prototype.
+        llvm_parameter_types = self.function_parameter_group.generate_llvm_definitions(scope_handler, llvm_module)
+        llvm_return_type = self.return_type.generate_llvm_definitions(scope_handler, llvm_module)
+        llvm_function_type = llvm.FunctionType(llvm_return_type, llvm_parameter_types)
+        llvm_function = llvm.Function(llvm_module, llvm_function_type, self.print_signature(AstPrinter()))
+
+        # Use the FunctionImplementationAst to generate the LLVM declaration.
+        self.body.generate_llvm_definitions(scope_handler, llvm_module, llvm_function=llvm_function)
+        scope_handler.move_out_of_current_scope()
 
     def _deduce_mock_class_type(self) -> TypeAst:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst

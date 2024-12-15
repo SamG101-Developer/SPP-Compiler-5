@@ -1,6 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+from llvmlite import ir as llvm
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -35,7 +37,9 @@ class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
     def from_variable_and_value(variable: LocalVariableAst, value: ExpressionAst) -> LetStatementInitializedAst:
         from SPPCompiler.LexicalAnalysis.TokenType import TokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
-        return LetStatementInitializedAst(variable.pos, TokenAst.default(TokenType.KwLet), variable, TokenAst.default(TokenType.TkAssign, pos=variable.pos), value)
+        return LetStatementInitializedAst(
+            variable.pos, TokenAst.default(TokenType.KwLet), variable,
+            TokenAst.default(TokenType.TkAssign, pos=variable.pos), value)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
@@ -54,8 +58,24 @@ class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
 
         # Analyse the assign_to and value of the let statement.
         self.value.analyse_semantics(scope_manager, **(kwargs | {"assignment": self.assign_to.extract_names}))
-        AstMemoryHandler.enforce_memory_integrity(self.value, self.assign_token, scope_manager)
+        AstMemoryHandler.enforce_memory_integrity(
+            self.value, self.assign_token, scope_manager, update_memory_info=False)
         self.assign_to.analyse_semantics(scope_manager, value=self.value, **kwargs)
+
+    def generate_llvm_definitions(
+            self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None,
+            block: llvm.Block = None, **kwargs) -> Any:
+
+        for var, val in self.assign_to._new_asts:
+            # Get the type of the variable and allocate memory for it.
+            var_type = scope_handler.current_scope.get_symbol(var.name).type
+            llvm_type = scope_handler.current_scope.get_symbol(var_type).llvm_info.llvm_type
+            llvm_alloc = builder.alloca(llvm_type, name=str(var.name))
+
+            # Convert the value to an LLVM constant and store it in the allocated memory.
+            llvm_value = val.generate_llvm_definitions(scope_handler, llvm_module, None, None, **kwargs)
+            llvm_var = llvm.Constant(llvm_type, llvm_value)
+            builder.store(llvm_var, llvm_alloc)
 
 
 __all__ = ["LetStatementInitializedAst"]

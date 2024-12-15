@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 
 
 # Todo: add newlines after multi-expression/statement blocks (ie between multiple ret/gen/let etc)
+# Todo: revert multi-skip back to simpler 1 function implementation (matches variadic parameter)
+# Todo: change else= inside object initializer to ".."
 
 
 # Decorator that wraps the function in a ParserRuleHandler

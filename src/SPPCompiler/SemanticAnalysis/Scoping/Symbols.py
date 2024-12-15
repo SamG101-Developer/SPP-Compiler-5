@@ -6,6 +6,7 @@ import copy, json
 
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import MemoryInfo
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
+from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ClassPrototypeAst import ClassPrototypeAst
@@ -80,6 +81,7 @@ class TypeSymbol:
     is_copyable: bool = field(default=False)
     is_abstract: bool = field(default=False)
     visibility: AstVisibility = field(default=AstVisibility.Private)
+    llvm_info: LlvmSymbolInfo = field(default_factory=LlvmSymbolInfo)
 
     def __post_init__(self) -> None:
         # Ensure the name is a GenericIdentifierAst, and the type is a ClassPrototypeAst or None.

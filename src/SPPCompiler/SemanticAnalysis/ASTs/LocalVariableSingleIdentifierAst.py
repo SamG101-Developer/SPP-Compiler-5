@@ -39,8 +39,9 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, CompilerStag
         return self.name
 
     def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         from SPPCompiler.SemanticAnalysis import TypeAst
+        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 
         # Create a variable symbol for this identifier and value.
         value_type = value.infer_type(scope_manager, **kwargs).type
@@ -54,6 +55,7 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, CompilerStag
         symbol.memory_info.ast_initialization = self.name
         if not isinstance(value, TypeAst):
             symbol.memory_info.initialization_counter = 1
+            AstMemoryHandler.enforce_memory_integrity(value, self, scope_manager)
         else:
             symbol.memory_info.ast_moved = self
 
