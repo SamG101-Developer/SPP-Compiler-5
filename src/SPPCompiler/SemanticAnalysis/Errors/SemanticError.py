@@ -511,7 +511,7 @@ class SemanticErrors:
         def add(self, identifier: IdentifierAst | GenericIdentifierAst, what: str, closest_match: Optional[str]) -> SemanticError:
             self.add_error(
                 pos=identifier.pos,
-                tag=f"Undefined {what}.",
+                tag=f"Undefined {what}: '{identifier}'.",
                 msg=f"The {what} '{identifier}' is not defined.",
                 tip=f"Did you mean '{closest_match}'?" if closest_match else f"Define the {what}.")
 
@@ -979,6 +979,21 @@ class SemanticErrors:
                 tag=f"{what.capitalize()} expression inferred as '{type}'",
                 msg=f"A {what} expression must be a boolean type.",
                 tip="Change the expression to be a boolean type.")
+
+            return self
+
+    class ExpressionNotGeneratorError(SemanticError):
+        """
+        The ExpressionNotGeneratorError is raised if an expression is not a generator type when it is expected to be.
+        This is when using "generator.next()" expressions.
+        """
+
+        def add(self, expression: ExpressionAst, type: TypeAst, what: str) -> SemanticError:
+            self.add_error(
+                pos=expression.pos,
+                tag=f"{what.capitalize()} expression inferred as '{type}'",
+                msg=f"A {what} expression must be a generator type.",
+                tip="Change the expression to be a generator type.")
 
             return self
 
