@@ -26,6 +26,12 @@ class PostfixExpressionOperatorNotKeywordAst(Ast, TypeInferrable, CompilerStages
             self.tok_not.print(printer)]
         return "".join(string)
 
+    def is_runtime_access(self) -> bool:
+        return True
+
+    def is_static_access(self) -> bool:
+        return False
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Not operations are always as "bool".
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
