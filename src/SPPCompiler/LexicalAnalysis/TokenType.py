@@ -97,6 +97,7 @@ class TokenType(Enum, metaclass=TokenTypeMeta):
     KwWith = "with"
     KwSkip = "skip"
     KwExit = "exit"
+    KwStep = "step"
 
     # Control flow exit
     KwRet = "ret"
@@ -104,6 +105,8 @@ class TokenType(Enum, metaclass=TokenTypeMeta):
 
     # Type helpers
     KwWhere = "where"
+    KwAs = "as"
+    KwIsNot = "is not"
     KwIs = "is"
 
     # Types
