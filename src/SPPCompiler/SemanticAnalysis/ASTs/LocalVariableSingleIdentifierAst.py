@@ -13,6 +13,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
+    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableSingleIdentifierAliasAst import LocalVariableSingleIdentifierAliasAst
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
 
@@ -21,13 +22,15 @@ if TYPE_CHECKING:
 class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, CompilerStages):
     tok_mut: Optional[TokenAst]
     name: IdentifierAst
+    alias: Optional[LocalVariableSingleIdentifierAliasAst]
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
             self.tok_mut.print(printer) + " " if self.tok_mut else "",
-            self.name.print(printer)]
+            self.name.print(printer),
+            (" " + self.alias.print(printer)) if self.alias is not None else ""]
         return "".join(string)
 
     @functools.cached_property
@@ -46,7 +49,7 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, CompilerStag
         # Create a variable symbol for this identifier and value.
         value_type = value.infer_type(scope_manager, **kwargs).type
         symbol = VariableSymbol(
-            name=self.name,
+            name=self.alias.name if self.alias else self.name,
             type=value_type,
             is_mutable=self.tok_mut is not None,
             visibility=AstVisibility.Public)

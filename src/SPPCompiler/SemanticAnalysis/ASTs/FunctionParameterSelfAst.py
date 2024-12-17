@@ -63,7 +63,7 @@ class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction, CompilerSta
 
         # Create the variable using ASTs, because "let self: ..." will be a parse error.
         ast = LetStatementUninitializedAst.from_variable_and_type(
-            variable=LocalVariableSingleIdentifierAst(self.pos, self.tok_mut, self.name),
+            variable=LocalVariableSingleIdentifierAst(self.pos, self.tok_mut, self.name, None),
             type=self.type)
         ast.analyse_semantics(scope_manager, **kwargs)
 
