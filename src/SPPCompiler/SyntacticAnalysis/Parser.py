@@ -18,9 +18,9 @@ if TYPE_CHECKING:
 
 
 # Decorator that wraps the function in a ParserRuleHandler
-def parser_rule(func) -> Callable[..., ParserRuleHandler]:
+def parser_rule[T](func: Callable[..., T]) -> Callable[..., ParserRuleHandler]:
     @functools.wraps(func)
-    def wrapper(self, *args) -> ParserRuleHandler:
+    def wrapper(self, *args) -> ParserRuleHandler[T]:
         return ParserRuleHandler(self, functools.partial(func, self, *args))
     return wrapper
 
@@ -834,31 +834,25 @@ class Parser:
 
     @parser_rule
     def parse_local_variable_skip_arguments(self) -> LocalVariableDestructureSkipNArgumentsAst:
-        p1 = self.parse_local_variable_skip_arguments_bound()
-        p2 = self.parse_local_variable_skip_arguments_unbound()
-        p3 = (p1 | p2).parse_once()
-        return p3
-
-    @parser_rule
-    def parse_local_variable_skip_arguments_bound(self) -> LocalVariableDestructureSkipNArgumentsAst:
         c1 = self.current_pos()
-        p1 = self.parse_token(TokenType.KwMut).parse_optional()
-        p2 = self.parse_token(TokenType.TkVariadic).parse_once()
-        p3 = self.parse_identifier().parse_once()
-        return LocalVariableDestructureSkipNArgumentsAst(c1, p2, LocalVariableSingleIdentifierAst(c1, p1, p3))
-
-    @parser_rule
-    def parse_local_variable_skip_arguments_unbound(self) -> LocalVariableDestructureSkipNArgumentsAst:
-        c1 = self.current_pos()
-        p2 = self.parse_token(TokenType.TkVariadic).parse_once()
-        return LocalVariableDestructureSkipNArgumentsAst(c1, p2, None)
+        p1 = self.parse_token(TokenType.TkVariadic).parse_once()
+        p2 = self.parse_local_variable_single_identifier().parse_optional()
+        return LocalVariableDestructureSkipNArgumentsAst(c1, p1, p2)
 
     @parser_rule
     def parse_local_variable_single_identifier(self) -> LocalVariableSingleIdentifierAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwMut).parse_optional()
         p2 = self.parse_identifier().parse_once()
-        return LocalVariableSingleIdentifierAst(c1, p1, p2)
+        p3 = self.parse_local_variable_single_identifier_alias().parse_optional()
+        return LocalVariableSingleIdentifierAst(c1, p1, p2, p3)
+
+    @parser_rule
+    def parse_local_variable_single_identifier_alias(self) -> LocalVariableSingleIdentifierAliasAst:
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.KwAs).parse_once()
+        p2 = self.parse_identifier().parse_once()
+        return LocalVariableSingleIdentifierAliasAst(c1, p1, p2)
 
     @parser_rule
     def parse_local_variable_destructure_array(self) -> LocalVariableDestructureArrayAst:
@@ -1005,31 +999,18 @@ class Parser:
 
     @parser_rule
     def parse_pattern_variant_skip_arguments(self) -> PatternVariantDestructureSkipNArgumentsAst:
-        p1 = self.parse_pattern_variant_skip_arguments_bound()
-        p2 = self.parse_pattern_variant_skip_arguments_unbound()
-        p3 = (p1 | p2).parse_once()
-        return p3
-
-    @parser_rule
-    def parse_pattern_variant_skip_arguments_bound(self) -> PatternVariantDestructureSkipNArgumentsAst:
-        c1 = self.current_pos()
-        p1 = self.parse_token(TokenType.KwMut).parse_optional()
-        p2 = self.parse_token(TokenType.TkVariadic).parse_once()
-        p3 = self.parse_identifier().parse_once()
-        return PatternVariantDestructureSkipNArgumentsAst(c1, p2, PatternVariantSingleIdentifierAst(c1, p1, p3))
-
-    @parser_rule
-    def parse_pattern_variant_skip_arguments_unbound(self) -> PatternVariantDestructureSkipNArgumentsAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.TkVariadic).parse_once()
-        return PatternVariantDestructureSkipNArgumentsAst(c1, p1, None)
+        p2 = self.parse_pattern_variant_single_identifier().parse_optional()
+        return PatternVariantDestructureSkipNArgumentsAst(c1, p1, p2)
 
     @parser_rule
     def parse_pattern_variant_single_identifier(self) -> PatternVariantSingleIdentifierAst:
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.KwMut).parse_optional()
         p2 = self.parse_identifier().parse_once()
-        return PatternVariantSingleIdentifierAst(c1, p1, p2)
+        p3 = self.parse_local_variable_single_identifier_alias().parse_optional()
+        return PatternVariantSingleIdentifierAst(c1, p1, p2, p3)
 
     @parser_rule
     def parse_pattern_variant_destructure_tuple(self) -> PatternVariantDestructureTupleAst:
@@ -1222,8 +1203,9 @@ class Parser:
         p2 = self.parse_postfix_op_member_access()
         p3 = self.parse_postfix_op_early_return()
         p4 = self.parse_postfix_op_not_keyword()
-        p5 = (p1 | p2 | p3 | p4).parse_once()
-        return p5
+        p5 = self.parse_postfix_op_step_keyword()
+        p6 = (p1 | p2 | p3 | p4 | p5).parse_once()
+        return p6
 
     @parser_rule
     def parse_postfix_op_function_call(self) -> PostfixExpressionOperatorFunctionCallAst:
@@ -1264,10 +1246,19 @@ class Parser:
 
     @parser_rule
     def parse_postfix_op_not_keyword(self) -> PostfixExpressionOperatorNotKeywordAst:
+        # Todo: Allow "::" ?
         c1 = self.current_pos()
         p1 = self.parse_token(TokenType.TkDot).parse_once()
         p2 = self.parse_token(TokenType.KwNot).parse_once()
         return PostfixExpressionOperatorNotKeywordAst(c1, p1, p2)
+
+    @parser_rule
+    def parse_postfix_op_step_keyword(self) -> PostfixExpressionOperatorStepKeywordAst:
+        # Todo: Allow "::" ?
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.TkDot).parse_once()
+        p2 = self.parse_token(TokenType.KwStep).parse_once()
+        return PostfixExpressionOperatorStepKeywordAst(c1, p1, p2)
 
     # ===== CONVENTIONS =====
 
