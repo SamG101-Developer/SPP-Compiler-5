@@ -9,6 +9,7 @@ class AstVisibility(Enum):
     Public = 0
     Protected = 1
     Private = 2
+    Hidden = 3
 
     def __str__(self) -> str:
         return self.name.lower()
