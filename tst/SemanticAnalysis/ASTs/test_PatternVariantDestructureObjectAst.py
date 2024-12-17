@@ -58,6 +58,19 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
+    def test_invalid_pattern_variant_destructure_object_aliasing_attributes(self):
+        """
+        cls Point1 {
+            x: std::BigInt
+            y: std::BigInt
+        }
+
+        fun f(p: Point1) -> std::Void {
+            case p is Point1(x as x_value, ..) { let xxx = x }
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_pattern_variant_destructure_object(self):
         """
@@ -101,5 +114,20 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
             case p of
                 is Point1(x, y) { }
                 is Point2(x, y) { }
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_pattern_variant_destructure_object_aliasing_attributes(self):
+        """
+        cls Point1 {
+            x: std::BigInt
+            y: std::BigInt
+        }
+
+        fun f(p: Point1) -> std::Void {
+            case p of
+                is Point1(x as x_value, ..) { let xxx = x_value }
+                is Point1(y as y_value, ..) { let yyy = y_value }
         }
         """
