@@ -52,10 +52,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
         from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, PostfixExpressionAst
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst, FunctionParameterVariadicAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        # from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-        # from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-        # from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticError
+        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
         # function's name and its owner type/namespace.
@@ -132,26 +129,18 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
 
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
-                    # new_scope = Scope(copy.deepcopy(function_scope.name), function_scope.parent)
-                    # new_scope._name += f"#generic{id(new_scope)}"
-                    # new_scope._non_generic_scope = function_scope
-
-                    # for generic_argument in generic_arguments:
-                    #     generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
-                    #     new_scope.add_symbol(generic_symbol)
-
-                    # temp_manager = ScopeManager(scope_manager.global_scope, new_scope)
+                    temp_manager = ScopeManager(scope_manager.global_scope, function_scope.parent)
 
                     new_overload = copy.deepcopy(function_overload)
                     new_overload.generic_parameter_group.parameters = Seq()
                     new_overload.function_parameter_group.parameters.for_each(lambda p: p.type.sub_generics(generic_arguments))
-                    new_overload.function_parameter_group.parameters.for_each(lambda p: p.type.analyse_semantics(scope_manager, **kwargs))
+                    new_overload.function_parameter_group.parameters.for_each(lambda p: p.type.analyse_semantics(temp_manager, **kwargs))
                     new_overload.return_type.sub_generics(generic_arguments)
-                    new_overload.return_type.analyse_semantics(scope_manager, **kwargs)
+                    new_overload.return_type.analyse_semantics(temp_manager, **kwargs)
 
                     parameters = new_overload.function_parameter_group.parameters.copy()
                     function_overload = new_overload
-                    # function_scope = new_scope
+                    function_scope = temp_manager.current_scope
 
                 # Type check the arguments against the parameters.
                 sorted_arguments = arguments.sort(key=lambda a: parameter_names.index(a.name))
@@ -172,7 +161,16 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
                 # Mark the overload as a pass.
                 pass_overloads.append((function_scope, function_overload))
 
-            except SemanticError as e:
+            except (
+                    SemanticErrors.FunctionCallAbstractFunctionError,
+                    SemanticErrors.FunctionCallTooManyArgumentsError,
+                    SemanticErrors.ArgumentNameInvalidError,
+                    SemanticErrors.ArgumentRequiredNameMissingError,
+                    SemanticErrors.TypeMismatchError,
+                    SemanticErrors.GenericParameterInferredConflictInferredError,
+                    SemanticErrors.GenericParameterInferredConflictExplicitError,
+                    SemanticErrors.GenericParameterNotInferredError) as e:
+
                 # Mark the overload as a fail.
                 fail_overloads.append((function_scope, function_overload, e))
                 continue
