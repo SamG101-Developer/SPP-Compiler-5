@@ -1,12 +1,12 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from llvmlite import ir
 from typing import Optional
 
 
 @dataclass(kw_only=True)
 class LlvmSymbolInfo:
-    llvm_type: Optional[ir.IdentifiedStructType]
-    llvm_module: ir.Module
+    llvm_type: Optional[ir.IdentifiedStructType] = field(default=None)
+    llvm_module: ir.Module = field(default=None)
 
 
 __all__ = ["LlvmSymbolInfo"]
