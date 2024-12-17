@@ -43,6 +43,7 @@ class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable, CompilerStage
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
+        # Todo: Check for superimposition, not direct equality
         # Check the iterable is a generator type.
         target_type = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics).map(InferredType.from_type)
         return_type = lhs.infer_type(scope_manager, **kwargs)
