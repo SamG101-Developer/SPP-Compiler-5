@@ -35,10 +35,16 @@ class AstFunctions:
             scope_manager: ScopeManager, lhs: ExpressionAst)\
             -> Tuple[Ast, Optional[Scope], IdentifierAst]:
 
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, PostfixExpressionAst
+        from SPPCompiler.SemanticAnalysis import IdentifierAst, PostfixExpressionAst, PostfixExpressionOperatorStepKeywordAst
+
+        # Special function: ".next()" on generators.
+        if isinstance(lhs, PostfixExpressionAst) and isinstance(lhs.op, PostfixExpressionOperatorStepKeywordAst):
+            function_owner_type = lhs.lhs.infer_type(scope_manager).type
+            function_name = IdentifierAst(lhs.op.pos, "next_")
+            function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Runtime access into an object: "object.method()"
-        if isinstance(lhs, PostfixExpressionAst) and lhs.op.is_runtime_access():
+        elif isinstance(lhs, PostfixExpressionAst) and lhs.op.is_runtime_access():
             function_owner_type = lhs.lhs.infer_type(scope_manager).type
             function_name = lhs.op.field
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
