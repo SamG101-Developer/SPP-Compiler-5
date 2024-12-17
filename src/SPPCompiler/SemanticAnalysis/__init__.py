@@ -63,6 +63,7 @@ from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureObjectAst import 
 from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureSkip1ArgumentAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureSkipNArgumentsAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureTupleAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableSingleIdentifierAliasAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableSingleIdentifierAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LoopConditionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.LoopConditionBooleanAst import *
@@ -100,6 +101,7 @@ from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorEarlyReturnAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorFunctionCallAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorMemberAccessAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorStepKeywordAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorNotKeywordAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PrimaryExpressionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import *
