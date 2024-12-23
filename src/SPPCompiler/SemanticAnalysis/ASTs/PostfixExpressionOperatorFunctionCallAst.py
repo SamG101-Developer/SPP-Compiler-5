@@ -204,6 +204,9 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
         return InferredType.from_type(return_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
+        if self._overload:
+            return
+
         # Analyse the function and generic arguments, and determine the overload.
         self.function_argument_group.analyse_pre_semantics(scope_manager, **kwargs)
         self.generic_argument_group.analyse_semantics(scope_manager, **kwargs)
