@@ -80,7 +80,7 @@ class TestLocalVariableDestructureTupleAst(CustomTestCase):
         }
         """
 
-    @should_pass_compilation()
+    @should_pass_compilation()  # todo: if (1, 2, 3, 4) is a variable, then there is a memory error
     def test_valid_local_variable_destructure_tuple_with_bound_multi_skip_3(self):
         """
         fun f() -> std::Void {

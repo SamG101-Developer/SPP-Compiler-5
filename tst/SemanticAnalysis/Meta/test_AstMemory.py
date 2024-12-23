@@ -322,3 +322,47 @@ class TestAstMemory(CustomTestCase):
             let y = p.y
         }
         """
+
+    @should_pass_compilation()
+    def test_valid_memory_copy(self):
+        """
+        fun f() -> std::Void {
+            let x = 123
+            let a = x
+            let b = x
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_memory_copy_custom(self):
+        """
+        cls Point {
+            x: std::BigInt
+            y: std::BigInt
+        }
+
+        sup Point ext std::Copy { }
+
+        fun f() -> std::Void {
+            let p = Point(x=5, y=5)
+            let a = p
+            let b = p
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_memory_copy_custom_generic(self):
+        """
+        cls Point[T] {
+            x: T
+            y: T
+        }
+
+        sup [T] Point[T] ext std::Copy { }
+
+        fun f() -> std::Void {
+            let p = Point(x=5, y=5)
+            let a = p
+            let b = p
+        }
+        """
