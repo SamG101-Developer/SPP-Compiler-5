@@ -48,6 +48,6 @@ class TestPatternVariantDestructureTupleAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object_bound_multi_skip(self):
         """
         fun f(p: (std::BigInt, std::BigInt)) -> std::Void {
-            case p is (mut ..x) { }
+            case p is (..mut x) { }
         }
         """

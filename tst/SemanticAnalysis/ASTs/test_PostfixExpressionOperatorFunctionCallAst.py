@@ -237,3 +237,59 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
             async a(&x)
         }
         """
+
+    @should_pass_compilation()
+    def test_valid_postfix_function_call_with_member_access(self):
+        """
+        cls TestClass { }
+        cls NewClass {
+            t: TestClass
+            u: TestClass
+        }
+
+        sup TestClass {
+            fun f(self) -> std::Void { }
+        }
+
+        fun g(n: NewClass) -> std::Void {
+            n.t.f()
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_postfix_function_call_with_member_access_2(self):
+        """
+        cls TestClass { }
+        cls NewClass {
+            t: TestClass
+            u: TestClass
+        }
+
+        sup TestClass {
+            fun f(self, t: TestClass) -> std::Void { }
+        }
+
+        fun g(n: NewClass) -> std::Void {
+            n.t.f(n.u)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_postfix_function_call_with_member_access_3(self):
+        """
+        cls TestClass { }
+        cls NewClass {
+            t: TestClass
+            u: TestClass
+            v: TestClass
+        }
+
+        sup TestClass {
+            @no_impl
+            fun f(self, t: TestClass) -> TestClass { }
+        }
+
+        fun g(n: NewClass) -> std::Void {
+            n.t.f(n.u).f(n.v)
+        }
+        """

@@ -66,7 +66,7 @@ class TestLocalVariableDestructureArrayAst(CustomTestCase):
     def test_valid_local_variable_destructure_array_with_bound_multi_skip_1(self):
         """
         fun f() -> std::Void {
-            let [a, mut ..b, c] = [1, 2, 3, 4]
+            let [a, ..mut b, c] = [1, 2, 3, 4]
             b = [5, 6]
         }
         """
@@ -75,7 +75,7 @@ class TestLocalVariableDestructureArrayAst(CustomTestCase):
     def test_valid_local_variable_destructure_array_with_bound_multi_skip_2(self):
         """
         fun f() -> std::Void {
-            let [mut ..a, b] = [1, 2, 3, 4]
+            let [..mut a, b] = [1, 2, 3, 4]
             a = [5, 6, 7]
         }
         """
@@ -84,7 +84,7 @@ class TestLocalVariableDestructureArrayAst(CustomTestCase):
     def test_valid_local_variable_destructure_array_with_bound_multi_skip_3(self):
         """
         fun f() -> std::Void {
-            let [a, b, mut ..c] = [1, 2, 3, 4]
+            let [a, b, ..mut c] = [1, 2, 3, 4]
             c = [5, 6]
         }
         """
