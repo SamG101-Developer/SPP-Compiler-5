@@ -82,7 +82,7 @@ class AstFunctions:
 
         # Create an argument for self, which is the object being called (convention tested later).
         self_argument = AstMutation.inject_code(f"{lhs.lhs}", Parser.parse_function_call_argument_unnamed)
-        self_argument.analyse_semantics(scope_manager, **kwargs)
+        # self_argument.analyse_semantics(scope_manager, **kwargs)
         function_arguments = fn.function_argument_group.arguments.copy()
         function_arguments.insert(0, self_argument)
 
@@ -94,6 +94,8 @@ class AstFunctions:
         new_function_call = AstMutation.inject_code(
             f"{fn.generic_argument_group}({function_arguments.join(", ")}){fn.fold_token or ""}",
             Parser.parse_postfix_op_function_call)
+
+        new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(scope_manager)
 
         # Get the overload from the uniform function call.
         return new_function_access, new_function_call
@@ -208,6 +210,7 @@ class AstFunctions:
                 named_argument = f"${parameter_name}={unnamed_argument}"
                 named_argument = AstMutation.inject_code(named_argument, Parser.parse_function_call_argument_named)
                 named_argument.name = parameter_name
+                named_argument._type_from_self = unnamed_argument._type_from_self
                 arguments.replace(unnamed_argument, named_argument, 1)
 
     @staticmethod
