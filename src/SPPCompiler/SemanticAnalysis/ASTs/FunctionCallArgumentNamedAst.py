@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -22,6 +22,7 @@ class FunctionCallArgumentNamedAst(Ast, Ordered, TypeInferrable, CompilerStages)
     tok_assign: TokenAst
     convention: ConventionAst
     value: ExpressionAst
+    _type_from_self: InferredType = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._variant = "Named"
@@ -42,6 +43,9 @@ class FunctionCallArgumentNamedAst(Ast, Ordered, TypeInferrable, CompilerStages)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst
+        if self._type_from_self:
+            return self._type_from_self
+
         inferred_type = self.value.infer_type(scope_manager, **kwargs)
 
         # The convention is either from the convention attribute or the symbol information.

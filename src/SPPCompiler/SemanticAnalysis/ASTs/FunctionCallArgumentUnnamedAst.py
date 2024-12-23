@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -20,6 +20,7 @@ class FunctionCallArgumentUnnamedAst(Ast, Ordered, TypeInferrable, CompilerStage
     convention: ConventionAst
     tok_unpack: Optional[TokenAst]
     value: ExpressionAst
+    _type_from_self: InferredType = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._variant = "Unnamed"
