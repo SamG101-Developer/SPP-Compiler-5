@@ -875,7 +875,7 @@ class Parser:
         c1 = self.current_pos()
         p1 = self.parse_type_single().parse_once()
         p2 = self.parse_token(TokenType.TkParenL).parse_once()
-        p3 = self.parse_local_variable_nested_for_destructure_object().parse_zero_or_more(TokenType.TkComma)
+        p3 = self.parse_local_variable_nested_for_destructure_object().parse_zero_or_more(TokenType.TkComma)  # one or more?
         p4 = self.parse_token(TokenType.TkParenR).parse_once()
         return LocalVariableDestructureObjectAst(c1, p1, p2, p3, p4)
 
@@ -888,7 +888,7 @@ class Parser:
         return LocalVariableAttributeBindingAst(c1, p1, p2, p3)
 
     @parser_rule
-    def parse_local_variable_nested_for_destructure_tuple(self) -> LocalVariableNestedForDestructureTupleAst:
+    def parse_local_variable_nested_for_destructure_array(self) -> LocalVariableNestedForDestructureArrayAst:
         p1 = self.parse_local_variable_destructure_array()
         p2 = self.parse_local_variable_destructure_tuple()
         p3 = self.parse_local_variable_destructure_object()
@@ -899,7 +899,7 @@ class Parser:
         return p7
 
     @parser_rule
-    def parse_local_variable_nested_for_destructure_array(self) -> LocalVariableNestedForDestructureArrayAst:
+    def parse_local_variable_nested_for_destructure_tuple(self) -> LocalVariableNestedForDestructureTupleAst:
         p1 = self.parse_local_variable_destructure_array()
         p2 = self.parse_local_variable_destructure_tuple()
         p3 = self.parse_local_variable_destructure_object()
@@ -1033,7 +1033,7 @@ class Parser:
         c1 = self.current_pos()
         p1 = self.parse_type_single().parse_once()
         p2 = self.parse_token(TokenType.TkParenL).parse_once()
-        p3 = self.parse_pattern_variant_nested_for_object_destructure().parse_zero_or_more(TokenType.TkComma)
+        p3 = self.parse_pattern_variant_nested_for_object_destructure().parse_zero_or_more(TokenType.TkComma)  # one or more?
         p4 = self.parse_token(TokenType.TkParenR).parse_once()
         return PatternVariantDestructureObjectAst(c1, p1, p2, p3, p4)
 
@@ -1645,6 +1645,7 @@ class Parser:
         return ArrayLiteralNElementAst(c1, p1, p2, p3)
 
     # ===== GLOBAL CONSTANTS =====
+
     @parser_rule
     def parse_global_constant_value(self) -> ExpressionAst:
         p1 = self.parse_literal_float()
