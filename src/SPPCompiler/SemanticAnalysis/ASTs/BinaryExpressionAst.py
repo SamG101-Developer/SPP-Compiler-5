@@ -78,7 +78,8 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         # Ensure the memory status of the left and right hand side.
         self.rhs.analyse_semantics(scope_manager, **kwargs)
-        AstMemoryHandler.enforce_memory_integrity(self.rhs, self.op, scope_manager)
+        if not isinstance(self.rhs, TokenAst) and not isinstance(self.lhs, TokenAst):
+            AstMemoryHandler.enforce_memory_integrity(self.rhs, self.op, scope_manager)
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
         if self.op.token.token_type.name.endswith("Assign") and not scope_manager.current_scope.get_variable_symbol_outermost_part(self.lhs):
