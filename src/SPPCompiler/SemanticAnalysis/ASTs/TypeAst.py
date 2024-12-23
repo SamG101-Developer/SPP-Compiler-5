@@ -173,6 +173,7 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         return InferredType.from_type(self)
 
+    # todo: remove "force" parameter - should be safe?
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source=None, generic_infer_target=None, force: bool = False, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
@@ -192,8 +193,6 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
             type_scope = type_symbol.scope
             type_scope_alias_bypass = type_symbol_alias_bypass.scope
             if type_symbol.is_generic: continue
-
-            # print("NAMING", type_part)
 
             # Name all the generic arguments.
             AstFunctions.name_generic_arguments(

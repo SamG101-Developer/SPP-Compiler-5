@@ -95,7 +95,7 @@ class AstTypeManagement:
 
         # Create a new scope for the generic substituted type.
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.type))
-        new_symbol = builtins.type(base_symbol)(name=type_part, type=new_scope._ast, scope=new_scope)
+        new_symbol = builtins.type(base_symbol)(name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable, is_abstract=base_symbol.is_abstract, visibility=base_symbol.visibility)
         if isinstance(base_symbol, AliasSymbol):
             new_symbol.old_type = base_symbol.old_type
 
