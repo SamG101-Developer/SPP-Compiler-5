@@ -293,3 +293,55 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
             n.t.f(n.u).f(n.v)
         }
         """
+
+    @should_pass_compilation()
+    def test_valid_postfix_function_call_with_superimposition(self):
+        """
+        cls TestClass { }
+        sup TestClass {
+            fun f(self) -> std::Void { }
+        }
+
+        cls TestClass2 { }
+        sup TestClass2 ext TestClass {
+            fun f(self) -> std::Void { }
+        }
+
+        fun g() -> std::Void {
+            TestClass2().f()
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_postfix_function_folding_1(self):
+        """
+        fun f(a: std::BigInt) -> std::Str { }
+        fun g() -> std::Void {
+            let x = (1, 2, 3, 4)
+            let mut y = f(x)..
+            y = ("a", "b", "c", "d")
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_postfix_function_folding_2(self):
+        """
+        fun f(a: std::BigInt, b: std::BigInt) -> std::Void { }
+        fun g() -> std::Void {
+            let x = (1, 2, 3, 4)
+            let y = (1, 2, 3, 4)
+            let mut z = f(x, y)..
+            z = ("a", "b", "c", "d")
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.VariableTupleDestructureTupleSizeMismatchError)
+    def test_invalid_postfix_function_folding_1(self):
+        """
+        fun f(a: std::BigInt, b: std::BigInt) -> std::Void { }
+        fun g() -> std::Void {
+            let x = (1, 2, 3, 4)
+            let y = (1, 2)
+            f(x, y)..
+        }
+        """

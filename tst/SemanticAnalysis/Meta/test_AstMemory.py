@@ -285,9 +285,11 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryMovedFromBorrowedContextError)
     def test_invalid_memory_moved_from_borrowed_context_1(self):
         """
+        cls T { }
+
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: T
+            y: T
         }
 
         fun f(p: &Point) -> std::Void {
@@ -298,9 +300,11 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryMovedFromBorrowedContextError)
     def test_invalid_memory_moved_from_borrowed_context_2(self):
         """
+        cls T { }
+
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: T
+            y: T
         }
 
         fun f(p: &mut Point) -> std::Void {
@@ -364,5 +368,18 @@ class TestAstMemory(CustomTestCase):
             let p = Point(x=5, y=5)
             let a = p
             let b = p
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_memory_moved_from_borrowed_context_1(self):
+        """
+        cls Point {
+            x: std::BigInt
+            y: std::BigInt
+        }
+
+        fun f(p: &Point) -> std::Void {
+            let x = p.x
         }
         """
