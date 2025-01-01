@@ -23,7 +23,7 @@ class CoroutinePrototypeAst(FunctionPrototypeAst):
         # Perform default function prototype semantic analysis.
         super().analyse_semantics(scope_manager, **kwargs)
         kwargs["function_type"] = self.tok_fun
-        kwargs["function_ret_type"] = self.return_type
+        kwargs["function_ret_type"] = scope_manager.current_scope.get_symbol(self.return_type).fq_name
 
         # Check the return type is a generator type.
         allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics)
