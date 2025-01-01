@@ -59,7 +59,8 @@ class CaseExpressionBranchAst(Ast, TypeInferrable, CompilerStages):
         scope_manager.create_and_move_into_new_scope(f"<pattern:{self.pos}>")
 
         # Analyse the patterns, guard and body.
-        self.patterns.for_each(lambda p: p.analyse_semantics(scope_manager, condition, **kwargs))
+        for p in self.patterns:
+            p.analyse_semantics(scope_manager, condition, **kwargs)
         self.body.analyse_semantics(scope_manager, **kwargs)
         if self.guard:
             self.guard.analyse_semantics(scope_manager, **kwargs)

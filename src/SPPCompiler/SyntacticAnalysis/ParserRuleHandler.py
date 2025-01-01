@@ -60,7 +60,7 @@ class ParserRuleHandler[T]:
             except ParserError as e:
                 # If the most recent parse is a separator, backtrack it because there is no following AST.
                 if parsed_sep:
-                    self._parser._index -= 1 * (separator != TokenType.NO_TOK)
+                    self._parser._index -= (separator != TokenType.NO_TOK)
 
                 # Save the error and break the loop.
                 error = e

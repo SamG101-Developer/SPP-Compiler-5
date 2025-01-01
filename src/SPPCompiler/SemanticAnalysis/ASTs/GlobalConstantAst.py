@@ -45,7 +45,8 @@ class GlobalConstantAst(Ast, VisibilityEnabled, CompilerStages):
         return "".join(string)
 
     def pre_process(self, context: PreProcessingContext) -> None:
-        self.annotations.for_each(lambda a: a.pre_process(self))
+        for a in self.annotations:
+            a.pre_process(self)
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).

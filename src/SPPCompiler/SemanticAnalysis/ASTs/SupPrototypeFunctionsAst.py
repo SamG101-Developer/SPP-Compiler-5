@@ -58,7 +58,8 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         scope_manager.create_and_move_into_new_scope(name_override or f"<sup:{self.name}:{self.pos}>", self)
         super().generate_symbols(scope_manager)
 
-        self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))
+        for p in self.generic_parameter_group.parameters:
+            p.generate_symbols(scope_manager)
         self.body.generate_symbols(scope_manager)
 
         scope_manager.move_out_of_current_scope()

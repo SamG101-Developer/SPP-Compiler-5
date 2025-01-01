@@ -41,7 +41,8 @@ class GenericTypeParameterInlineConstraintsAst(Ast, Default, CompilerStages):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        self.constraints.for_each(lambda constraint: constraint.analyse_semantics(scope_manager, **kwargs))
+        for c in self.constraints:
+            c.analyse_semantics(scope_manager, **kwargs)
 
         # Check there are duplicate constraints types.
         for i, t in self.constraints.enumerate():

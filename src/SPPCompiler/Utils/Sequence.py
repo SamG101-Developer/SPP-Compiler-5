@@ -29,8 +29,8 @@ class Seq[T]:
 
     # Iteration operations
 
-    def for_each[U](self, func: Callable[[T], U]) -> None:
-        for v in self._value: func(v)
+    # def for_each[U](self, func: Callable[[T], U]) -> None:
+    #     for v in self._value: func(v)
 
     def map[U](self, func: Callable[[T], U]) -> Seq[U]:
         return Seq([func(v) for v in self._value])

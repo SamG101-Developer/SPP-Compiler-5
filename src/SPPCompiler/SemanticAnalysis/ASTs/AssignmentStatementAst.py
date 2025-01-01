@@ -46,8 +46,8 @@ class AssignmentStatementAst(Ast, TypeInferrable, CompilerStages):
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Ensure the LHS and RHS are semantically valid.
-        self.lhs.for_each(lambda e: e.analyse_semantics(scope_manager, **kwargs))
-        self.rhs.for_each(lambda e: e.analyse_semantics(scope_manager, **kwargs))
+        for e in self.lhs: e.analyse_semantics(scope_manager, **kwargs)
+        for e in self.rhs: e.analyse_semantics(scope_manager, **kwargs)
 
         # Ensure the lhs targets are all symbolic (assignable to).
         lhs_syms = self.lhs.map(lambda e: scope_manager.current_scope.get_variable_symbol_outermost_part(e))

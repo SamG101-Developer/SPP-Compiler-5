@@ -87,7 +87,8 @@ class GenericParameterGroupAst(Ast, Default, CompilerStages):
             raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "generic parameter")
 
         # Analyse the parameters.
-        self.parameters.for_each(lambda p: p.analyse_semantics(scope_manager, **kwargs))
+        for p in self.parameters:
+            p.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["GenericParameterGroupAst"]

@@ -42,7 +42,8 @@ class PinStatementAst(Ast, TypeInferrable, CompilerStages):
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 
         # Analyse the expressions.
-        self.expressions.for_each(lambda expression: expression.analyse_semantics(scope_manager, **kwargs))
+        for e in self.expressions:
+            e.analyse_semantics(scope_manager, **kwargs)
 
         # Check each expression is symbolic.
         symbols = self.expressions.map(scope_manager.current_scope.get_variable_symbol_outermost_part)

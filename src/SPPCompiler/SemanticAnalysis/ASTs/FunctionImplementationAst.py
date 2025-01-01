@@ -54,7 +54,8 @@ class FunctionImplementationAst(Ast, Default, CompilerStages):
                 raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1])
 
         # Analyse each member of the class implementation.
-        self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
+        for m in self.members:
+            m.analyse_semantics(scope_manager, **kwargs)
 
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         # Create an entry block to start the function.

@@ -101,7 +101,8 @@ class FunctionParameterGroupAst(Ast, Default, CompilerStages):
             raise SemanticErrors.ParameterMultipleVariadicError().add(variadic_parameters[0], variadic_parameters[1])
 
         # Analyse the parameters.
-        self.parameters.for_each(lambda p: p.analyse_semantics(scope_manager, **kwargs))
+        for p in self.parameters:
+            p.analyse_semantics(scope_manager, **kwargs)
 
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         # Get the parameter's llvm types.

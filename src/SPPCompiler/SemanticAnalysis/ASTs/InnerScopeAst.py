@@ -67,4 +67,5 @@ class InnerScopeAst[T](Ast, Default, TypeInferrable, CompilerStages):
                 raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1])
 
         # Analyse the semantics of each member.
-        self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
+        for m in self.members:
+            m.analyse_semantics(scope_manager, **kwargs)

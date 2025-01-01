@@ -122,8 +122,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
                     explicit_generic_arguments=generic_arguments + owner_scope_generic_arguments,
                     infer_source=arguments.map(lambda a: (a.name, a.infer_type(scope_manager, **kwargs).type)).dict(),
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
-                    scope_manager=scope_manager,
-                    owner=lhs,
+                    scope_manager=scope_manager, owner=lhs,
                     variadic_parameter_identifier=function_overload.function_parameter_group.get_var().extract_name if is_variadic else None,
                     **kwargs)
 
@@ -133,8 +132,10 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
 
                     new_overload = copy.deepcopy(function_overload)
                     new_overload.generic_parameter_group.parameters = Seq()
-                    new_overload.function_parameter_group.parameters.for_each(lambda p: p.type.sub_generics(generic_arguments))
-                    new_overload.function_parameter_group.parameters.for_each(lambda p: p.type.analyse_semantics(temp_manager, **kwargs))
+                    for p in new_overload.function_parameter_group.parameters:
+                        p.type.sub_generics(generic_arguments)
+                    for p in new_overload.function_parameter_group.parameters:
+                        p.type.analyse_semantics(temp_manager, **kwargs)
                     new_overload.return_type.sub_generics(generic_arguments)
                     new_overload.return_type.analyse_semantics(temp_manager, **kwargs)
 

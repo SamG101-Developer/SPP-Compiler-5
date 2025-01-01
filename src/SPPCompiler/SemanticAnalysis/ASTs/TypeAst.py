@@ -88,12 +88,8 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
         return TypeAst(self.pos, Seq(), self.types.copy())
 
     def without_generics(self) -> TypeAst:
-        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
-
         # Return the type without its generic arguments.
-        match self.types[-1]:
-            case GenericIdentifierAst(): return TypeAst(self.pos, self.namespace, self.types[:-1] + [self.types[-1].without_generics()])
-            case _: return TypeAst(self.pos, self.namespace.copy(), self.types.copy())
+        return TypeAst(self.pos, self.namespace, self.types[:-1] + [self.types[-1].without_generics()])
 
     def contains_generic(self, generic_name: TypeAst) -> bool:
         from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
@@ -148,7 +144,8 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
             # Otherwise, iterate over the type parts and substitute their generic arguments.
             else:
                 for type_part in type_parts:
-                    type_part.generic_argument_group.type_arguments.for_each(lambda g: g.value.sub_generics(generic_arguments))
+                    for g in type_part.generic_argument_group.type_arguments:
+                        g.value.sub_generics(generic_arguments)
 
         # Return the modified type.
         return self

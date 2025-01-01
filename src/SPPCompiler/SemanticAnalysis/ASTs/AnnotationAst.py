@@ -42,7 +42,7 @@ class AnnotationAst(Ast, CompilerStages):
 
     def __deepcopy__(self, memodict={}):
         # Create a deep copy of the AST.
-        return AnnotationAst(self.pos, copy.deepcopy(self.tok_at), copy.deepcopy(self.name), _ctx=self._ctx)
+        return AnnotationAst(self.pos, self.tok_at, self.name, _ctx=self._ctx)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

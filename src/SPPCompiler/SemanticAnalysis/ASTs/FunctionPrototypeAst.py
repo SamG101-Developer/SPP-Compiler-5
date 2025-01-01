@@ -104,7 +104,8 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
             self.function_parameter_group.get_self().type = context.name
 
         # Pre-process the annotations.
-        self.annotations.for_each(lambda a: a.pre_process(self))
+        for a in self.annotations:
+            a.pre_process(self)
 
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
         mock_class_name = TypeAst.from_function_identifier(self.name)
@@ -127,7 +128,8 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         context.body.members.remove(self)
 
         # Pre-process the annotations of this function's duplicate.
-        function_ast.annotations.for_each(lambda a: a.pre_process(function_ast))
+        for a in function_ast.annotations:
+            a.pre_process(function_ast)
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
 
@@ -136,7 +138,8 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         super().generate_symbols(scope_manager)
 
         # Generate the generic parameters and attributes of the function.
-        self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))
+        for p in self.generic_parameter_group.parameters:
+            p.generate_symbols(scope_manager)
 
         # Move out of the function scope.
         scope_manager.move_out_of_current_scope()
@@ -175,14 +178,16 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         self.return_type.analyse_semantics(scope_manager)
-        self.function_parameter_group.parameters.map_attr("type").for_each(lambda t: t.analyse_semantics(scope_manager))
+        for t in self.function_parameter_group.parameters.map_attr("type"):
+            t.analyse_semantics(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         scope_manager.move_to_next_scope()
 
         # Analyse the semantics of everything except the body (subclasses handle this).
-        self.annotations.for_each(lambda a: a.analyse_semantics(scope_manager, **kwargs))
+        for a in self.annotations:
+            a.analyse_semantics(scope_manager, **kwargs)
         self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
         self.function_parameter_group.analyse_semantics(scope_manager, **kwargs)
         self.where_block.analyse_semantics(scope_manager, **kwargs)
@@ -230,9 +235,9 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
     def __deepcopy__(self, memodict=None) -> FunctionPrototypeAst:
         # Copy all attributes except for "_protected" attributes, which are re-linked.
         return type(self)(
-            copy.deepcopy(self.pos), copy.deepcopy(self.annotations), copy.deepcopy(self.tok_fun),
+            copy.deepcopy(self.pos), self.annotations, self.tok_fun,
             copy.deepcopy(self.name), copy.deepcopy(self.generic_parameter_group),
-            copy.deepcopy(self.function_parameter_group), copy.deepcopy(self.tok_arrow),
+            copy.deepcopy(self.function_parameter_group), self.tok_arrow,
             copy.deepcopy(self.return_type), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
             _ctx=self._ctx, _orig=self._orig, _scope=None, _abstract=self._abstract, _virtual=self._virtual,
             _non_implemented=self._non_implemented)

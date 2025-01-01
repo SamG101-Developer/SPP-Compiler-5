@@ -31,7 +31,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
 
     def __deepcopy__(self, memodict={}):
         return ClassAttributeAst(
-            self.pos, copy.deepcopy(self.annotations), copy.deepcopy(self.name), copy.deepcopy(self.tok_colon),
+            self.pos, self.annotations, copy.deepcopy(self.name), self.tok_colon,
             copy.deepcopy(self.type), _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
 
     @ast_printer_method
@@ -48,7 +48,8 @@ class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
         super().pre_process(context)
 
         # Pre-process the annotations of this attribute.
-        self.annotations.for_each(lambda a: a.pre_process(self))
+        for a in self.annotations:
+            a.pre_process(self)
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         # Create a variable symbol for this attribute in the current scope (class).
@@ -67,7 +68,8 @@ class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Analyse the semantics of the annotations and the type of the attribute.
-        self.annotations.for_each(lambda a: a.analyse_semantics(scope_manager, **kwargs))
+        for a in self.annotations:
+            a.analyse_semantics(scope_manager, **kwargs)
 
         # Ensure the attribute type is not void.
         void_type = CommonTypes.Void(self.pos)

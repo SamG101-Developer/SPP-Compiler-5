@@ -32,7 +32,7 @@ class GenericArgumentGroupAst(Ast, Default, CompilerStages):
 
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
-        return isinstance(other, GenericArgumentGroupAst) and self.arguments == other.arguments
+        return self.arguments == other.arguments
 
     def __getitem__(self, item: str) -> Optional[GenericArgumentAst]:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
@@ -102,7 +102,8 @@ class GenericArgumentGroupAst(Ast, Default, CompilerStages):
             raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "generic argument")
 
         # Analyse the arguments.
-        self.arguments.for_each(lambda arg: arg.analyse_semantics(scope_manager, **kwargs))
+        for a in self.arguments:
+            a.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["GenericArgumentGroupAst"]

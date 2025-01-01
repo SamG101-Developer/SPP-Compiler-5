@@ -126,8 +126,8 @@ class AstMemoryHandler:
 
         # For tuple and array literals, analyse each element.
         if isinstance(value_ast, (TupleLiteralAst, ArrayLiteralNElementAst)):
-            function_call = lambda v: AstMemoryHandler.enforce_memory_integrity(v, move_ast, scope_manager, update_memory_info=update_memory_info)
-            value_ast.elements.for_each(function_call)
+            for e in value_ast.elements:
+                AstMemoryHandler.enforce_memory_integrity(e, move_ast, scope_manager, update_memory_info=update_memory_info)
             return
 
         # Get the symbol representing the expression being moved.

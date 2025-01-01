@@ -69,7 +69,8 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         return InferredType.from_type(void_type)
 
     def pre_process(self, context: PreProcessingContext) -> None:
-        self.annotations.for_each(lambda a: a.pre_process(self))
+        for a in self.annotations:
+            a.pre_process(self)
         super().pre_process(context)
 
     def generate_symbols(self, scope_manager: ScopeManager, visibility: AstVisibility = None) -> None:

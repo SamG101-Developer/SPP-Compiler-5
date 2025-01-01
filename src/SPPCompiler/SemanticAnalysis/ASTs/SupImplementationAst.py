@@ -45,28 +45,28 @@ class SupImplementationAst(Ast, Default, CompilerStages):
         return SupImplementationAst(-1, TokenAst.default(TokenType.TkBraceL), members or Seq(), TokenAst.default(TokenType.TkBraceR))
 
     def pre_process(self, context: PreProcessingContext) -> None:
-        self.members.for_each(lambda member: member.pre_process(context))
+        for member in self.members: member.pre_process(context)
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
-        self.members.for_each(lambda member: member.generate_symbols(scope_manager))
+        for member in self.members: member.generate_symbols(scope_manager)
 
     def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
-        self.members.for_each(lambda member: member.alias_types(scope_manager, **kwargs))
+        for member in self.members: member.alias_types(scope_manager, **kwargs)
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        self.members.for_each(lambda member: member.load_sup_scopes(scope_manager))
+        for member in self.members: member.load_sup_scopes(scope_manager)
 
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        self.members.for_each(lambda member: member.inject_sup_scopes(scope_manager))
+        for member in self.members: member.inject_sup_scopes(scope_manager)
 
     def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
-        self.members.for_each(lambda member: member.alias_types_regeneration(scope_manager))
+        for member in self.members: member.alias_types_regeneration(scope_manager)
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
-        self.members.for_each(lambda member: member.regenerate_generic_types(scope_manager))
+        for member in self.members: member.regenerate_generic_types(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
+        for member in self.members: member.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["SupImplementationAst"]

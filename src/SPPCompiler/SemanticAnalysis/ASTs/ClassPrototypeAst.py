@@ -51,7 +51,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
     def __deepcopy__(self, memodict={}):
         from SPPCompiler.SemanticAnalysis import IdentifierAst
         return ClassPrototypeAst(
-            self.pos, copy.deepcopy(self.annotations), copy.deepcopy(self.tok_cls), IdentifierAst.from_type(self.name),
+            self.pos, copy.copy(self.annotations), self.tok_cls, IdentifierAst.from_type(self.name),
             copy.deepcopy(self.generic_parameter_group), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
             _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
 
@@ -88,7 +88,8 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         super().pre_process(context)
 
         # Pre-process the annotations and implementation of this class.
-        self.annotations.for_each(lambda a: a.pre_process(self))
+        for a in self.annotations:
+            a.pre_process(self)
         self.body.pre_process(self)
 
     def generate_symbols(self, scope_manager: ScopeManager, is_alias: bool = False) -> None:
@@ -100,7 +101,8 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         self._generate_symbols(scope_manager)
 
         # Generate the generic parameters and attributes of the class.
-        self.generic_parameter_group.parameters.for_each(lambda p: p.generate_symbols(scope_manager))
+        for p in self.generic_parameter_group.parameters:
+            p.generate_symbols(scope_manager)
         self.body.generate_symbols(scope_manager)
 
         # Move out of the type scope.

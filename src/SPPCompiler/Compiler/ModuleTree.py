@@ -36,7 +36,8 @@ class ModuleTree:
 
         # Merge the source and version control system modules.
         self._modules = src_modules + vcs_modules
-        self._modules.for_each(lambda m: setattr(m, "path", m.path.replace(os.getcwd(), "", 1)))
+        for m in self._modules:
+            setattr(m, "path", m.path.replace(os.getcwd(), "", 1))
 
     def __iter__(self) -> Iterable[Module]:
         # Iterate over the modules.

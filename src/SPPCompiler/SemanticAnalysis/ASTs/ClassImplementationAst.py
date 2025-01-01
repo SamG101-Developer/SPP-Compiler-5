@@ -27,8 +27,8 @@ class ClassImplementationAst(Ast, Default, CompilerStages):
 
     def __deepcopy__(self, memodict={}):
         return ClassImplementationAst(
-            self.pos, copy.deepcopy(self.tok_left_brace), copy.deepcopy(self.members),
-            copy.deepcopy(self.tok_right_brace), _ctx=self._ctx, _scope=self._scope)
+            self.pos, self.tok_left_brace, copy.deepcopy(self.members),
+            self.tok_right_brace, _ctx=self._ctx, _scope=self._scope)
 
     @staticmethod
     def default() -> ClassImplementationAst:
@@ -53,29 +53,30 @@ class ClassImplementationAst(Ast, Default, CompilerStages):
 
     def pre_process(self, context: PreProcessingContext) -> None:
         # Pre-process the members.
-        self.members.for_each(lambda m: m.pre_process(context))
+        for m in self.members: m.pre_process(context)
 
     def generate_symbols(self, scope_manager: ScopeManager) -> None:
         # Generate the symbols for the members.
-        self.members.for_each(lambda m: m.generate_symbols(scope_manager))
+        for m in self.members: m.generate_symbols(scope_manager)
 
     def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
         # Load the super scopes for the members.
-        self.members.for_each(lambda m: m.load_sup_scopes(scope_manager))
+        for m in self.members: m.load_sup_scopes(scope_manager)
 
     def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
         # Inject the super scopes for the members.
-        self.members.for_each(lambda m: m.inject_sup_scopes(scope_manager))
+        for m in self.members: m.inject_sup_scopes(scope_manager)
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         # Regenerate the generic types for the members.
-        self.members.for_each(lambda m: m.regenerate_generic_types(scope_manager))
+        for m in self.members: m.regenerate_generic_types(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Analyse the semantics of the members.
-        self.members.for_each(lambda m: m.analyse_semantics(scope_manager, **kwargs))
+        for m in self.members:
+            m.analyse_semantics(scope_manager, **kwargs)
 
         # Check there are no duplicate attribute names.
         attribute_names = self.members.map_attr("name")

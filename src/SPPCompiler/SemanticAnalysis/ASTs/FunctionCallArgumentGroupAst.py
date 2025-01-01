@@ -94,7 +94,8 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
                     self.arguments.insert(i, new_argument)
 
         # Analyse the arguments.
-        self.arguments.for_each(lambda a: a.analyse_semantics(scope_manager, **kwargs))
+        for a in self.arguments:
+            a.analyse_semantics(scope_manager, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, target: FunctionPrototypeAst = None, is_async: TokenAst = None, **kwargs) -> None:
         # Code that is run after the overload is selected.
