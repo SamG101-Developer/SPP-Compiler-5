@@ -125,9 +125,11 @@ class AstTypeManagement:
 
     @staticmethod
     def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: GenericArgumentGroupAst) -> Seq[Scope]:
-        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst
+        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst, GenericTypeArgumentNamedAst
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
         from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
 
         old_scopes = base_scope._direct_sup_scopes
         new_scopes = Seq()
@@ -158,8 +160,13 @@ class AstTypeManagement:
                 new_scope._symbol_table = copy.copy(scope._symbol_table)
                 new_scope._non_generic_scope = scope
 
-                for generic_argument in generic_arguments.arguments:
-                    generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
+                # Todo: can remove the "if-continue" if default generaic arguments are brought in here too.
+                for generic_parameter in scope._ast.generic_parameter_group.get_type_params():
+                    mock_generic_parameter = scope._ast.name.get_generic_parameter_for_argument(generic_parameter.name)
+                    mock_generic_value = generic_arguments.arguments.find(lambda a: a.name == mock_generic_parameter)
+                    if not mock_generic_value: continue
+                    new_generic_argument = GenericTypeArgumentNamedAst(-1, generic_parameter.name.types[-1], TokenAst.default(TokenType.TkAssign), mock_generic_value.value)
+                    generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, new_generic_argument)
                     new_scope.add_symbol(generic_symbol)
 
             # Add the new scope to the list of new scopes.
