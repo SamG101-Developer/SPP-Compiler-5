@@ -92,9 +92,9 @@ class Scope:
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
 
-    def rem_symbol(self, symbol: Symbol) -> None:
+    def rem_symbol(self, symbol_name: IdentifierAst) -> None:
         # Remove a symbol from the scope.
-        self._symbol_table.rem(symbol)
+        self._symbol_table.rem(symbol_name)
 
     def all_symbols(self, exclusive: bool = False) -> Seq[Symbol]:
         # Get all the symbols in the scope.

@@ -74,7 +74,7 @@ class ProgramAst(Ast, CompilerStages):
         for scope in scope_manager:
             for symbol in scope.all_symbols(exclusive=True).filter_to_type(TypeSymbol, AliasSymbol).filter(lambda t: not t.is_generic):
                 if symbol.name.generic_argument_group.arguments and symbol.scope._non_generic_scope is not symbol.scope:
-                    scope.rem_symbol(symbol)
+                    scope.rem_symbol(symbol.name)
         scope_manager.reset()
 
     def alias_types_regeneration(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:

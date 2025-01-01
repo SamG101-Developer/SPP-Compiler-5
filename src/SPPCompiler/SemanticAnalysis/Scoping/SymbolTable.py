@@ -19,9 +19,9 @@ class SymbolTable:
         # Add a symbol to the table.
         self._table[symbol.name] = symbol
 
-    def rem(self, symbol: Symbol) -> None:
-        # Remove a symbol from the table by symbol not symbol name.
-        self._table = {k: v for k, v in self._table.items() if v != symbol}
+    def rem(self, symbol_name: IdentifierAst) -> None:
+        # Remove a symbol from the table by symbol name.
+        del self._table[symbol_name]
 
     def get(self, name: IdentifierAst | GenericIdentifierAst, default=None) -> Symbol:
         # Get a symbol from the table.
