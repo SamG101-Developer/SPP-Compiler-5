@@ -124,7 +124,11 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
 
         # Check if there is a generic name in this type (at any nested argument level)
         for generic in custom_iterate(self):
-            if generic.value == generic_argument: return generic.name
+            if generic.value == generic_argument:
+                if not hasattr(generic, "name"):
+                    return generic_argument
+                else:
+                    return generic.name
         return None
 
     def sub_generics(self, generic_arguments: Seq[GenericArgumentAst]) -> TypeAst:
