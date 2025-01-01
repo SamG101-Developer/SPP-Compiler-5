@@ -55,9 +55,11 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         self.body.pre_process(self)
 
     def generate_symbols(self, scope_manager: ScopeManager, name_override: str = None) -> None:
+        # Create a new scope for the superimposition.
         scope_manager.create_and_move_into_new_scope(name_override or f"<sup:{self.name}:{self.pos}>", self)
         super().generate_symbols(scope_manager)
 
+        # Generate the symbols for the generic parameter group, and the self type.
         for p in self.generic_parameter_group.parameters:
             p.generate_symbols(scope_manager)
         self.body.generate_symbols(scope_manager)
