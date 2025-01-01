@@ -74,6 +74,11 @@ class GenericParameterGroupAst(Ast, Default, CompilerStages):
         from SPPCompiler.SemanticAnalysis import GenericCompParameterVariadicAst, GenericTypeParameterVariadicAst
         return self.parameters.filter_to_type(GenericCompParameterVariadicAst, GenericTypeParameterVariadicAst)
 
+    def get_type_params(self) -> Seq[GenericTypeParameterAst]:
+        # Get all the type generic parameters.
+        from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericTypeParameterAst
+        return self.parameters.filter_to_type(*GenericTypeParameterAst.__value__.__args__)
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
