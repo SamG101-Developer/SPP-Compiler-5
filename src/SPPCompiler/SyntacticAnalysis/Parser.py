@@ -1400,9 +1400,10 @@ class Parser:
     @parser_rule
     def parse_type_single(self) -> TypeAst:
         p1 = self.parse_type_single_with_namespace()
-        p2 = self.parse_type_single_without_namespace()
-        p3 = (p1 | p2).parse_once()
-        return p3
+        p2 = self.parse_type_single_with_self()
+        p3 = self.parse_type_single_without_namespace_or_self()
+        p4 = (p1 | p2 | p3).parse_once()
+        return p4
 
     @parser_rule
     def parse_type_single_with_namespace(self) -> TypeAst:
@@ -1413,10 +1414,29 @@ class Parser:
         return TypeAst(c1, p1, p3)
 
     @parser_rule
-    def parse_type_single_without_namespace(self) -> TypeAst:
+    def parse_type_single_with_self(self) -> TypeAst:
+        c1 = self.current_pos()
+        p1 = self.parse_self_type_keyword().parse_once()
+        p2 = self.parse_types_after_self().parse_optional() or Seq()
+        return TypeAst(c1, Seq(), Seq([p1]) + p2)
+
+    @parser_rule
+    def parse_types_after_self(self) -> Seq[GenericIdentifierAst]:
+        p1 = self.parse_token(TokenType.TkDblColon)
+        p2 = self.parse_generic_identifier().parse_zero_or_more(TokenType.TkDblColon)
+        return p2
+
+    @parser_rule
+    def parse_type_single_without_namespace_or_self(self) -> TypeAst:
         c1 = self.current_pos()
         p1 = self.parse_generic_identifier().parse_one_or_more(TokenType.TkDblColon)
         return TypeAst(c1, Seq(), p1)
+
+    @parser_rule
+    def parse_self_type_keyword(self) -> GenericIdentifierAst:
+        c1 = self.current_pos()
+        p1 = self.parse_token(TokenType.KwSelfType).parse_once()
+        return GenericIdentifierAst(c1, p1.token.token_metadata, None)
 
     @parser_rule
     def parse_type_tuple(self) -> TypeAst:
