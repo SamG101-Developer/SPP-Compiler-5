@@ -49,7 +49,8 @@ class TestObjectInitializerArgumentGroupAst(CustomTestCase):
         }
 
         fun f() -> std::Void {
-            let foo = Foo(else=false)
+            let b = true
+            let foo = Foo(..b)
         }
         """
 
@@ -87,7 +88,7 @@ class TestObjectInitializerArgumentGroupAst(CustomTestCase):
         }
 
         fun f(d: Foo) -> std::Void {
-            let foo = Foo(else=d)
+            let foo = Foo(..d)
         }
         """
 

@@ -9,11 +9,13 @@ from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
+    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class ObjectInitializerArgumentUnnamedAst(Ast, TypeInferrable, CompilerStages):
+    is_default: TokenAst
     name: IdentifierAst
 
     @ast_printer_method

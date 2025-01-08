@@ -55,19 +55,12 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
         return argument.value if isinstance(argument, ObjectInitializerArgumentNamedAst) else argument.name
 
     def get_def_args(self) -> Seq[ObjectInitializerArgumentNamedAst]:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        from SPPCompiler.SemanticAnalysis import ObjectInitializerArgumentNamedAst, TokenAst
-
-        # Filter the arguments to token arguments that are "else=".
-        named_args = self.arguments.filter_to_type(ObjectInitializerArgumentNamedAst)
-        token_args = named_args.filter(lambda arg: isinstance(arg.name, TokenAst))
-        return token_args.filter(lambda arg: arg.name.token.token_type == TokenType.KwElse)
+        from SPPCompiler.SemanticAnalysis import ObjectInitializerArgumentUnnamedAst
+        return self.arguments.filter_to_type(ObjectInitializerArgumentUnnamedAst).filter(lambda a: a.is_default is not None)
 
     def get_val_args(self) -> Seq[ObjectInitializerArgumentAst]:
-        from SPPCompiler.SemanticAnalysis import TokenAst
-
-        # Filter the arguments to non-token arguments.
-        return self.arguments.filter(lambda arg: not isinstance(arg.name, TokenAst))
+        from SPPCompiler.SemanticAnalysis import ObjectInitializerArgumentUnnamedAst
+        return self.arguments.filter(lambda a: not isinstance(a, ObjectInitializerArgumentUnnamedAst) or a.is_default is None)
 
     def pre_analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
@@ -117,10 +110,10 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
                 raise SemanticErrors.TypeMismatchError().add(attribute, attribute_type, argument, argument_type)
 
         # Type check the default argument if it exists.
-        def_argument_type = def_argument.value.infer_type(scope_manager, **kwargs) if def_argument else None
+        def_argument_type = def_argument.name.infer_type(scope_manager, **kwargs) if def_argument else None
         target_def_type = InferredType.from_type(class_type)
         if def_argument and not def_argument_type.symbolic_eq(target_def_type, class_symbol.scope, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(class_type, target_def_type, def_argument.value, def_argument_type)
+            raise SemanticErrors.TypeMismatchError().add(class_type, target_def_type, def_argument.name, def_argument_type)
 
 
 __all__ = ["ObjectInitializerArgumentGroupAst"]

@@ -1315,23 +1315,17 @@ class Parser:
     @parser_rule
     def parse_object_initializer_argument_unnamed(self) -> ObjectInitializerArgumentUnnamedAst:
         c1 = self.current_pos()
-        p1 = self.parse_identifier().parse_once()
-        return ObjectInitializerArgumentUnnamedAst(c1, p1)
+        p1 = self.parse_token(TokenType.TkVariadic).parse_optional()
+        p2 = self.parse_identifier().parse_once()
+        return ObjectInitializerArgumentUnnamedAst(c1, p1, p2)
 
     @parser_rule
     def parse_object_initializer_argument_named(self) -> ObjectInitializerArgumentNamedAst:
         c1 = self.current_pos()
-        p1 = self.parse_object_initializer_argument_named_key().parse_once()
+        p1 = self.parse_identifier().parse_once()
         p2 = self.parse_token(TokenType.TkAssign).parse_once()
         p3 = self.parse_expression().parse_once()
         return ObjectInitializerArgumentNamedAst(c1, p1, p2, p3)
-
-    @parser_rule
-    def parse_object_initializer_argument_named_key(self) -> IdentifierAst | TokenAst:
-        p1 = self.parse_identifier()
-        p2 = self.parse_token(TokenType.KwElse)
-        p3 = (p1 | p2).parse_once()
-        return p3
 
     # ===== LAMBDAS =====
 
