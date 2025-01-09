@@ -131,3 +131,24 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
                 is Point1(y as y_value, ..) { let yyy = y_value }
         }
         """
+
+    @should_pass_compilation()
+    def test_valid_pattern_variant_destructure_object_nested_1(self):
+        """
+        cls Point {
+            x: std::BigInt
+            y: std::BigInt
+        }
+
+        cls Line {
+            a: Point
+            b: Point
+        }
+
+        fun f(l: Line) -> std::Void {
+            case l of
+                is Line(a=Point(x as x1, y as y1), b=Point(x as x2, y as y2)) and x1 == 10 { }
+                is Line(a=Point(x as x1, y as y1), b=Point(x as x2, y as y2)) and x1 == 20 { }
+                is Line(a=Point(x as x1, y as y1), b=Point(x as x2, y as y2)) and x1 == 30 { }
+        }
+        """
