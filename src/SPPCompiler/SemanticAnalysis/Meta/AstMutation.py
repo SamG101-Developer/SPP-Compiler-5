@@ -8,6 +8,6 @@ if TYPE_CHECKING:
 class AstMutation:
     @staticmethod
     def inject_code[T](code: str, parsing_function: Callable[..., ParserRuleHandler[T]]) -> T:
-        from SPPCompiler.LexicalAnalysis.Lexer import Lexer
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
-        return parsing_function(Parser(Lexer(code + "\n").lex(code_injection=True))).parse_once()  # Todo: parse an <EOF> after
+        from SPPCompiler.LexicalAnalysis.Lexer import SppLexer
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+        return parsing_function(SppParser(SppLexer(code + "\n").lex())).parse_once()  # Todo: parse an <EOF> after

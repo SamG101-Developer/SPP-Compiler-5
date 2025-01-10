@@ -35,11 +35,11 @@ class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
 
     @staticmethod
     def from_variable_and_value(variable: LocalVariableAst, value: ExpressionAst) -> LetStatementInitializedAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
         return LetStatementInitializedAst(
-            variable.pos, TokenAst.default(TokenType.KwLet), variable,
-            TokenAst.default(TokenType.TkAssign, pos=variable.pos), value)
+            variable.pos, TokenAst.default(SppTokenType.KwLet), variable,
+            TokenAst.default(SppTokenType.TkAssign, pos=variable.pos), value)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".

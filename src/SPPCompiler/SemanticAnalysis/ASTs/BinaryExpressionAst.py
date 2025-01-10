@@ -35,10 +35,10 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 
         # Comparisons using the "is" keyword are always boolean.
-        if self.op.token.token_type == TokenType.KwIs:
+        if self.op.token.token_type == SppTokenType.KwIs:
             bool_type = CommonTypes.Bool(self.pos)
             return InferredType.from_type(bool_type)
 
@@ -48,13 +48,13 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
         return self._as_func.infer_type(scope_manager, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
 
         # The TypeAst cannot be used as an expression for a binary operation.
         if isinstance(self.lhs, TypeAst):
@@ -67,7 +67,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
         AstMemoryHandler.enforce_memory_integrity(self.lhs, self.op, scope_manager, update_memory_info=False)
 
         # If the RHS is a destructure, then analysis stops here (after analysing the conversion).
-        if self.op.token.token_type == TokenType.KwIs:
+        if self.op.token.token_type == SppTokenType.KwIs:
             n = scope_manager.current_scope.children.length
             self._as_func = AstBinUtils.convert_to_function_call(self)
             self._as_func.analyse_semantics(scope_manager, **kwargs)
@@ -98,7 +98,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
             # Get the parts of the tuple.
             new_asts = Seq()
             for i in range(rhs_num_elements):
-                new_ast = AstMutation.inject_code(f"{self.rhs}.{i}", Parser.parse_postfix_expression)
+                new_ast = AstMutation.inject_code(f"{self.rhs}.{i}", SppParser.parse_postfix_expression)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
                 new_asts.append(new_ast)
 

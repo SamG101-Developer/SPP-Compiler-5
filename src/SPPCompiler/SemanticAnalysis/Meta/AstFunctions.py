@@ -78,10 +78,10 @@ class AstFunctions:
             -> Tuple[PostfixExpressionAst, PostfixExpressionOperatorFunctionCallAst]:
 
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Create an argument for self, which is the object being called (convention tested later).
-        self_argument = AstMutation.inject_code(f"{lhs.lhs}", Parser.parse_function_call_argument_unnamed)
+        self_argument = AstMutation.inject_code(f"{lhs.lhs}", SppParser.parse_function_call_argument_unnamed)
         # self_argument.analyse_semantics(scope_manager, **kwargs)
         function_arguments = fn.function_argument_group.arguments.copy()
         function_arguments.insert(0, self_argument)
@@ -89,11 +89,11 @@ class AstFunctions:
         # Create a new function call with the object as the first argument.
         new_function_access = AstMutation.inject_code(
             f"{function_owner_type}::{function_name}",
-            Parser.parse_postfix_expression)
+            SppParser.parse_postfix_expression)
 
         new_function_call = AstMutation.inject_code(
             f"{fn.generic_argument_group}({function_arguments.join(", ")}){fn.fold_token or ""}",
-            Parser.parse_postfix_op_function_call)
+            SppParser.parse_postfix_op_function_call)
 
         new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(scope_manager)
 
@@ -181,7 +181,7 @@ class AstFunctions:
         from SPPCompiler.SemanticAnalysis import FunctionParameterVariadicAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Get the argument names and parameter names, and check for variadic parameters.
         argument_names = arguments.filter_to_type(FunctionCallArgumentNamedAst).map_attr("name")
@@ -199,7 +199,7 @@ class AstFunctions:
             # The variadic parameter requires a tuple of the remaining arguments.
             if parameter_names.length == 1 and is_variadic:
                 named_argument = f"{parameter_names.pop(0)}=({arguments[i:].join(", ")})"
-                named_argument = AstMutation.inject_code(named_argument, Parser.parse_function_call_argument_named)
+                named_argument = AstMutation.inject_code(named_argument, SppParser.parse_function_call_argument_named)
                 arguments.replace(unnamed_argument, named_argument, 1)
                 arguments.pop_n(-1, arguments.length - i - 1)
                 break
@@ -208,7 +208,7 @@ class AstFunctions:
             else:
                 parameter_name = parameter_names.pop(0)
                 named_argument = f"${parameter_name}={unnamed_argument}"
-                named_argument = AstMutation.inject_code(named_argument, Parser.parse_function_call_argument_named)
+                named_argument = AstMutation.inject_code(named_argument, SppParser.parse_function_call_argument_named)
                 named_argument.name = parameter_name
                 named_argument._type_from_self = unnamed_argument._type_from_self
                 arguments.replace(unnamed_argument, named_argument, 1)
@@ -221,7 +221,7 @@ class AstFunctions:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Special case for tuples to prevent infinite-recursion.
         if owner_type and owner_type.without_generics() == CommonTypes.Tup().without_generics():
@@ -239,8 +239,8 @@ class AstFunctions:
 
         # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
         GenericArgumentCTor = {
-            GenericCompArgumentUnnamedAst: Parser.parse_generic_comp_argument_named,
-            GenericTypeArgumentUnnamedAst: Parser.parse_generic_type_argument_named}
+            GenericCompArgumentUnnamedAst: SppParser.parse_generic_comp_argument_named,
+            GenericTypeArgumentUnnamedAst: SppParser.parse_generic_type_argument_named}
 
         # Name all the unnamed arguments with leftover parameter names.
         for i, unnamed_argument in arguments.filter_to_type(*GenericArgumentUnnamedAst.__value__.__args__).enumerate():
@@ -291,7 +291,7 @@ class AstFunctions:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Special case for tuples to prevent infinite-recursion.
         if isinstance(owner, TypeAst) and owner.without_generics() == CommonTypes.Tup().without_generics():
@@ -342,7 +342,8 @@ class AstFunctions:
 
         # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
         GenericArgumentCTor = defaultdict(
-            lambda: Parser.parse_generic_comp_argument_named, {TypeAst: Parser.parse_generic_type_argument_named})
+            lambda: SppParser.parse_generic_comp_argument_named,
+            {TypeAst: SppParser.parse_generic_type_argument_named})
 
         # Create the inferred generic arguments.
         inferred_generic_arguments = {k: v[0] for k, v in inferred_generic_arguments.items()}

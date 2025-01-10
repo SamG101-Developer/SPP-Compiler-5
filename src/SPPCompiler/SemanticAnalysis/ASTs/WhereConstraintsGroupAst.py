@@ -32,9 +32,9 @@ class WhereConstraintsGroupAst(Ast, Default):
 
     @staticmethod
     def default() -> WhereConstraintsGroupAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return WhereConstraintsGroupAst(-1, TokenAst.default(TokenType.TkBrackL), Seq(), TokenAst.default(TokenType.TkBrackR))
+        return WhereConstraintsGroupAst(-1, TokenAst.default(SppTokenType.TkBrackL), Seq(), TokenAst.default(SppTokenType.TkBrackR))
 
 
 __all__ = ["WhereConstraintsGroupAst"]

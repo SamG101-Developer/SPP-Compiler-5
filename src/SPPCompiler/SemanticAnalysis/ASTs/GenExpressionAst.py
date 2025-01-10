@@ -47,15 +47,15 @@ class GenExpressionAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(send_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import ConventionMovAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Check the enclosing function is a coroutine and not a subroutine.
-        if kwargs["function_type"].token.token_type != TokenType.KwCor:
+        if kwargs["function_type"].token.token_type != SppTokenType.KwCor:
             raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(kwargs["function_type"], self.tok_gen)
         self._func_ret_type = kwargs["function_ret_type"]
 
@@ -86,7 +86,7 @@ class GenExpressionAst(Ast, TypeInferrable, CompilerStages):
             raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"], expected_type, self.expression, expression_type)
 
         # Apply the function argument law of exclusivity checks to the expression.
-        ast = AstMutation.inject_code(f"({self.expression})", Parser.parse_function_call_arguments)
+        ast = AstMutation.inject_code(f"({self.expression})", SppParser.parse_function_call_arguments)
         ast.analyse_semantics(scope_manager, **kwargs)
 
 

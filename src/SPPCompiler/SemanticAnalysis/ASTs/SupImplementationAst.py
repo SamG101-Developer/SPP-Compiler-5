@@ -40,9 +40,9 @@ class SupImplementationAst(Ast, Default, CompilerStages):
     @staticmethod
     def default(members: Seq[SupMemberAst] = None) -> SupImplementationAst:
         # Create a default class implementation AST.
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return SupImplementationAst(-1, TokenAst.default(TokenType.TkBraceL), members or Seq(), TokenAst.default(TokenType.TkBraceR))
+        return SupImplementationAst(-1, TokenAst.default(SppTokenType.TkBraceL), members or Seq(), TokenAst.default(SppTokenType.TkBraceR))
 
     def pre_process(self, context: PreProcessingContext) -> None:
         for member in self.members: member.pre_process(context)

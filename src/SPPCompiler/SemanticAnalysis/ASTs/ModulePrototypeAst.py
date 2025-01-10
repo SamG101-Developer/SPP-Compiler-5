@@ -10,15 +10,12 @@ from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PrePr
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
     from SPPCompiler.SemanticAnalysis.ASTs.ModuleImplementationAst import ModuleImplementationAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class ModulePrototypeAst(Ast, CompilerStages):
     body: ModuleImplementationAst
-    tok_eof: TokenAst
-
     _name: str = field(init=False, default="")
 
     @ast_printer_method

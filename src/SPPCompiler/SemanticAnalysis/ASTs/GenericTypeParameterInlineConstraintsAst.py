@@ -35,9 +35,9 @@ class GenericTypeParameterInlineConstraintsAst(Ast, Default, CompilerStages):
 
     @staticmethod
     def default() -> GenericTypeParameterInlineConstraintsAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
-        return GenericTypeParameterInlineConstraintsAst(-1, TokenAst.default(TokenType.TkColon), Seq())
+        return GenericTypeParameterInlineConstraintsAst(-1, TokenAst.default(SppTokenType.TkColon), Seq())
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors

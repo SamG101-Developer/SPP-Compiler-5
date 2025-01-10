@@ -1,14 +1,14 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from glob import glob
-from typing import Iterable, Optional, TYPE_CHECKING
+from typing import Iterable, List, Optional, TYPE_CHECKING
 import os
 
-from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
+from SParLex.Utils.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+    from SPPCompiler.LexicalAnalysis.Token import Token
     from SPPCompiler.SemanticAnalysis.ASTs.ModulePrototypeAst import ModulePrototypeAst
 
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class Module:
     path: str
     code: str = field(default="")
-    token_stream: Seq[TokenType] = field(default_factory=Seq)
+    token_stream: List[Token] = field(default_factory=Seq)
     module_ast: Optional[ModulePrototypeAst] = field(default=None)
     error_formatter: Optional[ErrorFormatter] = field(default=None)
 

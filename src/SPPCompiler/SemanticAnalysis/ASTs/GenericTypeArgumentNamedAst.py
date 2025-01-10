@@ -40,16 +40,16 @@ class GenericTypeArgumentNamedAst(Ast, Ordered, CompilerStages):
 
     @staticmethod
     def from_name_value(name: TypeAst, value: TypeAst) -> GenericTypeArgumentNamedAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
-        return GenericTypeArgumentNamedAst(-1, IdentifierAst.from_type(name), TokenAst.default(TokenType.TkAssign), value)
+        return GenericTypeArgumentNamedAst(-1, IdentifierAst.from_type(name), TokenAst.default(SppTokenType.TkAssign), value)
 
     @staticmethod
     def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
         value = symbol.scope.type_symbol.fq_name if symbol.scope else symbol.scope
-        return GenericTypeArgumentNamedAst(-1, IdentifierAst.from_generic_identifier(symbol.name), TokenAst.default(TokenType.TkAssign), value)
+        return GenericTypeArgumentNamedAst(-1, IdentifierAst.from_generic_identifier(symbol.name), TokenAst.default(SppTokenType.TkAssign), value)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the name and value of the generic type argument.

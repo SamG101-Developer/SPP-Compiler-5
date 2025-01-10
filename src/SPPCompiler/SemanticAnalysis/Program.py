@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import json
 import os.path
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
 from SPPCompiler.Utils.ProgressBar import ProgressBar
@@ -18,8 +16,8 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ProgramAst(Ast, CompilerStages):
-    modules: Seq[ModulePrototypeAst]
+class Program(CompilerStages):
+    modules: Seq[ModulePrototypeAst] = field(default_factory=Seq, init=False, repr=False)
     _current: Optional[ModulePrototypeAst] = field(default=None, init=False, repr=False)
 
     @ast_printer_method
@@ -126,4 +124,4 @@ class ProgramAst(Ast, CompilerStages):
                 namespace_symbol.scope._ast = module.module_ast
 
 
-__all__ = ["ProgramAst"]
+__all__ = ["Program"]

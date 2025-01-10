@@ -48,9 +48,9 @@ class FunctionParameterGroupAst(Ast, Default, CompilerStages):
 
     @staticmethod
     def default(parameters: Seq[FunctionParameterAst] = None) -> FunctionParameterGroupAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return FunctionParameterGroupAst(-1, TokenAst.default(TokenType.TkParenL), parameters or Seq(), TokenAst.default(TokenType.TkParenR))
+        return FunctionParameterGroupAst(-1, TokenAst.default(SppTokenType.TkParenL), parameters or Seq(), TokenAst.default(SppTokenType.TkParenR))
 
     def get_self(self) -> Optional[FunctionParameterSelfAst]:
         # Get the "self" function parameter (if it exists).

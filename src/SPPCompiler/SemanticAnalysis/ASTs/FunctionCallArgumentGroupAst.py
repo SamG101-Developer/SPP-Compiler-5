@@ -46,9 +46,9 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
 
     @staticmethod
     def default(arguments: Seq[FunctionCallArgumentAst] = None) -> FunctionCallArgumentGroupAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return FunctionCallArgumentGroupAst(-1, TokenAst.default(TokenType.TkParenL), arguments or Seq(), TokenAst.default(TokenType.TkParenR))
+        return FunctionCallArgumentGroupAst(-1, TokenAst.default(SppTokenType.TkParenL), arguments or Seq(), TokenAst.default(SppTokenType.TkParenR))
 
     def get_named(self) -> Seq[FunctionCallArgumentNamedAst]:
         # Get all the named function call arguments.
@@ -66,7 +66,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Check there are no duplicate argument names.
         argument_names = self.arguments.filter_to_type(FunctionCallArgumentNamedAst).map(lambda a: a.name)
@@ -89,7 +89,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
                 # Replace the tuple-expansion argument with the expanded arguments
                 self.arguments.pop(i)
                 for j in range(tuple_argument_type.types[-1].generic_argument_group.arguments.length - 1, -1, -1):
-                    new_argument = AstMutation.inject_code(f"{argument.value}.{j}", Parser.parse_function_call_argument_unnamed)
+                    new_argument = AstMutation.inject_code(f"{argument.value}.{j}", SppParser.parse_function_call_argument_unnamed)
                     new_argument.convention = argument.convention
                     self.arguments.insert(i, new_argument)
 

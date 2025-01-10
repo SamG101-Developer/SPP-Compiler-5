@@ -64,7 +64,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered, CompilerStages):
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default.
         if isinstance(self.default, (TokenAst, TypeAst)):

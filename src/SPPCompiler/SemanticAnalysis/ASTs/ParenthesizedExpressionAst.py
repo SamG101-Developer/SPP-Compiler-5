@@ -22,8 +22,8 @@ class ParenthesizedExpressionAst(Ast, TypeInferrable, CompilerStages):
     @staticmethod
     def from_expression(expression: ExpressionAst, *, pos: int = -1) -> ParenthesizedExpressionAst:
         from SPPCompiler.SemanticAnalysis import TokenAst
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        return ParenthesizedExpressionAst(pos, TokenAst.default(TokenType.TkParenL), expression, TokenAst.default(TokenType.TkParenR))
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+        return ParenthesizedExpressionAst(pos, TokenAst.default(SppTokenType.TkParenL), expression, TokenAst.default(SppTokenType.TkParenR))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

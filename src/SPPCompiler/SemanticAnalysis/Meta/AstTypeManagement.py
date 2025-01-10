@@ -128,7 +128,7 @@ class AstTypeManagement:
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst, GenericTypeArgumentNamedAst
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
         from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
 
         old_scopes = base_scope._direct_sup_scopes
@@ -165,7 +165,7 @@ class AstTypeManagement:
                     mock_generic_parameter = scope._ast.name.get_generic_parameter_for_argument(generic_parameter.name)
                     mock_generic_value = generic_arguments.arguments.find(lambda a: a.name == mock_generic_parameter)
                     if not mock_generic_value: continue
-                    new_generic_argument = GenericTypeArgumentNamedAst(-1, generic_parameter.name.types[-1], TokenAst.default(TokenType.TkAssign), mock_generic_value.value)
+                    new_generic_argument = GenericTypeArgumentNamedAst(-1, generic_parameter.name.types[-1], TokenAst.default(SppTokenType.TkAssign), mock_generic_value.value)
                     generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, new_generic_argument)
                     new_scope.add_symbol(generic_symbol)
 
@@ -201,17 +201,17 @@ class AstTypeManagement:
     @staticmethod
     def generic_convert_sup_scope_name(name: str, generics: GenericArgumentGroupAst) -> str:
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         parts = name.split(":")
         if " ext " not in parts:
-            t = AstMutation.inject_code(parts[1], Parser.parse_type)
+            t = AstMutation.inject_code(parts[1], SppParser.parse_type)
             t.sub_generics(generics.arguments)
             return f"{parts[0]}:{t}:{parts[2]}"
 
         else:
-            t = AstMutation.inject_code(parts[1].split(" ext ")[0], Parser.parse_type)
-            u = AstMutation.inject_code(parts[1].split(" ext ")[1], Parser.parse_type)
+            t = AstMutation.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type)
+            u = AstMutation.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type)
             t.sub_generics(generics.arguments)
             u.sub_generics(generics.arguments)
             return f"{parts[0]}:{t} ext {u}:{parts[2]}"

@@ -27,8 +27,8 @@ class FunctionImplementationAst(Ast, Default, CompilerStages):
     @staticmethod
     def default() -> FunctionImplementationAst:
         # Create a default class implementation AST.
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        return FunctionImplementationAst(-1, TokenAst.default(TokenType.TkBraceL), Seq(), TokenAst.default(TokenType.TkBraceR))
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+        return FunctionImplementationAst(-1, TokenAst.default(SppTokenType.TkBraceL), Seq(), TokenAst.default(SppTokenType.TkBraceR))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

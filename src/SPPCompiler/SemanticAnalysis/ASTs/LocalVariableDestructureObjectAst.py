@@ -53,7 +53,7 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, CompilerSta
         from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Analyse the class and determine the attributes of the class.
         self.class_type.analyse_semantics(scope_manager, **kwargs)
@@ -74,14 +74,14 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, CompilerSta
                 continue
 
             elif isinstance(element, LocalVariableSingleIdentifierAst):
-                new_ast = AstMutation.inject_code(f"let {element} = {value}.{element.name}", Parser.parse_let_statement_initialized)
+                new_ast = AstMutation.inject_code(f"let {element} = {value}.{element.name}", SppParser.parse_let_statement_initialized)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
             elif isinstance(element, LocalVariableAttributeBindingAst) and isinstance(element.value, LocalVariableSingleIdentifierAst):
                 continue
 
             elif isinstance(element, LocalVariableAttributeBindingAst):
-                new_ast = AstMutation.inject_code(f"let {element.value} = {value}.{element.name}", Parser.parse_let_statement_initialized)
+                new_ast = AstMutation.inject_code(f"let {element.value} = {value}.{element.name}", SppParser.parse_let_statement_initialized)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
         # Check for any missing attributes in the destructure, unless a multi-skip is present.

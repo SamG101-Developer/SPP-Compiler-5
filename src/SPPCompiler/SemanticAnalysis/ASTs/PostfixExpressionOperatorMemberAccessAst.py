@@ -32,12 +32,12 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
         return "".join(string)
 
     def is_runtime_access(self) -> bool:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        return self.tok_access.token.token_type == TokenType.TkDot
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+        return self.tok_access.token.token_type == SppTokenType.TkDot
 
     def is_static_access(self) -> bool:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        return self.tok_access.token.token_type == TokenType.TkDblColon
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+        return self.tok_access.token.token_type == SppTokenType.TkDblColon
 
     def infer_type(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst

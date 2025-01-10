@@ -38,14 +38,14 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
-        has_skip = isinstance(self.skip_or_expr, TokenAst) and self.skip_or_expr.token.token_type == TokenType.KwSkip
+        has_skip = isinstance(self.skip_or_expr, TokenAst) and self.skip_or_expr.token.token_type == SppTokenType.KwSkip
         if isinstance(self.skip_or_expr, (TokenAst, TypeAst)) and not has_skip:
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.skip_or_expr)
 

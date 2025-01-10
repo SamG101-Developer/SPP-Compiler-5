@@ -36,12 +36,12 @@ class RetStatementAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Check the enclosing function is a subroutine and not a coroutine.
-        if kwargs["function_type"].token.token_type != TokenType.KwFun:
+        if kwargs["function_type"].token.token_type != SppTokenType.KwFun:
             raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(kwargs["function_type"], self.tok_ret)
         self._func_ret_type = kwargs["function_ret_type"]
 

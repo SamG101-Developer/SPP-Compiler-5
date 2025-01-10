@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
@@ -31,10 +31,10 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         from SPPCompiler.SemanticAnalysis import WhereBlockAst, TokenAst
 
         # Create default instances.
-        self.tok_sup = self.tok_sup or TokenAst.default(TokenType.KwSup)
+        self.tok_sup = self.tok_sup or TokenAst.default(SppTokenType.KwSup)
         self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
         self.where_block = self.where_block or WhereBlockAst.default()
-        self.tok_ext = self.tok_ext or TokenAst.default(TokenType.KwExt)
+        self.tok_ext = self.tok_ext or TokenAst.default(SppTokenType.KwExt)
         self.body = self.body or SupImplementationAst.default()
 
     @ast_printer_method

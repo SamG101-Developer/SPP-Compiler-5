@@ -3,7 +3,7 @@ from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from SPPCompiler.Compiler.ModuleTree import ModuleTree, Module
-    from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import ProgramAst
+    from SPPCompiler.SemanticAnalysis.Program import Program
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
@@ -27,10 +27,10 @@ def create_global(module: Module) -> Scope:
 
 
 class Analyser:
-    _ast: ProgramAst
+    _ast: Program
     _scope_manager: Optional[ScopeManager]
 
-    def __init__(self, ast: ProgramAst) -> None:
+    def __init__(self, ast: Program) -> None:
         self._ast = ast
         self._scope_manager = None
 

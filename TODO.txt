@@ -1,0 +1,22 @@
+Change iterative loops to be syntactic sugar.
+* Expression `loop i in g` becomes `loop g.next() is Some(val as i)`.
+* The semantic check for the `next` keyword will do the generator type check.
+
+Encapsulation annotations.
+* Overriding functions must keep the same encapsulation level.
+
+Overridden methods must be eliminated from overload resolution.
+* Eliminate overridden methods from overload resolution.
+* Maybe run the check override function for each overload.
+
+Generic types.
+* Passing too many generic arguments causes a Python error.
+
+Specialization.
+* `sup std::Vec[std::Str]` currently applies to all `std::Vec` types.
+
+Function folding.
+
+Different generic names.
+* Successful compilation just as parameters/arguments.
+* In sup scope, as return type or locally used.

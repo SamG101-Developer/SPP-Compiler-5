@@ -1,45 +1,44 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.BinaryExpressionAst import BinaryExpressionAst
     from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionAst import PostfixExpressionAst
 
-
 BINARY_METHODS = {
-    TokenType.TkAdd: "add", TokenType.TkSub: "sub", TokenType.TkMul: "mul", TokenType.TkDiv: "div",
-    TokenType.TkRem: "rem", TokenType.TkMod: "mod", TokenType.TkExp: "pow", TokenType.KwAnd: "and_",
-    TokenType.KwOr: "ior_", TokenType.TkEq: "eq", TokenType.TkNe: "ne", TokenType.TkLt: "lt", TokenType.TkGt: "gt",
-    TokenType.TkLe: "le", TokenType.TkGe: "ge", TokenType.TkSs: "cmp", TokenType.TkAddAssign: "add_assign",
-    TokenType.TkSubAssign: "sub_assign", TokenType.TkMulAssign: "mul_assign", TokenType.TkDivAssign: "div_assign",
-    TokenType.TkRemAssign: "rem_assign", TokenType.TkModAssign: "mod_assign", TokenType.TkExpAssign: "pow_assign",
+    SppTokenType.TkAdd: "add", SppTokenType.TkSub: "sub", SppTokenType.TkMul: "mul", SppTokenType.TkDiv: "div",
+    SppTokenType.TkRem: "rem", SppTokenType.TkMod: "mod", SppTokenType.TkExp: "pow", SppTokenType.KwAnd: "and_",
+    SppTokenType.KwOr: "ior_", SppTokenType.TkEq: "eq", SppTokenType.TkNe: "ne", SppTokenType.TkLt: "lt",
+    SppTokenType.TkGt: "gt", SppTokenType.TkLe: "le", SppTokenType.TkGe: "ge", SppTokenType.TkSs: "cmp",
+    SppTokenType.TkAddAssign: "add_assign", SppTokenType.TkSubAssign: "sub_assign",
+    SppTokenType.TkMulAssign: "mul_assign", SppTokenType.TkDivAssign: "div_assign",
+    SppTokenType.TkRemAssign: "rem_assign", SppTokenType.TkModAssign: "mod_assign",
+    SppTokenType.TkExpAssign: "pow_assign",
 }
-
 
 BINARY_OPERATOR_PRECEDENCE = {
-    TokenType.KwOr: 1,
-    TokenType.KwAnd: 2,
-    TokenType.TkEq: 3,
-    TokenType.TkNe: 3,
-    TokenType.TkLt: 3,
-    TokenType.TkGt: 4,
-    TokenType.TkLe: 4,
-    TokenType.TkGe: 4,
-    TokenType.TkSs: 4,
-    TokenType.TkAdd: 5,
-    TokenType.TkSub: 5,
-    TokenType.TkMul: 6,
-    TokenType.TkDiv: 6,
-    TokenType.TkRem: 6,
-    TokenType.TkMod: 6,
-    TokenType.TkExp: 6,
+    SppTokenType.KwOr: 1,
+    SppTokenType.KwAnd: 2,
+    SppTokenType.TkEq: 3,
+    SppTokenType.TkNe: 3,
+    SppTokenType.TkLt: 3,
+    SppTokenType.TkGt: 4,
+    SppTokenType.TkLe: 4,
+    SppTokenType.TkGe: 4,
+    SppTokenType.TkSs: 4,
+    SppTokenType.TkAdd: 5,
+    SppTokenType.TkSub: 5,
+    SppTokenType.TkMul: 6,
+    SppTokenType.TkDiv: 6,
+    SppTokenType.TkRem: 6,
+    SppTokenType.TkMod: 6,
+    SppTokenType.TkExp: 6,
 }
 
-
 BINARY_COMPARISON_OPERATORS = {
-    TokenType.TkEq, TokenType.TkNe, TokenType.TkLt, TokenType.TkGt, TokenType.TkLe, TokenType.TkGe,
+    SppTokenType.TkEq, SppTokenType.TkNe, SppTokenType.TkLt, SppTokenType.TkGt, SppTokenType.TkLe, SppTokenType.TkGe,
 }
 
 
@@ -65,7 +64,8 @@ class AstBinUtils:
             return ast
 
         # If the ast precedence > the rhs operator's expression precedence, re-arrange the ast.
-        elif BINARY_OPERATOR_PRECEDENCE[ast.op.token.token_type] >= BINARY_OPERATOR_PRECEDENCE[ast.rhs.op.token.token_type]:
+        elif BINARY_OPERATOR_PRECEDENCE[ast.op.token.token_type] >= BINARY_OPERATOR_PRECEDENCE[
+            ast.rhs.op.token.token_type]:
             rhs = ast.rhs
             ast.rhs = rhs.rhs
             rhs.rhs = rhs.lhs
@@ -96,7 +96,7 @@ class AstBinUtils:
             lhs = ast.lhs.rhs
             rhs = ast.rhs
             ast.rhs = BinaryExpressionAst(ast.pos, lhs, ast.op, rhs)
-            ast.op = TokenAst.default(TokenType.KwAnd)
+            ast.op = TokenAst.default(SppTokenType.KwAnd)
             AstBinUtils._combine_comparison_operators(ast)
             return ast
 
@@ -107,16 +107,20 @@ class AstBinUtils:
         """
 
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Standard binary operators are converted into function calls.
         if method_name := BINARY_METHODS.get(ast.op.token.token_type, None):
-            function_call_ast = AstMutation.inject_code(f"{ast.lhs}.{method_name}({ast.rhs})", Parser.parse_postfix_expression)
+            function_call_ast = AstMutation.inject_code(
+                f"{ast.lhs}.{method_name}({ast.rhs})",
+                SppParser.parse_postfix_expression)
             return function_call_ast
 
         # Convert the "is" expression into a case-pattern block.
-        elif ast.op.token.token_type == TokenType.KwIs:
-            case_ast = AstMutation.inject_code(f"case {ast.lhs} of is {ast.rhs} {{}}", Parser.parse_case_expression)
+        elif ast.op.token.token_type == SppTokenType.KwIs:
+            case_ast = AstMutation.inject_code(
+                f"case {ast.lhs} of is {ast.rhs} {{}}",
+                SppParser.parse_case_expression)
             return case_ast
 
     @staticmethod

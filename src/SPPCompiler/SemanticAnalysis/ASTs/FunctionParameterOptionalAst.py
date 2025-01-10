@@ -61,7 +61,7 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction, Compile
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default value.
         if isinstance(self.default, (TokenAst, TypeAst)):
@@ -82,7 +82,9 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction, Compile
             raise SemanticErrors.TypeMismatchError().add(self.extract_name, target_type, self.default, default_type)
 
         # Create the variable for the parameter.
-        ast = AstMutation.inject_code(f"let {self.variable}: {self.type}", Parser.parse_let_statement_uninitialized)
+        ast = AstMutation.inject_code(
+            f"let {self.variable}: {self.type}",
+            SppParser.parse_let_statement_uninitialized)
         ast.analyse_semantics(scope_manager, **kwargs)
 
         # Mark the symbol as initialized.

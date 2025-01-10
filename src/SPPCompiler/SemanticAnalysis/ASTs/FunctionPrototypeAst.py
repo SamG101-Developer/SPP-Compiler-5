@@ -96,7 +96,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, ModulePrototypeAst, SupPrototypeInheritanceAst
         from SPPCompiler.SemanticAnalysis import TypeAst, SupImplementationAst
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
         super().pre_process(context)
 
         # Substitute the "Self" parameter's type with the name of the method.
@@ -114,8 +114,12 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
 
         # If this is the first overload being converted, then the class needs to be made for the type.
         if context.body.members.filter_to_type(ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
-            mock_class_ast = AstMutation.inject_code(f"cls {mock_class_name} {{}}", Parser.parse_class_prototype)
-            mock_constant_ast = AstMutation.inject_code(f"cmp {self.name}: {mock_class_name} = {mock_class_name}()", Parser.parse_global_constant)
+            mock_class_ast = AstMutation.inject_code(
+                f"cls {mock_class_name} {{}}",
+                SppParser.parse_class_prototype)
+            mock_constant_ast = AstMutation.inject_code(
+                f"cmp {self.name}: {mock_class_name} = {mock_class_name}()",
+                SppParser.parse_global_constant)
             context.body.members.append(mock_class_ast)
             context.body.members.append(mock_constant_ast)
 

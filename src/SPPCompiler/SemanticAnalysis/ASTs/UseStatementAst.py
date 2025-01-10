@@ -58,9 +58,9 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
 
     @staticmethod
     def from_types(new_type: IdentifierAst, generic_parameter_group: Optional[GenericParameterGroupAst], old_type: TypeAst) -> UseStatementAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
-        return UseStatementAst(-1, Seq(), TokenAst.default(TokenType.KwUse), new_type, generic_parameter_group, TokenAst.default(TokenType.TkAssign), old_type)
+        return UseStatementAst(-1, Seq(), TokenAst.default(SppTokenType.KwUse), new_type, generic_parameter_group, TokenAst.default(SppTokenType.TkAssign), old_type)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
@@ -76,10 +76,10 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
     def generate_symbols(self, scope_manager: ScopeManager, visibility: AstVisibility = None) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Create a class ast for the aliased type, and generate it.
-        cls_ast = AstMutation.inject_code(f"cls {self.new_type} {{}}", Parser.parse_class_prototype)
+        cls_ast = AstMutation.inject_code(f"cls {self.new_type} {{}}", SppParser.parse_class_prototype)
         cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
         cls_ast._is_alias = True
         cls_ast._visibility = (visibility, None)
@@ -97,7 +97,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
 
     def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Skip the class scope and move into the type-alias scope (generic access)
         scope_manager.move_to_next_scope()
@@ -108,7 +108,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         old_type_symbol = scope_manager.current_scope.get_symbol(self.old_type)
 
         # Create a sup ast to allow the attribute and method access.
-        sup_ast = AstMutation.inject_code(f"sup {self.new_type} ext {self.old_type} {{}}", Parser.parse_sup_prototype_inheritance)
+        sup_ast = AstMutation.inject_code(f"sup {self.new_type} ext {self.old_type} {{}}", SppParser.parse_sup_prototype_inheritance)
         sup_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)  # Todo: is this required?
         sup_ast.generate_symbols(scope_manager)
 

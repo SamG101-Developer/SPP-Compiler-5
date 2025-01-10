@@ -44,15 +44,15 @@ class GenericCompArgumentNamedAst(Ast, Ordered, CompilerStages):
 
     @staticmethod
     def from_name_value(name: TypeAst, value: ExpressionAst) -> GenericCompArgumentNamedAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
-        return GenericCompArgumentNamedAst(-1, IdentifierAst.from_type(name), TokenAst.default(TokenType.TkAssign), value)
+        return GenericCompArgumentNamedAst(-1, IdentifierAst.from_type(name), TokenAst.default(SppTokenType.TkAssign), value)
 
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
-        return GenericCompArgumentNamedAst(-1, symbol.name, TokenAst.default(TokenType.TkAssign), symbol.memory_info.ast_comptime_const)
+        return GenericCompArgumentNamedAst(-1, symbol.name, TokenAst.default(SppTokenType.TkAssign), symbol.memory_info.ast_comptime_const)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst

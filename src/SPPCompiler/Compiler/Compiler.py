@@ -8,7 +8,7 @@ from SPPCompiler.Utils.Sequence import Seq
 if TYPE_CHECKING:
     from SPPCompiler.Compiler.ModuleTree import ModuleTree
     from SPPCompiler.SemanticAnalysis.Analyser import Analyser
-    from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import ProgramAst
+    from SPPCompiler.SemanticAnalysis.Program import Program
 
 
 class Compiler:
@@ -19,39 +19,40 @@ class Compiler:
     _src_path: str
     _module_tree: ModuleTree
     _mode: Mode
-    _ast: ProgramAst
+    _ast: Program
     _analyser: Analyser
 
     def __init__(self, mode: Mode) -> None:
         from SPPCompiler.Compiler.ModuleTree import ModuleTree
-        from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import ProgramAst
+        from SPPCompiler.SemanticAnalysis.Program import Program
 
         # Register the parameters against the instance.
         self._src_path = os.path.join(os.getcwd(), "src")
         self._module_tree = ModuleTree(os.getcwd())
         self._mode = mode
-        self._ast = ProgramAst(0, Seq())
+        self._ast = Program()
 
         # Compile the modules.
         self.compile()
 
     def compile(self) -> None:
-        from SPPCompiler.LexicalAnalysis.Lexer import Lexer
+        from SParLex.Utils.ErrorFormatter import ErrorFormatter
+        from SPPCompiler.LexicalAnalysis.Lexer import SppLexer
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter
         from SPPCompiler.SemanticAnalysis.Analyser import Analyser
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
-        from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Lexing stage.
         for module in self._module_tree.modules:
             with open(".\\" + module.path) as fo:
                 module.code = fo.read()
-            module.token_stream = Lexer(module.code).lex()
-            module.error_formatter = ErrorFormatter(module.token_stream, module.path)
+            module.token_stream = SppLexer(module.code).lex()
+            module.error_formatter = ErrorFormatter(SppTokenType, module.token_stream, module.path)
 
         # Parsing stage.
         for module in self._module_tree.modules.copy():
-            module.module_ast = Parser(module.token_stream, module.path, module.error_formatter).parse()
+            module.module_ast = SppParser(module.token_stream, module.path, module.error_formatter).parse().root_ast
 
             # Remove vcs "main.spp" files.
             module_namespace = module.path.split(os.path.sep)
