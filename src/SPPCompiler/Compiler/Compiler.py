@@ -42,17 +42,24 @@ class Compiler:
         from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter
         from SPPCompiler.SemanticAnalysis.Analyser import Analyser
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+        from SPPCompiler.Utils.ProgressBar import ProgressBar
+
+        progress_bars = [
+            ProgressBar("Lexing..................", self._module_tree.modules.length),
+            ProgressBar("Parsing.................", self._module_tree.modules.length)]
 
         # Lexing stage.
         for module in self._module_tree.modules:
             with open(".\\" + module.path) as fo:
                 module.code = fo.read()
             module.token_stream = SppLexer(module.code).lex()
+            progress_bars[0].next(module.path)
             module.error_formatter = ErrorFormatter(SppTokenType, module.token_stream, module.path)
 
         # Parsing stage.
         for module in self._module_tree.modules.copy():
             module.module_ast = SppParser(module.token_stream, module.path, module.error_formatter).parse().root_ast
+            progress_bars[1].next(module.path)
 
             # Remove vcs "main.spp" files.
             module_namespace = module.path.split(os.path.sep)
