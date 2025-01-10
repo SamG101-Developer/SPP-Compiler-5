@@ -46,39 +46,42 @@ class CompilerStages:
 
         self._ctx = context
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         """
-        The generate symbols stage generates all module and superimposition level symbols. This includes classes,
-        attributes, functions, sup-methods, aliases and global constants. No generation is done for symbols inside
-        functions. The symbols are generated here so that they can be used in any module, allowing for circular imports.
+        The generate top-level scopes stage generates all module and superimposition level scopes and symbols. This
+        includes classes, attributes, functions, sup-methods, aliases and global constants. No generation is done for
+        symbols inside functions. The symbols are generated here so that they can be used in any module, allowing for
+        circular imports.
         """
         self._scope = scope_manager.current_scope
 
-    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         """
-        The alias types stage generates all aliases for the module. This must come after the symbol generation stage,
-        as it requires symbol knowledge to attach the correct "old types". It must also come before the load sup scopes
-        stage, because superimposing over aliases requires the alias to exist beforehand, in any order of compilation.
+        The generate top-level aliases stage generates all aliases at the module/sup level. This must come after the
+        symbol generation stage, as it requires symbol knowledge to attach the correct "old types". It must also come
+        before the load sup scopes stage, because superimposing over aliases requires the alias to exist beforehand, in
+        any order of compilation.
         """
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         """
-        The load sup scopes stage links all super scopes to classes. This allows a type to know what attributes and
+        The load super scopes stage links all super scopes to classes. This allows a type to know what attributes and
         methods are on its superclasses, and is requires for symbol resolution.
         """
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         """
-        The postprocess sup scopes stage performs checks that must happen after the super scopes have been injected, but
-        that are separate from the next stage (type-regeneration). This includes things that require knowledge of all
-        the super scopes.
+        The postprocess super scopes stage performs checks that must happen after the super scopes have been injected,
+        but that are separate from the next stage (type-regeneration). This includes things that require knowledge of
+        all the super scopes.
         """
 
-    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         """
-        The alias types regeneration is the generic type regeneration stage exclusive to type-aliases. This is to ensure
-        the aliases' old type has been generically substituted correctly, and is required before the rest of the regular
-        type's generic substitution is regenerated. This is because regular type regeneration may rely on aliased types.
+        The regenerate generic aliases stage is the generic type regeneration stage exclusive to type-aliases. This is
+        to ensure the aliases' old type has been generically substituted correctly, and is required before the rest of
+        the regular type's generic substitution is regenerated. This is because regular type regeneration may rely on
+        aliased types.
         """
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:

@@ -92,44 +92,44 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
             a.pre_process(self)
         self.body.pre_process(self)
 
-    def generate_symbols(self, scope_manager: ScopeManager, is_alias: bool = False) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager, is_alias: bool = False) -> None:
         # Create a new scope for the class.
         scope_manager.create_and_move_into_new_scope(self.name, self)
-        super().generate_symbols(scope_manager)
+        super().generate_top_level_scopes(scope_manager)
 
         # Create a new symbol for the class.
         self._generate_symbols(scope_manager)
 
         # Generate the generic parameters and attributes of the class.
         for p in self.generic_parameter_group.parameters:
-            p.generate_symbols(scope_manager)
-        self.body.generate_symbols(scope_manager)
+            p.generate_top_level_scopes(scope_manager)
+        self.body.generate_top_level_scopes(scope_manager)
 
         # Move out of the type scope.
         scope_manager.move_out_of_current_scope()
 
-    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
-        self.body.alias_types(scope_manager)
+        self.body.generate_top_level_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
-        self.body.load_sup_scopes(scope_manager)
+        self.body.load_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
-        self.body.inject_sup_scopes(scope_manager)
+        self.body.postprocess_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
-        self.body.alias_types(scope_manager)
+        self.body.generate_top_level_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:

@@ -51,13 +51,13 @@ class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
         for a in self.annotations:
             a.pre_process(self)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a variable symbol for this attribute in the current scope (class).
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         scope_manager.current_scope.add_symbol(symbol)
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         self.type.analyse_semantics(scope_manager)
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:

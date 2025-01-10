@@ -73,7 +73,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
             a.pre_process(self)
         super().pre_process(context)
 
-    def generate_symbols(self, scope_manager: ScopeManager, visibility: AstVisibility = None) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager, visibility: AstVisibility = None) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
@@ -83,7 +83,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
         cls_ast._is_alias = True
         cls_ast._visibility = (visibility, None)
-        cls_ast.generate_symbols(scope_manager)
+        cls_ast.generate_top_level_scopes(scope_manager)
 
         # Create a scope for the alias' generics, so analysing can be done with the generics, without them leaking.
         scope_manager.create_and_move_into_new_scope(f"<type-alias:{self.new_type}:{self.pos}>", self)
@@ -95,7 +95,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         # Mark this AST as generated, so it is not generated in the analysis phase.
         self._generated = True
 
-    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
@@ -110,7 +110,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         # Create a sup ast to allow the attribute and method access.
         sup_ast = AstMutation.inject_code(f"sup {self.new_type} ext {self.old_type} {{}}", SppParser.parse_sup_prototype_inheritance)
         sup_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)  # Todo: is this required?
-        sup_ast.generate_symbols(scope_manager)
+        sup_ast.generate_top_level_scopes(scope_manager)
 
         # Register the old type against the new alias symbol.
         alias_symbol = scope_manager.current_scope.get_symbol(self.new_type)
@@ -119,7 +119,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         # Move out of the type-alias scopes.
         scope_manager.move_out_of_current_scope()
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()
@@ -127,7 +127,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()
@@ -135,7 +135,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()
 
-    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()
@@ -168,18 +168,18 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         else:
             current_scope = scope_manager.current_scope
             scope_manager._iterator, new_iterator = itertools.tee(scope_manager._iterator)
-            self.generate_symbols(scope_manager)
+            self.generate_top_level_scopes(scope_manager)
 
             scope_manager.reset(current_scope, new_iterator)
             scope_manager._iterator, new_iterator = itertools.tee(scope_manager._iterator)
-            self.alias_types(scope_manager)
+            self.generate_top_level_aliases(scope_manager)
 
             scope_manager.reset(current_scope, new_iterator)
             scope_manager._iterator, new_iterator = itertools.tee(scope_manager._iterator)
-            self.load_sup_scopes(scope_manager)
+            self.load_super_scopes(scope_manager)
 
             scope_manager.reset(current_scope, new_iterator)
-            self.inject_sup_scopes(scope_manager)
+            self.postprocess_super_scopes(scope_manager)
 
 
 __all__ = ["UseStatementAst"]

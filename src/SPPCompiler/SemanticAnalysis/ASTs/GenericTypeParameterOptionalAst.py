@@ -44,7 +44,7 @@ class GenericTypeParameterOptionalAst(Ast, Ordered, CompilerStages):
             self.default.print(printer)]
         return "".join(string)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
         symbol = TypeSymbol(name=self.name.types[-1], type=None, is_generic=True)

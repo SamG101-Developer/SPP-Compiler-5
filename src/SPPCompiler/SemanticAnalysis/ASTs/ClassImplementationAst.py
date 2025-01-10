@@ -55,17 +55,17 @@ class ClassImplementationAst(Ast, Default, CompilerStages):
         # Pre-process the members.
         for m in self.members: m.pre_process(context)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Generate the symbols for the members.
-        for m in self.members: m.generate_symbols(scope_manager)
+        for m in self.members: m.generate_top_level_scopes(scope_manager)
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Load the super scopes for the members.
-        for m in self.members: m.load_sup_scopes(scope_manager)
+        for m in self.members: m.load_super_scopes(scope_manager)
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Inject the super scopes for the members.
-        for m in self.members: m.inject_sup_scopes(scope_manager)
+        for m in self.members: m.postprocess_super_scopes(scope_manager)
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         # Regenerate the generic types for the members.

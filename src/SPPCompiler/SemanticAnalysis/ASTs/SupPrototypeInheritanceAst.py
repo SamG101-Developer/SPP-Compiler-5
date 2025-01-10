@@ -54,10 +54,10 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         if self.name.types[-1].value[0] == "$": return
         super().pre_process(context)
 
-    def generate_symbols(self, scope_manager: ScopeManager, name_override: str = None) -> None:
-        super().generate_symbols(scope_manager, name_override=f"<sup:{self.name} ext {self.super_class}:{self.pos}>")
+    def generate_top_level_scopes(self, scope_manager: ScopeManager, name_override: str = None) -> None:
+        super().generate_top_level_scopes(scope_manager, name_override=f"<sup:{self.name} ext {self.super_class}:{self.pos}>")
 
-    def load_sup_scopes(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
@@ -97,10 +97,10 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
 
         # Run the inject steps for the body.
         self._scope_cls = cls_symbol.scope
-        self.body.load_sup_scopes(scope_manager)
+        self.body.load_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
@@ -118,7 +118,7 @@ class SupPrototypeInheritanceAst(SupPrototypeFunctionsAst):
         if sup_symbol.is_abstract:
             cls_symbol.is_abstract = True
 
-        self.body.inject_sup_scopes(scope_manager)
+        self.body.postprocess_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:

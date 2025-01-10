@@ -37,26 +37,26 @@ class ModulePrototypeAst(Ast, CompilerStages):
         super().pre_process(context)
         self.body.pre_process(context)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Generate the module symbol.
-        super().generate_symbols(scope_manager)
-        self.body.generate_symbols(scope_manager)
+        super().generate_top_level_scopes(scope_manager)
+        self.body.generate_top_level_scopes(scope_manager)
 
-    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Alias the types in the module implementation.
-        self.body.alias_types(scope_manager, **kwargs)
+        self.body.generate_top_level_aliases(scope_manager, **kwargs)
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Load the super scopes.
-        self.body.load_sup_scopes(scope_manager)
+        self.body.load_super_scopes(scope_manager)
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Inject the super scopes.
-        self.body.inject_sup_scopes(scope_manager)
+        self.body.postprocess_super_scopes(scope_manager)
 
-    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Alias the types in the module implementation.
-        self.body.alias_types_regeneration(scope_manager)
+        self.body.regenerate_generic_aliases(scope_manager)
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         # Regenerate the generic types in the module implementation.

@@ -48,7 +48,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled, CompilerStages):
         for a in self.annotations:
             a.pre_process(self)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])

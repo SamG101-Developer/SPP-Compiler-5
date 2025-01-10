@@ -48,7 +48,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered, CompilerStages):
             self.default.print(printer)]
         return "".join(string)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
         from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst

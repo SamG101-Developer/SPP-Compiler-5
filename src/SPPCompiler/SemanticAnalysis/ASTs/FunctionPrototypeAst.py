@@ -135,25 +135,25 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         for a in function_ast.annotations:
             a.pre_process(function_ast)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
 
         # Create a new scope for the function.
         scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
-        super().generate_symbols(scope_manager)
+        super().generate_top_level_scopes(scope_manager)
 
         # Generate the generic parameters and attributes of the function.
         for p in self.generic_parameter_group.parameters:
-            p.generate_symbols(scope_manager)
+            p.generate_top_level_scopes(scope_manager)
 
         # Move out of the function scope.
         scope_manager.move_out_of_current_scope()
 
-    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -171,11 +171,11 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
 
         scope_manager.move_out_of_current_scope()
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
-    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
