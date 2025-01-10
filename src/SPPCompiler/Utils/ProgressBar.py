@@ -41,9 +41,9 @@ class ProgressBar:
         # Create the subtext label, describing the current step, and pad it to the end of the bar.
         pad_to_label = " " * (100 - len(bar))
         if self._current_value == self._max_value:
-            label = "[Done]"
+            label = "[100.00% | ✔️]"
         else:
-            label = f"{pad_to_label}[{self._current_label}]"
+            label = f"{pad_to_label}[0{percentage:.2f}% | {self._current_label}]"
         label = f"{color}{label}{reset}"
 
         # Create the colour of the progress bar depending on the percentage complete.
