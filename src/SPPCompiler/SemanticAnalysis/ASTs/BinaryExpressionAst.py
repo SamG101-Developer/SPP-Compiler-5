@@ -121,7 +121,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
             # Get the parts of the tuple.
             new_asts = Seq()
             for i in range(lhs_num_elements):
-                new_ast = AstMutation.inject_code(f"{self.lhs}.{i}", Parser.parse_postfix_expression)
+                new_ast = AstMutation.inject_code(f"{self.lhs}.{i}", SppParser.parse_postfix_expression)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
                 new_asts.append(new_ast)
 

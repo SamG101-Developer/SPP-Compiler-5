@@ -53,7 +53,7 @@ class LoopConditionIterableAst(Ast, TypeInferrable, CompilerStages):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.iterable)
 
         code = f"{self.iterable}.step() is std::Some(val as {self.variable})"
-        loop_condition_ast = AstMutation.inject_code(code, Parser.parse_loop_expression_condition_boolean)
+        loop_condition_ast = AstMutation.inject_code(code, SppParser.parse_loop_expression_condition_boolean)
         loop_condition_ast.analyse_semantics(scope_manager, **kwargs)
 
         # # Analyse the iterable.

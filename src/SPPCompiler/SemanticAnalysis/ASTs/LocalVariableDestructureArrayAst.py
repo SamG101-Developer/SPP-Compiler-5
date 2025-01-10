@@ -87,14 +87,14 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction, CompilerStag
         # Create expanded "let" statements for each part of the destructure.
         for i, element in indexes.zip(self.elements):
             if isinstance(element, LocalVariableDestructureSkipNArgumentsAst) and multi_arg_skips[0].binding:
-                new_ast = AstMutation.inject_code(f"let {element.binding} = {bound_multi_skip}", Parser.parse_let_statement_initialized)
+                new_ast = AstMutation.inject_code(f"let {element.binding} = {bound_multi_skip}", SppParser.parse_let_statement_initialized)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
             elif isinstance(element, (LocalVariableDestructureSkip1ArgumentAst, LocalVariableDestructureSkipNArgumentsAst)):
                 continue
 
             else:
-                new_ast = AstMutation.inject_code(f"let {element} = {value}.{i}", Parser.parse_let_statement_initialized)
+                new_ast = AstMutation.inject_code(f"let {element} = {value}.{i}", SppParser.parse_let_statement_initialized)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
 
