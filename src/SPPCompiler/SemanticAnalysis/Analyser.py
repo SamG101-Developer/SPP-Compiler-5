@@ -3,7 +3,7 @@ from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from SPPCompiler.Compiler.ModuleTree import ModuleTree, Module
-    from SPPCompiler.SemanticAnalysis.Program import Program
+    from SPPCompiler.Compiler.Program import Program
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
