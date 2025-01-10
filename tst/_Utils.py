@@ -2,8 +2,8 @@ from argparse import Namespace
 from unittest import TestCase
 import os.path
 
+from SParLex.Parser.ParserError import ParserError
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticError, SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Errors.ParserError import ParserError
 from spp import handle_init, handle_build
 
 
