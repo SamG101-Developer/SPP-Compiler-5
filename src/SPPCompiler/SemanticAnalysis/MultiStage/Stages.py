@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 type PreProcessingContext = Union[
     ClassPrototypeAst, ClassAttributeAst, FunctionPrototypeAst, GlobalConstantAst, ModulePrototypeAst,
-    SupPrototypeFunctionsAst, UseStatementAst]
+    SupPrototypeFunctionsAst, UseStatementAst, None]
 
 
 # Todo:
