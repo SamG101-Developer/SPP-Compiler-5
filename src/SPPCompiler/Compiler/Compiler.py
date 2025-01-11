@@ -1,7 +1,7 @@
 from __future__ import annotations
 from fastenum import Enum
 from typing import TYPE_CHECKING
-import json, os
+import hashlib, json, os
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -45,8 +45,8 @@ class Compiler:
         from SPPCompiler.Utils.ProgressBar import ProgressBar
 
         progress_bars = [
-            ProgressBar("Lexing..................", self._module_tree.modules.length),
-            ProgressBar("Parsing.................", self._module_tree.modules.length)]
+            ProgressBar("Lexing.........................", self._module_tree.modules.length),
+            ProgressBar("Parsing........................", self._module_tree.modules.length)]
 
         # Lexing stage.
         for module in self._module_tree.modules:
@@ -71,6 +71,14 @@ class Compiler:
         self._ast.modules = Seq([module.module_ast for module in self._module_tree.modules])
         self._analyser = Analyser(self._ast)
         self._analyser.analyse(self._module_tree)
+
+        # Make an output directory for the ASTs.
+        if not os.path.exists("out"):
+            os.makedirs("out")
+
+        # Save the file hashes to the output file (don't need to recompile if nothing has changed).
+        with open("out/file_hashes.json", "w") as file:
+            file.write(json.dumps({module.path: hashlib.md5(module.code.encode()).hexdigest() for module in self._module_tree.modules}, indent=4))
 
         # Save the AST to the output file (if in debug mode).
         if self._mode == Compiler.Mode.Debug:

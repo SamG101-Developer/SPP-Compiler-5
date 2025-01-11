@@ -42,14 +42,14 @@ class Analyser:
         self._scope_manager = ScopeManager(global_scope=create_global(module_tree.modules[0]))
 
         progress_bars = [
-            ProgressBar("Pre-processing..........", module_tree.modules.length),
-            ProgressBar("Generating symbols......", module_tree.modules.length),
-            ProgressBar("Aliasing types..........", module_tree.modules.length),
-            ProgressBar("Loading sup scopes......", module_tree.modules.length),
-            ProgressBar("Injecting sup scopes....", module_tree.modules.length),
-            ProgressBar("Regenerating aliases....", module_tree.modules.length),
-            ProgressBar("Regenerating generics...", module_tree.modules.length),
-            ProgressBar("Analysing semantics.....", module_tree.modules.length)]
+            ProgressBar("Pre-processing.................", module_tree.modules.length),
+            ProgressBar("Generating top-level scopes....", module_tree.modules.length),
+            ProgressBar("Generating top-level aliases...", module_tree.modules.length),
+            ProgressBar("Loading super scopes...........", module_tree.modules.length),
+            ProgressBar("Preprocessing super scopes.....", module_tree.modules.length),
+            ProgressBar("Regenerating generic aliases...", module_tree.modules.length),
+            ProgressBar("Regenerating generic types.....", module_tree.modules.length),
+            ProgressBar("Analysing semantics............", module_tree.modules.length)]
 
         try:
             self._ast.pre_process(None, progress_bars[0], module_tree)
