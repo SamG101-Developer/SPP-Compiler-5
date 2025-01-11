@@ -10,7 +10,7 @@ from pathlib import Path
 import json_fix, os, sys, tomllib
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
-from SPPCompiler.Compiler.ModuleTreeAst import ModuleTreeAst
+from SPPCompiler.Compiler.Compiler import Compiler
 
 
 def create_argument_parser() -> ArgumentParser:
@@ -108,8 +108,8 @@ def handle_build(args):
     handle_vcs(args)
 
     # Compile the project.
-    mode = ModuleTreeAst.Mode.Debug if args.mode == "debug" else ModuleTreeAst.Mode.Release
-    c = ModuleTreeAst(mode)
+    mode = Compiler.Mode.Debug if args.mode == "debug" else Compiler.Mode.Release
+    c = Compiler(mode)
 
 
 def handle_run(args):

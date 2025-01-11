@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from SPPCompiler.Compiler.Program import Program
 
 
-class ModuleTreeAst:
+class Compiler:
     class Mode(Enum):
         Debug = "d"
         Release = "r"
@@ -73,7 +73,7 @@ class ModuleTreeAst:
         self._analyser.analyse(self._module_tree)
 
         # Save the AST to the output file (if in debug mode).
-        if self._mode == ModuleTreeAst.Mode.Debug:
+        if self._mode == Compiler.Mode.Debug:
             for module in self._module_tree:
                 ast = module.module_ast
                 out_ast_path = module.path.replace("src", "out/ast", 1).replace(".spp", ".ast")
