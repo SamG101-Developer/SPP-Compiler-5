@@ -56,13 +56,15 @@ class FunctionParameterVariadicAst(Ast, Ordered, VariableNameExtraction, Compile
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import ConventionMutAst, ConventionRefAst, ConventionMovAst
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Analyse the type.
         self.type.analyse_semantics(scope_manager, **kwargs)
 
         # Create the variable for the parameter.
-        ast = AstMutation.inject_code(f"let {self.variable}: {self.type}", Parser.parse_let_statement_uninitialized)
+        ast = AstMutation.inject_code(
+            f"let {self.variable}: {self.type}",
+            SppParser.parse_let_statement_uninitialized)
         ast.analyse_semantics(scope_manager, **kwargs)
 
         # Mark the symbol as initialized.

@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
-from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
@@ -33,7 +33,7 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         from SPPCompiler.SemanticAnalysis import WhereBlockAst, TokenAst
 
         # Create default instances.
-        self.tok_sup = self.tok_sup or TokenAst.default(TokenType.KwSup)
+        self.tok_sup = self.tok_sup or TokenAst.default(SppTokenType.KwSup)
         self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
         self.where_block = self.where_block or WhereBlockAst.default()
         self.body = self.body or SupImplementationAst.default()
@@ -54,25 +54,25 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         super().pre_process(context)
         self.body.pre_process(self)
 
-    def generate_symbols(self, scope_manager: ScopeManager, name_override: str = None) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager, name_override: str = None) -> None:
         # Create a new scope for the superimposition.
         scope_manager.create_and_move_into_new_scope(name_override or f"<sup:{self.name}:{self.pos}>", self)
-        super().generate_symbols(scope_manager)
+        super().generate_top_level_scopes(scope_manager)
 
         # Generate the symbols for the generic parameter group, and the self type.
         for p in self.generic_parameter_group.parameters:
-            p.generate_symbols(scope_manager)
-        self.body.generate_symbols(scope_manager)
+            p.generate_top_level_scopes(scope_manager)
+        self.body.generate_top_level_scopes(scope_manager)
 
         scope_manager.move_out_of_current_scope()
 
-    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
-        self.body.alias_types(scope_manager)
+        self.body.generate_top_level_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         scope_manager.move_to_next_scope()
@@ -85,10 +85,10 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
         self._scope_cls = cls_symbol.scope
-        self.body.load_sup_scopes(scope_manager)
+        self.body.load_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst
 
         scope_manager.move_to_next_scope()
@@ -98,12 +98,12 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         if self.body.members.filter_to_type(SupPrototypeInheritanceAst).map(lambda s: s.body.members[-1]).filter(lambda m: m._abstract):
             cls_symbol.is_abstract = True
 
-        self.body.inject_sup_scopes(scope_manager)
+        self.body.postprocess_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
-        self.body.alias_types_regeneration(scope_manager)
+        self.body.regenerate_generic_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:

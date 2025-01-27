@@ -45,7 +45,7 @@ class GenericCompParameterVariadicAst(Ast, Ordered, CompilerStages):
             self.type.print(printer)]
         return "".join(string)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
         from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
@@ -60,13 +60,13 @@ class GenericCompParameterVariadicAst(Ast, Ordered, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Analyse the type of the default expression.
         self.type.analyse_semantics(scope_manager)
 
         # Create the variable for the const parameter.
-        ast = AstMutation.inject_code(f"let {self.name}: {self.type}", Parser.parse_let_statement_uninitialized)
+        ast = AstMutation.inject_code(f"let {self.name}: {self.type}", SppParser.parse_let_statement_uninitialized)
         ast.analyse_semantics(scope_manager, **kwargs)
 
         # Mark the symbol as initialized.

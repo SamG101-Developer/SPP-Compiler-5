@@ -55,9 +55,9 @@ class GenericParameterGroupAst(Ast, Default, CompilerStages):
 
     @staticmethod
     def default(parameters: Seq[GenericParameterAst] = None) -> GenericParameterGroupAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
-        return GenericParameterGroupAst(-1, TokenAst.default(TokenType.TkBrackL), parameters or Seq(), TokenAst.default(TokenType.TkBrackR))
+        return GenericParameterGroupAst(-1, TokenAst.default(SppTokenType.TkBrackL), parameters or Seq(), TokenAst.default(SppTokenType.TkBrackR))
 
     def get_req(self) -> Seq[GenericParameterRequiredAst]:
         # Get all the required generic parameters.

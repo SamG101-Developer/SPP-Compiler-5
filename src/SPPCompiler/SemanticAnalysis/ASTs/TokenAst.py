@@ -1,13 +1,18 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 import hashlib
 
+from SParLex.Lexer.Tokens import SpecialToken
+
 from SPPCompiler.LexicalAnalysis.Token import Token
-from SPPCompiler.LexicalAnalysis.TokenType import TokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+
+if TYPE_CHECKING:
+    from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 
 
 @dataclass
@@ -27,7 +32,7 @@ class TokenAst(Ast, Default, CompilerStages):
         return self.token.token_metadata
 
     @staticmethod
-    def default(token_type: TokenType = TokenType.NO_TOK, info: str = "", pos: int = -1) -> TokenAst:
+    def default(token_type: SppTokenType = SpecialToken.NO_TOK, info: str = "", pos: int = -1) -> TokenAst:
         return TokenAst(pos, Token(info or token_type.value, token_type))
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

@@ -45,9 +45,9 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
 
     @staticmethod
     def default(arguments: Seq[ObjectInitializerArgumentAst]) -> ObjectInitializerArgumentGroupAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return ObjectInitializerArgumentGroupAst(-1, TokenAst.default(TokenType.TkParenL), arguments or Seq(), TokenAst.default(TokenType.TkParenR))
+        return ObjectInitializerArgumentGroupAst(-1, TokenAst.default(SppTokenType.TkParenL), arguments or Seq(), TokenAst.default(SppTokenType.TkParenR))
 
     @staticmethod
     def get_arg_val(argument: ObjectInitializerArgumentAst) -> ExpressionAst:

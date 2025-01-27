@@ -59,10 +59,10 @@ class IntegerLiteralAst(Ast, TypeInferrable, CompilerStages):
     @staticmethod
     def from_python_literal(value: int) -> IntegerLiteralAst:
         from SPPCompiler.LexicalAnalysis.Token import Token
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
 
-        token = TokenAst(-1, Token(str(value), TokenType.CmLxDecInteger))
+        token = TokenAst(-1, Token(str(value), SppTokenType.LxDecInteger))
         return IntegerLiteralAst.from_token(token)
 
     @ast_printer_method

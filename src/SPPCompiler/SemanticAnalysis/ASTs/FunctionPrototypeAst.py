@@ -96,7 +96,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, ModulePrototypeAst, SupPrototypeInheritanceAst
         from SPPCompiler.SemanticAnalysis import TypeAst, SupImplementationAst
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
         super().pre_process(context)
 
         # Substitute the "Self" parameter's type with the name of the method.
@@ -114,8 +114,12 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
 
         # If this is the first overload being converted, then the class needs to be made for the type.
         if context.body.members.filter_to_type(ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
-            mock_class_ast = AstMutation.inject_code(f"cls {mock_class_name} {{}}", Parser.parse_class_prototype)
-            mock_constant_ast = AstMutation.inject_code(f"cmp {self.name}: {mock_class_name} = {mock_class_name}()", Parser.parse_global_constant)
+            mock_class_ast = AstMutation.inject_code(
+                f"cls {mock_class_name} {{}}",
+                SppParser.parse_class_prototype)
+            mock_constant_ast = AstMutation.inject_code(
+                f"cmp {self.name}: {mock_class_name} = {mock_class_name}()",
+                SppParser.parse_global_constant)
             context.body.members.append(mock_class_ast)
             context.body.members.append(mock_constant_ast)
 
@@ -131,25 +135,25 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         for a in function_ast.annotations:
             a.pre_process(function_ast)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
 
         # Create a new scope for the function.
         scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
-        super().generate_symbols(scope_manager)
+        super().generate_top_level_scopes(scope_manager)
 
         # Generate the generic parameters and attributes of the function.
         for p in self.generic_parameter_group.parameters:
-            p.generate_symbols(scope_manager)
+            p.generate_top_level_scopes(scope_manager)
 
         # Move out of the function scope.
         scope_manager.move_out_of_current_scope()
 
-    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
+    def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -167,11 +171,11 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
 
         scope_manager.move_out_of_current_scope()
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
-    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
+    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 

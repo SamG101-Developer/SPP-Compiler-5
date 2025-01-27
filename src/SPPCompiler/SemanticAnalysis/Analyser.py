@@ -3,7 +3,7 @@ from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from SPPCompiler.Compiler.ModuleTree import ModuleTree, Module
-    from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import ProgramAst
+    from SPPCompiler.Compiler.Program import Program
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
@@ -27,10 +27,10 @@ def create_global(module: Module) -> Scope:
 
 
 class Analyser:
-    _ast: ProgramAst
+    _ast: Program
     _scope_manager: Optional[ScopeManager]
 
-    def __init__(self, ast: ProgramAst) -> None:
+    def __init__(self, ast: Program) -> None:
         self._ast = ast
         self._scope_manager = None
 
@@ -41,25 +41,25 @@ class Analyser:
 
         self._scope_manager = ScopeManager(global_scope=create_global(module_tree.modules[0]))
 
-        program_bars = [
-            ProgressBar("Pre-processing..........", module_tree.modules.length),
-            ProgressBar("Generating symbols......", module_tree.modules.length),
-            ProgressBar("Aliasing types..........", module_tree.modules.length),
-            ProgressBar("Loading sup scopes......", module_tree.modules.length),
-            ProgressBar("Injecting sup scopes....", module_tree.modules.length),
-            ProgressBar("Regenerating aliases....", module_tree.modules.length),
-            ProgressBar("Regenerating generics...", module_tree.modules.length),
-            ProgressBar("Analysing semantics.....", module_tree.modules.length)]
+        progress_bars = [
+            ProgressBar("Pre-processing.................", module_tree.modules.length),
+            ProgressBar("Generating top-level scopes....", module_tree.modules.length),
+            ProgressBar("Generating top-level aliases...", module_tree.modules.length),
+            ProgressBar("Loading super scopes...........", module_tree.modules.length),
+            ProgressBar("Preprocessing super scopes.....", module_tree.modules.length),
+            ProgressBar("Regenerating generic aliases...", module_tree.modules.length),
+            ProgressBar("Regenerating generic types.....", module_tree.modules.length),
+            ProgressBar("Analysing semantics............", module_tree.modules.length)]
 
         try:
-            self._ast.pre_process(None, program_bars[0], module_tree)
-            self._ast.generate_symbols(self._scope_manager, program_bars[1], module_tree)
-            self._ast.alias_types(self._scope_manager, program_bars[2])
-            self._ast.load_sup_scopes(self._scope_manager, program_bars[3])
-            self._ast.inject_sup_scopes(self._scope_manager, program_bars[4])
-            self._ast.alias_types_regeneration(self._scope_manager, program_bars[5])
-            self._ast.regenerate_generic_types(self._scope_manager, program_bars[6])
-            self._ast.analyse_semantics(self._scope_manager, program_bars[7])
+            self._ast.pre_process(None, progress_bars[0], module_tree)
+            self._ast.generate_top_level_scopes(self._scope_manager, progress_bars[1], module_tree)
+            self._ast.generate_top_level_aliases(self._scope_manager, progress_bars[2])
+            self._ast.load_super_scopes(self._scope_manager, progress_bars[3])
+            self._ast.postprocess_super_scopes(self._scope_manager, progress_bars[4])
+            self._ast.regenerate_generic_aliases(self._scope_manager, progress_bars[5])
+            self._ast.regenerate_generic_types(self._scope_manager, progress_bars[6])
+            self._ast.analyse_semantics(self._scope_manager, progress_bars[7])
 
         except SemanticError as error:
             errored_module = module_tree.modules.find(lambda module: self._ast.current() is module.module_ast)

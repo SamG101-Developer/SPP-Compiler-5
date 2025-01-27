@@ -51,9 +51,9 @@ class GenericArgumentGroupAst(Ast, Default, CompilerStages):
 
     @staticmethod
     def default(arguments: Seq[GenericArgumentAst] = None) -> GenericArgumentGroupAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return GenericArgumentGroupAst(-1, TokenAst.default(TokenType.TkBrackL), arguments or Seq(), TokenAst.default(TokenType.TkBrackR))
+        return GenericArgumentGroupAst(-1, TokenAst.default(SppTokenType.TkBrackL), arguments or Seq(), TokenAst.default(SppTokenType.TkBrackR))
 
     @staticmethod
     def from_parameter_group(parameters: Seq[GenericParameterAst]) -> GenericArgumentGroupAst:

@@ -30,9 +30,9 @@ class WhereBlockAst(Ast, Default, CompilerStages):
 
     @staticmethod
     def default() -> WhereBlockAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import WhereConstraintsGroupAst, TokenAst
-        return WhereBlockAst(-1, TokenAst.default(TokenType.KwWhere), WhereConstraintsGroupAst.default())
+        return WhereBlockAst(-1, TokenAst.default(SppTokenType.KwWhere), WhereConstraintsGroupAst.default())
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...

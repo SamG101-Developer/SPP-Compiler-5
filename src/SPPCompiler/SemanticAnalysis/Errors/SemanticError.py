@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from fastenum import Enum
 from typing import List, NoReturn, Optional, Tuple, TYPE_CHECKING
 
-from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
+from SParLex.Utils.ErrorFormatter import ErrorFormatter
 
 
 if TYPE_CHECKING:

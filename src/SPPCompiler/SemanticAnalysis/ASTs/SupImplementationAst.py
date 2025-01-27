@@ -40,27 +40,27 @@ class SupImplementationAst(Ast, Default, CompilerStages):
     @staticmethod
     def default(members: Seq[SupMemberAst] = None) -> SupImplementationAst:
         # Create a default class implementation AST.
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return SupImplementationAst(-1, TokenAst.default(TokenType.TkBraceL), members or Seq(), TokenAst.default(TokenType.TkBraceR))
+        return SupImplementationAst(-1, TokenAst.default(SppTokenType.TkBraceL), members or Seq(), TokenAst.default(SppTokenType.TkBraceR))
 
     def pre_process(self, context: PreProcessingContext) -> None:
         for member in self.members: member.pre_process(context)
 
-    def generate_symbols(self, scope_manager: ScopeManager) -> None:
-        for member in self.members: member.generate_symbols(scope_manager)
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
+        for member in self.members: member.generate_top_level_scopes(scope_manager)
 
-    def alias_types(self, scope_manager: ScopeManager, **kwargs) -> None:
-        for member in self.members: member.alias_types(scope_manager, **kwargs)
+    def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
+        for member in self.members: member.generate_top_level_aliases(scope_manager, **kwargs)
 
-    def load_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        for member in self.members: member.load_sup_scopes(scope_manager)
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
+        for member in self.members: member.load_super_scopes(scope_manager)
 
-    def inject_sup_scopes(self, scope_manager: ScopeManager) -> None:
-        for member in self.members: member.inject_sup_scopes(scope_manager)
+    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
+        for member in self.members: member.postprocess_super_scopes(scope_manager)
 
-    def alias_types_regeneration(self, scope_manager: ScopeManager) -> None:
-        for member in self.members: member.alias_types_regeneration(scope_manager)
+    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
+        for member in self.members: member.regenerate_generic_aliases(scope_manager)
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         for member in self.members: member.regenerate_generic_types(scope_manager)

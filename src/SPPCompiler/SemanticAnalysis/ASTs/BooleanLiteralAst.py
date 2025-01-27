@@ -22,10 +22,10 @@ class BooleanLiteralAst(Ast, TypeInferrable, CompilerStages):
 
     @staticmethod
     def from_python_literal(pos: int, value: bool) -> BooleanLiteralAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
 
-        token = TokenAst.default(TokenType.KwTrue if value else TokenType.KwFalse, pos=pos)
+        token = TokenAst.default(SppTokenType.KwTrue if value else SppTokenType.KwFalse, pos=pos)
         return BooleanLiteralAst(pos, token)
 
     @ast_printer_method

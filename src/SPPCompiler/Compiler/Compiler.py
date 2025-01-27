@@ -1,14 +1,14 @@
 from __future__ import annotations
 from fastenum import Enum
 from typing import TYPE_CHECKING
-import json, os
+import hashlib, json, os
 
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.Compiler.ModuleTree import ModuleTree
     from SPPCompiler.SemanticAnalysis.Analyser import Analyser
-    from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import ProgramAst
+    from SPPCompiler.Compiler.Program import Program
 
 
 class Compiler:
@@ -19,39 +19,47 @@ class Compiler:
     _src_path: str
     _module_tree: ModuleTree
     _mode: Mode
-    _ast: ProgramAst
+    _ast: Program
     _analyser: Analyser
 
     def __init__(self, mode: Mode) -> None:
         from SPPCompiler.Compiler.ModuleTree import ModuleTree
-        from SPPCompiler.SemanticAnalysis.ASTs.ProgramAst import ProgramAst
+        from SPPCompiler.Compiler.Program import Program
 
         # Register the parameters against the instance.
         self._src_path = os.path.join(os.getcwd(), "src")
         self._module_tree = ModuleTree(os.getcwd())
         self._mode = mode
-        self._ast = ProgramAst(0, Seq())
+        self._ast = Program()
 
         # Compile the modules.
         self.compile()
 
     def compile(self) -> None:
-        from SPPCompiler.LexicalAnalysis.Lexer import Lexer
+        from SParLex.Utils.ErrorFormatter import ErrorFormatter
+        from SPPCompiler.LexicalAnalysis.Lexer import SppLexer
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter
         from SPPCompiler.SemanticAnalysis.Analyser import Analyser
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
-        from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+        from SPPCompiler.Utils.ProgressBar import ProgressBar
+
+        progress_bars = [
+            ProgressBar("Lexing.........................", self._module_tree.modules.length),
+            ProgressBar("Parsing........................", self._module_tree.modules.length)]
 
         # Lexing stage.
         for module in self._module_tree.modules:
             with open(".\\" + module.path) as fo:
                 module.code = fo.read()
-            module.token_stream = Lexer(module.code).lex()
-            module.error_formatter = ErrorFormatter(module.token_stream, module.path)
+            module.token_stream = SppLexer(module.code).lex()
+            progress_bars[0].next(module.path)
+            module.error_formatter = ErrorFormatter(SppTokenType, module.token_stream, module.path)
 
         # Parsing stage.
         for module in self._module_tree.modules.copy():
-            module.module_ast = Parser(module.token_stream, module.path, module.error_formatter).parse()
+            module.module_ast = SppParser(module.token_stream, module.path, module.error_formatter).parse().root_ast
+            progress_bars[1].next(module.path)
 
             # Remove vcs "main.spp" files.
             module_namespace = module.path.split(os.path.sep)
@@ -63,6 +71,14 @@ class Compiler:
         self._ast.modules = Seq([module.module_ast for module in self._module_tree.modules])
         self._analyser = Analyser(self._ast)
         self._analyser.analyse(self._module_tree)
+
+        # Make an output directory for the ASTs.
+        if not os.path.exists("out"):
+            os.makedirs("out")
+
+        # Save the file hashes to the output file (don't need to recompile if nothing has changed).
+        with open("out/file_hashes.json", "w") as file:
+            file.write(json.dumps({module.path: hashlib.md5(module.code.encode()).hexdigest() for module in self._module_tree.modules}, indent=4))
 
         # Save the AST to the output file (if in debug mode).
         if self._mode == Compiler.Mode.Debug:

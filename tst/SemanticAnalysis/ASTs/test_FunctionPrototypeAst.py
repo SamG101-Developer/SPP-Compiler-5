@@ -98,3 +98,15 @@ class TestFunctionPrototypeAst(CustomTestCase):
         fun f[T](a: T) -> std::Void { }
         fun f(a: std::BigInt) -> std::Void { }
         """
+
+    @should_pass_compilation()
+    def test_valid_generic_function_prototype_1(self):
+        """
+        fun f[T](a: T) -> std::Void { }
+        """
+
+    @should_pass_compilation()
+    def test_valid_generic_function_prototype_2(self):
+        """
+        fun f[T]() -> std::Void { }
+        """

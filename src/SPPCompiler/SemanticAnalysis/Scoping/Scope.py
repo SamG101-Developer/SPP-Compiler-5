@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
     from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol, VariableSymbol, Symbol
+    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol
 
 
 class Scope:
@@ -39,7 +39,7 @@ class Scope:
 
     _direct_sup_scopes: Seq[Scope]
     _direct_sub_scopes: Seq[Scope]
-    _type_symbol: Optional[TypeSymbol]
+    _type_symbol: Optional[TypeSymbol | NamespaceSymbol]
     _non_generic_scope: Optional[Scope]
 
     def __init__(self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Ast] = None) -> None:

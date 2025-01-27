@@ -32,25 +32,25 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
 
     @staticmethod
     def from_condition_and_branches(condition: ExpressionAst, branches: Seq[CaseExpressionBranchAst], *, pos: int) -> CaseExpressionAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import TokenAst
 
         # Create the case expression.
-        return CaseExpressionAst(pos, TokenAst.default(TokenType.KwCase), condition, TokenAst.default(TokenType.KwOf), branches)
+        return CaseExpressionAst(pos, TokenAst.default(SppTokenType.KwCase), condition, TokenAst.default(SppTokenType.KwOf), branches)
 
     @staticmethod
     def from_simple(c1: int, p1: TokenAst, p2: ExpressionAst, p3: InnerScopeAst, p4: Seq[CaseExpressionBranchAst]) -> CaseExpressionAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import BooleanLiteralAst, TokenAst, ParenthesizedExpressionAst
         from SPPCompiler.SemanticAnalysis import CaseExpressionBranchAst, PatternVariantExpressionAst
 
         # Convert condition into an "== true" comparison.
         first_pattern = PatternVariantExpressionAst(c1, BooleanLiteralAst.from_python_literal(c1, True))
-        first_branch = CaseExpressionBranchAst(c1, TokenAst.default(TokenType.TkEq, pos=c1), Seq([first_pattern]), None, p3)
+        first_branch = CaseExpressionBranchAst(c1, TokenAst.default(SppTokenType.TkEq, pos=c1), Seq([first_pattern]), None, p3)
         branches = Seq([first_branch]) + p4
 
         # Return the case expression.
-        return CaseExpressionAst(c1, p1, ParenthesizedExpressionAst.from_expression(p2, pos=p2.pos), TokenAst.default(TokenType.KwOf), branches)
+        return CaseExpressionAst(c1, p1, ParenthesizedExpressionAst.from_expression(p2, pos=p2.pos), TokenAst.default(SppTokenType.KwOf), branches)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -86,7 +86,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis import BinaryExpressionAst, PatternVariantElseAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -108,14 +108,19 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
         for branch in self.branches:
 
             # Destructures can only use 1 pattern.
-            if branch.comp_operator and branch.comp_operator.token.token_type == TokenType.KwIs and branch.patterns.length > 1:
+            if branch.comp_operator and branch.comp_operator.token.token_type == SppTokenType.KwIs and branch.patterns.length > 1:
                 raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1])
 
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
             symbols_in_scope = scope_manager.current_scope.all_symbols().filter_to_type(VariableSymbol)
-            old_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, s.memory_info.ast_partially_moved.copy(), s.memory_info.ast_pinned.copy(), s.memory_info.initialization_counter) for s in symbols_in_scope}
+            old_symbol_mem_info = {
+                s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, s.memory_info.ast_partially_moved.copy(), s.memory_info.ast_pinned.copy(), s.memory_info.initialization_counter)
+                for s in symbols_in_scope}
+
             branch.analyse_semantics(scope_manager, condition=self.condition, **kwargs)
-            new_symbol_mem_info = {s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, s.memory_info.ast_partially_moved.copy(), s.memory_info.ast_pinned.copy(), s.memory_info.initialization_counter) for s in symbols_in_scope}
+            new_symbol_mem_info = {
+                s: (s.memory_info.ast_initialization, s.memory_info.ast_moved, s.memory_info.ast_partially_moved.copy(), s.memory_info.ast_pinned.copy(), s.memory_info.initialization_counter)
+                for s in symbols_in_scope}
 
             # Reset the memory status of the symbols for the next branch to be analysed in the same state.
             for symbol, old_memory_status in old_symbol_mem_info.items():
@@ -133,7 +138,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
                 raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch, self.branches[-1])
 
             # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
-            if branch.comp_operator and branch.comp_operator.token.token_type != TokenType.KwIs:
+            if branch.comp_operator and branch.comp_operator.token.token_type != SppTokenType.KwIs:
                 for pattern in branch.patterns:
 
                     # Check the function exists.

@@ -46,14 +46,14 @@ class LoopConditionIterableAst(Ast, TypeInferrable, CompilerStages):
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         # from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SyntacticAnalysis.Parser import Parser
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.iterable, (TokenAst, TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.iterable)
 
         code = f"{self.iterable}.step() is std::Some(val as {self.variable})"
-        loop_condition_ast = AstMutation.inject_code(code, Parser.parse_loop_expression_condition_boolean)
+        loop_condition_ast = AstMutation.inject_code(code, SppParser.parse_loop_expression_condition_boolean)
         loop_condition_ast.analyse_semantics(scope_manager, **kwargs)
 
         # # Analyse the iterable.

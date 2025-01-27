@@ -39,9 +39,9 @@ class InnerScopeAst[T](Ast, Default, TypeInferrable, CompilerStages):
 
     @staticmethod
     def default(body: Seq[T] = None) -> InnerScopeAst[T]:
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
+        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return InnerScopeAst(-1, TokenAst.default(TokenType.TkBraceL), body or Seq(), TokenAst.default(TokenType.TkBraceR))
+        return InnerScopeAst(-1, TokenAst.default(SppTokenType.TkBraceL), body or Seq(), TokenAst.default(SppTokenType.TkBraceR))
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes

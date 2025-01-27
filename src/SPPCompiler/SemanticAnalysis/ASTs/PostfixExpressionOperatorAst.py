@@ -4,11 +4,14 @@ from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorEarlyReturnAst i
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorFunctionCallAst import PostfixExpressionOperatorFunctionCallAst
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorMemberAccessAst import PostfixExpressionOperatorMemberAccessAst
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorNotKeywordAst import PostfixExpressionOperatorNotKeywordAst
+from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorStepKeywordAst import PostfixExpressionOperatorStepKeywordAst
 
 type PostfixExpressionOperatorAst = Union[
     PostfixExpressionOperatorEarlyReturnAst,
     PostfixExpressionOperatorFunctionCallAst,
     PostfixExpressionOperatorMemberAccessAst,
-    PostfixExpressionOperatorNotKeywordAst]
+    PostfixExpressionOperatorNotKeywordAst,
+    PostfixExpressionOperatorStepKeywordAst
+]
 
 __all__ = ["PostfixExpressionOperatorAst"]
