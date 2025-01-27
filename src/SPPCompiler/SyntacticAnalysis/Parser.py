@@ -542,7 +542,7 @@ class SppParser(Parser):
     @parser_rule
     def parse_primary_expression(self) -> ExpressionAst:
         p1 = self.parse_literal()
-        p2 = self.parse_object_initialization()
+        p2 = self.parse_object_initializer()
         # p3 = self.parse_lambda_prototype()
         p4 = self.parse_parenthesized_expression()
         p5 = self.parse_type()
@@ -731,7 +731,7 @@ class SppParser(Parser):
         return RelStatementAst(c1, p1, p2)
 
     @parser_rule
-    def parse_inner_scope(self, rule) -> InnerScopeAst:
+    def parse_inner_scope(self, rule) -> InnerScopeAst:  # todo; remove param, it's always parse_statement
         c1 = self.current_pos()
         p1 = self.parse_token(SppTokenType.TkBraceL).parse_once()
         p2 = rule().parse_zero_or_more(SpecialToken.NO_TOK)
@@ -820,13 +820,13 @@ class SppParser(Parser):
         return p5
 
     @parser_rule
-    def parse_local_variable_skip_argument(self) -> LocalVariableDestructureSkip1ArgumentAst:
+    def parse_local_variable_destructure_skip_argument(self) -> LocalVariableDestructureSkip1ArgumentAst:
         c1 = self.current_pos()
         p1 = self.parse_token(SppTokenType.TkUnderscore).parse_once()
         return LocalVariableDestructureSkip1ArgumentAst(c1, p1)
 
     @parser_rule
-    def parse_local_variable_skip_arguments(self) -> LocalVariableDestructureSkipNArgumentsAst:
+    def parse_local_variable_destructure_skip_arguments(self) -> LocalVariableDestructureSkipNArgumentsAst:
         c1 = self.current_pos()
         p1 = self.parse_token(SppTokenType.TkVariadic).parse_once()
         p2 = self.parse_local_variable_single_identifier().parse_optional()
@@ -886,8 +886,8 @@ class SppParser(Parser):
         p2 = self.parse_local_variable_destructure_tuple()
         p3 = self.parse_local_variable_destructure_object()
         p4 = self.parse_local_variable_single_identifier()
-        p5 = self.parse_local_variable_skip_arguments()
-        p6 = self.parse_local_variable_skip_argument()
+        p5 = self.parse_local_variable_destructure_skip_arguments()
+        p6 = self.parse_local_variable_destructure_skip_argument()
         p7 = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
         return p7
 
@@ -897,8 +897,8 @@ class SppParser(Parser):
         p2 = self.parse_local_variable_destructure_tuple()
         p3 = self.parse_local_variable_destructure_object()
         p4 = self.parse_local_variable_single_identifier()
-        p5 = self.parse_local_variable_skip_arguments()
-        p6 = self.parse_local_variable_skip_argument()
+        p5 = self.parse_local_variable_destructure_skip_arguments()
+        p6 = self.parse_local_variable_destructure_skip_argument()
         p7 = (p1 | p2 | p3 | p4 | p5 | p6).parse_once()
         return p7
 
@@ -906,7 +906,7 @@ class SppParser(Parser):
     def parse_local_variable_nested_for_destructure_object(self) -> LocalVariableNestedForDestructureObjectAst:
         p1 = self.parse_local_variable_attribute_binding()
         p2 = self.parse_local_variable_single_identifier()
-        p3 = self.parse_local_variable_skip_arguments()
+        p3 = self.parse_local_variable_destructure_skip_arguments()
         p4 = (p1 | p2 | p3).parse_once()
         return p4
 
@@ -1009,7 +1009,7 @@ class SppParser(Parser):
     def parse_pattern_variant_destructure_tuple(self) -> PatternVariantDestructureTupleAst:
         c1 = self.current_pos()
         p1 = self.parse_token(SppTokenType.TkParenL).parse_once()
-        p2 = self.parse_pattern_variant_nested_for_tuple_destructure().parse_one_or_more(SppTokenType.TkComma)
+        p2 = self.parse_pattern_variant_nested_for_destructure_tuple().parse_one_or_more(SppTokenType.TkComma)
         p3 = self.parse_token(SppTokenType.TkParenR).parse_once()
         return PatternVariantDestructureTupleAst(c1, p1, p2, p3)
 
@@ -1017,7 +1017,7 @@ class SppParser(Parser):
     def parse_pattern_variant_destructure_array(self) -> PatternVariantDestructureArrayAst:
         c1 = self.current_pos()
         p1 = self.parse_token(SppTokenType.TkBrackL).parse_once()
-        p2 = self.parse_pattern_variant_nested_for_array_destructure().parse_one_or_more(SppTokenType.TkComma)
+        p2 = self.parse_pattern_variant_nested_for_destructure_array().parse_one_or_more(SppTokenType.TkComma)
         p3 = self.parse_token(SppTokenType.TkBrackR).parse_once()
         return PatternVariantDestructureArrayAst(c1, p1, p2, p3)
 
@@ -1026,7 +1026,7 @@ class SppParser(Parser):
         c1 = self.current_pos()
         p1 = self.parse_type_single().parse_once()
         p2 = self.parse_token(SppTokenType.TkParenL).parse_once()
-        p3 = self.parse_pattern_variant_nested_for_object_destructure().parse_zero_or_more(SppTokenType.TkComma)  # one or more?
+        p3 = self.parse_pattern_variant_nested_for_destructure_object().parse_zero_or_more(SppTokenType.TkComma)  # one or more?
         p4 = self.parse_token(SppTokenType.TkParenR).parse_once()
         return PatternVariantDestructureObjectAst(c1, p1, p2, p3, p4)
 
@@ -1068,7 +1068,7 @@ class SppParser(Parser):
         return PatternVariantElseCaseAst(c1, p1, p2)
 
     @parser_rule
-    def parse_pattern_variant_nested_for_tuple_destructure(self) -> PatternVariantNestedForDestructureTupleAst:
+    def parse_pattern_variant_nested_for_destructure_tuple(self) -> PatternVariantNestedForDestructureTupleAst:
         p1 = self.parse_pattern_variant_destructure_array()
         p2 = self.parse_pattern_variant_destructure_tuple()
         p3 = self.parse_pattern_variant_destructure_object()
@@ -1080,7 +1080,7 @@ class SppParser(Parser):
         return p8
 
     @parser_rule
-    def parse_pattern_variant_nested_for_array_destructure(self) -> PatternVariantNestedForDestructureArrayAst:
+    def parse_pattern_variant_nested_for_destructure_array(self) -> PatternVariantNestedForDestructureArrayAst:
         p1 = self.parse_pattern_variant_destructure_array()
         p2 = self.parse_pattern_variant_destructure_tuple()
         p3 = self.parse_pattern_variant_destructure_object()
@@ -1092,7 +1092,7 @@ class SppParser(Parser):
         return p8
 
     @parser_rule
-    def parse_pattern_variant_nested_for_object_destructure(self) -> PatternVariantNestedForDestructureObjectAst:
+    def parse_pattern_variant_nested_for_destructure_object(self) -> PatternVariantNestedForDestructureObjectAst:
         p1 = self.parse_pattern_variant_attribute_binding()
         p2 = self.parse_pattern_variant_single_identifier()
         p3 = self.parse_pattern_variant_skip_arguments()
@@ -1185,7 +1185,7 @@ class SppParser(Parser):
         return p1
 
     @parser_rule
-    def parse_unary_op_async_call(self) -> UnaryExpressionOperatorAsyncAst:
+    def parse_unary_op_async_call(self) -> UnaryExpressionOperatorAst:
         c1 = self.current_pos()
         p1 = self.parse_token(SppTokenType.KwAsync).parse_once()
         return UnaryExpressionOperatorAsyncAst(c1, p1)
@@ -1284,7 +1284,7 @@ class SppParser(Parser):
     # ===== OBJECT INITIALIZATION =====
 
     @parser_rule
-    def parse_object_initialization(self) -> ObjectInitializerAst:
+    def parse_object_initializer(self) -> ObjectInitializerAst:
         c1 = self.current_pos()
         p1 = self.parse_type_single().parse_once()
         p2 = self.parse_object_initializer_arguments().parse_once()
@@ -1661,13 +1661,13 @@ class SppParser(Parser):
         p4 = self.parse_literal_tuple(self.parse_global_constant_value)
         p5 = self.parse_literal_array(self.parse_global_constant_value)
         p6 = self.parse_literal_boolean()
-        p7 = self.parse_global_object_initialization()
+        p7 = self.parse_global_object_initializer()
         p8 = self.parse_identifier()
         p9 = (p1 | p2 | p3 | p4 | p5 | p6 | p7 | p8).parse_once()
         return p9
 
     @parser_rule
-    def parse_global_object_initialization(self) -> ObjectInitializerAst:
+    def parse_global_object_initializer(self) -> ObjectInitializerAst:
         c1 = self.current_pos()
         p1 = self.parse_type_single().parse_once()
         p2 = self.parse_global_object_initializer_arguments().parse_once()
