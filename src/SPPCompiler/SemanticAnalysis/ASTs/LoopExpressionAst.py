@@ -1,32 +1,35 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.StatementAst import StatementAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LoopConditionAst import LoopConditionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LoopElseStatementAst import LoopElseStatementAst
-    from SPPCompiler.SemanticAnalysis.ASTs.InnerScopeAst import InnerScopeAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
 class LoopExpressionAst(Ast, TypeInferrable, CompilerStages):
-    tok_loop: TokenAst
-    condition: LoopConditionAst
-    body: InnerScopeAst[StatementAst]
-    else_block: Optional[LoopElseStatementAst]
+    tok_loop: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwLoop))
+    condition: Asts.LoopConditionAst = field(default=None)
+    body: Asts.InnerScopeAst = field(default_factory=lambda: Asts.InnerScopeAst())
+    else_block: Optional[Asts.LoopElseStatementAst] = field(default=None)
 
     _loop_type_info: dict = field(default_factory=dict, init=False, repr=False)
     _loop_level: int = field(default=0, init=False, repr=False)
 
+    def __post_init__(self) -> None:
+        assert self.condition
+        assert self.body
+
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -36,10 +39,8 @@ class LoopExpressionAst(Ast, TypeInferrable, CompilerStages):
             self.else_block.print(printer) if self.else_block else ""]
         return "".join(string)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # Get the loop type set by exit expressions inside the loop.
         loop_type = self._loop_type_info.get(self._loop_level, (None, None))[1]
         if not loop_type:
@@ -55,12 +56,13 @@ class LoopExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         return loop_type
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Create a new scope for the loop body.
         scope_manager.create_and_move_into_new_scope(f"<loop:{self.pos}>")
         self.condition.analyse_semantics(scope_manager, **kwargs)
 
-        # Analyse twice (for memory checks).
+        # Todo: Analyse twice (for memory checks).
         # for i in range(("loop_level" not in kwargs) + 1):
 
         # For the top level loop, set the count to 0, and create empty dictionaries for the loop types and ASTs.

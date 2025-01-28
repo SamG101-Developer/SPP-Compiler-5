@@ -1,73 +1,60 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
+import std
 
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
+import SPPCompiler.SemanticAnalysis as Asts
+
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentNamedAst, GenericArgumentUnnamedAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericCompArgumentAst, GenericTypeArgumentAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericParameterAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class GenericArgumentGroupAst(Ast, Default, CompilerStages):
-    tok_left_bracket: TokenAst
-    arguments: Seq[GenericArgumentAst]
-    tok_right_bracket: TokenAst
-
-    def __post_init__(self) -> None:
-        # Convert the arguments into a sequence, and other defaults.
-        self.arguments = Seq(self.arguments)
+class GenericArgumentGroupAst(Ast, CompilerStages):
+    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceL))
+    arguments: Seq[Asts.GenericArgumentAst] = field(default_factory=Seq)
+    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))
 
     def __copy__(self) -> GenericArgumentGroupAst:
-        return GenericArgumentGroupAst.default(self.arguments.copy())
+        return GenericArgumentGroupAst(arguments=self.arguments.copy())
 
+    @std.override_method
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
         return self.arguments == other.arguments
 
-    def __getitem__(self, item: str) -> Optional[GenericArgumentAst]:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst
+    def __getitem__(self, item: str) -> Optional[Asts.GenericArgumentAst]:
         assert isinstance(item, str)
-        return self.arguments.find(lambda a: IdentifierAst.from_type(a.name).value == item)
+        return self.arguments.find(lambda a: Asts.IdentifierAst.from_type(a.name).value == item)
 
     @property
-    def type_arguments(self) -> Seq[GenericTypeArgumentAst]:
-        from SPPCompiler.SemanticAnalysis import GenericTypeArgumentAst
-        return self.arguments.filter_to_type(*GenericTypeArgumentAst.__value__.__args__)
+    def type_arguments(self) -> Seq[Asts.GenericTypeArgumentAst]:
+        return self.arguments.filter_to_type(*Asts.GenericTypeArgumentAst.__value__.__args__)
 
     @property
-    def comp_arguments(self) -> Seq[GenericCompArgumentAst]:
-        from SPPCompiler.SemanticAnalysis import GenericCompArgumentAst
-        return self.arguments.filter_to_type(*GenericCompArgumentAst.__value__.__args__)
+    def comp_arguments(self) -> Seq[Asts.GenericCompArgumentAst]:
+        return self.arguments.filter_to_type(*Asts.GenericCompArgumentAst.__value__.__args__)
 
     @staticmethod
-    def default(arguments: Seq[GenericArgumentAst] = None) -> GenericArgumentGroupAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return GenericArgumentGroupAst(-1, TokenAst.default(SppTokenType.TkBrackL), arguments or Seq(), TokenAst.default(SppTokenType.TkBrackR))
-
-    @staticmethod
-    def from_parameter_group(parameters: Seq[GenericParameterAst]) -> GenericArgumentGroupAst:
-        from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericCompParameterAst
-        from SPPCompiler.SemanticAnalysis import GenericTypeArgumentNamedAst, GenericTypeParameterAst
+    def from_parameter_group(parameters: Seq[Asts.GenericParameterAst]) -> GenericArgumentGroupAst:
 
         GenericArgumentCTor = {
-            **{g: GenericCompArgumentNamedAst for g in GenericCompParameterAst.__value__.__args__},
-            **{g: GenericTypeArgumentNamedAst for g in GenericTypeParameterAst.__value__.__args__}}
+            **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__value__.__args__},
+            **{g: Asts.GenericTypeArgumentNamedAst for g in Asts.GenericTypeParameterAst.__value__.__args__}}
 
         arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)].from_name_value(p.name, p.name))
-        return GenericArgumentGroupAst.default(arguments)
+        return GenericArgumentGroupAst(arguments=arguments)
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         if self.arguments:
@@ -79,21 +66,18 @@ class GenericArgumentGroupAst(Ast, Default, CompilerStages):
             string = []
         return "".join(string)
 
-    def get_named(self) -> Seq[GenericArgumentNamedAst]:
-        from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
-        return self.arguments.filter_to_type(GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst)
+    def get_named(self) -> Seq[Asts.GenericArgumentNamedAst]:
+        return self.arguments.filter_to_type(Asts.GenericCompArgumentNamedAst, Asts.GenericTypeArgumentNamedAst)
 
-    def get_unnamed(self) -> Seq[GenericArgumentUnnamedAst]:
-        from SPPCompiler.SemanticAnalysis import GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst
-        return self.arguments.filter_to_type(GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst)
+    def get_unnamed(self) -> Seq[Asts.GenericArgumentUnnamedAst]:
+        return self.arguments.filter_to_type(Asts.GenericCompArgumentUnnamedAst, Asts.GenericTypeArgumentUnnamedAst)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Code that is run before the overload is selected.
-        from SPPCompiler.SemanticAnalysis import GenericArgumentNamedAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Check there are no duplicate argument names.
-        generic_argument_names = self.arguments.filter_to_type(*GenericArgumentNamedAst.__value__.__args__).map(lambda a: a.name).flat()
+        generic_argument_names = self.arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__value__.__args__).map(lambda a: a.name).flat()
         if duplicates := generic_argument_names.non_unique():
             raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named generic argument")
 

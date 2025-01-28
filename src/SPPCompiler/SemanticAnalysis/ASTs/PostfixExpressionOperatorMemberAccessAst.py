@@ -1,8 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
-import difflib
+import difflib, std
 
+from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
+from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
@@ -10,20 +12,24 @@ from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStages):
-    tok_access: TokenAst
-    field: IdentifierAst | TokenAst
+    tok_access: TokenAst = field(default=None)
+    field: IdentifierAst | TokenAst = field(default=None)
 
+    def __post_init__(self) -> None:
+        assert self.tok_access
+        assert self.field
+
+    @std.override_method
     def __eq__(self, other: PostfixExpressionOperatorMemberAccessAst) -> bool:
         return self.tok_access == other.tok_access and self.field == other.field
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -39,6 +45,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
         from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         return self.tok_access.token.token_type == SppTokenType.TkDblColon
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
@@ -56,6 +63,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
             attribute_type = lhs_symbol.scope.get_symbol(self.field).type
             return InferredType.from_type(attribute_type)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement

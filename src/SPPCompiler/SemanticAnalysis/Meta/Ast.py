@@ -1,17 +1,20 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import *
+import std
 
 
 @dataclass
-class Ast:
-    pos: int
+class Ast(std.BaseObject):
+    pos: int = field(default=-1)
 
     @ast_printer_method
+    @std.abstract_method
     def print(self, printer: AstPrinter) -> str:
         ...
 
+    @std.virtual_method
     def __eq__(self, other: Ast) -> bool:
         return isinstance(other, Ast)
 
@@ -20,10 +23,4 @@ class Ast:
         return self.print(printer)
 
 
-class Default:
-    @staticmethod
-    def default() -> Default:
-        ...
-
-
-__all__ = ["Ast", "Default"]
+__all__ = ["Ast"]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Type, TYPE_CHECKING
+import std
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
@@ -16,7 +17,7 @@ class InferredType:
     type: TypeAst
 
     def __str__(self) -> str:
-        return f"{self.convention.default()}{self.type}"
+        return f"{self.convention()}{self.type}"
 
     def __hash__(self) -> int:
         return hash(self.type)
@@ -35,5 +36,6 @@ class InferredType:
 
 @dataclass
 class TypeInferrable:
+    @std.abstract_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         ...

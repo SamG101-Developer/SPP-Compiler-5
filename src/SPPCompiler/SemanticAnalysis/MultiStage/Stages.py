@@ -2,6 +2,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from llvmlite import ir as llvm
 from typing import Any, Optional, Union, TYPE_CHECKING
+import std
+
+from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ClassAttributeAst import ClassAttributeAst
@@ -11,7 +14,6 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.ASTs.ModulePrototypeAst import ModulePrototypeAst
     from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
     from SPPCompiler.SemanticAnalysis.ASTs.UseStatementAst import UseStatementAst
-    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 type PreProcessingContext = Union[
@@ -19,24 +21,12 @@ type PreProcessingContext = Union[
     SupPrototypeFunctionsAst, UseStatementAst, None]
 
 
-# Todo:
-#  - Rename functions:
-#  1. pre_process -> pre_process
-#  2. generate_symbols -> generate_exported_symbols
-#  3. alias_types -> link_aliases
-#  4. load_sup_scopes -> link_super_scopes
-#  5. inject_sup_scopes -> postprocess_super_scopes
-#  6. alias_types_regeneration -> generic_regenerate_aliases
-#  7. regenerate_generic_types -> generic_regenerate_types
-#  8. analyse_semantics -> analyse_semantics
-#  9. generate_llvm -> generate_llvm
-
-
 @dataclass
 class CompilerStages:
     _ctx: PreProcessingContext = field(default=None, kw_only=True, repr=False)
     _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
 
+    @std.virtual_method
     def pre_process(self, context: PreProcessingContext) -> None:
         """
         The preprocessor stage performs mutations on ASTs, introduces new ASTs, and removes some ASTs. This allows for
@@ -46,6 +36,7 @@ class CompilerStages:
 
         self._ctx = context
 
+    @std.virtual_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         """
         The generate top-level scopes stage generates all module and superimposition level scopes and symbols. This
@@ -55,6 +46,7 @@ class CompilerStages:
         """
         self._scope = scope_manager.current_scope
 
+    @std.virtual_method
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         """
         The generate top-level aliases stage generates all aliases at the module/sup level. This must come after the
@@ -63,12 +55,14 @@ class CompilerStages:
         any order of compilation.
         """
 
+    @std.virtual_method
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         """
         The load super scopes stage links all super scopes to classes. This allows a type to know what attributes and
         methods are on its superclasses, and is requires for symbol resolution.
         """
 
+    @std.virtual_method
     def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         """
         The postprocess super scopes stage performs checks that must happen after the super scopes have been injected,
@@ -76,6 +70,7 @@ class CompilerStages:
         all the super scopes.
         """
 
+    @std.virtual_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         """
         The regenerate generic aliases stage is the generic type regeneration stage exclusive to type-aliases. This is
@@ -84,6 +79,7 @@ class CompilerStages:
         aliased types.
         """
 
+    @std.virtual_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         """
         The regenerate generic types stage takes all the pruned generic types, and regenerated them with full knowledge
@@ -91,6 +87,7 @@ class CompilerStages:
         compilation stages.
         """
 
+    @std.virtual_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         """
         The semantic analysis stage is the most complex, and final analysis, stage of the semantic pipeline. This stage
@@ -98,12 +95,14 @@ class CompilerStages:
         generated, and all types to be aliased, loaded, and post-processed. All functions scopes are inspected.
         """
 
+    @std.virtual_method
     def generate_llvm_declarations(self, scope_handler: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
         """
         The LLVM declaration generation stage is the penultimate stage of the compiler. This stage generates the LLVM IR
         declarations for the module, with no implementations. This is to load all the symbols into the LLVM context.
         """
 
+    @std.virtual_method
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         """
         The LLVM definition generation stage is the final stage of the compiler. This stage generates the LLVM IR

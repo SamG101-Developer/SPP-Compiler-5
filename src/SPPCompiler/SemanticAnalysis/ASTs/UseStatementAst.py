@@ -1,21 +1,21 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
-import copy, itertools
+import copy, itertools, std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility, VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.AnnotationAst import AnnotationAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterGroupAst import GenericParameterGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -26,25 +26,21 @@ if TYPE_CHECKING:
 
 @dataclass
 class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
-    annotations: Seq[AnnotationAst]
-    tok_use: TokenAst
-    new_type: TypeAst
-    generic_parameter_group: GenericParameterGroupAst
-    tok_assign: TokenAst
-    old_type: TypeAst
+    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    tok_use: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwUse))
+    new_type: Asts.TypeAst = field(default=None)
+    generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    old_type: Asts.TypeAst = field(default=None)
 
     _generated: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst, TypeAst
-
-        # Convert the annotations into a sequence, the name to a TypeAst, and create defaults.
-        self.annotations = Seq(self.annotations)
-        self.new_type = TypeAst.from_identifier(self.new_type)
-        self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
+        assert self.new_type
+        assert self.old_type
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -57,27 +53,24 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         return "".join(string)
 
     @staticmethod
-    def from_types(new_type: IdentifierAst, generic_parameter_group: Optional[GenericParameterGroupAst], old_type: TypeAst) -> UseStatementAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import TokenAst
-        return UseStatementAst(-1, Seq(), TokenAst.default(SppTokenType.KwUse), new_type, generic_parameter_group, TokenAst.default(SppTokenType.TkAssign), old_type)
+    def from_types(new_type: Asts.IdentifierAst, generic_parameter_group: Optional[Asts.GenericParameterGroupAst], old_type: Asts.TypeAst) -> UseStatementAst:
+        return UseStatementAst(new_type=new_type, generic_parameter_group=generic_parameter_group, old_type=old_type)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
+    @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
         for a in self.annotations:
             a.pre_process(self)
         super().pre_process(context)
 
+    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager, visibility: AstVisibility = None) -> None:
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-
         # Create a class ast for the aliased type, and generate it.
         cls_ast = AstMutation.inject_code(f"cls {self.new_type} {{}}", SppParser.parse_class_prototype)
         cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
@@ -95,6 +88,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         # Mark this AST as generated, so it is not generated in the analysis phase.
         self._generated = True
 
+    @std.override_method
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
@@ -108,7 +102,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         old_type_symbol = scope_manager.current_scope.get_symbol(self.old_type)
 
         # Create a sup ast to allow the attribute and method access.
-        sup_ast = AstMutation.inject_code(f"sup {self.new_type} ext {self.old_type} {{}}", SppParser.parse_sup_prototype_inheritance)
+        sup_ast = AstMutation.inject_code(f"sup {self.new_type} ext {self.old_type} {{}}", SppParser.parse_sup_prototype_extension)
         sup_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)  # Todo: is this required?
         sup_ast.generate_top_level_scopes(scope_manager)
 
@@ -119,6 +113,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         # Move out of the type-alias scopes.
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
@@ -127,6 +122,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
@@ -135,6 +131,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
@@ -147,6 +144,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
@@ -155,6 +153,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # If the symbol has already been generated (module/sup level, skip the scopes).
         if self._generated:

@@ -1,29 +1,29 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
-import functools
+import functools, std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
 class LocalVariableDestructureSkip1ArgumentAst(Ast, VariableNameExtraction):
-    tok_underscore: TokenAst
+    tok_underscore: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkUnderscore))
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         return self.tok_underscore.print(printer)
 
     @functools.cached_property
-    def extract_names(self) -> Seq[IdentifierAst]:
+    @std.override_method
+    def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return Seq()
 
 

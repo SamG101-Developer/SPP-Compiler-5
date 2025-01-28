@@ -1,35 +1,33 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
-import functools
+import functools, std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableNestedForDestructureObjectAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
 class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, CompilerStages):
-    class_type: TypeAst
-    tok_left_paren: TokenAst
-    elements: Seq[LocalVariableNestedForDestructureObjectAst]
-    tok_right_paren: TokenAst
+    class_type: Asts.TypeAst = field(default=None)
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    elements: Seq[Asts.LocalVariableNestedForDestructureObjectAst] = field(default_factory=Seq)
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
 
     def __post_init__(self) -> None:
-        # Convert the elements into a sequence.
-        self.elements = Seq(self.elements)
+        assert self.class_type
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -40,27 +38,25 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, CompilerSta
         return "".join(string)
 
     @functools.cached_property
-    def extract_names(self) -> Seq[IdentifierAst]:
+    @std.override_method
+    def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.elements.map(lambda e: e.extract_names).flat()
 
     @functools.cached_property
-    def extract_name(self) -> IdentifierAst:
+    @std.override_method
+    def extract_name(self) -> Asts.IdentifierAst:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
         return IdentifierAst(self.pos, "_Unmatchable")
 
-    def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import LocalVariableSingleIdentifierAst, LocalVariableAttributeBindingAst
-        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureSkipNArgumentsAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+    @std.override_method
+    def analyse_semantics(self, scope_manager: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
 
         # Analyse the class and determine the attributes of the class.
         self.class_type.analyse_semantics(scope_manager, **kwargs)
         attributes = scope_manager.current_scope.get_symbol(self.class_type).type.body.members
 
         # Only 1 "multi-skip" allowed in a destructure.
-        multi_arg_skips = self.elements.filter_to_type(LocalVariableDestructureSkipNArgumentsAst)
+        multi_arg_skips = self.elements.filter_to_type(Asts.LocalVariableDestructureSkipNArgumentsAst)
         if multi_arg_skips.length > 1:
             raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1])
 
@@ -70,23 +66,23 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, CompilerSta
 
         # Create expanded "let" statements for each part of the destructure.
         for element in self.elements:
-            if isinstance(element, LocalVariableDestructureSkipNArgumentsAst):
+            if isinstance(element, Asts.LocalVariableDestructureSkipNArgumentsAst):
                 continue
 
-            elif isinstance(element, LocalVariableSingleIdentifierAst):
+            elif isinstance(element, Asts.LocalVariableSingleIdentifierAst):
                 new_ast = AstMutation.inject_code(f"let {element} = {value}.{element.name}", SppParser.parse_let_statement_initialized)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
-            elif isinstance(element, LocalVariableAttributeBindingAst) and isinstance(element.value, LocalVariableSingleIdentifierAst):
+            elif isinstance(element, Asts.LocalVariableAttributeBindingAst) and isinstance(element.value, Asts.LocalVariableSingleIdentifierAst):
                 continue
 
-            elif isinstance(element, LocalVariableAttributeBindingAst):
+            elif isinstance(element, Asts.LocalVariableAttributeBindingAst):
                 new_ast = AstMutation.inject_code(f"let {element.value} = {value}.{element.name}", SppParser.parse_let_statement_initialized)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
         # Check for any missing attributes in the destructure, unless a multi-skip is present.
         if not multi_arg_skips:
-            assigned_attributes = self.elements.filter_not_type(LocalVariableDestructureSkipNArgumentsAst).map(lambda e: e.name)
+            assigned_attributes = self.elements.filter_not_type(Asts.LocalVariableDestructureSkipNArgumentsAst).map(lambda e: e.name)
             missing_attributes = attributes.filter(lambda a: a.name not in assigned_attributes)
             if missing_attributes:
                 raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_attributes[0], "attribute", "destructure argument")

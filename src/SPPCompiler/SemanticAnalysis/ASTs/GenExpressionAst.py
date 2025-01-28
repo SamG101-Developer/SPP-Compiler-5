@@ -1,36 +1,32 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
 class GenExpressionAst(Ast, TypeInferrable, CompilerStages):
-    tok_gen: TokenAst
-    tok_with: Optional[TokenAst]
-    convention: Optional[ConventionAst]
-    expression: Optional[ExpressionAst]
-    _func_ret_type: Optional[TypeAst] = field(default=None, init=False, repr=False)
+    tok_gen: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwGen))
+    tok_with: Optional[Asts.TokenAst] = field(default=None)
+    convention: Optional[Asts.ConventionAst] = field(default=None)
+    expression: Optional[Asts.ExpressionAst] = field(default=None)
 
-    def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis.ASTs.ConventionMovAst import ConventionMovAst
-
-        # Create defaults.
-        self.convention = self.convention or ConventionMovAst.default()
+    _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -40,20 +36,15 @@ class GenExpressionAst(Ast, TypeInferrable, CompilerStages):
             self.expression.print(printer) if self.expression else ""]
         return "".join(string)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # The inferred type of a gen expression is the type of the value being sent back into the coroutine.
         generator_type = self._func_ret_type
         send_type = generator_type.types[-1].generic_argument_group["Send"].value
         return InferredType.from_type(send_type)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import ConventionMovAst
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-
         # Check the enclosing function is a coroutine and not a subroutine.
         if kwargs["function_type"].token.token_type != SppTokenType.KwCor:
             raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(kwargs["function_type"], self.tok_gen)
@@ -69,7 +60,7 @@ class GenExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         # Determine the yield's convention (based on convention token and symbol information)
         match self.convention, expression_type.convention:
-            case ConventionMovAst(), symbol_convention: expression_type.convention = symbol_convention
+            case Asts.ConventionMovAst(), symbol_convention: expression_type.convention = symbol_convention
             case _: expression_type.convention = type(self.convention)
 
         # Determine the yield type of the enclosing function.

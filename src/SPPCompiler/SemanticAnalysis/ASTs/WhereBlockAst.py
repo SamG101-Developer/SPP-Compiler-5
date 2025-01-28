@@ -1,23 +1,25 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.WhereConstraintsGroupAst import WhereConstraintsGroupAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class WhereBlockAst(Ast, Default, CompilerStages):
-    tok_where: TokenAst
-    constraint_group: WhereConstraintsGroupAst
+class WhereBlockAst(Ast, CompilerStages):
+    tok_where: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwWhere))
+    constraint_group: Asts.WhereConstraintsGroupAst = field(default_factory=lambda: Asts.WhereConstraintsGroupAst())
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         if self.constraint_group.constraints:
@@ -28,12 +30,7 @@ class WhereBlockAst(Ast, Default, CompilerStages):
             string = []
         return "".join(string)
 
-    @staticmethod
-    def default() -> WhereBlockAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import WhereConstraintsGroupAst, TokenAst
-        return WhereBlockAst(-1, TokenAst.default(SppTokenType.KwWhere), WhereConstraintsGroupAst.default())
-
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 

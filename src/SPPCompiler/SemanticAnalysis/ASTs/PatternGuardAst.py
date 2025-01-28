@@ -1,24 +1,28 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class PatternGuardAst(Ast, TypeInferrable, CompilerStages):
-    guard_token: TokenAst
-    expression: ExpressionAst
+class PatternGuardAst[T](Ast, CompilerStages):
+    guard_token: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwAnd))
+    expression: Asts.ExpressionAst = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.expression
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -26,16 +30,10 @@ class PatternGuardAst(Ast, TypeInferrable, CompilerStages):
             self.expression.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
-
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the expression.
-        if isinstance(self.expression, (TokenAst, TypeAst)):
+        if isinstance(self.expression, (Asts.TokenAst, Asts.TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.expression)
 
         # Analyse the expression.

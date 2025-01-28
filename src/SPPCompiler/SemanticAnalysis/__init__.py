@@ -14,7 +14,6 @@ from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ConventionMovAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ConventionMutAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ConventionRefAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.CoroutinePrototypeAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.FloatLiteralAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentAst import *
@@ -107,18 +106,16 @@ from SPPCompiler.SemanticAnalysis.ASTs.RelStatementAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.RetStatementAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.StatementAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.StringLiteralAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.SubroutinePrototypeAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.SupImplementationAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.SupMemberAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeInheritanceAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeExtensionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.SupUseStatementAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TupleLiteralAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TypeOptionalAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.TypePartAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TypeTupleAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TypeVariantAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.UnaryExpressionAst import *
@@ -130,3 +127,6 @@ from SPPCompiler.SemanticAnalysis.ASTs.WhereConstraintsAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.WhereConstraintsGroupAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.WithExpressionAliasAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.WithExpressionAst import *
+
+from SPPCompiler.SemanticAnalysis.ASTs.CoroutinePrototypeAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.SubroutinePrototypeAst import *

@@ -4,7 +4,7 @@ from SPPCompiler.SemanticAnalysis.ASTs.ClassPrototypeAst import ClassPrototypeAs
 from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
 from SPPCompiler.SemanticAnalysis.ASTs.GlobalConstantAst import GlobalConstantAst
 from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
-from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeInheritanceAst import SupPrototypeInheritanceAst
+from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeExtensionAst import SupPrototypeExtensionAst
 from SPPCompiler.SemanticAnalysis.ASTs.UseStatementAst import UseStatementAst
 
 type ModuleMemberAst = Union[
@@ -12,7 +12,7 @@ type ModuleMemberAst = Union[
     FunctionPrototypeAst,
     GlobalConstantAst,
     SupPrototypeFunctionsAst,
-    SupPrototypeInheritanceAst,
+    SupPrototypeExtensionAst,
     UseStatementAst]
 
 __all__ = ["ModuleMemberAst"]

@@ -1,58 +1,47 @@
 from __future__ import annotations
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
-import copy
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.Utils.Sequence import Seq
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.CaseExpressionBranchAst import CaseExpressionBranchAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.InnerScopeAst import InnerScopeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
-    tok_case: TokenAst
-    condition: ExpressionAst
-    kw_of: Optional[TokenAst]
-    branches: Seq[CaseExpressionBranchAst]
+class CaseExpressionAst[T](Ast, TypeInferrable, CompilerStages):
+    tok_case: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCase))
+    condition: Asts.ExpressionAst = field(default=None)
+    kw_of: Optional[Asts.TokenAst] = field(default=None)
+    branches: Seq[Asts.CaseExpressionBranchAst] = field(default_factory=Seq)
 
     def __post_init__(self) -> None:
-        # Convert the branches into a sequence.
-        self.branches = Seq(self.branches)
+        assert self.condition
 
     @staticmethod
-    def from_condition_and_branches(condition: ExpressionAst, branches: Seq[CaseExpressionBranchAst], *, pos: int) -> CaseExpressionAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import TokenAst
-
-        # Create the case expression.
-        return CaseExpressionAst(pos, TokenAst.default(SppTokenType.KwCase), condition, TokenAst.default(SppTokenType.KwOf), branches)
-
-    @staticmethod
-    def from_simple(c1: int, p1: TokenAst, p2: ExpressionAst, p3: InnerScopeAst, p4: Seq[CaseExpressionBranchAst]) -> CaseExpressionAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import BooleanLiteralAst, TokenAst, ParenthesizedExpressionAst
-        from SPPCompiler.SemanticAnalysis import CaseExpressionBranchAst, PatternVariantExpressionAst
-
+    def from_simple(c1: int, p1: Asts.TokenAst, p2: Asts.ExpressionAst, p3: Asts.InnerScopeAst, p4: Seq[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
         # Convert condition into an "== true" comparison.
-        first_pattern = PatternVariantExpressionAst(c1, BooleanLiteralAst.from_python_literal(c1, True))
-        first_branch = CaseExpressionBranchAst(c1, TokenAst.default(SppTokenType.TkEq, pos=c1), Seq([first_pattern]), None, p3)
+        first_pattern = Asts.PatternVariantExpressionAst(c1, Asts.BooleanLiteralAst.from_python_literal(c1, True))
+        first_branch = Asts.CaseExpressionBranchAst(c1, comp_operator=Asts.TokenAst.raw(pos=c1, token=SppTokenType.TkEq), patterns=Seq([first_pattern]), body=p3)
         branches = Seq([first_branch]) + p4
 
         # Return the case expression.
-        return CaseExpressionAst(c1, p1, ParenthesizedExpressionAst.from_expression(p2, pos=p2.pos), TokenAst.default(SppTokenType.KwOf), branches)
+        return CaseExpressionAst(c1, p1, Asts.ParenthesizedExpressionAst(pos=p2.pos, expression=p2), Asts.TokenAst.raw(token=SppTokenType.KwOf), branches)
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -62,11 +51,10 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
             self.branches.print(printer, "\n")]
         return "".join(string)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # The checks here only apply when assigning from this expression.
         from SPPCompiler.SemanticAnalysis import PatternVariantElseAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         branch_inferred_types = self.branches.map(lambda x: x.infer_type(scope_manager)).unique()
 
         # All branches must return the same type.
@@ -85,15 +73,10 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import BinaryExpressionAst, PatternVariantElseAst, TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
-
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
-        if isinstance(self.condition, (TokenAst, TypeAst)):
+        if isinstance(self.condition, (Asts.TokenAst, Asts.TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.condition)
 
         # Analyse the condition and enforce memory integrity (outside the new scope).
@@ -134,7 +117,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
                 symbol_mem_info[symbol].append((branch, new_symbol_mem_info[symbol]))
 
             # Check the "else" branch is the final branch (also ensures there is only 1).
-            if isinstance(branch.patterns[0], PatternVariantElseAst) and branch != self.branches[-1]:
+            if isinstance(branch.patterns[0], Asts.PatternVariantElseAst) and branch != self.branches[-1]:
                 raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch, self.branches[-1])
 
             # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
@@ -142,7 +125,7 @@ class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
                 for pattern in branch.patterns:
 
                     # Check the function exists.
-                    binary_ast = BinaryExpressionAst(self.pos, self.condition, branch.comp_operator, pattern.expression)
+                    binary_ast = Asts.BinaryExpressionAst(self.pos, self.condition, branch.comp_operator, pattern.expression)
                     binary_ast.analyse_semantics(scope_manager, **kwargs)
 
                     # Check the function's return type is boolean.

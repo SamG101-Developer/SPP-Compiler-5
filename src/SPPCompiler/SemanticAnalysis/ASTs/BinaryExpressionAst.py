@@ -1,30 +1,39 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstBinUtils import AstBinUtils
+from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.CaseExpressionAst import CaseExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionAst import PostfixExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
-    lhs: ExpressionAst
-    op: TokenAst
-    rhs: ExpressionAst
-    _as_func: Optional[PostfixExpressionAst | CaseExpressionAst] = field(default=None, init=False, repr=False)
+class BinaryExpressionAst[T](Ast, TypeInferrable, CompilerStages):
+    lhs: Asts.ExpressionAst = field(default=None)
+    op: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAdd))
+    rhs: Asts.ExpressionAst = field(default=None)
+
+    _as_func: Optional[Asts.PostfixExpressionAst | Asts.CaseExpressionAst] = field(default=None, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        assert self.lhs and self.rhs
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -33,6 +42,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
             self.rhs.print(printer)]
         return "".join(string)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -47,19 +57,12 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
             self.analyse_semantics(scope_manager, **kwargs)
         return self._as_func.infer_type(scope_manager, **kwargs)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-
         # The TypeAst cannot be used as an expression for a binary operation.
-        if isinstance(self.lhs, TypeAst):
+        if isinstance(self.lhs, Asts.TypeAst):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs)
-        if isinstance(self.rhs, TypeAst):
+        if isinstance(self.rhs, Asts.TypeAst):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs)
 
         # Analyse the LHS of the binary expression.
@@ -78,7 +81,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         # Ensure the memory status of the left and right hand side.
         self.rhs.analyse_semantics(scope_manager, **kwargs)
-        if not isinstance(self.rhs, TokenAst) and not isinstance(self.lhs, TokenAst):
+        if not isinstance(self.rhs, Asts.TokenAst) and not isinstance(self.lhs, Asts.TokenAst):
             AstMemoryHandler.enforce_memory_integrity(self.rhs, self.op, scope_manager)
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
@@ -87,7 +90,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
 
         # Todo: Check on the tuple size to be > 1 ?
         # Handle lhs-folding
-        if isinstance(self.lhs, TokenAst):
+        if isinstance(self.lhs, Asts.TokenAst):
             # Check the rhs is a tuple.
             rhs_tuple_type = self.rhs.infer_type(scope_manager, **kwargs).type
             if not rhs_tuple_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
@@ -110,7 +113,7 @@ class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
             self._as_func.analyse_semantics(scope_manager, **kwargs)
 
         # Handle rhs-folding
-        elif isinstance(self.rhs, TokenAst):
+        elif isinstance(self.rhs, Asts.TokenAst):
             # Check the rhs is a tuple.
             lhs_tuple_type = self.lhs.infer_type(scope_manager, **kwargs).type
             if not lhs_tuple_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):

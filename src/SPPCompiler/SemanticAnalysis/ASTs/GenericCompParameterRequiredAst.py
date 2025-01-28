@@ -1,39 +1,42 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
+from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class GenericCompParameterRequiredAst(Ast, Ordered, CompilerStages):
-    tok_cmp: TokenAst
-    name: TypeAst
-    tok_colon: TokenAst
-    type: TypeAst
+    tok_cmp: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCmp))
+    name: Asts.TypeAst = field(default=None)
+    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
+    type: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import TypeAst
-
-        # Convert the name to a TypeAst.
-        self.name = TypeAst.from_identifier(self.name)
+        assert self.name
+        assert self.type
         self._variant = "Required"
 
+    @std.override_method
     def __eq__(self, other: GenericCompParameterRequiredAst) -> bool:
         # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericCompParameterRequiredAst) and self.name == other.name
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -43,23 +46,19 @@ class GenericCompParameterRequiredAst(Ast, Ordered, CompilerStages):
             self.type.print(printer)]
         return "".join(string)
 
+    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
-        from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
-        from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-
         # Create a variable symbol for this constant in the current scope (class / function).
-        symbol = VariableSymbol(name=IdentifierAst.from_type(self.name), type=self.type, visibility=AstVisibility.Public, is_generic=True)
+        symbol = VariableSymbol(
+            name=Asts.IdentifierAst.from_type(self.name),
+            type=self.type, visibility=AstVisibility.Public, is_generic=True)
         symbol.memory_info.ast_pinned.append(self.name)
         symbol.memory_info.ast_comptime_const = self
         symbol.memory_info.initialized_by(self)
         scope_manager.current_scope.add_symbol(symbol)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-
         # Analyse the type of the default expression.
         self.type.analyse_semantics(scope_manager)
 
@@ -70,7 +69,7 @@ class GenericCompParameterRequiredAst(Ast, Ordered, CompilerStages):
         ast.analyse_semantics(scope_manager, **kwargs)
 
         # Mark the symbol as initialized.
-        symbol = scope_manager.current_scope.get_symbol(IdentifierAst.from_type(self.name))
+        symbol = scope_manager.current_scope.get_symbol(Asts.IdentifierAst.from_type(self.name))
         symbol.memory_info.initialized_by(self)
 
 

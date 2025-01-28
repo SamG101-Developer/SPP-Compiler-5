@@ -1,36 +1,32 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class ConventionMutAst(Ast, Default):
-    tok_borrow: TokenAst
-    tok_mut: TokenAst
+class ConventionMutAst(Ast):
+    tok_borrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBorrow))
+    tok_mut: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwMut))
 
+    @std.override_method
     def __eq__(self, other: ConventionMutAst) -> bool:
         # Check both ASTs are the same type.
         return isinstance(other, ConventionMutAst)
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
             self.tok_borrow.print(printer),
             self.tok_mut.print(printer) + " "]
         return "".join(string)
-
-    @staticmethod
-    def default() -> ConventionMutAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import TokenAst
-        return ConventionMutAst(-1, TokenAst.default(SppTokenType.TkBorrow), TokenAst.default(SppTokenType.KwMut))
 
 
 __all__ = ["ConventionMutAst"]

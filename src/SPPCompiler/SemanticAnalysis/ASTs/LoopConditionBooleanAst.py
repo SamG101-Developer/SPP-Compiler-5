@@ -1,40 +1,44 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class LoopConditionBooleanAst(Ast, TypeInferrable, CompilerStages):
-    condition: ExpressionAst
+class LoopConditionBooleanAst[T](Ast, TypeInferrable, CompilerStages):
+    condition: Asts.ExpressionAst = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.condition
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         return self.condition.print(printer)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Boolean conditions are inferred as "bool".
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         bool_type = CommonTypes.Bool(self.pos)
         return InferredType.from_type(bool_type)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
-        if isinstance(self.condition, (TokenAst, TypeAst)):
+        if isinstance(self.condition, (Asts.TokenAst, Asts.TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.condition)
 
         # Analyse the condition expression.

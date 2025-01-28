@@ -1,25 +1,23 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
-import functools
+import functools, std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableSingleIdentifierAst import LocalVariableSingleIdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
 class LocalVariableDestructureSkipNArgumentsAst(Ast, VariableNameExtraction):
-    tok_variadic: TokenAst
-    binding: Optional[LocalVariableSingleIdentifierAst]
+    tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
+    binding: Optional[Asts.LocalVariableSingleIdentifierAst] = field(default=None)
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -28,7 +26,8 @@ class LocalVariableDestructureSkipNArgumentsAst(Ast, VariableNameExtraction):
         return "".join(string)
 
     @functools.cached_property
-    def extract_names(self) -> Seq[IdentifierAst]:
+    @std.override_method
+    def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.binding.extract_names if self.binding else Seq()
 
 

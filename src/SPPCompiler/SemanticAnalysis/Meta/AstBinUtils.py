@@ -96,7 +96,7 @@ class AstBinUtils:
             lhs = ast.lhs.rhs
             rhs = ast.rhs
             ast.rhs = BinaryExpressionAst(ast.pos, lhs, ast.op, rhs)
-            ast.op = TokenAst.default(SppTokenType.KwAnd)
+            ast.op = TokenAst.raw(token=SppTokenType.KwAnd)
             AstBinUtils._combine_comparison_operators(ast)
             return ast
 

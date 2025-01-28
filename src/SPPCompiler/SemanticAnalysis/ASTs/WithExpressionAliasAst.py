@@ -1,24 +1,28 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class WithExpressionAliasAst(Ast, CompilerStages):
-    variable: LocalVariableAst
-    tok_assign: TokenAst
+    variable: Asts.LocalVariableAst = field(default=None)
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+
+    def __post_init__(self) -> None:
+        assert self.variable
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -26,7 +30,8 @@ class WithExpressionAliasAst(Ast, CompilerStages):
             self.tok_assign.print(printer)]
         return "".join(string)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, with_expression: ExpressionAst = None, **kwargs) -> None:
+    @std.override_method
+    def analyse_semantics(self, scope_manager: ScopeManager, with_expression: Asts.ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 

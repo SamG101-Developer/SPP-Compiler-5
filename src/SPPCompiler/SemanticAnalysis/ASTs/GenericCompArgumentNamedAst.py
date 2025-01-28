@@ -1,39 +1,38 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
     from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 
 
 @dataclass
 class GenericCompArgumentNamedAst(Ast, Ordered, CompilerStages):
-    name: TypeAst
-    tok_assign: TokenAst
-    value: ExpressionAst
+    name: Asts.TypeAst = field(default=None)
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    value: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import TypeAst
-
-        # Convert the name to a TypeAst.
-        self.name = TypeAst.from_identifier(self.name)
+        assert self.name
+        assert self.value
         self._variant = "Named"
 
+    @std.override_method
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.
         return isinstance(other, GenericCompArgumentNamedAst) and self.name == other.name and self.value == other.value
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -43,17 +42,14 @@ class GenericCompArgumentNamedAst(Ast, Ordered, CompilerStages):
         return " ".join(string)
 
     @staticmethod
-    def from_name_value(name: TypeAst, value: ExpressionAst) -> GenericCompArgumentNamedAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
-        return GenericCompArgumentNamedAst(-1, IdentifierAst.from_type(name), TokenAst.default(SppTokenType.TkAssign), value)
+    def from_name_value(name: Asts.TypeAst, value: Asts.ExpressionAst) -> GenericCompArgumentNamedAst:
+        return GenericCompArgumentNamedAst(name=Asts.IdentifierAst.from_type(name), value=value)
 
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import TokenAst
-        return GenericCompArgumentNamedAst(-1, symbol.name, TokenAst.default(SppTokenType.TkAssign), symbol.memory_info.ast_comptime_const)
+        return GenericCompArgumentNamedAst(name=symbol.name, value=symbol.memory_info.ast_comptime_const)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors

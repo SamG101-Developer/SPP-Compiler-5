@@ -1,44 +1,35 @@
 from __future__ import annotations
 
-import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import copy, std
 
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ClassMemberAst import ClassMemberAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class ClassImplementationAst(Ast, Default, CompilerStages):
-    tok_left_brace: TokenAst
-    members: Seq[ClassMemberAst]
-    tok_right_brace: TokenAst
-
-    def __post_init__(self) -> None:
-        # Convert the members into a sequence.
-        self.members = Seq(self.members)
+class ClassImplementationAst(Ast, CompilerStages):
+    tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceL))
+    members: Seq[Asts.ClassMemberAst] = field(default_factory=Seq)
+    tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))
 
     def __deepcopy__(self, memodict={}):
         return ClassImplementationAst(
             self.pos, self.tok_left_brace, copy.deepcopy(self.members),
             self.tok_right_brace, _ctx=self._ctx, _scope=self._scope)
 
-    @staticmethod
-    def default() -> ClassImplementationAst:
-        # Create a default class implementation AST.
-        from SPPCompiler.LexicalAnalysis.TokenType import TokenType
-        return ClassImplementationAst(-1, TokenAst.default(TokenType.TkBraceL), Seq(), TokenAst.default(TokenType.TkBraceR))
-
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
-        # Print the AST with auto-formatting.
         # Print the AST with auto-formatting.
         if self.members:
             string = [
@@ -51,29 +42,33 @@ class ClassImplementationAst(Ast, Default, CompilerStages):
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
 
+    @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
         # Pre-process the members.
         for m in self.members: m.pre_process(context)
 
+    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Generate the symbols for the members.
         for m in self.members: m.generate_top_level_scopes(scope_manager)
 
+    @std.override_method
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Load the super scopes for the members.
         for m in self.members: m.load_super_scopes(scope_manager)
 
+    @std.override_method
     def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Inject the super scopes for the members.
         for m in self.members: m.postprocess_super_scopes(scope_manager)
 
+    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         # Regenerate the generic types for the members.
         for m in self.members: m.regenerate_generic_types(scope_manager)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # Analyse the semantics of the members.
         for m in self.members:
             m.analyse_semantics(scope_manager, **kwargs)

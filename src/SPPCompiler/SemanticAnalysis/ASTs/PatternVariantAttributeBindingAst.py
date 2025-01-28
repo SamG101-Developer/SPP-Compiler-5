@@ -1,25 +1,27 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.PatternMapping import PatternMapping
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAttributeBindingAst import LocalVariableAttributeBindingAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantAst import PatternVariantNestedForAttributeBindingAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class PatternVariantAttributeBindingAst(Ast, PatternMapping):
-    name: IdentifierAst
-    tok_assign: TokenAst
-    value: PatternVariantNestedForAttributeBindingAst
+class PatternVariantAttributeBindingAst[T](Ast, PatternMapping):
+    name: Asts.IdentifierAst = field(default=None)
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    value: Asts.PatternVariantNestedForAttributeBindingAst = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.name
+        assert self.value
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -28,10 +30,10 @@ class PatternVariantAttributeBindingAst(Ast, PatternMapping):
             self.value.print(printer)]
         return "".join(string)
 
-    def convert_to_variable(self, **kwargs) -> LocalVariableAttributeBindingAst:
+    @std.override_method
+    def convert_to_variable(self, **kwargs) -> Asts.LocalVariableAttributeBindingAst:
         # Convert the attribute binding into a local variable attribute binding.
-        from SPPCompiler.SemanticAnalysis import LocalVariableAttributeBindingAst
-        return LocalVariableAttributeBindingAst(self.pos, self.name, self.tok_assign, self.value.convert_to_variable(**kwargs))
+        return Asts.LocalVariableAttributeBindingAst(self.pos, self.name, self.tok_assign, self.value.convert_to_variable(**kwargs))
 
 
 __all__ = ["PatternVariantAttributeBindingAst"]

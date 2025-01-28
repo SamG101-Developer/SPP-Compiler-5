@@ -1,24 +1,30 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.UnaryExpressionOperatorAst import UnaryExpressionOperatorAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class UnaryExpressionAst(Ast, TypeInferrable, CompilerStages):
-    op: UnaryExpressionOperatorAst
-    rhs: ExpressionAst
+    op: Asts.UnaryExpressionOperatorAst = field(default=None)
+    rhs: Asts.ExpressionAst = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.op
+        assert self.rhs
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -26,16 +32,15 @@ class UnaryExpressionAst(Ast, TypeInferrable, CompilerStages):
             self.rhs.print(printer)]
         return "".join(string)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Infer the type of the unary operation being applied to the "rhs".
         return self.op.infer_type(scope_manager, rhs=self.rhs, **kwargs)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the rhs.
-        if isinstance(self.rhs, (TokenAst, TypeAst)):
+        if isinstance(self.rhs, (Asts.TokenAst, Asts.TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs)
 
         # Analyse the "op" and the "rhs".

@@ -1,61 +1,48 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
-import copy
+import copy, std
 
 from llvmlite import ir as llvm
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.AnnotationAst import AnnotationAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ClassImplementationAst import ClassImplementationAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterGroupAst import GenericParameterGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.WhereBlockAst import WhereBlockAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
-    annotations: Seq[AnnotationAst]
-    tok_cls: TokenAst
-    name: TypeAst
-    generic_parameter_group: GenericParameterGroupAst
-    where_block: WhereBlockAst
-    body: ClassImplementationAst
+    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    tok_cls: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCls))
+    name: Asts.TypeAst = field(default=None)
+    generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
+    where_block: Asts.WhereBlockAst = field(default_factory=lambda: Asts.WhereBlockAst())
+    body: Asts.ClassImplementationAst = field(default_factory=lambda: Asts.ClassImplementationAst())
 
     _is_alias: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst
-        from SPPCompiler.SemanticAnalysis import TypeAst, WhereBlockAst
-
-        # Convert the annotations into a sequence, the name to a TypeAst, and create other defaults.
-        self.annotations = Seq(self.annotations)
-        self.name = TypeAst.from_identifier(self.name)
-        self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
-        self.where_block = self.where_block or WhereBlockAst.default()
-        self.body = self.body or ClassImplementationAst.default()
+        assert self.name
 
     def __json__(self) -> str:
         return f"{self.name}{self.generic_parameter_group}"
 
     def __deepcopy__(self, memodict={}):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst
         return ClassPrototypeAst(
-            self.pos, copy.copy(self.annotations), self.tok_cls, IdentifierAst.from_type(self.name),
+            self.pos, copy.copy(self.annotations), self.tok_cls, Asts.IdentifierAst.from_type(self.name),
             copy.deepcopy(self.generic_parameter_group), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
             _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -84,6 +71,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
             symbol_2.scope = scope_manager.current_scope
             scope_manager.current_scope.parent.add_symbol(symbol_2)
 
+    @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
         super().pre_process(context)
 
@@ -92,6 +80,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
             a.pre_process(self)
         self.body.pre_process(self)
 
+    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager, is_alias: bool = False) -> None:
         # Create a new scope for the class.
         scope_manager.create_and_move_into_new_scope(self.name, self)
@@ -108,36 +97,42 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         # Move out of the type scope.
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.generate_top_level_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.load_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.postprocess_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.generate_top_level_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.regenerate_generic_types(scope_manager)
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Move into the class scope.
         scope_manager.move_to_next_scope()
@@ -150,6 +145,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         # Move out of the class scope.
         scope_manager.move_out_of_current_scope()
 
+    @std.override_method
     def generate_llvm_declarations(self, scope_handler: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
         # Move into the class scope.
         scope_handler.move_to_next_scope()
@@ -163,6 +159,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         # Move out of the class scope.
         scope_handler.move_out_of_current_scope()
 
+    @std.override_method
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         # Move into the class scope.
         scope_handler.move_to_next_scope()

@@ -1,29 +1,37 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from llvmlite import ir as llvm
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
-    let_keyword: TokenAst
-    assign_to: LocalVariableAst
-    assign_token: TokenAst
-    value: ExpressionAst
+    let_keyword: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwLet))
+    assign_to: Asts.LocalVariableAst = field(default=None)
+    assign_token: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    value: Asts.ExpressionAst = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.assign_to
+        assert self.value
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -34,26 +42,21 @@ class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
         return "".join(string)
 
     @staticmethod
-    def from_variable_and_value(variable: LocalVariableAst, value: ExpressionAst) -> LetStatementInitializedAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import TokenAst
+    def from_variable_and_value(variable: Asts.LocalVariableAst, value: Asts.ExpressionAst) -> LetStatementInitializedAst:
         return LetStatementInitializedAst(
-            variable.pos, TokenAst.default(SppTokenType.KwLet), variable,
-            TokenAst.default(SppTokenType.TkAssign, pos=variable.pos), value)
+            variable.pos, Asts.TokenAst.raw(token=SppTokenType.KwLet), variable,
+            Asts.TokenAst.raw(pos=variable.pos, token=SppTokenType.TkAssign), value)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
-
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
-        if isinstance(self.value, (TokenAst, TypeAst)):
+        if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.value)
 
         # Analyse the assign_to and value of the let statement.
@@ -62,6 +65,7 @@ class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
             self.value, self.assign_token, scope_manager, update_memory_info=False)
         self.assign_to.analyse_semantics(scope_manager, value=self.value, **kwargs)
 
+    @std.override_method
     def generate_llvm_definitions(
             self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None,
             block: llvm.Block = None, **kwargs) -> Any:

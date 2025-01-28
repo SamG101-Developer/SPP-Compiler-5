@@ -76,7 +76,7 @@ class SppTokenType(TokenType):
     TkBraceL = "{"
     TkBraceR = "}"
     TkQst = "?"
-    TkVariadic = ".."
+    TkDblDot = ".."
     TkColon = ":"
     TkBorrow = "&"
     TkUnion = "|"

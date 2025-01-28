@@ -125,7 +125,7 @@ class AstTypeManagement:
 
     @staticmethod
     def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: GenericArgumentGroupAst) -> Seq[Scope]:
-        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeInheritanceAst, SupPrototypeFunctionsAst, GenericTypeArgumentNamedAst
+        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeExtensionAst, SupPrototypeFunctionsAst, GenericTypeArgumentNamedAst
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
         from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
         from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -145,7 +145,7 @@ class AstTypeManagement:
                 new_scope = scope_manager.current_scope.get_symbol(new_fq_type).scope
 
             # Create the scope for the new super class type. This will handle recursive sup-scope creation.
-            elif isinstance(scope._ast, SupPrototypeInheritanceAst):
+            elif isinstance(scope._ast, SupPrototypeExtensionAst):
                 temp_manager = ScopeManager(scope_manager.global_scope, base_scope)
                 new_fq_super_type = copy.deepcopy(scope._ast.super_class)
                 super_type_symbol = base_scope.get_symbol(new_fq_super_type)
@@ -165,7 +165,7 @@ class AstTypeManagement:
                     mock_generic_parameter = scope._ast.name.get_generic_parameter_for_argument(generic_parameter.name)
                     mock_generic_value = generic_arguments.arguments.find(lambda a: a.name == mock_generic_parameter)
                     if not mock_generic_value: continue
-                    new_generic_argument = GenericTypeArgumentNamedAst(-1, generic_parameter.name.types[-1], TokenAst.default(SppTokenType.TkAssign), mock_generic_value.value)
+                    new_generic_argument = GenericTypeArgumentNamedAst(name=generic_parameter.name.types[-1], value=mock_generic_value.value)
                     generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, new_generic_argument)
                     new_scope.add_symbol(generic_symbol)
 

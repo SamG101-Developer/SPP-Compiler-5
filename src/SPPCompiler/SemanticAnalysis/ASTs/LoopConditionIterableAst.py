@@ -1,18 +1,19 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
-from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -24,11 +25,16 @@ if TYPE_CHECKING:
 
 @dataclass
 class LoopConditionIterableAst(Ast, TypeInferrable, CompilerStages):
-    variable: LocalVariableAst
-    in_keyword: TokenAst
-    iterable: ExpressionAst
+    variable: Asts.LocalVariableAst = field(default=None)
+    in_keyword: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwIn))
+    iterable: Asts.ExpressionAst = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.variable
+        assert self.iterable
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -37,19 +43,17 @@ class LoopConditionIterableAst(Ast, TypeInferrable, CompilerStages):
             self.iterable.print(printer)]
         return "".join(string)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Infer the type from the iterable.
         return self.iterable.infer_type(scope_manager, **kwargs)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         # from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
-        if isinstance(self.iterable, (TokenAst, TypeAst)):
+        if isinstance(self.iterable, (Asts.TokenAst, Asts.TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.iterable)
 
         code = f"{self.iterable}.step() is std::Some(val as {self.variable})"

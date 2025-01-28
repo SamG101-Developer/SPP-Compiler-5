@@ -1,41 +1,39 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.CoroutinePrototypeAst import CoroutinePrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentAst import FunctionCallArgumentAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentNamedAst import FunctionCallArgumentNamedAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentUnnamedAst import FunctionCallArgumentUnnamedAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
-    tok_left_paren: TokenAst
-    arguments: Seq[FunctionCallArgumentAst]
-    tok_right_paren: TokenAst
-
-    def __post_init__(self) -> None:
-        # Convert the arguments into a sequence.
-        self.arguments = Seq(self.arguments)
+class FunctionCallArgumentGroupAst(Ast, CompilerStages):
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    arguments: Seq[Asts.FunctionCallArgumentAst] = field(default_factory=Seq)
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
 
     def __copy__(self) -> FunctionCallArgumentGroupAst:
-        return FunctionCallArgumentGroupAst.default(self.arguments.copy())
+        return FunctionCallArgumentGroupAst(arguments=self.arguments.copy())
 
+    @std.override_method
     def __eq__(self, other: FunctionCallArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
         return isinstance(other, FunctionCallArgumentGroupAst) and self.arguments == other.arguments
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -44,32 +42,19 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    @staticmethod
-    def default(arguments: Seq[FunctionCallArgumentAst] = None) -> FunctionCallArgumentGroupAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return FunctionCallArgumentGroupAst(-1, TokenAst.default(SppTokenType.TkParenL), arguments or Seq(), TokenAst.default(SppTokenType.TkParenR))
-
-    def get_named(self) -> Seq[FunctionCallArgumentNamedAst]:
+    def get_named(self) -> Seq[Asts.FunctionCallArgumentNamedAst]:
         # Get all the named function call arguments.
-        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst
-        return self.arguments.filter_to_type(FunctionCallArgumentNamedAst)
+        return self.arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst)
 
-    def get_unnamed(self) -> Seq[FunctionCallArgumentUnnamedAst]:
+    def get_unnamed(self) -> Seq[Asts.FunctionCallArgumentUnnamedAst]:
         # Get all the unnamed function call arguments.
-        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentUnnamedAst
-        return self.arguments.filter_to_type(FunctionCallArgumentUnnamedAst)
+        return self.arguments.filter_to_type(Asts.FunctionCallArgumentUnnamedAst)
 
     def analyse_pre_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Code that is run before the overload is selected.
-        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, FunctionCallArgumentUnnamedAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Check there are no duplicate argument names.
-        argument_names = self.arguments.filter_to_type(FunctionCallArgumentNamedAst).map(lambda a: a.name)
+        argument_names = self.arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst).map(lambda a: a.name)
         if duplicates := argument_names.non_unique():
             raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named arguments")
 
@@ -79,7 +64,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
 
         # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ...").
         for i, argument in self.arguments.enumerate():
-            if isinstance(argument, FunctionCallArgumentUnnamedAst) and argument.tok_unpack:
+            if isinstance(argument, Asts.FunctionCallArgumentUnnamedAst) and argument.tok_unpack:
 
                 # Check the argument type is a tuple
                 tuple_argument_type = argument.infer_type(scope_manager, **kwargs).type
@@ -97,14 +82,12 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
         for a in self.arguments:
             a.analyse_semantics(scope_manager, **kwargs)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, target: FunctionPrototypeAst = None, is_async: TokenAst = None, **kwargs) -> None:
+    @std.override_method
+    def analyse_semantics(self, scope_manager: ScopeManager, target: Asts.FunctionPrototypeAst = None, is_async: Asts.TokenAst = None, **kwargs) -> None:
         # Code that is run after the overload is selected.
-        from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst, CoroutinePrototypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 
         # Mark if pins are required, and the ast to mark as errored if required.
-        pins_required = is_async or isinstance(target, CoroutinePrototypeAst)
+        pins_required = is_async or isinstance(target, Asts.CoroutinePrototypeAst)
         pin_error_ast = is_async or target
 
         # Define the borrow sets to maintain the law of exclusivity.
@@ -122,7 +105,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
             if not symbol:
                 continue
 
-            if isinstance(argument.convention, ConventionMovAst):
+            if isinstance(argument.convention, Asts.ConventionMovAst):
                 # Don't recheck the moves or partial moves, but ensure the pins are maintained here.
                 AstMemoryHandler.enforce_memory_integrity(
                     argument.value, argument, scope_manager,
@@ -132,7 +115,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
                 if overlap := (borrows_ref + borrows_mut).find(lambda b: AstMemoryHandler.overlaps(b, argument.value)):
                     raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value)
 
-            elif isinstance(argument.convention, ConventionMutAst):
+            elif isinstance(argument.convention, Asts.ConventionMutAst):
                 # Check the argument being mutably borrowed isn't an immutable borrow.
                 if symbol.memory_info.is_borrow_ref:
                     raise SemanticErrors.MutabilityInvalidMutationError().add(argument.value, argument.convention, symbol.memory_info.ast_borrowed)
@@ -156,7 +139,7 @@ class FunctionCallArgumentGroupAst(Ast, Default, CompilerStages):
                 # Add the mutable borrow to the mutable borrow set.
                 borrows_mut.append(argument.value)
 
-            elif isinstance(argument.convention, ConventionRefAst):
+            elif isinstance(argument.convention, Asts.ConventionRefAst):
                 # Check the immutable borrow doesn't overlap with any other mutable borrow in the same scope.
                 if overlap := borrows_mut.find(lambda b: AstMemoryHandler.overlaps(b, argument.value)):
                     raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value)

@@ -1,30 +1,34 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
+import std
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.Utils.Sequence import Seq
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.StatementAst import StatementAst
-    from SPPCompiler.SemanticAnalysis.ASTs.WithExpressionAliasAst import WithExpressionAliasAst
-    from SPPCompiler.SemanticAnalysis.ASTs.InnerScopeAst import InnerScopeAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class WithExpressionAst(Ast, TypeInferrable, CompilerStages):
-    tok_with: TokenAst
-    alias: Optional[WithExpressionAliasAst]
-    expression: ExpressionAst
-    body: InnerScopeAst[StatementAst]
+    tok_with: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwWith))
+    alias: Optional[Asts.WithExpressionAliasAst] = field(default=None)
+    expression: Asts.ExpressionAst = field(default=None)
+    body: Asts.InnerScopeAst = field(default_factory=lambda: Asts.InnerScopeAst())
+
+    def __post_init__(self):
+        assert self.expression
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -34,16 +38,14 @@ class WithExpressionAst(Ast, TypeInferrable, CompilerStages):
             self.body.print(printer)]
         return "".join(string)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         return self.body.infer_type(scope_manager, **kwargs)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the expression.
-        if isinstance(self.expression, (TokenAst, TypeAst)):
+        if isinstance(self.expression, (Asts.TokenAst, Asts.TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.expression)
 
         # Create a new scope for the with block and move into it.
@@ -53,10 +55,10 @@ class WithExpressionAst(Ast, TypeInferrable, CompilerStages):
         # Check a Ctx type is superimposed over the type of the expression.
         expression_type = self.expression.infer_type(scope_manager, **kwargs).type
         expression_sup_types = scope_manager.current_scope.get_symbol(expression_type).scope.sup_scopes
-        expression_sup_types = expression_sup_types.filter(lambda s: isinstance(s._ast, ClassPrototypeAst))
+        expression_sup_types = expression_sup_types.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst))
         expression_sup_types = expression_sup_types.map(lambda s: s.type_symbol.fq_name.without_generics())
 
-        context_types = Seq([CommonTypes.CtxRef(), CommonTypes.CtxMut()]).map(TypeAst.without_generics)
+        context_types = Seq([CommonTypes.CtxRef(), CommonTypes.CtxMut()]).map(Asts.TypeAst.without_generics)
         if not context_types.any(lambda t: expression_sup_types.any(lambda s: s.symbolic_eq(t, scope_manager.current_scope))):
             raise SemanticErrors.WithExpressionNonContextualConditionError().add(self.expression)
 

@@ -102,7 +102,7 @@ class AstFunctions:
 
     @staticmethod
     def get_all_function_scopes(function_name: IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, FunctionPrototypeAst, GenericArgumentGroupAst]]:
-        from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst, IdentifierAst, TypeAst, ClassPrototypeAst
+        from SPPCompiler.SemanticAnalysis import SupPrototypeExtensionAst, IdentifierAst, TypeAst, ClassPrototypeAst
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
         from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
@@ -114,8 +114,8 @@ class AstFunctions:
         # Functions at the module level: will have no inheritable generics (no enclosing superimposition).
         if isinstance(function_owner_scope.name, IdentifierAst):
             for ancestor_scope in function_owner_scope.ancestors:
-                for sup_scope in ancestor_scope._children.filter(lambda c: isinstance(c._ast, SupPrototypeInheritanceAst) and c._ast.name == function_name):
-                    generics = GenericArgumentGroupAst.default()
+                for sup_scope in ancestor_scope._children.filter(lambda c: isinstance(c._ast, SupPrototypeExtensionAst) and c._ast.name == function_name):
+                    generics = GenericArgumentGroupAst()
                     overload_scopes_and_info.append((ancestor_scope, sup_scope._ast.body.members[0], generics))
 
         # Functions in a superimposition block: will have inheritable generics from "sup [...] ... { ... }".
@@ -126,10 +126,10 @@ class AstFunctions:
                 sup_scopes = Seq([function_owner_scope])
 
             for sup_scope in sup_scopes.unique():
-                if sup_ast := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst).find(lambda m: m.name == function_name):
+                if sup_ast := sup_scope._ast.body.members.filter_to_type(SupPrototypeExtensionAst).find(lambda m: m.name == function_name):
                     generics = sup_scope._symbol_table.all().filter(lambda s: s.is_generic)
                     generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
-                    generics = GenericArgumentGroupAst.default(generics)
+                    generics = GenericArgumentGroupAst(arguments=generics)
                     overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))
 
         # Return the overload scopes, and their generic argument groups.

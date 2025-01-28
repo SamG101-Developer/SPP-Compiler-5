@@ -1,15 +1,16 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+import std
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ObjectInitializerArgumentGroupAst import ObjectInitializerArgumentGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -19,10 +20,14 @@ if TYPE_CHECKING:
 
 @dataclass
 class ObjectInitializerAst(Ast, TypeInferrable, CompilerStages):
-    class_type: TypeAst
-    object_argument_group: ObjectInitializerArgumentGroupAst
+    class_type: Asts.TypeAst = field(default=None)
+    object_argument_group: Asts.ObjectInitializerArgumentGroupAst = field(default_factory=lambda: Asts.ObjectInitializerArgumentGroupAst())
+
+    def __post_init__(self) -> None:
+        assert self.class_type
 
     @ast_printer_method
+    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -30,14 +35,13 @@ class ObjectInitializerAst(Ast, TypeInferrable, CompilerStages):
             self.object_argument_group.print(printer)]
         return "".join(string)
 
+    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Use the type of the object initializer.
         return InferredType.from_type(self.class_type)
 
+    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         # Get the base symbol and make sure it isn't generic.
         base_symbol = scope_manager.current_scope.get_symbol(self.class_type.without_generics())
@@ -48,9 +52,11 @@ class ObjectInitializerAst(Ast, TypeInferrable, CompilerStages):
 
         # Determine the generic inference source and target
         generic_infer_source = {
-            a.name: self.object_argument_group.get_arg_val(a).infer_type(scope_manager, **kwargs).type for a in self.object_argument_group.arguments.filter(lambda a: isinstance(a.name, IdentifierAst))}
+            a.name: self.object_argument_group.get_arg_val(a).infer_type(scope_manager, **kwargs).type
+            for a in self.object_argument_group.arguments.filter(lambda a: isinstance(a.name, Asts.IdentifierAst))}
         generic_infer_target = {
-            a.name: a.type for a in base_symbol.type.body.members}
+            a.name: a.type
+            for a in base_symbol.type.body.members}
 
         # Analyse the type and object argument group.
         base_symbol.type.body.analyse_semantics(ScopeManager(scope_manager.current_scope, base_symbol.scope), **kwargs)
