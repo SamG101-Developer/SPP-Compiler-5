@@ -20,9 +20,14 @@ class IdentifierAst(Ast, TypeInferrable, CompilerStages):
     value: str = field(default="")
 
     @std.override_method
-    def __eq__(self, other: IdentifierAst) -> bool:
+    def __eq__(self, other: IdentifierAst | str) -> bool:
         # Check both ASTs are the same type and have the same value.
-        return isinstance(other, IdentifierAst) and self.value == other.value
+        if isinstance(other, str):
+            return self.value == other
+        elif isinstance(other, IdentifierAst):
+            return self.value == other.value
+        else:
+            raise TypeError(f"Unsupported type for comparison: {type(other)}")
 
     @std.override_method
     def __hash__(self) -> int:

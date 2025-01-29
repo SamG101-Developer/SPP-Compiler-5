@@ -1,8 +1,10 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
-import copy, std
 
+import copy
+import std
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
@@ -11,13 +13,8 @@ from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, Ast
 from SPPCompiler.SemanticAnalysis.Mixins.PatternMapping import PatternMapping
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-import SPPCompiler.SemanticAnalysis as Asts
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureObjectAst import LocalVariableDestructureObjectAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
@@ -42,14 +39,14 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping, CompilerStages):
         return "".join(string)
 
     @std.override_method
-    def convert_to_variable(self, **kwargs) -> LocalVariableDestructureObjectAst:
+    def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureObjectAst:
         # Convert the object destructuring into a local variable object destructuring.
         elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureObjectAst.__value__.__args__)
         converted_elements = elements.map(lambda e: e.convert_to_variable(**kwargs))
-        return LocalVariableDestructureObjectAst(self.pos, self.type, self.tok_left_paren, converted_elements, self.tok_right_paren)
+        return Asts.LocalVariableDestructureObjectAst(self.pos, self.type, self.tok_left_paren, converted_elements, self.tok_right_paren)
 
     @std.override_method
-    def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         self.type.analyse_semantics(scope_manager, **kwargs)
 
         # Flow type the condition symbol if necessary.

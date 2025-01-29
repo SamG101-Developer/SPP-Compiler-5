@@ -4,25 +4,24 @@ from llvmlite import ir as llvm
 from typing import Any, Optional, Union, TYPE_CHECKING
 import std
 
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ClassAttributeAst import ClassAttributeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ClassPrototypeAst import ClassPrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GlobalConstantAst import GlobalConstantAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ModulePrototypeAst import ModulePrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
-    from SPPCompiler.SemanticAnalysis.ASTs.UseStatementAst import UseStatementAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 type PreProcessingContext = Union[
-    ClassPrototypeAst, ClassAttributeAst, FunctionPrototypeAst, GlobalConstantAst, ModulePrototypeAst,
-    SupPrototypeFunctionsAst, UseStatementAst, None]
+    Asts.ClassPrototypeAst,
+    Asts.ClassAttributeAst,
+    Asts.FunctionPrototypeAst,
+    Asts.GlobalConstantAst,
+    Asts.ModulePrototypeAst,
+    Asts.SupPrototypeFunctionsAst,
+    Asts.UseStatementAst,
+    None]
 
 
 @dataclass
 class CompilerStages:
+    __friends__ = {"AnnotationAst"}
     _ctx: PreProcessingContext = field(default=None, kw_only=True, repr=False)
     _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
 

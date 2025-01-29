@@ -5,11 +5,9 @@ from typing import Iterable, List, Optional, TYPE_CHECKING
 import os
 
 from SParLex.Utils.ErrorFormatter import ErrorFormatter
+from SPPCompiler.LexicalAnalysis.Token import Token
+from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.LexicalAnalysis.Token import Token
-    from SPPCompiler.SemanticAnalysis.ASTs.ModulePrototypeAst import ModulePrototypeAst
 
 
 @dataclass

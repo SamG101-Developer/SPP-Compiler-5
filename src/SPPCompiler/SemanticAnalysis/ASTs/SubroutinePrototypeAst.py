@@ -1,14 +1,13 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+
 import std
 
-from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 import SPPCompiler.SemanticAnalysis as Asts
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass

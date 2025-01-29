@@ -1,8 +1,12 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING
-import copy, itertools, std
 
+import copy
+import itertools
+import std
+from dataclasses import dataclass, field
+from typing import Optional
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
@@ -10,13 +14,10 @@ from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, Ast
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility, VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
-import SPPCompiler.SemanticAnalysis as Asts
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 # Todo:
@@ -66,7 +67,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
         super().pre_process(context)
 
     @std.override_method
-    def generate_top_level_scopes(self, scope_manager: ScopeManager, visibility: AstVisibility = None) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager, visibility: Optional[AstVisibility] = None) -> None:
         # Create a class ast for the aliased type, and generate it.
         cls_ast = AstMutation.inject_code(f"cls {self.new_type} {{}}", SppParser.parse_class_prototype)
         cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
