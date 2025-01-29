@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import Dict, Self, TYPE_CHECKING
 import copy, std
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -27,7 +27,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
         assert self.name
         assert self.type
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memodict: Dict = None) -> ClassAttributeAst:
         return ClassAttributeAst(
             self.pos, self.annotations, copy.deepcopy(self.name), self.tok_colon,
             copy.deepcopy(self.type), _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)

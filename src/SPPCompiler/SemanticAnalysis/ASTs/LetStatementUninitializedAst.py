@@ -37,10 +37,6 @@ class LetStatementUninitializedAst(Ast, TypeInferrable, CompilerStages):
             self.type.print(printer)]
         return "".join(string)
 
-    @staticmethod
-    def from_variable_and_type(variable: Asts.LocalVariableAst, type: Asts.TypeAst) -> LetStatementUninitializedAst:
-        return LetStatementUninitializedAst(pos=variable.pos, assign_to=variable, type=type)
-
     @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".

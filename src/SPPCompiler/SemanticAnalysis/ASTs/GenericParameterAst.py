@@ -1,41 +1,36 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.GenericCompParameterOptionalAst import GenericCompParameterOptionalAst
-from SPPCompiler.SemanticAnalysis.ASTs.GenericCompParameterRequiredAst import GenericCompParameterRequiredAst
-from SPPCompiler.SemanticAnalysis.ASTs.GenericCompParameterVariadicAst import GenericCompParameterVariadicAst
-from SPPCompiler.SemanticAnalysis.ASTs.GenericTypeParameterOptionalAst import GenericTypeParameterOptionalAst
-from SPPCompiler.SemanticAnalysis.ASTs.GenericTypeParameterRequiredAst import GenericTypeParameterRequiredAst
-from SPPCompiler.SemanticAnalysis.ASTs.GenericTypeParameterVariadicAst import GenericTypeParameterVariadicAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type GenericParameterAst = Union[
-    GenericCompParameterOptionalAst,
-    GenericCompParameterRequiredAst,
-    GenericCompParameterVariadicAst,
-    GenericTypeParameterOptionalAst,
-    GenericTypeParameterRequiredAst,
-    GenericTypeParameterVariadicAst]
+    Asts.GenericCompParameterOptionalAst,
+    Asts.GenericCompParameterRequiredAst,
+    Asts.GenericCompParameterVariadicAst,
+    Asts.GenericTypeParameterOptionalAst,
+    Asts.GenericTypeParameterRequiredAst,
+    Asts.GenericTypeParameterVariadicAst]
 
 type GenericCompParameterAst = Union[
-    GenericCompParameterOptionalAst,
-    GenericCompParameterRequiredAst,
-    GenericCompParameterVariadicAst]
+    Asts.GenericCompParameterOptionalAst,
+    Asts.GenericCompParameterRequiredAst,
+    Asts.GenericCompParameterVariadicAst]
 
 type GenericTypeParameterAst = Union[
-    GenericTypeParameterOptionalAst,
-    GenericTypeParameterRequiredAst,
-    GenericTypeParameterVariadicAst]
+    Asts.GenericTypeParameterOptionalAst,
+    Asts.GenericTypeParameterRequiredAst,
+    Asts.GenericTypeParameterVariadicAst]
 
 type GenericParameterRequiredAst = Union[
-    GenericCompParameterRequiredAst,
-    GenericTypeParameterRequiredAst]
+    Asts.GenericCompParameterRequiredAst,
+    Asts.GenericTypeParameterRequiredAst]
 
 type GenericParameterOptionalAst = Union[
-    GenericCompParameterOptionalAst,
-    GenericTypeParameterOptionalAst]
+    Asts.GenericCompParameterOptionalAst,
+    Asts.GenericTypeParameterOptionalAst]
 
 type GenericParameterVariadicAst = Union[
-    GenericCompParameterVariadicAst,
-    GenericTypeParameterVariadicAst]
+    Asts.GenericCompParameterVariadicAst,
+    Asts.GenericTypeParameterVariadicAst]
 
 __all__ = [
     "GenericParameterAst",

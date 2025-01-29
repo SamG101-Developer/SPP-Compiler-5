@@ -42,8 +42,7 @@ class ObjectInitializerArgumentGroupAst(Ast, CompilerStages):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    @staticmethod
-    def get_arg_val(argument: Asts.ObjectInitializerArgumentAst) -> Asts.ExpressionAst:
+    def get_arg_val(self, argument: Asts.ObjectInitializerArgumentAst) -> Asts.ExpressionAst:
         return argument.value if isinstance(argument, Asts.ObjectInitializerArgumentNamedAst) else argument.name
 
     def get_def_args(self) -> Seq[Asts.ObjectInitializerArgumentNamedAst]:

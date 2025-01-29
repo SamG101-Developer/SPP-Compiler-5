@@ -1,5 +1,8 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Self
+
 import std
 
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast

@@ -1,10 +1,9 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.LetStatementInitializedAst import LetStatementInitializedAst
-from SPPCompiler.SemanticAnalysis.ASTs.LetStatementUninitializedAst import LetStatementUninitializedAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type LetStatementAst = Union[
-    LetStatementInitializedAst,
-    LetStatementUninitializedAst]
+    Asts.LetStatementInitializedAst,
+    Asts.LetStatementUninitializedAst]
 
 __all__ = ["LetStatementAst"]

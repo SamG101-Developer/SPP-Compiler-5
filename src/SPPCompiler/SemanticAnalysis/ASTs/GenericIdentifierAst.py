@@ -1,15 +1,13 @@
 from __future__ import annotations
+
+import hashlib
+import std
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
-import hashlib, std
+from typing import Self, Any
 
-
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-import SPPCompiler.SemanticAnalysis as Asts
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
 
 
 @dataclass
@@ -44,7 +42,7 @@ class GenericIdentifierAst(Ast):
         return GenericIdentifierAst(identifier.pos, identifier.value, Asts.GenericArgumentGroupAst())
 
     @staticmethod
-    def from_type(type: TypeAst) -> GenericIdentifierAst:
+    def from_type(type: Asts.TypeAst) -> GenericIdentifierAst:
         return type.types[-1]
 
     def without_generics(self) -> GenericIdentifierAst:

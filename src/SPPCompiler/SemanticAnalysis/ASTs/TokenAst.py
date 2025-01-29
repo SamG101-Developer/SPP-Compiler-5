@@ -1,8 +1,12 @@
 from __future__ import annotations
+
+import hashlib
+import std
 from dataclasses import dataclass, field
-import hashlib, std
+from typing import Any, Self
 
 from SParLex.Lexer.Tokens import SpecialToken
+
 from SPPCompiler.LexicalAnalysis.Token import Token
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast

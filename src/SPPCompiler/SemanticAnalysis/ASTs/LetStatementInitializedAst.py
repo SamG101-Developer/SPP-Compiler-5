@@ -41,12 +41,6 @@ class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
             self.value.print(printer)]
         return "".join(string)
 
-    @staticmethod
-    def from_variable_and_value(variable: Asts.LocalVariableAst, value: Asts.ExpressionAst) -> LetStatementInitializedAst:
-        return LetStatementInitializedAst(
-            variable.pos, Asts.TokenAst.raw(token=SppTokenType.KwLet), variable,
-            Asts.TokenAst.raw(pos=variable.pos, token=SppTokenType.TkAssign), value)
-
     @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".

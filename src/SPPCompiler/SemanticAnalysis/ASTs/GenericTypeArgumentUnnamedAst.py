@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class GenericTypeArgumentUnnamedAst[T](Ast, Ordered, CompilerStages):
+class GenericTypeArgumentUnnamedAst(Ast, Ordered, CompilerStages):
     value: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:

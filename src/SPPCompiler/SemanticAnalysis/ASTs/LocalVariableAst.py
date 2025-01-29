@@ -1,44 +1,38 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAttributeBindingAst import LocalVariableAttributeBindingAst
-from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureArrayAst import LocalVariableDestructureArrayAst
-from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureObjectAst import LocalVariableDestructureObjectAst
-from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureTupleAst import LocalVariableDestructureTupleAst
-from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableSingleIdentifierAst import LocalVariableSingleIdentifierAst
-from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureSkip1ArgumentAst import LocalVariableDestructureSkip1ArgumentAst
-from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureSkipNArgumentsAst import LocalVariableDestructureSkipNArgumentsAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type LocalVariableAst = Union[
-    LocalVariableDestructureArrayAst,
-    LocalVariableDestructureTupleAst,
-    LocalVariableDestructureObjectAst,
-    LocalVariableSingleIdentifierAst]
+    Asts.LocalVariableDestructureArrayAst,
+    Asts.LocalVariableDestructureTupleAst,
+    Asts.LocalVariableDestructureObjectAst,
+    Asts.LocalVariableSingleIdentifierAst]
 
 type LocalVariableNestedForDestructureArrayAst = Union[
-    LocalVariableDestructureArrayAst,
-    LocalVariableDestructureTupleAst,
-    LocalVariableDestructureObjectAst,
-    LocalVariableDestructureSkip1ArgumentAst,
-    LocalVariableDestructureSkipNArgumentsAst,
-    LocalVariableSingleIdentifierAst]
+    Asts.LocalVariableDestructureArrayAst,
+    Asts.LocalVariableDestructureTupleAst,
+    Asts.LocalVariableDestructureObjectAst,
+    Asts.LocalVariableDestructureSkip1ArgumentAst,
+    Asts.LocalVariableDestructureSkipNArgumentsAst,
+    Asts.LocalVariableSingleIdentifierAst]
 
 type LocalVariableNestedForDestructureTupleAst = Union[
-    LocalVariableDestructureArrayAst,
-    LocalVariableDestructureTupleAst,
-    LocalVariableDestructureObjectAst,
-    LocalVariableDestructureSkip1ArgumentAst,
-    LocalVariableDestructureSkipNArgumentsAst,
-    LocalVariableSingleIdentifierAst]
+    Asts.LocalVariableDestructureArrayAst,
+    Asts.LocalVariableDestructureTupleAst,
+    Asts.LocalVariableDestructureObjectAst,
+    Asts.LocalVariableDestructureSkip1ArgumentAst,
+    Asts.LocalVariableDestructureSkipNArgumentsAst,
+    Asts.LocalVariableSingleIdentifierAst]
 
 type LocalVariableNestedForDestructureObjectAst = Union[
-    LocalVariableAttributeBindingAst,
-    LocalVariableDestructureSkipNArgumentsAst,
-    LocalVariableSingleIdentifierAst]
+    Asts.LocalVariableAttributeBindingAst,
+    Asts.LocalVariableDestructureSkipNArgumentsAst,
+    Asts.LocalVariableSingleIdentifierAst]
 
 type LocalVariableNestedForAttributeBindingAst = Union[
-    LocalVariableDestructureArrayAst,
-    LocalVariableDestructureTupleAst,
-    LocalVariableDestructureObjectAst]
+    Asts.LocalVariableDestructureArrayAst,
+    Asts.LocalVariableDestructureTupleAst,
+    Asts.LocalVariableDestructureObjectAst]
 
 __all__ = [
     "LocalVariableAst",

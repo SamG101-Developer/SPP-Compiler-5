@@ -1,21 +1,21 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import Self
+
 import std
 
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-import SPPCompiler.SemanticAnalysis as Asts
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class GenericCompArgumentUnnamedAst[T](Ast, Ordered, CompilerStages):
+class GenericCompArgumentUnnamedAst(Ast, Ordered, CompilerStages):
     value: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:

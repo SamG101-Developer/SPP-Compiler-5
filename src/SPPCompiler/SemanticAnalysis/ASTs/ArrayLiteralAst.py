@@ -1,10 +1,9 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.ArrayLiteral0ElementAst import ArrayLiteral0ElementAst
-from SPPCompiler.SemanticAnalysis.ASTs.ArrayLiteralNElementAst import ArrayLiteralNElementAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type ArrayLiteralAst = Union[
-    ArrayLiteral0ElementAst,
-    ArrayLiteralNElementAst]
+    Asts.ArrayLiteral0ElementAst,
+    Asts.ArrayLiteralNElementAst]
 
 __all__ = ["ArrayLiteralAst"]

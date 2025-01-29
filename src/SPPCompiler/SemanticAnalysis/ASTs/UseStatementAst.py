@@ -52,10 +52,6 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable, CompilerStages):
             self.old_type.print(printer)]
         return "".join(string)
 
-    @staticmethod
-    def from_types(new_type: Asts.IdentifierAst, generic_parameter_group: Optional[Asts.GenericParameterGroupAst], old_type: Asts.TypeAst) -> UseStatementAst:
-        return UseStatementAst(new_type=new_type, generic_parameter_group=generic_parameter_group, old_type=old_type)
-
     @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".

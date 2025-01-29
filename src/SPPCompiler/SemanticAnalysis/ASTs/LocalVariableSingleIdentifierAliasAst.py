@@ -26,3 +26,6 @@ class LocalVariableSingleIdentifierAliasAst(Ast, CompilerStages):
             self.tok_as.print(printer) + " ",
             self.name.print(printer)]
         return "".join(string)
+
+
+__all__ = ["LocalVariableSingleIdentifierAliasAst"]

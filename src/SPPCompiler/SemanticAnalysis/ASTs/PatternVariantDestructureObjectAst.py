@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PatternVariantDestructureObjectAst[T](Ast, PatternMapping, CompilerStages):
+class PatternVariantDestructureObjectAst(Ast, PatternMapping, CompilerStages):
     type: Asts.TypeAst = field(default=None)
     tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
     elements: Seq[Asts.PatternVariantNestedForDestructureObjectAst] = field(default_factory=Seq)
@@ -65,7 +65,7 @@ class PatternVariantDestructureObjectAst[T](Ast, PatternMapping, CompilerStages)
 
         # Create the new variables from the pattern in the patterns scope.
         variable = self.convert_to_variable(**kwargs)
-        new_ast = Asts.LetStatementInitializedAst.from_variable_and_value(variable, condition)
+        new_ast = Asts.LetStatementInitializedAst(pos=variable.pos, assign_to=variable, value=condition)
         new_ast.analyse_semantics(scope_manager, **kwargs)
 
 

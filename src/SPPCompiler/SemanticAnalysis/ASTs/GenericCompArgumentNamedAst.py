@@ -1,18 +1,18 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import Any, Self
+
 import std
 
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-import SPPCompiler.SemanticAnalysis as Asts
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 
 
 @dataclass
@@ -42,7 +42,7 @@ class GenericCompArgumentNamedAst(Ast, Ordered, CompilerStages):
         return " ".join(string)
 
     @staticmethod
-    def from_name_value(name: Asts.TypeAst, value: Asts.ExpressionAst) -> GenericCompArgumentNamedAst:
+    def from_name_value(name: Any, value: Asts.ExpressionAst) -> GenericCompArgumentNamedAst:
         return GenericCompArgumentNamedAst(name=Asts.IdentifierAst.from_type(name), value=value)
 
     @staticmethod

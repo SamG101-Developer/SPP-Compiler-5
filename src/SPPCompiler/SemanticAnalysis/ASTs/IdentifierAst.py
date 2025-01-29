@@ -1,17 +1,18 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
-import difflib, hashlib, std
 
+import difflib
+import hashlib
+import std
+from dataclasses import dataclass, field
+from typing import Any, Self
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
-import SPPCompiler.SemanticAnalysis as Asts
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
@@ -29,9 +30,14 @@ class IdentifierAst(Ast, TypeInferrable, CompilerStages):
         return int.from_bytes(hashlib.md5(self.value.encode()).digest())
 
     @std.override_method
-    def __add__(self, other):
+    def __add__(self, other: IdentifierAst | str) -> IdentifierAst:
         if isinstance(other, str):
             self.value += other
+        elif isinstance(other, IdentifierAst):
+            self.value += other.value
+        else:
+            raise TypeError(f"Unsupported type for concatenation: {type(other)}")
+        return self
 
     def __json__(self) -> str:
         # Return the internal string as the JSON formatted IdentifierAst.
@@ -44,7 +50,7 @@ class IdentifierAst(Ast, TypeInferrable, CompilerStages):
         return self.value
 
     @staticmethod
-    def from_type(type: Asts.TypeAst) -> IdentifierAst:
+    def from_type(type: Asts.TypeAst) -> Asts.IdentifierAst:
         # if type.namespace or type.types.length > 1:
         #     warnings.warn(f"Type {type} has a namespace or nested types, which will be ignored.")
         return IdentifierAst.from_generic_identifier(type.types[-1])

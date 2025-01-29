@@ -1,21 +1,21 @@
 from __future__ import annotations
+
+import copy
+import std
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
-import copy, std
+from typing import Any, Dict, Self
 
 from llvmlite import ir as llvm
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
-import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
@@ -35,7 +35,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
     def __json__(self) -> str:
         return f"{self.name}{self.generic_parameter_group}"
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memodict: Dict = None) -> ClassPrototypeAst:
         return ClassPrototypeAst(
             self.pos, copy.copy(self.annotations), self.tok_cls, Asts.IdentifierAst.from_type(self.name),
             copy.deepcopy(self.generic_parameter_group), copy.deepcopy(self.where_block), copy.deepcopy(self.body),

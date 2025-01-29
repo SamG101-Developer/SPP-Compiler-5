@@ -1,7 +1,8 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.ClassAttributeAst import ClassAttributeAst
+import SPPCompiler.SemanticAnalysis as Asts
 
-type ClassMemberAst = Union[ClassAttributeAst]
+type ClassMemberAst = Union[
+    Asts.ClassAttributeAst]
 
 __all__ = ["ClassMemberAst"]

@@ -1,20 +1,20 @@
 from __future__ import annotations
+
+import copy
+import std
 from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING, Any
-import copy, std
+from typing import Any, Dict, Optional, Self
 
 from llvmlite import ir as llvm
 
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-import SPPCompiler.SemanticAnalysis as Asts
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
@@ -230,11 +230,11 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         if isinstance(self.function_parameter_group.get_self().convention, ConventionRefAst):
             return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
-    def _deduce_mock_class_call(self, function_type) -> Asts.IdentifierAst:
+    def _deduce_mock_class_call(self, function_type: Asts.TypeAst) -> Asts.IdentifierAst:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
         return IdentifierAst(self.name.pos, f"call_{function_type.types[-1].value.split("_")[-1].lower()}")
 
-    def __deepcopy__(self, memodict=None) -> FunctionPrototypeAst:
+    def __deepcopy__(self, memodict: Dict = None) -> FunctionPrototypeAst:
         # Copy all attributes except for "_protected" attributes, which are re-linked.
         return type(self)(
             copy.deepcopy(self.pos), self.annotations, self.tok_fun,

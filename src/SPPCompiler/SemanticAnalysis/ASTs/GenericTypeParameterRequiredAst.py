@@ -11,13 +11,12 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class GenericTypeParameterRequiredAst(Ast, Ordered, CompilerStages):
-    name: TypeAst = field(default=None)
+    name: Asts.TypeAst = field(default=None)
     constraints: Asts.GenericTypeParameterInlineConstraintsAst = field(default_factory=lambda: Asts.GenericTypeParameterInlineConstraintsAst())
 
     def __post_init__(self) -> None:

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class PatternVariantDestructureTupleAst[T](Ast, PatternMapping, CompilerStages):
+class PatternVariantDestructureTupleAst(Ast, PatternMapping, CompilerStages):
     tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
     elements: Seq[Asts.PatternVariantNestedForDestructureTupleAst] = field(default_factory=Seq)
     tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
@@ -42,7 +42,7 @@ class PatternVariantDestructureTupleAst[T](Ast, PatternMapping, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Create the new variables from the pattern in the patterns scope.
         variable = self.convert_to_variable(**kwargs)
-        new_ast = Asts.LetStatementInitializedAst.from_variable_and_value(variable, condition)
+        new_ast = Asts.LetStatementInitializedAst(pos=variable.pos, assign_to=variable, value=condition)
         new_ast.analyse_semantics(scope_manager, **kwargs)
 
 

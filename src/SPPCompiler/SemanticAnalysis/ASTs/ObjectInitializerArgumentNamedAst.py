@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ObjectInitializerArgumentNamedAst[T](Ast, TypeInferrable, CompilerStages):
+class ObjectInitializerArgumentNamedAst(Ast, TypeInferrable, CompilerStages):
     name: Asts.IdentifierAst | Asts.TokenAst = field(default=None)
     assignment_token: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
     value: Asts.ExpressionAst = field(default=None)

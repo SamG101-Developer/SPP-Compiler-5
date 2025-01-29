@@ -1,31 +1,28 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.GenericCompArgumentNamedAst import GenericCompArgumentNamedAst
-from SPPCompiler.SemanticAnalysis.ASTs.GenericCompArgumentUnnamedAst import GenericCompArgumentUnnamedAst
-from SPPCompiler.SemanticAnalysis.ASTs.GenericTypeArgumentNamedAst import GenericTypeArgumentNamedAst
-from SPPCompiler.SemanticAnalysis.ASTs.GenericTypeArgumentUnnamedAst import GenericTypeArgumentUnnamedAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type GenericArgumentAst = Union[
-    GenericCompArgumentNamedAst,
-    GenericCompArgumentUnnamedAst,
-    GenericTypeArgumentNamedAst,
-    GenericTypeArgumentUnnamedAst]
+    Asts.GenericCompArgumentNamedAst,
+    Asts.GenericCompArgumentUnnamedAst,
+    Asts.GenericTypeArgumentNamedAst,
+    Asts.GenericTypeArgumentUnnamedAst]
 
 type GenericCompArgumentAst = Union[
-    GenericCompArgumentNamedAst,
-    GenericCompArgumentUnnamedAst]
+    Asts.GenericCompArgumentNamedAst,
+    Asts.GenericCompArgumentUnnamedAst]
 
 type GenericTypeArgumentAst = Union[
-    GenericTypeArgumentNamedAst,
-    GenericTypeArgumentUnnamedAst]
+    Asts.GenericTypeArgumentNamedAst,
+    Asts.GenericTypeArgumentUnnamedAst]
 
 type GenericArgumentNamedAst = Union[
-    GenericCompArgumentNamedAst,
-    GenericTypeArgumentNamedAst]
+    Asts.GenericCompArgumentNamedAst,
+    Asts.GenericTypeArgumentNamedAst]
 
 type GenericArgumentUnnamedAst = Union[
-    GenericCompArgumentUnnamedAst,
-    GenericTypeArgumentUnnamedAst]
+    Asts.GenericCompArgumentUnnamedAst,
+    Asts.GenericTypeArgumentUnnamedAst]
 
 __all__ = [
     "GenericArgumentAst",

@@ -1,19 +1,18 @@
 from __future__ import annotations
 
+import copy
+import std
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
-import copy, std
+from typing import Dict, Self
 
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
-import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
@@ -22,7 +21,7 @@ class ClassImplementationAst(Ast, CompilerStages):
     members: Seq[Asts.ClassMemberAst] = field(default_factory=Seq)
     tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memodict: Dict = None) -> ClassImplementationAst:
         return ClassImplementationAst(
             self.pos, self.tok_left_brace, copy.deepcopy(self.members),
             self.tok_right_brace, _ctx=self._ctx, _scope=self._scope)

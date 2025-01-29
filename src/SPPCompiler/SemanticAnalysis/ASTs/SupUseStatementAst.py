@@ -1,5 +1,8 @@
-from SPPCompiler.SemanticAnalysis.ASTs.UseStatementAst import UseStatementAst
+from typing import Union
 
-type SupUseStatementAst = UseStatementAst
+import SPPCompiler.SemanticAnalysis as Asts
+
+type SupUseStatementAst = Union[
+    Asts.UseStatementAst]
 
 __all__ = ["SupUseStatementAst"]

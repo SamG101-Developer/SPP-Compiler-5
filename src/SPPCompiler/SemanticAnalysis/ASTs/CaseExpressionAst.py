@@ -1,9 +1,12 @@
 from __future__ import annotations
+
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING
+from typing import Any, Optional
+
 import std
 
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
@@ -12,16 +15,13 @@ from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.Utils.Sequence import Seq
-import SPPCompiler.SemanticAnalysis as Asts
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class CaseExpressionAst[T](Ast, TypeInferrable, CompilerStages):
+class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
     tok_case: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCase))
     condition: Asts.ExpressionAst = field(default=None)
     kw_of: Optional[Asts.TokenAst] = field(default=None)

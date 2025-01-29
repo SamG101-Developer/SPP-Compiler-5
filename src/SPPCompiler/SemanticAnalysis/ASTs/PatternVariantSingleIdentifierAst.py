@@ -40,7 +40,7 @@ class PatternVariantSingleIdentifierAst(Ast, PatternMapping, CompilerStages):
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Create the new variable from the pattern in the patterns scope.
         variable = self.convert_to_variable(**kwargs)
-        new_ast = Asts.LetStatementInitializedAst.from_variable_and_value(variable, condition)
+        new_ast = Asts.LetStatementInitializedAst(pos=variable.pos, assign_to=variable, value=condition)
         new_ast.analyse_semantics(scope_manager, **kwargs)
 
 

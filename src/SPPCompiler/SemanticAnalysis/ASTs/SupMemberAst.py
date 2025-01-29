@@ -1,13 +1,11 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
-from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeExtensionAst import SupPrototypeExtensionAst
-from SPPCompiler.SemanticAnalysis.ASTs.SupUseStatementAst import SupUseStatementAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type SupMemberAst = Union[
-    FunctionPrototypeAst,
-    SupPrototypeExtensionAst,
-    SupUseStatementAst,
+    Asts.FunctionPrototypeAst,
+    Asts.SupPrototypeExtensionAst,
+    Asts.SupUseStatementAst,
 ]
 
 __all__ = ["SupMemberAst"]

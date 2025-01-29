@@ -1,7 +1,8 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.StatementAst import StatementAst
+import SPPCompiler.SemanticAnalysis as Asts
 
-type FunctionMemberAst = Union[StatementAst]
+type FunctionMemberAst = Union[
+    Asts.StatementAst]
 
 __all__ = ["FunctionMemberAst"]

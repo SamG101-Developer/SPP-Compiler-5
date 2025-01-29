@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class LoopConditionBooleanAst[T](Ast, TypeInferrable, CompilerStages):
+class LoopConditionBooleanAst(Ast, TypeInferrable, CompilerStages):
     condition: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:

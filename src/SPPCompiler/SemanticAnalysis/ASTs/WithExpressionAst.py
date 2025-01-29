@@ -24,7 +24,7 @@ class WithExpressionAst(Ast, TypeInferrable, CompilerStages):
     expression: Asts.ExpressionAst = field(default=None)
     body: Asts.InnerScopeAst = field(default_factory=lambda: Asts.InnerScopeAst())
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         assert self.expression
 
     @ast_printer_method

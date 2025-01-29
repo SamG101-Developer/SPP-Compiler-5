@@ -14,7 +14,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class PatternGuardAst[T](Ast, CompilerStages):
+class PatternGuardAst(Ast, CompilerStages):
     guard_token: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwAnd))
     expression: Asts.ExpressionAst = field(default=None)
 
