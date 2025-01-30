@@ -38,7 +38,7 @@ class TypeAst(Ast, TypeInferrable):
 
     def __hash__(self) -> int:
         # Hash the namespace and types into a fixed string and convert it into an integer.
-        return int.from_bytes(hashlib.md5("".join([str(p) for p in self.namespace + self.types]).encode()).digest())
+        return int.from_bytes(hashlib.md5("".join([str(p) for p in self.namespace.list() + self.types.list()]).encode()).digest())
 
     def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
 

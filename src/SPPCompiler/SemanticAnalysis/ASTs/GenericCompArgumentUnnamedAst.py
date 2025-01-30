@@ -17,7 +17,7 @@ class GenericCompArgumentUnnamedAst(Ast, Ordered):
     value: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:
-        assert self.value
+        # assert self.value
         self._variant = "Unnamed"
 
     @std.override_method

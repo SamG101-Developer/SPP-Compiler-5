@@ -299,7 +299,7 @@ class AstFunctions:
                     inferred_generic_arguments[generic_parameter_name].append(inferred_generic_argument)
 
                 # Handle the variadic parameter if it exists.
-                if infer_target_name == variadic_parameter_identifier:
+                if variadic_parameter_identifier and infer_target_name == variadic_parameter_identifier:
                     inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].types[-1].generic_argument_group.arguments[0].value
 
         # Check each generic argument name only has one unique inferred type.
