@@ -175,15 +175,16 @@ class AstTypeManagement:
 
     @staticmethod
     def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst) -> str:
-        parts = name.split("#")
+        parts = name.split(":")
+
         if " ext " not in parts:
             t = AstMutation.inject_code(parts[1], SppParser.parse_type)
             t.sub_generics(generics.arguments)
-            return f"{parts[0]}#{t}#{parts[2]}"
+            return f"{parts[0]}:{t}:{parts[2]}"
 
         else:
             t = AstMutation.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type)
             u = AstMutation.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type)
             t.sub_generics(generics.arguments)
             u.sub_generics(generics.arguments)
-            return f"{parts[0]}#{t} ext {u}#{parts[2]}"
+            return f"{parts[0]}:#{t} ext {u}:{parts[2]}"

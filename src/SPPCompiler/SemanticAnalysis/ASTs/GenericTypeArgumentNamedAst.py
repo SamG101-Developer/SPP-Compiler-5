@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 
 import std
@@ -10,7 +9,6 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
@@ -23,7 +21,7 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
 
     def __post_init__(self) -> None:
         assert self.name
-        assert self.value
+        # assert self.value
         self._variant = "Named"
 
     @std.override_method

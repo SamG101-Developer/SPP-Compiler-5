@@ -114,7 +114,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         function_ast = copy.deepcopy(self)
         function_ast._orig = self.name
         mock_superimposition_body = Asts.SupImplementationAst(members=Seq([function_ast]))
-        mock_superimposition = Asts.SupPrototypeExtensionAst(pos=self.pos, generic_parameter_group=self.generic_parameter_group, super_class=mock_class_name, where_block=self.where_block, body=mock_superimposition_body, name=function_type)
+        mock_superimposition = Asts.SupPrototypeExtensionAst(pos=self.pos, generic_parameter_group=self.generic_parameter_group, name=mock_class_name, super_class=function_type, where_block=self.where_block, body=mock_superimposition_body)
         context.body.members.insert(0, mock_superimposition)
         context.body.members.remove(self)
 
@@ -126,7 +126,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
 
         # Create a new scope for the function.
-        scope_manager.create_and_move_into_new_scope(f"<function#{self._orig}#{self.pos}>", self)
+        scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
 
         # Generate the generic parameters and attributes of the function.

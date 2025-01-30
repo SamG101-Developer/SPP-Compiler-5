@@ -1620,7 +1620,7 @@ class SppParser(Parser):
         p1 = self.parse_token(SppTokenType.TkParenL).parse_once()
         p2 = item().parse_two_or_more(SppTokenType.TkComma)
         p3 = self.parse_token(SppTokenType.TkParenR).parse_once()
-        return Asts.TupleLiteralAst(c1, p1, Seq([p2]), p3)
+        return Asts.TupleLiteralAst(c1, p1, Seq(p2), p3)
 
     # ===== ARRAYS =====
 

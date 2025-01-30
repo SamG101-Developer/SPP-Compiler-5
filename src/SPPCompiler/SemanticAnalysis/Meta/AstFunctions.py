@@ -168,9 +168,7 @@ class AstFunctions:
 
     @staticmethod
     def name_function_arguments(arguments: Seq[Asts.FunctionCallArgumentAst], parameters: Seq[Asts.FunctionParameterAst]) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+        import SPPCompiler.SemanticAnalysis as Asts
 
         # Get the argument names and parameter names, and check for variadic parameters.
         argument_names = arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst).map_attr("name")

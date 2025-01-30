@@ -77,7 +77,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         cls_ast.generate_top_level_scopes(scope_manager)
 
         # Create a scope for the alias' generics, so analysing can be done with the generics, without them leaking.
-        scope_manager.create_and_move_into_new_scope(f"<type-alias#{self.new_type}#{self.pos}>", self)
+        scope_manager.create_and_move_into_new_scope(f"<type-alias:{self.new_type}:{self.pos}>", self)
         for generic_parameter in self.generic_parameter_group.parameters:
             type_symbol = TypeSymbol(name=generic_parameter.name.types[-1], type=None, is_generic=True)
             scope_manager.current_scope.add_symbol(type_symbol)

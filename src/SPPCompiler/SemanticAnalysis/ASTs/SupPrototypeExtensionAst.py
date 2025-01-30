@@ -61,7 +61,7 @@ class SupPrototypeExtensionAst(Ast):
     @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a new scope for the superimposition.
-        scope_manager.create_and_move_into_new_scope(f"<sup#{self.name} ext {self.super_class}#{self.pos}>", self)
+        scope_manager.create_and_move_into_new_scope(f"<sup:{self.name} ext {self.super_class}:{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
 
         # Generate the symbols for the generic parameter group, and the self type.
