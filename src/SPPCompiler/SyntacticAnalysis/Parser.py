@@ -653,7 +653,7 @@ class SppParser(Parser):
     def parse_gen_expression_normal_no_expression(self) -> Asts.GenExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_token(SppTokenType.KwGen).parse_once()
-        return Asts.GenExpressionAst(c1, p1, None, None, None)
+        return Asts.GenExpressionAst(c1, p1, None, Asts.ConventionMovAst(p1.pos), None)
 
     @parser_rule
     def parse_gen_expression_normal_with_expression(self) -> Asts.GenExpressionAst:
@@ -669,7 +669,7 @@ class SppParser(Parser):
         p1 = self.parse_token(SppTokenType.KwGen).parse_once()
         p2 = self.parse_token(SppTokenType.KwWith).parse_once()
         p3 = self.parse_expression().parse_once()
-        return Asts.GenExpressionAst(c1, p1, p2, None, p3)
+        return Asts.GenExpressionAst(c1, p1, p2, Asts.ConventionMovAst(p3.pos), p3)
 
     @parser_rule
     def parse_with_expression(self) -> Asts.WithExpressionAst:
