@@ -112,8 +112,8 @@ class Program(CompilerStages):
         for part in module_namespace:
             part = Asts.IdentifierAst(-1, part)
 
-            if Seq(scope_manager.current_scope.children).map(lambda s: s.name).contains(part):  # filter_to_type(IdentifierAst).
-                scope = Seq(scope_manager.current_scope.children).filter(lambda s: s.name == part).first()  #  isinstance(s.name, IdentifierAst) and
+            if Seq(scope_manager.current_scope.children).map(lambda s: s.name).contains(part):
+                scope = Seq(scope_manager.current_scope.children).filter(lambda s: s.name == part).first()
                 if scope_manager.current_scope is not scope: scope_manager.reset(scope)
 
             else:

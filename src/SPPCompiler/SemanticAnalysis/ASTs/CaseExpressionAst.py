@@ -24,7 +24,7 @@ from SPPCompiler.Utils.Sequence import Seq
 class CaseExpressionAst(Ast, TypeInferrable):
     tok_case: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCase))
     condition: Asts.ExpressionAst = field(default=None)
-    kw_of: Optional[Asts.TokenAst] = field(default=None)
+    kw_of: Optional[Asts.TokenAst] = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwOf))
     branches: Seq[Asts.CaseExpressionBranchAst] = field(default_factory=Seq)
 
     def __post_init__(self) -> None:
@@ -38,7 +38,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
         branches = Seq([first_branch]) + p4
 
         # Return the case expression.
-        return CaseExpressionAst(c1, p1, Asts.ParenthesizedExpressionAst(pos=p2.pos, expression=p2), Asts.TokenAst.raw(token=SppTokenType.KwOf), branches)
+        return CaseExpressionAst(c1, p1, Asts.ParenthesizedExpressionAst(pos=p2.pos, expression=p2), branches=branches)
 
     @ast_printer_method
     @std.override_method

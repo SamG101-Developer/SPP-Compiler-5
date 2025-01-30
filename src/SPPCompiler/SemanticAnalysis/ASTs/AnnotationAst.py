@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, Self
+from typing import Dict
 
 import std
 
@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled, AstVisibility
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 """

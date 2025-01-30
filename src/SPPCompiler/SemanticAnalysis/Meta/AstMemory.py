@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Tuple, Type, TYPE_CHECKING
 
 import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -118,7 +119,6 @@ class AstMemoryHandler:
             None
         """
 
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
         # For tuple and array literals, analyse each element.

@@ -134,7 +134,7 @@ class AliasSymbol(TypeSymbol):
         # Dump the AliasSymbol as a JSON object.
         return super().__json__() | {"old_type": self.old_type}
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the AliasSymbol, but link the old scope.
         return AliasSymbol(
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,

@@ -1,11 +1,12 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from llvmlite import ir as llvm
-from typing import Any, Optional, Union, TYPE_CHECKING
+
+from dataclasses import dataclass
+from typing import Any, Union
+
 import std
+from llvmlite import ir as llvm
 
 import SPPCompiler.SemanticAnalysis as Asts
-from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 type PreProcessingContext = Union[
@@ -15,6 +16,7 @@ type PreProcessingContext = Union[
     Asts.GlobalConstantAst,
     Asts.ModulePrototypeAst,
     Asts.SupPrototypeFunctionsAst,
+    Asts.SupPrototypeExtensionAst,
     Asts.UseStatementAst,
     None]
 

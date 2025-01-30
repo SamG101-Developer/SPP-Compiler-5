@@ -25,7 +25,7 @@ class BooleanLiteralAst(Ast, TypeInferrable):
 
     @staticmethod
     def from_python_literal(pos: int, value: bool) -> BooleanLiteralAst:
-        token = Asts.TokenAst.raw(token=SppTokenType.KwTrue if value else SppTokenType.KwFalse, pos=pos)
+        token = Asts.TokenAst.raw(pos=pos, token=SppTokenType.KwTrue if value else SppTokenType.KwFalse)
         return BooleanLiteralAst(pos, token)
 
     @ast_printer_method

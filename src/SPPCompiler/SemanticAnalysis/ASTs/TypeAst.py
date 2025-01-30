@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import copy
 import hashlib
-import std
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterator, Optional, Self
+from typing import Any, Dict, Iterator, Optional
 
+import std
 from convert_case import pascal_case
 from llvmlite import ir as llvm
 
@@ -16,7 +16,6 @@ from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
@@ -95,7 +94,7 @@ class TypeAst(Ast, TypeInferrable):
             if part == generic_name: return True
         return False
 
-    def get_generic(self, generic_name: TypeAst) -> Optional[Self]:
+    def get_generic(self, generic_name: TypeAst) -> Optional[TypeAst]:
         # Custom iterator to iterate over the type parts and their generic arguments.
         def custom_iterate(t: TypeAst) -> Iterator[Asts.GenericArgumentAst]:
             for p in t.types:
@@ -166,7 +165,6 @@ class TypeAst(Ast, TypeInferrable):
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         return InferredType.from_type(self)
 
-    # todo: remove "force" parameter - should be safe?
     @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
         # Determine the scope to use for the type analysis.

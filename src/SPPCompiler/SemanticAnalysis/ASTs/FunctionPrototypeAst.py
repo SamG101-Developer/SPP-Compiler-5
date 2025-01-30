@@ -1,19 +1,21 @@
 from __future__ import annotations
 
 import copy
-import std
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Self
+from typing import Any, Dict, Optional
 
+import std
 from llvmlite import ir as llvm
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -82,14 +84,10 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
 
     @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
-        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, ModulePrototypeAst, SupPrototypeExtensionAst
-        from SPPCompiler.SemanticAnalysis import TypeAst, SupImplementationAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
         super().pre_process(context)
 
         # Substitute the "Self" parameter's type with the name of the method.
-        if not isinstance(context, ModulePrototypeAst) and self.function_parameter_group.get_self():
+        if not isinstance(context, Asts.ModulePrototypeAst) and self.function_parameter_group.get_self():
             self.function_parameter_group.get_self().type = context.name
 
         # Pre-process the annotations.
@@ -97,12 +95,12 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             a.pre_process(self)
 
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
-        mock_class_name = TypeAst.from_function_identifier(self.name)
+        mock_class_name = Asts.TypeAst.from_function_identifier(self.name)
         function_type = self._deduce_mock_class_type()
         function_call = self._deduce_mock_class_call(function_type)
 
         # If this is the first overload being converted, then the class needs to be made for the type.
-        if context.body.members.filter_to_type(ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
+        if context.body.members.filter_to_type(Asts.ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
             mock_class_ast = AstMutation.inject_code(
                 f"cls {mock_class_name} {{}}",
                 SppParser.parse_class_prototype)
@@ -115,8 +113,8 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         # Superimpose the function type over the mock class.
         function_ast = copy.deepcopy(self)
         function_ast._orig = self.name
-        mock_superimposition_body = SupImplementationAst(members=Seq([function_ast]))
-        mock_superimposition = SupPrototypeExtensionAst(pos=self.pos, generic_parameter_group=self.generic_parameter_group, super_class=mock_class_name, where_block=self.where_block, body=mock_superimposition_body, name=function_type)
+        mock_superimposition_body = Asts.SupImplementationAst(members=Seq([function_ast]))
+        mock_superimposition = Asts.SupPrototypeExtensionAst(pos=self.pos, generic_parameter_group=self.generic_parameter_group, super_class=mock_class_name, where_block=self.where_block, body=mock_superimposition_body, name=function_type)
         context.body.members.insert(0, mock_superimposition)
         context.body.members.remove(self)
 

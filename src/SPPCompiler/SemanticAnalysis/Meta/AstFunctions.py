@@ -5,6 +5,10 @@ from typing import Dict, Optional, Tuple, TYPE_CHECKING
 import operator
 
 from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 
 if TYPE_CHECKING:
     import SPPCompiler.SemanticAnalysis as Asts
@@ -271,10 +275,6 @@ class AstFunctions:
         """
 
         import SPPCompiler.SemanticAnalysis as Asts
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Special case for tuples to prevent infinite-recursion.
         if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypes.Tup().without_generics():
