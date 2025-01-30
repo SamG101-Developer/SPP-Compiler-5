@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PatternVariantLiteralAst(Ast, PatternMapping, CompilerStages):
+class PatternVariantLiteralAst(Ast, PatternMapping):
     literal: Asts.LiteralAst = field(default=None)
 
     def __post_init__(self) -> None:

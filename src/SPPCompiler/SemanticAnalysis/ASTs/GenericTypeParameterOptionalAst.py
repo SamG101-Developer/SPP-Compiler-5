@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
 
 @dataclass
-class GenericTypeParameterOptionalAst(Ast, Ordered, CompilerStages):
+class GenericTypeParameterOptionalAst(Ast, Ordered):
     name: Asts.TypeAst = field(default=None)
     constraints: Asts.GenericTypeParameterInlineConstraintsAst = field(default_factory=lambda: Asts.GenericTypeParameterInlineConstraintsAst())
     tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))

@@ -21,7 +21,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction, CompilerStages):
+class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
     tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
     elements: Seq[Asts.LocalVariableNestedForDestructureArrayAst] = field(default_factory=Seq)
     tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))

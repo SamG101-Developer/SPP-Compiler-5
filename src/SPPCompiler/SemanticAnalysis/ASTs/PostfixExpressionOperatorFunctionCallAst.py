@@ -17,7 +17,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStages):
+class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default_factory=Asts.GenericArgumentGroupAst)
     function_argument_group: Asts.FunctionCallArgumentGroupAst = field(default_factory=Asts.FunctionCallArgumentGroupAst)
     fold_token: Optional[Asts.TokenAst] = field(default=None)

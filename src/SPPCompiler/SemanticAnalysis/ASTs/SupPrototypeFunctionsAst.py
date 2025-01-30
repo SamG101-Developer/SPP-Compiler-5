@@ -16,7 +16,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class SupPrototypeFunctionsAst(Ast, CompilerStages):
+class SupPrototypeFunctionsAst(Ast):
     tok_sup: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwSup))
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
     name: Asts.TypeAst = field(default=None)
@@ -46,7 +46,7 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
     @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a new scope for the superimposition.
-        scope_manager.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
+        scope_manager.create_and_move_into_new_scope(f"<sup#{self.name}#{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
 
         # Generate the symbols for the generic parameter group, and the self type.

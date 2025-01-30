@@ -20,7 +20,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction, CompilerStages):
+class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
     tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
     elements: Seq[Asts.LocalVariableNestedForDestructureTupleAst] = field(default_factory=Seq)
     tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))

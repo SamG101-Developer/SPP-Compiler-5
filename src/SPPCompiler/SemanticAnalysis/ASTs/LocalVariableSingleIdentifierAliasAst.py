@@ -1,6 +1,5 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 import std
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -11,7 +10,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class LocalVariableSingleIdentifierAliasAst(Ast, CompilerStages):
+class LocalVariableSingleIdentifierAliasAst(Ast):
     tok_as: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwAs))
     name: Asts.IdentifierAst = field(default=None)
 

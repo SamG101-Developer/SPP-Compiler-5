@@ -18,7 +18,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, CompilerStages):
+class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
     alias: Optional[Asts.LocalVariableSingleIdentifierAliasAst] = field(default=None)

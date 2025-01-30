@@ -18,7 +18,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class WithExpressionAst(Ast, TypeInferrable, CompilerStages):
+class WithExpressionAst(Ast, TypeInferrable):
     tok_with: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwWith))
     alias: Optional[Asts.WithExpressionAliasAst] = field(default=None)
     expression: Asts.ExpressionAst = field(default=None)

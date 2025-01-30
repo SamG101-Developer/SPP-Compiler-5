@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class GenericTypeParameterRequiredAst(Ast, Ordered, CompilerStages):
+class GenericTypeParameterRequiredAst(Ast, Ordered):
     name: Asts.TypeAst = field(default=None)
     constraints: Asts.GenericTypeParameterInlineConstraintsAst = field(default_factory=lambda: Asts.GenericTypeParameterInlineConstraintsAst())
 

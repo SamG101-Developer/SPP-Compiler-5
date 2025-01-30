@@ -18,7 +18,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
+class FunctionPrototypeAst(Ast, VisibilityEnabled):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     tok_fun: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwFun))
     name: Asts.IdentifierAst = field(default=None)
@@ -128,7 +128,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
 
         # Create a new scope for the function.
-        scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
+        scope_manager.create_and_move_into_new_scope(f"<function#{self._orig}#{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
 
         # Generate the generic parameters and attributes of the function.

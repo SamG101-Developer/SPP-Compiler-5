@@ -4,34 +4,33 @@ from typing import Dict, Optional, TYPE_CHECKING
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
+    import SPPCompiler.SemanticAnalysis as Asts
     from SPPCompiler.SemanticAnalysis.Scoping.Symbols import Symbol
 
 
 class SymbolTable:
-    _table: Dict[IdentifierAst | GenericIdentifierAst, Symbol]
+    _table: Dict[Asts.IdentifierAst | Asts.GenericIdentifierAst, Symbol]
 
-    def __init__(self, table: Optional[Dict[IdentifierAst | GenericIdentifierAst, Symbol]] = None):
+    def __init__(self, table: Optional[Dict[Asts.IdentifierAst | Asts.GenericIdentifierAst, Symbol]] = None):
         self._table = table or {}
 
     def add(self, symbol: Symbol) -> None:
         # Add a symbol to the table.
         self._table[symbol.name] = symbol
 
-    def rem(self, symbol_name: IdentifierAst) -> None:
+    def rem(self, symbol_name: Asts.IdentifierAst) -> None:
         # Remove a symbol from the table by symbol name.
         del self._table[symbol_name]
 
-    def get(self, name: IdentifierAst | GenericIdentifierAst, default=None) -> Symbol:
+    def get(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst, default=None) -> Symbol:
         # Get a symbol from the table.
         return self._table.get(name, default)
 
-    def set(self, name: IdentifierAst | GenericIdentifierAst, symbol: Symbol) -> None:
+    def set(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst, symbol: Symbol) -> None:
         # Set a symbol in the table.
         self._table[name] = symbol
 
-    def has(self, name: IdentifierAst | GenericIdentifierAst) -> bool:
+    def has(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst) -> bool:
         # Check if a symbol is in the table.
         return name in self._table
 

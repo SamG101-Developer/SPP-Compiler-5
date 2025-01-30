@@ -18,7 +18,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 
 @dataclass
-class GenericCompParameterVariadicAst(Ast, Ordered, CompilerStages):
+class GenericCompParameterVariadicAst(Ast, Ordered):
     tok_cmp: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCmp))
     tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
     name: Asts.TypeAst = field(default=None)

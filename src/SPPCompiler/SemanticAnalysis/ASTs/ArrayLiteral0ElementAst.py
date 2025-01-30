@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class ArrayLiteral0ElementAst(Ast, TypeInferrable, CompilerStages):
+class ArrayLiteral0ElementAst(Ast, TypeInferrable):
     tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackL))
     element_type: Asts.TypeAst = field(default=None)
     tok_comma: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkComma))

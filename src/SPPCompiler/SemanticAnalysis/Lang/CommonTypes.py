@@ -4,13 +4,12 @@ from typing import Type, TYPE_CHECKING
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
+    import SPPCompiler.SemanticAnalysis as Asts
 
 
 class CommonTypes:
     @staticmethod
-    def type_variant_to_convention(type: TypeAst) -> Type[ConventionAst]:
+    def type_variant_to_convention(type: Asts.TypeAst) -> Type[Asts.ConventionAst]:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst
 
         match type.types[-1].value[-3:].lower():

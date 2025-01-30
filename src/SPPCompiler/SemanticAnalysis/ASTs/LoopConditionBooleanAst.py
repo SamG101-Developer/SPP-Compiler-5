@@ -17,7 +17,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class LoopConditionBooleanAst(Ast, TypeInferrable, CompilerStages):
+class LoopConditionBooleanAst(Ast, TypeInferrable):
     condition: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:

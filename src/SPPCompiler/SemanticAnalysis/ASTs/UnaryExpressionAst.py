@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class UnaryExpressionAst(Ast, TypeInferrable, CompilerStages):
+class UnaryExpressionAst(Ast, TypeInferrable):
     op: Asts.UnaryExpressionOperatorAst = field(default=None)
     rhs: Asts.ExpressionAst = field(default=None)
 

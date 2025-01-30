@@ -22,8 +22,6 @@ type PreProcessingContext = Union[
 @dataclass
 class CompilerStages:
     __friends__ = {"AnnotationAst"}
-    _ctx: PreProcessingContext = field(default=None, kw_only=True, repr=False)
-    _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
 
     @std.virtual_method
     def pre_process(self, context: PreProcessingContext) -> None:
@@ -33,8 +31,6 @@ class CompilerStages:
         them. This stage directly affects what symbols are generated.
         """
 
-        self._ctx = context
-
     @std.virtual_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         """
@@ -43,7 +39,6 @@ class CompilerStages:
         symbols inside functions. The symbols are generated here so that they can be used in any module, allowing for
         circular imports.
         """
-        self._scope = scope_manager.current_scope
 
     @std.virtual_method
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:

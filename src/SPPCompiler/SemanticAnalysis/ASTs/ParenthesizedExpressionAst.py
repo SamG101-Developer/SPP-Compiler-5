@@ -16,7 +16,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class ParenthesizedExpressionAst(Ast, TypeInferrable, CompilerStages):
+class ParenthesizedExpressionAst(Ast, TypeInferrable):
     tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
     expression: Asts.ExpressionAst = field(default=None)
     tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))

@@ -18,7 +18,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class FunctionParameterVariadicAst(Ast, Ordered, VariableNameExtraction, CompilerStages):
+class FunctionParameterVariadicAst(Ast, Ordered, VariableNameExtraction):
     tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
     variable: Asts.LocalVariableAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))

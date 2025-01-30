@@ -338,11 +338,11 @@ class SemanticErrors:
         def add(self, target: Ast, what_target: str, source: Ast, what_source: str) -> SemanticError:
             self.add_info(
                 pos=target.pos,
-                tag=f"{what_target.capitalize()}'s defined here")
+                tag=f"{what_target.capitalize()} '{target}' defined here")
 
             self.add_error(
                 pos=source.pos,
-                tag=f"Invalid {what_source} name.",
+                tag=f"Invalid {what_source} name for '{source}'.",
                 msg=f"{what_target}/{what_source} name mismatch.",
                 tip="Use a name found on the target.")
 

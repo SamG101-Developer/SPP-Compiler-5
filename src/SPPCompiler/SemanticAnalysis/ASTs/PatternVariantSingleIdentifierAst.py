@@ -12,7 +12,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class PatternVariantSingleIdentifierAst(Ast, PatternMapping, CompilerStages):
+class PatternVariantSingleIdentifierAst(Ast, PatternMapping):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
     alias: Optional[Asts.LocalVariableSingleIdentifierAliasAst] = field(default=None)

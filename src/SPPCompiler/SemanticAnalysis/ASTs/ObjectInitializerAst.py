@@ -19,7 +19,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class ObjectInitializerAst(Ast, TypeInferrable, CompilerStages):
+class ObjectInitializerAst(Ast, TypeInferrable):
     class_type: Asts.TypeAst = field(default=None)
     object_argument_group: Asts.ObjectInitializerArgumentGroupAst = field(default_factory=lambda: Asts.ObjectInitializerArgumentGroupAst())
 

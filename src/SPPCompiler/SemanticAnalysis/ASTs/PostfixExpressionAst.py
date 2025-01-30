@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PostfixExpressionAst(Ast, TypeInferrable, CompilerStages):
+class PostfixExpressionAst(Ast, TypeInferrable):
     lhs: Asts.ExpressionAst = field(default=None)
     op: Asts.PostfixExpressionOperatorAst = field(default=None)
 

@@ -18,7 +18,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class RetStatementAst(Ast, TypeInferrable, CompilerStages):
+class RetStatementAst(Ast, TypeInferrable):
     tok_ret: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwRet))
     expression: Optional[Asts.ExpressionAst] = field(default=None)
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)

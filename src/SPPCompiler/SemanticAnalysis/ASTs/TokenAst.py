@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import std
 from dataclasses import dataclass, field
-from typing import Any, Self
 
 from SParLex.Lexer.Tokens import SpecialToken
 
@@ -15,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 
 @dataclass
-class TokenAst(Ast, CompilerStages):
+class TokenAst(Ast):
     token: Token = field(default=None)
 
     def __post_init__(self) -> None:

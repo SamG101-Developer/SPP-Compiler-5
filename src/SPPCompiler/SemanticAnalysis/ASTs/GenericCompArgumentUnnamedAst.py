@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class GenericCompArgumentUnnamedAst(Ast, Ordered, CompilerStages):
+class GenericCompArgumentUnnamedAst(Ast, Ordered):
     value: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:

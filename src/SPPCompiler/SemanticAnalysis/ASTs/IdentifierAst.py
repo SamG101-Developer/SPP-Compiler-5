@@ -16,10 +16,9 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, Variab
 
 
 @dataclass
-class IdentifierAst(Ast, TypeInferrable, CompilerStages):
+class IdentifierAst(Ast, TypeInferrable):
     value: str = field(default="")
 
-    @std.override_method
     def __eq__(self, other: IdentifierAst | str) -> bool:
         # Check both ASTs are the same type and have the same value.
         if isinstance(other, str):
@@ -29,12 +28,10 @@ class IdentifierAst(Ast, TypeInferrable, CompilerStages):
         else:
             raise TypeError(f"Unsupported type for comparison: {type(other)}")
 
-    @std.override_method
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.md5(self.value.encode()).digest())
 
-    @std.override_method
     def __add__(self, other: IdentifierAst | str) -> IdentifierAst:
         if isinstance(other, str):
             self.value += other

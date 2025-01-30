@@ -16,7 +16,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 
 
 @dataclass
-class GenericCompArgumentNamedAst(Ast, Ordered, CompilerStages):
+class GenericCompArgumentNamedAst(Ast, Ordered):
     name: Asts.TypeAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
     value: Asts.ExpressionAst = field(default=None)
@@ -42,12 +42,12 @@ class GenericCompArgumentNamedAst(Ast, Ordered, CompilerStages):
         return " ".join(string)
 
     @staticmethod
-    def from_name_value(name: Any, value: Asts.ExpressionAst) -> GenericCompArgumentNamedAst:
-        return GenericCompArgumentNamedAst(name=Asts.IdentifierAst.from_type(name), value=value)
+    def from_name_value(name: Asts.TypeAst, value: Asts.ExpressionAst) -> GenericCompArgumentNamedAst:
+        return GenericCompArgumentNamedAst(name=name, value=value)
 
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
-        return GenericCompArgumentNamedAst(name=symbol.name, value=symbol.memory_info.ast_comptime_const)
+        return GenericCompArgumentNamedAst(name=Asts.TypeAst.from_identifier(symbol.name), value=symbol.memory_info.ast_comptime_const)
 
     @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

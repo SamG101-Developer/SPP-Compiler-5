@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class ModulePrototypeAst(Ast, CompilerStages):
+class ModulePrototypeAst(Ast):
     body: Asts.ModuleImplementationAst = field(default_factory=Asts.ModuleImplementationAst)
     _name: str = field(init=False, default="")
 

@@ -15,7 +15,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class GenericTypeParameterInlineConstraintsAst(Ast, CompilerStages):
+class GenericTypeParameterInlineConstraintsAst(Ast):
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
     constraints: Seq[Asts.TypeAst] = field(default_factory=Seq)
 

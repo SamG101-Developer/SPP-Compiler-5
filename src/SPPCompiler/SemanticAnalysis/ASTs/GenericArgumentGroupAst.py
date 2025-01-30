@@ -17,10 +17,10 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class GenericArgumentGroupAst(Ast, CompilerStages):
-    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceL))
+class GenericArgumentGroupAst(Ast):
+    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackL))
     arguments: Seq[Asts.GenericArgumentAst] = field(default_factory=Seq)
-    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))
+    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackR))
 
     def __copy__(self) -> GenericArgumentGroupAst:
         return GenericArgumentGroupAst(arguments=self.arguments.copy())

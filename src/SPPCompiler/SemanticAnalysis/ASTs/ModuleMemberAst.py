@@ -1,18 +1,13 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.ClassPrototypeAst import ClassPrototypeAst
-from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
-from SPPCompiler.SemanticAnalysis.ASTs.GlobalConstantAst import GlobalConstantAst
-from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
-from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeExtensionAst import SupPrototypeExtensionAst
-from SPPCompiler.SemanticAnalysis.ASTs.UseStatementAst import UseStatementAst
+import SPPCompiler.SemanticAnalysis.ASTs as Asts
 
 type ModuleMemberAst = Union[
-    ClassPrototypeAst,
-    FunctionPrototypeAst,
-    GlobalConstantAst,
-    SupPrototypeFunctionsAst,
-    SupPrototypeExtensionAst,
-    UseStatementAst]
+    Asts.ClassPrototypeAst,
+    Asts.FunctionPrototypeAst,
+    Asts.GlobalConstantAst,
+    Asts.SupPrototypeFunctionsAst,
+    Asts.SupPrototypeExtensionAst,
+    Asts.UseStatementAst]
 
 __all__ = ["ModuleMemberAst"]

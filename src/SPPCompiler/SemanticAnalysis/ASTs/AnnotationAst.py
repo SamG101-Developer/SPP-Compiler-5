@@ -37,7 +37,7 @@ class _Annotations(Enum):
 
 
 @dataclass
-class AnnotationAst(Ast, CompilerStages):
+class AnnotationAst(Ast):
     tok_at: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAt))
     name: Asts.IdentifierAst = field(default=None)
 

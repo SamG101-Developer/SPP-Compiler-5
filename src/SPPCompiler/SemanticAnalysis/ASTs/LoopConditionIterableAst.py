@@ -24,7 +24,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class LoopConditionIterableAst(Ast, TypeInferrable, CompilerStages):
+class LoopConditionIterableAst(Ast, TypeInferrable):
     variable: Asts.LocalVariableAst = field(default=None)
     in_keyword: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwIn))
     iterable: Asts.ExpressionAst = field(default=None)

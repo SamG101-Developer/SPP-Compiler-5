@@ -5,8 +5,6 @@ import std
 from dataclasses import dataclass, field
 
 import SPPCompiler.SemanticAnalysis as Asts
-from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
@@ -15,9 +13,9 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStages):
-    tok_access: TokenAst = field(default=None)
-    field: IdentifierAst | TokenAst = field(default=None)
+class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
+    tok_access: Asts.TokenAst = field(default=None)
+    field: Asts.IdentifierAst | Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
         assert self.tok_access
@@ -63,7 +61,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
             return InferredType.from_type(attribute_type)
 
     @std.override_method
-    def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors

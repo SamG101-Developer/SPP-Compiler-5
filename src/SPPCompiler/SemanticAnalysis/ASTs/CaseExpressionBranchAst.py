@@ -15,7 +15,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class CaseExpressionBranchAst(Ast, TypeInferrable, CompilerStages):
+class CaseExpressionBranchAst(Ast, TypeInferrable):
     comp_operator: Optional[Asts.TokenAst] = field(default=None)
     patterns: Seq[Asts.PatternVariantAst] = field(default_factory=Seq)
     guard: Optional[Asts.PatternGuardAst] = field(default=None)

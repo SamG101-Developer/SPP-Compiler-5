@@ -15,7 +15,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class LoopExpressionAst(Ast, TypeInferrable, CompilerStages):
+class LoopExpressionAst(Ast, TypeInferrable):
     tok_loop: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwLoop))
     condition: Asts.LoopConditionAst = field(default=None)
     body: Asts.InnerScopeAst = field(default_factory=lambda: Asts.InnerScopeAst())

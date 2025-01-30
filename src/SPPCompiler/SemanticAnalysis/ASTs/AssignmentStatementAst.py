@@ -17,7 +17,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class AssignmentStatementAst(Ast, TypeInferrable, CompilerStages):
+class AssignmentStatementAst(Ast, TypeInferrable):
     lhs: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
     op: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
     rhs: Seq[Asts.ExpressionAst] = field(default_factory=Seq)

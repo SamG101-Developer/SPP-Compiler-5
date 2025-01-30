@@ -8,11 +8,13 @@ __status__ = "Development"
 from argparse import Namespace
 import graphviz, gprof2dot
 import os, cProfile
+import std
 
 from spp import handle_build
 
 
-def main():
+def main() -> None:
+    # std.enable_type_checking(std.ErrorLevel.WARNING)/
     project_dir = "project"
     os.chdir(project_dir)
 

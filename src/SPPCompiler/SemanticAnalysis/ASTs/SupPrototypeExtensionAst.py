@@ -24,7 +24,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class SupPrototypeExtensionAst(Ast, CompilerStages):
+class SupPrototypeExtensionAst(Ast):
     tok_sup: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwSup))
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
     name: Asts.TypeAst = field(default=None)
@@ -35,7 +35,6 @@ class SupPrototypeExtensionAst(Ast, CompilerStages):
 
     _scope_cls: Optional[Scope] = field(init=False, default=None)
 
-    @std.override_method
     def __post_init__(self) -> None:
         assert self.super_class
 
@@ -62,7 +61,7 @@ class SupPrototypeExtensionAst(Ast, CompilerStages):
     @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a new scope for the superimposition.
-        scope_manager.create_and_move_into_new_scope(f"<sup:{self.name} ext {self.super_class}:{self.pos}>", self)
+        scope_manager.create_and_move_into_new_scope(f"<sup#{self.name} ext {self.super_class}#{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
 
         # Generate the symbols for the generic parameter group, and the self type.

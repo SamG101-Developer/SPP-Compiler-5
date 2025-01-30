@@ -16,7 +16,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction, CompilerStages):
+class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
     convention: Asts.ConventionAst = field(default_factory=lambda: Asts.ConventionMovAst())
     name: Asts.IdentifierAst = field(default=None)

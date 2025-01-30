@@ -17,7 +17,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class ArrayLiteralNElementAst(Ast, TypeInferrable, CompilerStages):
+class ArrayLiteralNElementAst(Ast, TypeInferrable):
     tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackL))
     elements: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
     tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackR))

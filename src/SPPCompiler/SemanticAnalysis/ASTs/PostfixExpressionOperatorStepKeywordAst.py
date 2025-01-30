@@ -17,7 +17,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable, CompilerStages):
+class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable):
     tok_dot: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDot))
     tok_step: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwStep))
 

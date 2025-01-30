@@ -17,7 +17,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class FunctionCallArgumentNamedAst(Ast, Ordered, TypeInferrable, CompilerStages):
+class FunctionCallArgumentNamedAst(Ast, Ordered, TypeInferrable):
     name: Asts.IdentifierAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
     convention: Asts.ConventionAst = field(default_factory=Asts.ConventionMovAst)

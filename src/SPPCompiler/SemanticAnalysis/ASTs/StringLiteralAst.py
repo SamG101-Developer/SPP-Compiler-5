@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class StringLiteralAst(Ast, TypeInferrable, CompilerStages):
+class StringLiteralAst(Ast, TypeInferrable):
     value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.LxDoubleQuoteStr))
 
     @ast_printer_method

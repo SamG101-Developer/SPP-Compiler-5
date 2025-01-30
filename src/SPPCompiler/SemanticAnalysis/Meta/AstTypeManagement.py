@@ -5,11 +5,7 @@ import builtins, copy, difflib
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentGroupAst import GenericArgumentGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
+    import SPPCompiler.SemanticAnalysis as Asts
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
     from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
@@ -17,7 +13,7 @@ if TYPE_CHECKING:
 
 class AstTypeManagement:
     @staticmethod
-    def is_type_indexable(type: TypeAst, scope: Scope) -> bool:
+    def is_type_indexable(type: Asts.TypeAst, scope: Scope) -> bool:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
         # Only tuple and array types are indexable.
@@ -26,7 +22,7 @@ class AstTypeManagement:
         return is_tuple or is_array
 
     @staticmethod
-    def is_index_within_type_bound(index: int, type: TypeAst, scope: Scope):
+    def is_index_within_type_bound(index: int, type: Asts.TypeAst, scope: Scope):
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
         # Tuple type: count the number of generic arguments.
@@ -38,7 +34,7 @@ class AstTypeManagement:
             return index < int(type.types[-1].generic_argument_group.arguments[1].value.value.token.token_metadata)
 
     @staticmethod
-    def get_nth_type_of_indexable_type(index: int, type: TypeAst, scope: Scope) -> TypeAst:
+    def get_nth_type_of_indexable_type(index: int, type: Asts.TypeAst, scope: Scope) -> Asts.TypeAst:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
         # Tuple type: get the nth generic argument.
@@ -50,7 +46,7 @@ class AstTypeManagement:
             return type.types[-1].generic_argument_group.arguments[0].value
 
     @staticmethod
-    def get_namespaced_scope_with_error(scope_manager: ScopeManager, namespace: Seq[IdentifierAst]) -> Scope:
+    def get_namespaced_scope_with_error(scope_manager: ScopeManager, namespace: Seq[Asts.IdentifierAst]) -> Scope:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
@@ -72,7 +68,7 @@ class AstTypeManagement:
         return namespace_scope
 
     @staticmethod
-    def get_type_part_symbol_with_error(scope: Scope, type_part: GenericIdentifierAst, ignore_alias: bool = False, **kwargs) -> TypeSymbol:
+    def get_type_part_symbol_with_error(scope: Scope, type_part: Asts.GenericIdentifierAst, ignore_alias: bool = False, **kwargs) -> TypeSymbol:
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
@@ -88,7 +84,7 @@ class AstTypeManagement:
         return type_symbol
 
     @staticmethod
-    def create_generic_scope(scope_manager: ScopeManager, type: TypeAst, type_part: GenericIdentifierAst, base_symbol: TypeSymbol) -> Scope:
+    def create_generic_scope(scope_manager: ScopeManager, type: Asts.TypeAst, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol) -> Scope:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
@@ -124,12 +120,10 @@ class AstTypeManagement:
         return new_scope
 
     @staticmethod
-    def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: GenericArgumentGroupAst) -> Seq[Scope]:
-        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, SupPrototypeExtensionAst, SupPrototypeFunctionsAst, GenericTypeArgumentNamedAst
+    def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
         from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
+        import SPPCompiler.SemanticAnalysis as Asts
 
         old_scopes = base_scope._direct_sup_scopes
         new_scopes = Seq()
@@ -137,7 +131,7 @@ class AstTypeManagement:
         for scope in old_scopes:
 
             # Create the scope with the generic arguments injected. This will handle recursive scope creation.
-            if isinstance(scope._ast, ClassPrototypeAst):
+            if isinstance(scope._ast, Asts.ClassPrototypeAst):
                 temp_manager = ScopeManager(scope_manager.global_scope, base_scope.parent)
                 new_fq_type = copy.deepcopy(scope.type_symbol.fq_name)
                 new_fq_type.sub_generics(generic_arguments.arguments)
@@ -145,7 +139,7 @@ class AstTypeManagement:
                 new_scope = scope_manager.current_scope.get_symbol(new_fq_type).scope
 
             # Create the scope for the new super class type. This will handle recursive sup-scope creation.
-            elif isinstance(scope._ast, SupPrototypeExtensionAst):
+            elif isinstance(scope._ast, Asts.SupPrototypeExtensionAst):
                 temp_manager = ScopeManager(scope_manager.global_scope, base_scope)
                 new_fq_super_type = copy.deepcopy(scope._ast.super_class)
                 super_type_symbol = base_scope.get_symbol(new_fq_super_type)
@@ -153,19 +147,19 @@ class AstTypeManagement:
                 new_fq_super_type.analyse_semantics(temp_manager)
 
             # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
-            if isinstance(scope._ast, SupPrototypeFunctionsAst):
+            if isinstance(scope._ast, (Asts.SupPrototypeFunctionsAst, Asts.SupPrototypeExtensionAst)):
                 new_scope_name = AstTypeManagement.generic_convert_sup_scope_name(scope.name, generic_arguments)
                 new_scope = Scope(new_scope_name, scope.parent, ast=scope._ast)
                 new_scope._children = scope._children
                 new_scope._symbol_table = copy.copy(scope._symbol_table)
                 new_scope._non_generic_scope = scope
 
-                # Todo: can remove the "if-continue" if default generaic arguments are brought in here too.
+                # Todo: can remove the "if-continue" if default generic arguments are brought in here too.
                 for generic_parameter in scope._ast.generic_parameter_group.get_type_params():
                     mock_generic_parameter = scope._ast.name.get_generic_parameter_for_argument(generic_parameter.name)
                     mock_generic_value = generic_arguments.arguments.find(lambda a: a.name == mock_generic_parameter)
                     if not mock_generic_value: continue
-                    new_generic_argument = GenericTypeArgumentNamedAst(name=generic_parameter.name.types[-1], value=mock_generic_value.value)
+                    new_generic_argument = Asts.GenericTypeArgumentNamedAst(name=generic_parameter.name, value=mock_generic_value.value)
                     generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, new_generic_argument)
                     new_scope.add_symbol(generic_symbol)
 
@@ -176,7 +170,7 @@ class AstTypeManagement:
         return new_scopes
 
     @staticmethod
-    def create_generic_symbol(scope_manager: ScopeManager, generic_argument: GenericArgumentAst) -> TypeSymbol | VariableSymbol:
+    def create_generic_symbol(scope_manager: ScopeManager, generic_argument: Asts.GenericArgumentAst) -> TypeSymbol | VariableSymbol:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
 
@@ -199,19 +193,19 @@ class AstTypeManagement:
             raise Exception(type(true_value_symbol))
 
     @staticmethod
-    def generic_convert_sup_scope_name(name: str, generics: GenericArgumentGroupAst) -> str:
+    def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst) -> str:
         from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
-        parts = name.split(":")
+        parts = name.split("#")
         if " ext " not in parts:
             t = AstMutation.inject_code(parts[1], SppParser.parse_type)
             t.sub_generics(generics.arguments)
-            return f"{parts[0]}:{t}:{parts[2]}"
+            return f"{parts[0]}#{t}#{parts[2]}"
 
         else:
             t = AstMutation.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type)
             u = AstMutation.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type)
             t.sub_generics(generics.arguments)
             u.sub_generics(generics.arguments)
-            return f"{parts[0]}:{t} ext {u}:{parts[2]}"
+            return f"{parts[0]}#{t} ext {u}#{parts[2]}"

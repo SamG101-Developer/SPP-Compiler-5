@@ -17,7 +17,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
+class ClassAttributeAst(Ast, VisibilityEnabled):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     name: Asts.IdentifierAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))

@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PostfixExpressionOperatorNotKeywordAst(Ast, TypeInferrable, CompilerStages):
+class PostfixExpressionOperatorNotKeywordAst(Ast, TypeInferrable):
     tok_dot: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDot))
     tok_not: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwNot))
 

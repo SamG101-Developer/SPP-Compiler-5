@@ -33,7 +33,7 @@ SIZE_MAPPING = {
 
 
 @dataclass
-class FloatLiteralAst(Ast, TypeInferrable, CompilerStages):
+class FloatLiteralAst(Ast, TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
     integer_value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.LxDecInteger))
     tok_dot: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDot))

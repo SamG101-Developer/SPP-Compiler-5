@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class WithExpressionAliasAst(Ast, CompilerStages):
+class WithExpressionAliasAst(Ast):
     variable: Asts.LocalVariableAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
 

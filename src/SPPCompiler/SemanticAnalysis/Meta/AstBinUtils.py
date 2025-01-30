@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.BinaryExpressionAst import BinaryExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionAst import PostfixExpressionAst
+    import SPPCompiler.SemanticAnalysis as Asts
 
 BINARY_METHODS = {
     SppTokenType.TkAdd: "add", SppTokenType.TkSub: "sub", SppTokenType.TkMul: "mul", SppTokenType.TkDiv: "div",
@@ -44,14 +43,14 @@ BINARY_COMPARISON_OPERATORS = {
 
 class AstBinUtils:
     @staticmethod
-    def convert_to_function_call(ast: BinaryExpressionAst) -> PostfixExpressionAst:
+    def convert_to_function_call(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst:
         ast = AstBinUtils._fix_associativity(ast)
         ast = AstBinUtils._combine_comparison_operators(ast)
         ast = AstBinUtils._convert_to_function_call(ast)
         return ast
 
     @staticmethod
-    def _fix_associativity(ast: BinaryExpressionAst) -> BinaryExpressionAst:
+    def _fix_associativity(ast: Asts.BinaryExpressionAst) -> Asts.BinaryExpressionAst:
         """
         The parser uses right-hand recursive parsing to mitigate left-hand-recursion in the binary operator parsing.
         This means the operators are in a reverse precedence order, and need to be re-arranged.
@@ -79,7 +78,7 @@ class AstBinUtils:
             return ast
 
     @staticmethod
-    def _combine_comparison_operators(ast: BinaryExpressionAst) -> BinaryExpressionAst:
+    def _combine_comparison_operators(ast: Asts.BinaryExpressionAst) -> Asts.BinaryExpressionAst:
         """
         Expand chained comparison operators into their multiple parts. For example, the comparison "0 < a < 1" becomes
         "0 < a and a < 1".
@@ -101,7 +100,7 @@ class AstBinUtils:
             return ast
 
     @staticmethod
-    def _convert_to_function_call_inner(ast: BinaryExpressionAst) -> PostfixExpressionAst:
+    def _convert_to_function_call_inner(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst:
         """
         Convert the binary expression into a postfix expression, with the binary operator being a function call.
         """
@@ -124,7 +123,7 @@ class AstBinUtils:
             return case_ast
 
     @staticmethod
-    def _convert_to_function_call(ast: BinaryExpressionAst) -> PostfixExpressionAst | BinaryExpressionAst:
+    def _convert_to_function_call(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst | Asts.BinaryExpressionAst:
         """
         Convert the binary expression into a postfix expression, with the binary operator being a function call.
         """

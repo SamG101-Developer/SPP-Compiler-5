@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from llvmlite import ir
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
+    import SPPCompiler.SemanticAnalysis as Asts
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
     from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol
@@ -59,7 +59,7 @@ class BuildTypes:
         # Set the body of the LLVM type.
         type.llvm_info.llvm_type.set_body(*super_class_types, *attribute_types)
 
-    def _create_llvm_type_name(self, type: TypeAst) -> str:
+    def _create_llvm_type_name(self, type: Asts.TypeAst) -> str:
         return f"{type}"
 
 

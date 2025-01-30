@@ -16,7 +16,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PatternVariantDestructureArrayAst(Ast, PatternMapping, CompilerStages):
+class PatternVariantDestructureArrayAst(Ast, PatternMapping):
     tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
     elements: Seq[Asts.PatternVariantNestedForDestructureArrayAst] = field(default_factory=Seq)
     tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))

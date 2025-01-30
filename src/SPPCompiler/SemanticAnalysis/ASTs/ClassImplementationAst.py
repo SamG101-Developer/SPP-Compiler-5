@@ -16,7 +16,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class ClassImplementationAst(Ast, CompilerStages):
+class ClassImplementationAst(Ast):
     tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceL))
     members: Seq[Asts.ClassMemberAst] = field(default_factory=Seq)
     tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))

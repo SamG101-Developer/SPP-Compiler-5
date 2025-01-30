@@ -36,7 +36,7 @@ SIZE_MAPPING = {
 
 
 @dataclass
-class IntegerLiteralAst(Ast, TypeInferrable, CompilerStages):
+class IntegerLiteralAst(Ast, TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
     value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.LxDecInteger))
     type: Optional[Asts.TypeAst] = field(default=None)

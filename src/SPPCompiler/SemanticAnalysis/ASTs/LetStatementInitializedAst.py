@@ -19,7 +19,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class LetStatementInitializedAst(Ast, TypeInferrable, CompilerStages):
+class LetStatementInitializedAst(Ast, TypeInferrable):
     let_keyword: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwLet))
     assign_to: Asts.LocalVariableAst = field(default=None)
     assign_token: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))

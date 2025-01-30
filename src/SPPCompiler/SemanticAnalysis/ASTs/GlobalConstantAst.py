@@ -18,7 +18,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class GlobalConstantAst(Ast, VisibilityEnabled, CompilerStages):
+class GlobalConstantAst(Ast, VisibilityEnabled):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     tok_cmp: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCmp))
     name: Asts.IdentifierAst = field(default=None)

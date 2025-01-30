@@ -16,7 +16,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class GenericParameterGroupAst(Ast, CompilerStages):
+class GenericParameterGroupAst(Ast):
     tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceL))
     parameters: Seq[Asts.GenericParameterAst] = field(default_factory=Seq)
     tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))

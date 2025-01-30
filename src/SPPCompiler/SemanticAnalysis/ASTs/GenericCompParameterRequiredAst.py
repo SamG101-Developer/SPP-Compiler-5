@@ -18,7 +18,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 
 @dataclass
-class GenericCompParameterRequiredAst(Ast, Ordered, CompilerStages):
+class GenericCompParameterRequiredAst(Ast, Ordered):
     tok_cmp: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCmp))
     name: Asts.TypeAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))

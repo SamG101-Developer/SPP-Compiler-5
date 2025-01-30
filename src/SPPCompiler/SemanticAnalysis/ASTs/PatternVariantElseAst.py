@@ -11,7 +11,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class PatternVariantElseAst(Ast, CompilerStages):
+class PatternVariantElseAst(Ast):
     tok_else: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwElse))
 
     @ast_printer_method

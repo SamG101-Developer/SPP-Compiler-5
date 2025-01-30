@@ -20,7 +20,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction, CompilerStages):
+class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
     variable: Asts.LocalVariableAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
     convention: Asts.ConventionAst = field(default_factory=Asts.ConventionMovAst)

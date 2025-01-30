@@ -17,7 +17,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class InnerScopeAst(Ast, TypeInferrable, CompilerStages):
+class InnerScopeAst(Ast, TypeInferrable):
     tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceL))
     members: Seq[Asts.StatementAst] = field(default_factory=Seq)
     tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))

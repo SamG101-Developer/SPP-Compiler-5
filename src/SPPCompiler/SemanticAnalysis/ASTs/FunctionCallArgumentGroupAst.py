@@ -21,7 +21,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class FunctionCallArgumentGroupAst(Ast, CompilerStages):
+class FunctionCallArgumentGroupAst(Ast):
     tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
     arguments: Seq[Asts.FunctionCallArgumentAst] = field(default_factory=Seq)
     tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))

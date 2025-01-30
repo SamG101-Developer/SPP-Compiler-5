@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PostfixExpressionOperatorEarlyReturnAst(Ast, TypeInferrable, CompilerStages):
+class PostfixExpressionOperatorEarlyReturnAst(Ast, TypeInferrable):
     tok_qst: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkQst))
 
     @ast_printer_method

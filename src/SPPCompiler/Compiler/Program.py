@@ -10,15 +10,15 @@ from SPPCompiler.Utils.ProgressBar import ProgressBar
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
+    import SPPCompiler.SemanticAnalysis as Asts
     from SPPCompiler.Compiler.ModuleTree import ModuleTree, Module
-    from SPPCompiler.SemanticAnalysis.ASTs.ModulePrototypeAst import ModulePrototypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
 class Program(CompilerStages):
-    modules: Seq[ModulePrototypeAst] = field(default_factory=Seq, init=False, repr=False)
-    _current: Optional[ModulePrototypeAst] = field(default=None, init=False, repr=False)
+    modules: Seq[Asts.ModulePrototypeAst] = field(default_factory=Seq, init=False, repr=False)
+    _current: Optional[Asts.ModulePrototypeAst] = field(default=None, init=False, repr=False)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -99,21 +99,21 @@ class Program(CompilerStages):
             module.analyse_semantics(scope_manager, **kwargs)
         scope_manager.reset()
 
-    def current(self) -> ModulePrototypeAst:
+    def current(self) -> Asts.ModulePrototypeAst:
         return self._current
 
     def _move_scope_manager_to_namespace(self, scope_manager: ScopeManager, module: Module):
-        from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
+        import SPPCompiler.SemanticAnalysis as Asts
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
         module_namespace = module.path.split(os.path.sep)
         module_namespace = module_namespace[module_namespace.index("src") + 1 : -1]
 
         for part in module_namespace:
-            part = IdentifierAst(-1, part)
+            part = Asts.IdentifierAst(-1, part)
 
-            if Seq(scope_manager.current_scope.children).map(lambda s: s.name).contains(part):
-                scope = Seq(scope_manager.current_scope.children).filter(lambda s: s.name == part).first()
+            if Seq(scope_manager.current_scope.children).map(lambda s: s.name).contains(part):  # filter_to_type(IdentifierAst).
+                scope = Seq(scope_manager.current_scope.children).filter(lambda s: s.name == part).first()  #  isinstance(s.name, IdentifierAst) and
                 if scope_manager.current_scope is not scope: scope_manager.reset(scope)
 
             else:

@@ -22,7 +22,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class BinaryExpressionAst(Ast, TypeInferrable, CompilerStages):
+class BinaryExpressionAst(Ast, TypeInferrable):
     lhs: Asts.ExpressionAst = field(default=None)
     op: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAdd))
     rhs: Asts.ExpressionAst = field(default=None)

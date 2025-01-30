@@ -16,7 +16,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class UnaryExpressionOperatorAsyncAst(Ast, TypeInferrable, CompilerStages):
+class UnaryExpressionOperatorAsyncAst(Ast, TypeInferrable):
     tok_async: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwAsync))
 
     @ast_printer_method

@@ -17,7 +17,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
-class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction, CompilerStages):
+class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction):
     class_type: Asts.TypeAst = field(default=None)
     tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
     elements: Seq[Asts.LocalVariableNestedForDestructureObjectAst] = field(default_factory=Seq)

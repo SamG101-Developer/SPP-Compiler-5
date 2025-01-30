@@ -21,7 +21,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class CaseExpressionAst(Ast, TypeInferrable, CompilerStages):
+class CaseExpressionAst(Ast, TypeInferrable):
     tok_case: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCase))
     condition: Asts.ExpressionAst = field(default=None)
     kw_of: Optional[Asts.TokenAst] = field(default=None)

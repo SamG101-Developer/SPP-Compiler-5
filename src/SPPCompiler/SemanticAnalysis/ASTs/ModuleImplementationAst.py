@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class ModuleImplementationAst(Ast, CompilerStages):
+class ModuleImplementationAst(Ast):
     members: Seq[Asts.ModuleMemberAst] = field(default_factory=Seq)
 
     @ast_printer_method

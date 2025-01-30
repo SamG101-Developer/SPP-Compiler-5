@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class BooleanLiteralAst(Ast, TypeInferrable, CompilerStages):
+class BooleanLiteralAst(Ast, TypeInferrable):
     value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwFalse))
 
     @std.override_method

@@ -19,7 +19,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
+class ClassPrototypeAst(Ast, VisibilityEnabled):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     tok_cls: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCls))
     name: Asts.TypeAst = field(default=None)
@@ -101,7 +101,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
-        self.body.generate_top_level_aliases(scope_manager)
+        self.body.generate_top_level_aliases(scope_manager, **kwargs)
         scope_manager.move_out_of_current_scope()
 
     @std.override_method

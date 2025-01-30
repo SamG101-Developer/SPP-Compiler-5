@@ -1,11 +1,10 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
-from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeExtensionAst import SupPrototypeExtensionAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type SupPrototypeAst = Union[
-    SupPrototypeFunctionsAst,
-    SupPrototypeExtensionAst
+    Asts.SupPrototypeFunctionsAst,
+    Asts.SupPrototypeExtensionAst
 ]
 
 __all__ = ["SupPrototypeAst"]

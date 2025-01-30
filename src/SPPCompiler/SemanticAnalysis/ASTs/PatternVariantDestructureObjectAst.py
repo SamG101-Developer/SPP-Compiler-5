@@ -18,7 +18,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class PatternVariantDestructureObjectAst(Ast, PatternMapping, CompilerStages):
+class PatternVariantDestructureObjectAst(Ast, PatternMapping):
     type: Asts.TypeAst = field(default=None)
     tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
     elements: Seq[Asts.PatternVariantNestedForDestructureObjectAst] = field(default_factory=Seq)

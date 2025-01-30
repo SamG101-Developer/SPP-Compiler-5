@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PatternVariantExpressionAst(Ast, CompilerStages):
+class PatternVariantExpressionAst(Ast):
     expression: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:

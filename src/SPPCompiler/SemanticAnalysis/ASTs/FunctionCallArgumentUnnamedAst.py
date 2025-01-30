@@ -16,7 +16,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class FunctionCallArgumentUnnamedAst(Ast, Ordered, TypeInferrable, CompilerStages):
+class FunctionCallArgumentUnnamedAst(Ast, Ordered, TypeInferrable):
     convention: Asts.ConventionAst = field(default_factory=Asts.ConventionMovAst)
     tok_unpack: Optional[Asts.TokenAst] = field(default=None)
     value: Asts.ExpressionAst = field(default=None)

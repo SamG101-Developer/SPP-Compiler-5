@@ -24,7 +24,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class TypeAst(Ast, TypeInferrable, CompilerStages):
+class TypeAst(Ast, TypeInferrable):
     namespace: Seq[Asts.IdentifierAst] = field(default_factory=Seq)
     types: Seq[Asts.GenericIdentifierAst] = field(default_factory=Seq)
 
@@ -33,17 +33,14 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
         self.namespace = Seq(self.namespace)
         self.types = Seq(self.types)
 
-    @std.override_method
     def __eq__(self, other: TypeAst) -> bool:
         # Check both ASTs are the same type and have the same namespace and types.
         return isinstance(other, TypeAst) and self.namespace == other.namespace and self.types == other.types
 
-    @std.override_method
     def __hash__(self) -> int:
         # Hash the namespace and types into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.md5("".join([str(p) for p in self.namespace + self.types]).encode()).digest())
 
-    @std.override_method
     def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
 
         # Iterate over the type parts and generics.
@@ -171,7 +168,7 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
 
     # todo: remove "force" parameter - should be safe?
     @std.override_method
-    def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source: Dict = None, generic_infer_target: Dict = None, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
         # Determine the scope to use for the type analysis.
         match self.namespace.length:
             case 0: type_scope = scope_manager.current_scope
