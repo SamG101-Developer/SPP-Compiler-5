@@ -21,7 +21,7 @@ class GenericCompArgumentNamedAst(Ast, Ordered):
 
     def __post_init__(self) -> None:
         assert self.name
-        assert self.value
+        # assert self.value
         self._variant = "Named"
 
     @std.override_method

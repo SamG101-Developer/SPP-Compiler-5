@@ -21,7 +21,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 class GenExpressionAst(Ast, TypeInferrable):
     tok_gen: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwGen))
     tok_with: Optional[Asts.TokenAst] = field(default=None)
-    convention: Optional[Asts.ConventionAst] = field(default=None)
+    convention: Optional[Asts.ConventionAst] = field(default_factory=lambda: Asts.ConventionMovAst())
     expression: Optional[Asts.ExpressionAst] = field(default=None)
 
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)

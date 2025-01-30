@@ -1,10 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Type, TYPE_CHECKING
+import SPPCompiler.SemanticAnalysis as Asts
 import std
 
 if TYPE_CHECKING:
-    import SPPCompiler.SemanticAnalysis as Asts
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
@@ -28,8 +28,7 @@ class InferredType:
 
     @staticmethod
     def from_type(type: Asts.TypeAst) -> InferredType:
-        from SPPCompiler.SemanticAnalysis import ConventionMovAst
-        return InferredType(convention=ConventionMovAst, type=type)
+        return InferredType(convention=Asts.ConventionMovAst, type=type)
 
 
 @dataclass
