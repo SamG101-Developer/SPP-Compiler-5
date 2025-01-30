@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import copy
-import std
 from dataclasses import dataclass, field
+
+import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -12,7 +13,6 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.PatternMapping import PatternMapping
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 

@@ -39,14 +39,14 @@ class GenericIdentifierAst(Ast):
 
     @staticmethod
     def from_identifier(identifier: Asts.IdentifierAst) -> GenericIdentifierAst:
-        return GenericIdentifierAst(identifier.pos, identifier.value, Asts.GenericArgumentGroupAst())
+        return GenericIdentifierAst(identifier.pos, identifier.value)
 
     @staticmethod
     def from_type(type: Asts.TypeAst) -> GenericIdentifierAst:
         return type.types[-1]
 
     def without_generics(self) -> GenericIdentifierAst:
-        return GenericIdentifierAst(self.pos, self.value, Asts.GenericArgumentGroupAst())
+        return GenericIdentifierAst(self.pos, self.value)
 
 
 __all__ = ["GenericIdentifierAst"]

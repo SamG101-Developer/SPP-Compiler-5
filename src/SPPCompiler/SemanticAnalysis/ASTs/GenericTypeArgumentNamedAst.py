@@ -42,13 +42,9 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
         return "".join(string)
 
     @staticmethod
-    def from_name_value(name: Asts.TypeAst, value: Asts.TypeAst) -> GenericTypeArgumentNamedAst:
-        return GenericTypeArgumentNamedAst(name=copy.deepcopy(name), value=value)
-
-    @staticmethod
     def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:
         value = symbol.scope.type_symbol.fq_name if symbol.scope else symbol.scope
-        return GenericTypeArgumentNamedAst(name=symbol.fq_name, value=value)
+        return GenericTypeArgumentNamedAst(name=Asts.TypeAst.from_generic_identifier(symbol.name), value=value)
 
     @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

@@ -8,10 +8,8 @@ import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
-
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
 
 @dataclass

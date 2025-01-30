@@ -9,7 +9,6 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 

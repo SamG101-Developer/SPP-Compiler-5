@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -11,7 +12,6 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -49,7 +49,7 @@ class GenericArgumentGroupAst(Ast):
             **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__value__.__args__},
             **{g: Asts.GenericTypeArgumentNamedAst for g in Asts.GenericTypeParameterAst.__value__.__args__}}
 
-        arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)].from_name_value(p.name, p.name))
+        arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)](name=copy.deepcopy(p.name), value=p.name))
         return GenericArgumentGroupAst(arguments=arguments)
 
     @ast_printer_method

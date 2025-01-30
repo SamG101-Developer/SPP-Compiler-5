@@ -1,17 +1,18 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
+
 import std
 
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-import SPPCompiler.SemanticAnalysis as Asts
 
 
 def integer_limits(*, signed: bool, b: int) -> tuple[int, int]:

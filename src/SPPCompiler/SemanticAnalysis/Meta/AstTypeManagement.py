@@ -143,7 +143,7 @@ class AstTypeManagement:
                     mock_generic_parameter = scope._ast.name.get_generic_parameter_for_argument(generic_parameter.name)
                     mock_generic_value = generic_arguments.arguments.find(lambda a: a.name == mock_generic_parameter)
                     if not mock_generic_value: continue
-                    new_generic_argument = Asts.GenericTypeArgumentNamedAst(name=copy.deepcopy(generic_parameter.name), value=mock_generic_value.value)
+                    new_generic_argument = Asts.GenericTypeArgumentNamedAst(name=Asts.TypeAst.from_generic_identifier(generic_parameter.name.types[-1]), value=mock_generic_value.value)
                     generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, new_generic_argument)
                     new_scope.add_symbol(generic_symbol)
 

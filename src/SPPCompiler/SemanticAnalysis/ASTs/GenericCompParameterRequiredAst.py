@@ -11,7 +11,6 @@ from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser

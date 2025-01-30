@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Self
 
 import std
 
@@ -14,7 +13,6 @@ from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq

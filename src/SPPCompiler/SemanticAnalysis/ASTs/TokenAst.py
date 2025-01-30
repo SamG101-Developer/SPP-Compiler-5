@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import hashlib
-import std
 from dataclasses import dataclass, field
 
+import std
 from SParLex.Lexer.Tokens import SpecialToken
 
 from SPPCompiler.LexicalAnalysis.Token import Token
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 
 
 @dataclass

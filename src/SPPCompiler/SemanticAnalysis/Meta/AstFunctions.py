@@ -7,8 +7,9 @@ import operator
 from SPPCompiler.Utils.Sequence import Seq
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 if TYPE_CHECKING:
     import SPPCompiler.SemanticAnalysis as Asts
@@ -96,7 +97,6 @@ class AstFunctions:
     @staticmethod
     def get_all_function_scopes(function_name: Asts.IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]]:
         import SPPCompiler.SemanticAnalysis as Asts
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
 
         function_name = Asts.TypeAst.from_function_identifier(function_name)
         generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
@@ -205,10 +205,6 @@ class AstFunctions:
     @staticmethod
     def name_generic_arguments(arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], owner_type: Asts.TypeAst = None) -> None:
         import SPPCompiler.SemanticAnalysis as Asts
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
         # Special case for tuples to prevent infinite-recursion.
         if owner_type and owner_type.without_generics() == CommonTypes.Tup().without_generics():
