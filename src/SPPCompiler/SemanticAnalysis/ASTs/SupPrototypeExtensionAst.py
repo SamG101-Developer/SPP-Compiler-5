@@ -102,7 +102,7 @@ class SupPrototypeExtensionAst(Ast):
         if existing_sup_scope := cls_symbol.scope.sup_scopes.filter(
                 lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
                 lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, scope_manager.current_scope)):
-            if not cls_symbol.name.value.startswith("$"):
+            if cls_symbol.name.value[0] != "$":
                 raise SemanticErrors.SuperimpositionInheritanceDuplicateSuperclassError(
                     existing_sup_scope._ast.super_class, self.super_class)
 
@@ -177,7 +177,7 @@ class SupPrototypeExtensionAst(Ast):
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(
                 lambda p: not self.name.contains_generic(p.name)):
-            if not self.name.types[-1].value.startswith("$"):
+            if self.name.types[-1].value[0] != "$":
                 raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
                     unconstrained[0], self.name)
 

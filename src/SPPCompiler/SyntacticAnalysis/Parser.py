@@ -1,52 +1,27 @@
 from __future__ import annotations
-from typing import Callable, List, Optional, Tuple, TYPE_CHECKING
-import functools
+
+from typing import List, Optional, Tuple, TYPE_CHECKING
 
 from SParLex.Lexer.Tokens import SpecialToken
-from SParLex.Parser.Parser import Parser
+from SParLex.Parser.Parser import Parser, parser_rule
 from SParLex.Parser.ParserRuleHandler import ParserRuleHandler
 
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.Token import Token
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.Utils.Functools import reduce
 from SPPCompiler.Utils.Sequence import Seq
-import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SParLex.Parser.ParserError import ParserErrors
     from SParLex.Utils.ErrorFormatter import ErrorFormatter
 
 
 # Todo: add newlines after multi-expression/statement blocks (ie between multiple ret/gen/let etc)
-# Todo: revert multi-skip back to simpler 1 function implementation (matches variadic parameter)
-# Todo: change else= inside object initializer to ".."
-
-
-# Decorator that wraps the function in a ParserRuleHandler
-def parser_rule[T](func: Callable[..., T]) -> Callable[..., ParserRuleHandler]:
-    @functools.wraps(func)
-    def wrapper(self, *args) -> ParserRuleHandler[T]:
-        return ParserRuleHandler(self, functools.partial(func, self, *args))
-    return wrapper
 
 
 class SppParser(Parser):
-    _tokens: List[Token]
-    _name: str
-    _index: int
-    _err_fmt: ErrorFormatter
-    _error: Optional[ParserErrors.SyntaxError]
-
     def __init__(self, tokens: List[Token], file_name: str = "", error_formatter: Optional[ErrorFormatter] = None) -> None:
         super().__init__(SppTokenType, tokens, file_name, error_formatter)
-
-        from SParLex.Parser.ParserError import ParserErrors
-        from SParLex.Utils.ErrorFormatter import ErrorFormatter
-
-        self._tokens = tokens
-        self._name = file_name
-        self._index = 0
-        self._err_fmt = error_formatter or ErrorFormatter(SppTokenType, self._tokens, file_name)
-        self._error = ParserErrors.SyntaxError()
 
     def current_pos(self) -> int:
         return self._index
@@ -530,14 +505,14 @@ class SppParser(Parser):
         c1 = self.current_pos()
         p1 = self.parse_unary_op().parse_zero_or_more(SpecialToken.NO_TOK)
         p2 = self.parse_postfix_expression().parse_once()
-        return functools.reduce(lambda acc, x: Asts.UnaryExpressionAst(c1, x, acc), p1, p2)
+        return reduce(lambda acc, x: Asts.UnaryExpressionAst(c1, x, acc), p1, p2)
 
     @parser_rule
     def parse_postfix_expression(self) -> Asts.ExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_primary_expression().parse_once()
         p2 = self.parse_postfix_op().parse_zero_or_more(SpecialToken.NO_TOK)
-        return functools.reduce(lambda acc, x: Asts.PostfixExpressionAst(c1, acc, x), p2, p1)
+        return reduce(lambda acc, x: Asts.PostfixExpressionAst(c1, acc, x), p2, p1)
 
     @parser_rule
     def parse_primary_expression(self) -> Asts.ExpressionAst:

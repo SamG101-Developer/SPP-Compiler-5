@@ -129,7 +129,7 @@ class Scope:
             symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
-        if not symbol and (isinstance(name, IdentifierAst) or name.value.startswith("$")):
+        if not symbol and (isinstance(name, IdentifierAst) or name.value[0] == "$"):
             symbol = search_super_scopes(scope, name)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.

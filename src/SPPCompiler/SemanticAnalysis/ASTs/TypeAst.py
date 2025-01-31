@@ -215,8 +215,8 @@ class TypeAst(Ast, TypeInferrable):
         if all([
                 not type_symbol.is_generic,
                 not isinstance(type_symbol, AliasSymbol),
-                not self.types[-1].value.startswith("$"),
-                not self.types[-1].value == "Self"]):
+                self.types[-1].value[0] != "$",
+                self.types[-1].value != "Self"]):
             self.namespace = type_scope_alias_bypass.to_namespace()
 
     @std.override_method

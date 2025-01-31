@@ -1,7 +1,12 @@
 from __future__ import annotations
-from fastenum import Enum
+
+import hashlib
+import json
+import os
+import time
 from typing import TYPE_CHECKING
-import hashlib, json, os
+
+from fastenum import Enum
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -43,6 +48,7 @@ class Compiler:
         from SPPCompiler.SemanticAnalysis.Analyser import Analyser
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
         from SPPCompiler.Utils.ProgressBar import ProgressBar
+        time_start = time.time()
 
         progress_bars = [
             ProgressBar("Lexing.........................", self._module_tree.modules.length),
@@ -71,6 +77,10 @@ class Compiler:
         self._ast.modules = Seq([module.module_ast for module in self._module_tree.modules])
         self._analyser = Analyser(self._ast)
         self._analyser.analyse(self._module_tree)
+
+        # Print compile time.
+        time_end = time.time()
+        print(f"Compile time: {time_end - time_start:.2}s")
 
         # Make an output directory for the ASTs.
         if not os.path.exists("out"):
