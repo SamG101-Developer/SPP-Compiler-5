@@ -47,6 +47,7 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
 
     @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
+
         # Only 1 "multi-skip" allowed in a destructure.
         multi_arg_skips = self.elements.filter_to_type(Asts.LocalVariableDestructureSkipNArgumentsAst)
         if multi_arg_skips.length > 1:

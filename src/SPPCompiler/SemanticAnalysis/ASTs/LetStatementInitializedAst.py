@@ -21,7 +21,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 class LetStatementInitializedAst(Ast, TypeInferrable):
     let_keyword: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwLet))
     assign_to: Asts.LocalVariableAst = field(default=None)
-    assign_token: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
     value: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -35,7 +35,7 @@ class LetStatementInitializedAst(Ast, TypeInferrable):
         string = [
             self.let_keyword.print(printer) + " ",
             self.assign_to.print(printer) + " ",
-            self.assign_token.print(printer) + " ",
+            self.tok_assign.print(printer) + " ",
             self.value.print(printer)]
         return "".join(string)
 
@@ -54,7 +54,7 @@ class LetStatementInitializedAst(Ast, TypeInferrable):
         # Analyse the assign_to and value of the let statement.
         self.value.analyse_semantics(scope_manager, **(kwargs | {"assignment": self.assign_to.extract_names}))
         AstMemoryHandler.enforce_memory_integrity(
-            self.value, self.assign_token, scope_manager, update_memory_info=False)
+            self.value, self.tok_assign, scope_manager, update_memory_info=False)
         self.assign_to.analyse_semantics(scope_manager, value=self.value, **kwargs)
 
     @std.override_method

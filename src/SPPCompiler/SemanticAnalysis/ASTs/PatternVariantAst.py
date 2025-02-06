@@ -4,6 +4,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 
 type PatternVariantAst = Union[
     Asts.PatternVariantElseAst,
+    Asts.PatternVariantElseCaseAst,
     Asts.PatternVariantExpressionAst,
     Asts.PatternVariantLiteralAst,
     Asts.PatternVariantDestructureTupleAst,
@@ -20,8 +21,8 @@ type PatternVariantNestedForDestructureArrayAst = Union[
     Asts.PatternVariantDestructureArrayAst,
     Asts.PatternVariantDestructureTupleAst,
     Asts.PatternVariantDestructureObjectAst,
-    Asts.PatternVariantDestructureSkipNArgumentsAst,
     Asts.PatternVariantDestructureSkip1ArgumentAst,
+    Asts.PatternVariantDestructureSkipNArgumentsAst,
     Asts.PatternVariantExpressionAst,
     Asts.PatternVariantLiteralAst,
     Asts.PatternVariantSingleIdentifierAst]
@@ -30,8 +31,8 @@ type PatternVariantNestedForDestructureTupleAst = Union[
     Asts.PatternVariantDestructureArrayAst,
     Asts.PatternVariantDestructureTupleAst,
     Asts.PatternVariantDestructureObjectAst,
-    Asts.PatternVariantDestructureSkipNArgumentsAst,
     Asts.PatternVariantDestructureSkip1ArgumentAst,
+    Asts.PatternVariantDestructureSkipNArgumentsAst,
     Asts.PatternVariantExpressionAst,
     Asts.PatternVariantLiteralAst,
     Asts.PatternVariantSingleIdentifierAst]

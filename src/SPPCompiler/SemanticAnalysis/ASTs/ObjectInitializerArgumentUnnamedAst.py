@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Optional
 
 import std
 
@@ -14,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class ObjectInitializerArgumentUnnamedAst(Ast, TypeInferrable):
-    is_default: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
+    is_default: Optional[Asts.TokenAst] = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
     name: Asts.IdentifierAst = field(default=None)
 
     def __post_init__(self) -> None:

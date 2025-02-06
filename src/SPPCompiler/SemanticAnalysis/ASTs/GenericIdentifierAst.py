@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import hashlib
-import std
 from dataclasses import dataclass, field
-from typing import Self, Any
+
+import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast

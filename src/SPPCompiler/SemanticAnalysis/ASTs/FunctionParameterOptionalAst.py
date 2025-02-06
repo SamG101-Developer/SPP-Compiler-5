@@ -73,6 +73,8 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
         self.default.analyse_semantics(scope_manager, **kwargs)
 
         # Check the convention is not a borrow (no way to give a default value as a borrow).
+        # Todo: remove this check, because of global constants being borrowed?
+        # Todo: otherwise, remove from the parser the possibility of a convention for an optional parameter.
         if not isinstance(self.convention, Asts.ConventionMovAst):
             raise SemanticErrors.ParameterOptionalNonBorrowTypeError().add(self.convention)
 

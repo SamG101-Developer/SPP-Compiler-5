@@ -28,10 +28,10 @@ class SupPrototypeExtensionAst(Ast):
     tok_sup: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwSup))
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
     name: Asts.TypeAst = field(default=None)
-    where_block: Optional[Asts.WhereBlockAst] = field(default_factory=lambda: Asts.WhereBlockAst())
-    body: Asts.SupImplementationAst = field(default_factory=lambda: Asts.SupImplementationAst())
     tok_ext: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwExt))
     super_class: Asts.TypeAst = field(default=None)
+    where_block: Optional[Asts.WhereBlockAst] = field(default_factory=lambda: Asts.WhereBlockAst())
+    body: Asts.SupImplementationAst = field(default_factory=lambda: Asts.SupImplementationAst())
 
     _scope_cls: Optional[Scope] = field(init=False, default=None)
 

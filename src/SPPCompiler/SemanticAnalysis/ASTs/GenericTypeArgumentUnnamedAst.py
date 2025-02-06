@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class GenericTypeArgumentUnnamedAst(Ast, Ordered):
-    value: Asts.ExpressionAst = field(default=None)
+    value: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:
         # assert self.value

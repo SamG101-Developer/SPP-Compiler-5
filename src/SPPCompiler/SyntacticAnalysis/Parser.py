@@ -118,7 +118,7 @@ class SppParser(Parser):
         p5 = self.parse_type().parse_once()
         p6 = self.parse_where_block().parse_optional() or Asts.WhereBlockAst(pos=c1)
         p7 = self.parse_sup_implementation().parse_once()
-        return Asts.SupPrototypeExtensionAst(c1, p1, p2, p3, p6, p7, p4, p5)
+        return Asts.SupPrototypeExtensionAst(c1, p1, p2, p3, p4, p5, p6, p7)
 
     @parser_rule
     def parse_sup_implementation(self) -> Asts.SupImplementationAst:
