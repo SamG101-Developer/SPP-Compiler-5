@@ -21,7 +21,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 class GenExpressionAst(Ast, TypeInferrable):
     tok_gen: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwGen))
     tok_with: Optional[Asts.TokenAst] = field(default=None)
-    convention: Optional[Asts.ConventionAst] = field(default=None)
+    convention: Asts.ConventionAst = field(default=None)
     expression: Optional[Asts.ExpressionAst] = field(default=None)
 
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
@@ -78,8 +78,9 @@ class GenExpressionAst(Ast, TypeInferrable):
             raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"], expected_type, self.expression, expression_type)
 
         # Apply the function argument law of exclusivity checks to the expression.
-        ast = AstMutation.inject_code(f"({self.expression})", SppParser.parse_function_call_arguments)
-        ast.analyse_semantics(scope_manager, **kwargs)
+        if self.expression:
+            ast = AstMutation.inject_code(f"({self.convention} {self.expression})", SppParser.parse_function_call_arguments)
+            ast.analyse_semantics(scope_manager, **kwargs)
 
 
 __all__ = ["GenExpressionAst"]
