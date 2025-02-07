@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 
 class Compiler:
     class Mode(Enum):
-        Debug = "d"
-        Release = "r"
+        Dev = "d"
+        Rel = "r"
 
     _src_path: str
     _module_tree: ModuleTree
@@ -91,7 +91,7 @@ class Compiler:
             file.write(json.dumps({module.path: hashlib.md5(module.code.encode()).hexdigest() for module in self._module_tree.modules}, indent=4))
 
         # Save the AST to the output file (if in debug mode).
-        if self._mode == Compiler.Mode.Debug:
+        if self._mode == Compiler.Mode.Dev:
             for module in self._module_tree:
                 ast = module.module_ast
                 out_ast_path = module.path.replace("src", "out/ast", 1).replace(".spp", ".ast")
