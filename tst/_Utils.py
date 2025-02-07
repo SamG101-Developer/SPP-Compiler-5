@@ -4,7 +4,7 @@ import os.path
 
 from SParLex.Parser.ParserError import ParserError
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticError, SemanticErrors
-from spp import handle_init, handle_build
+from spp_cli import handle_init, handle_build
 
 
 class CustomTestCase(TestCase):
@@ -19,7 +19,7 @@ def _build_temp_project_2(project_dir_name, project_name, code):
         if not os.path.exists(fp):
             os.makedirs(os.path.abspath(fp))
             os.chdir(fp)
-            handle_init(Namespace())
+            handle_init()
             with open("src/main.spp", "a") as f:
                 f.write(code)
             handle_build(Namespace(mode="release"))

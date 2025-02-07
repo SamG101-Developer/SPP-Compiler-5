@@ -29,8 +29,9 @@ class TestLoopControlFlowStatementAst(CustomTestCase):
         """
         fun f() -> std::Void {
             loop true {
-                exit 1
-                exit true
+                case false of
+                    true { exit 1 }
+                    false { exit true }
             }
         }
         """

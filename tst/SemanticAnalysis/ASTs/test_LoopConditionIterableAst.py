@@ -12,7 +12,7 @@ class TestLoopConditionIterableAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.LoopIterableInvalidTypeError)
+    @should_fail_compilation(SemanticErrors.ExpressionNotGeneratorError)
     def test_invalid_loop_condition_iterable_invalid_type(self):
         """
         fun f() -> std::Void {
