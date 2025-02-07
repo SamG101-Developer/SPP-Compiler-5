@@ -29,41 +29,41 @@ class Program(CompilerStages):
         for module in self.modules:
             module_in_tree = module_tree.modules.find(lambda m: m.module_ast is module)
             module._name = module_in_tree.path
-            progress_bar.next(module.name.value)
             self._current = module
             module.pre_process(module)
+            progress_bar.next(module.name.value)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None, module_tree: ModuleTree = None) -> None:
         # Generate symbols for all the modules, including namespaces in the scope manager.
         for module in self.modules:
-            progress_bar.next(module.name.value)
             self._move_scope_manager_to_namespace(scope_manager, module_tree.modules.find(lambda m: m.module_ast is module))
             self._current = module
             module.generate_top_level_scopes(scope_manager)
             scope_manager.reset()
+            progress_bar.next(module.name.value)
 
     def generate_top_level_aliases(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None, **kwargs) -> None:
         # Alias types for all the modules.
         for module in self.modules:
-            progress_bar.next(module.name.value)
             self._current = module
             module.generate_top_level_aliases(scope_manager, **kwargs)
+            progress_bar.next(module.name.value)
         scope_manager.reset()
 
     def load_super_scopes(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
         # Load the super scopes for all the modules.
         for module in self.modules:
-            progress_bar.next(module.name.value)
             self._current = module
             module.load_super_scopes(scope_manager)
+            progress_bar.next(module.name.value)
         scope_manager.reset()
 
     def postprocess_super_scopes(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
         # Inject the super scopes for all the modules.
         for module in self.modules:
-            progress_bar.next(module.name.value)
             self._current = module
             module.postprocess_super_scopes(scope_manager)
+            progress_bar.next(module.name.value)
         scope_manager.reset()
 
         # Prune the generic scopes of the scope tree.
@@ -78,25 +78,25 @@ class Program(CompilerStages):
     def regenerate_generic_aliases(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
         # Generate generic types for all the modules.
         for module in self.modules:
-            progress_bar.next(module.name.value)
             self._current = module
             module.regenerate_generic_aliases(scope_manager)
+            progress_bar.next(module.name.value)
         scope_manager.reset()
 
     def regenerate_generic_types(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
         # Regenerate generic types for all the modules.
         for module in self.modules:
-            progress_bar.next(module.name.value)
             self._current = module
             module.regenerate_generic_types(scope_manager)
+            progress_bar.next(module.name.value)
         scope_manager.reset()
 
     def analyse_semantics(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None, **kwargs) -> None:
         # Analyse the semantics for all the modules.
         for module in self.modules:
-            progress_bar.next(module.name.value)
             self._current = module
             module.analyse_semantics(scope_manager, **kwargs)
+            progress_bar.next(module.name.value)
         scope_manager.reset()
 
     def current(self) -> Asts.ModulePrototypeAst:
