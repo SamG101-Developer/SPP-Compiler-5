@@ -19,6 +19,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 #  - [1] Relax iterable type to superimpose a GenXXX type, rather than exactly match it
 #  - [1] Does the generator have to be owned? pins would ensure memory safety
 #  - [2] Change the '== "GenXXX"' to symbolic_eq (requires [1])
+#  - [3] Maintain the borrow from the iterator - x in y.iter_mut() => cant borrow from y inside the loop
 
 
 @dataclass
