@@ -1,0 +1,139 @@
+__author__ = ["Sam Gardner"]
+__license__ = "MIT"
+__version__ = "5.0.0"
+__maintainer__ = "Sam Gardner"
+__email__ = "samuelgardner101@gmail.com"
+__status__ = "Development"
+
+from argparse import ArgumentParser, Namespace
+from pathlib import Path
+import os, tomllib
+
+from SPPCompiler.Compiler.Compiler import Compiler
+
+
+def cli() -> ArgumentParser:
+    # Create the parser and add the subcommands holder.
+    parser = ArgumentParser(description="S++ Programming Language Compiler")
+    subcommands = parser.add_subparsers(help="command", required=True, dest="command")
+
+    # Register the subcommands and their arguments.
+    subcommands.add_parser("init", help="Initialize a new project")
+    subcommands.add_parser("vcs", help="Manage the version control system")
+    subcommands.add_parser("build", help="Build the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", metavar="<MODE>", help="Choose the build mode")
+    subcommands.add_parser("run", help="Run the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", metavar="<MODE>", help="Choose the run mode")
+    subcommands.add_parser("clean", help="Clean the S++ project").add_argument("--mode", "-m", choices=["dev", "rel", "all"], default="all", metavar="<MODE>", help="Choose the clean mode")
+    subcommands.add_parser("test", help="Test the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", metavar="<MODE>", help="Choose the test mode")
+    subcommands.add_parser("version", help="Show the version")
+    subcommands.add_parser("help", help="Show help")
+
+    # Return the parser.
+    return parser
+
+
+def handle_init() -> None:
+    # Check if the current directory is empty or not.
+    cwd = Path.cwd()
+    if any(cwd.iterdir()):
+        print("Directory is not empty")
+        return
+
+    # Determine teh directory structure (src and bin folders).
+    bin_directory = cwd / "out"
+    src_directory = cwd / "src"
+    src_folder = src_directory / cwd.name
+    main_file = src_folder / "main.spp"
+    toml_file = cwd / "spp.toml"
+
+    # Create the directory structure.
+    bin_directory.mkdir()
+    src_directory.mkdir()
+    src_folder.mkdir()
+
+    # Create src/main.spp and spp.toml files.
+    with open(main_file, "w") as fo:
+        fo.write("fun main(args: std::Vec[std::Str]) -> std::Void {\n    ret\n}\n")
+    with open(toml_file, "w") as fo:
+        fo.write(f"[project]\nname = \"{cwd.name}\"\nversion = \"0.1.0\"\n\n[vcs]\nstd = {{ git = \"https://github.com/SamG101-Developer/SPP-STL\", branch = \"master\" }}")
+
+
+def handle_vcs() -> None:
+    # Check if the spp.toml file exists.
+    cwd = Path.cwd()
+    toml_file = cwd / "spp.toml"
+    if not toml_file.exists():
+        print("spp.toml file does not exist")
+        return
+
+    # Parse the spp.toml file and check if the vcs section exists.
+    toml = tomllib.load(open(toml_file, "rb"))
+    vcs = toml.get("vcs")
+    if not vcs: return
+
+    # Check if the "vcs" folder exists, create it if it doesn't.
+    vcs_folder = cwd / "vcs"
+    if not vcs_folder.exists(): vcs_folder.mkdir()
+    os.chdir(vcs_folder)
+
+    # Iterate over the vcs section and clone/update the repositories.
+    for key, info in vcs.items():
+        repo_name, repo_url, repo_branch = key, info.get("git"), info.get("branch", "master")
+        repo_folder = vcs_folder / repo_name
+        if not repo_folder.exists():
+            os.system(f"git clone {repo_url} {repo_folder}")
+            os.system(f"git -C {repo_folder} checkout {repo_branch}")
+            print(f"Cloned {repo_name} repository")
+        else:
+            os.system(f"git -C {repo_folder} pull origin {repo_branch}")
+            os.system(f"git -C {repo_folder} checkout {repo_branch}")
+            print(f"Updated {repo_name} repository")
+
+    # Reset the working directory.
+    os.chdir(cwd)
+
+
+def handle_build(args: Namespace) -> None:
+    # Check if the bin directory exists, create it if it doesn't.
+    cwd = Path.cwd()
+    bin_directory = cwd / "out"
+    if not bin_directory.exists(): bin_directory.mkdir()
+
+    inner_bin_directory = bin_directory  / args.mode
+    if not inner_bin_directory.exists(): inner_bin_directory.mkdir()
+
+    # Handle vcs operations.
+    handle_vcs()
+
+    # Compile the code.
+    Compiler(Compiler.Mode.Dev if args.mode == "dev" else Compiler.Mode.Rel)
+
+
+def handle_run(args: Namespace) -> None:
+    handle_build(args)
+    # Todo
+
+
+def handle_test(args: Namespace) -> None:
+    handle_build(args)
+    # Todo
+
+
+def handle_version() -> None:
+    print(__version__)
+
+
+def handle_help() -> None:
+    print(cli().format_help())
+
+
+def main() -> None:
+    # Parse the arguments and handle the subcommands.
+    args = cli().parse_args()
+    match args.command:
+        case "init": handle_init()
+        case "vcs": handle_vcs()
+        case "build": handle_build(args)
+        case "run": handle_run(args)
+        case "test": handle_test(args)
+        case "version": handle_version()
+        case "help": handle_help()
