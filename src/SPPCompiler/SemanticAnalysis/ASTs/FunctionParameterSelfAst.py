@@ -67,7 +67,7 @@ class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction):
 
         # Mark the symbol as initialized.
         symbol = scope_manager.current_scope.get_symbol(self.name)
-        symbol.is_mutable = self.tok_mut is not None
+        symbol.is_mutable = self.tok_mut is not None or isinstance(self.convention, Asts.ConventionMutAst)
         symbol.memory_info.ast_borrowed = self.convention if type(self.convention) is not Asts.ConventionMovAst else None
         symbol.memory_info.is_borrow_mut = isinstance(self.convention, Asts.ConventionMutAst)
         symbol.memory_info.is_borrow_ref = isinstance(self.convention, Asts.ConventionRefAst)
