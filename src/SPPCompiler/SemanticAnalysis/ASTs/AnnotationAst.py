@@ -34,6 +34,7 @@ class _Annotations(Enum):
     Hidden = "hidden"
     Cold = "cold"
     Hot = "hot"
+    CompilerBuiltin = "compiler_builtin"
 
 
 @dataclass
@@ -95,7 +96,7 @@ class AnnotationAst(Ast):
 
             context._abstract = self
 
-        elif self.name.value == _Annotations.NonImplementedMethod.value:
+        elif self.name.value in [_Annotations.NonImplementedMethod.value, _Annotations.CompilerBuiltin.value]:
             # The "non_implemented_method" annotation can only be applied to functions.
             if not isinstance(context, Asts.FunctionPrototypeAst):
                 raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
