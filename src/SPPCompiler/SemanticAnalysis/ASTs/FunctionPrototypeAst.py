@@ -174,9 +174,9 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
     @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
-        self.return_type.analyse_semantics(scope_manager)
         for t in self.function_parameter_group.parameters.map_attr("type"):
             t.analyse_semantics(scope_manager)
+        self.return_type.analyse_semantics(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     @std.override_method
@@ -189,6 +189,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             a.analyse_semantics(scope_manager, **kwargs)
         self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
         self.function_parameter_group.analyse_semantics(scope_manager, **kwargs)
+        self.return_type.analyse_semantics(scope_manager, **kwargs)
         self.where_block.analyse_semantics(scope_manager, **kwargs)
 
         # Subclasses will finish analysis and exit the scope.
