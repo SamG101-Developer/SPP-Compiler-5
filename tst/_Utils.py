@@ -22,11 +22,11 @@ def _build_temp_project_2(project_dir_name, project_name, code):
             handle_init()
             with open("src/main.spp", "a") as f:
                 f.write(code)
-            handle_build(Namespace(mode="release"))
+            handle_build(Namespace(mode="rel"))
 
         else:
             os.chdir(fp)
-            handle_build(Namespace(mode="release"))
+            handle_build(Namespace(mode="rel"))
 
     finally:
         os.chdir(restore)

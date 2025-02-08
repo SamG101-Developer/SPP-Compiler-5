@@ -176,7 +176,7 @@ class AstTypeManagement:
                 new_scope._non_generic_scope = scope
 
                 # Todo: can remove the "if-continue" if default generic arguments are brought in here too.
-                # Todo: compare this to the inverse_generic_inference function
+                # Todo: compare this to the inverse_generic_inference function. not even sure how this works.
                 for generic_parameter in scope._ast.generic_parameter_group.get_type_params():
                     mock_generic_parameter = scope._ast.name.get_generic_parameter_for_argument(generic_parameter.name)
                     mock_generic_value = generic_arguments.arguments.find(lambda a: a.name == mock_generic_parameter)

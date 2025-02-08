@@ -114,7 +114,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         function_ast = copy.deepcopy(self)
         function_ast._orig = self.name
         mock_superimposition_body = Asts.SupImplementationAst(members=Seq([function_ast]))
-        mock_superimposition = Asts.SupPrototypeExtensionAst(pos=self.pos, generic_parameter_group=self.generic_parameter_group, name=mock_class_name, super_class=function_type, where_block=self.where_block, body=mock_superimposition_body)
+        mock_superimposition = Asts.SupPrototypeExtensionAst(pos=self.pos, generic_parameter_group=self.generic_parameter_group, name=mock_class_name, super_class=function_type, where_block=self.where_block, body=mock_superimposition_body, _ctx=self._ctx)
         context.body.members.insert(0, mock_superimposition)
         context.body.members.remove(self)
 

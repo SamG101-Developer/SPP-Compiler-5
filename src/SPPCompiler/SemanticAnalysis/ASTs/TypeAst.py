@@ -34,7 +34,11 @@ class TypeAst(Ast, TypeInferrable):
 
     def __eq__(self, other: TypeAst) -> bool:
         # Check both ASTs are the same type and have the same namespace and types.
-        return isinstance(other, TypeAst) and self.namespace == other.namespace and self.types == other.types
+        if isinstance(other, TypeAst):
+            return self.namespace == other.namespace and self.types == other.types
+        elif isinstance(other, Asts.IdentifierAst):
+            return self.types.list() == [Asts.GenericIdentifierAst.from_identifier(other)]
+        return False
 
     def __hash__(self) -> int:
         # Hash the namespace and types into a fixed string and convert it into an integer.
@@ -146,11 +150,12 @@ class TypeAst(Ast, TypeInferrable):
         # Return the modified type.
         return self
 
-    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
+    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, allow_none: bool = False) -> bool:
         # Get the symbols for each type, based on the scopes.
         that_scope = that_scope or self_scope
         self_symbol = self_scope.get_symbol(self)
         that_symbol = that_scope.get_symbol(that)
+        if allow_none and (self_symbol is None or that_symbol is None): return False
 
         # Special case for Variant types (can match any of the alternative types).
         # Todo: Tidy this up?
