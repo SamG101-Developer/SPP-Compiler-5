@@ -37,7 +37,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
 
     def __deepcopy__(self, memodict: Dict = None) -> ClassPrototypeAst:
         return ClassPrototypeAst(
-            self.pos, copy.copy(self.annotations), self.tok_cls, Asts.IdentifierAst.from_type(self.name),
+            self.pos, copy.copy(self.annotations), self.tok_cls, copy.deepcopy(self.name),
             copy.deepcopy(self.generic_parameter_group), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
             _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
 
