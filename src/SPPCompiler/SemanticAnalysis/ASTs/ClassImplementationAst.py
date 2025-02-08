@@ -58,11 +58,6 @@ class ClassImplementationAst(Ast):
         for m in self.members: m.load_super_scopes(scope_manager)
 
     @std.override_method
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        # Inject the super scopes for the members.
-        for m in self.members: m.postprocess_super_scopes(scope_manager)
-
-    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         # Regenerate the generic types for the members.
         for m in self.members: m.regenerate_generic_types(scope_manager)

@@ -58,10 +58,6 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
         scope_manager.current_scope.add_symbol(symbol)
 
     @std.override_method
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        self.type.analyse_semantics(scope_manager)
-
-    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         self.type.analyse_semantics(scope_manager)
 

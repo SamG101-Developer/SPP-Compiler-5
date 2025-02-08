@@ -76,18 +76,11 @@ class SupPrototypeFunctionsAst(Ast):
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
         self._scope_cls = cls_symbol.scope
         self.body.load_super_scopes(scope_manager)
-        scope_manager.move_out_of_current_scope()
-
-    @std.override_method
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        scope_manager.move_to_next_scope()
-        cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
 
         # Mark the type as abstract if any of the functions are abstract.
         if self.body.members.filter_to_type(Asts.SupPrototypeExtensionAst).map(lambda s: s.body.members[-1]).filter(lambda m: m._abstract):
             cls_symbol.is_abstract = True
 
-        self.body.postprocess_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     @std.override_method

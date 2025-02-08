@@ -127,13 +127,8 @@ class SupPrototypeExtensionAst(Ast):
         # Run the inject steps for the body.
         self._scope_cls = cls_symbol.scope
         self.body.load_super_scopes(scope_manager)
-        scope_manager.move_out_of_current_scope()
 
-    @std.override_method
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        scope_manager.move_to_next_scope()
-        sup_symbol = scope_manager.current_scope.get_symbol(self.super_class.without_generics())
-        cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
+        # sup_symbol = scope_manager.current_scope.get_symbol(self.super_class.without_generics())
 
         # Prevent duplicate attributes by checking if the attributes appear in any super class.
         super_class_attribute_names = sup_symbol.scope.sup_scopes.filter(
@@ -147,7 +142,6 @@ class SupPrototypeExtensionAst(Ast):
         if sup_symbol.is_abstract:
             cls_symbol.is_abstract = True
 
-        self.body.postprocess_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     @std.override_method

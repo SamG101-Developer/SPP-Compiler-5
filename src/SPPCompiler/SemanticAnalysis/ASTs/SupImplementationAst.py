@@ -51,10 +51,6 @@ class SupImplementationAst(Ast):
         for member in self.members: member.load_super_scopes(scope_manager)
 
     @std.override_method
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        for member in self.members: member.postprocess_super_scopes(scope_manager)
-
-    @std.override_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         for member in self.members: member.regenerate_generic_aliases(scope_manager)
 

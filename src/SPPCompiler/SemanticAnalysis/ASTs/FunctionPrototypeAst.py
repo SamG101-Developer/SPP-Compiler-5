@@ -162,11 +162,6 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         scope_manager.move_out_of_current_scope()
 
     @std.override_method
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        scope_manager.move_to_next_scope()
-        scope_manager.move_out_of_current_scope()
-
-    @std.override_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()

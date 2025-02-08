@@ -58,16 +58,6 @@ class Program(CompilerStages):
             progress_bar.next(module.name.value)
         scope_manager.reset()
 
-    def postprocess_super_scopes(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
-        # Inject the super scopes for all the modules.
-        for module in self.modules:
-            self._current = module
-            module.postprocess_super_scopes(scope_manager)
-            progress_bar.next(module.name.value)
-        scope_manager.reset()
-
-        # Prune the generic scopes of the scope tree.
-        # Todo: move into scope class
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol
         for scope in scope_manager:
             for symbol in scope.all_symbols(exclusive=True).filter_to_type(TypeSymbol, AliasSymbol).filter(lambda t: not t.is_generic):

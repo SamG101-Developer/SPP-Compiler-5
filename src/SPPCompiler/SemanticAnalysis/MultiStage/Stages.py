@@ -59,14 +59,6 @@ class CompilerStages:
         """
 
     @std.virtual_method
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        """
-        The postprocess super scopes stage performs checks that must happen after the super scopes have been injected,
-        but that are separate from the next stage (type-regeneration). This includes things that require knowledge of
-        all the super scopes.
-        """
-
-    @std.virtual_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         """
         The regenerate generic aliases stage is the generic type regeneration stage exclusive to type-aliases. This is

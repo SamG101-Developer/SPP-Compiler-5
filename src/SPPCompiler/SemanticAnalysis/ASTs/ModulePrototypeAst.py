@@ -56,11 +56,6 @@ class ModulePrototypeAst(Ast):
         self.body.load_super_scopes(scope_manager)
 
     @std.override_method
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        # Inject the super scopes.
-        self.body.postprocess_super_scopes(scope_manager)
-
-    @std.override_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Alias the types in the module implementation.
         self.body.regenerate_generic_aliases(scope_manager)
