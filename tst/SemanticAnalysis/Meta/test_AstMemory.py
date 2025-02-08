@@ -371,15 +371,115 @@ class TestAstMemory(CustomTestCase):
         }
         """
 
-    @should_pass_compilation()
-    def test_valid_memory_moved_from_borrowed_context_1(self):
+    @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
+    def test_invalid_unpinned_values_for_coroutine(self):
         """
-        cls Point {
-            x: std::BigInt
-            y: std::BigInt
+        cor foo(x: &std::BigInt) -> std::GenRef[std::BigInt] {
+            gen &1
         }
 
-        fun f(p: &Point) -> std::Void {
-            let x = p.x
+        fun test() -> std::Void {
+            let x = 123
+            foo(&x)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
+    def test_invalid_unpinned_values_for_async(self):
+        """
+        fun foo(x: &std::BigInt) -> std::Void {
+        }
+
+        fun test() -> std::Void {
+            let x = 123
+            async foo(&x)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_coroutine_yielded_value_use(self):
+        """
+        cor foo() -> std::GenRef[std::BigInt] {
+            gen &1
+        }
+
+        fun test() -> std::Void {
+            let coro = foo()
+            let x = coro.step
+            let y = coro.step
+            let z = x + y
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_use_of_moving_coro_during_pin_from_pinned_borrow(self):
+        """
+        cor foo(x: &std::BigInt) -> std::GenRef[std::BigInt] {
+            gen &1
+        }
+
+        fun test() -> std::GenRef[std::BigInt] {
+            let x = 1
+            pin x
+            let coro = foo(&x)
+            let y = coro
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_use_of_coroutine_post_invalidation(self):
+        """
+        cor foo(x: &std::BigInt) -> std::GenRef[std::BigInt] {
+            gen &1
+        }
+
+        fun test() -> std::Void {
+            let x = 1
+            pin x
+            let coro = foo(&x)
+            rel x
+            let y = coro.step
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_use_of_future_post_invalidation(self):
+        """
+        fun foo(x: &std::BigInt) -> std::Void {
+        }
+
+        fun test() -> std::Void {
+            let x = 1
+            pin x
+            let fut = async foo(&x)
+            rel x
+            let y = fut
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_pinned_values_for_coroutine(self):
+        """
+        cor foo(x: &std::BigInt) -> std::GenRef[std::BigInt] {
+            gen &1
+        }
+
+        fun test() -> std::Void {
+            let x = 123
+            pin x
+            foo(&x)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_pinned_values_for_async(self):
+        """
+        fun foo(x: &std::BigInt) -> std::Void {
+        }
+
+        fun test() -> std::Void {
+            let x = 123
+            pin x
+            async foo(&x)
         }
         """
