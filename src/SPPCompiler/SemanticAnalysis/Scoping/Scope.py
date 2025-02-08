@@ -122,7 +122,6 @@ class Scope:
         if isinstance(name, TypeAst):
             scope, name = shift_scope_for_namespaced_type(self, name)
         symbol = scope._symbol_table.get(name)
-        # print("G:", name, "from scope:", self, f"({symbol})")
 
         # If this is not an exclusive search, search the parent scope.
         if not symbol and scope._parent and not exclusive:
