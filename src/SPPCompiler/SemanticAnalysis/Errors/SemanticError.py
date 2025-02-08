@@ -1088,6 +1088,41 @@ class SemanticErrors:
 
             return self
 
+    class SuperimpositionGenericNamedArgumentError(SemanticError):
+        """
+        The SuperimpositionGenericNamedArgumentError is raised if a named argument is used in a superimposition.
+        Superimpositions must match their class signature. For example, "sup [T, U] Point[T, U]" is fine, but
+        "sup [A, B] Point[T=A, U=B]" is not.
+        """
+
+        def add(self, named_argument: GenericArgumentNamedAst) -> SemanticError:
+            self.add_error(
+                pos=named_argument.pos,
+                tag="Named argument in superimposition.",
+                msg="Named arguments are not allowed in superimpositions.",
+                tip="Remove the named argument or convert it to unnamed form. This will be relaxed in future versions.")
+
+            return self
+
+    class SuperimpositionGenericArgumentMismatchError(SemanticError):
+        """
+        The SuperimpositionGenericArgumentMismatchError is raised if a generic argument is mismatched in a
+        superimposition. For the "cls Point[T, U]" type, the superimposition must look like "sup [T, U] Point[T, U]".
+        """
+
+        def add(self, generic_argument: GenericArgumentAst, superimposition: SupPrototypeAst) -> SemanticError:
+            self.add_info(
+                pos=superimposition.pos,
+                tag="Superimposition defined here")
+
+            self.add_error(
+                pos=generic_argument.pos,
+                tag="Generic argument mismatch.",
+                msg="The superimposition generic argument does not match the class generic argument.",
+                tip="Change the superimposition generic argument to match the class generic argument. This will be relaxed in future versions.")
+
+            return self
+
     class SuperimpositionInheritanceMethodInvalidError(SemanticError):
         """
         The SuperimpositionInheritanceMethodInvalidError is raised if a subclass method does not exist on the

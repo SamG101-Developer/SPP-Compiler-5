@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -82,15 +83,21 @@ class SupPrototypeExtensionAst(Ast):
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
 
+        # Cannot superimpose with a generic super class.
+        cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
+        if cls_symbol.is_generic:
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type")
+
+        # Ensure all the generic arguments are unnamed and match the class's generic parameters.
+        for generic_arg in self.name.types[-1].generic_argument_group.arguments:
+            if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__value__.__args__):
+                raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(generic_arg)
+            if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
+                raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(generic_arg, self)
+
         # Ensure the validity of the superclass, along with its generics.
         self.super_class.analyse_semantics(scope_manager)
         sup_symbol = scope_manager.current_scope.get_symbol(self.super_class.without_generics())
-        cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
-
-        # Cannot superimpose with a generic super class.
-        if cls_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(
-                self.name, self.name, "superimposition type")
 
         if sup_symbol.is_generic:
             raise SemanticErrors.GenericTypeInvalidUsageError().add(

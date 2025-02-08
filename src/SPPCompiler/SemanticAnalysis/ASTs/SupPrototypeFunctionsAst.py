@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -71,6 +72,17 @@ class SupPrototypeFunctionsAst(Ast):
         cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
         if cls_symbol.is_generic:
             raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type")
+
+        # Ensure all the generic arguments are unnamed and match the class's generic parameters.
+        for generic_arg in self.name.types[-1].generic_argument_group.arguments:
+            if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__value__.__args__):
+                raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(generic_arg)
+            if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
+                print("???")
+                print(cls_symbol.type.generic_parameter_group.parameters)
+                print(repr(generic_arg.value))
+                print(cls_symbol.type.generic_parameter_group.parameters.map(lambda p: repr(p.name)))
+                raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(generic_arg, self)
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
