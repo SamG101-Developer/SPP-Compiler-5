@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext, CompilerStages
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
@@ -82,6 +82,7 @@ class SupPrototypeExtensionAst(Ast):
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
 
+        # Ensure the validity of the superclass, along with its generics.
         self.super_class.analyse_semantics(scope_manager)
         sup_symbol = scope_manager.current_scope.get_symbol(self.super_class.without_generics())
         cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
