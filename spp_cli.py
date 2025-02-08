@@ -7,8 +7,10 @@ __status__ = "Development"
 
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-import os, tomllib
+import os, tomllib, sys
 
+print(__file__)
+sys.path.append(str(Path(__file__).parent / "src"))
 from SPPCompiler.Compiler.Compiler import Compiler
 
 
@@ -137,3 +139,7 @@ def main() -> None:
         case "test": handle_test(args)
         case "version": handle_version()
         case "help": handle_help()
+
+
+if __name__ == "__main__":
+    main()

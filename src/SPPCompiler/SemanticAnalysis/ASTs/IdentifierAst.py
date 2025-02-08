@@ -25,7 +25,7 @@ class IdentifierAst(Ast, TypeInferrable):
         elif isinstance(other, IdentifierAst):
             return self.value == other.value
         else:
-            raise TypeError(f"Unsupported type for comparison: {type(other)}")
+            return False
 
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
