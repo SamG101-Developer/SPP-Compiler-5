@@ -12,6 +12,7 @@ from argparse import Namespace
 
 import gprof2dot
 import graphviz
+import json_fix
 
 from spp_cli import handle_build
 
