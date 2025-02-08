@@ -273,6 +273,8 @@ class AstFunctions:
         # Special case for tuples to prevent infinite-recursion.
         if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypes.Tup().without_generics():
             return explicit_generic_arguments
+        if generic_parameters.is_empty():
+            return explicit_generic_arguments
 
         # The inferred generics map is: {TypeAst: [TypeAst]}
         inferred_generic_arguments = defaultdict(Seq)
