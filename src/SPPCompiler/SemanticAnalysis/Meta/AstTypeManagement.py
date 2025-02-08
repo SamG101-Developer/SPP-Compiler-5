@@ -43,6 +43,8 @@ class AstTypeManagement:
         if type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope):
             return type.types[-1].generic_argument_group.arguments[0].value
 
+        # Todo: some sort of error here (will never throw because of previous checks, but for type-checker).
+
     @staticmethod
     def get_namespaced_scope_with_error(scope_manager: ScopeManager, namespace: Seq[Asts.IdentifierAst]) -> Scope:
         # Work through each cumulative namespace, checking if the namespace exists.
@@ -77,12 +79,13 @@ class AstTypeManagement:
 
     @staticmethod
     def create_generic_scope(scope_manager: ScopeManager, type: Asts.TypeAst, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol) -> Scope:
-        # Create a new scope for the generic substituted type.
-        new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.type))
+        # Create a new scope & symbol for the generic substituted type.
+        new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.scope._ast))
         new_symbol = builtins.type(base_symbol)(name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable, is_abstract=base_symbol.is_abstract, visibility=base_symbol.visibility)
         if isinstance(base_symbol, AliasSymbol):
             new_symbol.old_type = base_symbol.old_type
 
+        # Configure the new scope based on the base scope, register non-generic scope as the base scope.
         new_scope.parent.add_symbol(new_symbol)
         new_scope._children = base_symbol.scope._children
         new_scope._symbol_table = copy.deepcopy(base_symbol.scope._symbol_table)
@@ -109,6 +112,39 @@ class AstTypeManagement:
 
     @staticmethod
     def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
+        """
+        Given the type
+
+        Wrapper[T, U, V] {
+            a: T
+            b: U
+            c: V
+        }
+
+        and the superimpositions:
+
+        sup [A, B, C] Wrapper[T=A, U=B, V=C] { }
+        sup [A, B, C] Wrapper[T=A, U=B, V=C] ext OtherType[A, B] { }
+
+        and the base classes:
+
+        cls OtherType[T, U] { }
+
+        Assume the type Wrapper[Str, U64, Bool] is created. The first superimposition must become
+        Wrapper[T=Str, U=U64, V=Bool]. This is fine. The second superimposition must become
+        Wrapper[T=Str, U=U64, V=Bool] ext OtherType[Str, U64]. This requires [T=Str and T=A] => [A=Str]. Apply this
+        to the supertype, and the result is Wrapper[T=Str, U=U64, V=Bool] ext OtherType[Str, U64]. The base classes
+        are then created with the generic arguments applied, per superimposition-extension.
+
+        Args:
+            scope_manager:
+            base_scope:
+            generic_arguments:
+
+        Returns:
+
+        """
+
         old_scopes = base_scope._direct_sup_scopes
         new_scopes = Seq()
 
@@ -116,19 +152,20 @@ class AstTypeManagement:
 
             # Create the scope with the generic arguments injected. This will handle recursive scope creation.
             if isinstance(scope._ast, Asts.ClassPrototypeAst):
-                temp_manager = ScopeManager(scope_manager.global_scope, base_scope.parent)
-                new_fq_type = copy.deepcopy(scope.type_symbol.fq_name)
-                new_fq_type.sub_generics(generic_arguments.arguments)
-                new_fq_type.analyse_semantics(temp_manager)
-                new_scope = scope_manager.current_scope.get_symbol(new_fq_type).scope
+                # The superimposition-ext checker handles these scopes.
+                continue
 
             # Create the scope for the new super class type. This will handle recursive sup-scope creation.
             elif isinstance(scope._ast, Asts.SupPrototypeExtensionAst):
-                temp_manager = ScopeManager(scope_manager.global_scope, base_scope)
+                temp_manager = ScopeManager(scope_manager.global_scope, base_scope.parent)
                 new_fq_super_type = copy.deepcopy(scope._ast.super_class)
-                super_type_symbol = base_scope.get_symbol(new_fq_super_type)
-                new_fq_super_type.sub_generics(generic_arguments.arguments)
+                AstTypeManagement.inverse_generic_inference(scope._ast.name, generic_arguments, new_fq_super_type)
                 new_fq_super_type.analyse_semantics(temp_manager)
+
+                # Get the class scope generated for the super class and add it to the new scopes too.
+                modified_class_scope = scope_manager.current_scope.get_symbol(new_fq_super_type).scope
+                if modified_class_scope not in new_scopes:
+                    new_scopes.append(modified_class_scope)
 
             # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
             if isinstance(scope._ast, (Asts.SupPrototypeFunctionsAst, Asts.SupPrototypeExtensionAst)):
@@ -139,6 +176,7 @@ class AstTypeManagement:
                 new_scope._non_generic_scope = scope
 
                 # Todo: can remove the "if-continue" if default generic arguments are brought in here too.
+                # Todo: compare this to the inverse_generic_inference function
                 for generic_parameter in scope._ast.generic_parameter_group.get_type_params():
                     mock_generic_parameter = scope._ast.name.get_generic_parameter_for_argument(generic_parameter.name)
                     mock_generic_value = generic_arguments.arguments.find(lambda a: a.name == mock_generic_parameter)
@@ -152,6 +190,15 @@ class AstTypeManagement:
 
         # Return the new scopes.
         return new_scopes
+
+    @staticmethod
+    def inverse_generic_inference(source_type: Asts.TypeAst, generic_arguments: Asts.GenericArgumentGroupAst, target_type: Asts.TypeAst) -> None:
+        inverse_generic_argument_group = Asts.GenericArgumentGroupAst()
+        for generic_argument in generic_arguments.arguments:
+            infer_from_source = source_type.types[-1].generic_argument_group.arguments.find(lambda a: (a.name if hasattr(a, "name") else a.value) == generic_argument.name).value
+            new_generic_argument = Asts.GenericTypeArgumentNamedAst(name=copy.deepcopy(infer_from_source), value=copy.deepcopy(generic_argument.value))
+            inverse_generic_argument_group.arguments.append(new_generic_argument)
+        target_type.sub_generics(inverse_generic_argument_group.arguments)
 
     @staticmethod
     def create_generic_symbol(scope_manager: ScopeManager, generic_argument: Asts.GenericArgumentAst) -> TypeSymbol | VariableSymbol:

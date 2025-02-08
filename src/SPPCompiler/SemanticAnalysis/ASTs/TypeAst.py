@@ -167,6 +167,7 @@ class TypeAst(Ast, TypeInferrable):
 
     @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
+
         # Determine the scope to use for the type analysis.
         match self.namespace.length:
             case 0: type_scope = scope_manager.current_scope
@@ -199,7 +200,7 @@ class TypeAst(Ast, TypeInferrable):
             # Analyse the semantics of the generic arguments.
             type_part.generic_argument_group.analyse_semantics(scope_manager)
 
-            # If the generically filled type doesn't exist (Vec[Str]), but teh base does (Vec[T]), create it.
+            # If the generically filled type doesn't exist (Vec[Str]), but the base does (Vec[T]), create it.
             if not type_scope.parent.has_symbol(type_part):
                 new_scope = AstTypeManagement.create_generic_scope(scope_manager, self, type_part, type_symbol)
 
