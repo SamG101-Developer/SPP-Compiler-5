@@ -57,13 +57,7 @@ class Program(CompilerStages):
             module.load_super_scopes(scope_manager)
             progress_bar.next(module.name.value)
         scope_manager.reset()
-
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol
-        for scope in scope_manager:
-            for symbol in scope.all_symbols(exclusive=True).filter_to_type(TypeSymbol, AliasSymbol).filter(lambda t: not t.is_generic):
-                if symbol.name.generic_argument_group.arguments and symbol.scope._non_generic_scope is not symbol.scope:
-                    scope.rem_symbol(symbol.name)
-        scope_manager.reset()
+        scope_manager.strip_generics()
 
     def regenerate_generic_aliases(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
         # Generate generic types for all the modules.

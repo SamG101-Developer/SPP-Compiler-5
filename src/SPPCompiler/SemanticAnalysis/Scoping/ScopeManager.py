@@ -86,6 +86,14 @@ class ScopeManager:
 
             return scope
 
+    def strip_generics(self) -> None:
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol
+        for scope in self:
+            for symbol in scope.all_symbols(exclusive=True).filter_to_type(TypeSymbol, AliasSymbol).filter(lambda t: not t.is_generic):
+                if symbol.name.generic_argument_group.arguments and symbol.scope._non_generic_scope is not symbol.scope:
+                    scope.rem_symbol(symbol.name)
+        self.reset()
+
     @property
     def global_scope(self) -> Scope:
         return self._global_scope
