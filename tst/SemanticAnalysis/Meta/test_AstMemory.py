@@ -418,7 +418,7 @@ class TestAstMemory(CustomTestCase):
             gen &1
         }
 
-        fun test() -> std::GenRef[std::BigInt] {
+        fun test() -> std::Void {
             let x = 1
             pin x
             let coro = foo(&x)
