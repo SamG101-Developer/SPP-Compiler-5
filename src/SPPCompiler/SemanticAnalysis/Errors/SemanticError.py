@@ -1257,21 +1257,6 @@ class SemanticErrors:
 
             return self
 
-    class LoopIterableInvalidTypeError(SemanticError):
-        """
-        The LoopIterableInvalidTypeError is raised if the iterable of a loop is not a valid type. The iterable must be a
-        generator type.
-        """
-
-        def add(self, iterable: Asts.ExpressionAst, type: Asts.TypeAst) -> SemanticError:
-            self.add_error(
-                pos=iterable.pos,
-                tag=f"Iterable inferred as '{type}'",
-                msg="The iterable type is not valid.",
-                tip="Use a generator type.")
-
-            return self
-
     class TupleElementBorrowedError(SemanticError):
         """
         The TupleElementBorrowedError is raised if an element in a tuple is borrowed. Array elements cannot be borrowed,
