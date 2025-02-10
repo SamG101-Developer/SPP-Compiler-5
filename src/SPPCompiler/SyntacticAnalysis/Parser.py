@@ -525,12 +525,11 @@ class SppParser(Parser):
         p7 = self.parse_case_expression()
         p8 = self.parse_loop_expression()
         p9 = self.parse_gen_expression()
-        p10 = self.parse_with_expression()
-        p11 = self.parse_inner_scope()
-        p12 = self.parse_self_keyword()
-        p13 = self.parse_token(SppTokenType.TkDblDot)
-        p14 = (p1 | p2 | p4 | p5 | p6 | p7 | p8 | p9 | p10 | p11 | p12 | p13).parse_once()
-        return p14
+        p10 = self.parse_inner_scope()
+        p11 = self.parse_self_keyword()
+        p12 = self.parse_token(SppTokenType.TkDblDot)
+        p13 = (p1 | p2 | p4 | p5 | p6 | p7 | p8 | p9 | p10 | p11 | p12).parse_once()
+        return p13
 
     @parser_rule
     def parse_parenthesized_expression(self) -> Asts.ParenthesizedExpressionAst:
@@ -645,22 +644,6 @@ class SppParser(Parser):
         p2 = self.parse_token(SppTokenType.KwWith).parse_once()
         p3 = self.parse_expression().parse_once()
         return Asts.GenExpressionAst(c1, p1, p2, Asts.ConventionMovAst(p3.pos), p3)
-
-    @parser_rule
-    def parse_with_expression(self) -> Asts.WithExpressionAst:
-        c1 = self.current_pos()
-        p1 = self.parse_token(SppTokenType.KwWith).parse_once()
-        p2 = self.parse_with_expression_lhs_alias().parse_optional()
-        p3 = self.parse_expression().parse_once()
-        p4 = self.parse_inner_scope().parse_once()
-        return Asts.WithExpressionAst(c1, p1, p2, p3, p4)
-
-    @parser_rule
-    def parse_with_expression_lhs_alias(self) -> Asts.WithExpressionAliasAst:
-        c1 = self.current_pos()
-        p1 = self.parse_local_variable().parse_once()
-        p2 = self.parse_token(SppTokenType.TkAssign).parse_once()
-        return Asts.WithExpressionAliasAst(c1, p1, p2)
 
     # ===== STATEMENTS =====
 

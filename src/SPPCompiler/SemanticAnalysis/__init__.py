@@ -128,5 +128,3 @@ from SPPCompiler.SemanticAnalysis.ASTs.UseStatementAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.WhereBlockAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.WhereConstraintsAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.WhereConstraintsGroupAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.WithExpressionAliasAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.WithExpressionAst import *

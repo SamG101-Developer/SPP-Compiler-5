@@ -8,6 +8,7 @@ __status__ = "Development"
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 import os, tomllib, sys
+import distutils.ccompiler
 
 print(__file__)
 sys.path.append(str(Path(__file__).parent / "src"))
@@ -43,6 +44,7 @@ def handle_init() -> None:
     # Determine teh directory structure (src and bin folders).
     bin_directory = cwd / "out"
     src_directory = cwd / "src"
+    ffi_directory = cwd / "ffi"
     src_folder = src_directory / cwd.name
     main_file = src_folder / "main.spp"
     toml_file = cwd / "spp.toml"
@@ -50,6 +52,7 @@ def handle_init() -> None:
     # Create the directory structure.
     bin_directory.mkdir()
     src_directory.mkdir()
+    ffi_directory.mkdir()
     src_folder.mkdir()
 
     # Create src/main.spp and spp.toml files.
@@ -103,6 +106,10 @@ def handle_build(args: Namespace) -> None:
     inner_bin_directory = bin_directory  / args.mode
     if not inner_bin_directory.exists(): inner_bin_directory.mkdir()
 
+    # Validate the project structure.
+    if not validate_project_structure():
+        return
+
     # Handle vcs operations.
     handle_vcs()
 
@@ -126,6 +133,57 @@ def handle_version() -> None:
 
 def handle_help() -> None:
     print(cli().format_help())
+
+
+def validate_project_structure() -> bool:
+    # Check there is a spp.toml, src, and src/main.spp file.
+    cwd = Path.cwd()
+    toml_file = cwd / "spp.toml"
+    src_directory = cwd / "src"
+    main_file = src_directory / "main.spp"
+    if not toml_file.exists():
+        print("spp.toml file does not exist")
+        return False
+    if not src_directory.exists():
+        print("src directory does not exist")
+        return False
+    if not main_file.exists():
+        print("main.spp file does not exist")
+        return False
+
+    # If there is a VCS folder, run the validation steps inside each repository.
+    vcs_folder = cwd / "vcs"
+    if vcs_folder.exists():
+        for repo in vcs_folder.iterdir():
+            os.chdir(repo)
+            validate_project_structure()
+            os.chdir(cwd)
+
+    # If there is an FFI folder, check each subfolder is structured properly.
+    ffi_folder = cwd / "ffi"
+    if ffi_folder.exists():
+        ext = distutils.ccompiler.new_compiler().shared_lib_extension[1:]
+
+        for lib_folder in ffi_folder.iterdir():
+            if not lib_folder.is_dir():
+                print(f"{lib_folder.name} is not a directory")
+                return False
+
+            # Check for "library_name/lib/library_name.{ext}" and "library_name/stub.spp" files.
+            lib_name = lib_folder.name
+            lib_file = lib_folder / "lib" / f"{lib_name}.{ext}"
+            stub_file = lib_folder / "stub.spp"
+
+            if not lib_file.exists():
+                print(f"{lib_name}.{ext} file does not exist")
+                return False
+
+            if not stub_file.exists():
+                print("stub.spp file does not exist")
+                return False
+
+    # Return True if all checks pass.
+    return True
 
 
 def main() -> None:

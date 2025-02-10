@@ -1440,21 +1440,6 @@ class SemanticErrors:
 
             return self
 
-    class WithExpressionNonContextualConditionError(SemanticError):
-        """
-        The WithExpressionNonContextualConditionError is raised if the condition in a with expression is not a
-        contextual condition. A contextual condition is an expression that superimposes either "CtxMut" or "CtxRef".
-        """
-
-        def add(self, condition: ExpressionAst) -> SemanticError:
-            self.add_error(
-                pos=condition.pos,
-                tag="Non-contextual condition.",
-                msg="The condition in a with expression must superimpose 'CtxMut' or 'CtxRef'.",
-                tip="Use a contextual condition in the with expression.")
-
-            return self
-
     class AsyncFunctionCallInvalidTargetError(SemanticError):
         """
         The AsyncFunctionCallInvalidTargetError is raised if the target of an async function call is not a function. For
