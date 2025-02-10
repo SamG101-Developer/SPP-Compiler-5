@@ -45,7 +45,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
-            transformed_lhs, transformed_function_call = AstFunctions.convert_function_to_type_access(scope_manager, function_owner_type, function_name, lhs, self, **kwargs)
+            transformed_lhs, transformed_function_call = AstFunctions.convert_method_to_function_form(scope_manager, function_owner_type, function_name, lhs, self, **kwargs)
             transformed_function_call.determine_overload(scope_manager, transformed_lhs, **kwargs)
             self._overload = transformed_function_call._overload
             return

@@ -1,21 +1,21 @@
 from __future__ import annotations
-from collections import defaultdict
-from fastenum import Enum
-from typing import Dict, Optional, Tuple, TYPE_CHECKING
-import operator
 
-from SPPCompiler.Utils.Sequence import Seq
-from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+import operator
+from collections import defaultdict
+from typing import Dict, Optional, Tuple
+
+from fastenum import Enum
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
+from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-
-if TYPE_CHECKING:
-    import SPPCompiler.SemanticAnalysis as Asts
-    from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
-    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.Utils.Sequence import Seq
 
 
 class FunctionConflictCheckType(Enum):
@@ -29,28 +29,26 @@ class AstFunctions:
             scope_manager: ScopeManager, lhs: Asts.ExpressionAst)\
             -> Tuple[Ast, Optional[Scope], Asts.IdentifierAst]:
 
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, PostfixExpressionAst, PostfixExpressionOperatorStepKeywordAst
-
         # Special function: ".next()" on generators.
-        if isinstance(lhs, PostfixExpressionAst) and isinstance(lhs.op, PostfixExpressionOperatorStepKeywordAst):
+        if isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.op, Asts.PostfixExpressionOperatorStepKeywordAst):
             function_owner_type = lhs.lhs.infer_type(scope_manager).type
-            function_name = IdentifierAst(lhs.op.pos, "next_")
+            function_name = Asts.IdentifierAst(lhs.op.pos, "next_")
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Runtime access into an object: "object.method()"
-        elif isinstance(lhs, PostfixExpressionAst) and lhs.op.is_runtime_access():
+        elif isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
             function_owner_type = lhs.lhs.infer_type(scope_manager).type
             function_name = lhs.op.field
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Static access into a type: "Type::method()"
-        elif isinstance(lhs, PostfixExpressionAst) and lhs.op.is_static_access():
+        elif isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_static_access():
             function_owner_type = lhs.lhs
             function_name = lhs.op.field
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Direct access into a function: "function()"
-        elif isinstance(lhs, IdentifierAst):
+        elif isinstance(lhs, Asts.IdentifierAst):
             function_owner_type = None
             function_name = lhs
             function_owner_scope = scope_manager.current_scope.parent_module
@@ -65,18 +63,14 @@ class AstFunctions:
         return function_owner_type, function_owner_scope, function_name
 
     @staticmethod
-    def convert_function_to_type_access(
+    def convert_method_to_function_form(
             scope_manager: ScopeManager,
             function_owner_type: Ast, function_name: Asts.IdentifierAst, lhs: Asts.ExpressionAst,
             fn: Asts.PostfixExpressionOperatorFunctionCallAst, **kwargs)\
             -> Tuple[Asts.PostfixExpressionAst, Asts.PostfixExpressionOperatorFunctionCallAst]:
 
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-
         # Create an argument for self, which is the object being called (convention tested later).
         self_argument = AstMutation.inject_code(f"{lhs.lhs}", SppParser.parse_function_call_argument_unnamed)
-        # self_argument.analyse_semantics(scope_manager, **kwargs)
         function_arguments = fn.function_argument_group.arguments.copy()
         function_arguments.insert(0, self_argument)
 
@@ -96,8 +90,6 @@ class AstFunctions:
 
     @staticmethod
     def get_all_function_scopes(function_name: Asts.IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]]:
-        import SPPCompiler.SemanticAnalysis as Asts
-
         function_name = Asts.TypeAst.from_function_identifier(function_name)
         generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
         overload_scopes_and_info = Seq()
@@ -168,7 +160,6 @@ class AstFunctions:
 
     @staticmethod
     def name_function_arguments(arguments: Seq[Asts.FunctionCallArgumentAst], parameters: Seq[Asts.FunctionParameterAst]) -> None:
-        import SPPCompiler.SemanticAnalysis as Asts
 
         # Get the argument names and parameter names, and check for variadic parameters.
         argument_names = arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst).map_attr("name")
@@ -202,7 +193,6 @@ class AstFunctions:
 
     @staticmethod
     def name_generic_arguments(arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], owner_type: Asts.TypeAst = None) -> None:
-        import SPPCompiler.SemanticAnalysis as Asts
 
         # Special case for tuples to prevent infinite-recursion.
         if owner_type and owner_type.without_generics() == CommonTypes.Tup().without_generics():
@@ -267,8 +257,6 @@ class AstFunctions:
             infer_source: {x: BigInt, y: Str, z: Bool}
             infer_target: {x: T, y: U, z: V}
         """
-
-        import SPPCompiler.SemanticAnalysis as Asts
 
         # Special case for tuples to prevent infinite-recursion.
         if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypes.Tup().without_generics():

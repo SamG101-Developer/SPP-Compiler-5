@@ -114,7 +114,7 @@ class SupPrototypeFunctionsAst(Ast):
             raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(optional[0])
 
         # Analyse the name, where block, and body.
-        # self.name.analyse_semantics(scope_manager, **kwargs)
+        self.name.analyse_semantics(scope_manager, **kwargs)
         self.where_block.analyse_semantics(scope_manager, **kwargs)
         self.body.analyse_semantics(scope_manager, **kwargs)
 

@@ -1499,7 +1499,7 @@ class SppParser(Parser):
         p1 = self.parse_numeric_prefix_op().parse_optional()
         p2 = self.parse_lexeme(SppTokenType.LxDecInteger).parse_once()
         p3 = self.parse_integer_postfix_type().parse_optional()
-        return Asts.IntegerLiteralAst(c1, p1, p2, Asts.TypeAst.from_identifier(p3) if p3 else p3)
+        return Asts.IntegerLiteralAst(c1, p1, p2, p3)
 
     @parser_rule
     def parse_literal_integer_b02(self) -> Asts.IntegerLiteralAst:
@@ -1525,7 +1525,7 @@ class SppParser(Parser):
         return p3
 
     @parser_rule
-    def parse_integer_postfix_type(self) -> SppTokenType:
+    def parse_integer_postfix_type(self) -> Asts.TypeAst:
         p1  = self.parse_token(SppTokenType.TkUnderscore).parse_once()
         p2  = self.parse_characters("i8")
         p3  = self.parse_characters("i16")
@@ -1540,10 +1540,10 @@ class SppParser(Parser):
         p12 = self.parse_characters("u128")
         p13 = self.parse_characters("u256")
         p14 = (p2 | p3 | p4 | p5 | p6 | p7 | p8 | p9 | p10 | p11 | p12 | p13).parse_once()
-        return p14
+        return Asts.TypeAst.from_identifier(p14)
 
     @parser_rule
-    def parse_float_postfix_type(self) -> SppTokenType:
+    def parse_float_postfix_type(self) -> Asts.TypeAst:
         p1 = self.parse_token(SppTokenType.TkUnderscore).parse_once()
         p2 = self.parse_characters("f8")
         p3 = self.parse_characters("f16")
@@ -1552,7 +1552,7 @@ class SppParser(Parser):
         p6 = self.parse_characters("f128")
         p7 = self.parse_characters("f256")
         p8 = (p2 | p3 | p4 | p5 | p6 | p7).parse_once()
-        return p8
+        return Asts.TypeAst.from_identifier(p8)
 
     # ===== TUPLES =====
 
@@ -1646,7 +1646,7 @@ class SppParser(Parser):
         return p1
 
     @parser_rule
-    def parse_characters(self, characters: str) -> Asts.TokenAst:
+    def parse_characters(self, characters: str) -> Asts.IdentifierAst:
         # TODO : these rules don't come up u the error for failed alternate parsing (see number postfix types)
 
         p1 = self.parse_identifier().parse_once()
