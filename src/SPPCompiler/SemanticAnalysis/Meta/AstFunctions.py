@@ -108,12 +108,17 @@ class AstFunctions:
             else:
                 sup_scopes = Seq([function_owner_scope])
 
-            for sup_scope in sup_scopes.unique():
+            for sup_scope in sup_scopes:
                 if sup_ast := sup_scope._ast.body.members.filter_to_type(Asts.SupPrototypeExtensionAst).find(lambda m: m.name == function_name):
                     generics = sup_scope._symbol_table.all().filter(lambda s: s.is_generic)
                     generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
                     generics = Asts.GenericArgumentGroupAst(arguments=generics)
                     overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))
+
+            # When a derived class has overridden a function, the overridden base class function(s) must be removed.
+            depths = overload_scopes_and_info.map(operator.itemgetter(0)).map(lambda s: function_owner_scope.depth_difference(s))
+            min_depth = depths.min()
+            overload_scopes_and_info = overload_scopes_and_info.filter(lambda info: function_owner_scope.depth_difference(info[0]) == min_depth)
 
         # Return the overload scopes, and their generic argument groups.
         return overload_scopes_and_info
