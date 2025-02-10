@@ -168,22 +168,21 @@ class AstTypeManagement:
                     new_scopes.append(modified_class_scope)
 
             # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
-            if isinstance(scope._ast, (Asts.SupPrototypeFunctionsAst, Asts.SupPrototypeExtensionAst)):
-                new_scope_name = AstTypeManagement.generic_convert_sup_scope_name(scope.name, generic_arguments)
-                new_scope = Scope(new_scope_name, scope.parent, ast=scope._ast)
-                new_scope._children = scope._children
-                new_scope._symbol_table = copy.copy(scope._symbol_table)
-                new_scope._non_generic_scope = scope
+            new_scope_name = AstTypeManagement.generic_convert_sup_scope_name(scope.name, generic_arguments)
+            new_scope = Scope(new_scope_name, scope.parent, ast=scope._ast)
+            new_scope._children = scope._children
+            new_scope._symbol_table = copy.copy(scope._symbol_table)
+            new_scope._non_generic_scope = scope
 
-                # Todo: can remove the "if-continue" if default generic arguments are brought in here too.
-                # Todo: compare this to the inverse_generic_inference function. not even sure how this works.
-                for generic_parameter in scope._ast.generic_parameter_group.get_type_params():
-                    mock_generic_parameter = scope._ast.name.get_generic_parameter_for_argument(generic_parameter.name)
-                    mock_generic_value = generic_arguments.arguments.find(lambda a: a.name == mock_generic_parameter)
-                    if not mock_generic_value: continue
-                    new_generic_argument = Asts.GenericTypeArgumentNamedAst(name=Asts.TypeAst.from_generic_identifier(generic_parameter.name.types[-1]), value=mock_generic_value.value)
-                    generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, new_generic_argument)
-                    new_scope.add_symbol(generic_symbol)
+            # Todo: can remove the "if-continue" if default generic arguments are brought in here too.
+            # Todo: compare this to the inverse_generic_inference function. not even sure how this works.
+            for generic_parameter in scope._ast.generic_parameter_group.get_type_params():
+                mock_generic_parameter = scope._ast.name.get_generic_parameter_for_argument(generic_parameter.name)
+                mock_generic_value = generic_arguments.arguments.find(lambda a: a.name == mock_generic_parameter)
+                if not mock_generic_value: continue
+                new_generic_argument = Asts.GenericTypeArgumentNamedAst(name=Asts.TypeAst.from_generic_identifier(generic_parameter.name.types[-1]), value=mock_generic_value.value)
+                generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, new_generic_argument)
+                new_scope.add_symbol(generic_symbol)
 
             # Add the new scope to the list of new scopes.
             new_scopes.append(new_scope)
