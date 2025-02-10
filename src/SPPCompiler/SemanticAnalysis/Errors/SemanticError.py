@@ -402,6 +402,25 @@ class SemanticErrors:
 
             return self
 
+    class GenericArgumentTooManyError(SemanticError):
+        """
+        The GenericArgumentTooManyError is raised if a function call has too many generic arguments. This can be from a
+        type definition, or a function call.
+        """
+
+        def add(self, generic_parameters: Seq[Asts.GenericParameterAst], extra_generic_argument: Asts.GenericArgumentAst) -> SemanticError:
+            self.add_info(
+                pos=generic_parameters[0].pos,
+                tag="Generic parameters defined here")
+
+            self.add_error(
+                pos=extra_generic_argument.pos,
+                tag="Extra generic argument provided here.",
+                msg="Too many generic arguments.",
+                tip="Remove the extra generic argument.")
+
+            return self
+
     class FunctionCallAmbiguousSignaturesError(SemanticError):
         """
         The FunctionCallAmbiguousSignaturesError is raised if a function call has multiple valid signatures that match

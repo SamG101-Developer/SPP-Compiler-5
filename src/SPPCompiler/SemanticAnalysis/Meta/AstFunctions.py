@@ -117,8 +117,9 @@ class AstFunctions:
 
             # When a derived class has overridden a function, the overridden base class function(s) must be removed.
             depths = overload_scopes_and_info.map(operator.itemgetter(0)).map(lambda s: function_owner_scope.depth_difference(s))
-            min_depth = depths.min()
-            overload_scopes_and_info = overload_scopes_and_info.filter(lambda info: function_owner_scope.depth_difference(info[0]) == min_depth)
+            if depths:
+                min_depth = depths.min()
+                overload_scopes_and_info = overload_scopes_and_info.filter(lambda info: function_owner_scope.depth_difference(info[0]) == min_depth)
 
         # Return the overload scopes, and their generic argument groups.
         return overload_scopes_and_info
@@ -231,9 +232,13 @@ class AstFunctions:
 
             # Normal named argument assignment.
             else:
-                named_argument = f"{parameter_names.pop(0)}={unnamed_argument}"
-                named_argument = AstMutation.inject_code(named_argument, GenericArgumentCTor[type(unnamed_argument)])
-                arguments.replace(unnamed_argument, named_argument, 1)
+                try:
+                    named_argument = f"{parameter_names.pop(0)}={unnamed_argument}"
+                    named_argument = AstMutation.inject_code(named_argument, GenericArgumentCTor[type(unnamed_argument)])
+                    arguments.replace(unnamed_argument, named_argument, 1)
+                except IndexError:
+                    # Too many generic arguments passed.
+                    raise SemanticErrors.GenericArgumentTooManyError().add(parameters, unnamed_argument)
 
     @staticmethod
     def inherit_generic_arguments(
