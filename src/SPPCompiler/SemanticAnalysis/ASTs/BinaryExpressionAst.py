@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -32,7 +31,6 @@ class BinaryExpressionAst(Ast, TypeInferrable):
         assert self.lhs and self.rhs
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -41,7 +39,6 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             self.rhs.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -56,7 +53,6 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             self.analyse_semantics(scope_manager, **kwargs)
         return self._as_func.infer_type(scope_manager, **kwargs)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The TypeAst cannot be used as an expression for a binary operation.
         if isinstance(self.lhs, Asts.TypeAst):

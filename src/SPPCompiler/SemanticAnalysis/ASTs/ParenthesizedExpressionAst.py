@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -23,7 +21,6 @@ class ParenthesizedExpressionAst(Ast, TypeInferrable):
         assert self.expression
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -32,12 +29,10 @@ class ParenthesizedExpressionAst(Ast, TypeInferrable):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Infer the type of the expression.
         return self.expression.infer_type(scope_manager, **kwargs)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the expression.
         if isinstance(self.expression, (Asts.TokenAst, Asts.TypeAst)):

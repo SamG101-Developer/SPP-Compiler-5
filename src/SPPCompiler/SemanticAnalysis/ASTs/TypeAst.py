@@ -5,7 +5,6 @@ import hashlib
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterator, Optional
 
-import std
 from convert_case import pascal_case
 from llvmlite import ir as llvm
 
@@ -60,7 +59,6 @@ class TypeAst(Ast, TypeInferrable):
         return f"cls {self.print(AstPrinter())}"
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -166,11 +164,9 @@ class TypeAst(Ast, TypeInferrable):
         # Compare each type's class prototype.
         return self_symbol.type is that_symbol.type
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         return InferredType.from_type(self)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
 
         # Determine the scope to use for the type analysis.
@@ -225,7 +221,6 @@ class TypeAst(Ast, TypeInferrable):
                 self.types[-1].value != "Self"]):
             self.namespace = type_scope_alias_bypass.to_namespace()
 
-    @std.override_method
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         type_symbol = scope_handler.current_scope.get_symbol(self)
         if self.without_generics().symbolic_eq(CommonTypes.Box().without_generics(), scope_handler.current_scope):

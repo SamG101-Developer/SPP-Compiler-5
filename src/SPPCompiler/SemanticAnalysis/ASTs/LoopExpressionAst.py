@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -30,7 +28,6 @@ class LoopExpressionAst(Ast, TypeInferrable):
         assert self.body
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -40,7 +37,6 @@ class LoopExpressionAst(Ast, TypeInferrable):
             self.else_block.print(printer) if self.else_block else ""]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Get the loop type set by exit expressions inside the loop.
         loop_type = self._loop_type_info.get(self._loop_level, (None, None))[1]
@@ -57,7 +53,6 @@ class LoopExpressionAst(Ast, TypeInferrable):
 
         return loop_type
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Create a new scope for the loop body.
         scope_manager.create_and_move_into_new_scope(f"<loop:{self.pos}>")

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -25,13 +23,11 @@ class ObjectInitializerArgumentGroupAst(Ast):
         # Create a shallow copy of the AST.
         return ObjectInitializerArgumentGroupAst(arguments=self.arguments.copy())
 
-    @std.override_method
     def __eq__(self, other: ObjectInitializerArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
         return isinstance(other, ObjectInitializerArgumentGroupAst) and self.arguments == other.arguments
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -55,7 +51,6 @@ class ObjectInitializerArgumentGroupAst(Ast):
             argument.analyse_semantics(scope_manager, **kwargs)
             AstMemoryHandler.enforce_memory_integrity(self.get_arg_val(argument), argument, scope_manager)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, class_type: Asts.TypeAst = None, **kwargs) -> None:
         # Get the symbol of the class type, and check it isn't abstract.
         class_symbol = scope_manager.current_scope.get_symbol(class_type)

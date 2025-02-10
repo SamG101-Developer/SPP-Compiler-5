@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -24,13 +22,11 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
         # assert self.value
         self._variant = "Named"
 
-    @std.override_method
     def __eq__(self, other: GenericTypeArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.
         return isinstance(other, GenericTypeArgumentNamedAst) and self.name == other.name and self.value == other.value
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -44,7 +40,6 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
         value = symbol.scope.type_symbol.fq_name if symbol.scope else symbol.scope
         return GenericTypeArgumentNamedAst(name=Asts.TypeAst.from_generic_identifier(symbol.name), value=value)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the name and value of the generic type argument.
         self.value.analyse_semantics(scope_manager, **kwargs)

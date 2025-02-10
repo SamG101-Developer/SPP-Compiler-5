@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Optional
-
-import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -27,7 +24,6 @@ class SupPrototypeFunctionsAst(Ast):
     _scope_cls: Optional[Scope] = field(init=False, default=None)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -38,13 +34,11 @@ class SupPrototypeFunctionsAst(Ast):
             self.body.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
         # Pre-process the members of this superimposition.
         super().pre_process(context)
         self.body.pre_process(self)
 
-    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a new scope for the superimposition.
         scope_manager.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
@@ -57,14 +51,12 @@ class SupPrototypeFunctionsAst(Ast):
 
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.generate_top_level_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
 
@@ -95,19 +87,16 @@ class SupPrototypeFunctionsAst(Ast):
 
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         self.body.regenerate_generic_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         self.body.regenerate_generic_types(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
 
         # Move to the next scope.

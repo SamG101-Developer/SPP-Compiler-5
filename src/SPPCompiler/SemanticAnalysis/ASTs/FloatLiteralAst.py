@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -39,7 +37,6 @@ class FloatLiteralAst(Ast, TypeInferrable):
     decimal_value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.LxDecInteger))
     type: Optional[Asts.TypeAst] = field(default=None)
 
-    @std.override_method
     def __eq__(self, other: FloatLiteralAst) -> bool:
         # Check both ASTs are the same type and have the same sign, value and type.
         return all([
@@ -50,7 +47,6 @@ class FloatLiteralAst(Ast, TypeInferrable):
             self.type == other.type])
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -61,7 +57,6 @@ class FloatLiteralAst(Ast, TypeInferrable):
             self.type.print(printer) if self.type else ""]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Match the type against the allowed type postfixes (no postfix is BigDec).
         match self.type:
@@ -84,7 +79,6 @@ class FloatLiteralAst(Ast, TypeInferrable):
 
         return InferredType.from_type(float_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # No analysis needs to be done for the BigDec automatically inferred type.
         if not self.type:

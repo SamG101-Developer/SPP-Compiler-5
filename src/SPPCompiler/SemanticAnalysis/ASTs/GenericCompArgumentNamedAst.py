@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -24,13 +23,11 @@ class GenericCompArgumentNamedAst(Ast, Ordered):
         # assert self.value
         self._variant = "Named"
 
-    @std.override_method
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.
         return isinstance(other, GenericCompArgumentNamedAst) and self.name == other.name and self.value == other.value
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -43,7 +40,6 @@ class GenericCompArgumentNamedAst(Ast, Ordered):
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
         return GenericCompArgumentNamedAst(name=Asts.TypeAst.from_identifier(symbol.name), value=symbol.memory_info.ast_comptime_const)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors

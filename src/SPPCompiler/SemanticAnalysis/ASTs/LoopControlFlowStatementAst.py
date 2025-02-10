@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -23,7 +22,6 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
     skip_or_expr: Optional[Asts.ExpressionAst] = field(default=None)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -31,13 +29,11 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
             self.skip_or_expr.print(printer) if self.skip_or_expr else ""]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         has_skip = isinstance(self.skip_or_expr, Asts.TokenAst) and self.skip_or_expr.token.token_type == SppTokenType.KwSkip

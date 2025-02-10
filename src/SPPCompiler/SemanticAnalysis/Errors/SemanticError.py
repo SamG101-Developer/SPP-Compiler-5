@@ -319,7 +319,7 @@ class SemanticErrors:
         considered a duplicate.
         """
 
-        def add(self, first_prototype:Asts. IdentifierAst, second_prototype: Asts.IdentifierAst) -> SemanticError:
+        def add(self, first_prototype: Asts. IdentifierAst, second_prototype: Asts.IdentifierAst) -> SemanticError:
             self.add_info(
                 pos=first_prototype.pos,
                 tag="First prototype defined here")

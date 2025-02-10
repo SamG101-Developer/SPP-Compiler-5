@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import functools
-import std
 from dataclasses import dataclass, field
 
 import SPPCompiler.SemanticAnalysis as Asts
@@ -23,7 +22,6 @@ class LocalVariableAttributeBindingAst(Ast, VariableNameExtraction):
         assert self.value
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -33,7 +31,6 @@ class LocalVariableAttributeBindingAst(Ast, VariableNameExtraction):
         return "".join(string)
 
     @functools.cached_property
-    @std.override_method
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.value.extract_names
 

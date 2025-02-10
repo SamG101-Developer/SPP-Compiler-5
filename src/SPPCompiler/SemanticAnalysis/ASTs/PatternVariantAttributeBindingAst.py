@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -22,7 +20,6 @@ class PatternVariantAttributeBindingAst(Ast, PatternMapping):
         assert self.value
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -31,7 +28,6 @@ class PatternVariantAttributeBindingAst(Ast, PatternMapping):
             self.value.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableAttributeBindingAst:
         # Convert the attribute binding into a local variable attribute binding.
         return Asts.LocalVariableAttributeBindingAst(self.pos, self.name, self.tok_assign, self.value.convert_to_variable(**kwargs))

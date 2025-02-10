@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -33,7 +31,6 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
         assert self.value
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -46,12 +43,10 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
             self.value.print(printer) + "\n"]
         return "".join(string)
 
-    @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
         for a in self.annotations:
             a.pre_process(self)
 
-    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
@@ -60,11 +55,9 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
         symbol.memory_info.initialized_by(self)
         scope_manager.current_scope.add_symbol(symbol)
 
-    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         self.type.analyse_semantics(scope_manager)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):

@@ -3,8 +3,6 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -28,7 +26,6 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping):
         assert self.type
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -38,14 +35,12 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureObjectAst:
         # Convert the object destructuring into a local variable object destructuring.
         elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureObjectAst.__value__.__args__)
         converted_elements = elements.map(lambda e: e.convert_to_variable(**kwargs))
         return Asts.LocalVariableDestructureObjectAst(self.pos, self.type, self.tok_left_paren, converted_elements, self.tok_right_paren)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         self.type.analyse_semantics(scope_manager, **kwargs)
 

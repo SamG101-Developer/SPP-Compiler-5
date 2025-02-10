@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -22,7 +20,6 @@ class TupleLiteralAst(Ast, TypeInferrable):
     tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -31,7 +28,6 @@ class TupleLiteralAst(Ast, TypeInferrable):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Create the standard "std::Tup[..Items]" type, with generic items.
         inner_types = self.elements.map(lambda element: element.infer_type(scope_manager, **kwargs).type)
@@ -39,7 +35,6 @@ class TupleLiteralAst(Ast, TypeInferrable):
         tuple_type.analyse_semantics(scope_manager, **kwargs)
         return InferredType.from_type(tuple_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the elements in the tuple.
         for element in self.elements:

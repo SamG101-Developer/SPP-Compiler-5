@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Any
 
-import std
 from llvmlite import ir as llvm
 
 import SPPCompiler.SemanticAnalysis as Asts
@@ -23,7 +22,6 @@ class RetStatementAst(Ast, TypeInferrable):
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -31,13 +29,11 @@ class RetStatementAst(Ast, TypeInferrable):
             self.expression.print(printer) if self.expression is not None else ""]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token.token_type != SppTokenType.KwFun:
@@ -59,7 +55,6 @@ class RetStatementAst(Ast, TypeInferrable):
         if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(expression_type.type, expected_type, self.expression, expected_type)
 
-    @std.override_method
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         # Create a return instruction with the expression if it exists.
         if self.expression:

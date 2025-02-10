@@ -4,8 +4,6 @@ import functools
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
@@ -27,7 +25,6 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction):
         assert self.name
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -37,16 +34,13 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction):
         return "".join(string)
 
     @functools.cached_property
-    @std.override_method
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return Seq([self.name])
 
     @functools.cached_property
-    @std.override_method
     def extract_name(self) -> Asts.IdentifierAst:
         return self.name
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
 
         # Create a variable symbol for this identifier and value.

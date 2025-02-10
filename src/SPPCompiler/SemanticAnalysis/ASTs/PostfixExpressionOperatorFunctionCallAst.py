@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import std
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
 
@@ -27,7 +26,6 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
     _is_async: Optional[Ast] = field(default=None, init=False, repr=False)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -175,7 +173,6 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
         self._overload = pass_overloads[0]
         return
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredType:
         # Todo: Hacky workaround - see why having a function call as a "self" argument doesn't use its "analyse
         #  semantics" as the same object. it calls the analyse_semantics method, but on another instance of the AST -
@@ -188,7 +185,6 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
         return_type = self._overload[0].get_symbol(return_type).fq_name
         return InferredType.from_type(return_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         if self._overload:
             return

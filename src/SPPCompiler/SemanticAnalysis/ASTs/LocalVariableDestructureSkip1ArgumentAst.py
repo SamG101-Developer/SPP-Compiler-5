@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import functools
-import std
 from dataclasses import dataclass, field
 
 import SPPCompiler.SemanticAnalysis as Asts
@@ -17,13 +16,11 @@ class LocalVariableDestructureSkip1ArgumentAst(Ast, VariableNameExtraction):
     tok_underscore: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkUnderscore))
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         return self.tok_underscore.print(printer)
 
     @functools.cached_property
-    @std.override_method
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return Seq()
 

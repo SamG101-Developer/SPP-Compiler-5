@@ -3,8 +3,6 @@ from __future__ import annotations
 import functools
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -26,7 +24,6 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
     tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -36,16 +33,13 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
         return "".join(string)
 
     @functools.cached_property
-    @std.override_method
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.elements.map(lambda e: e.extract_names).flat()
 
     @functools.cached_property
-    @std.override_method
     def extract_name(self) -> Asts.IdentifierAst:
         return Asts.IdentifierAst(self.pos, "_Unmatchable")
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
 
         # Only 1 "multi-skip" allowed in a destructure.

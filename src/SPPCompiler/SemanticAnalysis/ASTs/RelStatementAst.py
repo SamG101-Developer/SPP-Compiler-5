@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -20,7 +18,6 @@ class RelStatementAst(Ast, TypeInferrable):
     expressions: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -28,14 +25,12 @@ class RelStatementAst(Ast, TypeInferrable):
             self.expressions.print(printer, ", ")]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the expressions.
         for e in self.expressions:
@@ -58,7 +53,8 @@ class RelStatementAst(Ast, TypeInferrable):
 
             # Check the rel target isn't a compile-time constant.
             if symbol.memory_info.ast_comptime_const:
-                raise SemanticErrors.MemoryReleasingConstantSymbolError().add(self, rel_target, symbol.memory_info.ast_initialization)
+                raise SemanticErrors.MemoryReleasingConstantSymbolError().add(self, rel_target,
+                                                                              symbol.memory_info.ast_initialization)
 
             # Cause a pinned generator/future to be invalidated.
             for pin_target in symbol.memory_info.pin_target:

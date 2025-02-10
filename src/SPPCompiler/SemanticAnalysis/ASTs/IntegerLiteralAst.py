@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -45,7 +43,6 @@ class IntegerLiteralAst(Ast, TypeInferrable):
     def __post_init__(self) -> None:
         assert self.value
 
-    @std.override_method
     def __eq__(self, other: IntegerLiteralAst) -> bool:
         # Check both ASTs are the same type and have the same sign, value and type.
         return all([
@@ -64,7 +61,6 @@ class IntegerLiteralAst(Ast, TypeInferrable):
         return IntegerLiteralAst.from_token(token)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -73,7 +69,6 @@ class IntegerLiteralAst(Ast, TypeInferrable):
             self.type.print(printer) if self.type else ""]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Create an integer type based on the (optional) type postfix.
 
@@ -110,7 +105,6 @@ class IntegerLiteralAst(Ast, TypeInferrable):
 
         return InferredType.from_type(integer_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # No analysis needs to be done for the BigInt automatically inferred type.
         if not self.type:

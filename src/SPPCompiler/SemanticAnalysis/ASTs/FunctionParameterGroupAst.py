@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Any
 
-import std
 from llvmlite import ir as llvm
 
 import SPPCompiler.SemanticAnalysis as Asts
@@ -25,13 +24,11 @@ class FunctionParameterGroupAst(Ast):
     def __copy__(self) -> FunctionParameterGroupAst:
         return FunctionParameterGroupAst(parameters=self.parameters.copy())
 
-    @std.override_method
     def __eq__(self, other: FunctionParameterGroupAst) -> bool:
         # Check both ASTs are the same type and have the same parameters.
         return isinstance(other, FunctionParameterGroupAst) and self.parameters == other.parameters
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -65,7 +62,6 @@ class FunctionParameterGroupAst(Ast):
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst
         return self.parameters.filter_not_type(FunctionParameterSelfAst)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate parameter names.
         parameter_names = self.get_non_self().map_attr("extract_names").flat()
@@ -90,7 +86,6 @@ class FunctionParameterGroupAst(Ast):
         for p in self.parameters:
             p.analyse_semantics(scope_manager, **kwargs)
 
-    @std.override_method
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         # Get the parameter's llvm types.
         parameter_types = self.parameters.map_attr("type")

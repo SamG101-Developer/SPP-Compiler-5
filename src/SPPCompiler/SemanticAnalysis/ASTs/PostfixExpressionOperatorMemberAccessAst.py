@@ -3,8 +3,6 @@ from __future__ import annotations
 import difflib
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -21,12 +19,10 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
         assert self.tok_access
         assert self.field
 
-    @std.override_method
     def __eq__(self, other: PostfixExpressionOperatorMemberAccessAst) -> bool:
         return self.tok_access == other.tok_access and self.field == other.field
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -42,7 +38,6 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
         from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         return self.tok_access.token.token_type == SppTokenType.TkDblColon
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
@@ -60,7 +55,8 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
             attribute_type = lhs_symbol.scope.get_symbol(self.field).type
             return InferredType.from_type(attribute_type)
 
-    @std.override_method
+        raise NotImplementedError("Unknown member access type.")
+
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement

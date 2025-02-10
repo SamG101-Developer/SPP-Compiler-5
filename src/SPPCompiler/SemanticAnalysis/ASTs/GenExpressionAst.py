@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -27,7 +25,6 @@ class GenExpressionAst(Ast, TypeInferrable):
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -37,14 +34,12 @@ class GenExpressionAst(Ast, TypeInferrable):
             self.expression.print(printer) if self.expression else ""]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # The inferred type of a gen expression is the type of the value being sent back into the coroutine.
         generator_type = self._func_ret_type
         send_type = generator_type.types[-1].generic_argument_group["Send"].value
         return InferredType.from_type(send_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a coroutine and not a subroutine.
         if kwargs["function_type"].token.token_type != SppTokenType.KwCor:

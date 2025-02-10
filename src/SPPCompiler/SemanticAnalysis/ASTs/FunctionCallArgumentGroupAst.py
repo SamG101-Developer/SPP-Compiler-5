@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -27,13 +25,11 @@ class FunctionCallArgumentGroupAst(Ast):
     def __copy__(self) -> FunctionCallArgumentGroupAst:
         return FunctionCallArgumentGroupAst(arguments=self.arguments.copy())
 
-    @std.override_method
     def __eq__(self, other: FunctionCallArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
         return isinstance(other, FunctionCallArgumentGroupAst) and self.arguments == other.arguments
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -82,7 +78,6 @@ class FunctionCallArgumentGroupAst(Ast):
         for a in self.arguments:
             a.analyse_semantics(scope_manager, **kwargs)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, target: Asts.FunctionPrototypeAst = None, is_async: Asts.TokenAst = None, **kwargs) -> None:
         # Code that is run after the overload is selected.
 

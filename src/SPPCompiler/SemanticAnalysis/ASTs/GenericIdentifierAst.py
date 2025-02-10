@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass, field
 
-import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -15,12 +14,10 @@ class GenericIdentifierAst(Ast):
     value: str = field(default="")
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default_factory=lambda: Asts.GenericArgumentGroupAst())
 
-    @std.override_method
     def __eq__(self, other: GenericIdentifierAst) -> bool:
         # Check both ASTs are the same type and have the same value and generic argument group.
         return isinstance(other, GenericIdentifierAst) and self.value == other.value and self.generic_argument_group == other.generic_argument_group
 
-    @std.override_method
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.md5(self.value.encode()).digest())
@@ -29,7 +26,6 @@ class GenericIdentifierAst(Ast):
         return self.print(AstPrinter())
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [

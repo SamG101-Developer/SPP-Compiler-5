@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Optional
-
-import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -40,7 +37,6 @@ class SupPrototypeExtensionAst(Ast):
         assert self.super_class
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -53,13 +49,11 @@ class SupPrototypeExtensionAst(Ast):
             self.body.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
         if self.name.types[-1].value[0] == "$": return
         super().pre_process(context)
         self.body.pre_process(self)
 
-    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a new scope for the superimposition.
         scope_manager.create_and_move_into_new_scope(f"<sup:{self.name} ext {self.super_class}:{self.pos}>", self)
@@ -72,14 +66,12 @@ class SupPrototypeExtensionAst(Ast):
 
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.generate_top_level_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
 
@@ -135,8 +127,6 @@ class SupPrototypeExtensionAst(Ast):
         self._scope_cls = cls_symbol.scope
         self.body.load_super_scopes(scope_manager)
 
-        # sup_symbol = scope_manager.current_scope.get_symbol(self.super_class.without_generics())
-
         # Prevent duplicate attributes by checking if the attributes appear in any super class.
         super_class_attribute_names = sup_symbol.scope.sup_scopes.filter(
             lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s._ast.body.members).flat().map_attr("name")
@@ -151,20 +141,17 @@ class SupPrototypeExtensionAst(Ast):
 
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         self.body.regenerate_generic_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         self.super_class.analyse_semantics(scope_manager)
         self.body.regenerate_generic_types(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Move to the next scope.
         scope_manager.move_to_next_scope()

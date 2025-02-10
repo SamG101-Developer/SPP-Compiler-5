@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-import std
 from llvmlite import ir as llvm
 
 import SPPCompiler.SemanticAnalysis as Asts
@@ -22,7 +21,6 @@ class FunctionImplementationAst(Ast):
     tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         if self.members:
@@ -36,7 +34,6 @@ class FunctionImplementationAst(Ast):
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check there is no code after a "ret" statement, as this is unreachable.
         for i, member in self.members.enumerate():
@@ -47,7 +44,6 @@ class FunctionImplementationAst(Ast):
         for m in self.members:
             m.analyse_semantics(scope_manager, **kwargs)
 
-    @std.override_method
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         # Create an entry block to start the function.
         entry_block = llvm_function.append_basic_block(name="entry")

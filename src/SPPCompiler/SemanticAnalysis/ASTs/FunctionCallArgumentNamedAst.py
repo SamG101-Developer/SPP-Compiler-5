@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -27,13 +25,11 @@ class FunctionCallArgumentNamedAst(Ast, Ordered, TypeInferrable):
         assert self.value
         self._variant = "Named"
 
-    @std.override_method
     def __eq__(self, other: FunctionCallArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.
         return isinstance(other, FunctionCallArgumentNamedAst) and self.name == other.name and self.value == other.value
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -43,7 +39,6 @@ class FunctionCallArgumentNamedAst(Ast, Ordered, TypeInferrable):
             self.value.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         if self._type_from_self:
             return self._type_from_self
@@ -56,7 +51,6 @@ class FunctionCallArgumentNamedAst(Ast, Ordered, TypeInferrable):
             case _: convention = type(self.convention)
         return InferredType(convention=convention, type=inferred_type.type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.

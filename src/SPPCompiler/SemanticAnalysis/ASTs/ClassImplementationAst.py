@@ -4,8 +4,6 @@ import copy
 from dataclasses import dataclass, field
 from typing import Dict
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -28,7 +26,6 @@ class ClassImplementationAst(Ast):
             self.tok_right_brace, _ctx=self._ctx, _scope=self._scope)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         if self.members:
@@ -42,27 +39,22 @@ class ClassImplementationAst(Ast):
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
 
-    @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
         # Pre-process the members.
         for m in self.members: m.pre_process(context)
 
-    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Generate the symbols for the members.
         for m in self.members: m.generate_top_level_scopes(scope_manager)
 
-    @std.override_method
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Load the super scopes for the members.
         for m in self.members: m.load_super_scopes(scope_manager)
 
-    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         # Regenerate the generic types for the members.
         for m in self.members: m.regenerate_generic_types(scope_manager)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the semantics of the members.
         for m in self.members:

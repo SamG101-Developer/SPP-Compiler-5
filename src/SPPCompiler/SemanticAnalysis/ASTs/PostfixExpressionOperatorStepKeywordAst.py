@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -21,7 +19,6 @@ class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable):
     tok_step: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwStep))
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -35,13 +32,11 @@ class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable):
     def is_static_access(self) -> bool:
         return False
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredType:
         # Next operations return the "Gen" generic parameter's argument.
         function_return_type = lhs.infer_type(scope_manager, **kwargs).type.types[-1].generic_argument_group["Gen"].value
         return InferredType.from_type(function_return_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # Todo: Check for superimposition, not direct equality
         # Check the iterable is a generator type.

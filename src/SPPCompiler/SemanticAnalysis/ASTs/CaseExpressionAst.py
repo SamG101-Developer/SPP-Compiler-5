@@ -4,7 +4,6 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -40,7 +39,6 @@ class CaseExpressionAst(Ast, TypeInferrable):
         return CaseExpressionAst(c1, p1, Asts.ParenthesizedExpressionAst(pos=p2.pos, expression=p2), branches=branches)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -50,7 +48,6 @@ class CaseExpressionAst(Ast, TypeInferrable):
             self.branches.print(printer, "\n")]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # The checks here only apply when assigning from this expression.
         from SPPCompiler.SemanticAnalysis import PatternVariantElseAst
@@ -72,7 +69,6 @@ class CaseExpressionAst(Ast, TypeInferrable):
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
         if isinstance(self.condition, (Asts.TokenAst, Asts.TypeAst)):
@@ -135,6 +131,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
                         raise SemanticErrors.ExpressionNotBooleanError().add(self.condition, return_type, "case")
 
         # Update the memory status of the symbols.
+        # Todo: tidy this up omg
         for symbol, new_memory_info_list in symbol_mem_info.items():
 
             # Assuming all new memory states are consistent across branches, update to the first "new" state list.

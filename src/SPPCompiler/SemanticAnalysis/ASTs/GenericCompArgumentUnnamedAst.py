@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -20,18 +18,15 @@ class GenericCompArgumentUnnamedAst(Ast, Ordered):
         # assert self.value
         self._variant = "Unnamed"
 
-    @std.override_method
     def __eq__(self, other: GenericCompArgumentUnnamedAst) -> bool:
         # Check both ASTs are the same type and have the same value.
         return isinstance(other, GenericCompArgumentUnnamedAst) and self.value == other.value
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         return self.value.print(printer)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):

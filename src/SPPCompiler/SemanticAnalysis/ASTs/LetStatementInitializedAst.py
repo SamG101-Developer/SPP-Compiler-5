@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-import std
 from llvmlite import ir as llvm
 
 import SPPCompiler.SemanticAnalysis as Asts
@@ -29,7 +28,6 @@ class LetStatementInitializedAst(Ast, TypeInferrable):
         assert self.value
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -39,13 +37,11 @@ class LetStatementInitializedAst(Ast, TypeInferrable):
             self.value.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):
@@ -57,7 +53,6 @@ class LetStatementInitializedAst(Ast, TypeInferrable):
             self.value, self.tok_assign, scope_manager, update_memory_info=False)
         self.assign_to.analyse_semantics(scope_manager, value=self.value, **kwargs)
 
-    @std.override_method
     def generate_llvm_definitions(
             self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None,
             block: llvm.Block = None, **kwargs) -> Any:

@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -22,7 +20,6 @@ class PatternVariantSingleIdentifierAst(Ast, PatternMapping):
         assert self.name
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -31,13 +28,11 @@ class PatternVariantSingleIdentifierAst(Ast, PatternMapping):
             (" " + self.alias.print(printer)) if self.alias is not None else ""]
         return " ".join(string)
 
-    @std.override_method
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableSingleIdentifierAst:
         # Convert the single identifier into a local variable single identifier.
         from SPPCompiler.SemanticAnalysis import LocalVariableSingleIdentifierAst
         return LocalVariableSingleIdentifierAst(self.pos, self.tok_mut, self.name, self.alias)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Create the new variable from the pattern in the patterns scope.
         variable = self.convert_to_variable(**kwargs)

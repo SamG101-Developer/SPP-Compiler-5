@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -27,7 +25,6 @@ class CaseExpressionBranchAst(Ast, TypeInferrable):
         return case_branch
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -37,12 +34,10 @@ class CaseExpressionBranchAst(Ast, TypeInferrable):
             self.body.print(printer) if self.body else ""]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Infer the type of the body.
         return self.body.infer_type(scope_manager, **kwargs)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Create a new scope for the pattern block.
         scope_manager.create_and_move_into_new_scope(f"<pattern:{self.pos}>")

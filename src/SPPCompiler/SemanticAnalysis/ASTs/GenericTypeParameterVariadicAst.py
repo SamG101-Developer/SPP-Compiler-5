@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -23,13 +21,11 @@ class GenericTypeParameterVariadicAst(Ast, Ordered):
         assert self.name
         self._variant = "Variadic"
 
-    @std.override_method
     def __eq__(self, other: GenericTypeParameterVariadicAst) -> bool:
         # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericTypeParameterVariadicAst) and self.name == other.name
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -38,13 +34,11 @@ class GenericTypeParameterVariadicAst(Ast, Ordered):
             self.constraints.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).
         symbol = TypeSymbol(name=self.name.types[-1], type=None, is_generic=True)
         scope_manager.current_scope.add_symbol(symbol)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         self.name.analyse_semantics(scope_manager, **kwargs)
         self.constraints.analyse_semantics(scope_manager, **kwargs)

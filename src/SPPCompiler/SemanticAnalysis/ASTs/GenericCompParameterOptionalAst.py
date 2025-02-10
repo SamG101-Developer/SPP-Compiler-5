@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -33,13 +31,11 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
         assert self.default
         self._variant = "Optional"
 
-    @std.override_method
     def __eq__(self, other: GenericCompParameterOptionalAst) -> bool:
         # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericCompParameterOptionalAst) and self.name == other.name
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -51,7 +47,6 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
             self.default.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a variable symbol for this constant in the current scope (class / function).
         symbol = VariableSymbol(
@@ -62,7 +57,6 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
         symbol.memory_info.initialized_by(self)
         scope_manager.current_scope.add_symbol(symbol)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default.
         if isinstance(self.default, (Asts.TokenAst, Asts.TypeAst)):

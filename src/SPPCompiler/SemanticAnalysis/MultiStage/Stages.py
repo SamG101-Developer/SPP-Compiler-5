@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Union
 
-import std
 from llvmlite import ir as llvm
 
 import SPPCompiler.SemanticAnalysis as Asts
@@ -25,7 +24,6 @@ type PreProcessingContext = Union[
 class CompilerStages:
     __friends__ = {"AnnotationAst"}
 
-    @std.virtual_method
     def pre_process(self, context: PreProcessingContext) -> None:
         """
         The preprocessor stage performs mutations on ASTs, introduces new ASTs, and removes some ASTs. This allows for
@@ -33,7 +31,6 @@ class CompilerStages:
         them. This stage directly affects what symbols are generated.
         """
 
-    @std.virtual_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         """
         The generate top-level scopes stage generates all module and superimposition level scopes and symbols. This
@@ -42,7 +39,6 @@ class CompilerStages:
         circular imports.
         """
 
-    @std.virtual_method
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         """
         The generate top-level aliases stage generates all aliases at the module/sup level. This must come after the
@@ -51,14 +47,12 @@ class CompilerStages:
         any order of compilation.
         """
 
-    @std.virtual_method
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         """
         The load super scopes stage links all super scopes to classes. This allows a type to know what attributes and
         methods are on its superclasses, and is requires for symbol resolution.
         """
 
-    @std.virtual_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         """
         The regenerate generic aliases stage is the generic type regeneration stage exclusive to type-aliases. This is
@@ -67,7 +61,6 @@ class CompilerStages:
         aliased types.
         """
 
-    @std.virtual_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         """
         The regenerate generic types stage takes all the pruned generic types, and regenerated them with full knowledge
@@ -75,7 +68,6 @@ class CompilerStages:
         compilation stages.
         """
 
-    @std.virtual_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         """
         The semantic analysis stage is the most complex, and final analysis, stage of the semantic pipeline. This stage
@@ -83,14 +75,12 @@ class CompilerStages:
         generated, and all types to be aliased, loaded, and post-processed. All functions scopes are inspected.
         """
 
-    @std.virtual_method
     def generate_llvm_declarations(self, scope_handler: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
         """
         The LLVM declaration generation stage is the penultimate stage of the compiler. This stage generates the LLVM IR
         declarations for the module, with no implementations. This is to load all the symbols into the LLVM context.
         """
 
-    @std.virtual_method
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         """
         The LLVM definition generation stage is the final stage of the compiler. This stage generates the LLVM IR

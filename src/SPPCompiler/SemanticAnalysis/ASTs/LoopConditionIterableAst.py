@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -33,7 +31,6 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
         assert self.iterable
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -42,12 +39,10 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
             self.iterable.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Infer the type from the iterable.
         return self.iterable.infer_type(scope_manager, **kwargs)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 

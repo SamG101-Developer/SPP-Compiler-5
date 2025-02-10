@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -19,7 +17,6 @@ class GenericTypeParameterInlineConstraintsAst(Ast):
     constraints: Seq[Asts.TypeAst] = field(default_factory=Seq)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         if self.constraints:
@@ -30,7 +27,6 @@ class GenericTypeParameterInlineConstraintsAst(Ast):
             string = []
         return "".join(string)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         for c in self.constraints:
             c.analyse_semantics(scope_manager, **kwargs)

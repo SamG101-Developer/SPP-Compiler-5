@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -17,7 +15,6 @@ class WhereBlockAst(Ast):
     constraint_group: Asts.WhereConstraintsGroupAst = field(default_factory=lambda: Asts.WhereConstraintsGroupAst())
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         if self.constraint_group.constraints:
@@ -28,7 +25,6 @@ class WhereBlockAst(Ast):
             string = []
         return "".join(string)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 

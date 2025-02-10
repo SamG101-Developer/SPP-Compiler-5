@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import functools
-import std
 from dataclasses import dataclass, field
 
 import SPPCompiler.SemanticAnalysis as Asts
@@ -27,7 +26,6 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction):
         assert self.class_type
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -38,17 +36,14 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction):
         return "".join(string)
 
     @functools.cached_property
-    @std.override_method
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.elements.map(lambda e: e.extract_names).flat()
 
     @functools.cached_property
-    @std.override_method
     def extract_name(self) -> Asts.IdentifierAst:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
         return IdentifierAst(self.pos, "_Unmatchable")
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
 
         # Analyse the class and determine the attributes of the class.

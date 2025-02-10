@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
@@ -17,7 +15,6 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class CoroutinePrototypeAst(Asts.FunctionPrototypeAst):
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Perform default function prototype semantic analysis.
         super().analyse_semantics(scope_manager, **kwargs)

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -26,7 +24,6 @@ class LetStatementUninitializedAst(Ast, TypeInferrable):
         assert self.type
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         string = [
             self.tok_let.print(printer) + " ",
@@ -35,13 +32,11 @@ class LetStatementUninitializedAst(Ast, TypeInferrable):
             self.type.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the variable's type.
         self.type.analyse_semantics(scope_manager, **kwargs)

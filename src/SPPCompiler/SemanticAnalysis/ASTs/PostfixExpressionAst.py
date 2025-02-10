@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -21,12 +19,10 @@ class PostfixExpressionAst(Ast, TypeInferrable):
         assert self.lhs
         assert self.op
 
-    @std.override_method
     def __eq__(self, other: PostfixExpressionAst) -> bool:
         return isinstance(other, PostfixExpressionAst) and self.lhs == other.lhs and self.op == other.op
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -34,12 +30,10 @@ class PostfixExpressionAst(Ast, TypeInferrable):
             self.op.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Infer the type of the postfix operation being applied to the "lhs".
         return self.op.infer_type(scope_manager, lhs=self.lhs, **kwargs)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst cannot be used as an expression for the lhs.
         if isinstance(self.lhs, Asts.TokenAst):

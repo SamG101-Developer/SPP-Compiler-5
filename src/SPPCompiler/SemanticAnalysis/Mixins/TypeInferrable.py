@@ -2,7 +2,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Type, TYPE_CHECKING
 import SPPCompiler.SemanticAnalysis as Asts
-import std
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -33,6 +32,5 @@ class InferredType:
 
 @dataclass
 class TypeInferrable:
-    @std.abstract_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         ...

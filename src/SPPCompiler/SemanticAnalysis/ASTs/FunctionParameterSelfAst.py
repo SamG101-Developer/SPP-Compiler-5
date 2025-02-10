@@ -4,8 +4,6 @@ import functools
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -28,13 +26,11 @@ class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction):
         self.type = CommonTypes.Self(self.pos)
         self._variant = "Self"
 
-    @std.override_method
     def __eq__(self, other: FunctionParameterSelfAst) -> bool:
         # Check both ASTs are the same type.
         return isinstance(other, FunctionParameterSelfAst)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -44,16 +40,13 @@ class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction):
         return "".join(string)
 
     @functools.cached_property
-    @std.override_method
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return Seq([self.name])
 
     @functools.cached_property
-    @std.override_method
     def extract_name(self) -> Asts.IdentifierAst:
         return self.name
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the type.
         self.type.analyse_semantics(scope_manager, **kwargs)

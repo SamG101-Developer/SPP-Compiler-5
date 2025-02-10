@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict
 
-import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -50,7 +49,6 @@ class AnnotationAst(Ast):
         return AnnotationAst(self.pos, self.tok_at, self.name, _ctx=self._ctx)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -58,7 +56,6 @@ class AnnotationAst(Ast):
             self.name.print(printer) + " "]
         return "".join(string)
 
-    @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
         super().pre_process(context)
@@ -153,7 +150,6 @@ class AnnotationAst(Ast):
         else:
             raise SemanticErrors.AnnotationInvalidError().add(self.name)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Prevent duplicate annotations from being applied to an AST.
         annotation_names = self._ctx.annotations.map_attr("name")

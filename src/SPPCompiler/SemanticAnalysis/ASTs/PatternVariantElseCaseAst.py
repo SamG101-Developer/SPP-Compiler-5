@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -20,7 +18,6 @@ class PatternVariantElseCaseAst(Ast):
         assert self.case_expression
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -28,7 +25,6 @@ class PatternVariantElseCaseAst(Ast):
             self.case_expression.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Analyse the case expression.
         self.case_expression.analyse_semantics(scope_manager, **kwargs)

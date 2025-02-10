@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -25,7 +23,6 @@ class ObjectInitializerAst(Ast, TypeInferrable):
         assert self.class_type
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -33,12 +30,10 @@ class ObjectInitializerAst(Ast, TypeInferrable):
             self.object_argument_group.print(printer)]
         return "".join(string)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Use the type of the object initializer.
         return InferredType.from_type(self.class_type)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
 
         # Get the base symbol and make sure it isn't generic.

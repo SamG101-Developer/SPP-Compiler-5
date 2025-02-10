@@ -4,7 +4,6 @@ import copy
 from dataclasses import dataclass, field
 from typing import Optional
 
-import std
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -25,7 +24,6 @@ class GenericArgumentGroupAst(Ast):
     def __copy__(self) -> GenericArgumentGroupAst:
         return GenericArgumentGroupAst(arguments=self.arguments.copy())
 
-    @std.override_method
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
         return self.arguments == other.arguments
@@ -53,7 +51,6 @@ class GenericArgumentGroupAst(Ast):
         return GenericArgumentGroupAst(arguments=arguments)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         if self.arguments:
@@ -71,7 +68,6 @@ class GenericArgumentGroupAst(Ast):
     def get_unnamed(self) -> Seq[Asts.GenericArgumentUnnamedAst]:
         return self.arguments.filter_to_type(Asts.GenericCompArgumentUnnamedAst, Asts.GenericTypeArgumentUnnamedAst)
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Code that is run before the overload is selected.
 

@@ -4,8 +4,6 @@ import difflib
 import hashlib
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -45,7 +43,6 @@ class IdentifierAst(Ast, TypeInferrable):
         return self.value
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the internal string.
         return self.value
@@ -62,7 +59,6 @@ class IdentifierAst(Ast, TypeInferrable):
         #     warnings.warn(f"Generic identifier {identifier} has generic arguments, which will be ignored.")
         return IdentifierAst(identifier.pos, identifier.value)
 
-    @std.override_method
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # Extract the symbol from the current scope.
         symbol = scope_manager.current_scope.get_symbol(self)
@@ -78,7 +74,6 @@ class IdentifierAst(Ast, TypeInferrable):
         else:
             raise ValueError(f"Symbol for {self} is not a variable or namespace.")
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors

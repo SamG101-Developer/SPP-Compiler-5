@@ -3,8 +3,6 @@ from __future__ import annotations
 import functools
 from dataclasses import dataclass, field
 
-import std
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -34,13 +32,11 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
         assert self.default
         self._variant = "Optional"
 
-    @std.override_method
     def __eq__(self, other: FunctionParameterOptionalAst) -> bool:
         # Check both ASTs are the same type and have the same variable.
         return isinstance(other, FunctionParameterOptionalAst) and self.variable == other.variable
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -53,16 +49,13 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
         return "".join(string)
 
     @functools.cached_property
-    @std.override_method
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.variable.extract_names
 
     @functools.cached_property
-    @std.override_method
     def extract_name(self) -> Asts.IdentifierAst:
         return self.variable.extract_name
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default value.
         if isinstance(self.default, (Asts.TokenAst, Asts.TypeAst)):

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import copy
-import std
 from dataclasses import dataclass, field
-from typing import Any, Dict, Self
+from typing import Any, Dict
 
 from llvmlite import ir as llvm
 
@@ -13,7 +12,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -42,7 +41,6 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
             _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -71,7 +69,6 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
             symbol_2.scope = scope_manager.current_scope
             scope_manager.current_scope.parent.add_symbol(symbol_2)
 
-    @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
         super().pre_process(context)
 
@@ -80,7 +77,6 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
             a.pre_process(self)
         self.body.pre_process(self)
 
-    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager, is_alias: bool = False) -> None:
         # Create a new scope for the class.
         scope_manager.create_and_move_into_new_scope(self.name, self)
@@ -97,35 +93,30 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         # Move out of the type scope.
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.generate_top_level_aliases(scope_manager, **kwargs)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.load_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.generate_top_level_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.regenerate_generic_types(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Move into the class scope.
         scope_manager.move_to_next_scope()
@@ -138,7 +129,6 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         # Move out of the class scope.
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def generate_llvm_declarations(self, scope_handler: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
         # Move into the class scope.
         scope_handler.move_to_next_scope()
@@ -152,7 +142,6 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         # Move out of the class scope.
         scope_handler.move_out_of_current_scope()
 
-    @std.override_method
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         # Move into the class scope.
         scope_handler.move_to_next_scope()

@@ -4,7 +4,6 @@ import copy
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 
-import std
 from llvmlite import ir as llvm
 
 import SPPCompiler.SemanticAnalysis as Asts
@@ -42,7 +41,6 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         assert self.name
         assert self.return_type
 
-    @std.override_method
     def __eq__(self, other: FunctionPrototypeAst) -> bool:
         # Check both ASTs are the same type and have the same name, generic parameter group, function parameter group,
         # return type and where block.
@@ -54,7 +52,6 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             self.where_block == other.where_block])
 
     @ast_printer_method
-    @std.override_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
@@ -82,7 +79,6 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             string.insert(0, owner.print(printer) + "::")
         return "".join(string)
 
-    @std.override_method
     def pre_process(self, context: PreProcessingContext) -> None:
         super().pre_process(context)
 
@@ -114,7 +110,9 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         function_ast = copy.deepcopy(self)
         function_ast._orig = self.name
         mock_superimposition_body = Asts.SupImplementationAst(members=Seq([function_ast]))
-        mock_superimposition = Asts.SupPrototypeExtensionAst(pos=self.pos, generic_parameter_group=self.generic_parameter_group, name=mock_class_name, super_class=function_type, where_block=self.where_block, body=mock_superimposition_body, _ctx=self._ctx)
+        mock_superimposition = Asts.SupPrototypeExtensionAst(
+            pos=self.pos, generic_parameter_group=self.generic_parameter_group, name=mock_class_name,
+            super_class=function_type, where_block=self.where_block, body=mock_superimposition_body, _ctx=self._ctx)
         context.body.members.insert(0, mock_superimposition)
         context.body.members.remove(self)
 
@@ -122,7 +120,6 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         for a in function_ast.annotations:
             a.pre_process(function_ast)
 
-    @std.override_method
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
 
         # Create a new scope for the function.
@@ -136,13 +133,11 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         # Move out of the function scope.
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
@@ -161,12 +156,10 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
 
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         for t in self.function_parameter_group.parameters.map_attr("type"):
@@ -174,8 +167,6 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         self.return_type.analyse_semantics(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    @std.override_method
-    @std.virtual_method
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         scope_manager.move_to_next_scope()
 
@@ -189,7 +180,6 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
 
         # Subclasses will finish analysis and exit the scope.
 
-    @std.override_method
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         scope_handler.move_to_next_scope()
 
@@ -223,6 +213,8 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         # Class methods with "&self" are the FunRef type.
         if isinstance(self.function_parameter_group.get_self().convention, ConventionRefAst):
             return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
+
+        raise NotImplementedError(f"Unknown convention for function {self.name}")
 
     def _deduce_mock_class_call(self, function_type: Asts.TypeAst) -> Asts.IdentifierAst:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
