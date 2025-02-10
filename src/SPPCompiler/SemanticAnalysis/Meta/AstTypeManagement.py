@@ -43,7 +43,7 @@ class AstTypeManagement:
         if type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope):
             return type.types[-1].generic_argument_group.arguments[0].value
 
-        # Todo: some sort of error here (will never throw because of previous checks, but for type-checker).
+        raise NotImplementedError("Only tuple and array types are indexable.")
 
     @staticmethod
     def get_namespaced_scope_with_error(scope_manager: ScopeManager, namespace: Seq[Asts.IdentifierAst]) -> Scope:
@@ -159,7 +159,7 @@ class AstTypeManagement:
             elif isinstance(scope._ast, Asts.SupPrototypeExtensionAst):
                 temp_manager = ScopeManager(scope_manager.global_scope, base_scope.parent)
                 new_fq_super_type = copy.deepcopy(scope._ast.super_class)
-                AstTypeManagement.inverse_generic_inference(scope._ast.name, generic_arguments, new_fq_super_type)
+                new_fq_super_type.sub_generics(generic_arguments.arguments)
                 new_fq_super_type.analyse_semantics(temp_manager)
 
                 # Get the class scope generated for the super class and add it to the new scopes too.
@@ -190,15 +190,6 @@ class AstTypeManagement:
 
         # Return the new scopes.
         return new_scopes
-
-    @staticmethod
-    def inverse_generic_inference(source_type: Asts.TypeAst, generic_arguments: Asts.GenericArgumentGroupAst, target_type: Asts.TypeAst) -> None:
-        inverse_generic_argument_group = Asts.GenericArgumentGroupAst()
-        for generic_argument in generic_arguments.arguments:
-            infer_from_source = source_type.types[-1].generic_argument_group.arguments.find(lambda a: (a.name if hasattr(a, "name") else a.value) == generic_argument.name).value
-            new_generic_argument = Asts.GenericTypeArgumentNamedAst(name=copy.deepcopy(infer_from_source), value=copy.deepcopy(generic_argument.value))
-            inverse_generic_argument_group.arguments.append(new_generic_argument)
-        target_type.sub_generics(inverse_generic_argument_group.arguments)
 
     @staticmethod
     def create_generic_symbol(scope_manager: ScopeManager, generic_argument: Asts.GenericArgumentAst) -> TypeSymbol | VariableSymbol:

@@ -70,10 +70,6 @@ class SupPrototypeFunctionsAst(Ast):
             if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__value__.__args__):
                 raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(generic_arg)
             if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
-                print("???")
-                print(cls_symbol.type.generic_parameter_group.parameters)
-                print(repr(generic_arg.value))
-                print(cls_symbol.type.generic_parameter_group.parameters.map(lambda p: repr(p.name)))
                 raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(generic_arg, self)
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
