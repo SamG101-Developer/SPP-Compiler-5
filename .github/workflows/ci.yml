@@ -34,7 +34,7 @@ jobs:
           mkdir tests/test_outputs
           cd tests/test_outputs
           python ../../spp_cli.py init
-          cd ../..
+          cd ..
 
       - name: Run unit tests
         run: |
