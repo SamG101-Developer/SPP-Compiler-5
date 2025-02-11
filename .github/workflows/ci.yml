@@ -27,6 +27,7 @@ jobs:
 
       - name: Add src to PYTHONPATH
         run: |
+          echo "SHOW_PROGRESS_BARS=0" >> $GITHUB_ENV
           echo "PYTHONPATH=$(pwd)/src:$PYTHONPATH" >> $GITHUB_ENV
 
       - name: Prepare test project environment
