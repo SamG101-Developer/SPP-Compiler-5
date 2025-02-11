@@ -117,13 +117,6 @@ class AstFunctions:
                     overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))
 
             # When a derived class has overridden a function, the overridden base class function(s) must be removed.
-            # Todo: this doesn't work.
-            # depths = overload_scopes_and_info.map(operator.itemgetter(0)).map(lambda s: function_owner_scope.depth_difference(s))
-            # if depths:
-            #     min_depth = depths.min()
-            #     overload_scopes_and_info = overload_scopes_and_info.filter(lambda info: function_owner_scope.depth_difference(info[0]) == min_depth)
-
-            # Todo: this might work.
             for scope_1, function_1, _ in overload_scopes_and_info.copy():
                 for scope_2, function_2, _ in overload_scopes_and_info.copy():
                     if function_1 is not function_2 and function_owner_scope.depth_difference(scope_1) < function_owner_scope.depth_difference(scope_2):
