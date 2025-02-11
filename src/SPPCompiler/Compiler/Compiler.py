@@ -80,7 +80,7 @@ class Compiler:
 
         # Print compile time.
         time_end = time.time()
-        print(f"Compile time: {time_end - time_start:.2}s")
+        # print(f"Compile time: {time_end - time_start:.2}s")
 
         # Make an output directory for the ASTs.
         if not os.path.exists("out"):

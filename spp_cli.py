@@ -101,7 +101,7 @@ def handle_vcs() -> None:
     os.chdir(cwd)
 
 
-def handle_build(args: Namespace) -> None:
+def handle_build(args: Namespace, skip_vcs: bool = False) -> None:
     # Check if the bin directory exists, create it if it doesn't.
     cwd = Path.cwd()
     bin_directory = cwd / "out"
@@ -115,7 +115,8 @@ def handle_build(args: Namespace) -> None:
         return
 
     # Handle vcs operations.
-    handle_vcs()
+    if not skip_vcs:
+        handle_vcs()
 
     # Compile the code.
     try:
