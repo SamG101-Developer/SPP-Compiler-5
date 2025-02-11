@@ -74,7 +74,8 @@ def handle_vcs() -> None:
         return
 
     # Parse the spp.toml file and check if the vcs section exists.
-    toml = tomllib.load(open(toml_file, "rb"))
+    with open(toml_file, "rb") as fo:
+        toml = tomllib.load(fo)
     vcs = toml.get("vcs")
     if not vcs: return
 

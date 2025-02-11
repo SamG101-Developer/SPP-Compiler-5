@@ -56,7 +56,7 @@ class Compiler:
 
         # Lexing stage.
         for module in self._module_tree.modules:
-            with open(".\\" + module.path) as fo:
+            with open(os.path.join(os.getcwd(), module.path.lstrip(os.path.sep))) as fo:
                 module.code = fo.read()
             module.token_stream = SppLexer(module.code).lex()
             progress_bars[0].next(module.path)
