@@ -31,9 +31,9 @@ jobs:
 
       - name: Prepare test project environment
         run: |
-          mkdir tests/test_outputs
-          cd tests/test_outputs
-          python ../../spp_cli.py init
+          mkdir test_outputs
+          cd test_outputs
+          python ../spp_cli.py init
           cd ..
 
       - name: Run unit tests
