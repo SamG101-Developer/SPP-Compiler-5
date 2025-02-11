@@ -10,9 +10,6 @@ from pathlib import Path
 import os, tomllib, sys
 import distutils.ccompiler
 
-from SParLex.Parser.ParserError import ParserError
-from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticError
-
 print(__file__)
 sys.path.append(str(Path(__file__).parent / "src"))
 from SPPCompiler.Compiler.Compiler import Compiler
@@ -122,7 +119,7 @@ def handle_build(args: Namespace, skip_vcs: bool = False) -> None:
     try:
         Compiler(Compiler.Mode.Dev if args.mode == "dev" else Compiler.Mode.Rel)
         os.chdir(cwd.parent)
-    except (SemanticError, ParserError, KeyboardInterrupt) as e:
+    except Exception as e:
         os.chdir(cwd.parent)
         raise e
 
