@@ -1,22 +1,20 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class GenericTypeArgumentUnnamedAst(Ast, Ordered, CompilerStages):
-    value: TypeAst
+class GenericTypeArgumentUnnamedAst(Ast, Ordered):
+    value: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:
+        # assert self.value
         self._variant = "Unnamed"
 
     def __eq__(self, other: GenericTypeArgumentUnnamedAst) -> bool:

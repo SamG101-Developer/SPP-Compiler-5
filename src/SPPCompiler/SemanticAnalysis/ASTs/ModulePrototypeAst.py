@@ -1,21 +1,19 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
-import functools, os
 
+import functools
+import os
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ModuleImplementationAst import ModuleImplementationAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class ModulePrototypeAst(Ast, CompilerStages):
-    body: ModuleImplementationAst
+class ModulePrototypeAst(Ast):
+    body: Asts.ModuleImplementationAst = field(default_factory=Asts.ModuleImplementationAst)
     _name: str = field(init=False, default="")
 
     @ast_printer_method
@@ -24,7 +22,7 @@ class ModulePrototypeAst(Ast, CompilerStages):
         return self.body.print(printer)
 
     @functools.cached_property
-    def name(self) -> IdentifierAst:
+    def name(self) -> Asts.IdentifierAst:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
 
         parts = self._name.split(os.path.sep)
@@ -49,10 +47,6 @@ class ModulePrototypeAst(Ast, CompilerStages):
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Load the super scopes.
         self.body.load_super_scopes(scope_manager)
-
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        # Inject the super scopes.
-        self.body.postprocess_super_scopes(scope_manager)
 
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Alias the types in the module implementation.

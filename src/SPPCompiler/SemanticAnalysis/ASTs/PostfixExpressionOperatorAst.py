@@ -1,17 +1,13 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorEarlyReturnAst import PostfixExpressionOperatorEarlyReturnAst
-from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorFunctionCallAst import PostfixExpressionOperatorFunctionCallAst
-from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorMemberAccessAst import PostfixExpressionOperatorMemberAccessAst
-from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorNotKeywordAst import PostfixExpressionOperatorNotKeywordAst
-from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorStepKeywordAst import PostfixExpressionOperatorStepKeywordAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type PostfixExpressionOperatorAst = Union[
-    PostfixExpressionOperatorEarlyReturnAst,
-    PostfixExpressionOperatorFunctionCallAst,
-    PostfixExpressionOperatorMemberAccessAst,
-    PostfixExpressionOperatorNotKeywordAst,
-    PostfixExpressionOperatorStepKeywordAst
+    Asts.PostfixExpressionOperatorEarlyReturnAst,
+    Asts.PostfixExpressionOperatorFunctionCallAst,
+    Asts.PostfixExpressionOperatorMemberAccessAst,
+    Asts.PostfixExpressionOperatorNotKeywordAst,
+    Asts.PostfixExpressionOperatorStepKeywordAst
 ]
 
 __all__ = ["PostfixExpressionOperatorAst"]

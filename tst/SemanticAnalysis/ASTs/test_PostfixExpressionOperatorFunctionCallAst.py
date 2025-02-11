@@ -299,6 +299,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
         """
         cls TestClass { }
         sup TestClass {
+            @virtual_method
             fun f(self) -> std::Void { }
         }
 

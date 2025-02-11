@@ -1,29 +1,26 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
 
 @dataclass
-class GenericTypeArgumentNamedAst(Ast, Ordered, CompilerStages):
-    name: TypeAst
-    tok_assign: TokenAst
-    value: TypeAst
+class GenericTypeArgumentNamedAst(Ast, Ordered):
+    name: Asts.TypeAst = field(default=None)
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    value: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:
-        from SPPCompiler.SemanticAnalysis import TypeAst
+        assert self.name
+        # assert self.value
         self._variant = "Named"
-        self.name = TypeAst.from_identifier(self.name)
 
     def __eq__(self, other: GenericTypeArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.
@@ -39,17 +36,9 @@ class GenericTypeArgumentNamedAst(Ast, Ordered, CompilerStages):
         return "".join(string)
 
     @staticmethod
-    def from_name_value(name: TypeAst, value: TypeAst) -> GenericTypeArgumentNamedAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
-        return GenericTypeArgumentNamedAst(-1, IdentifierAst.from_type(name), TokenAst.default(SppTokenType.TkAssign), value)
-
-    @staticmethod
     def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
         value = symbol.scope.type_symbol.fq_name if symbol.scope else symbol.scope
-        return GenericTypeArgumentNamedAst(-1, IdentifierAst.from_generic_identifier(symbol.name), TokenAst.default(SppTokenType.TkAssign), value)
+        return GenericTypeArgumentNamedAst(name=Asts.TypeAst.from_generic_identifier(symbol.name), value=value)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the name and value of the generic type argument.

@@ -1,9 +1,9 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.UnaryExpressionOperatorAsyncAst import UnaryExpressionOperatorAsyncAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type UnaryExpressionOperatorAst = Union[
-    UnaryExpressionOperatorAsyncAst
+    Asts.UnaryExpressionOperatorAsyncAst
 ]
 
 __all__ = ["UnaryExpressionOperatorAst"]

@@ -1,5 +1,6 @@
 import math
 import os
+import time
 
 import colorama
 
@@ -12,6 +13,7 @@ class ProgressBar:
     _current_value: int
     _current_label: str
     _characters: list[str]
+    _start_time: float
 
     def __init__(self, title: str, max_value: int) -> None:
         self._title = title
@@ -19,8 +21,12 @@ class ProgressBar:
         self._current_value = 0
         self._current_label = ""
         self._character = "—"
+        self._start_time = -1
 
     def next(self, label: str) -> None:
+        if self._start_time == -1:
+            self._start_time = time.time()
+
         self._current_value += 1
         self._current_label = label.split(os.path.sep)[-1]
         self._print()
@@ -41,9 +47,9 @@ class ProgressBar:
         # Create the subtext label, describing the current step, and pad it to the end of the bar.
         pad_to_label = " " * (100 - len(bar))
         if self._current_value == self._max_value:
-            label = "[100.00% | ✔️]"
+            label = f"[{time.time() - self._start_time:.3f}s | 100.00% | ✔️]"
         else:
-            label = f"{pad_to_label}[0{percentage:.2f}% | {self._current_label}]"
+            label = f"{pad_to_label}[{time.time() - self._start_time:.3f}s | 0{percentage:.2f}% | {self._current_label}]"
         label = f"{color}{label}{reset}"
 
         # Create the colour of the progress bar depending on the percentage complete.

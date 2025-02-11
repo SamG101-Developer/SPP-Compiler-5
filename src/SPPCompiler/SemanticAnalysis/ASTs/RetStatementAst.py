@@ -1,25 +1,25 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from llvmlite import ir as llvm
-from typing import Optional, TYPE_CHECKING, Any
 
+from dataclasses import dataclass, field
+from typing import Optional, Any
+
+from llvmlite import ir as llvm
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class RetStatementAst(Ast, TypeInferrable, CompilerStages):
-    tok_ret: TokenAst
-    expression: Optional[ExpressionAst]
-    _func_ret_type: Optional[TypeAst] = field(default=None, init=False, repr=False)
+class RetStatementAst(Ast, TypeInferrable):
+    tok_ret: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwRet))
+    expression: Optional[Asts.ExpressionAst] = field(default=None)
+    _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -31,15 +31,10 @@ class RetStatementAst(Ast, TypeInferrable, CompilerStages):
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token.token_type != SppTokenType.KwFun:
             raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(kwargs["function_type"], self.tok_ret)

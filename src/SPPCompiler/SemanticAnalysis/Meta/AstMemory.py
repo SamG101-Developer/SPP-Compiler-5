@@ -2,13 +2,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, Type, TYPE_CHECKING
 
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
-    from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.CaseExpressionBranchAst import CaseExpressionBranchAst
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -52,10 +51,10 @@ class MemoryInfo:
     is_borrow_mut: bool = field(default=False)
     is_borrow_ref: bool = field(default=False)
 
-    is_inconsistently_initialized: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=None)
-    is_inconsistently_moved: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=None)
-    is_inconsistently_partially_moved: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=None)
-    is_inconsistently_pinned: Tuple[Tuple[CaseExpressionBranchAst, bool], Tuple[CaseExpressionBranchAst, bool]] = field(default=None)
+    is_inconsistently_initialized: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
+    is_inconsistently_moved: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
+    is_inconsistently_partially_moved: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
+    is_inconsistently_pinned: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
 
     pin_target: Optional[Seq[Ast]] = field(default_factory=Seq)
 
@@ -77,10 +76,10 @@ class MemoryInfo:
             self.ast_partially_moved.is_empty() and self.initialized_by(ast)
 
     @property
-    def convention(self) -> Type[ConventionAst]:
+    def convention(self) -> Type[Asts.ConventionAst]:
         # Get the convention for the memory, based on the borrow status of the symbol.
-        from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionMutAst, ConventionRefAst, ConventionMovAst
-        return ConventionMutAst if self.is_borrow_mut else ConventionRefAst if self.is_borrow_ref else ConventionMovAst
+        import SPPCompiler.SemanticAnalysis as Asts
+        return Asts.ConventionMutAst if self.is_borrow_mut else Asts.ConventionRefAst if self.is_borrow_ref else Asts.ConventionMovAst
 
 
 class AstMemoryHandler:
@@ -97,7 +96,7 @@ class AstMemoryHandler:
 
     @staticmethod
     def enforce_memory_integrity(
-            value_ast: ExpressionAst, move_ast: Ast, scope_manager: ScopeManager, check_move: bool = True,
+            value_ast: Asts.ExpressionAst, move_ast: Ast, scope_manager: ScopeManager, check_move: bool = True,
             check_partial_move: bool = True, check_move_from_borrowed_context: bool = True,
             check_pins: bool = True, update_memory_info: bool = True) -> None:
 
@@ -120,12 +119,10 @@ class AstMemoryHandler:
             None
         """
 
-        from SPPCompiler.SemanticAnalysis import TupleLiteralAst, ArrayLiteralNElementAst, IdentifierAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
         # For tuple and array literals, analyse each element.
-        if isinstance(value_ast, (TupleLiteralAst, ArrayLiteralNElementAst)):
+        if isinstance(value_ast, (Asts.TupleLiteralAst, Asts.ArrayLiteralNElementAst)):
             for e in value_ast.elements:
                 AstMemoryHandler.enforce_memory_integrity(e, move_ast, scope_manager, update_memory_info=update_memory_info)
             return
@@ -161,27 +158,27 @@ class AstMemoryHandler:
             raise SemanticErrors.MemoryNotInitializedUsageError().add(value_ast, symbol.memory_info.ast_moved)
 
         # Check the symbol doesn't have any outstanding partial moves.
-        if check_partial_move and symbol.memory_info.ast_partially_moved and isinstance(value_ast, IdentifierAst):
+        if check_partial_move and symbol.memory_info.ast_partially_moved and isinstance(value_ast, Asts.IdentifierAst):
             raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(value_ast, symbol.memory_info.ast_partially_moved[0])
 
         # Check there are overlapping partial moves (for an attribute move)
-        if check_partial_move and symbol.memory_info.ast_partially_moved and not isinstance(value_ast, IdentifierAst):
+        if check_partial_move and symbol.memory_info.ast_partially_moved and not isinstance(value_ast, Asts.IdentifierAst):
             if overlaps := symbol.memory_info.ast_partially_moved.filter(lambda p: AstMemoryHandler.left_overlap(p, value_ast)):
                 raise SemanticErrors.MemoryNotInitializedUsageError().add(value_ast, overlaps[0])
             if overlaps := symbol.memory_info.ast_partially_moved.filter(lambda p: AstMemoryHandler.overlaps(p, value_ast)):
                 raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(value_ast, overlaps[0])
 
         # Check the symbol is not being moved from a borrowed context (for an attribute move).
-        if check_move_from_borrowed_context and symbol.memory_info.ast_borrowed and not isinstance(value_ast, IdentifierAst):
+        if check_move_from_borrowed_context and symbol.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst):
             raise SemanticErrors.MemoryMovedFromBorrowedContextError().add(value_ast, symbol.memory_info.ast_borrowed)
 
         # Check the symbol being moved is not pinned.
-        if check_pins and symbol.memory_info.ast_pinned and not isinstance(value_ast, IdentifierAst):
+        if check_pins and symbol.memory_info.ast_pinned and not isinstance(value_ast, Asts.IdentifierAst):
             if overlaps := symbol.memory_info.ast_pinned.filter(lambda p: AstMemoryHandler.overlaps(p, value_ast)):
                 raise SemanticErrors.MemoryMovedWhilstPinnedError().add(value_ast, overlaps[0])
 
         # Markt the symbol as either moved or partially moved (for non-copy types).
         if update_memory_info and not copies:
             match value_ast:
-                case IdentifierAst(): symbol.memory_info.moved_by(move_ast)
+                case Asts.IdentifierAst(): symbol.memory_info.moved_by(move_ast)
                 case _: symbol.memory_info.ast_partially_moved.append(value_ast)

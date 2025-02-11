@@ -1,43 +1,27 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
 
+from dataclasses import dataclass, field
+from typing import Optional
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantElseCaseAst import PatternVariantElseCaseAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PatternGuardAst import PatternGuardAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantAst import PatternVariantAst
-    from SPPCompiler.SemanticAnalysis.ASTs.StatementAst import StatementAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.InnerScopeAst import InnerScopeAst
-
 
 @dataclass
-class CaseExpressionBranchAst(Ast, TypeInferrable, CompilerStages):
-    comp_operator: Optional[TokenAst]
-    patterns: Seq[PatternVariantAst]
-    guard: Optional[PatternGuardAst]
-    body: Optional[InnerScopeAst[StatementAst]]
-
-    def __post_init__(self) -> None:
-        from SPPCompiler.SemanticAnalysis import InnerScopeAst
-
-        # Convert the patterns into a sequence.
-        self.patterns = Seq(self.patterns)
-        self.body = self.body or InnerScopeAst.default()
+class CaseExpressionBranchAst(Ast, TypeInferrable):
+    comp_operator: Optional[Asts.TokenAst] = field(default=None)
+    patterns: Seq[Asts.PatternVariantAst] = field(default_factory=Seq)
+    guard: Optional[Asts.PatternGuardAst] = field(default=None)
+    body: Asts.InnerScopeAst = field(default_factory=lambda: Asts.InnerScopeAst())
 
     @staticmethod
-    def from_else_to_else_case(pos: int, else_case: PatternVariantElseCaseAst) -> CaseExpressionBranchAst:
-        from SPPCompiler.SemanticAnalysis import InnerScopeAst, PatternVariantElseAst
-        else_pattern = PatternVariantElseAst(pos, else_case.tok_else)
-        case_branch  = CaseExpressionBranchAst(pos, None, Seq([else_pattern]), None, InnerScopeAst.default(Seq([else_case.case_expression])))
+    def from_else_to_else_case(pos: int, else_case: Asts.PatternVariantElseCaseAst) -> CaseExpressionBranchAst:
+        else_pattern = Asts.PatternVariantElseAst(pos=pos, tok_else=else_case.tok_else)
+        case_branch  = CaseExpressionBranchAst(pos=pos, patterns=Seq([else_pattern]), body=Asts.InnerScopeAst(members=Seq([else_case.case_expression])))
         return case_branch
 
     @ast_printer_method
@@ -54,7 +38,7 @@ class CaseExpressionBranchAst(Ast, TypeInferrable, CompilerStages):
         # Infer the type of the body.
         return self.body.infer_type(scope_manager, **kwargs)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Create a new scope for the pattern block.
         scope_manager.create_and_move_into_new_scope(f"<pattern:{self.pos}>")
 

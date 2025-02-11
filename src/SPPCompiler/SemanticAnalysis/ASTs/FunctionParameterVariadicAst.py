@@ -1,33 +1,32 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
-import functools
 
+import functools
+from dataclasses import dataclass, field
+
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class FunctionParameterVariadicAst(Ast, Ordered, VariableNameExtraction, CompilerStages):
-    tok_variadic: TokenAst
-    variable: LocalVariableAst
-    tok_colon: TokenAst
-    convention: ConventionAst
-    type: TypeAst
+class FunctionParameterVariadicAst(Ast, Ordered, VariableNameExtraction):
+    tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
+    variable: Asts.LocalVariableAst = field(default=None)
+    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
+    convention: Asts.ConventionAst = field(default_factory=Asts.ConventionMovAst)
+    type: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:
+        assert self.variable
+        assert self.type
         self._variant = "Variadic"
 
     def __eq__(self, other: FunctionParameterVariadicAst) -> bool:
@@ -46,18 +45,14 @@ class FunctionParameterVariadicAst(Ast, Ordered, VariableNameExtraction, Compile
         return "".join(string)
 
     @functools.cached_property
-    def extract_names(self) -> Seq[IdentifierAst]:
+    def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.variable.extract_names
 
     @functools.cached_property
-    def extract_name(self) -> IdentifierAst:
+    def extract_name(self) -> Asts.IdentifierAst:
         return self.variable.extract_name
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import ConventionMutAst, ConventionRefAst, ConventionMovAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-
         # Analyse the type.
         self.type.analyse_semantics(scope_manager, **kwargs)
 
@@ -70,9 +65,9 @@ class FunctionParameterVariadicAst(Ast, Ordered, VariableNameExtraction, Compile
         # Mark the symbol as initialized.
         for name in self.variable.extract_names:
             symbol = scope_manager.current_scope.get_symbol(name)
-            symbol.memory_info.ast_borrowed = self.convention if type(self.convention) is not ConventionMovAst else None
-            symbol.memory_info.is_borrow_mut = isinstance(self.convention, ConventionMutAst)
-            symbol.memory_info.is_borrow_ref = isinstance(self.convention, ConventionRefAst)
+            symbol.memory_info.ast_borrowed = self.convention if type(self.convention) is not Asts.ConventionMovAst else None
+            symbol.memory_info.is_borrow_mut = isinstance(self.convention, Asts.ConventionMutAst)
+            symbol.memory_info.is_borrow_ref = isinstance(self.convention, Asts.ConventionRefAst)
             symbol.memory_info.initialized_by(self)
 
 

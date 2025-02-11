@@ -1,15 +1,15 @@
 from __future__ import annotations
+
+import os
 from dataclasses import dataclass, field
 from glob import glob
-from typing import Iterable, List, Optional, TYPE_CHECKING
-import os
+from typing import Iterable, List, Optional
 
 from SParLex.Utils.ErrorFormatter import ErrorFormatter
-from SPPCompiler.Utils.Sequence import Seq
 
-if TYPE_CHECKING:
-    from SPPCompiler.LexicalAnalysis.Token import Token
-    from SPPCompiler.SemanticAnalysis.ASTs.ModulePrototypeAst import ModulePrototypeAst
+from SPPCompiler.LexicalAnalysis.Token import Token
+from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
+from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass

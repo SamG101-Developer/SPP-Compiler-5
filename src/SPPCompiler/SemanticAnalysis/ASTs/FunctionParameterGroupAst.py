@@ -1,37 +1,28 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING, Any
+
+from dataclasses import dataclass, field
+from typing import Optional, Any
 
 from llvmlite import ir as llvm
 
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterAst import FunctionParameterAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterOptionalAst import FunctionParameterOptionalAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterRequiredAst import FunctionParameterRequiredAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterSelfAst import FunctionParameterSelfAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterVariadicAst import FunctionParameterVariadicAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-
 
 @dataclass
-class FunctionParameterGroupAst(Ast, Default, CompilerStages):
-    tok_left_paren: TokenAst
-    parameters: Seq[FunctionParameterAst]
-    tok_right_paren: TokenAst
-
-    def __post_init__(self) -> None:
-        # Convert the parameters into a sequence.
-        self.parameters = Seq(self.parameters)
+class FunctionParameterGroupAst(Ast):
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    parameters: Seq[Asts.FunctionParameterAst] = field(default_factory=Seq)
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
 
     def __copy__(self) -> FunctionParameterGroupAst:
-        return FunctionParameterGroupAst.default(self.parameters.copy())
+        return FunctionParameterGroupAst(parameters=self.parameters.copy())
 
     def __eq__(self, other: FunctionParameterGroupAst) -> bool:
         # Check both ASTs are the same type and have the same parameters.
@@ -46,41 +37,32 @@ class FunctionParameterGroupAst(Ast, Default, CompilerStages):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    @staticmethod
-    def default(parameters: Seq[FunctionParameterAst] = None) -> FunctionParameterGroupAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return FunctionParameterGroupAst(-1, TokenAst.default(SppTokenType.TkParenL), parameters or Seq(), TokenAst.default(SppTokenType.TkParenR))
-
-    def get_self(self) -> Optional[FunctionParameterSelfAst]:
+    def get_self(self) -> Optional[Asts.FunctionParameterSelfAst]:
         # Get the "self" function parameter (if it exists).
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst
         return self.parameters.filter_to_type(FunctionParameterSelfAst).first(None)
 
-    def get_req(self) -> Seq[FunctionParameterRequiredAst]:
+    def get_req(self) -> Seq[Asts.FunctionParameterRequiredAst]:
         # Get all the required function parameters.
         from SPPCompiler.SemanticAnalysis import FunctionParameterRequiredAst
         return self.parameters.filter_to_type(FunctionParameterRequiredAst)
 
-    def get_opt(self) -> Seq[FunctionParameterOptionalAst]:
+    def get_opt(self) -> Seq[Asts.FunctionParameterOptionalAst]:
         # Get all the optional function parameters.
         from SPPCompiler.SemanticAnalysis import FunctionParameterOptionalAst
         return self.parameters.filter_to_type(FunctionParameterOptionalAst)
 
-    def get_var(self) -> Optional[FunctionParameterVariadicAst]:
+    def get_var(self) -> Optional[Asts.FunctionParameterVariadicAst]:
         # Get the variadic function parameter (if it exists).
         from SPPCompiler.SemanticAnalysis import FunctionParameterVariadicAst
         return self.parameters.filter_to_type(FunctionParameterVariadicAst).first(None)
 
-    def get_non_self(self) -> Seq[FunctionParameterAst]:
+    def get_non_self(self) -> Seq[Asts.FunctionParameterAst]:
         # Get all the function parameters that are not "self".
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst
         return self.parameters.filter_not_type(FunctionParameterSelfAst)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst, FunctionParameterVariadicAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # Check there are no duplicate parameter names.
         parameter_names = self.get_non_self().map_attr("extract_names").flat()
         if duplicates := parameter_names.non_unique():
@@ -91,12 +73,12 @@ class FunctionParameterGroupAst(Ast, Default, CompilerStages):
             raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "parameter")
 
         # Check there is only 1 "self" parameter.
-        self_parameters = self.parameters.filter_to_type(FunctionParameterSelfAst)
+        self_parameters = self.parameters.filter_to_type(Asts.FunctionParameterSelfAst)
         if self_parameters.length > 1:
             raise SemanticErrors.ParameterMultipleSelfError().add(self_parameters[0], self_parameters[1])
 
         # Check there is only 1 variadic parameter.
-        variadic_parameters = self.parameters.filter_to_type(FunctionParameterVariadicAst)
+        variadic_parameters = self.parameters.filter_to_type(Asts.FunctionParameterVariadicAst)
         if variadic_parameters.length > 1:
             raise SemanticErrors.ParameterMultipleVariadicError().add(variadic_parameters[0], variadic_parameters[1])
 

@@ -1,34 +1,42 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
-import difflib, hashlib
 
+import difflib
+import hashlib
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
 
 
 @dataclass
-class IdentifierAst(Ast, TypeInferrable, CompilerStages):
-    value: str
+class IdentifierAst(Ast, TypeInferrable):
+    value: str = field(default="")
 
-    def __eq__(self, other: IdentifierAst) -> bool:
+    def __eq__(self, other: IdentifierAst | str) -> bool:
         # Check both ASTs are the same type and have the same value.
-        return isinstance(other, IdentifierAst) and self.value == other.value
+        if isinstance(other, str):
+            return self.value == other
+        elif isinstance(other, IdentifierAst):
+            return self.value == other.value
+        else:
+            return False
 
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.md5(self.value.encode()).digest())
 
-    def __add__(self, other):
+    def __add__(self, other: IdentifierAst | str) -> IdentifierAst:
         if isinstance(other, str):
             self.value += other
+        elif isinstance(other, IdentifierAst):
+            self.value += other.value
+        else:
+            raise TypeError(f"Unsupported type for concatenation: {type(other)}")
+        return self
 
     def __json__(self) -> str:
         # Return the internal string as the JSON formatted IdentifierAst.
@@ -40,20 +48,18 @@ class IdentifierAst(Ast, TypeInferrable, CompilerStages):
         return self.value
 
     @staticmethod
-    def from_type(type: TypeAst) -> IdentifierAst:
+    def from_type(type: Asts.TypeAst) -> Asts.IdentifierAst:
         # if type.namespace or type.types.length > 1:
         #     warnings.warn(f"Type {type} has a namespace or nested types, which will be ignored.")
         return IdentifierAst.from_generic_identifier(type.types[-1])
 
     @staticmethod
-    def from_generic_identifier(identifier: GenericIdentifierAst) -> IdentifierAst:
+    def from_generic_identifier(identifier: Asts.GenericIdentifierAst) -> IdentifierAst:
         # if identifier.generic_argument_group.arguments:
         #     warnings.warn(f"Generic identifier {identifier} has generic arguments, which will be ignored.")
         return IdentifierAst(identifier.pos, identifier.value)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
-
         # Extract the symbol from the current scope.
         symbol = scope_manager.current_scope.get_symbol(self)
 

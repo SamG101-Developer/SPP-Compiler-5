@@ -1,26 +1,23 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
 
+from dataclasses import dataclass, field
+from typing import Optional
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.PatternMapping import PatternMapping
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableSingleIdentifierAst import LocalVariableSingleIdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableSingleIdentifierAliasAst import LocalVariableSingleIdentifierAliasAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
 
 
 @dataclass
-class PatternVariantSingleIdentifierAst(Ast, PatternMapping, CompilerStages):
-    tok_mut: Optional[TokenAst]
-    name: IdentifierAst
-    alias: Optional[LocalVariableSingleIdentifierAliasAst]
+class PatternVariantSingleIdentifierAst(Ast, PatternMapping):
+    tok_mut: Optional[Asts.TokenAst] = field(default=None)
+    name: Asts.IdentifierAst = field(default=None)
+    alias: Optional[Asts.LocalVariableSingleIdentifierAliasAst] = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.name
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -31,17 +28,15 @@ class PatternVariantSingleIdentifierAst(Ast, PatternMapping, CompilerStages):
             (" " + self.alias.print(printer)) if self.alias is not None else ""]
         return " ".join(string)
 
-    def convert_to_variable(self, **kwargs) -> LocalVariableSingleIdentifierAst:
+    def convert_to_variable(self, **kwargs) -> Asts.LocalVariableSingleIdentifierAst:
         # Convert the single identifier into a local variable single identifier.
         from SPPCompiler.SemanticAnalysis import LocalVariableSingleIdentifierAst
         return LocalVariableSingleIdentifierAst(self.pos, self.tok_mut, self.name, self.alias)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import LetStatementInitializedAst
-
+    def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Create the new variable from the pattern in the patterns scope.
         variable = self.convert_to_variable(**kwargs)
-        new_ast = LetStatementInitializedAst.from_variable_and_value(variable, condition)
+        new_ast = Asts.LetStatementInitializedAst(pos=variable.pos, assign_to=variable, value=condition)
         new_ast.analyse_semantics(scope_manager, **kwargs)
 
 

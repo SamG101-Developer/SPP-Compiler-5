@@ -1,27 +1,21 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.SupMemberAst import SupMemberAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class SupImplementationAst(Ast, Default, CompilerStages):
-    tok_left_brace: TokenAst
-    members: Seq[SupMemberAst]
-    tok_right_brace: TokenAst
-
-    def __post_init__(self) -> None:
-        # Convert the members into a sequence.
-        self.members = Seq(self.members)
+class SupImplementationAst(Ast):
+    tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceL))
+    members: Seq[Asts.SupMemberAst] = field(default_factory=Seq)
+    tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -37,13 +31,6 @@ class SupImplementationAst(Ast, Default, CompilerStages):
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
 
-    @staticmethod
-    def default(members: Seq[SupMemberAst] = None) -> SupImplementationAst:
-        # Create a default class implementation AST.
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-        return SupImplementationAst(-1, TokenAst.default(SppTokenType.TkBraceL), members or Seq(), TokenAst.default(SppTokenType.TkBraceR))
-
     def pre_process(self, context: PreProcessingContext) -> None:
         for member in self.members: member.pre_process(context)
 
@@ -55,9 +42,6 @@ class SupImplementationAst(Ast, Default, CompilerStages):
 
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         for member in self.members: member.load_super_scopes(scope_manager)
-
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        for member in self.members: member.postprocess_super_scopes(scope_manager)
 
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         for member in self.members: member.regenerate_generic_aliases(scope_manager)

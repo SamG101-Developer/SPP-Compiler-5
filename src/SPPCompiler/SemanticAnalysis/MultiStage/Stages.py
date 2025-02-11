@@ -1,41 +1,28 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from llvmlite import ir as llvm
-from typing import Any, Optional, Union, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ClassAttributeAst import ClassAttributeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ClassPrototypeAst import ClassPrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GlobalConstantAst import GlobalConstantAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ModulePrototypeAst import ModulePrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeFunctionsAst import SupPrototypeFunctionsAst
-    from SPPCompiler.SemanticAnalysis.ASTs.UseStatementAst import UseStatementAst
-    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from dataclasses import dataclass
+from typing import Any, Union
+
+from llvmlite import ir as llvm
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 type PreProcessingContext = Union[
-    ClassPrototypeAst, ClassAttributeAst, FunctionPrototypeAst, GlobalConstantAst, ModulePrototypeAst,
-    SupPrototypeFunctionsAst, UseStatementAst, None]
-
-
-# Todo:
-#  - Rename functions:
-#  1. pre_process -> pre_process
-#  2. generate_symbols -> generate_exported_symbols
-#  3. alias_types -> link_aliases
-#  4. load_sup_scopes -> link_super_scopes
-#  5. inject_sup_scopes -> postprocess_super_scopes
-#  6. alias_types_regeneration -> generic_regenerate_aliases
-#  7. regenerate_generic_types -> generic_regenerate_types
-#  8. analyse_semantics -> analyse_semantics
-#  9. generate_llvm -> generate_llvm
+    Asts.ClassPrototypeAst,
+    Asts.ClassAttributeAst,
+    Asts.FunctionPrototypeAst,
+    Asts.GlobalConstantAst,
+    Asts.ModulePrototypeAst,
+    Asts.SupPrototypeFunctionsAst,
+    Asts.SupPrototypeExtensionAst,
+    Asts.UseStatementAst,
+    None]
 
 
 @dataclass
 class CompilerStages:
-    _ctx: PreProcessingContext = field(default=None, kw_only=True, repr=False)
-    _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
+    __friends__ = {"AnnotationAst"}
 
     def pre_process(self, context: PreProcessingContext) -> None:
         """
@@ -44,8 +31,6 @@ class CompilerStages:
         them. This stage directly affects what symbols are generated.
         """
 
-        self._ctx = context
-
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         """
         The generate top-level scopes stage generates all module and superimposition level scopes and symbols. This
@@ -53,7 +38,6 @@ class CompilerStages:
         symbols inside functions. The symbols are generated here so that they can be used in any module, allowing for
         circular imports.
         """
-        self._scope = scope_manager.current_scope
 
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         """
@@ -67,13 +51,6 @@ class CompilerStages:
         """
         The load super scopes stage links all super scopes to classes. This allows a type to know what attributes and
         methods are on its superclasses, and is requires for symbol resolution.
-        """
-
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        """
-        The postprocess super scopes stage performs checks that must happen after the super scopes have been injected,
-        but that are separate from the next stage (type-regeneration). This includes things that require knowledge of
-        all the super scopes.
         """
 
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:

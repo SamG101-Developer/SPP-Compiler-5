@@ -1,22 +1,20 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Type, TYPE_CHECKING
+import SPPCompiler.SemanticAnalysis as Asts
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ConventionMovAst import ConventionMovAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass(kw_only=True)
 class InferredType:
-    convention: Type[ConventionAst]
-    type: TypeAst
+    convention: Type[Asts.ConventionAst]
+    type: Asts.TypeAst
 
     def __str__(self) -> str:
-        return f"{self.convention.default()}{self.type}"
+        return f"{self.convention()}{self.type}"
 
     def __hash__(self) -> int:
         return hash(self.type)
@@ -28,9 +26,8 @@ class InferredType:
         return InferredType(convention=self.convention, type=self.type.without_generics())
 
     @staticmethod
-    def from_type(type: TypeAst) -> InferredType:
-        from SPPCompiler.SemanticAnalysis import ConventionMovAst
-        return InferredType(convention=ConventionMovAst, type=type)
+    def from_type(type: Asts.TypeAst) -> InferredType:
+        return InferredType(convention=Asts.ConventionMovAst, type=type)
 
 
 @dataclass

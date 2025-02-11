@@ -1,16 +1,14 @@
 from __future__ import annotations
-from typing import Type, TYPE_CHECKING
 
+from typing import Type
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
 
 
 class CommonTypes:
     @staticmethod
-    def type_variant_to_convention(type: TypeAst) -> Type[ConventionAst]:
+    def type_variant_to_convention(type: Asts.TypeAst) -> Type[Asts.ConventionAst]:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst
 
         match type.types[-1].value[-3:].lower():
@@ -21,277 +19,202 @@ class CommonTypes:
 
     @staticmethod
     def U8(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "U8", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U8")]))
 
     @staticmethod
     def U16(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "U16", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U16")]))
 
     @staticmethod
     def U32(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "U32", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U32")]))
 
     @staticmethod
     def U64(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "U64", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U64")]))
 
     @staticmethod
     def U128(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "U128", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U128")]))
 
     @staticmethod
     def U256(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "U256", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U256")]))
 
     @staticmethod
     def I8(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "I8", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I8")]))
 
     @staticmethod
     def I16(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "I16", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I16")]))
 
     @staticmethod
     def I32(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "I32", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I32")]))
 
     @staticmethod
     def I64(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "I64", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I64")]))
 
     @staticmethod
     def I128(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "I128", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I128")]))
 
     @staticmethod
     def I256(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "I256", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I256")]))
 
     @staticmethod
     def F8(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "F8", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F8")]))
 
     @staticmethod
     def F16(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "F16", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F16")]))
 
     @staticmethod
     def F32(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "F32", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F32")]))
 
     @staticmethod
     def F64(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "F64", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F64")]))
 
     @staticmethod
     def F128(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "F128", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F128")]))
 
     @staticmethod
     def F256(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "F256", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F256")]))
 
     @staticmethod
     def Self(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [], [GenericIdentifierAst(pos, "Self", None)])
+        return Asts.TypeAst(pos, Seq([]), Seq([Asts.GenericIdentifierAst(pos, "Self")]))
 
     @staticmethod
     def Void(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Void", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Void")]))
 
     @staticmethod
     def Bool(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Bool", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Bool")]))
 
     @staticmethod
     def BigInt(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "BigInt", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "BigInt")]))
 
     @staticmethod
     def BigDec(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "BigDec", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "BigDec")]))
 
     @staticmethod
     def Str(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Str", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Str")]))
 
     @staticmethod
     def Rgx(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, [IdentifierAst(pos, "std")], [GenericIdentifierAst(pos, "Rgx", None)])
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Rgx")]))
 
     @staticmethod
     def Copy(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Copy", None)]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Copy")]))
 
     @staticmethod
     def CtxRef(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "CtxRef", None)]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "CtxRef")]))
 
     @staticmethod
     def CtxMut(pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "CtxMut", None)]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "CtxMut")]))
 
     @staticmethod
-    def Box(inner_type=None, pos: int = -1):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericTypeArgumentUnnamedAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
-
-        inner_type_generic = GenericTypeArgumentUnnamedAst(-1, inner_type)
-        generics = GenericArgumentGroupAst.default(Seq([inner_type_generic]))
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Box", generics)]))
+    def Single(inner_type=None, pos: int = -1):
+        inner_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, inner_type)
+        generics = Asts.GenericArgumentGroupAst(arguments=Seq([inner_type_generic]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Box", generics)]))
 
     @staticmethod
     def Fut(inner_type, pos: int = -1):
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
-
         # Convert the inner type into a generic argument and load it into a group for the optional type.
-        inner_type_generic = GenericTypeArgumentUnnamedAst(-1, inner_type)
-        generics = GenericArgumentGroupAst.default(Seq([inner_type_generic]))
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Fut", generics)]))
+        inner_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, inner_type)
+        generics = Asts.GenericArgumentGroupAst(arguments=Seq([inner_type_generic]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Fut", generics)]))
 
     @staticmethod
     def Arr(elem_type, size, pos: int = -1):
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst, GenericArgumentGroupAst
-        from SPPCompiler.SemanticAnalysis import GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst
-
         # Convert the element type and size into generic arguments and load them into a group for the array type.
-        elem_type_generic = GenericTypeArgumentUnnamedAst(-1, elem_type)
-        size_comp_generic = GenericCompArgumentUnnamedAst(-1, size)
-        generics = GenericArgumentGroupAst.default(Seq([elem_type_generic, size_comp_generic]))
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Arr", generics)]))
+        elem_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, elem_type)
+        size_comp_generic = Asts.GenericCompArgumentUnnamedAst(-1, size)
+        generics = Asts.GenericArgumentGroupAst(arguments=Seq([elem_type_generic, size_comp_generic]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Arr", generics)]))
 
     @staticmethod
     def Opt(inner_type, pos: int = -1):
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
-
         # Convert the inner type into a generic argument and load it into a group for the optional type.
-        inner_type_generic = GenericTypeArgumentUnnamedAst(-1, inner_type)
-        generics = GenericArgumentGroupAst.default(Seq([inner_type_generic]))
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Opt", generics)]))
+        inner_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, inner_type)
+        generics = Asts.GenericArgumentGroupAst(arguments=Seq([inner_type_generic]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Opt", generics)]))
 
     @staticmethod
     def Tup(inner_types: Seq = None, pos: int = -1):
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
-
         # Convert the inner types into generic arguments and load them into a group for the tuple type.
-        inner_type_generics = (inner_types or Seq()).map(lambda x: GenericTypeArgumentUnnamedAst(-1, x))
-        generics = GenericArgumentGroupAst.default(inner_type_generics)
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Tup", generics)]))
+        inner_type_generics = (inner_types or Seq()).map(lambda x: Asts.GenericTypeArgumentUnnamedAst(-1, x))
+        generics = Asts.GenericArgumentGroupAst(arguments=inner_type_generics)
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Tup", generics)]))
 
     @staticmethod
     def Var(inner_types: Seq = None, pos: int = -1):
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
-
         # Convert the inner types into generic arguments and load them into a group for the variant type.
-        inner_type_generics = (inner_types or Seq()).map(lambda x: GenericTypeArgumentUnnamedAst(-1, x))
-        generics = GenericArgumentGroupAst.default(inner_type_generics)
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "Var", generics)]))
+        inner_type_generics = (inner_types or Seq()).map(lambda x: Asts.GenericTypeArgumentUnnamedAst(-1, x))
+        generics = Asts.GenericArgumentGroupAst(arguments=inner_type_generics)
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Var", generics)]))
 
     @staticmethod
-    def FunRef(param_types, return_type, pos: int = -1):  # param_types is a tuple
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
-
+    def FunRef(param_types, return_type, pos: int = -1):
         # Convert the parameter/return type(s) into generic arguments and load them into a group for the function type.
-        return_type_generic = GenericTypeArgumentUnnamedAst(-1, return_type)
-        param_types_generic = GenericTypeArgumentUnnamedAst(-1, param_types)
-        generics = GenericArgumentGroupAst.default(Seq([param_types_generic, return_type_generic]))
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "FunRef", generics)]))
+        return_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, return_type)
+        param_types_generic = Asts.GenericTypeArgumentUnnamedAst(-1, param_types)
+        generics = Asts.GenericArgumentGroupAst(arguments=Seq([param_types_generic, return_type_generic]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "FunRef", generics)]))
 
     @staticmethod
-    def FunMut(param_types, return_type, pos: int = -1):  # param_types is a tuple
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
-
+    def FunMut(param_types, return_type, pos: int = -1):
         # Convert the parameter/return type(s) into generic arguments and load them into a group for the function type.
-        param_types_generic = GenericTypeArgumentUnnamedAst(-1, param_types)
-        return_type_generic = GenericTypeArgumentUnnamedAst(-1, return_type)
-        generics = GenericArgumentGroupAst.default(Seq([param_types_generic, return_type_generic]))
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "FunMut", generics)]))
+        param_types_generic = Asts.GenericTypeArgumentUnnamedAst(-1, param_types)
+        return_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, return_type)
+        generics = Asts.GenericArgumentGroupAst(arguments=Seq([param_types_generic, return_type_generic]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "FunMut", generics)]))
 
     @staticmethod
-    def FunMov(param_types, return_type, pos: int = -1):  # param_types is a tuple
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
-
+    def FunMov(param_types, return_type, pos: int = -1):
         # Convert the parameter/return type(s) into generic arguments and load them into a group for the function type.
-        param_types_generic = GenericTypeArgumentUnnamedAst(-1, param_types)
-        return_type_generic = GenericTypeArgumentUnnamedAst(-1, return_type)
-        generics = GenericArgumentGroupAst.default(Seq([param_types_generic, return_type_generic]))
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "FunMov", generics)]))
+        param_types_generic = Asts.GenericTypeArgumentUnnamedAst(-1, param_types)
+        return_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, return_type)
+        generics = Asts.GenericArgumentGroupAst(arguments=Seq([param_types_generic, return_type_generic]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "FunMov", generics)]))
 
     @staticmethod
     def GenRef(gen_type=None, ret_type=None, send_type=None, pos: int = -1):
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
-
         # Convert the gen/send type(s) into generic arguments and load them into a group for the generator type.
-        gen_type = GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
-        send_type = GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
-        generics = GenericArgumentGroupAst.default(Seq([gen_type, send_type]))
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "GenRef", generics)]))
+        gen_type = Asts.GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
+        send_type = Asts.GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
+        generics = Asts.GenericArgumentGroupAst(arguments=Seq([gen_type, send_type]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "GenRef", generics)]))
 
     @staticmethod
     def GenMut(gen_type=None, ret_type=None, send_type=None, pos: int = -1):
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
-
         # Convert the gen/send type(s) into generic arguments and load them into a group for the generator type.
-        gen_type = GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
-        send_type = GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
-        generics = GenericArgumentGroupAst.default(Seq([gen_type, send_type]))
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "GenMut", generics)]))
+        gen_type = Asts.GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
+        send_type = Asts.GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
+        generics = Asts.GenericArgumentGroupAst(arguments=Seq([gen_type, send_type]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "GenMut", generics)]))
 
     @staticmethod
     def GenMov(gen_type=None, ret_type=None, send_type=None, pos: int = -1):
-        # Import ASTs needed for the type and generic argument creation.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst, TypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst, GenericTypeArgumentUnnamedAst
-
         # Convert the gen/send type(s) into generic arguments and load them into a group for the generator type.
-        gen_type = GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
-        send_type = GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
-        generics = GenericArgumentGroupAst.default(Seq([gen_type, send_type]))
-        return TypeAst(pos, Seq([IdentifierAst(pos, "std")]), Seq([GenericIdentifierAst(pos, "GenMov", generics)]))
+        gen_type = Asts.GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
+        send_type = Asts.GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
+        generics = Asts.GenericArgumentGroupAst(arguments=Seq([gen_type, send_type]))
+        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "GenMov", generics)]))

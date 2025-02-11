@@ -29,7 +29,7 @@ class TestGenericArgumentGroupAst(CustomTestCase):
         """
         cls A[T] { a: T }
 
-        sup [U] A[T=U] {
+        sup [T] A[T] {
             fun f(&self) -> std::Void { }
         }
 
@@ -44,7 +44,7 @@ class TestGenericArgumentGroupAst(CustomTestCase):
         """
         cls A[T] { a: T }
 
-        sup [U] A[T=U] {
+        sup [T] A[T] {
             fun f(&self) -> U { ret self.a }
         }
 

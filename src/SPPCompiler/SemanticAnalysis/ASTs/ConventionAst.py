@@ -1,12 +1,10 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.ConventionMovAst import ConventionMovAst
-from SPPCompiler.SemanticAnalysis.ASTs.ConventionMutAst import ConventionMutAst
-from SPPCompiler.SemanticAnalysis.ASTs.ConventionRefAst import ConventionRefAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type ConventionAst = Union[
-    ConventionMovAst,
-    ConventionMutAst,
-    ConventionRefAst]
+    Asts.ConventionMovAst,
+    Asts.ConventionMutAst,
+    Asts.ConventionRefAst]
 
 __all__ = ["ConventionAst"]

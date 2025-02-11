@@ -1,27 +1,22 @@
 from __future__ import annotations
-from collections import defaultdict
-from fastenum import Enum
-from typing import Dict, Optional, Tuple, TYPE_CHECKING
+
 import operator
+from collections import defaultdict
+from typing import Dict, Optional, Tuple
 
+from fastenum import Enum
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter
+from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentAst import FunctionCallArgumentAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentNamedAst import FunctionCallArgumentNamedAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterAst import FunctionParameterAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentAst, GenericArgumentNamedAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentGroupAst import GenericArgumentGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericParameterAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionAst import PostfixExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorFunctionCallAst import PostfixExpressionOperatorFunctionCallAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
-    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 class FunctionConflictCheckType(Enum):
@@ -32,31 +27,29 @@ class FunctionConflictCheckType(Enum):
 class AstFunctions:
     @staticmethod
     def get_function_owner_type_and_function_name(
-            scope_manager: ScopeManager, lhs: ExpressionAst)\
-            -> Tuple[Ast, Optional[Scope], IdentifierAst]:
-
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, PostfixExpressionAst, PostfixExpressionOperatorStepKeywordAst
+            scope_manager: ScopeManager, lhs: Asts.ExpressionAst)\
+            -> Tuple[Ast, Optional[Scope], Asts.IdentifierAst]:
 
         # Special function: ".next()" on generators.
-        if isinstance(lhs, PostfixExpressionAst) and isinstance(lhs.op, PostfixExpressionOperatorStepKeywordAst):
+        if isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.op, Asts.PostfixExpressionOperatorStepKeywordAst):
             function_owner_type = lhs.lhs.infer_type(scope_manager).type
-            function_name = IdentifierAst(lhs.op.pos, "next_")
+            function_name = Asts.IdentifierAst(lhs.op.pos, "next_")
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Runtime access into an object: "object.method()"
-        elif isinstance(lhs, PostfixExpressionAst) and lhs.op.is_runtime_access():
+        elif isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
             function_owner_type = lhs.lhs.infer_type(scope_manager).type
             function_name = lhs.op.field
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Static access into a type: "Type::method()"
-        elif isinstance(lhs, PostfixExpressionAst) and lhs.op.is_static_access():
+        elif isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_static_access():
             function_owner_type = lhs.lhs
             function_name = lhs.op.field
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Direct access into a function: "function()"
-        elif isinstance(lhs, IdentifierAst):
+        elif isinstance(lhs, Asts.IdentifierAst):
             function_owner_type = None
             function_name = lhs
             function_owner_scope = scope_manager.current_scope.parent_module
@@ -71,18 +64,14 @@ class AstFunctions:
         return function_owner_type, function_owner_scope, function_name
 
     @staticmethod
-    def convert_function_to_type_access(
+    def convert_method_to_function_form(
             scope_manager: ScopeManager,
-            function_owner_type: Ast, function_name: IdentifierAst, lhs: ExpressionAst,
-            fn: PostfixExpressionOperatorFunctionCallAst, **kwargs)\
-            -> Tuple[PostfixExpressionAst, PostfixExpressionOperatorFunctionCallAst]:
-
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+            function_owner_type: Ast, function_name: Asts.IdentifierAst, lhs: Asts.ExpressionAst,
+            fn: Asts.PostfixExpressionOperatorFunctionCallAst, **kwargs)\
+            -> Tuple[Asts.PostfixExpressionAst, Asts.PostfixExpressionOperatorFunctionCallAst]:
 
         # Create an argument for self, which is the object being called (convention tested later).
         self_argument = AstMutation.inject_code(f"{lhs.lhs}", SppParser.parse_function_call_argument_unnamed)
-        # self_argument.analyse_semantics(scope_manager, **kwargs)
         function_arguments = fn.function_argument_group.arguments.copy()
         function_arguments.insert(0, self_argument)
 
@@ -101,42 +90,45 @@ class AstFunctions:
         return new_function_access, new_function_call
 
     @staticmethod
-    def get_all_function_scopes(function_name: IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, FunctionPrototypeAst, GenericArgumentGroupAst]]:
-        from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst, IdentifierAst, TypeAst, ClassPrototypeAst
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
-        from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
-
-        function_name = TypeAst.from_function_identifier(function_name)
-        generic_argument_ctor = {VariableSymbol: GenericCompArgumentNamedAst, TypeSymbol: GenericTypeArgumentNamedAst}
+    def get_all_function_scopes(function_name: Asts.IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]]:
+        function_name = Asts.TypeAst.from_function_identifier(function_name)
+        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
         overload_scopes_and_info = Seq()
 
         # Functions at the module level: will have no inheritable generics (no enclosing superimposition).
-        if isinstance(function_owner_scope.name, IdentifierAst):
+        if isinstance(function_owner_scope.name, Asts.IdentifierAst):
             for ancestor_scope in function_owner_scope.ancestors:
-                for sup_scope in ancestor_scope._children.filter(lambda c: isinstance(c._ast, SupPrototypeInheritanceAst) and c._ast.name == function_name):
-                    generics = GenericArgumentGroupAst.default()
+                for sup_scope in ancestor_scope._children.filter(lambda c: isinstance(c._ast, Asts.SupPrototypeExtensionAst) and c._ast.name == function_name):
+                    generics = Asts.GenericArgumentGroupAst()
                     overload_scopes_and_info.append((ancestor_scope, sup_scope._ast.body.members[0], generics))
 
         # Functions in a superimposition block: will have inheritable generics from "sup [...] ... { ... }".
         else:
-            if isinstance(function_owner_scope._ast, ClassPrototypeAst):
+            if isinstance(function_owner_scope._ast, Asts.ClassPrototypeAst):
                 sup_scopes = function_owner_scope._direct_sup_scopes if exclusive else function_owner_scope.sup_scopes
             else:
                 sup_scopes = Seq([function_owner_scope])
 
-            for sup_scope in sup_scopes.unique():
-                if sup_ast := sup_scope._ast.body.members.filter_to_type(SupPrototypeInheritanceAst).find(lambda m: m.name == function_name):
+            for sup_scope in sup_scopes:
+                for sup_ast in sup_scope._ast.body.members.filter_to_type(Asts.SupPrototypeExtensionAst).filter(lambda m: m.name == function_name):
                     generics = sup_scope._symbol_table.all().filter(lambda s: s.is_generic)
                     generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
-                    generics = GenericArgumentGroupAst.default(generics)
+                    generics = Asts.GenericArgumentGroupAst(arguments=generics)
                     overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))
+
+            # When a derived class has overridden a function, the overridden base class function(s) must be removed.
+            for scope_1, function_1, _ in overload_scopes_and_info.copy():
+                for scope_2, function_2, _ in overload_scopes_and_info.copy():
+                    if function_1 is not function_2 and function_owner_scope.depth_difference(scope_1) < function_owner_scope.depth_difference(scope_2):
+                        conflict = AstFunctions.check_for_conflicting_method(scope_1, scope_2, function_1, FunctionConflictCheckType.InvalidOverride)
+                        if conflict:
+                            overload_scopes_and_info.remove_if(lambda info: info[1] is conflict)
 
         # Return the overload scopes, and their generic argument groups.
         return overload_scopes_and_info
 
     @staticmethod
-    def check_for_conflicting_method(this_scope: Scope, target_scope: Scope, new_function: FunctionPrototypeAst, conflict_type: FunctionConflictCheckType) -> Optional[FunctionPrototypeAst]:
+    def check_for_conflicting_method(this_scope: Scope, target_scope: Scope, new_function: Asts.FunctionPrototypeAst, conflict_type: FunctionConflictCheckType) -> Optional[Asts.FunctionPrototypeAst]:
         """
         Check for conflicting methods between the new function, anf functions in the type scope. This is used to check
         overrides are valid, and there aren't conflicting overloads.
@@ -176,17 +168,12 @@ class AstFunctions:
             if parameter_set_1.zip(parameter_set_2).all(lambda p1p2: parameter_comp(*p1p2, existing_scope, this_scope)): return existing_function
 
     @staticmethod
-    def name_function_arguments(arguments: Seq[FunctionCallArgumentAst], parameters: Seq[FunctionParameterAst]) -> None:
-        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, FunctionCallArgumentUnnamedAst
-        from SPPCompiler.SemanticAnalysis import FunctionParameterVariadicAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+    def name_function_arguments(arguments: Seq[Asts.FunctionCallArgumentAst], parameters: Seq[Asts.FunctionParameterAst]) -> None:
 
         # Get the argument names and parameter names, and check for variadic parameters.
-        argument_names = arguments.filter_to_type(FunctionCallArgumentNamedAst).map_attr("name")
+        argument_names = arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst).map_attr("name")
         parameter_names = parameters.map_attr("extract_name")
-        is_variadic = parameters and isinstance(parameters[-1], FunctionParameterVariadicAst)
+        is_variadic = parameters and isinstance(parameters[-1], Asts.FunctionParameterVariadicAst)
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
@@ -194,7 +181,7 @@ class AstFunctions:
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
-        for i, unnamed_argument in arguments.filter_to_type(FunctionCallArgumentUnnamedAst).enumerate():
+        for i, unnamed_argument in arguments.filter_to_type(Asts.FunctionCallArgumentUnnamedAst).enumerate():
 
             # The variadic parameter requires a tuple of the remaining arguments.
             if parameter_names.length == 1 and is_variadic:
@@ -214,23 +201,16 @@ class AstFunctions:
                 arguments.replace(unnamed_argument, named_argument, 1)
 
     @staticmethod
-    def name_generic_arguments(arguments: Seq[GenericArgumentAst], parameters: Seq[GenericParameterAst], owner_type: TypeAst = None) -> None:
-        from SPPCompiler.SemanticAnalysis import GenericArgumentUnnamedAst, GenericArgumentNamedAst
-        from SPPCompiler.SemanticAnalysis import GenericCompArgumentUnnamedAst, GenericTypeArgumentUnnamedAst
-        from SPPCompiler.SemanticAnalysis import GenericParameterVariadicAst
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+    def name_generic_arguments(arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], owner_type: Asts.TypeAst = None) -> None:
 
         # Special case for tuples to prevent infinite-recursion.
         if owner_type and owner_type.without_generics() == CommonTypes.Tup().without_generics():
             return
 
         # Get the argument names and parameter names, and check for variadic parameters.
-        argument_names = arguments.filter_to_type(*GenericArgumentNamedAst.__value__.__args__).map_attr("name")
+        argument_names = arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__value__.__args__).map_attr("name")
         parameter_names = parameters.map_attr("name")
-        is_variadic = parameters and isinstance(parameters[-1], GenericParameterVariadicAst.__value__.__args__)
+        is_variadic = parameters and isinstance(parameters[-1], Asts.GenericParameterVariadicAst.__value__.__args__)
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
@@ -239,11 +219,11 @@ class AstFunctions:
 
         # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
         GenericArgumentCTor = {
-            GenericCompArgumentUnnamedAst: SppParser.parse_generic_comp_argument_named,
-            GenericTypeArgumentUnnamedAst: SppParser.parse_generic_type_argument_named}
+            Asts.GenericCompArgumentUnnamedAst: SppParser.parse_generic_comp_argument_named,
+            Asts.GenericTypeArgumentUnnamedAst: SppParser.parse_generic_type_argument_named}
 
         # Name all the unnamed arguments with leftover parameter names.
-        for i, unnamed_argument in arguments.filter_to_type(*GenericArgumentUnnamedAst.__value__.__args__).enumerate():
+        for i, unnamed_argument in arguments.filter_to_type(*Asts.GenericArgumentUnnamedAst.__value__.__args__).enumerate():
 
             # The variadic parameter requires a tuple of the remaining arguments.
             if parameter_names.length == 1 and is_variadic:
@@ -255,21 +235,25 @@ class AstFunctions:
 
             # Normal named argument assignment.
             else:
-                named_argument = f"{parameter_names.pop(0)}={unnamed_argument}"
-                named_argument = AstMutation.inject_code(named_argument, GenericArgumentCTor[type(unnamed_argument)])
-                arguments.replace(unnamed_argument, named_argument, 1)
+                try:
+                    named_argument = f"{parameter_names.pop(0)}={unnamed_argument}"
+                    named_argument = AstMutation.inject_code(named_argument, GenericArgumentCTor[type(unnamed_argument)])
+                    arguments.replace(unnamed_argument, named_argument, 1)
+                except IndexError:
+                    # Too many generic arguments passed.
+                    raise SemanticErrors.GenericArgumentTooManyError().add(parameters, unnamed_argument)
 
     @staticmethod
     def inherit_generic_arguments(
-            generic_parameters: Seq[GenericParameterAst],
-            explicit_generic_arguments: Seq[GenericArgumentAst],
-            infer_source: Dict[IdentifierAst, TypeAst],
-            infer_target: Dict[IdentifierAst, TypeAst],
+            generic_parameters: Seq[Asts.GenericParameterAst],
+            explicit_generic_arguments: Seq[Asts.GenericArgumentAst],
+            infer_source: Dict[Asts.IdentifierAst, Asts.TypeAst],
+            infer_target: Dict[Asts.IdentifierAst, Asts.TypeAst],
             scope_manager: ScopeManager,
-            owner: TypeAst | ExpressionAst = None,
-            variadic_parameter_identifier: Optional[IdentifierAst] = None,
+            owner: Asts.TypeAst | Asts.ExpressionAst = None,
+            variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None,
             **kwargs)\
-            -> Seq[GenericArgumentAst]:
+            -> Seq[Asts.GenericArgumentAst]:
 
         """
         cls Point[T, U, V, W] {
@@ -287,14 +271,10 @@ class AstFunctions:
             infer_target: {x: T, y: U, z: V}
         """
 
-        from SPPCompiler.SemanticAnalysis import TypeAst
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-
         # Special case for tuples to prevent infinite-recursion.
-        if isinstance(owner, TypeAst) and owner.without_generics() == CommonTypes.Tup().without_generics():
+        if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypes.Tup().without_generics():
+            return explicit_generic_arguments
+        if generic_parameters.is_empty():
             return explicit_generic_arguments
 
         # The inferred generics map is: {TypeAst: [TypeAst]}
@@ -322,7 +302,7 @@ class AstFunctions:
                     inferred_generic_arguments[generic_parameter_name].append(inferred_generic_argument)
 
                 # Handle the variadic parameter if it exists.
-                if infer_target_name == variadic_parameter_identifier:
+                if variadic_parameter_identifier and infer_target_name == variadic_parameter_identifier:
                     inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].types[-1].generic_argument_group.arguments[0].value
 
         # Check each generic argument name only has one unique inferred type.
@@ -343,7 +323,7 @@ class AstFunctions:
         # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
         GenericArgumentCTor = defaultdict(
             lambda: SppParser.parse_generic_comp_argument_named,
-            {TypeAst: SppParser.parse_generic_type_argument_named})
+            {Asts.TypeAst: SppParser.parse_generic_type_argument_named})
 
         # Create the inferred generic arguments.
         inferred_generic_arguments = {k: v[0] for k, v in inferred_generic_arguments.items()}

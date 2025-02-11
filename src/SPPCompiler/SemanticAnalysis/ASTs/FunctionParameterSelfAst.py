@@ -1,35 +1,28 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING
-import functools
 
+import functools
+from dataclasses import dataclass, field
+from typing import Optional
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ConventionAst import ConventionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction, CompilerStages):
-    tok_mut: Optional[TokenAst]
-    convention: ConventionAst
-    name: IdentifierAst
-    type: TypeAst = field(default=None, init=False)
+class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction):
+    tok_mut: Optional[Asts.TokenAst] = field(default=None)
+    convention: Asts.ConventionAst = field(default_factory=lambda: Asts.ConventionMovAst())
+    name: Asts.IdentifierAst = field(default=None)
+    type: Asts.TypeAst = field(default=None, init=False)
 
     def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-
-        # Create defaults.
+        assert self.name
         self.type = CommonTypes.Self(self.pos)
         self._variant = "Self"
 
@@ -47,32 +40,30 @@ class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction, CompilerSta
         return "".join(string)
 
     @functools.cached_property
-    def extract_names(self) -> Seq[IdentifierAst]:
+    def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return Seq([self.name])
 
     @functools.cached_property
-    def extract_name(self) -> IdentifierAst:
+    def extract_name(self) -> Asts.IdentifierAst:
         return self.name
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import ConventionMutAst, ConventionRefAst, ConventionMovAst
-        from SPPCompiler.SemanticAnalysis import LetStatementUninitializedAst, LocalVariableSingleIdentifierAst
-
         # Analyse the type.
         self.type.analyse_semantics(scope_manager, **kwargs)
 
         # Create the variable using ASTs, because "let self: ..." will be a parse error.
-        ast = LetStatementUninitializedAst.from_variable_and_type(
-            variable=LocalVariableSingleIdentifierAst(self.pos, self.tok_mut, self.name, None),
+        ast = Asts.LetStatementUninitializedAst(
+            pos=self.pos,
+            assign_to=Asts.LocalVariableSingleIdentifierAst(self.pos, self.tok_mut, self.name, None),
             type=self.type)
         ast.analyse_semantics(scope_manager, **kwargs)
 
         # Mark the symbol as initialized.
         symbol = scope_manager.current_scope.get_symbol(self.name)
-        symbol.is_mutable = self.tok_mut is not None
-        symbol.memory_info.ast_borrowed = self.convention if type(self.convention) is not ConventionMovAst else None
-        symbol.memory_info.is_borrow_mut = isinstance(self.convention, ConventionMutAst)
-        symbol.memory_info.is_borrow_ref = isinstance(self.convention, ConventionRefAst)
+        symbol.is_mutable = self.tok_mut is not None or isinstance(self.convention, Asts.ConventionMutAst)
+        symbol.memory_info.ast_borrowed = self.convention if type(self.convention) is not Asts.ConventionMovAst else None
+        symbol.memory_info.is_borrow_mut = isinstance(self.convention, Asts.ConventionMutAst)
+        symbol.memory_info.is_borrow_ref = isinstance(self.convention, Asts.ConventionRefAst)
         symbol.memory_info.initialized_by(self)
 
 

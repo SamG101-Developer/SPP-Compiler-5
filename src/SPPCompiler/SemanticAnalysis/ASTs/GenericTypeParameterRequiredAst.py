@@ -1,30 +1,22 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericTypeParameterInlineConstraintsAst import GenericTypeParameterInlineConstraintsAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
 
 @dataclass
-class GenericTypeParameterRequiredAst(Ast, Ordered, CompilerStages):
-    name: TypeAst
-    constraints: GenericTypeParameterInlineConstraintsAst
+class GenericTypeParameterRequiredAst(Ast, Ordered):
+    name: Asts.TypeAst = field(default=None)
+    constraints: Asts.GenericTypeParameterInlineConstraintsAst = field(default_factory=lambda: Asts.GenericTypeParameterInlineConstraintsAst())
 
     def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import TypeAst, GenericTypeParameterInlineConstraintsAst
-
-        # Convert the name to a TypeAst, and create defaults.
-        self.name = TypeAst.from_identifier(self.name)
-        self.constraints = self.constraints or GenericTypeParameterInlineConstraintsAst.default()
+        assert self.name
         self._variant = "Required"
 
     def __eq__(self, other: GenericTypeParameterRequiredAst) -> bool:
@@ -41,13 +33,12 @@ class GenericTypeParameterRequiredAst(Ast, Ordered, CompilerStages):
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
         symbol = TypeSymbol(name=self.name.types[-1], type=None, is_generic=True)
         scope_manager.current_scope.add_symbol(symbol)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         self.name.analyse_semantics(scope_manager, **kwargs)
         self.constraints.analyse_semantics(scope_manager, **kwargs)
-    
-    
+
+
 __all__ = ["GenericTypeParameterRequiredAst"]

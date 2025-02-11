@@ -1,23 +1,27 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+
 import hashlib
+from dataclasses import dataclass, field
 
 from SParLex.Lexer.Tokens import SpecialToken
 
 from SPPCompiler.LexicalAnalysis.Token import Token
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-
-if TYPE_CHECKING:
-    from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 
 
 @dataclass
-class TokenAst(Ast, Default, CompilerStages):
-    token: Token
+class TokenAst(Ast):
+    token: Token = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.token
+
+    @staticmethod
+    def raw(*, pos: int = -1, token: SppTokenType = SpecialToken.NO_TOK, token_metadata: str = "") -> TokenAst:
+        from SPPCompiler.LexicalAnalysis.Token import Token
+        return TokenAst(pos, Token(token_metadata or token.value, token))
 
     def __eq__(self, other: TokenAst) -> bool:
         # Check both ASTs are the same type and have the same token.
@@ -30,14 +34,6 @@ class TokenAst(Ast, Default, CompilerStages):
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return self.token.token_metadata
-
-    @staticmethod
-    def default(token_type: SppTokenType = SpecialToken.NO_TOK, info: str = "", pos: int = -1) -> TokenAst:
-        return TokenAst(pos, Token(info or token_type.value, token_type))
-
-    def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        # Required for ".." being used as an expression in binary folding.
-        pass
 
 
 __all__ = ["TokenAst"]

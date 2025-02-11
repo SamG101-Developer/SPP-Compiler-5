@@ -4,7 +4,7 @@ from typing import Any, Iterator, Optional, TYPE_CHECKING
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
+    import SPPCompiler.SemanticAnalysis as Asts
     from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
@@ -69,7 +69,7 @@ class ScopeManager:
         # Return the new scope.
         return self._current_scope
 
-    def get_namespaced_scope(self, namespace: Seq[IdentifierAst]) -> Optional[Scope]:
+    def get_namespaced_scope(self, namespace: Seq[Asts.IdentifierAst]) -> Optional[Scope]:
         # Find the first scope that matches the first part of the namespace.
         namespace_symbol = None
         for scope in self._current_scope.ancestors:
@@ -85,6 +85,14 @@ class ScopeManager:
                 scope = namespace_symbol.scope
 
             return scope
+
+    def strip_generics(self) -> None:
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol
+        for scope in self:
+            for symbol in scope.all_symbols(exclusive=True).filter_to_type(TypeSymbol, AliasSymbol).filter(lambda t: not t.is_generic):
+                if symbol.name.generic_argument_group.arguments and symbol.scope._non_generic_scope is not symbol.scope:
+                    scope.rem_symbol(symbol.name)
+        self.reset()
 
     @property
     def global_scope(self) -> Scope:

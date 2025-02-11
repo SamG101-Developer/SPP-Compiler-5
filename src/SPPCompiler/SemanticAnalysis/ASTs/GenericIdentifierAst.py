@@ -1,27 +1,18 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
-import hashlib
 
+import hashlib
+from dataclasses import dataclass, field
+
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentGroupAst import GenericArgumentGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
 
 
 @dataclass
 class GenericIdentifierAst(Ast):
-    value: str
-    generic_argument_group: GenericArgumentGroupAst
-
-    def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
-
-        # Create defaults.
-        self.generic_argument_group = self.generic_argument_group or GenericArgumentGroupAst.default()
+    value: str = field(default="")
+    generic_argument_group: Asts.GenericArgumentGroupAst = field(default_factory=lambda: Asts.GenericArgumentGroupAst())
 
     def __eq__(self, other: GenericIdentifierAst) -> bool:
         # Check both ASTs are the same type and have the same value and generic argument group.
@@ -43,15 +34,15 @@ class GenericIdentifierAst(Ast):
         return "".join(string)
 
     @staticmethod
-    def from_identifier(identifier: IdentifierAst) -> GenericIdentifierAst:
-        return GenericIdentifierAst(identifier.pos, identifier.value, None)
+    def from_identifier(identifier: Asts.IdentifierAst) -> GenericIdentifierAst:
+        return GenericIdentifierAst(identifier.pos, identifier.value)
 
     @staticmethod
-    def from_type(type: TypeAst) -> GenericIdentifierAst:
+    def from_type(type: Asts.TypeAst) -> GenericIdentifierAst:
         return type.types[-1]
 
     def without_generics(self) -> GenericIdentifierAst:
-        return GenericIdentifierAst(self.pos, self.value, None)
+        return GenericIdentifierAst(self.pos, self.value)
 
 
 __all__ = ["GenericIdentifierAst"]

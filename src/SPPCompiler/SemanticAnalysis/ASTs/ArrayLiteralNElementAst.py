@@ -1,28 +1,22 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class ArrayLiteralNElementAst(Ast, TypeInferrable, CompilerStages):
-    tok_left_bracket: TokenAst
-    elements: Seq[ExpressionAst]
-    tok_right_bracket: TokenAst
-
-    def __post_init__(self) -> None:
-        # Convert the elements into a sequence.
-        self.elements = Seq(self.elements)
+class ArrayLiteralNElementAst(Ast, TypeInferrable):
+    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackL))
+    elements: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
+    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackR))
 
     def __eq__(self, other: ArrayLiteralNElementAst) -> bool:
         # Check both ASTs are the same type and have the same elements.
@@ -50,13 +44,10 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(array_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import ConventionMovAst, TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # Analyse the elements in the array.
         for element in self.elements:
             element.analyse_semantics(scope_manager, **kwargs)
-            if isinstance(element, (TokenAst, TypeAst)):
+            if isinstance(element, (Asts.TokenAst, Asts.TypeAst)):
                 raise SemanticErrors.ExpressionTypeInvalidError().add(element)
 
         # Check all elements have the same type as the 0th element.
@@ -66,7 +57,7 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable, CompilerStages):
                 raise SemanticErrors.ArrayElementsDifferentTypesError().add(element_types[0], element_type)
 
         # Check all elements are "owned", and not "borrowed".
-        borrowed_elements = self.elements.filter(lambda e: e.infer_type(scope_manager, **kwargs).convention is not ConventionMovAst)
+        borrowed_elements = self.elements.filter(lambda e: e.infer_type(scope_manager, **kwargs).convention is not Asts.ConventionMovAst)
         if borrowed_elements:
             if borrow_symbol := scope_manager.current_scope.get_variable_symbol_outermost_part(borrowed_elements[0]):
                 if borrow_ast := borrow_symbol.memory_info.ast_borrowed:

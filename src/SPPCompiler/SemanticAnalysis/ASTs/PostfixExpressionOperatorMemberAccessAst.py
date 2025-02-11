@@ -1,24 +1,23 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
-import difflib
 
+import difflib
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStages):
-    tok_access: TokenAst
-    field: IdentifierAst | TokenAst
+class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
+    tok_access: Asts.TokenAst = field(default=None)
+    field: Asts.IdentifierAst | Asts.TokenAst = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.tok_access
+        assert self.field
 
     def __eq__(self, other: PostfixExpressionOperatorMemberAccessAst) -> bool:
         return self.tok_access == other.tok_access and self.field == other.field
@@ -39,7 +38,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
         from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         return self.tok_access.token.token_type == SppTokenType.TkDblColon
 
-    def infer_type(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredType:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
 
@@ -56,7 +55,9 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable, CompilerStag
             attribute_type = lhs_symbol.scope.get_symbol(self.field).type
             return InferredType.from_type(attribute_type)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
+        raise NotImplementedError("Unknown member access type.")
+
+    def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors

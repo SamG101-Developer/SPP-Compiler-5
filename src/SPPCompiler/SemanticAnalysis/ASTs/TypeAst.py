@@ -1,33 +1,30 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+from dataclasses import dataclass, field
+from typing import Any, Dict, Iterator, Optional
 
 from convert_case import pascal_case
-from dataclasses import dataclass
-from typing import Iterator, Optional, TYPE_CHECKING, Any
-import hashlib
-
 from llvmlite import ir as llvm
 
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentAst import GenericArgumentAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypePartAst import TypePartAst
-    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
 @dataclass
-class TypeAst(Ast, TypeInferrable, CompilerStages):
-    namespace: Seq[IdentifierAst]
-    types: Seq[TypePartAst]
+class TypeAst(Ast, TypeInferrable):
+    namespace: Seq[Asts.IdentifierAst] = field(default_factory=Seq)
+    types: Seq[Asts.GenericIdentifierAst] = field(default_factory=Seq)
 
     def __post_init__(self) -> None:
         # Convert the namespace and types into a sequence.
@@ -36,19 +33,22 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
 
     def __eq__(self, other: TypeAst) -> bool:
         # Check both ASTs are the same type and have the same namespace and types.
-        return isinstance(other, TypeAst) and self.namespace == other.namespace and self.types == other.types
+        if isinstance(other, TypeAst):
+            return self.namespace == other.namespace and self.types == other.types
+        elif isinstance(other, Asts.IdentifierAst):
+            return self.types.list() == [Asts.GenericIdentifierAst.from_identifier(other)]
+        return False
 
     def __hash__(self) -> int:
         # Hash the namespace and types into a fixed string and convert it into an integer.
-        return int.from_bytes(hashlib.md5("".join([str(p) for p in self.namespace + self.types]).encode()).digest())
+        return int.from_bytes(hashlib.md5("".join([str(p) for p in self.namespace.list() + self.types.list()]).encode()).digest())
 
-    def __iter__(self) -> Iterator[TypePartAst]:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, GenericIdentifierAst
+    def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
 
         # Iterate over the type parts and generics.
         def internal_iteration(t: TypeAst):
-            if isinstance(t, IdentifierAst):
-                yield GenericIdentifierAst.from_identifier(t)
+            if isinstance(t, Asts.IdentifierAst):
+                yield Asts.GenericIdentifierAst.from_identifier(t)
             for part in t.types:
                 yield part
                 for g in part.generic_argument_group.arguments:  # .filter_to_type(*GenericTypeArgumentAst.__value__.__args__):
@@ -67,21 +67,19 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
         return "".join(string)
 
     @staticmethod
-    def from_identifier(identifier: IdentifierAst) -> TypeAst:
+    def from_identifier(identifier: Asts.IdentifierAst) -> TypeAst:
         # Create a TypeAst from an IdentifierAst.
-        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst, TypeAst
-        return TypeAst(identifier.pos, Seq(), Seq([GenericIdentifierAst.from_identifier(identifier)]))
+        return TypeAst(identifier.pos, Seq(), Seq([Asts.GenericIdentifierAst.from_identifier(identifier)]))
 
     @staticmethod
-    def from_generic_identifier(identifier: GenericIdentifierAst) -> TypeAst:
+    def from_generic_identifier(identifier: Asts.GenericIdentifierAst) -> TypeAst:
         # Create a TypeAst from a GenericIdentifierAst.
         return TypeAst(identifier.pos, Seq(), Seq([identifier]))
 
     @staticmethod
-    def from_function_identifier(identifier: IdentifierAst) -> TypeAst:
+    def from_function_identifier(identifier: Asts.IdentifierAst) -> TypeAst:
         # Create a TypeAst from a function IdentifierAst ($PascalCase mapping too).
-        from SPPCompiler.SemanticAnalysis import IdentifierAst
-        mock_type_name = IdentifierAst(identifier.pos, f"${pascal_case(identifier.value.replace("_", " "))}")
+        mock_type_name = Asts.IdentifierAst(identifier.pos, f"${pascal_case(identifier.value.replace("_", " "))}")
         return TypeAst.from_identifier(mock_type_name)
 
     def without_namespace(self) -> TypeAst:
@@ -92,17 +90,15 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
         return TypeAst(self.pos, self.namespace, self.types[:-1] + [self.types[-1].without_generics()])
 
     def contains_generic(self, generic_name: TypeAst) -> bool:
-        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
-
         # Check if there is a generic name in this type (at any nested argument level)
-        generic_name = GenericIdentifierAst.from_type(generic_name)
+        generic_name = Asts.GenericIdentifierAst.from_type(generic_name)
         for part in self:
             if part == generic_name: return True
         return False
 
     def get_generic(self, generic_name: TypeAst) -> Optional[TypeAst]:
         # Custom iterator to iterate over the type parts and their generic arguments.
-        def custom_iterate(t: TypeAst) -> Iterator[GenericArgumentAst]:
+        def custom_iterate(t: TypeAst) -> Iterator[Asts.GenericArgumentAst]:
             for p in t.types:
                 for g in p.generic_argument_group.type_arguments:
                     yield g
@@ -116,7 +112,7 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
     def get_generic_parameter_for_argument(self, generic_argument: TypeAst) -> Optional[TypeAst]:
 
         # Custom iterator to iterate over the type parts and their generic arguments.
-        def custom_iterate(t: TypeAst) -> Iterator[GenericArgumentAst]:
+        def custom_iterate(t: TypeAst) -> Iterator[Asts.GenericArgumentAst]:
             for p in t.types:
                 for g in p.generic_argument_group.type_arguments:
                     yield g
@@ -131,11 +127,9 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
                     return generic.name
         return None
 
-    def sub_generics(self, generic_arguments: Seq[GenericArgumentAst]) -> TypeAst:
-        from SPPCompiler.SemanticAnalysis import GenericIdentifierAst
-
+    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> TypeAst:
         # Get all the substitutable parts of this type (GenericIdentifierAst parts)
-        type_parts = self.types.filter_to_type(GenericIdentifierAst)
+        type_parts = self.types.filter_to_type(Asts.GenericIdentifierAst)
 
         # Iterate over the generic parameters, and substitute the generic arguments into the type parts.
         for generic_name, generic_type in generic_arguments.map(lambda a: (a.name, a.value)):
@@ -154,13 +148,12 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
         # Return the modified type.
         return self
 
-    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-
+    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, allow_none: bool = False) -> bool:
         # Get the symbols for each type, based on the scopes.
         that_scope = that_scope or self_scope
         self_symbol = self_scope.get_symbol(self)
         that_symbol = that_scope.get_symbol(that)
+        if allow_none and (self_symbol is None or that_symbol is None): return False
 
         # Special case for Variant types (can match any of the alternative types).
         # Todo: Tidy this up?
@@ -174,11 +167,7 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         return InferredType.from_type(self)
 
-    # todo: remove "force" parameter - should be safe?
-    def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source=None, generic_infer_target=None, force: bool = False, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
-        from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
+    def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
 
         # Determine the scope to use for the type analysis.
         match self.namespace.length:
@@ -212,8 +201,8 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
             # Analyse the semantics of the generic arguments.
             type_part.generic_argument_group.analyse_semantics(scope_manager)
 
-            # If the generically filled type doesn't exist (Vec[Str]), but teh base does (Vec[T]), create it.
-            if force or not type_scope.parent.has_symbol(type_part):
+            # If the generically filled type doesn't exist (Vec[Str]), but the base does (Vec[T]), create it.
+            if not type_scope.parent.has_symbol(type_part):
                 new_scope = AstTypeManagement.create_generic_scope(scope_manager, self, type_part, type_symbol)
 
                 # Handle type aliasing (providing generics to the original type).
@@ -228,13 +217,11 @@ class TypeAst(Ast, TypeInferrable, CompilerStages):
         if all([
                 not type_symbol.is_generic,
                 not isinstance(type_symbol, AliasSymbol),
-                not self.types[-1].value.startswith("$"),
-                not self.types[-1].value == "Self"]):
+                self.types[-1].value[0] != "$",
+                self.types[-1].value != "Self"]):
             self.namespace = type_scope_alias_bypass.to_namespace()
 
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-
         type_symbol = scope_handler.current_scope.get_symbol(self)
         if self.without_generics().symbolic_eq(CommonTypes.Box().without_generics(), scope_handler.current_scope):
             type_symbol.llvm_info.llvm_type = llvm.PointerType()

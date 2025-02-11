@@ -1,7 +1,12 @@
 from __future__ import annotations
-from fastenum import Enum
+
+import hashlib
+import json
+import os
+import time
 from typing import TYPE_CHECKING
-import hashlib, json, os
+
+from fastenum import Enum
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -13,8 +18,8 @@ if TYPE_CHECKING:
 
 class Compiler:
     class Mode(Enum):
-        Debug = "d"
-        Release = "r"
+        Dev = "d"
+        Rel = "r"
 
     _src_path: str
     _module_tree: ModuleTree
@@ -43,6 +48,7 @@ class Compiler:
         from SPPCompiler.SemanticAnalysis.Analyser import Analyser
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
         from SPPCompiler.Utils.ProgressBar import ProgressBar
+        time_start = time.time()
 
         progress_bars = [
             ProgressBar("Lexing.........................", self._module_tree.modules.length),
@@ -72,6 +78,10 @@ class Compiler:
         self._analyser = Analyser(self._ast)
         self._analyser.analyse(self._module_tree)
 
+        # Print compile time.
+        time_end = time.time()
+        print(f"Compile time: {time_end - time_start:.2}s")
+
         # Make an output directory for the ASTs.
         if not os.path.exists("out"):
             os.makedirs("out")
@@ -81,7 +91,7 @@ class Compiler:
             file.write(json.dumps({module.path: hashlib.md5(module.code.encode()).hexdigest() for module in self._module_tree.modules}, indent=4))
 
         # Save the AST to the output file (if in debug mode).
-        if self._mode == Compiler.Mode.Debug:
+        if self._mode == Compiler.Mode.Dev:
             for module in self._module_tree:
                 ast = module.module_ast
                 out_ast_path = module.path.replace("src", "out/ast", 1).replace(".spp", ".ast")

@@ -1,23 +1,22 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable, CompilerStages):
-    tok_dot: TokenAst
-    tok_step: TokenAst
+class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable):
+    tok_dot: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDot))
+    tok_step: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwStep))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -33,19 +32,15 @@ class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable, CompilerStage
     def is_static_access(self) -> bool:
         return False
 
-    def infer_type(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredType:
         # Next operations return the "Gen" generic parameter's argument.
         function_return_type = lhs.infer_type(scope_manager, **kwargs).type.types[-1].generic_argument_group["Gen"].value
         return InferredType.from_type(function_return_type)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TypeAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-
+    def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # Todo: Check for superimposition, not direct equality
         # Check the iterable is a generator type.
-        target_type = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(TypeAst.without_generics).map(InferredType.from_type)
+        target_type = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(Asts.TypeAst.without_generics).map(InferredType.from_type)
         return_type = lhs.infer_type(scope_manager, **kwargs)
         if not target_type.any(lambda t: t.symbolic_eq(return_type.without_generics(), scope_manager.current_scope)):
             raise SemanticErrors.ExpressionNotGeneratorError().add(lhs, return_type.type, "next expression")

@@ -1,58 +1,45 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING, Any
+
 import copy
+from dataclasses import dataclass, field
+from typing import Any, Dict, Optional
 
 from llvmlite import ir as llvm
 
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.AnnotationAst import AnnotationAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionParameterGroupAst import FunctionParameterGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterGroupAst import GenericParameterGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionImplementationAst import FunctionImplementationAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ModulePrototypeAst import ModulePrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.WhereBlockAst import WhereBlockAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
-    annotations: Seq[AnnotationAst]
-    tok_fun: TokenAst
-    name: IdentifierAst
-    generic_parameter_group: Optional[GenericParameterGroupAst]
-    function_parameter_group: FunctionParameterGroupAst
-    tok_arrow: TokenAst
-    return_type: TypeAst
-    where_block: Optional[WhereBlockAst]
-    body: FunctionImplementationAst
+class FunctionPrototypeAst(Ast, VisibilityEnabled):
+    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    tok_fun: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwFun))
+    name: Asts.IdentifierAst = field(default=None)
+    generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
+    function_parameter_group: Asts.FunctionParameterGroupAst = field(default_factory=lambda: Asts.FunctionParameterGroupAst())
+    tok_arrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkArrowR))
+    return_type: Asts.TypeAst = field(default=None)
+    where_block: Asts.WhereBlockAst = field(default_factory=lambda: Asts.WhereBlockAst())
+    body: Asts.FunctionImplementationAst = field(default_factory=lambda: Asts.FunctionImplementationAst())
 
-    _orig: Optional[IdentifierAst] = field(default=None, kw_only=True, repr=False)
-    _abstract: Optional[AnnotationAst] = field(default=None, kw_only=True, repr=False)
-    _virtual: Optional[AnnotationAst] = field(default=None, kw_only=True, repr=False)
-    _non_implemented: Optional[AnnotationAst] = field(default=None, kw_only=True, repr=False)
-    _cold: Optional[AnnotationAst] = field(default=None, kw_only=True, repr=False)
-    _hot: Optional[AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _orig: Optional[Asts.IdentifierAst] = field(default=None, kw_only=True, repr=False)
+    _abstract: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _virtual: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _non_implemented: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _cold: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _hot: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
 
     def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst
-        from SPPCompiler.SemanticAnalysis import WhereBlockAst
-
-        # Convert the annotations into a sequence, and create other defaults.
-        self.annotations = Seq(self.annotations)
-        self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
-        self.where_block = self.where_block or WhereBlockAst.default()
-        self.body = self.body or FunctionImplementationAst.default()
+        assert self.name
+        assert self.return_type
 
     def __eq__(self, other: FunctionPrototypeAst) -> bool:
         # Check both ASTs are the same type and have the same name, generic parameter group, function parameter group,
@@ -80,7 +67,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         return "".join(string)
 
     @ast_printer_method
-    def print_signature(self, printer: AstPrinter, owner: TypeAst = None) -> str:
+    def print_signature(self, printer: AstPrinter, owner: Asts.TypeAst = None) -> str:
         string = [
             self._orig.print(printer),
             self.generic_parameter_group.print(printer),
@@ -93,14 +80,10 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         return "".join(string)
 
     def pre_process(self, context: PreProcessingContext) -> None:
-        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst, ModulePrototypeAst, SupPrototypeInheritanceAst
-        from SPPCompiler.SemanticAnalysis import TypeAst, SupImplementationAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
         super().pre_process(context)
 
         # Substitute the "Self" parameter's type with the name of the method.
-        if not isinstance(context, ModulePrototypeAst) and self.function_parameter_group.get_self():
+        if not isinstance(context, Asts.ModulePrototypeAst) and self.function_parameter_group.get_self():
             self.function_parameter_group.get_self().type = context.name
 
         # Pre-process the annotations.
@@ -108,12 +91,12 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
             a.pre_process(self)
 
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
-        mock_class_name = TypeAst.from_function_identifier(self.name)
+        mock_class_name = Asts.TypeAst.from_function_identifier(self.name)
         function_type = self._deduce_mock_class_type()
         function_call = self._deduce_mock_class_call(function_type)
 
         # If this is the first overload being converted, then the class needs to be made for the type.
-        if context.body.members.filter_to_type(ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
+        if context.body.members.filter_to_type(Asts.ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
             mock_class_ast = AstMutation.inject_code(
                 f"cls {mock_class_name} {{}}",
                 SppParser.parse_class_prototype)
@@ -126,8 +109,10 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         # Superimpose the function type over the mock class.
         function_ast = copy.deepcopy(self)
         function_ast._orig = self.name
-        mock_superimposition_body = SupImplementationAst.default(Seq([function_ast]))
-        mock_superimposition = SupPrototypeInheritanceAst(self.pos, None, self.generic_parameter_group, mock_class_name, self.where_block, mock_superimposition_body, None, function_type)
+        mock_superimposition_body = Asts.SupImplementationAst(members=Seq([function_ast]))
+        mock_superimposition = Asts.SupPrototypeExtensionAst(
+            pos=self.pos, generic_parameter_group=self.generic_parameter_group, name=mock_class_name,
+            super_class=function_type, where_block=self.where_block, body=mock_superimposition_body, _ctx=self._ctx)
         context.body.members.insert(0, mock_superimposition)
         context.body.members.remove(self)
 
@@ -171,19 +156,15 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
 
         scope_manager.move_out_of_current_scope()
 
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        scope_manager.move_to_next_scope()
-        scope_manager.move_out_of_current_scope()
-
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
-        self.return_type.analyse_semantics(scope_manager)
         for t in self.function_parameter_group.parameters.map_attr("type"):
             t.analyse_semantics(scope_manager)
+        self.return_type.analyse_semantics(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
@@ -194,6 +175,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
             a.analyse_semantics(scope_manager, **kwargs)
         self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
         self.function_parameter_group.analyse_semantics(scope_manager, **kwargs)
+        self.return_type.analyse_semantics(scope_manager, **kwargs)
         self.where_block.analyse_semantics(scope_manager, **kwargs)
 
         # Subclasses will finish analysis and exit the scope.
@@ -211,7 +193,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         self.body.generate_llvm_definitions(scope_handler, llvm_module, llvm_function=llvm_function)
         scope_handler.move_out_of_current_scope()
 
-    def _deduce_mock_class_type(self) -> TypeAst:
+    def _deduce_mock_class_type(self) -> Asts.TypeAst:
         from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst
         from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
@@ -232,11 +214,13 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         if isinstance(self.function_parameter_group.get_self().convention, ConventionRefAst):
             return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
-    def _deduce_mock_class_call(self, function_type) -> IdentifierAst:
+        raise NotImplementedError(f"Unknown convention for function {self.name}")
+
+    def _deduce_mock_class_call(self, function_type: Asts.TypeAst) -> Asts.IdentifierAst:
         from SPPCompiler.SemanticAnalysis import IdentifierAst
         return IdentifierAst(self.name.pos, f"call_{function_type.types[-1].value.split("_")[-1].lower()}")
 
-    def __deepcopy__(self, memodict=None) -> FunctionPrototypeAst:
+    def __deepcopy__(self, memodict: Dict = None) -> FunctionPrototypeAst:
         # Copy all attributes except for "_protected" attributes, which are re-linked.
         return type(self)(
             copy.deepcopy(self.pos), self.annotations, self.tok_fun,

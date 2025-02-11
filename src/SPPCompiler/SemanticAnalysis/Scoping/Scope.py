@@ -1,17 +1,12 @@
 from __future__ import annotations
+
+import copy
 from typing import Any, Optional, Tuple, TYPE_CHECKING
-import copy, warnings
 
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ClassPrototypeAst import ClassPrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericIdentifierAst import GenericIdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionAst import PostfixExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.SupPrototypeAst import SupPrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
+    import SPPCompiler.SemanticAnalysis as Asts
     from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
     from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
     from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol
@@ -35,7 +30,7 @@ class Scope:
     _parent: Optional[Scope]
     _children: Seq[Scope]
     _symbol_table: SymbolTable
-    _ast: Optional[FunctionPrototypeAst | ClassPrototypeAst | SupPrototypeAst]
+    _ast: Optional[Asts.FunctionPrototypeAst | Asts.ClassPrototypeAst | Asts.SupPrototypeAst]
 
     _direct_sup_scopes: Seq[Scope]
     _direct_sub_scopes: Seq[Scope]
@@ -92,7 +87,7 @@ class Scope:
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
 
-    def rem_symbol(self, symbol_name: IdentifierAst) -> None:
+    def rem_symbol(self, symbol_name: Asts.IdentifierAst) -> None:
         # Remove a symbol from the scope.
         self._symbol_table.rem(symbol_name)
 
@@ -108,10 +103,10 @@ class Scope:
 
         return symbols
 
-    def has_symbol(self, name: IdentifierAst | TypeAst | GenericIdentifierAst, exclusive: bool = False) -> bool:
+    def has_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False) -> bool:
         return self.get_symbol(name, exclusive) is not None
 
-    def get_symbol(self, name: IdentifierAst | TypeAst | GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
+    def get_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
         from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
 
         # Ensure the name is a valid type.
@@ -127,26 +122,25 @@ class Scope:
         if isinstance(name, TypeAst):
             scope, name = shift_scope_for_namespaced_type(self, name)
         symbol = scope._symbol_table.get(name)
-        # print("G:", name, "from scope:", self, f"({symbol})")
 
         # If this is not an exclusive search, search the parent scope.
         if not symbol and scope._parent and not exclusive:
             symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
-        if not symbol and (isinstance(name, IdentifierAst) or name.value.startswith("$")):
+        if not symbol and (isinstance(name, IdentifierAst) or name.value[0] == "$"):
             symbol = search_super_scopes(scope, name)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
 
-    def get_multiple_symbols(self, name: IdentifierAst, original_scope: Scope = None) -> Seq[Tuple[Symbol, Scope, int]]:
+    def get_multiple_symbols(self, name: Asts.IdentifierAst, original_scope: Scope = None) -> Seq[Tuple[Symbol, Scope, int]]:
         # Get all the symbols with the given name (ambiguity checks, function overloads etc), and their "depth".
         symbols = Seq([(self._symbol_table.get(name), self, self.depth_difference(original_scope or self))])
         symbols.extend(search_super_scopes_multiple(original_scope or self, self, name))
         return symbols
 
-    def get_variable_symbol_outermost_part(self, name: IdentifierAst | PostfixExpressionAst) -> Optional[VariableSymbol]:
+    def get_variable_symbol_outermost_part(self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst) -> Optional[VariableSymbol]:
         # There is no symbol for non-identifiers.
         from SPPCompiler.SemanticAnalysis import PostfixExpressionAst, PostfixExpressionOperatorMemberAccessAst
 
@@ -178,7 +172,7 @@ class Scope:
 
         return _depth_difference(self, scope, 0)
 
-    def to_namespace(self) -> Seq[IdentifierAst]:
+    def to_namespace(self) -> Seq[Asts.IdentifierAst]:
         # Convert the scope to a namespace.
         from SPPCompiler.SemanticAnalysis import IdentifierAst
         return Seq([node.name for node in self.ancestors.reverse()[1:] if isinstance(node.name, IdentifierAst)])
@@ -233,7 +227,7 @@ class Scope:
         return all_sub_scopes
 
 
-def shift_scope_for_namespaced_type(scope: Scope, type: TypeAst) -> Tuple[Scope, GenericIdentifierAst]:
+def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[Scope, Asts.GenericIdentifierAst]:
     # For TypeAsts, move through each namespace/type part accessing the namespace scope.#
     for part in type.namespace + type.types[:-1]:
         # Get the next type/namespace symbol from the scope.
@@ -245,7 +239,7 @@ def shift_scope_for_namespaced_type(scope: Scope, type: TypeAst) -> Tuple[Scope,
     return scope, type
 
 
-def search_super_scopes(scope: Scope, name: IdentifierAst | GenericIdentifierAst) -> Optional[VariableSymbol]:
+def search_super_scopes(scope: Scope, name: Asts.IdentifierAst | Asts.GenericIdentifierAst) -> Optional[VariableSymbol]:
     # Recursively search the super scopes for a variable symbol.
     symbol = None
     for super_scope in scope._direct_sup_scopes:
@@ -254,7 +248,7 @@ def search_super_scopes(scope: Scope, name: IdentifierAst | GenericIdentifierAst
     return symbol
 
 
-def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: IdentifierAst) -> Seq[Tuple[VariableSymbol, Scope, int]]:
+def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: Asts.IdentifierAst) -> Seq[Tuple[VariableSymbol, Scope, int]]:
     # Recursively search the super scopes for variable symbols with the given name.
     symbols = Seq()
     for super_scope in scope._direct_sup_scopes:

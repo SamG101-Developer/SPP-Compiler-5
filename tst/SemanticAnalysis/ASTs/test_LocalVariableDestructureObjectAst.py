@@ -26,7 +26,7 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
         }
 
         fun f(p: Point) -> std::Void {
-            let Point(mut ..x) = p
+            let Point(..mut x) = p
         }
         """
 

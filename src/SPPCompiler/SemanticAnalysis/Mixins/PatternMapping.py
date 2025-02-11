@@ -1,12 +1,11 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableAst import LocalVariableAst
+from dataclasses import dataclass
+
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
 class PatternMapping:
-    def convert_to_variable(self, **kwargs) -> LocalVariableAst:
+    def convert_to_variable(self, **kwargs) -> Asts.LocalVariableAst:
         ...

@@ -1,26 +1,20 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class GenericTypeParameterInlineConstraintsAst(Ast, Default, CompilerStages):
-    tok_colon: TokenAst
-    constraints: Seq[TypeAst]
-
-    def __post_init__(self) -> None:
-        # Convert the constraints into a sequence.
-        self.constraints = Seq(self.constraints)
+class GenericTypeParameterInlineConstraintsAst(Ast):
+    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
+    constraints: Seq[Asts.TypeAst] = field(default_factory=Seq)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -33,14 +27,7 @@ class GenericTypeParameterInlineConstraintsAst(Ast, Default, CompilerStages):
             string = []
         return "".join(string)
 
-    @staticmethod
-    def default() -> GenericTypeParameterInlineConstraintsAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import TokenAst
-        return GenericTypeParameterInlineConstraintsAst(-1, TokenAst.default(SppTokenType.TkColon), Seq())
-
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         for c in self.constraints:
             c.analyse_semantics(scope_manager, **kwargs)
 

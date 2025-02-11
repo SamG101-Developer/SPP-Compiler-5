@@ -1,27 +1,25 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
 
+from dataclasses import dataclass, field
+from typing import Optional
+
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
-    tok_seq_exit: Seq[TokenAst]
-    skip_or_expr: Optional[ExpressionAst]
-
-    def __post_init__(self) -> None:
-        # Convert the exit tokens into a sequence.
-        self.tok_seq_exit = Seq(self.tok_seq_exit)
+class LoopControlFlowStatementAst(Ast, TypeInferrable):
+    tok_seq_exit: Seq[Asts.TokenAst] = field(default_factory=Seq)
+    skip_or_expr: Optional[Asts.ExpressionAst] = field(default=None)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -33,20 +31,13 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
         # All statements are inferred as "void".
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         void_type = CommonTypes.Void(self.pos)
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
-
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
-        has_skip = isinstance(self.skip_or_expr, TokenAst) and self.skip_or_expr.token.token_type == SppTokenType.KwSkip
-        if isinstance(self.skip_or_expr, (TokenAst, TypeAst)) and not has_skip:
+        has_skip = isinstance(self.skip_or_expr, Asts.TokenAst) and self.skip_or_expr.token.token_type == SppTokenType.KwSkip
+        if isinstance(self.skip_or_expr, (Asts.TokenAst, Asts.TypeAst)) and not has_skip:
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.skip_or_expr)
 
         # Get the number of control flow statement, and the loop's nesting level.
@@ -58,7 +49,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable, CompilerStages):
             raise SemanticErrors.LoopTooManyControlFlowStatementsError().add(kwargs["loop_ast"], self, number_of_controls, nested_loop_depth)
 
         # Save and compare the loop's "exiting" type against other nested loop's exit statement types.
-        if not isinstance(self.skip_or_expr, TokenAst):
+        if not isinstance(self.skip_or_expr, Asts.TokenAst):
 
             # Ensure the memory integrity of the expression.
             if self.skip_or_expr:

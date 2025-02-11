@@ -1,42 +1,27 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING
 
+from dataclasses import dataclass, field
+from typing import Optional
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterGroupAst import GenericParameterGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.SupImplementationAst import SupImplementationAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.WhereBlockAst import WhereBlockAst
-    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
 @dataclass
-class SupPrototypeFunctionsAst(Ast, CompilerStages):
-    tok_sup: TokenAst
-    generic_parameter_group: GenericParameterGroupAst
-    name: TypeAst
-    where_block: Optional[WhereBlockAst]
-    body: SupImplementationAst
+class SupPrototypeFunctionsAst(Ast):
+    tok_sup: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwSup))
+    generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
+    name: Asts.TypeAst = field(default=None)
+    where_block: Optional[Asts.WhereBlockAst] = field(default_factory=lambda: Asts.WhereBlockAst())
+    body: Asts.SupImplementationAst = field(default_factory=lambda: Asts.SupImplementationAst())
 
     _scope_cls: Optional[Scope] = field(init=False, default=None)
-
-    def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst
-        from SPPCompiler.SemanticAnalysis import WhereBlockAst, TokenAst
-
-        # Create default instances.
-        self.tok_sup = self.tok_sup or TokenAst.default(SppTokenType.KwSup)
-        self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
-        self.where_block = self.where_block or WhereBlockAst.default()
-        self.body = self.body or SupImplementationAst.default()
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -54,9 +39,9 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         super().pre_process(context)
         self.body.pre_process(self)
 
-    def generate_top_level_scopes(self, scope_manager: ScopeManager, name_override: str = None) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a new scope for the superimposition.
-        scope_manager.create_and_move_into_new_scope(name_override or f"<sup:{self.name}:{self.pos}>", self)
+        scope_manager.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
 
         # Generate the symbols for the generic parameter group, and the self type.
@@ -73,8 +58,6 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         scope_manager.move_out_of_current_scope()
 
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         scope_manager.move_to_next_scope()
 
         # Cannot superimpose over a generic type.
@@ -82,23 +65,22 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         if cls_symbol.is_generic:
             raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type")
 
+        # Ensure all the generic arguments are unnamed and match the class's generic parameters.
+        for generic_arg in self.name.types[-1].generic_argument_group.arguments:
+            if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__value__.__args__):
+                raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(generic_arg)
+            if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
+                raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(generic_arg, self)
+
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
         self._scope_cls = cls_symbol.scope
         self.body.load_super_scopes(scope_manager)
-        scope_manager.move_out_of_current_scope()
-
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        from SPPCompiler.SemanticAnalysis import SupPrototypeInheritanceAst
-
-        scope_manager.move_to_next_scope()
-        cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
 
         # Mark the type as abstract if any of the functions are abstract.
-        if self.body.members.filter_to_type(SupPrototypeInheritanceAst).map(lambda s: s.body.members[-1]).filter(lambda m: m._abstract):
+        if self.body.members.filter_to_type(Asts.SupPrototypeExtensionAst).map(lambda s: s.body.members[-1]).filter(lambda m: m._abstract):
             cls_symbol.is_abstract = True
 
-        self.body.postprocess_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
@@ -112,7 +94,6 @@ class SupPrototypeFunctionsAst(Ast, CompilerStages):
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Move to the next scope.
         scope_manager.move_to_next_scope()

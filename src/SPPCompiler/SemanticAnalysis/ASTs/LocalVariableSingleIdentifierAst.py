@@ -1,28 +1,28 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
-import functools
 
+import functools
+from dataclasses import dataclass, field
+from typing import Optional
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableSingleIdentifierAliasAst import LocalVariableSingleIdentifierAliasAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
 
 
 @dataclass
-class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, CompilerStages):
-    tok_mut: Optional[TokenAst]
-    name: IdentifierAst
-    alias: Optional[LocalVariableSingleIdentifierAliasAst]
+class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction):
+    tok_mut: Optional[Asts.TokenAst] = field(default=None)
+    name: Asts.IdentifierAst = field(default=None)
+    alias: Optional[Asts.LocalVariableSingleIdentifierAliasAst] = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.name
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -34,17 +34,14 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, CompilerStag
         return "".join(string)
 
     @functools.cached_property
-    def extract_names(self) -> Seq[IdentifierAst]:
+    def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return Seq([self.name])
 
     @functools.cached_property
-    def extract_name(self) -> IdentifierAst:
+    def extract_name(self) -> Asts.IdentifierAst:
         return self.name
 
-    def analyse_semantics(self, scope_manager: ScopeManager, value: ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TypeAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
+    def analyse_semantics(self, scope_manager: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
 
         # Create a variable symbol for this identifier and value.
         value_type = value.infer_type(scope_manager, **kwargs).type
@@ -56,7 +53,7 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction, CompilerStag
 
         # Set the initialization ast (for errors). Increment the initialization counter for initialized variables.
         symbol.memory_info.ast_initialization = self.name
-        if not isinstance(value, TypeAst):
+        if not isinstance(value, Asts.TypeAst):
             symbol.memory_info.initialization_counter = 1
             AstMemoryHandler.enforce_memory_integrity(value, self, scope_manager)
         else:

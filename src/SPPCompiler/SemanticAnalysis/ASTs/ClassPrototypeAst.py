@@ -1,57 +1,44 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+
 import copy
+from dataclasses import dataclass, field
+from typing import Any, Dict
 
 from llvmlite import ir as llvm
 
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.AnnotationAst import AnnotationAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ClassImplementationAst import ClassImplementationAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterGroupAst import GenericParameterGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.WhereBlockAst import WhereBlockAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
-    annotations: Seq[AnnotationAst]
-    tok_cls: TokenAst
-    name: TypeAst
-    generic_parameter_group: GenericParameterGroupAst
-    where_block: WhereBlockAst
-    body: ClassImplementationAst
+class ClassPrototypeAst(Ast, VisibilityEnabled):
+    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    tok_cls: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCls))
+    name: Asts.TypeAst = field(default=None)
+    generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
+    where_block: Asts.WhereBlockAst = field(default_factory=lambda: Asts.WhereBlockAst())
+    body: Asts.ClassImplementationAst = field(default_factory=lambda: Asts.ClassImplementationAst())
 
     _is_alias: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import GenericParameterGroupAst
-        from SPPCompiler.SemanticAnalysis import TypeAst, WhereBlockAst
-
-        # Convert the annotations into a sequence, the name to a TypeAst, and create other defaults.
-        self.annotations = Seq(self.annotations)
-        self.name = TypeAst.from_identifier(self.name)
-        self.generic_parameter_group = self.generic_parameter_group or GenericParameterGroupAst.default()
-        self.where_block = self.where_block or WhereBlockAst.default()
-        self.body = self.body or ClassImplementationAst.default()
+        assert self.name
 
     def __json__(self) -> str:
         return f"{self.name}{self.generic_parameter_group}"
 
-    def __deepcopy__(self, memodict={}):
-        from SPPCompiler.SemanticAnalysis import IdentifierAst
+    def __deepcopy__(self, memodict: Dict = None) -> ClassPrototypeAst:
         return ClassPrototypeAst(
-            self.pos, copy.copy(self.annotations), self.tok_cls, IdentifierAst.from_type(self.name),
+            self.pos, copy.copy(self.annotations), self.tok_cls, copy.deepcopy(self.name),
             copy.deepcopy(self.generic_parameter_group), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
             _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
 
@@ -111,19 +98,13 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
-        self.body.generate_top_level_aliases(scope_manager)
+        self.body.generate_top_level_aliases(scope_manager, **kwargs)
         scope_manager.move_out_of_current_scope()
 
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.load_super_scopes(scope_manager)
-        scope_manager.move_out_of_current_scope()
-
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        # Skip the class scope (no sup-scope work to do).
-        scope_manager.move_to_next_scope()
-        self.body.postprocess_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
@@ -146,6 +127,10 @@ class ClassPrototypeAst(Ast, VisibilityEnabled, CompilerStages):
         self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
         self.where_block.analyse_semantics(scope_manager, **kwargs)
         self.body.analyse_semantics(scope_manager, **kwargs)
+
+        # Check the type isn't recursive, by recursing through all attribute types.
+        if recursion := AstTypeManagement.is_type_recursive(self, scope_manager):
+            raise SemanticErrors.RecursiveTypeDefinitionError(self, recursion)
 
         # Move out of the class scope.
         scope_manager.move_out_of_current_scope()

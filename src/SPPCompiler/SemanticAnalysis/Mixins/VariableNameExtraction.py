@@ -6,7 +6,7 @@ import functools
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
+    import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
@@ -14,9 +14,9 @@ class VariableNameExtraction:
     _new_asts: dict = field(default_factory=dict, init=False)
 
     @functools.cached_property
-    def extract_names(self) -> Seq[IdentifierAst]:
+    def extract_names(self) -> Seq[Asts.IdentifierAst]:
         raise
 
     @functools.cached_property
-    def extract_name(self) -> IdentifierAst:
+    def extract_name(self) -> Asts.IdentifierAst:
         raise

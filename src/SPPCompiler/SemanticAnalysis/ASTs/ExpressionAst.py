@@ -1,14 +1,11 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.BinaryExpressionAst import BinaryExpressionAst
-from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionAst import PostfixExpressionAst
-from SPPCompiler.SemanticAnalysis.ASTs.UnaryExpressionAst import UnaryExpressionAst
-from SPPCompiler.SemanticAnalysis.ASTs.PrimaryExpressionAst import PrimaryExpressionAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type ExpressionAst = Union[
-    BinaryExpressionAst,
-    PostfixExpressionAst,
-    UnaryExpressionAst,
-    PrimaryExpressionAst]
+    Asts.BinaryExpressionAst,
+    Asts.PostfixExpressionAst,
+    Asts.UnaryExpressionAst,
+    Asts.PrimaryExpressionAst]
 
 __all__ = ["ExpressionAst"]

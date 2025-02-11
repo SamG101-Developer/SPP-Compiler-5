@@ -1,35 +1,34 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
+from typing import Dict
 
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.AnnotationAst import AnnotationAst
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
 
 
 @dataclass
-class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
-    annotations: Seq[AnnotationAst]
-    name: IdentifierAst
-    tok_colon: TokenAst
-    type: TypeAst
+class ClassAttributeAst(Ast, VisibilityEnabled):
+    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    name: Asts.IdentifierAst = field(default=None)
+    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
+    type: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:
-        # Convert the annotations into a sequence.
-        self.annotations = Seq(self.annotations)
+        assert self.name
+        assert self.type
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memodict: Dict = None) -> ClassAttributeAst:
         return ClassAttributeAst(
             self.pos, self.annotations, copy.deepcopy(self.name), self.tok_colon,
             copy.deepcopy(self.type), _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
@@ -53,19 +52,13 @@ class ClassAttributeAst(Ast, VisibilityEnabled, CompilerStages):
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a variable symbol for this attribute in the current scope (class).
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         scope_manager.current_scope.add_symbol(symbol)
-
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        self.type.analyse_semantics(scope_manager)
 
     def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
         self.type.analyse_semantics(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # Analyse the semantics of the annotations and the type of the attribute.
         for a in self.annotations:

@@ -1,27 +1,21 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class RelStatementAst(Ast, TypeInferrable, CompilerStages):
-    tok_rel: TokenAst
-    expressions: Seq[ExpressionAst]
-
-    def __post_init__(self) -> None:
-        # Convert the expressions into a sequence.
-        self.expressions = Seq(self.expressions)
+class RelStatementAst(Ast, TypeInferrable):
+    tok_rel: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwRel))
+    expressions: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -38,8 +32,6 @@ class RelStatementAst(Ast, TypeInferrable, CompilerStages):
         return InferredType.from_type(void_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # Analyse the expressions.
         for e in self.expressions:
             e.analyse_semantics(scope_manager, **kwargs)
@@ -61,7 +53,8 @@ class RelStatementAst(Ast, TypeInferrable, CompilerStages):
 
             # Check the rel target isn't a compile-time constant.
             if symbol.memory_info.ast_comptime_const:
-                raise SemanticErrors.MemoryReleasingConstantSymbolError().add(self, rel_target, symbol.memory_info.ast_initialization)
+                raise SemanticErrors.MemoryReleasingConstantSymbolError().add(self, rel_target,
+                                                                              symbol.memory_info.ast_initialization)
 
             # Cause a pinned generator/future to be invalidated.
             for pin_target in symbol.memory_info.pin_target:

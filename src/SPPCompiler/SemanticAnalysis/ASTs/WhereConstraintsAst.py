@@ -1,26 +1,19 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.Sequence import Seq
 
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-
 
 @dataclass
 class WhereConstraintsAst(Ast):
-    types: Seq[TypeAst]
-    tok_colon: TokenAst
-    constraints: Seq[TypeAst]
-
-    def __post_init__(self) -> None:
-        # Convert the types and constraints into a sequence.
-        self.types = Seq(self.types)
-        self.constraints = Seq(self.constraints)
+    types: Seq[Asts.TypeAst] = field(default_factory=Seq)
+    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
+    constraints: Seq[Asts.TypeAst] = field(default_factory=Seq)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

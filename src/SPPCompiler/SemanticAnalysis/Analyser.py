@@ -46,7 +46,6 @@ class Analyser:
             ProgressBar("Generating top-level scopes....", module_tree.modules.length),
             ProgressBar("Generating top-level aliases...", module_tree.modules.length),
             ProgressBar("Loading super scopes...........", module_tree.modules.length),
-            ProgressBar("Preprocessing super scopes.....", module_tree.modules.length),
             ProgressBar("Regenerating generic aliases...", module_tree.modules.length),
             ProgressBar("Regenerating generic types.....", module_tree.modules.length),
             ProgressBar("Analysing semantics............", module_tree.modules.length)]
@@ -56,10 +55,9 @@ class Analyser:
             self._ast.generate_top_level_scopes(self._scope_manager, progress_bars[1], module_tree)
             self._ast.generate_top_level_aliases(self._scope_manager, progress_bars[2])
             self._ast.load_super_scopes(self._scope_manager, progress_bars[3])
-            self._ast.postprocess_super_scopes(self._scope_manager, progress_bars[4])
-            self._ast.regenerate_generic_aliases(self._scope_manager, progress_bars[5])
-            self._ast.regenerate_generic_types(self._scope_manager, progress_bars[6])
-            self._ast.analyse_semantics(self._scope_manager, progress_bars[7])
+            self._ast.regenerate_generic_aliases(self._scope_manager, progress_bars[4])
+            self._ast.regenerate_generic_types(self._scope_manager, progress_bars[5])
+            self._ast.analyse_semantics(self._scope_manager, progress_bars[6])
 
         except SemanticError as error:
             errored_module = module_tree.modules.find(lambda module: self._ast.current() is module.module_ast)

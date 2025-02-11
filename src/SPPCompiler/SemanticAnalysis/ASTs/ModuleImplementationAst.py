@@ -1,24 +1,19 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
+from dataclasses import dataclass, field
+
+
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ModuleMemberAst import ModuleMemberAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class ModuleImplementationAst(Ast, CompilerStages):
-    members: Seq[ModuleMemberAst]
-
-    def __post_init__(self) -> None:
-        # Convert the members into a sequence.
-        self.members = Seq(self.members)
+class ModuleImplementationAst(Ast):
+    members: Seq[Asts.ModuleMemberAst] = field(default_factory=Seq)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -40,10 +35,6 @@ class ModuleImplementationAst(Ast, CompilerStages):
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         # Load the super scopes.
         for m in self.members: m.load_super_scopes(scope_manager)
-
-    def postprocess_super_scopes(self, scope_manager: ScopeManager) -> None:
-        # Inject the super scopes.
-        for m in self.members: m.postprocess_super_scopes(scope_manager)
 
     def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Alias the types in the members for regeneration.

@@ -1,41 +1,25 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 
-from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast, Default
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericParameterAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericParameterRequiredAst, GenericParameterOptionalAst, GenericParameterVariadicAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericCompParameterAst, GenericTypeParameterAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class GenericParameterGroupAst(Ast, Default, CompilerStages):
-    tok_left_bracket: TokenAst
-    parameters: Seq[GenericParameterAst]
-    tok_right_bracket: TokenAst
-
-    type_parameters: Seq[GenericTypeParameterAst] = field(default_factory=Seq, init=False, repr=False)
-    comp_parameters: Seq[GenericCompParameterAst] = field(default_factory=Seq, init=False, repr=False)
-
-    def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericTypeParameterAst, GenericCompParameterAst
-
-        # Convert the arguments into a sequence, and other defaults.
-        self.parameters = Seq(self.parameters)
-        self.type_parameters = self.parameters.filter_to_type(*GenericTypeParameterAst.__value__.__args__)
-        self.comp_parameters = self.parameters.filter_to_type(*GenericCompParameterAst.__value__.__args__)
+class GenericParameterGroupAst(Ast):
+    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceL))
+    parameters: Seq[Asts.GenericParameterAst] = field(default_factory=Seq)
+    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))
 
     def __copy__(self) -> GenericParameterGroupAst:
-        return GenericParameterGroupAst.default(self.parameters.copy())
+        return GenericParameterGroupAst(parameters=self.parameters.copy())
 
     def __eq__(self, other: GenericParameterGroupAst) -> bool:
         # Check both ASTs are the same type and have the same parameters.
@@ -53,35 +37,27 @@ class GenericParameterGroupAst(Ast, Default, CompilerStages):
             string = []
         return "".join(string)
 
-    @staticmethod
-    def default(parameters: Seq[GenericParameterAst] = None) -> GenericParameterGroupAst:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-        from SPPCompiler.SemanticAnalysis import TokenAst
-        return GenericParameterGroupAst(-1, TokenAst.default(SppTokenType.TkBrackL), parameters or Seq(), TokenAst.default(SppTokenType.TkBrackR))
-
-    def get_req(self) -> Seq[GenericParameterRequiredAst]:
+    def get_req(self) -> Seq[Asts.GenericParameterRequiredAst]:
         # Get all the required generic parameters.
-        from SPPCompiler.SemanticAnalysis import GenericCompParameterRequiredAst, GenericTypeParameterRequiredAst
-        return self.parameters.filter_to_type(GenericCompParameterRequiredAst, GenericTypeParameterRequiredAst)
+        return self.parameters.filter_to_type(Asts.GenericCompParameterRequiredAst, Asts.GenericTypeParameterRequiredAst)
 
-    def get_opt(self) -> Seq[GenericParameterOptionalAst]:
+    def get_opt(self) -> Seq[Asts.GenericParameterOptionalAst]:
         # Get all the optional generic parameters.
-        from SPPCompiler.SemanticAnalysis import GenericCompParameterOptionalAst, GenericTypeParameterOptionalAst
-        return self.parameters.filter_to_type(GenericCompParameterOptionalAst, GenericTypeParameterOptionalAst)
+        return self.parameters.filter_to_type(Asts.GenericCompParameterOptionalAst, Asts.GenericTypeParameterOptionalAst)
 
-    def get_var(self) -> Seq[GenericParameterVariadicAst]:
+    def get_var(self) -> Seq[Asts.GenericParameterVariadicAst]:
         # Get all the variadic generic parameters.
-        from SPPCompiler.SemanticAnalysis import GenericCompParameterVariadicAst, GenericTypeParameterVariadicAst
-        return self.parameters.filter_to_type(GenericCompParameterVariadicAst, GenericTypeParameterVariadicAst)
+        return self.parameters.filter_to_type(Asts.GenericCompParameterVariadicAst, Asts.GenericTypeParameterVariadicAst)
 
-    def get_type_params(self) -> Seq[GenericTypeParameterAst]:
+    def get_comp_params(self) -> Seq[Asts.GenericCompParameterAst]:
+        # Get all the computation generic parameters.
+        return self.parameters.filter_to_type(*Asts.GenericCompParameterAst.__value__.__args__)
+
+    def get_type_params(self) -> Seq[Asts.GenericTypeParameterAst]:
         # Get all the type generic parameters.
-        from SPPCompiler.SemanticAnalysis.ASTs.GenericParameterAst import GenericTypeParameterAst
-        return self.parameters.filter_to_type(*GenericTypeParameterAst.__value__.__args__)
+        return self.parameters.filter_to_type(*Asts.GenericTypeParameterAst.__value__.__args__)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # Check there are no duplicate generic parameter names.
         generic_parameter_names = self.parameters.map(lambda parameter: parameter.name)
         if duplicates := generic_parameter_names.non_unique():

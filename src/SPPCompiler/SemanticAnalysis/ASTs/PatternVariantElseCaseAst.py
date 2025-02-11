@@ -1,22 +1,21 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
+from dataclasses import dataclass, field
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.CaseExpressionAst import CaseExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PatternVariantElseCaseAst(Ast, CompilerStages):
-    tok_else: TokenAst
-    case_expression: CaseExpressionAst
+class PatternVariantElseCaseAst(Ast):
+    tok_else: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwElse))
+    case_expression: Asts.CaseExpressionAst = field(default=None)
+
+    def __post_init__(self) -> None:
+        assert self.case_expression
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -26,7 +25,7 @@ class PatternVariantElseCaseAst(Ast, CompilerStages):
             self.case_expression.print(printer)]
         return "".join(string)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Analyse the case expression.
         self.case_expression.analyse_semantics(scope_manager, **kwargs)
 

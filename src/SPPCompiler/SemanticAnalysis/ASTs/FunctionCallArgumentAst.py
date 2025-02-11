@@ -1,10 +1,9 @@
 from typing import Union
 
-from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentNamedAst import FunctionCallArgumentNamedAst
-from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentUnnamedAst import FunctionCallArgumentUnnamedAst
+import SPPCompiler.SemanticAnalysis as Asts
 
 type FunctionCallArgumentAst = Union[
-    FunctionCallArgumentNamedAst,
-    FunctionCallArgumentUnnamedAst]
+    Asts.FunctionCallArgumentNamedAst,
+    Asts.FunctionCallArgumentUnnamedAst]
 
 __all__ = ["FunctionCallArgumentAst"]

@@ -1,18 +1,18 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from fastenum import Enum
-from typing import TYPE_CHECKING
-import copy
 
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Dict
+
+
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages, PreProcessingContext
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.IdentifierAst import IdentifierAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-
+from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled, AstVisibility
+from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 """
 Todo - ideas:
@@ -33,14 +33,18 @@ class _Annotations(Enum):
     Hidden = "hidden"
     Cold = "cold"
     Hot = "hot"
+    CompilerBuiltin = "compiler_builtin"
 
 
 @dataclass
-class AnnotationAst(Ast, CompilerStages):
-    tok_at: TokenAst
-    name: IdentifierAst
+class AnnotationAst(Ast):
+    tok_at: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAt))
+    name: Asts.IdentifierAst = field(default=None)
 
-    def __deepcopy__(self, memodict={}):
+    def __post_init__(self) -> None:
+        assert self.name
+
+    def __deepcopy__(self, memodict: Dict = None) -> AnnotationAst:
         # Create a deep copy of the AST.
         return AnnotationAst(self.pos, self.tok_at, self.name, _ctx=self._ctx)
 
@@ -54,35 +58,44 @@ class AnnotationAst(Ast, CompilerStages):
 
     def pre_process(self, context: PreProcessingContext) -> None:
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
-        from SPPCompiler.SemanticAnalysis import FunctionPrototypeAst, ModulePrototypeAst
-        from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled, AstVisibility
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
         super().pre_process(context)
 
-        # Pre-process the name of this annotation.
         if self.name.value == _Annotations.VirtualMethod.value:
-            # The "virtual_method" annotation can only be applied to class method.
-            if not isinstance(context, FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
-            if isinstance(context._ctx, ModulePrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "class-method")
+            # The "virtual_method" annotation can only be applied to function asts.
+            if not isinstance(context, Asts.FunctionPrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(
+                    self.name, context.name, "function")
+
+            # The function ast must be a class method, not a free function.
+            if isinstance(context._ctx, Asts.ModulePrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(
+                    self.name, context.name, "class-method")
+
+            # The "virtual_method" annotation cannot be applied to an "abstract_method" annotation.
             if context._abstract:
-                raise SemanticErrors.AnnotationConflictError().add(self.name, context._abstract.name)
+                raise SemanticErrors.AnnotationConflictError().add(
+                    self.name, context._abstract.name)
+
             context._virtual = self
 
         elif self.name.value == _Annotations.AbstractMethod.value:
-            # The "abstract_method" annotation can only be applied to class method.
-            if not isinstance(context, FunctionPrototypeAst):
+            # The "abstract_method" annotation can only be applied to function asts.
+            if not isinstance(context, Asts.FunctionPrototypeAst):
                 raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
-            if isinstance(context._ctx, ModulePrototypeAst):
+
+            # The function ast must be a class method, not a free function.
+            if isinstance(context._ctx, Asts.ModulePrototypeAst):
                 raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "class-method")
+
+            # The "abstract_method" annotation cannot be applied to a "virtual_method" annotation.
             if context._virtual:
                 raise SemanticErrors.AnnotationConflictError().add(self.name, context._virtual.name)
+
             context._abstract = self
 
-        elif self.name.value == _Annotations.NonImplementedMethod.value:
+        elif self.name.value in [_Annotations.NonImplementedMethod.value, _Annotations.CompilerBuiltin.value]:
             # The "non_implemented_method" annotation can only be applied to functions.
-            if not isinstance(context, FunctionPrototypeAst):
+            if not isinstance(context, Asts.FunctionPrototypeAst):
                 raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
             context._non_implemented = self
 
@@ -120,7 +133,7 @@ class AnnotationAst(Ast, CompilerStages):
 
         elif self.name.value == _Annotations.Cold.value:
             # The "cold" annotation can only be applied to functions.
-            if not isinstance(context, FunctionPrototypeAst):
+            if not isinstance(context, Asts.FunctionPrototypeAst):
                 raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
             if context._hot:
                 raise SemanticErrors.AnnotationConflictError().add(self.name, context._hot.name)
@@ -128,7 +141,7 @@ class AnnotationAst(Ast, CompilerStages):
 
         elif self.name.value == _Annotations.Hot.value:
             # The "hot" annotation can only be applied to functions.
-            if not isinstance(context, FunctionPrototypeAst):
+            if not isinstance(context, Asts.FunctionPrototypeAst):
                 raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
             if context._cold:
                 raise SemanticErrors.AnnotationConflictError().add(self.name, context._cold.name)
@@ -138,8 +151,6 @@ class AnnotationAst(Ast, CompilerStages):
             raise SemanticErrors.AnnotationInvalidError().add(self.name)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-
         # Prevent duplicate annotations from being applied to an AST.
         annotation_names = self._ctx.annotations.map_attr("name")
         if duplicate_annotations := annotation_names.filter(lambda a: a == self.name).remove(self.name):

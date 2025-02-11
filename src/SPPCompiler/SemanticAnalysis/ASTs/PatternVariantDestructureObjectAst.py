@@ -1,34 +1,29 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
 
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.PatternMapping import PatternMapping
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.PatternVariantAst import PatternVariantNestedForDestructureObjectAst
-    from SPPCompiler.SemanticAnalysis.ASTs.LocalVariableDestructureObjectAst import LocalVariableDestructureObjectAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TypeAst import TypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PatternVariantDestructureObjectAst(Ast, PatternMapping, CompilerStages):
-    type: TypeAst
-    tok_left_paren: TokenAst
-    elements: Seq[PatternVariantNestedForDestructureObjectAst]
-    tok_right_paren: TokenAst
+class PatternVariantDestructureObjectAst(Ast, PatternMapping):
+    type: Asts.TypeAst = field(default=None)
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    elements: Seq[Asts.PatternVariantNestedForDestructureObjectAst] = field(default_factory=Seq)
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
 
     def __post_init__(self) -> None:
-        # Convert the elements into a sequence.
-        self.elements = Seq(self.elements)
+        assert self.type
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -40,19 +35,13 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping, CompilerStages):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    def convert_to_variable(self, **kwargs) -> LocalVariableDestructureObjectAst:
+    def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureObjectAst:
         # Convert the object destructuring into a local variable object destructuring.
-        from SPPCompiler.SemanticAnalysis import LocalVariableDestructureObjectAst, PatternVariantNestedForDestructureObjectAst
-        elements = self.elements.filter_to_type(*PatternVariantNestedForDestructureObjectAst.__value__.__args__)
+        elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureObjectAst.__value__.__args__)
         converted_elements = elements.map(lambda e: e.convert_to_variable(**kwargs))
-        return LocalVariableDestructureObjectAst(self.pos, self.type, self.tok_left_paren, converted_elements, self.tok_right_paren)
+        return Asts.LocalVariableDestructureObjectAst(self.pos, self.type, self.tok_left_paren, converted_elements, self.tok_right_paren)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, condition: ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        from SPPCompiler.SemanticAnalysis import LetStatementInitializedAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
-
+    def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         self.type.analyse_semantics(scope_manager, **kwargs)
 
         # Flow type the condition symbol if necessary.
@@ -68,7 +57,7 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping, CompilerStages):
 
         # Create the new variables from the pattern in the patterns scope.
         variable = self.convert_to_variable(**kwargs)
-        new_ast = LetStatementInitializedAst.from_variable_and_value(variable, condition)
+        new_ast = Asts.LetStatementInitializedAst(pos=variable.pos, assign_to=variable, value=condition)
         new_ast.analyse_semantics(scope_manager, **kwargs)
 
 

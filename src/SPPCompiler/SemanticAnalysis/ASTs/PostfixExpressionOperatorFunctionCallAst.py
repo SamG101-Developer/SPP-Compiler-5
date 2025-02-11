@@ -2,42 +2,28 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Optional, Tuple
 
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
-from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
+from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
-from SPPCompiler.SemanticAnalysis.MultiStage.Stages import CompilerStages
+from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.ASTs.ExpressionAst import ExpressionAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionCallArgumentGroupAst import FunctionCallArgumentGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.FunctionPrototypeAst import FunctionPrototypeAst
-    from SPPCompiler.SemanticAnalysis.ASTs.GenericArgumentGroupAst import GenericArgumentGroupAst
-    from SPPCompiler.SemanticAnalysis.ASTs.TokenAst import TokenAst
-    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStages):
-    generic_argument_group: GenericArgumentGroupAst
-    function_argument_group: FunctionCallArgumentGroupAst
-    fold_token: Optional[TokenAst]
+class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
+    generic_argument_group: Asts.GenericArgumentGroupAst = field(default_factory=Asts.GenericArgumentGroupAst)
+    function_argument_group: Asts.FunctionCallArgumentGroupAst = field(default_factory=Asts.FunctionCallArgumentGroupAst)
+    fold_token: Optional[Asts.TokenAst] = field(default=None)
 
-    _overload: Optional[Tuple[Scope, FunctionPrototypeAst]] = field(default=None, init=False, repr=False)
+    _overload: Optional[Tuple[Scope, Asts.FunctionPrototypeAst]] = field(default=None, init=False, repr=False)
     _is_async: Optional[Ast] = field(default=None, init=False, repr=False)
-
-    def __post_init__(self) -> None:
-        # Import the necessary classes to create default instances.
-        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentGroupAst, GenericArgumentGroupAst
-
-        # Create defaults.
-        self.generic_argument_group = self.generic_argument_group or GenericArgumentGroupAst.default()
-        self.function_argument_group = self.function_argument_group or FunctionCallArgumentGroupAst.default()
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -48,12 +34,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
             self.fold_token.print(printer) if self.fold_token else ""]
         return "".join(string)
 
-    def determine_overload(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import FunctionCallArgumentNamedAst, PostfixExpressionAst
-        from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst, FunctionParameterVariadicAst
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-
+    def determine_overload(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
         # function's name and its owner type/namespace.
 
@@ -63,8 +44,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
             raise SemanticErrors.FunctionCallOnNoncallableTypeError().add(lhs)
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
-        if isinstance(lhs, PostfixExpressionAst) and lhs.op.is_runtime_access():
-            transformed_lhs, transformed_function_call = AstFunctions.convert_function_to_type_access(scope_manager, function_owner_type, function_name, lhs, self, **kwargs)
+        if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
+            transformed_lhs, transformed_function_call = AstFunctions.convert_method_to_function_form(scope_manager, function_owner_type, function_name, lhs, self, **kwargs)
             transformed_function_call.determine_overload(scope_manager, transformed_lhs, **kwargs)
             self._overload = transformed_function_call._overload
             return
@@ -86,7 +67,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
 
             # Extract generic/function argument information from this AST.
             arguments = self.function_argument_group.arguments.copy()
-            argument_names = arguments.filter_to_type(FunctionCallArgumentNamedAst).map_attr("name")
+            argument_names = arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst).map_attr("name")
             generic_arguments = self.generic_argument_group.arguments.copy()
 
             # Use a try-except block to catch any errors as a following overload could still be valid.
@@ -149,11 +130,11 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
                     argument_type = argument.infer_type(scope_manager, **kwargs)
                     parameter_type = InferredType(convention=type(parameter.convention), type=parameter.type)
 
-                    if isinstance(parameter, FunctionParameterVariadicAst):
+                    if isinstance(parameter, Asts.FunctionParameterVariadicAst):
                         parameter_type.type = CommonTypes.Tup(Seq([parameter_type.type] * argument_type.type.types[-1].generic_argument_group.arguments.length))
                         parameter_type.type.analyse_semantics(scope_manager, **kwargs)
 
-                    if isinstance(parameter, FunctionParameterSelfAst):
+                    if isinstance(parameter, Asts.FunctionParameterSelfAst):
                         argument.convention = parameter.convention
 
                     elif not parameter_type.symbolic_eq(argument_type, function_scope, scope_manager.current_scope):
@@ -192,7 +173,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
         self._overload = pass_overloads[0]
         return
 
-    def infer_type(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredType:
         # Todo: Hacky workaround - see why having a function call as a "self" argument doesn't use its "analyse
         #  semantics" as the same object. it calls the analyse_semantics method, but on another instance of the AST -
         #  being copied somewhere, maybe in a code injection.
@@ -204,7 +185,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable, CompilerStag
         return_type = self._overload[0].get_symbol(return_type).fq_name
         return InferredType.from_type(return_type)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, lhs: ExpressionAst = None, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         if self._overload:
             return
 
