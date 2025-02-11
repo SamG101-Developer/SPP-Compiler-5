@@ -3,6 +3,7 @@ from __future__ import annotations
 import builtins
 import copy
 import difflib
+from typing import Generator, Optional, Tuple
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -225,3 +226,28 @@ class AstTypeManagement:
             t.sub_generics(generics.arguments)
             u.sub_generics(generics.arguments)
             return f"{parts[0]}:#{t} ext {u}:{parts[2]}"
+
+    @staticmethod
+    def is_type_recursive(type: Asts.ClassPrototypeAst, scope_manager: ScopeManager) -> Optional[Asts.TypeAst]:
+        """
+        Check if a type is recursive by analysing teh type's attributes, and its attributes' attributes, and so on. If
+        even one attribute's type (no matter how nested) matches the original type, then the type is recursive.
+
+        Args:
+            type: The type to check for any recursion.
+            scope_manager: The scope manager to use for symbol resolution.
+
+        Returns: True if the type is recursive, False otherwise.
+        """
+
+        def get_attribute_types(class_prototype: Asts.ClassPrototypeAst) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
+            for attribute in class_prototype.body.members:
+                raw_attribute_type = attribute.type
+                symbol = scope_manager.current_scope.get_symbol(raw_attribute_type)
+                yield symbol.type, attribute.type
+                if symbol.type:
+                    yield from get_attribute_types(symbol.type)
+
+        for attribute_cls_prototype, attribute_ast in get_attribute_types(type):
+            if attribute_cls_prototype is type:
+                return attribute_ast

@@ -9,8 +9,10 @@ from llvmlite import ir as llvm
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -125,6 +127,10 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
         self.where_block.analyse_semantics(scope_manager, **kwargs)
         self.body.analyse_semantics(scope_manager, **kwargs)
+
+        # Check the type isn't recursive, by recursing through all attribute types.
+        if recursion := AstTypeManagement.is_type_recursive(self, scope_manager):
+            raise SemanticErrors.RecursiveTypeDefinitionError(self, recursion)
 
         # Move out of the class scope.
         scope_manager.move_out_of_current_scope()

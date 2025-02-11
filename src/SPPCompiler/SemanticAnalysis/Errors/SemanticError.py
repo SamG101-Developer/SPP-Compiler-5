@@ -1501,3 +1501,22 @@ class SemanticErrors:
                 tip="Use a non-abstract class instead.")
 
             return self
+
+    class RecursiveTypeDefinitionError(SemanticError):
+        """
+        The RecursiveTypeDefinitionError is raised if a type definition is recursive. This is when a type definition
+        refers to itself in its own definition, as an attribute, making the type an infinite size.
+        """
+
+        def add(self, class_prototype: Asts.ClassPrototypeAst, recursion_type: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                pos=class_prototype.pos,
+                tag="Type defined here")
+
+            self.add_error(
+                pos=recursion_type.pos,
+                tag="Recursive type definition.",
+                msg="Cannot refer to the enclosing type within the definition of the type.",
+                tip="Use Single[T] or Shared[T] instead.")
+
+            return self
