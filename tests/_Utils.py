@@ -14,8 +14,8 @@ class CustomTestCase(TestCase):
 
 def _build_temp_project_v3(code):
     cwd = os.getcwd()
-    fp = f"C:/Users/samue/PycharmProjects/SPP-Compiler-5/tst/test_outputs"
-    with open(f"{fp}/src/main.spp", "w") as f:
+    fp = f"test_outputs"
+    with open(f"{cwd}/{fp}/src/main.spp", "w") as f:
         f.write(code)
     os.chdir(fp)
     handle_build(Namespace(mode="rel"))
