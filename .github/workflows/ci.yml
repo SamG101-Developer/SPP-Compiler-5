@@ -29,6 +29,10 @@ jobs:
         run: |
           echo "PYTHONPATH=$(pwd)/src:$PYTHONPATH" >> $GITHUB_ENV
 
+      - name: Prepare test project environment
+        run: |
+          python spp_cli.py init
+
       - name: Run unit tests
         run: |
           python -m unittest discover tests
