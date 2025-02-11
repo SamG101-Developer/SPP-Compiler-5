@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tst._Utils import *
 import json_fix
 
@@ -21,7 +19,6 @@ class TestLoopConditionIterableAst(CustomTestCase):
         }
         """
 
-    # Todo: this should actually fail because v isn't mutable
     @should_pass_compilation()
     def test_valid_loop_condition_iterable(self):
         """

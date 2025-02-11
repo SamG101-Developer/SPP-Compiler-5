@@ -32,6 +32,14 @@ class TestArrayLiteralNElementAst(CustomTestCase):
     def test_invalid_array_filled_array_borrowed_elements(self):
         """
         fun f(a: &std::BigInt) -> std::Void {
-            let a = [a, 2, 3]
+            let b = [a]
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.ArrayElementsDifferentTypesError)
+    def test_invalid_array_filled_array_mixed_borrowed_elements(self):
+        """
+        fun f(a: &std::BigInt) -> std::Void {
+            let b = [a, 1, 2]
         }
         """
