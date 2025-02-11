@@ -4,10 +4,14 @@ import difflib
 from dataclasses import dataclass, field
 
 import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
 
 
 @dataclass
@@ -31,40 +35,30 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
         return "".join(string)
 
     def is_runtime_access(self) -> bool:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         return self.tok_access.token.token_type == SppTokenType.TkDot
 
     def is_static_access(self) -> bool:
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         return self.tok_access.token.token_type == SppTokenType.TkDblColon
 
-    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredType:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-
+    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         lhs_type = lhs.infer_type(scope_manager)
-        lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type.type)
+        lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type)
 
         # Numerical access -> get the nth generic argument of the tuple.
-        if isinstance(self.field, TokenAst):
-            element_type = AstTypeManagement.get_nth_type_of_indexable_type(int(self.field.token.token_metadata), lhs_type.type, scope_manager.current_scope)
-            return InferredType.from_type(element_type)
+        if isinstance(self.field, Asts.TokenAst):
+            element_type = AstTypeManagement.get_nth_type_of_indexable_type(int(self.field.token.token_metadata), lhs_type, scope_manager.current_scope)
+            return element_type
 
         # Accessing a member from the scope by the identifier.
-        elif isinstance(self.field, IdentifierAst):
+        elif isinstance(self.field, Asts.IdentifierAst):
             attribute_type = lhs_symbol.scope.get_symbol(self.field).type
-            return InferredType.from_type(attribute_type)
+            return attribute_type
 
         raise NotImplementedError("Unknown member access type.")
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TokenAst, TypeAst
-        from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
-        
         # Accessing static methods off of a type, such as "Str::new()".
-        if isinstance(lhs, TypeAst):
+        if isinstance(lhs, Asts.TypeAst):
             lhs_symbol = scope_manager.current_scope.get_symbol(lhs)
 
             # Check static member access "::" is being used.
@@ -78,8 +72,8 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
                 raise SemanticErrors.IdentifierUnknownError().add(self.field, "static member", closest_match[0] if closest_match else None)
         
         # Numerical access to a tuple, such as "tuple.0".
-        elif isinstance(self.field, TokenAst):
-            lhs_type = lhs.infer_type(scope_manager).type
+        elif isinstance(self.field, Asts.TokenAst):
+            lhs_type = lhs.infer_type(scope_manager)
             lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type)
 
             # Check the lhs isn't a generic type.
@@ -95,8 +89,8 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
                 raise SemanticErrors.MemberAccessIndexOutOfBoundsError().add(lhs, lhs_type, self.field)
         
         # Accessing a regular attribute/method, such as "class.attribute".
-        elif isinstance(self.field, IdentifierAst) and self.is_runtime_access():
-            lhs_type = lhs.infer_type(scope_manager).type
+        elif isinstance(self.field, Asts.IdentifierAst) and self.is_runtime_access():
+            lhs_type = lhs.infer_type(scope_manager)
             lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type)
             
             # Check the lhs is a variable and not a namespace.
@@ -114,7 +108,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
                 raise SemanticErrors.IdentifierUnknownError().add(self.field, "runtime member", closest_match[0] if closest_match else None)
         
         # Accessing a namespaced constant, such as "std::pi".
-        elif isinstance(self.field, IdentifierAst) and self.is_static_access():
+        elif isinstance(self.field, Asts.IdentifierAst) and self.is_static_access():
             lhs_val_symbol = scope_manager.current_scope.get_symbol(lhs)
 
             # Check the lhs is a namespace and not a variable.
@@ -122,7 +116,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
                 raise SemanticErrors.MemberAccessRuntimeOperatorExpectedError().add(lhs, self.tok_access)
         
             # Check the variable exists on the lhs.
-            lhs_type = lhs.infer_type(scope_manager).type
+            lhs_type = lhs.infer_type(scope_manager)
             lhs_type_symbol = scope_manager.current_scope.get_symbol(lhs_type)
             if not lhs_type_symbol.scope.has_symbol(self.field):
                 alternatives = lhs_type_symbol.scope.all_symbols().map_attr("name")

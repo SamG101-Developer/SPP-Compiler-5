@@ -9,7 +9,6 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
@@ -68,7 +67,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
 
         # Make sure the default expression is of the correct type.
         default_type = self.default.infer_type(scope_manager)
-        target_type = InferredType.from_type(self.type)
+        target_type = self.type
         if not target_type.symbolic_eq(default_type, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(self.name, target_type, self.default, default_type)
 

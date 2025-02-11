@@ -11,7 +11,6 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
@@ -32,13 +31,13 @@ class AstFunctions:
 
         # Special function: ".next()" on generators.
         if isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.op, Asts.PostfixExpressionOperatorStepKeywordAst):
-            function_owner_type = lhs.lhs.infer_type(scope_manager).type
+            function_owner_type = lhs.lhs.infer_type(scope_manager)
             function_name = Asts.IdentifierAst(lhs.op.pos, "next_")
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Runtime access into an object: "object.method()"
         elif isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
-            function_owner_type = lhs.lhs.infer_type(scope_manager).type
+            function_owner_type = lhs.lhs.infer_type(scope_manager)
             function_name = lhs.op.field
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
@@ -142,13 +141,13 @@ class AstFunctions:
         # For overloads, the required parameters must have different types or conventions.
         if conflict_type == FunctionConflictCheckType.InvalidOverload:
             parameter_filter = lambda f: f.function_parameter_group.get_req()
-            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.convention == p2.convention
+            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2)
             extra_check      = lambda f1, f2, s1, s2: f1.tok_fun == f2.tok_fun
 
         # For overrides, all parameters must be direct matches (type and convention). Todo: Self convention check
         else:
             parameter_filter = lambda f: f.function_parameter_group.get_non_self()
-            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.convention == p2.convention and p1.variable.extract_names == p2.variable.extract_names and type(p1) is type(p2)
+            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.variable.extract_names == p2.variable.extract_names and type(p1) is type(p2)
             extra_check      = lambda f1, f2, s1, s2: f1.return_type.symbolic_eq(f2.return_type, s1, s2) and f1.tok_fun == f2.tok_fun
 
         # Check each parameter set for each overload: 1 match is a conflict.

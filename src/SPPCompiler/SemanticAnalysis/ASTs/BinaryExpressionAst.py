@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Meta.AstBinUtils import AstBinUtils
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
@@ -39,14 +39,13 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             self.rhs.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 
         # Comparisons using the "is" keyword are always boolean.
         if self.op.token.token_type == SppTokenType.KwIs:
-            bool_type = CommonTypes.Bool(self.pos)
-            return InferredType.from_type(bool_type)
+            return CommonTypes.Bool(self.pos)
 
         # Infer the type from the function equivalent of the binary expression.
         if not self._as_func:
@@ -87,7 +86,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
         # Handle lhs-folding
         if isinstance(self.lhs, Asts.TokenAst):
             # Check the rhs is a tuple.
-            rhs_tuple_type = self.rhs.infer_type(scope_manager, **kwargs).type
+            rhs_tuple_type = self.rhs.infer_type(scope_manager, **kwargs)
             if not rhs_tuple_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, rhs_tuple_type, self.lhs)
 
@@ -110,7 +109,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
         # Handle rhs-folding
         elif isinstance(self.rhs, Asts.TokenAst):
             # Check the rhs is a tuple.
-            lhs_tuple_type = self.lhs.infer_type(scope_manager, **kwargs).type
+            lhs_tuple_type = self.lhs.infer_type(scope_manager, **kwargs)
             if not lhs_tuple_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, lhs_tuple_type, self.lhs)
 

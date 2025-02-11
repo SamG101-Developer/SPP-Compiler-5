@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -57,27 +57,25 @@ class FloatLiteralAst(Ast, TypeInferrable):
             self.type.print(printer) if self.type else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Match the type against the allowed type postfixes (no postfix is BigDec).
         match self.type:
             case None:
-                float_type = CommonTypes.BigDec(self.pos)
+                return CommonTypes.BigDec(self.pos)
             case type if type.types[-1].value == "f8":
-                float_type = CommonTypes.F8(self.pos)
+                return CommonTypes.F8(self.pos)
             case type if type.types[-1].value == "f16":
-                float_type = CommonTypes.F16(self.pos)
+                return CommonTypes.F16(self.pos)
             case type if type.types[-1].value == "f32":
-                float_type = CommonTypes.F32(self.pos)
+                return CommonTypes.F32(self.pos)
             case type if type.types[-1].value == "f64":
-                float_type = CommonTypes.F64(self.pos)
+                return CommonTypes.F64(self.pos)
             case type if type.types[-1].value == "f128":
-                float_type = CommonTypes.F128(self.pos)
+                return CommonTypes.F128(self.pos)
             case type if type.types[-1].value == "f256":
-                float_type = CommonTypes.F256(self.pos)
+                return CommonTypes.F256(self.pos)
             case _:
                 raise
-
-        return InferredType.from_type(float_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # No analysis needs to be done for the BigDec automatically inferred type.

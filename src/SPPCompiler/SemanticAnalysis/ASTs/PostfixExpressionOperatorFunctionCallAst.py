@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
@@ -101,7 +101,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                 generic_arguments = AstFunctions.inherit_generic_arguments(
                     generic_parameters=function_overload.generic_parameter_group.get_req(),
                     explicit_generic_arguments=generic_arguments + owner_scope_generic_arguments,
-                    infer_source=arguments.map(lambda a: (a.name, a.infer_type(scope_manager, **kwargs).type)).dict(),
+                    infer_source=arguments.map(lambda a: (a.name, a.infer_type(scope_manager, **kwargs))).dict(),
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
                     scope_manager=scope_manager, owner=lhs,
                     variadic_parameter_identifier=function_overload.function_parameter_group.get_var().extract_name if is_variadic else None,
@@ -128,11 +128,11 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                 sorted_arguments = arguments.sort(key=lambda a: parameter_names.index(a.name))
                 for argument, parameter in sorted_arguments.zip(parameters):
                     argument_type = argument.infer_type(scope_manager, **kwargs)
-                    parameter_type = InferredType(convention=type(parameter.convention), type=parameter.type)
+                    parameter_type = parameter.type
 
                     if isinstance(parameter, Asts.FunctionParameterVariadicAst):
-                        parameter_type.type = CommonTypes.Tup(Seq([parameter_type.type] * argument_type.type.types[-1].generic_argument_group.arguments.length))
-                        parameter_type.type.analyse_semantics(scope_manager, **kwargs)
+                        parameter_type = CommonTypes.Tup(Seq([parameter_type] * argument_type.types[-1].generic_argument_group.arguments.length))
+                        parameter_type.analyse_semantics(scope_manager, **kwargs)
 
                     if isinstance(parameter, Asts.FunctionParameterSelfAst):
                         argument.convention = parameter.convention
@@ -151,7 +151,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                     SemanticErrors.TypeMismatchError,
                     SemanticErrors.GenericParameterInferredConflictInferredError,
                     SemanticErrors.GenericParameterInferredConflictExplicitError,
-                    SemanticErrors.GenericParameterNotInferredError) as e:
+                    SemanticErrors.GenericParameterNotInferredError,
+                    SemanticErrors.GenericArgumentTooManyError) as e:
 
                 # Mark the overload as a fail.
                 fail_overloads.append((function_scope, function_overload, e))
@@ -159,21 +160,21 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
 
         # If there are no pass overloads, raise an error.
         if pass_overloads.is_empty():
-            failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {f[2].error_info[0].tag}").join("\n")
-            argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(scope_manager, **kwargs).type).join(", ")})"
+            failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {type(f[2]).__name__}").join("\n")
+            argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(scope_manager, **kwargs)).join(", ")})"
             raise SemanticErrors.FunctionCallNoValidSignaturesError().add(self, failed_signatures_and_errors, argument_usage_signature)
 
         # If there are multiple pass overloads, raise an error.
         elif pass_overloads.length > 1:
             passed_signatures = pass_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name)).join("\n")
-            argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(scope_manager, **kwargs).type).join(", ")})"
+            argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(scope_manager, **kwargs)).join(", ")})"
             raise SemanticErrors.FunctionCallAmbiguousSignaturesError().add(self, passed_signatures, argument_usage_signature)
 
         # Set the overload to the only pass overload.
         self._overload = pass_overloads[0]
         return
 
-    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # Todo: Hacky workaround - see why having a function call as a "self" argument doesn't use its "analyse
         #  semantics" as the same object. it calls the analyse_semantics method, but on another instance of the AST -
         #  being copied somewhere, maybe in a code injection.
@@ -183,7 +184,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
         # Expand the return type from the scope it was defined in => comparisons won't require function scope knowledge.
         return_type = self._overload[1].return_type
         return_type = self._overload[0].get_symbol(return_type).fq_name
-        return InferredType.from_type(return_type)
+        return return_type
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         if self._overload:

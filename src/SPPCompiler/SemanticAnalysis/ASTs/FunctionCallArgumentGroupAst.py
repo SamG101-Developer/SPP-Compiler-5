@@ -63,7 +63,7 @@ class FunctionCallArgumentGroupAst(Ast):
             if isinstance(argument, Asts.FunctionCallArgumentUnnamedAst) and argument.tok_unpack:
 
                 # Check the argument type is a tuple
-                tuple_argument_type = argument.infer_type(scope_manager, **kwargs).type
+                tuple_argument_type = argument.infer_type(scope_manager, **kwargs)
                 if not tuple_argument_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
                     raise SemanticErrors.ArgumentTupleExpansionOfNonTupleError().add(argument.value, tuple_argument_type)
 

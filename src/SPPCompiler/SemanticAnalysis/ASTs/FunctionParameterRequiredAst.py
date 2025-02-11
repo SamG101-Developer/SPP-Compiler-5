@@ -19,7 +19,6 @@ from SPPCompiler.Utils.Sequence import Seq
 class FunctionParameterRequiredAst(Ast, Ordered, VariableNameExtraction):
     variable: Asts.LocalVariableAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
-    convention: Asts.ConventionAst = field(default_factory=lambda: Asts.ConventionMovAst())
     type: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -37,7 +36,6 @@ class FunctionParameterRequiredAst(Ast, Ordered, VariableNameExtraction):
         string = [
             self.variable.print(printer),
             self.tok_colon.print(printer) + " ",
-            self.convention.print(printer),
             self.type.print(printer)]
         return "".join(string)
 
@@ -62,9 +60,9 @@ class FunctionParameterRequiredAst(Ast, Ordered, VariableNameExtraction):
         # Mark the symbol as initialized.
         for name in self.variable.extract_names:
             symbol = scope_manager.current_scope.get_symbol(name)
-            symbol.memory_info.ast_borrowed = self.convention if type(self.convention) is not Asts.ConventionMovAst else None
-            symbol.memory_info.is_borrow_mut = isinstance(self.convention, Asts.ConventionMutAst)
-            symbol.memory_info.is_borrow_ref = isinstance(self.convention, Asts.ConventionRefAst)
+            symbol.memory_info.ast_borrowed = self.type.convention if type(self.type.convention) is not Asts.ConventionMovAst else None
+            symbol.memory_info.is_borrow_mut = isinstance(self.type.convention, Asts.ConventionMutAst)
+            symbol.memory_info.is_borrow_ref = isinstance(self.type.convention, Asts.ConventionRefAst)
             symbol.memory_info.initialized_by(self)
 
 

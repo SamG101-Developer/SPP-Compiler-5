@@ -4,9 +4,11 @@ from dataclasses import dataclass, field
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -29,19 +31,14 @@ class PostfixExpressionOperatorNotKeywordAst(Ast, TypeInferrable):
     def is_static_access(self) -> bool:
         return False
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Not operations are always as "bool".
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        bool_type = CommonTypes.Bool(self.pos)
-        return InferredType.from_type(bool_type)
+        return CommonTypes.Bool(self.pos)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        
         # Check the loop condition is boolean.
         target_type = CommonTypes.Bool(self.pos)
-        return_type = lhs.infer_type(scope_manager).type
+        return_type = lhs.infer_type(scope_manager)
         if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
             raise SemanticErrors.ExpressionNotBooleanError().add(lhs, return_type, "not expression")
 

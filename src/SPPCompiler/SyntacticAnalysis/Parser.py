@@ -258,20 +258,18 @@ class SppParser(Parser):
         c1 = self.current_pos()
         p1 = self.parse_local_variable().parse_once()
         p2 = self.parse_token(SppTokenType.TkColon).parse_once()
-        p3 = self.parse_convention().parse_once()
-        p4 = self.parse_type().parse_once()
-        return Asts.FunctionParameterRequiredAst(c1, p1, p2, p3, p4)
+        p3 = self.parse_type().parse_once()
+        return Asts.FunctionParameterRequiredAst(c1, p1, p2, p3)
 
     @parser_rule
     def parse_function_parameter_optional(self) -> Asts.FunctionParameterOptionalAst:
         c1 = self.current_pos()
         p1 = self.parse_local_variable().parse_once()
         p2 = self.parse_token(SppTokenType.TkColon).parse_once()
-        p3 = self.parse_convention().parse_once()
-        p4 = self.parse_type().parse_once()
-        p5 = self.parse_token(SppTokenType.TkAssign).parse_once()
-        p6 = self.parse_expression().parse_once()
-        return Asts.FunctionParameterOptionalAst(c1, p1, p2, p3, p4, p5, p6)
+        p3 = self.parse_type().parse_once()
+        p4 = self.parse_token(SppTokenType.TkAssign).parse_once()
+        p5 = self.parse_expression().parse_once()
+        return Asts.FunctionParameterOptionalAst(c1, p1, p2, p3, p4, p5)
 
     @parser_rule
     def parse_function_parameter_variadic(self) -> Asts.FunctionParameterVariadicAst:
@@ -279,9 +277,8 @@ class SppParser(Parser):
         p1 = self.parse_token(SppTokenType.TkDblDot).parse_once()
         p2 = self.parse_local_variable().parse_once()
         p3 = self.parse_token(SppTokenType.TkColon).parse_once()
-        p4 = self.parse_convention().parse_once()
-        p5 = self.parse_type().parse_once()
-        return Asts.FunctionParameterVariadicAst(c1, p1, p2, p3, p4, p5)
+        p4 = self.parse_type().parse_once()
+        return Asts.FunctionParameterVariadicAst(c1, p1, p2, p3, p4)
 
     # ===== GENERICS =====
 
@@ -1353,17 +1350,19 @@ class SppParser(Parser):
     @parser_rule
     def parse_type_single_with_namespace(self) -> Asts.TypeAst:
         c1 = self.current_pos()
-        p1 = self.parse_identifier().parse_one_or_more(SppTokenType.TkDblColon)
-        p2 = self.parse_token(SppTokenType.TkDblColon).parse_once()
-        p3 = self.parse_generic_identifier().parse_one_or_more(SppTokenType.TkDblColon)
-        return Asts.TypeAst(c1, Seq(p1), Seq(p3))
+        p1 = self.parse_convention().parse_once()
+        p2 = self.parse_identifier().parse_one_or_more(SppTokenType.TkDblColon)
+        p3 = self.parse_token(SppTokenType.TkDblColon).parse_once()
+        p4 = self.parse_generic_identifier().parse_one_or_more(SppTokenType.TkDblColon)
+        return Asts.TypeAst(c1, p1, Seq(p2), Seq(p4))
 
     @parser_rule
     def parse_type_single_with_self(self) -> Asts.TypeAst:
         c1 = self.current_pos()
-        p1 = self.parse_self_type_keyword().parse_once()
-        p2 = self.parse_types_after_self().parse_optional() or Seq()
-        return Asts.TypeAst(c1, Seq(), Seq([p1]) + p2)
+        p1 = self.parse_convention().parse_once()
+        p2 = self.parse_self_type_keyword().parse_once()
+        p3 = self.parse_types_after_self().parse_optional() or Seq()
+        return Asts.TypeAst(c1, p1, Seq(), Seq([p2]) + p3)
 
     @parser_rule
     def parse_types_after_self(self) -> Seq[Asts.GenericIdentifierAst]:
@@ -1374,8 +1373,9 @@ class SppParser(Parser):
     @parser_rule
     def parse_type_single_without_namespace_or_self(self) -> Asts.TypeAst:
         c1 = self.current_pos()
-        p1 = self.parse_generic_identifier().parse_one_or_more(SppTokenType.TkDblColon)
-        return Asts.TypeAst(c1, Seq(), Seq(p1))
+        p1 = self.parse_convention().parse_once()
+        p2 = self.parse_generic_identifier().parse_one_or_more(SppTokenType.TkDblColon)
+        return Asts.TypeAst(c1, p1, Seq(), Seq(p2))
 
     @parser_rule
     def parse_self_type_keyword(self) -> Asts.GenericIdentifierAst:

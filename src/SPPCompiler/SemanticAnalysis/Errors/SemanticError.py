@@ -8,7 +8,6 @@ from colorama import Fore, Style
 from fastenum import Enum
 
 import SPPCompiler.SemanticAnalysis as Asts
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -478,7 +477,7 @@ class SemanticErrors:
         Todo: add more info?
         """
 
-        def add(self, function_call: Asts.ExpressionAst, function_definition: Asts.IdentifierAst) -> SemanticError:
+        def add(self, function_call: Asts.PostfixExpressionOperatorFunctionCallAst, function_definition: Asts.IdentifierAst) -> SemanticError:
             self.add_info(
                 pos=function_definition.pos,
                 tag="Function defined here")
@@ -563,7 +562,7 @@ class SemanticErrors:
         Todo: add potential alias's old type: (... aka: ...)
         """
 
-        def add(self, existing_ast: Ast, existing_type: InferredType, incoming_ast: Ast, incoming_type: InferredType) -> SemanticError:
+        def add(self, existing_ast: Ast, existing_type: Asts.TypeAst, incoming_ast: Ast, incoming_type: Asts.TypeAst) -> SemanticError:
             self.add_info(
                 pos=existing_ast.pos,
                 tag=f"Type inferred as '{existing_type}' here")
@@ -1301,13 +1300,13 @@ class SemanticErrors:
         and the case expression is being used for assignment.
         """
 
-        def add(self, return_type_1: InferredType, return_type_2: InferredType) -> SemanticError:
+        def add(self, return_type_1: Asts.TypeAst, return_type_2: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=return_type_1.type.pos,
+                pos=return_type_1.pos,
                 tag=f"Branch inferred as '{return_type_1}'")
 
             self.add_error(
-                pos=return_type_2.type.pos,
+                pos=return_type_2.pos,
                 tag=f"Branch inferred as '{return_type_2}'",
                 msg="The branches return conflicting types.",
                 tip="Ensure the branches return the same type.")
@@ -1518,5 +1517,20 @@ class SemanticErrors:
                 tag="Recursive type definition.",
                 msg="Cannot refer to the enclosing type within the definition of the type.",
                 tip="Use Single[T] or Shared[T] instead.")
+
+            return self
+
+    class ConventionInvalidUsageError(SemanticError):
+        """
+        The ConventionInvalidUsageError is raised if a convention is used in an invalid context. For example, using a
+        convention for an object initializers class type.
+        """
+
+        def add(self, convention: Ast) -> SemanticError:
+            self.add_error(
+                pos=convention.pos,
+                tag="Invalid usage of convention.",
+                msg="Conventions cannot be used in this context.",
+                tip="Remove the convention.")
 
             return self

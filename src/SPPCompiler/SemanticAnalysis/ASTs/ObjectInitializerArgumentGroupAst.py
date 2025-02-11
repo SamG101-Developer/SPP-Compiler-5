@@ -8,7 +8,6 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -81,14 +80,14 @@ class ObjectInitializerArgumentGroupAst(Ast):
         for argument in self.get_val_args():
             attribute, sup_scope = all_attributes.find(lambda x: x[0].name == argument.name)
             argument_type = argument.infer_type(scope_manager, **kwargs)
-            attribute_type = InferredType.from_type(attribute.type)
+            attribute_type = attribute.type
 
             if not attribute_type.symbolic_eq(argument_type, sup_scope, scope_manager.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(attribute, attribute_type, argument, argument_type)
 
         # Type check the default argument if it exists.
         def_argument_type = def_argument.name.infer_type(scope_manager, **kwargs) if def_argument else None
-        target_def_type = InferredType.from_type(class_type)
+        target_def_type = class_type
         if def_argument and not def_argument_type.symbolic_eq(target_def_type, class_symbol.scope, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(class_type, target_def_type, def_argument.name, def_argument_type)
 

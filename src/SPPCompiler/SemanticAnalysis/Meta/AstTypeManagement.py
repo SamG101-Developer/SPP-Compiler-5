@@ -205,7 +205,7 @@ class AstTypeManagement:
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
             return VariableSymbol(
                 name=Asts.IdentifierAst.from_type(generic_argument.name),
-                type=generic_argument.value.infer_type(scope_manager).type,
+                type=generic_argument.value.infer_type(scope_manager),
                 is_generic=True)
 
         else:

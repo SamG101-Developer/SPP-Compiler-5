@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
@@ -23,6 +23,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class TypeAst(Ast, TypeInferrable):
+    convention: Asts.ConventionAst = field(default_factory=Asts.ConventionMovAst)
     namespace: Seq[Asts.IdentifierAst] = field(default_factory=Seq)
     types: Seq[Asts.GenericIdentifierAst] = field(default_factory=Seq)
 
@@ -55,6 +56,12 @@ class TypeAst(Ast, TypeInferrable):
                     yield from internal_iteration(g.value)
         return internal_iteration(self)
 
+    def __copy__(self) -> TypeAst:
+        return TypeAst(self.pos, self.convention, self.namespace.copy(), self.types.copy())
+
+    def __deepcopy__(self, memodict: Dict) -> TypeAst:
+        return TypeAst(self.pos, copy.deepcopy(self.convention), copy.deepcopy(self.namespace), copy.deepcopy(self.types))
+
     def __json__(self) -> str:
         return f"cls {self.print(AstPrinter())}"
 
@@ -62,6 +69,7 @@ class TypeAst(Ast, TypeInferrable):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
+            self.convention.print(printer),
             self.namespace.print(printer, "::") + "::" if self.namespace else "",
             self.types.print(printer, "::")]
         return "".join(string)
@@ -69,12 +77,12 @@ class TypeAst(Ast, TypeInferrable):
     @staticmethod
     def from_identifier(identifier: Asts.IdentifierAst) -> TypeAst:
         # Create a TypeAst from an IdentifierAst.
-        return TypeAst(identifier.pos, Seq(), Seq([Asts.GenericIdentifierAst.from_identifier(identifier)]))
+        return TypeAst(identifier.pos, Asts.ConventionMovAst(), Seq(), Seq([Asts.GenericIdentifierAst.from_identifier(identifier)]))
 
     @staticmethod
     def from_generic_identifier(identifier: Asts.GenericIdentifierAst) -> TypeAst:
         # Create a TypeAst from a GenericIdentifierAst.
-        return TypeAst(identifier.pos, Seq(), Seq([identifier]))
+        return TypeAst(identifier.pos, Asts.ConventionMovAst(), Seq(), Seq([identifier]))
 
     @staticmethod
     def from_function_identifier(identifier: Asts.IdentifierAst) -> TypeAst:
@@ -83,11 +91,11 @@ class TypeAst(Ast, TypeInferrable):
         return TypeAst.from_identifier(mock_type_name)
 
     def without_namespace(self) -> TypeAst:
-        return TypeAst(self.pos, Seq(), self.types.copy())
+        return TypeAst(self.pos, self.convention, Seq(), self.types.copy())
 
     def without_generics(self) -> TypeAst:
         # Return the type without its generic arguments.
-        return TypeAst(self.pos, self.namespace, self.types[:-1] + [self.types[-1].without_generics()])
+        return TypeAst(self.pos, self.convention, self.namespace, self.types[:-1] + [self.types[-1].without_generics()])
 
     def contains_generic(self, generic_name: TypeAst) -> bool:
         # Check if there is a generic name in this type (at any nested argument level)
@@ -148,12 +156,11 @@ class TypeAst(Ast, TypeInferrable):
         # Return the modified type.
         return self
 
-    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, allow_none: bool = False) -> bool:
+    def symbolic_eq(self, that: TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
         # Get the symbols for each type, based on the scopes.
         that_scope = that_scope or self_scope
         self_symbol = self_scope.get_symbol(self)
         that_symbol = that_scope.get_symbol(that)
-        if allow_none and (self_symbol is None or that_symbol is None): return False
 
         # Special case for Variant types (can match any of the alternative types).
         # Todo: Tidy this up?
@@ -162,10 +169,10 @@ class TypeAst(Ast, TypeInferrable):
                 return True
 
         # Compare each type's class prototype.
-        return self_symbol.type is that_symbol.type
+        return self_symbol.type is that_symbol.type and type(self.convention) is type(that.convention)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        return InferredType.from_type(self)
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
+        return self
 
     def analyse_semantics(self, scope_manager: ScopeManager, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
 

@@ -75,12 +75,6 @@ class MemoryInfo:
             self.ast_partially_moved.remove(ast)
             self.ast_partially_moved.is_empty() and self.initialized_by(ast)
 
-    @property
-    def convention(self) -> Type[Asts.ConventionAst]:
-        # Get the convention for the memory, based on the borrow status of the symbol.
-        import SPPCompiler.SemanticAnalysis as Asts
-        return Asts.ConventionMutAst if self.is_borrow_mut else Asts.ConventionRefAst if self.is_borrow_ref else Asts.ConventionMovAst
-
 
 class AstMemoryHandler:
     @staticmethod
