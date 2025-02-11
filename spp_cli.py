@@ -121,6 +121,7 @@ def handle_build(args: Namespace, skip_vcs: bool = False) -> None:
     # Compile the code.
     try:
         Compiler(Compiler.Mode.Dev if args.mode == "dev" else Compiler.Mode.Rel)
+        os.chdir(cwd.parent)
     except (SemanticError, ParserError, KeyboardInterrupt) as e:
         os.chdir(cwd.parent)
         raise e
