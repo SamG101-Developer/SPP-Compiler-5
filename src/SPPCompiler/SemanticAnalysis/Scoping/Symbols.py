@@ -106,9 +106,7 @@ class TypeSymbol:
 
     @property
     def fq_name(self) -> Asts.TypeAst:
-        from SPPCompiler.SemanticAnalysis import TypeAst, IdentifierAst
-
-        fq_name = TypeAst.from_generic_identifier(self.name)
+        fq_name = Asts.TypeSingleAst.from_generic_identifier(self.name)
         if self.is_generic:
             return fq_name
         if isinstance(self, AliasSymbol):
@@ -118,11 +116,12 @@ class TypeSymbol:
 
         scope = self.scope.parent_module
         while scope.parent:
-            if isinstance(scope.name, IdentifierAst):
-                fq_name.namespace.insert(0, scope.name)
+            if isinstance(scope.name, Asts.IdentifierAst):
+                fq_name = fq_name.prepend_namespace_part(scope.name)
             else:
-                fq_name.types.insert(0, scope.name)
+                raise NotImplementedError("Nested types are not supported yet.")
             scope = scope.parent
+
         return fq_name
 
 

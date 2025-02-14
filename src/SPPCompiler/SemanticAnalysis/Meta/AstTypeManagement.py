@@ -94,7 +94,7 @@ class AstTypeManagement:
         new_scope._direct_sub_scopes = base_symbol.scope._direct_sub_scopes
         new_scope._non_generic_scope = base_symbol.scope
 
-        # No more checks for the tuple type (avoid recursion).
+        # No more checks for the tuple type (avoid recursion, is textual because it is to do with generics).
         if type and type.without_generics() == CommonTypes.Tup().without_generics():
             return new_scope
 
@@ -113,39 +113,6 @@ class AstTypeManagement:
 
     @staticmethod
     def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
-        """
-        Given the type
-
-        Wrapper[T, U, V] {
-            a: T
-            b: U
-            c: V
-        }
-
-        and the superimpositions:
-
-        sup [A, B, C] Wrapper[T=A, U=B, V=C] { }
-        sup [A, B, C] Wrapper[T=A, U=B, V=C] ext OtherType[A, B] { }
-
-        and the base classes:
-
-        cls OtherType[T, U] { }
-
-        Assume the type Wrapper[Str, U64, Bool] is created. The first superimposition must become
-        Wrapper[T=Str, U=U64, V=Bool]. This is fine. The second superimposition must become
-        Wrapper[T=Str, U=U64, V=Bool] ext OtherType[Str, U64]. This requires [T=Str and T=A] => [A=Str]. Apply this
-        to the supertype, and the result is Wrapper[T=Str, U=U64, V=Bool] ext OtherType[Str, U64]. The base classes
-        are then created with the generic arguments applied, per superimposition-extension.
-
-        Args:
-            scope_manager:
-            base_scope:
-            generic_arguments:
-
-        Returns:
-
-        """
-
         old_scopes = base_scope._direct_sup_scopes
         new_scopes = Seq()
 
@@ -160,7 +127,7 @@ class AstTypeManagement:
             elif isinstance(scope._ast, Asts.SupPrototypeExtensionAst):
                 temp_manager = ScopeManager(scope_manager.global_scope, base_scope.parent)
                 new_fq_super_type = copy.deepcopy(scope._ast.super_class)
-                new_fq_super_type.sub_generics(generic_arguments.arguments)
+                new_fq_super_type = new_fq_super_type.sub_generics(generic_arguments.arguments)
                 new_fq_super_type.analyse_semantics(temp_manager)
 
                 # Get the class scope generated for the super class and add it to the new scopes too.
@@ -175,14 +142,9 @@ class AstTypeManagement:
             new_scope._symbol_table = copy.copy(scope._symbol_table)
             new_scope._non_generic_scope = scope
 
-            # Todo: can remove the "if-continue" if default generic arguments are brought in here too.
-            # Todo: compare this to the inverse_generic_inference function. not even sure how this works.
-            for generic_parameter in scope._ast.generic_parameter_group.get_type_params():
-                mock_generic_parameter = scope._ast.name.get_generic_parameter_for_argument(generic_parameter.name)
-                mock_generic_value = generic_arguments.arguments.find(lambda a: a.name == mock_generic_parameter)
-                if not mock_generic_value: continue
-                new_generic_argument = Asts.GenericTypeArgumentNamedAst(name=Asts.TypeAst.from_generic_identifier(generic_parameter.name.types[-1]), value=mock_generic_value.value)
-                generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, new_generic_argument)
+            # Add the generic arguments to the new scope.
+            for generic_argument in generic_arguments.arguments:
+                generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
                 new_scope.add_symbol(generic_symbol)
 
             # Add the new scope to the list of new scopes.
@@ -197,7 +159,7 @@ class AstTypeManagement:
 
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
             return TypeSymbol(
-                name=generic_argument.name.types[-1],
+                name=generic_argument.name.type_parts()[0],
                 type=true_value_symbol.type,
                 scope=true_value_symbol.scope,
                 is_generic=True)
@@ -205,41 +167,27 @@ class AstTypeManagement:
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
             return VariableSymbol(
                 name=Asts.IdentifierAst.from_type(generic_argument.name),
-                type=generic_argument.value.infer_type(scope_manager),
+                type=generic_argument.value.infer_type(scope_manager).type,
                 is_generic=True)
 
         else:
-            raise Exception(type(true_value_symbol))
+            raise Exception(f"Unknown generic argument type: {type(generic_argument).__name__}")
 
     @staticmethod
     def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst) -> str:
         parts = name.split(":")
 
         if " ext " not in parts:
-            t = AstMutation.inject_code(parts[1], SppParser.parse_type)
-            t.sub_generics(generics.arguments)
+            t = AstMutation.inject_code(parts[1], SppParser.parse_type).sub_generics(generics.arguments)
             return f"{parts[0]}:{t}:{parts[2]}"
 
         else:
-            t = AstMutation.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type)
-            u = AstMutation.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type)
-            t.sub_generics(generics.arguments)
-            u.sub_generics(generics.arguments)
+            t = AstMutation.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type).sub_generics(generics.arguments)
+            u = AstMutation.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type).sub_generics(generics.arguments)
             return f"{parts[0]}:#{t} ext {u}:{parts[2]}"
 
     @staticmethod
     def is_type_recursive(type: Asts.ClassPrototypeAst, scope_manager: ScopeManager) -> Optional[Asts.TypeAst]:
-        """
-        Check if a type is recursive by analysing teh type's attributes, and its attributes' attributes, and so on. If
-        even one attribute's type (no matter how nested) matches the original type, then the type is recursive.
-
-        Args:
-            type: The type to check for any recursion.
-            scope_manager: The scope manager to use for symbol resolution.
-
-        Returns: True if the type is recursive, False otherwise.
-        """
-
         def get_attribute_types(class_prototype: Asts.ClassPrototypeAst) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
             for attribute in class_prototype.body.members:
                 raw_attribute_type = attribute.type

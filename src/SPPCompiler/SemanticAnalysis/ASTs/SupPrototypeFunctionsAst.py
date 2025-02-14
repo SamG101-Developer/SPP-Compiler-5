@@ -66,8 +66,8 @@ class SupPrototypeFunctionsAst(Ast):
             raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type")
 
         # Ensure all the generic arguments are unnamed and match the class's generic parameters.
-        for generic_arg in self.name.types[-1].generic_argument_group.arguments:
-            if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__value__.__args__):
+        for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
+            if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__args__):
                 raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(generic_arg)
             if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
                 raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(generic_arg, self)

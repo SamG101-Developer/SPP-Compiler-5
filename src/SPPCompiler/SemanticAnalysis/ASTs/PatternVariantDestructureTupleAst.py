@@ -28,7 +28,7 @@ class PatternVariantDestructureTupleAst(Ast, PatternMapping):
 
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureTupleAst:
         # Convert the tuple destructuring into a local variable tuple destructuring.
-        elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureTupleAst.__value__.__args__)
+        elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureTupleAst.__args__)
         converted_elements = elements.map(lambda e: e.convert_to_variable(**kwargs))
         return Asts.LocalVariableDestructureTupleAst(self.pos, self.tok_left_paren, converted_elements, self.tok_right_paren)
 

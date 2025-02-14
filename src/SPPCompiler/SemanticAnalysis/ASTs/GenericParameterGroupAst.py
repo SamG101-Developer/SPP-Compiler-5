@@ -14,9 +14,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class GenericParameterGroupAst(Ast):
-    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceL))
+    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackL))
     parameters: Seq[Asts.GenericParameterAst] = field(default_factory=Seq)
-    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))
+    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackR))
 
     def __copy__(self) -> GenericParameterGroupAst:
         return GenericParameterGroupAst(parameters=self.parameters.copy())
@@ -51,11 +51,11 @@ class GenericParameterGroupAst(Ast):
 
     def get_comp_params(self) -> Seq[Asts.GenericCompParameterAst]:
         # Get all the computation generic parameters.
-        return self.parameters.filter_to_type(*Asts.GenericCompParameterAst.__value__.__args__)
+        return self.parameters.filter_to_type(*Asts.GenericCompParameterAst.__args__)
 
     def get_type_params(self) -> Seq[Asts.GenericTypeParameterAst]:
         # Get all the type generic parameters.
-        return self.parameters.filter_to_type(*Asts.GenericTypeParameterAst.__value__.__args__)
+        return self.parameters.filter_to_type(*Asts.GenericTypeParameterAst.__args__)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate generic parameter names.

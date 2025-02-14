@@ -91,9 +91,9 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             a.pre_process(self)
 
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
-        mock_class_name = Asts.TypeAst.from_function_identifier(self.name)
+        mock_class_name = AstMutation.inject_code(self.name.to_function_identifier().value, SppParser.parse_type)
         function_type = self._deduce_mock_class_type()
-        function_call = self._deduce_mock_class_call(function_type)
+        function_call = Asts.IdentifierAst(self.name.pos, "call")
 
         # If this is the first overload being converted, then the class needs to be made for the type.
         if context.body.members.filter_to_type(Asts.ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
@@ -215,10 +215,6 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         raise NotImplementedError(f"Unknown convention for function {self.name}")
-
-    def _deduce_mock_class_call(self, function_type: Asts.TypeAst) -> Asts.IdentifierAst:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst
-        return IdentifierAst(self.name.pos, f"call_{function_type.types[-1].value.split("_")[-1].lower()}")
 
     def __deepcopy__(self, memodict: Dict = None) -> FunctionPrototypeAst:
         # Copy all attributes except for "_protected" attributes, which are re-linked.
