@@ -520,7 +520,7 @@ class SppParser(Parser):
         p2 = self.parse_object_initializer()
         # p3 = self.parse_lambda_prototype()
         p4 = self.parse_parenthesized_expression()
-        p5 = self.parse_type_single()
+        p5 = self.parse_type()
         p6 = self.parse_identifier()
         p7 = self.parse_case_expression()
         p8 = self.parse_loop_expression()
@@ -1400,11 +1400,10 @@ class SppParser(Parser):
 
     @parser_rule
     def parse_type_tuple(self) -> Asts.TypeSingleAst:
-        p1 = self.parse_type_tuple_0_items()
-        p2 = self.parse_type_tuple_1_items()
-        p3 = self.parse_type_tuple_n_items()
-        p4 = (p1 | p2 | p3).parse_once()
-        return p4
+        p1 = self.parse_type_tuple_1_items()
+        p2 = self.parse_type_tuple_n_items()
+        p3 = (p1 | p2).parse_once()
+        return p3
 
     @parser_rule
     def parse_type_array(self) -> Asts.TypeSingleAst:
@@ -1460,13 +1459,6 @@ class SppParser(Parser):
         c1 = self.current_pos()
         p1 = self.parse_token(SppTokenType.TkQst).parse_once()
         return Asts.TypePostfixOperatorOptionalTypeAst(c1, p1)
-
-    @parser_rule
-    def parse_type_tuple_0_items(self) -> Asts.TypeSingleAst:
-        c1 = self.current_pos()
-        p1 = self.parse_token(SppTokenType.TkParenL).parse_once()
-        p2 = self.parse_token(SppTokenType.TkParenR).parse_once()
-        return Asts.TypeTupleAst(c1, p1, Seq([]), p2).convert()
 
     @parser_rule
     def parse_type_tuple_1_items(self) -> Asts.TypeSingleAst:
