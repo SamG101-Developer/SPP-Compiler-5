@@ -3,19 +3,18 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import SPPCompiler.SemanticAnalysis as Asts
-from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class TypeTupleAst(Ast):
+class TypeParenthesizedAst(Ast):
     tok_l_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst())
-    type_list: Seq[Asts.TypeAst] = field(default_factory=Seq)
+    type_expr: Asts.TypeAst = field(default_factory=Seq)
     tok_r_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst())
 
     def convert(self) -> Asts.TypeSingleAst:
-        return CommonTypes.Tup(self.type_list, self.pos)
+        return self.type_expr
 
 
-__all__ = ["TypeTupleAst"]
+__all__ = ["TypeParenthesizedAst"]
