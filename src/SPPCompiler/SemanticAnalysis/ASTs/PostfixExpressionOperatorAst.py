@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type PostfixExpressionOperatorAst = Union[
+PostfixExpressionOperatorAst = Union[
     Asts.PostfixExpressionOperatorEarlyReturnAst,
     Asts.PostfixExpressionOperatorFunctionCallAst,
     Asts.PostfixExpressionOperatorMemberAccessAst,

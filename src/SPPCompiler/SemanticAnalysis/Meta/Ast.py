@@ -32,11 +32,10 @@ class Ast(CompilerStages):
         return self.print(printer)
 
     def pre_process(self, context: PreProcessingContext) -> None:
-            self._ctx = context
+        self._ctx = context
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         self._scope = scope_manager.current_scope
-
 
 
 __all__ = ["Ast"]

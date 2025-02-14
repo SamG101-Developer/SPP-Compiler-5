@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Union
 
 from llvmlite import ir as llvm
@@ -20,7 +19,6 @@ type PreProcessingContext = Union[
     None]
 
 
-@dataclass
 class CompilerStages:
     __friends__ = {"AnnotationAst"}
 
