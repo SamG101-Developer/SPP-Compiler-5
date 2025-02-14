@@ -40,6 +40,14 @@ class GenericArgumentGroupAst(Ast):
     def comp_arguments(self) -> Seq[Asts.GenericCompArgumentAst]:
         return self.arguments.filter_to_type(*Asts.GenericCompArgumentAst.__args__)
 
+    @property
+    def named_arguments(self) -> Seq[Asts.GenericArgumentNamedAst]:
+        return self.arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__)
+
+    @property
+    def unnamed_arguments(self) -> Seq[Asts.GenericArgumentUnnamedAst]:
+        return self.arguments.filter_to_type(*Asts.GenericArgumentUnnamedAst.__args__)
+
     @staticmethod
     def from_parameter_group(parameters: Seq[Asts.GenericParameterAst]) -> GenericArgumentGroupAst:
 
