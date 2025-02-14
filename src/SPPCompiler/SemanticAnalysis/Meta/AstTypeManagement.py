@@ -131,7 +131,7 @@ class AstTypeManagement:
                 new_fq_super_type.analyse_semantics(temp_manager)
 
                 # Get the class scope generated for the super class and add it to the new scopes too.
-                modified_class_scope = scope_manager.current_scope.get_symbol(new_fq_super_type).scope
+                modified_class_scope = temp_manager.current_scope.get_symbol(new_fq_super_type).scope
                 if modified_class_scope not in new_scopes:
                     new_scopes.append(modified_class_scope)
 

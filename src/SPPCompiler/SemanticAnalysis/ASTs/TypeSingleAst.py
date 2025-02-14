@@ -75,9 +75,6 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
         return False
 
     def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
-        # print("-" * 100)
-        # print(self, that, self_scope, that_scope)
-
         that_scope = that_scope or self_scope
         that_scope, that = that.split_to_scope_and_type(that_scope)
 
@@ -102,7 +99,6 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
         return self_symbol.type is that_symbol.type
 
     def analyse_semantics(self, scope_manager: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
-
         type_scope = type_scope or scope_manager.current_scope
 
         # Determine the type scope and type symbol.

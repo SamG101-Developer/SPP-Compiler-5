@@ -5,7 +5,7 @@ from typing import Any, Optional, Tuple, TYPE_CHECKING
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol, AliasSymbol
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -38,8 +38,6 @@ class Scope:
     _non_generic_scope: Optional[Scope]
 
     def __init__(self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Ast] = None) -> None:
-        from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-
         # Initialize the scope with the given name, parent, and AST.
         self._name = name
         self._parent = parent
@@ -64,10 +62,7 @@ class Scope:
         return str(self._name)
 
     def _translate_symbol(self, symbol: Symbol) -> Symbol:
-        from SPPCompiler.SemanticAnalysis import GenericCompArgumentNamedAst, GenericTypeArgumentNamedAst
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol, TypeSymbol
-
-        generic_argument_ctor = {VariableSymbol: GenericCompArgumentNamedAst, TypeSymbol: GenericTypeArgumentNamedAst}
+        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
         generics = self._symbol_table.all()
         generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
 
@@ -109,10 +104,8 @@ class Scope:
         return self.get_symbol(name, exclusive) is not None
 
     def get_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
-        from SPPCompiler.SemanticAnalysis import IdentifierAst, TypeAst, GenericIdentifierAst
-
         # Ensure the name is a valid type.
-        if not isinstance(name, (IdentifierAst, TypeAst, GenericIdentifierAst)):
+        if not isinstance(name, (Asts.IdentifierAst, Asts.TypeAst, Asts.GenericIdentifierAst)):
             return None
 
         # Handle generic translation.
@@ -121,7 +114,7 @@ class Scope:
 
         # Get the symbol from the symbol table if it exists.
         scope = self
-        if isinstance(name, TypeAst):
+        if isinstance(name, Asts.TypeAst):
             scope, name = shift_scope_for_namespaced_type(self, name)
         symbol = scope._symbol_table.get(name)
 
@@ -130,7 +123,7 @@ class Scope:
             symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
-        if not symbol and (isinstance(name, IdentifierAst) or name.value[0] == "$"):
+        if not symbol and (isinstance(name, Asts.IdentifierAst) or name.value[0] == "$"):
             symbol = search_super_scopes(scope, name)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
@@ -143,13 +136,10 @@ class Scope:
         return symbols
 
     def get_variable_symbol_outermost_part(self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst) -> Optional[VariableSymbol]:
-        # There is no symbol for non-identifiers.
-        from SPPCompiler.SemanticAnalysis import PostfixExpressionAst, PostfixExpressionOperatorMemberAccessAst
-
         # Define a helper lambda that validates a postfix expression.
         is_valid_postfix = lambda p: \
-            isinstance(p, PostfixExpressionAst) and \
-            isinstance(p.op, PostfixExpressionOperatorMemberAccessAst) and \
+            isinstance(p, Asts.PostfixExpressionAst) and \
+            isinstance(p.op, Asts.PostfixExpressionOperatorMemberAccessAst) and \
             p.op.is_runtime_access()
 
         # Shift to the leftmost identifier and get the symbol from the symbol table.
@@ -176,8 +166,7 @@ class Scope:
 
     def to_namespace(self) -> Seq[Asts.IdentifierAst]:
         # Convert the scope to a namespace.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst
-        return Seq([node.name for node in self.ancestors.reverse()[1:] if isinstance(node.name, IdentifierAst)])
+        return Seq([node.name for node in self.ancestors.reverse()[1:] if isinstance(node.name, Asts.IdentifierAst)])
 
     @property
     def name(self) -> Any:
@@ -197,8 +186,7 @@ class Scope:
     @property
     def parent_module(self) -> Scope:
         # Get the ancestor module scope.
-        from SPPCompiler.SemanticAnalysis import IdentifierAst
-        return self.ancestors.filter(lambda s: isinstance(s.name, IdentifierAst))[0]
+        return self.ancestors.filter(lambda s: isinstance(s.name, Asts.IdentifierAst))[0]
 
     @property
     def children(self) -> Seq[Scope]:
@@ -260,8 +248,6 @@ def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: Asts
 
 
 def confirm_type_with_alias(scope: Scope, symbol: Symbol, ignore_alias: bool) -> Optional[Symbol]:
-    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
-
     # Get the alias symbol's old type if aliases are being ignored.
     match symbol:
         case AliasSymbol() if symbol.old_type and not ignore_alias:
