@@ -28,21 +28,21 @@ class AstTypeManagement:
     def is_index_within_type_bound(index: int, type: Asts.TypeAst, scope: Scope):
         # Tuple type: count the number of generic arguments.
         if type.without_generics().symbolic_eq(CommonTypes.Tup().without_generics(), scope):
-            return index < type.types[-1].generic_argument_group.arguments.length
+            return index < type.type_parts()[0].generic_argument_group.arguments.length
 
         # Array type: get the "n" generic comp argument.
         if type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope):
-            return index < int(type.types[-1].generic_argument_group.arguments[1].value.value.token.token_metadata)
+            return index < int(type.type_parts()[0].generic_argument_group.arguments[1].value.value.token.token_metadata)
 
     @staticmethod
     def get_nth_type_of_indexable_type(index: int, type: Asts.TypeAst, scope: Scope) -> Asts.TypeAst:
         # Tuple type: get the nth generic argument.
         if type.without_generics().symbolic_eq(CommonTypes.Tup().without_generics(), scope):
-            return type.types[-1].generic_argument_group.arguments[index].value
+            return type.type_parts()[0].generic_argument_group.arguments[index].value
 
         # Array type: get the first generic argument.
         if type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope):
-            return type.types[-1].generic_argument_group.arguments[0].value
+            return type.type_parts()[0].generic_argument_group.arguments[0].value
 
         raise NotImplementedError("Only tuple and array types are indexable.")
 

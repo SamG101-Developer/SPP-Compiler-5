@@ -44,7 +44,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
 
         # Comparisons using the "is" keyword are always boolean.
         if self.op.token.token_type == SppTokenType.KwIs:
-            return CommonTypes.Bool(self.pos)
+            return InferredTypeInfo(CommonTypes.Bool(self.pos))
 
         # Infer the type from the function equivalent of the binary expression.
         if not self._as_func:

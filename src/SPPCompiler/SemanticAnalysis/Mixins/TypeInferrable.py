@@ -20,6 +20,9 @@ class InferredTypeInfo:
     type: Asts.TypeAst
     convention: Asts.ConventionAst = field(default_factory=lambda: Asts.ConventionMovAst())
 
+    def __str__(self) -> str:
+        return f"{self.convention}{self.type}"
+
     def symbolic_eq(self, that: InferredTypeInfo, self_scope: Scope, that_scope: Optional[Scope] = None) -> bool:
         return type(self.convention) is type(that.convention) and self.type.symbolic_eq(that.type, self_scope, that_scope)
 
