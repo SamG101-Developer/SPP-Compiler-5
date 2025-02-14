@@ -51,14 +51,13 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable):
         element_types = self.elements.map(lambda e: e.infer_type(scope_manager, **kwargs))
         for element_type in element_types[1:]:
             if not element_types[0].symbolic_eq(element_type, scope_manager.current_scope):
-                raise SemanticErrors.ArrayElementsDifferentTypesError().add(element_types[0], element_type)
+                raise SemanticErrors.ArrayElementsDifferentTypesError().add(element_types[0], element_type.type)
 
         # Check all elements are "owned", and not "borrowed".
-        borrowed_elements = self.elements.filter(lambda e: e.infer_type(scope_manager, **kwargs).convention is not Asts.ConventionMovAst)
-        if borrowed_elements:
-            if borrow_symbol := scope_manager.current_scope.get_variable_symbol_outermost_part(borrowed_elements[0]):
+        for element in self.elements:
+            if borrow_symbol := scope_manager.current_scope.get_variable_symbol_outermost_part(element):
                 if borrow_ast := borrow_symbol.memory_info.ast_borrowed:
-                    raise SemanticErrors.ArrayElementBorrowedError().add(borrowed_elements[0], borrow_ast)
+                    raise SemanticErrors.ArrayElementBorrowedError().add(element, borrow_ast)
 
 
 __all__ = ["ArrayLiteralNElementAst"]
