@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type SupMemberAst = Union[
+SupMemberAst = Union[
     Asts.FunctionPrototypeAst,
     Asts.SupPrototypeExtensionAst,
     Asts.SupUseStatementAst,

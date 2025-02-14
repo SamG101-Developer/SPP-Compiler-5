@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type PrimaryExpressionAst = Union[
+PrimaryExpressionAst = Union[
     Asts.LiteralAst,
     Asts.IdentifierAst,
     Asts.ParenthesizedExpressionAst,
@@ -11,7 +11,7 @@ type PrimaryExpressionAst = Union[
     Asts.InnerScopeAst,
     Asts.CaseExpressionAst,
     Asts.LoopExpressionAst,
-    Asts.TypeAst,
+    Asts.TypeSingleAst,
     Asts.TokenAst,
 ]
 

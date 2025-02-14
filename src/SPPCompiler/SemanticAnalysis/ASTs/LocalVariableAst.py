@@ -2,21 +2,13 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type LocalVariableAst = Union[
+LocalVariableAst = Union[
     Asts.LocalVariableDestructureArrayAst,
     Asts.LocalVariableDestructureTupleAst,
     Asts.LocalVariableDestructureObjectAst,
     Asts.LocalVariableSingleIdentifierAst]
 
-type LocalVariableNestedForDestructureArrayAst = Union[
-    Asts.LocalVariableDestructureArrayAst,
-    Asts.LocalVariableDestructureTupleAst,
-    Asts.LocalVariableDestructureObjectAst,
-    Asts.LocalVariableDestructureSkip1ArgumentAst,
-    Asts.LocalVariableDestructureSkipNArgumentsAst,
-    Asts.LocalVariableSingleIdentifierAst]
-
-type LocalVariableNestedForDestructureTupleAst = Union[
+LocalVariableNestedForDestructureArrayAst = Union[
     Asts.LocalVariableDestructureArrayAst,
     Asts.LocalVariableDestructureTupleAst,
     Asts.LocalVariableDestructureObjectAst,
@@ -24,12 +16,20 @@ type LocalVariableNestedForDestructureTupleAst = Union[
     Asts.LocalVariableDestructureSkipNArgumentsAst,
     Asts.LocalVariableSingleIdentifierAst]
 
-type LocalVariableNestedForDestructureObjectAst = Union[
+LocalVariableNestedForDestructureTupleAst = Union[
+    Asts.LocalVariableDestructureArrayAst,
+    Asts.LocalVariableDestructureTupleAst,
+    Asts.LocalVariableDestructureObjectAst,
+    Asts.LocalVariableDestructureSkip1ArgumentAst,
+    Asts.LocalVariableDestructureSkipNArgumentsAst,
+    Asts.LocalVariableSingleIdentifierAst]
+
+LocalVariableNestedForDestructureObjectAst = Union[
     Asts.LocalVariableAttributeBindingAst,
     Asts.LocalVariableDestructureSkipNArgumentsAst,
     Asts.LocalVariableSingleIdentifierAst]
 
-type LocalVariableNestedForAttributeBindingAst = Union[
+LocalVariableNestedForAttributeBindingAst = Union[
     Asts.LocalVariableDestructureArrayAst,
     Asts.LocalVariableDestructureTupleAst,
     Asts.LocalVariableDestructureObjectAst,

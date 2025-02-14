@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type FunctionCallArgumentAst = Union[
+FunctionCallArgumentAst = Union[
     Asts.FunctionCallArgumentNamedAst,
     Asts.FunctionCallArgumentUnnamedAst]
 

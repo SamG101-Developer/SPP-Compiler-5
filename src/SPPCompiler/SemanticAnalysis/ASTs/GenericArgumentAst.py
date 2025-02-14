@@ -2,25 +2,25 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type GenericArgumentAst = Union[
+GenericArgumentAst = Union[
     Asts.GenericCompArgumentNamedAst,
     Asts.GenericCompArgumentUnnamedAst,
     Asts.GenericTypeArgumentNamedAst,
     Asts.GenericTypeArgumentUnnamedAst]
 
-type GenericCompArgumentAst = Union[
+GenericCompArgumentAst = Union[
     Asts.GenericCompArgumentNamedAst,
     Asts.GenericCompArgumentUnnamedAst]
 
-type GenericTypeArgumentAst = Union[
+GenericTypeArgumentAst = Union[
     Asts.GenericTypeArgumentNamedAst,
     Asts.GenericTypeArgumentUnnamedAst]
 
-type GenericArgumentNamedAst = Union[
+GenericArgumentNamedAst = Union[
     Asts.GenericCompArgumentNamedAst,
     Asts.GenericTypeArgumentNamedAst]
 
-type GenericArgumentUnnamedAst = Union[
+GenericArgumentUnnamedAst = Union[
     Asts.GenericCompArgumentUnnamedAst,
     Asts.GenericTypeArgumentUnnamedAst]
 
