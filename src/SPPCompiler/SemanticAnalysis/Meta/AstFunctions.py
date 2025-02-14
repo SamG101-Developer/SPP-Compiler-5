@@ -31,13 +31,13 @@ class AstFunctions:
 
         # Special function: ".next()" on generators.
         if isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.op, Asts.PostfixExpressionOperatorStepKeywordAst):
-            function_owner_type = lhs.lhs.infer_type(scope_manager)
+            function_owner_type = lhs.lhs.infer_type(scope_manager).type
             function_name = Asts.IdentifierAst(lhs.op.pos, "next_")
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Runtime access into an object: "object.method()"
         elif isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
-            function_owner_type = lhs.lhs.infer_type(scope_manager)
+            function_owner_type = lhs.lhs.infer_type(scope_manager).type
             function_name = lhs.op.field
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
@@ -83,7 +83,8 @@ class AstFunctions:
             f"{fn.generic_argument_group}({function_arguments.join(", ")}){fn.fold_token or ""}",
             SppParser.parse_postfix_op_function_call)
 
-        new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(scope_manager)
+        # Todo: convention too?
+        new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(scope_manager).type
 
         # Get the overload from the uniform function call.
         return new_function_access, new_function_call

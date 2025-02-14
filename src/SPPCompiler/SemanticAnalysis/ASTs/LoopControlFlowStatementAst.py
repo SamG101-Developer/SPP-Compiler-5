@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -28,9 +28,9 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
             self.skip_or_expr.print(printer) if self.skip_or_expr else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # All statements are inferred as "void".
-        return CommonTypes.Void(self.pos)
+        return InferredTypeInfo(CommonTypes.Void(self.pos))
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
@@ -56,7 +56,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
 
             # Infer the exit type of this loop control flow statement.
             match self.skip_or_expr:
-                case None: exit_type = CommonTypes.Void(self.tok_seq_exit[-1].pos)
+                case None: exit_type = InferredTypeInfo(CommonTypes.Void(self.tok_seq_exit[-1].pos))
                 case _   : exit_type = self.skip_or_expr.infer_type(scope_manager, **kwargs)
 
             # Insert or check the depth's corresponding exit type.

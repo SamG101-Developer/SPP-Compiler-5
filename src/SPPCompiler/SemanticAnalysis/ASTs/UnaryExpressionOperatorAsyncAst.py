@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -21,12 +21,12 @@ class UnaryExpressionOperatorAsyncAst(Ast, TypeInferrable):
         # Print the AST with auto-formatting.
         return self.tok_async.print(printer)
 
-    def infer_type(self, scope_manager: ScopeManager, rhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
+    def infer_type(self, scope_manager: ScopeManager, rhs: Asts.ExpressionAst = None, **kwargs) -> InferredTypeInfo:
         # Async calls wrap the return type in a future type.
-        inner_type = rhs.infer_type(scope_manager)
+        inner_type = rhs.infer_type(scope_manager).type
         future_type = CommonTypes.Fut(inner_type)
         future_type.analyse_semantics(scope_manager)
-        return future_type
+        return InferredTypeInfo(future_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, rhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # Check the rhs is a postfix function call.

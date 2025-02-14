@@ -48,13 +48,13 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
 
         # Ensure the rhs value is a tuple.
         value_type = value.infer_type(scope_manager, **kwargs).without_generics()
-        tuple_type = CommonTypes.Tup().without_generics()
+        tuple_type = InferredTypeInfo(CommonTypes.Tup()).without_generics()
         if not value_type.symbolic_eq(tuple_type, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(self, tuple_type, value, value_type)
 
         # Determine the number of elements in the lhs and rhs tuples.
         num_lhs_tuple_elements = self.elements.length
-        num_rhs_tuple_elements = value.infer_type(scope_manager, **kwargs).types[-1].generic_argument_group.arguments.length
+        num_rhs_tuple_elements = value.infer_type(scope_manager, **kwargs).type.types[-1].generic_argument_group.arguments.length
 
         # Ensure the lhs and rhs tuples have the same number of elements unless a multi-skip is present.
         if (num_lhs_tuple_elements < num_rhs_tuple_elements and not multi_arg_skips) or num_lhs_tuple_elements > num_rhs_tuple_elements:

@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
 
@@ -40,19 +40,19 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
     def is_static_access(self) -> bool:
         return self.tok_access.token.token_type == SppTokenType.TkDblColon
 
-    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
-        lhs_type = lhs.infer_type(scope_manager)
+    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredTypeInfo:
+        lhs_type = lhs.infer_type(scope_manager).type
         lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type)
 
         # Numerical access -> get the nth generic argument of the tuple.
         if isinstance(self.field, Asts.TokenAst):
             element_type = AstTypeManagement.get_nth_type_of_indexable_type(int(self.field.token.token_metadata), lhs_type, scope_manager.current_scope)
-            return element_type
+            return InferredTypeInfo(element_type)
 
         # Accessing a member from the scope by the identifier.
         elif isinstance(self.field, Asts.IdentifierAst):
             attribute_type = lhs_symbol.scope.get_symbol(self.field).type
-            return attribute_type
+            return InferredTypeInfo(attribute_type)
 
         raise NotImplementedError("Unknown member access type.")
 
@@ -73,7 +73,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
         
         # Numerical access to a tuple, such as "tuple.0".
         elif isinstance(self.field, Asts.TokenAst):
-            lhs_type = lhs.infer_type(scope_manager)
+            lhs_type = lhs.infer_type(scope_manager).type
             lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type)
 
             # Check the lhs isn't a generic type.
@@ -90,7 +90,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
         
         # Accessing a regular attribute/method, such as "class.attribute".
         elif isinstance(self.field, Asts.IdentifierAst) and self.is_runtime_access():
-            lhs_type = lhs.infer_type(scope_manager)
+            lhs_type = lhs.infer_type(scope_manager).type
             lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type)
             
             # Check the lhs is a variable and not a namespace.
@@ -116,7 +116,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
                 raise SemanticErrors.MemberAccessRuntimeOperatorExpectedError().add(lhs, self.tok_access)
         
             # Check the variable exists on the lhs.
-            lhs_type = lhs.infer_type(scope_manager)
+            lhs_type = lhs.infer_type(scope_manager).tpye
             lhs_type_symbol = scope_manager.current_scope.get_symbol(lhs_type)
             if not lhs_type_symbol.scope.has_symbol(self.field):
                 alternatives = lhs_type_symbol.scope.all_symbols().map_attr("name")

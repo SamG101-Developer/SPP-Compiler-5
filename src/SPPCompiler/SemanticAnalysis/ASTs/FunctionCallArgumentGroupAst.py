@@ -64,7 +64,7 @@ class FunctionCallArgumentGroupAst(Ast):
 
                 # Check the argument type is a tuple
                 tuple_argument_type = argument.infer_type(scope_manager, **kwargs)
-                if not tuple_argument_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
+                if not tuple_argument_type.without_generics().symbolic_eq(InferredTypeInfo(CommonTypes.Tup()), scope_manager.current_scope):
                     raise SemanticErrors.ArgumentTupleExpansionOfNonTupleError().add(argument.value, tuple_argument_type)
 
                 # Replace the tuple-expansion argument with the expanded arguments

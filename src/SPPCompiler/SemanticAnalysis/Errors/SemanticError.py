@@ -8,6 +8,7 @@ from colorama import Fore, Style
 from fastenum import Enum
 
 import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -562,7 +563,7 @@ class SemanticErrors:
         Todo: add potential alias's old type: (... aka: ...)
         """
 
-        def add(self, existing_ast: Ast, existing_type: Asts.TypeAst, incoming_ast: Ast, incoming_type: Asts.TypeAst) -> SemanticError:
+        def add(self, existing_ast: Ast, existing_type: InferredTypeInfo, incoming_ast: Ast, incoming_type: InferredTypeInfo) -> SemanticError:
             self.add_info(
                 pos=existing_ast.pos,
                 tag=f"Type inferred as '{existing_type}' here")
@@ -1517,20 +1518,5 @@ class SemanticErrors:
                 tag="Recursive type definition.",
                 msg="Cannot refer to the enclosing type within the definition of the type.",
                 tip="Use Single[T] or Shared[T] instead.")
-
-            return self
-
-    class ConventionInvalidUsageError(SemanticError):
-        """
-        The ConventionInvalidUsageError is raised if a convention is used in an invalid context. For example, using a
-        convention for an object initializers class type.
-        """
-
-        def add(self, convention: Ast) -> SemanticError:
-            self.add_error(
-                pos=convention.pos,
-                tag="Invalid usage of convention.",
-                msg="Conventions cannot be used in this context.",
-                tip="Remove the convention.")
 
             return self

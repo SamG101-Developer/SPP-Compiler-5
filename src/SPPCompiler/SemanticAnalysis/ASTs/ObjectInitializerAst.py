@@ -6,7 +6,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -30,16 +30,11 @@ class ObjectInitializerAst(Ast, TypeInferrable):
             self.object_argument_group.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # Use the type of the object initializer.
-        return self.class_type
+        return InferredTypeInfo(self.class_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-
-        # Check the type has no convention.
-        if type(self.class_type.convention) is not Asts.ConventionMovAst:
-            raise SemanticErrors.ConventionInvalidUsageError().add(self.class_type)
-
         # Get the base symbol and make sure it isn't generic.
         base_symbol = scope_manager.current_scope.get_symbol(self.class_type.without_generics())
         if base_symbol.is_generic:
@@ -49,7 +44,7 @@ class ObjectInitializerAst(Ast, TypeInferrable):
 
         # Determine the generic inference source and target
         generic_infer_source = {
-            a.name: self.object_argument_group.get_arg_val(a).infer_type(scope_manager, **kwargs)
+            a.name: self.object_argument_group.get_arg_val(a).infer_type(scope_manager, **kwargs).type
             for a in self.object_argument_group.arguments.filter(lambda a: isinstance(a.name, Asts.IdentifierAst))}
         generic_infer_target = {
             a.name: a.type
@@ -57,7 +52,7 @@ class ObjectInitializerAst(Ast, TypeInferrable):
 
         # Analyse the type and object argument group.
         base_symbol.type.body.analyse_semantics(ScopeManager(scope_manager.current_scope, base_symbol.scope), **kwargs)
-        self.class_type.analyse_semantics(scope_manager, generic_infer_source, generic_infer_target, **kwargs)
+        self.class_type.analyse_semantics(scope_manager, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
         self.object_argument_group.analyse_semantics(scope_manager, class_type=self.class_type, **kwargs)
 
 

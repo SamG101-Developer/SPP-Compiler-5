@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -33,7 +33,7 @@ class InnerScopeAst(Ast, TypeInferrable):
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
 
         # Return the last member's inferred type, if there are any members.
         if self.members:
@@ -41,7 +41,7 @@ class InnerScopeAst(Ast, TypeInferrable):
             return self.members[-1].infer_type(temp_manager, **kwargs)
 
         # An empty scope is inferred to have a void type.
-        return CommonTypes.Void(self.pos)
+        return InferredTypeInfo(CommonTypes.Void(self.pos))
 
     def analyse_semantics(self, scope_manager: ScopeManager, inline: bool = False, **kwargs) -> None:
         self._scope = scope_manager.current_scope

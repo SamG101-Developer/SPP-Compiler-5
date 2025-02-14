@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -39,15 +39,14 @@ class FunctionCallArgumentNamedAst(Ast, Ordered, TypeInferrable):
             self.value.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         if self._type_from_self:
-            return self._type_from_self
+            return InferredTypeInfo(self._type_from_self, self.convention)
         inferred_type = self.value.infer_type(scope_manager, **kwargs)
 
         # The convention is either from the convention attribute or the symbol information.
-        return Asts.TypeAst(
-            pos=inferred_type.pos, convention=self.convention, namespace=inferred_type.namespace,
-            types=inferred_type.types)
+        convention = inferred_type.convention if isinstance(self.convention, Asts.ConventionMovAst) else self.convention
+        return InferredTypeInfo(inferred_type.type, self.convention)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
 

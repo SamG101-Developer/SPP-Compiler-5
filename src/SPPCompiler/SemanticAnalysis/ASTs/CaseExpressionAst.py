@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.Utils.Sequence import Seq
@@ -47,7 +47,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
             self.branches.print(printer, "\n")]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # The checks here only apply when assigning from this expression.
         branch_inferred_types = self.branches.map(lambda x: x.infer_type(scope_manager)).unique()
 
@@ -62,7 +62,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
         # Return the branches' return type, if there are any branches, otherwise Void.
         if self.branches.length > 0:
             return branch_inferred_types[0]
-        return CommonTypes.Void(self.pos)
+        return InferredTypeInfo(CommonTypes.Void(self.pos))
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
@@ -120,7 +120,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
 
                     # Check the function's return type is boolean.
                     # Todo: is it possible it is non-boolean? comparisons are forced, and they all have Bool return.
-                    target_type = CommonTypes.Bool(self.pos)
+                    target_type = InferredTypeInfo(CommonTypes.Bool(self.pos))
                     return_type = binary_ast.infer_type(scope_manager)
                     if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
                         raise SemanticErrors.ExpressionNotBooleanError().add(self.condition, return_type, "case")

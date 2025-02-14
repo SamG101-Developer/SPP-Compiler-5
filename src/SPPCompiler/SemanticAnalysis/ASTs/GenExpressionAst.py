@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
@@ -35,7 +35,7 @@ class GenExpressionAst(Ast, TypeInferrable):
             self.expression.print(printer) if self.expression else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # The inferred type of a gen expression is the type of the value being sent back into the coroutine.
         generator_type = self._func_ret_type
         send_type = generator_type.types[-1].generic_argument_group["Send"].value
@@ -50,7 +50,7 @@ class GenExpressionAst(Ast, TypeInferrable):
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expression:
             self.expression.analyse_semantics(scope_manager, **kwargs)
-            expression_type = copy.copy(self.expression.infer_type(scope_manager, **kwargs))
+            expression_type = self.expression.infer_type(scope_manager, **kwargs)
         else:
             void_type = CommonTypes.Void(self.pos)
             expression_type = void_type

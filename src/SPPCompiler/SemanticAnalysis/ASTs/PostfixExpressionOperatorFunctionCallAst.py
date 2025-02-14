@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
@@ -101,7 +101,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                 generic_arguments = AstFunctions.inherit_generic_arguments(
                     generic_parameters=function_overload.generic_parameter_group.get_req(),
                     explicit_generic_arguments=generic_arguments + owner_scope_generic_arguments,
-                    infer_source=arguments.map(lambda a: (a.name, a.infer_type(scope_manager, **kwargs))).dict(),
+                    infer_source=arguments.map(lambda a: (a.name, a.infer_type(scope_manager, **kwargs).type)).dict(),
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
                     scope_manager=scope_manager, owner=lhs,
                     variadic_parameter_identifier=function_overload.function_parameter_group.get_var().extract_name if is_variadic else None,
@@ -114,10 +114,10 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                     new_overload = copy.deepcopy(function_overload)
                     new_overload.generic_parameter_group.parameters = Seq()
                     for p in new_overload.function_parameter_group.parameters:
-                        p.type.sub_generics(generic_arguments)
+                        p.type = p.type.sub_generics(generic_arguments)
                     for p in new_overload.function_parameter_group.parameters:
                         p.type.analyse_semantics(temp_manager, **kwargs)
-                    new_overload.return_type.sub_generics(generic_arguments)
+                    new_overload.return_type = new_overload.return_type.sub_generics(generic_arguments)
                     new_overload.return_type.analyse_semantics(temp_manager, **kwargs)
 
                     parameters = new_overload.function_parameter_group.parameters.copy()
@@ -127,8 +127,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                 # Type check the arguments against the parameters.
                 sorted_arguments = arguments.sort(key=lambda a: parameter_names.index(a.name))
                 for argument, parameter in sorted_arguments.zip(parameters):
+                    parameter_type = InferredTypeInfo(parameter.type, parameter.convention)  # todo: parameter convention?
                     argument_type = argument.infer_type(scope_manager, **kwargs)
-                    parameter_type = parameter.type
 
                     if isinstance(parameter, Asts.FunctionParameterVariadicAst):
                         parameter_type = CommonTypes.Tup(Seq([parameter_type] * argument_type.types[-1].generic_argument_group.arguments.length))
@@ -174,7 +174,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
         self._overload = pass_overloads[0]
         return
 
-    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
+    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredTypeInfo:
         # Todo: Hacky workaround - see why having a function call as a "self" argument doesn't use its "analyse
         #  semantics" as the same object. it calls the analyse_semantics method, but on another instance of the AST -
         #  being copied somewhere, maybe in a code injection.
@@ -184,7 +184,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
         # Expand the return type from the scope it was defined in => comparisons won't require function scope knowledge.
         return_type = self._overload[1].return_type
         return_type = self._overload[0].get_symbol(return_type).fq_name
-        return return_type
+        return InferredTypeInfo(return_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         if self._overload:

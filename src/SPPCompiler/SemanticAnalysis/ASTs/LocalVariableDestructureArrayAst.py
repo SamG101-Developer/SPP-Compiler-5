@@ -48,13 +48,13 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
 
         # Ensure the rhs value is a array.
         value_type = value.infer_type(scope_manager, **kwargs).without_generics()
-        array_type = CommonTypes.Arr(None, self.elements.length).without_generics()
+        array_type = InferredTypeInfo(CommonTypes.Arr(None, self.elements.length)).without_generics()
         if not value_type.symbolic_eq(array_type, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(self, array_type, value, value_type)
 
         # Determine the number of elements in the lhs and rhs arrays.
         num_lhs_array_elements = self.elements.length
-        num_rhs_array_elements = int(value.infer_type(scope_manager, **kwargs).types[-1].generic_argument_group.arguments[1].value.value.token.token_metadata)
+        num_rhs_array_elements = int(value.infer_type(scope_manager, **kwargs).type.types[-1].generic_argument_group.arguments[1].value.value.token.token_metadata)
 
         # Ensure the lhs and rhs arrays have the same number of elements unless a multi-skip is present.
         if (num_lhs_array_elements < num_rhs_array_elements and not multi_arg_skips) or num_lhs_array_elements > num_rhs_array_elements:

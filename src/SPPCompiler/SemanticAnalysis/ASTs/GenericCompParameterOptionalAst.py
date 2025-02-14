@@ -67,7 +67,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
 
         # Make sure the default expression is of the correct type.
         default_type = self.default.infer_type(scope_manager)
-        target_type = self.type
+        target_type = InferredTypeInfo(self.type)
         if not target_type.symbolic_eq(default_type, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(self.name, target_type, self.default, default_type)
 

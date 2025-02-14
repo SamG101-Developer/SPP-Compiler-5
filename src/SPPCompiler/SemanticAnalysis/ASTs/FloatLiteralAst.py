@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -57,23 +57,23 @@ class FloatLiteralAst(Ast, TypeInferrable):
             self.type.print(printer) if self.type else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # Match the type against the allowed type postfixes (no postfix is BigDec).
         match self.type:
             case None:
-                return CommonTypes.BigDec(self.pos)
+                return InferredTypeInfo(CommonTypes.BigDec(self.pos))
             case type if type.types[-1].value == "f8":
-                return CommonTypes.F8(self.pos)
+                return InferredTypeInfo(CommonTypes.F8(self.pos))
             case type if type.types[-1].value == "f16":
-                return CommonTypes.F16(self.pos)
+                return InferredTypeInfo(CommonTypes.F16(self.pos))
             case type if type.types[-1].value == "f32":
-                return CommonTypes.F32(self.pos)
+                return InferredTypeInfo(CommonTypes.F32(self.pos))
             case type if type.types[-1].value == "f64":
-                return CommonTypes.F64(self.pos)
+                return InferredTypeInfo(CommonTypes.F64(self.pos))
             case type if type.types[-1].value == "f128":
-                return CommonTypes.F128(self.pos)
+                return InferredTypeInfo(CommonTypes.F128(self.pos))
             case type if type.types[-1].value == "f256":
-                return CommonTypes.F256(self.pos)
+                return InferredTypeInfo(CommonTypes.F256(self.pos))
             case _:
                 raise
 
