@@ -68,16 +68,22 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
         return TypeSingleAst(self.pos, name)
 
     def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
-        for g in self.name.generic_argument_group.named_arguments:
+        def custom_iterate(t: Asts.TypeAst) -> Iterator[Asts.GenericArgumentAst]:
+            for g in t.type_parts()[0].generic_argument_group.type_arguments:
+                yield g
+                yield from custom_iterate(g.value)
+
+        for g in custom_iterate(self):
             if g.name == generic_name:
                 return g.value
         return None
 
     def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
         def custom_iterate(t: Asts.TypeAst) -> Iterator[Asts.GenericArgumentAst]:
-            for g in self.name.generic_argument_group.type_arguments:
+            for g in t.type_parts()[0].generic_argument_group.type_arguments:
                 yield g
-                yield from g.value
+                print("PPPPP", g.value)
+                yield from custom_iterate(g.value)
 
         for g in custom_iterate(self):
             if g.value == argument:

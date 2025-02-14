@@ -109,7 +109,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
 
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
-                    temp_manager = ScopeManager(scope_manager.global_scope, function_scope.parent)
+                    temp_manager = ScopeManager(scope_manager.global_scope, function_scope)
 
                     new_overload = copy.deepcopy(function_overload)
                     new_overload.generic_parameter_group.parameters = Seq()
@@ -131,8 +131,9 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                     argument_type = argument.infer_type(scope_manager, **kwargs)
 
                     if isinstance(parameter, Asts.FunctionParameterVariadicAst):
-                        parameter_type = CommonTypes.Tup(Seq([parameter_type] * argument_type.types[-1].generic_argument_group.arguments.length))
+                        parameter_type = CommonTypes.Tup(Seq([parameter_type] * argument_type.type.type_parts()[0].generic_argument_group.arguments.length))
                         parameter_type.analyse_semantics(scope_manager, **kwargs)
+                        parameter_type = InferredTypeInfo(parameter_type)
 
                     if isinstance(parameter, Asts.FunctionParameterSelfAst):
                         argument.convention = parameter.convention
