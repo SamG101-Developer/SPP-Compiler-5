@@ -75,6 +75,15 @@ class MemoryInfo:
             self.ast_partially_moved.remove(ast)
             self.ast_partially_moved.is_empty() and self.initialized_by(ast)
 
+    @property
+    def convention(self) -> Optional[Asts.ConventionAst]:
+        # Return the convention of the symbol.
+        if self.is_borrow_mut:
+            return Asts.ConventionMutAst()
+        elif self.is_borrow_ref:
+            return Asts.ConventionRefAst()
+        return Asts.ConventionMovAst()
+
 
 class AstMemoryHandler:
     @staticmethod
