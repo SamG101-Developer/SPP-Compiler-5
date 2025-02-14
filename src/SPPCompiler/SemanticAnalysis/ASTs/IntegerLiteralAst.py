@@ -45,11 +45,7 @@ class IntegerLiteralAst(Ast, TypeInferrable):
 
     def __eq__(self, other: IntegerLiteralAst) -> bool:
         # Check both ASTs are the same type and have the same sign, value and type.
-        return all([
-            isinstance(other, IntegerLiteralAst),
-            self.tok_sign == other.tok_sign,
-            self.value.token.token_metadata == other.value.token.token_metadata,
-            self.type == other.type])
+        return isinstance(other, IntegerLiteralAst) and self.tok_sign == other.tok_sign and self.value.token.token_metadata == other.value.token.token_metadata and self.type == other.type
 
     @staticmethod
     def from_token(value: Asts.TokenAst, pos: int = -1) -> IntegerLiteralAst:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Optional, Self, Dict, Tuple
+from typing import Optional, Self, Dict, Tuple, Iterator
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
@@ -29,6 +29,11 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
 
     def __hash__(self) -> int:
         return hash(self.name)
+
+    def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
+        yield self.name
+        for g in self.name.generic_argument_group.type_arguments:
+            yield from g.value
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -68,11 +73,18 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
                 return g.value
         return None
 
+    def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
+        def custom_iterate(t: Asts.TypeAst) -> Iterator[Asts.GenericArgumentAst]:
+            for g in self.name.generic_argument_group.type_arguments:
+                yield g
+                yield from g.value
+
+        for g in custom_iterate(self):
+            if g.value == argument:
+                return g.name if isinstance(g, Asts.GenericArgumentNamedAst) else g.value
+
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
-        for g in self.name.generic_argument_group.arguments:
-            if g.value == generic_name:
-                return True
-        return False
+        return any(g == Asts.GenericIdentifierAst.from_type(generic_name) for g in self)
 
     def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
         that_scope = that_scope or self_scope

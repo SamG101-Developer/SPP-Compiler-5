@@ -35,6 +35,9 @@ class TypeAbstractAst(Ast):
     def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
         ...
 
+    def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
+        ...
+
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
         ...
 

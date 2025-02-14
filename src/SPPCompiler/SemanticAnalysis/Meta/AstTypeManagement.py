@@ -25,7 +25,7 @@ class AstTypeManagement:
         return is_tuple or is_array
 
     @staticmethod
-    def is_index_within_type_bound(index: int, type: Asts.TypeAst, scope: Scope):
+    def is_index_within_type_bound(index: int, type: Asts.TypeAst, scope: Scope) -> bool:
         # Tuple type: count the number of generic arguments.
         if type.without_generics().symbolic_eq(CommonTypes.Tup().without_generics(), scope):
             return index < type.type_parts()[0].generic_argument_group.arguments.length
@@ -33,6 +33,8 @@ class AstTypeManagement:
         # Array type: get the "n" generic comp argument.
         if type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope):
             return index < int(type.type_parts()[0].generic_argument_group.arguments[1].value.value.token.token_metadata)
+
+        raise NotImplementedError("Only tuple and array types are indexable.")
 
     @staticmethod
     def get_nth_type_of_indexable_type(index: int, type: Asts.TypeAst, scope: Scope) -> Asts.TypeAst:
@@ -90,7 +92,7 @@ class AstTypeManagement:
         new_scope.parent.add_symbol(new_symbol)
         new_scope._children = base_symbol.scope._children
         new_scope._symbol_table = copy.deepcopy(base_symbol.scope._symbol_table)
-        new_scope._direct_sup_scopes = AstTypeManagement.substitute_generic_sup_scopes(scope_manager, base_symbol.scope, type_part.generic_argument_group)
+        new_scope._direct_sup_scopes = AstTypeManagement.create_generic_sup_scopes(scope_manager, base_symbol.scope, type_part.generic_argument_group)
         new_scope._direct_sub_scopes = base_symbol.scope._direct_sub_scopes
         new_scope._non_generic_scope = base_symbol.scope
 
@@ -112,7 +114,7 @@ class AstTypeManagement:
         return new_scope
 
     @staticmethod
-    def substitute_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
+    def create_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
         old_scopes = base_scope._direct_sup_scopes
         new_scopes = Seq()
 
@@ -158,20 +160,12 @@ class AstTypeManagement:
         true_value_symbol = scope_manager.current_scope.get_symbol(generic_argument.value)
 
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
-            return TypeSymbol(
-                name=generic_argument.name.type_parts()[0],
-                type=true_value_symbol.type,
-                scope=true_value_symbol.scope,
-                is_generic=True)
+            return TypeSymbol(name=generic_argument.name.type_parts()[0], type=true_value_symbol.type, scope=true_value_symbol.scope, is_generic=True)
 
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
-            return VariableSymbol(
-                name=Asts.IdentifierAst.from_type(generic_argument.name),
-                type=generic_argument.value.infer_type(scope_manager).type,
-                is_generic=True)
+            return VariableSymbol(name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(scope_manager).type, is_generic=True)
 
-        else:
-            raise Exception(f"Unknown generic argument type: {type(generic_argument).__name__}")
+        raise Exception(f"Unknown generic argument type: {type(generic_argument).__name__}")
 
     @staticmethod
     def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst) -> str:

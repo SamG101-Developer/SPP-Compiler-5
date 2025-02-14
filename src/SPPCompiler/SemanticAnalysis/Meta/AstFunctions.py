@@ -204,7 +204,6 @@ class AstFunctions:
     def name_generic_arguments(arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], owner_type: Asts.TypeAst = None) -> None:
 
         # Special case for tuples to prevent infinite-recursion.
-        # Todo: symbolic-eq here?
         if owner_type and owner_type.without_generics() == CommonTypes.Tup().without_generics():
             return
 
@@ -275,6 +274,12 @@ class AstFunctions:
         if generic_parameters.is_empty():
             return explicit_generic_arguments
 
+        print("#" * 100)
+        print("generic_parameters", generic_parameters)
+        print("explicit_generic_arguments", explicit_generic_arguments)
+        print("infer_source", [f"{k}=>{v}" for k, v in infer_source.items()])
+        print("infer_target", [f"{k}=>{v}" for k, v in infer_target.items()])
+
         # The inferred generics map is: {TypeAst: [TypeAst]}
         inferred_generic_arguments = defaultdict(Seq)
 
@@ -292,8 +297,9 @@ class AstFunctions:
 
                 # Check for inner match (a: Vec[T] vs a: Vec[BigInt]).
                 else:
-                    # corresponding_generic_parameter = infer_target_type.get_generic_parameter_for_argument(generic_parameter_name)
-                    inferred_generic_argument = infer_source[infer_target_name].get_generic(generic_parameter_name)
+                    corresponding_generic_parameter = infer_target_type.get_generic_parameter_for_argument(generic_parameter_name)
+                    print("corresponding_generic_parameter", corresponding_generic_parameter)
+                    inferred_generic_argument = infer_source[infer_target_name].get_generic(corresponding_generic_parameter)
 
                 # Handle the match if it exists.
                 if inferred_generic_argument:
@@ -302,6 +308,9 @@ class AstFunctions:
                 # Handle the variadic parameter if it exists.
                 if variadic_parameter_identifier and infer_target_name == variadic_parameter_identifier:
                     inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].types[-1].generic_argument_group.arguments[0].value
+
+        print("inferred_generic_arguments", [f"{k}=>{v}" for k, v in inferred_generic_arguments.items()])
+        print("#" * 100)
 
         # Check each generic argument name only has one unique inferred type.
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():

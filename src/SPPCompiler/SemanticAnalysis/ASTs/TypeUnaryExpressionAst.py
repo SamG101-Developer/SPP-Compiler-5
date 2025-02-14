@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Self, Optional, Dict, Tuple
+from typing import Self, Optional, Dict, Tuple, Iterator
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -21,6 +21,9 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
 
     def __hash__(self) -> int:
         return hash((self.op, self.rhs))
+
+    def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
+        yield from self.rhs
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -49,6 +52,11 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
     def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             return self.rhs.get_generic(generic_name)
+        return None
+
+    def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
+        if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
+            return self.rhs.get_generic_parameter_for_argument(argument)
         return None
 
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
