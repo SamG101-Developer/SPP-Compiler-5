@@ -48,7 +48,7 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping):
         condition_symbol = scope_manager.current_scope.get_symbol(condition)
         is_condition_symbol_variant = condition_symbol and condition_symbol.type.without_generics().symbolic_eq(CommonTypes.Var().without_generics(), scope_manager.current_scope)
         if condition_symbol and is_condition_symbol_variant:
-            if not condition_symbol.type.symbolic_eq(self.type, scope_manager.current_scope):
+            if not condition_symbol.type.symbolic_eq(self.type, scope_manager.current_scope, scope_manager.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(condition, condition_symbol.type, self.type, self.type)
 
             flow_symbol = copy.deepcopy(condition_symbol)

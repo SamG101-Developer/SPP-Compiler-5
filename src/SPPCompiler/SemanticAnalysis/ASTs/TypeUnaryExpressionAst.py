@@ -40,10 +40,10 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
         self.rhs = self.rhs.sub_generics(generic_arguments)
         return self
 
-    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None) -> bool:
+    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             self_scope = self_scope.get_symbol(self.op.name).scope
-        return self.rhs.symbolic_eq(that, self_scope, that_scope)
+        return self.rhs.symbolic_eq(that, self_scope, that_scope, check_variant)
 
     def without_generics(self) -> Self:
         return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics())

@@ -32,7 +32,7 @@ class TypeAbstractAst(Ast):
     def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Self:
         ...
 
-    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None) -> bool:
+    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
         ...
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
