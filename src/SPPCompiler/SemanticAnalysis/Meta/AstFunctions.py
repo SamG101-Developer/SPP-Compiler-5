@@ -280,7 +280,7 @@ class AstFunctions:
 
         # Add the explicit generic arguments to the inferred generic arguments.
         for explicit_generic_argument in explicit_generic_arguments:
-            inferred_generic_arguments[explicit_generic_argument.name.name].append(explicit_generic_argument.value)
+            inferred_generic_arguments[explicit_generic_argument.name].append(explicit_generic_argument.value)
 
         # Infer the generic arguments from the source to the target.
         for generic_parameter_name in generic_parameters.map_attr("name"):
@@ -292,8 +292,8 @@ class AstFunctions:
 
                 # Check for inner match (a: Vec[T] vs a: Vec[BigInt]).
                 else:
-                    corresponding_generic_parameter = infer_target_type.get_generic_parameter_for_argument(generic_parameter_name)
-                    inferred_generic_argument = infer_source[infer_target_name].get_generic(corresponding_generic_parameter)
+                    # corresponding_generic_parameter = infer_target_type.get_generic_parameter_for_argument(generic_parameter_name)
+                    inferred_generic_argument = infer_source[infer_target_name].get_generic(generic_parameter_name)
 
                 # Handle the match if it exists.
                 if inferred_generic_argument:
@@ -314,9 +314,9 @@ class AstFunctions:
                 raise SemanticErrors.GenericParameterInferredConflictExplicitError().add(inferred_generic_argument_name, inferred_generic_argument_value[0], explicit_generic_arguments[inferred_generic_argument_name])
 
         # Check all the generic parameters have been inferred.
-        for generic_parameter in generic_parameters:
-            if generic_parameter.name.name not in inferred_generic_arguments:
-                raise SemanticErrors.GenericParameterNotInferredError().add(generic_parameter, owner)
+        for generic_parameter_name in generic_parameters.map_attr("name"):
+            if generic_parameter_name not in inferred_generic_arguments:
+                raise SemanticErrors.GenericParameterNotInferredError().add(generic_parameter_name, owner)
 
         # Create the inferred generic arguments.
         inferred_generic_arguments = {k: v[0] for k, v in inferred_generic_arguments.items()}
