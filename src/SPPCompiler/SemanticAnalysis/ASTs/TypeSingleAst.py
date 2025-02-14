@@ -32,8 +32,11 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
 
     def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
         yield self.name
-        for g in self.name.generic_argument_group.type_arguments:
-            yield from g.value
+        for g in self.name.generic_argument_group.arguments:
+            if isinstance(g.value, Asts.IdentifierAst):
+                yield Asts.GenericIdentifierAst.from_identifier(g.value)
+            else:
+                yield from g.value
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -82,7 +85,6 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
         def custom_iterate(t: Asts.TypeAst) -> Iterator[Asts.GenericArgumentAst]:
             for g in t.type_parts()[0].generic_argument_group.type_arguments:
                 yield g
-                print("PPPPP", g.value)
                 yield from custom_iterate(g.value)
 
         for g in custom_iterate(self):

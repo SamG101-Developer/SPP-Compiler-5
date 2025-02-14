@@ -62,17 +62,17 @@ class FloatLiteralAst(Ast, TypeInferrable):
         match self.type:
             case None:
                 return InferredTypeInfo(CommonTypes.BigDec(self.pos))
-            case type if type.types[-1].value == "f8":
+            case type if type.type_parts()[0].value == "f8":
                 return InferredTypeInfo(CommonTypes.F8(self.pos))
-            case type if type.types[-1].value == "f16":
+            case type if type.type_parts()[0].value == "f16":
                 return InferredTypeInfo(CommonTypes.F16(self.pos))
-            case type if type.types[-1].value == "f32":
+            case type if type.type_parts()[0].value == "f32":
                 return InferredTypeInfo(CommonTypes.F32(self.pos))
-            case type if type.types[-1].value == "f64":
+            case type if type.type_parts()[0].value == "f64":
                 return InferredTypeInfo(CommonTypes.F64(self.pos))
-            case type if type.types[-1].value == "f128":
+            case type if type.type_parts()[0].value == "f128":
                 return InferredTypeInfo(CommonTypes.F128(self.pos))
-            case type if type.types[-1].value == "f256":
+            case type if type.type_parts()[0].value == "f256":
                 return InferredTypeInfo(CommonTypes.F256(self.pos))
             case _:
                 raise
@@ -83,7 +83,7 @@ class FloatLiteralAst(Ast, TypeInferrable):
             return
 
         # Check if the value is within the bounds.
-        lower, upper = SIZE_MAPPING[self.type.types[-1].value]
+        lower, upper = SIZE_MAPPING[self.type.type_parts()[0].value]
         true_value = float(self.integer_value.token.token_metadata + "." + self.decimal_value.token.token_metadata)
         if not (lower <= true_value < upper):
             raise SemanticErrors.NumberOutOfBoundsError(self, lower, upper, "float")
