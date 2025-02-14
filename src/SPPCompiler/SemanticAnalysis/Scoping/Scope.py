@@ -3,13 +3,13 @@ from __future__ import annotations
 import copy
 from typing import Any, Optional, Tuple, TYPE_CHECKING
 
+import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    import SPPCompiler.SemanticAnalysis as Asts
     from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
-    from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol
 
 
 class Scope:
@@ -84,6 +84,8 @@ class Scope:
         return new_symbol
 
     def add_symbol(self, symbol: Symbol) -> None:
+        if isinstance(symbol, TypeSymbol):
+            assert isinstance(symbol.name, Asts.GenericIdentifierAst)
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
 
@@ -229,13 +231,13 @@ class Scope:
 
 def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[Scope, Asts.GenericIdentifierAst]:
     # For TypeAsts, move through each namespace/type part accessing the namespace scope.#
-    for part in type.namespace + type.types[:-1]:
+    for part in type.fq_type_parts()[:-1]:
         # Get the next type/namespace symbol from the scope.
         inner_symbol = scope.get_symbol(part)
         match inner_symbol:
             case None: break
             case _: scope = inner_symbol.scope
-    type = type.types[-1]
+    type = type.type_parts()[-1]
     return scope, type
 
 
