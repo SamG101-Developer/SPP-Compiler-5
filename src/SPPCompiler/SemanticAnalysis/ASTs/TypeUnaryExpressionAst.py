@@ -19,6 +19,9 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
     def __eq__(self, other: TypeUnaryExpressionAst) -> bool:
         return isinstance(other, TypeUnaryExpressionAst) and self.op == other.op and self.rhs == other.rhs
 
+    def __hash__(self) -> int:
+        return hash((self.op, self.rhs))
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return f"{self.op}{self.rhs}"
@@ -36,17 +39,27 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
             type_scope = (type_scope or scope_manager.current_scope).get_symbol(self.op.name).scope
         self.rhs.analyse_semantics(scope_manager, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
 
+    def without_generics(self) -> Self:
+        return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics())
+
     def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Self:
         self.rhs = self.rhs.sub_generics(generic_arguments)
         return self
+
+    def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
+        if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
+            return self.rhs.get_generic(generic_name)
+        return None
+
+    def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
+        if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
+            return self.rhs.contains_generic(generic_name)
+        return False
 
     def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             self_scope = self_scope.get_symbol(self.op.name).scope
         return self.rhs.symbolic_eq(that, self_scope, that_scope, check_variant)
-
-    def without_generics(self) -> Self:
-        return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics())
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         return InferredTypeInfo(self)

@@ -164,11 +164,9 @@ class SupPrototypeExtensionAst(Ast):
         self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
 
         # Check every generic parameter is constrained by the type.
-        if unconstrained := self.generic_parameter_group.parameters.filter(
-                lambda p: not self.name.contains_generic(p.name)):
-            if self.name.types[-1].value[0] != "$":
-                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
-                    unconstrained[0], self.name)
+        if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
+            if self.name.type_parts()[0].value[0] != "$":
+                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(unconstrained[0], self.name)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_opt():

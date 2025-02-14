@@ -18,6 +18,9 @@ class TypeUnaryOperatorNamespaceAst(Ast, TypeInferrable):
     def __eq__(self, other: TypeUnaryOperatorNamespaceAst) -> bool:
         return self.name == other.name
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return f"{self.name}{self.tok_dbl_colon}"

@@ -1,22 +1,24 @@
 from __future__ import annotations
 
-from typing import Type
-
 import SPPCompiler.SemanticAnalysis as Asts
-from SPPCompiler.Utils.Sequence import Seq
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.Utils.Sequence import Seq
 
 
 class CommonTypes:
     @staticmethod
-    def type_variant_to_convention(type: Asts.TypeAst) -> Type[Asts.ConventionAst]:
+    def type_variant_to_convention(type: Asts.TypeAst) -> Asts.ConventionAst:
 
-        match type.types[-1].value[-3:].lower():
-            case "mov": return Asts.ConventionMovAst
-            case "mut": return Asts.ConventionMutAst
-            case "ref": return Asts.ConventionRefAst
-            case _: raise ValueError(f"Invalid type variant: {type.types[-1].value}")
+        match type.type_parts()[0].value[-3:].lower():
+            case "mov":
+                return Asts.ConventionMovAst()
+            case "mut":
+                return Asts.ConventionMutAst()
+            case "ref":
+                return Asts.ConventionRefAst()
+            case _:
+                raise ValueError(f"Invalid type variant: {type.type_parts()[0].value}")
 
     @staticmethod
     def U8(pos: int = -1):

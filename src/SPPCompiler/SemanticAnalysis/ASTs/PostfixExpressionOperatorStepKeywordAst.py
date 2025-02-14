@@ -40,7 +40,7 @@ class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable):
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # Todo: Check for superimposition, not direct equality
         # Check the iterable is a generator type.
-        target_type = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(InferredTypeInfo).map(Asts.TypeAst.without_generics)
+        target_type = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(InferredTypeInfo).map(lambda t: t.without_generics())
         return_type = lhs.infer_type(scope_manager, **kwargs)
         if not target_type.any(lambda t: t.symbolic_eq(return_type.without_generics(), scope_manager.current_scope)):
             raise SemanticErrors.ExpressionNotGeneratorError().add(lhs, return_type, "next expression")

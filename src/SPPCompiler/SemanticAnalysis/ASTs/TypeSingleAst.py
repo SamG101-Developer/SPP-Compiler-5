@@ -27,6 +27,9 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
             return self.name.value == other.value
         return False
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return f"{self.name}"
@@ -54,10 +57,22 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
             if self == generic_name:
                 return generic_type
 
-            for g in name.generic_argument_group.type_arguments:
+            for g in name.generic_argument_group.type_arguments:  # comp args?
                 g.value = g.value.sub_generics(generic_arguments)
 
         return TypeSingleAst(self.pos, name)
+
+    def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
+        for g in self.name.generic_argument_group.named_arguments:
+            if g.name == generic_name:
+                return g.value
+        return None
+
+    def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
+        for g in self.name.generic_argument_group.arguments:
+            if g.value == generic_name:
+                return True
+        return False
 
     def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
         # print("-" * 100)

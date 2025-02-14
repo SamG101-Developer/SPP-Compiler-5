@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -38,8 +37,8 @@ class GenExpressionAst(Ast, TypeInferrable):
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # The inferred type of a gen expression is the type of the value being sent back into the coroutine.
         generator_type = self._func_ret_type
-        send_type = generator_type.types[-1].generic_argument_group["Send"].value
-        return send_type
+        send_type = generator_type.type_parts()[0].generic_argument_group["Send"].value
+        return InferredTypeInfo(send_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a coroutine and not a subroutine.
@@ -62,14 +61,13 @@ class GenExpressionAst(Ast, TypeInferrable):
 
         # Determine the yield type of the enclosing function.
         external_gen_type = kwargs["function_ret_type"]
-        internal_gen_type = external_gen_type.types[-1].generic_argument_group["Gen"].value
-        expected_type = Asts.TypeAst(
-            pos=internal_gen_type.pos, convention=CommonTypes.type_variant_to_convention(external_gen_type)(),
-            namespace=internal_gen_type.namespace, types=internal_gen_type.types)
+        internal_gen_type = external_gen_type.type_parts()[0].generic_argument_group["Gen"].value
+        expected_type = InferredTypeInfo(internal_gen_type, CommonTypes.type_variant_to_convention(external_gen_type))
 
         # If the "with" keyword is being used, the expression type is the Gen generic type parameter.
+        # Todo: this doesnt actually do anything?
         if self.tok_with:
-            expression_type = internal_gen_type
+            expression_type = InferredTypeInfo(internal_gen_type)
 
         # Check the expression type matches the expected type.
         if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
