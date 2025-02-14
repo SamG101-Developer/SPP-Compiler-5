@@ -59,25 +59,23 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
 
         return TypeSingleAst(self.pos, name)
 
-    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None) -> bool:
-        # Todo: Conventions
+    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
+        # print("-" * 100)
+        # print(self, that, self_scope, that_scope)
+
+        that_scope = that_scope or self_scope
+        that_scope, that = that.split_to_scope_and_type(that_scope)
 
         # Get the symbols of the types.
-        that_scope = that_scope or self_scope
         self_symbol = self_scope.get_symbol(self.name)
-        that_scope, that = that.split_to_scope_and_type(that_scope)
         that_symbol = that_scope.get_symbol(that.name)
 
-        print("-" * 100)
-        print(self, self_scope, self_symbol)
-        print(that, that_scope, that_symbol)
-
         # Variant type: one of the generic arguments must match the type.
-        # if self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope):
-        #     composite_types = self_symbol.name.generic_argument_group.arguments[0].value.type_parts()[0].generic_argument_group.arguments
-        #     if composite_types.any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope)):
-        #         return True
-        #
+        if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, that_scope, check_variant=False):
+            composite_types = self_symbol.name.generic_argument_group.arguments[0].value.type_parts()[0].generic_argument_group.arguments
+            if composite_types.any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope)):
+                return True
+
         # # Intersections type: all the generic arguments must be superimposed over the type.
         # if self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Isc(), self_scope):
         #     composite_types = self_symbol.name.generic_argument_group.arguments[0].value.type_parts()[0].generic_argument_group.arguments
