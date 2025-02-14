@@ -49,11 +49,11 @@ class CaseExpressionAst(Ast, TypeInferrable):
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # The checks here only apply when assigning from this expression.
-        branch_inferred_types = self.branches.map(lambda x: x.infer_type(scope_manager)).unique()
+        branch_inferred_types = self.branches.map(lambda x: x.infer_type(scope_manager))
 
         # All branches must return the same type.
-        if branch_inferred_types.length > 1:
-            raise SemanticErrors.CaseBranchesConflictingTypesError().add(branch_inferred_types[0], branch_inferred_types[1])
+        if mismatch := branch_inferred_types[1:].find(lambda x: not x.symbolic_eq(branch_inferred_types[0], scope_manager.current_scope, scope_manager.current_scope)):
+            raise SemanticErrors.CaseBranchesConflictingTypesError().add(branch_inferred_types[0], mismatch)
 
         # Ensure there is an "else" branch if the branches are not exhaustive.
         if not isinstance(self.branches[-1].patterns[0], Asts.PatternVariantElseAst):
