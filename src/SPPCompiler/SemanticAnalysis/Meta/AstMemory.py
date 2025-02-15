@@ -1,6 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, Type, TYPE_CHECKING
+from typing import Optional, Tuple, TYPE_CHECKING
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -120,6 +121,15 @@ class AstMemoryHandler:
 
         Returns:
             None
+
+        Raises:
+            MemoryNotInitializedUsageError: If a symbol is used before being initialized.
+            MemoryPartiallyInitializedUsageError: If a symbol is used before being fully initialized.
+            MemoryMovedFromBorrowedContextError: If a symbol is moved from a borrowed context.
+            MemoryMovedWhilstPinnedError: If a symbol is moved whilst pinned.
+            MemoryInconsistentlyInitializedError: If a symbol is inconsistently initialized from branches.
+            MemoryInconsistentlyMovedError: If a symbol is inconsistently moved from branches.
+            MemoryInconsistentlyPinnedError: If a symbol is inconsistently pinned from branches.
         """
 
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
