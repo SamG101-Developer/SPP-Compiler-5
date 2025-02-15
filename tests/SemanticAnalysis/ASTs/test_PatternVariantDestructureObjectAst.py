@@ -110,7 +110,7 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
             y: std::BigInt
         }
 
-        fun f(p: Point1 | Point2) -> std::Void {
+        fun f(p: Point1 or Point2) -> std::Void {
             case p of
                 is Point1(x, y) { }
                 is Point2(x, y) { }

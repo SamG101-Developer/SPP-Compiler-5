@@ -29,7 +29,7 @@ class TestUseStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_use_statement_variant(self):
         """
-        use SomeType = std::Str | std::Bool
+        use SomeType = std::Str or std::Bool
         fun f(a: SomeType) -> std::Void { }
         fun g() -> std::Void { f("hello") }
         """
@@ -38,7 +38,7 @@ class TestUseStatementAst(CustomTestCase):
     def test_valid_use_statement_local_variant(self):
         """
         fun f() -> std::Void {
-            use SomeType = std::Str | std::Bool
+            use SomeType = std::Str or std::Bool
             let x: SomeType
             x = "hello"
         }

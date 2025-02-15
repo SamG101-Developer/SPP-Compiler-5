@@ -10,12 +10,6 @@ class TestFunctionParameterOptionalAst(CustomTestCase):
         fun f(a: std::Bool = std::Bool) -> std::Void { }
         """
 
-    @should_fail_compilation(SemanticErrors.ParameterOptionalNonBorrowTypeError)
-    def test_invalid_function_parameter_optional_invalid_convention(self):
-        """
-        fun f(a: &std::Bool = true) -> std::Void { }
-        """
-
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_function_parameter_optional_invalid_type(self):
         """

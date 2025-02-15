@@ -20,6 +20,15 @@ class TestLetStatementAst(CustomTestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_tye_convention(self):
+        """
+        fun f(b: &std::Bool) -> std::Void {
+            let mut x: &mut std::Bool
+            x = b
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_let_statement_uninitialized(self):
         """
@@ -33,5 +42,14 @@ class TestLetStatementAst(CustomTestCase):
         """
         fun f() -> std::Void {
             let x: std::BigInt
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_convention(self):
+        """
+        fun f(b: &std::Bool) -> std::Void {
+            let mut x: & std::Bool
+            x = b
         }
         """

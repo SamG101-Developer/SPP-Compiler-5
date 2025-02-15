@@ -221,7 +221,7 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
             y: std::BigInt
         }
 
-        fun f(p: Point1 | Point2) -> std::Void {
+        fun f(p: Point1 or Point2) -> std::Void {
             let Point1(x, y) = p
         }
         """
