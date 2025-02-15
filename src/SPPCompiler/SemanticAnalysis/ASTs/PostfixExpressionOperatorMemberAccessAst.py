@@ -116,7 +116,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
                 raise SemanticErrors.MemberAccessRuntimeOperatorExpectedError().add(lhs, self.tok_access)
         
             # Check the variable exists on the lhs.
-            lhs_type = lhs.infer_type(scope_manager).tpye
+            lhs_type = lhs.infer_type(scope_manager).type
             lhs_type_symbol = scope_manager.current_scope.get_symbol(lhs_type)
             if not lhs_type_symbol.scope.has_symbol(self.field):
                 alternatives = lhs_type_symbol.scope.all_symbols().map_attr("name")

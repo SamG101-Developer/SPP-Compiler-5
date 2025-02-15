@@ -51,7 +51,7 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable):
         element_types = self.elements.map(lambda e: e.infer_type(scope_manager, **kwargs))
         for element_type in element_types[1:]:
             if not element_types[0].symbolic_eq(element_type, scope_manager.current_scope):
-                raise SemanticErrors.ArrayElementsDifferentTypesError().add(element_types[0], element_type.type)
+                raise SemanticErrors.ArrayElementsDifferentTypesError().add(element_types[0].type, element_type.type)
 
         # Check all elements are "owned", and not "borrowed".
         for element in self.elements:

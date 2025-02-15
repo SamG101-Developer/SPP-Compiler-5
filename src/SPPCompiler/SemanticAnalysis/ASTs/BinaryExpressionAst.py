@@ -87,9 +87,9 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             # Check the rhs is a tuple.
             rhs_tuple_type = self.rhs.infer_type(scope_manager, **kwargs)
             if not rhs_tuple_type.without_generics().symbolic_eq(InferredTypeInfo(CommonTypes.Tup()), scope_manager.current_scope):
-                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, rhs_tuple_type, self.lhs)
+                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, rhs_tuple_type.type, self.lhs)
 
-            rhs_num_elements = rhs_tuple_type.types[-1].generic_argument_group.arguments.length
+            rhs_num_elements = rhs_tuple_type.type.type_parts()[0].generic_argument_group.arguments.length
 
             # Get the parts of the tuple.
             new_asts = Seq()
@@ -110,9 +110,9 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             # Check the rhs is a tuple.
             lhs_tuple_type = self.lhs.infer_type(scope_manager, **kwargs)
             if not lhs_tuple_type.without_generics().symbolic_eq(InferredTypeInfo(CommonTypes.Tup()), scope_manager.current_scope):
-                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, lhs_tuple_type, self.lhs)
+                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, lhs_tuple_type.type, self.lhs)
 
-            lhs_num_elements = lhs_tuple_type.types[-1].generic_argument_group.arguments.length
+            lhs_num_elements = lhs_tuple_type.type.type_parts()[0].generic_argument_group.arguments.length
 
             # Get the parts of the tuple.
             new_asts = Seq()

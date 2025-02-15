@@ -221,24 +221,6 @@ class SemanticErrors:
 
             return self
 
-    class ParameterOptionalNonBorrowTypeError(SemanticError):
-        """
-        The ParameterOptionalNonBorrowTypeError is raised if an optional parameter has a borrow convention. Optional
-        parameters cannot have borrow conventions, as borrows cannot be taken as part of an expression, only as a
-        function argument. Therefore there is no way to give a default value that is a borrow.
-
-        Todo: In the future, borrow conventions may be allowed as optional parameter expression prefixes.
-        """
-
-        def add(self, convention: Asts.ConventionAst) -> SemanticError:
-            self.add_error(
-                pos=convention.pos,
-                tag="Borrow convention on optional parameter.",
-                msg="Optional parameters cannot have borrow conventions.",
-                tip="Change the convention to a move convention, or remove the default value.")
-
-            return self
-
     class FunctionCoroutineInvalidReturnTypeError(SemanticError):
         """
         The FunctionCoroutineInvalidReturnTypeError is raised if a coroutine has a return type that is not a generator.

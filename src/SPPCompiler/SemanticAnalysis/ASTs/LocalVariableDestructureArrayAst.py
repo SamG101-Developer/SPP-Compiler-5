@@ -10,6 +10,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
@@ -54,7 +55,7 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
 
         # Determine the number of elements in the lhs and rhs arrays.
         num_lhs_array_elements = self.elements.length
-        num_rhs_array_elements = int(value.infer_type(scope_manager, **kwargs).type.types[-1].generic_argument_group.arguments[1].value.value.token.token_metadata)
+        num_rhs_array_elements = int(value.infer_type(scope_manager, **kwargs).type.type_parts()[0].generic_argument_group.arguments[1].value.value.token.token_metadata)
 
         # Ensure the lhs and rhs arrays have the same number of elements unless a multi-skip is present.
         if (num_lhs_array_elements < num_rhs_array_elements and not multi_arg_skips) or num_lhs_array_elements > num_rhs_array_elements:

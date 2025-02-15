@@ -51,7 +51,7 @@ class RetStatementAst(Ast, TypeInferrable):
 
         # Check the expression type matches the expected type.
         if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(expression_type, expected_type, self.expression, expected_type)
+            raise SemanticErrors.TypeMismatchError().add(expression_type.type, expected_type, self.expression, expected_type)
 
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         # Create a return instruction with the expression if it exists.

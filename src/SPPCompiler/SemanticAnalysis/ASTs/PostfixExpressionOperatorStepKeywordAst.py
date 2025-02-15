@@ -34,7 +34,7 @@ class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable):
 
     def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredTypeInfo:
         # Next operations return the "Gen" generic parameter's argument.
-        function_return_type = lhs.infer_type(scope_manager, **kwargs).type.types[-1].generic_argument_group["Gen"].value
+        function_return_type = lhs.infer_type(scope_manager, **kwargs).type.type_parts()[0].generic_argument_group["Gen"].value
         return InferredTypeInfo(function_return_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
@@ -43,7 +43,7 @@ class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable):
         target_type = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(InferredTypeInfo).map(lambda t: t.without_generics())
         return_type = lhs.infer_type(scope_manager, **kwargs)
         if not target_type.any(lambda t: t.symbolic_eq(return_type.without_generics(), scope_manager.current_scope)):
-            raise SemanticErrors.ExpressionNotGeneratorError().add(lhs, return_type, "next expression")
+            raise SemanticErrors.ExpressionNotGeneratorError().add(lhs, return_type.type, "next expression")
 
         # Tie borrows to coroutine pin outputs, for auto invalidation.
         if "assignment" in kwargs:

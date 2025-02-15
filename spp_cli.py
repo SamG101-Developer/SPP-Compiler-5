@@ -119,7 +119,7 @@ def handle_build(args: Namespace, skip_vcs: bool = False) -> None:
     try:
         Compiler(Compiler.Mode.Dev if args.mode == "dev" else Compiler.Mode.Rel)
         os.chdir(cwd.parent)
-    except Exception as e:
+    except BaseException as e:
         os.chdir(cwd.parent)
         raise e
 

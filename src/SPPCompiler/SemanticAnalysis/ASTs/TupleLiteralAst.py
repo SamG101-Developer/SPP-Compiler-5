@@ -46,7 +46,7 @@ class TupleLiteralAst(Ast, TypeInferrable):
         for element in self.elements:
             if borrow_symbol := scope_manager.current_scope.get_variable_symbol_outermost_part(element):
                 if borrow_ast := borrow_symbol.memory_info.ast_borrowed:
-                    raise SemanticErrors.ArrayElementBorrowedError().add(element, borrow_ast)
+                    raise SemanticErrors.TupleElementBorrowedError().add(element, borrow_ast)
 
 
 __all__ = ["TupleLiteralAst"]
