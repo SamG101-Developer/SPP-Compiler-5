@@ -22,9 +22,22 @@ class TestLoopConditionIterableAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_loop_condition_iterable(self):
         """
+        fun f(y: &mut std::Str) -> std::Void {
+            let v = std::Vec[std::Str]()
+            loop mut x in v.iter_mut() {
+                x = y
+            }
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_loop_condition_iterable_move(self):
+        """
         fun f() -> std::Void {
             let v = std::Vec[std::Str]()
-            loop mut x in v.iter_mut() { }
+            loop mut x in v.iter_mov() {
+                x = "hello"
+            }
         }
         """
 
