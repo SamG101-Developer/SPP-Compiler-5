@@ -43,11 +43,11 @@ class SupImplementationAst(Ast):
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         for member in self.members: member.load_super_scopes(scope_manager)
 
-    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
-        for member in self.members: member.regenerate_generic_aliases(scope_manager)
+    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
+        for member in self.members: member.relink_sup_scopes_to_generic_aliases(scope_manager)
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
-        for member in self.members: member.regenerate_generic_types(scope_manager)
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
+        for member in self.members: member.relink_sup_scopes_to_generic_types(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         for member in self.members: member.analyse_semantics(scope_manager, **kwargs)

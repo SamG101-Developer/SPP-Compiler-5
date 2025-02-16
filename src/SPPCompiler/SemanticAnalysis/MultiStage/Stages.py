@@ -20,8 +20,6 @@ type PreProcessingContext = Union[
 
 
 class CompilerStages:
-    __friends__ = {"AnnotationAst"}
-
     def pre_process(self, context: PreProcessingContext) -> None:
         """
         The preprocessor stage performs mutations on ASTs, introduces new ASTs, and removes some ASTs. This allows for
@@ -51,19 +49,18 @@ class CompilerStages:
         methods are on its superclasses, and is requires for symbol resolution.
         """
 
-    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
         """
-        The regenerate generic aliases stage is the generic type regeneration stage exclusive to type-aliases. This is
-        to ensure the aliases' old type has been generically substituted correctly, and is required before the rest of
-        the regular type's generic substitution is regenerated. This is because regular type regeneration may rely on
-        aliased types.
+        When generic types are created, they may not have all the generic-translated super scopes attached to them. The
+        easiest way to fix this is to remove their symbols, and regenerate them. For Aliases, this must be done to the
+        old types before the rest of the normal generic types.
         """
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
         """
-        The regenerate generic types stage takes all the pruned generic types, and regenerated them with full knowledge
-        of substitutions and inference. This is required as the generic types were placeholders earlier in the
-        compilation stages.
+        When generic types are created, they may not have all the generic-translated super scopes attached to them. The
+        easiest way to fix this is to remove their symbols, and regenerate them. This is the regenerate generic types
+        stage.
         """
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

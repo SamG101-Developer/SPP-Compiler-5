@@ -156,11 +156,11 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
 
         scope_manager.move_out_of_current_scope()
 
-    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         for t in self.function_parameter_group.parameters.map_attr("type"):
             t.analyse_semantics(scope_manager)

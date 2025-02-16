@@ -59,19 +59,19 @@ class Program(CompilerStages):
         scope_manager.reset()
         scope_manager.strip_generics()
 
-    def regenerate_generic_aliases(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
+    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
         # Generate generic types for all the modules.
         for module in self.modules:
             self._current = module
-            module.regenerate_generic_aliases(scope_manager)
+            module.relink_sup_scopes_to_generic_aliases(scope_manager)
             progress_bar.next(module.name.value)
         scope_manager.reset()
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager, progress_bar: ProgressBar = None) -> None:
         # Regenerate generic types for all the modules.
         for module in self.modules:
             self._current = module
-            module.regenerate_generic_types(scope_manager)
+            module.relink_sup_scopes_to_generic_types(scope_manager)
             progress_bar.next(module.name.value)
         scope_manager.reset()
 

@@ -107,7 +107,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()
 
-    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()
@@ -119,7 +119,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()
