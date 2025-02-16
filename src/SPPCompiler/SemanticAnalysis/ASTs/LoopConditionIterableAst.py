@@ -45,7 +45,9 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
         return self.iterable.infer_type(scope_manager, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        # Todo: iteration should be optional values?
+        # Todo: iteration should be optional values? how this work with conventions?
+        # Todo: using type.type_parts()[0]... => what if the type superimposes the generic type?
+        #  Get the "iterable_type" from the list of superimposed types.
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.iterable, (Asts.TokenAst, Asts.TypeAst)):
@@ -56,7 +58,7 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
         AstMemoryHandler.enforce_memory_integrity(self.iterable, self.iterable, scope_manager, update_memory_info=False)
 
         # Check the iterable is a generator type.
-        iterable_type = self.iterable.infer_type(scope_manager, **kwargs)
+        iterable_type = self.iterable.infer_type(scope_manager, **kwargs).type
         allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(lambda t: t.without_generics())
         superimposed_types = scope_manager.current_scope.get_symbol(iterable_type).scope.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name.without_generics())
         superimposed_types.append(scope_manager.current_scope.get_symbol(iterable_type).fq_name.without_generics())
@@ -65,16 +67,16 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
             raise SemanticErrors.ExpressionNotGeneratorError().add(self.iterable, iterable_type, "loop")
 
         # Create a "let" statement to introduce the loop variable into the scope.
-        gen_type = iterable_type.types[-1].generic_argument_group["Gen"].value
+        gen_type = iterable_type.type_parts()[0].generic_argument_group["Gen"].value
         let_ast = AstMutation.inject_code(f"let {self.variable}: {gen_type}", SppParser.parse_let_statement_uninitialized)
         let_ast.analyse_semantics(scope_manager, **kwargs)
 
         # Set the memory information of the symbol based on the type of iteration.
         symbols = self.variable.extract_names.map(lambda n: scope_manager.current_scope.get_symbol(n))
         for symbol in symbols:
-            symbol.memory_info.ast_borrowed = self if iterable_type.types[-1].value in ["GenMut", "GenRef"] else None
-            symbol.memory_info.is_borrow_mut = iterable_type.types[-1].value == "GenMut"
-            symbol.memory_info.is_borrow_ref = iterable_type.types[-1].value == "GenRef"
+            symbol.memory_info.ast_borrowed = self if iterable_type.type_parts()[0].value in ["GenMut", "GenRef"] else None
+            symbol.memory_info.is_borrow_mut = iterable_type.type_parts()[0].value == "GenMut"
+            symbol.memory_info.is_borrow_ref = iterable_type.type_parts()[0].value == "GenRef"
             symbol.memory_info.initialized_by(self)
 
 

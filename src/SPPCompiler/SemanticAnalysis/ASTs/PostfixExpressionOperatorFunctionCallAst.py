@@ -182,9 +182,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
         if not self._overload:
             self.analyse_semantics(scope_manager, lhs, **kwargs)
 
-        # Expand the return type from the scope it was defined in => comparisons won't require function scope knowledge.
+        # Return the function's return type.
         return_type = self._overload[1].return_type
-        return_type = self._overload[0].get_symbol(return_type).fq_name
         return InferredTypeInfo(return_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
