@@ -47,6 +47,22 @@ class TestGenExpressionAst(CustomTestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_gen_expression_unroll(self):
+        """
+        cor foo() -> std::GenRef[std::BigInt] {
+            gen &1
+            gen &2
+            gen &3
+        }
+
+        cor bar() -> std::GenMut[std::BigInt] {
+            gen &mut 0
+            gen with foo()
+            gen &mut 4
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_gen_expression_mov(self):
         """
@@ -68,5 +84,21 @@ class TestGenExpressionAst(CustomTestCase):
         """
         cor foo() -> std::GenMut[std::BigInt] {
             gen &mut 1
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_gen_expression_unroll(self):
+        """
+        cor foo() -> std::GenMut[std::BigInt] {
+            gen &mut 1
+            gen &mut 2
+            gen &mut 3
+        }
+
+        cor bar() -> std::GenMut[std::BigInt] {
+            gen &mut 0
+            gen with foo()
+            gen &mut 4
         }
         """

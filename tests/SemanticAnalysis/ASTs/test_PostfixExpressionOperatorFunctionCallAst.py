@@ -336,6 +336,21 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
         }
         """
 
+    @should_pass_compilation()
+    def test_valid_remove_parameter_for_void_substitution(self):
+        """
+        cls TestClass[T] { }
+
+        sup [T] TestClass[T] {
+            fun f(self, a: T) -> std::Void { }
+        }
+
+        fun g() -> std::Void {
+            let x = TestClass[std::Void]()
+            x.f()
+        }
+        """
+
     @should_fail_compilation(SemanticErrors.VariableTupleDestructureTupleSizeMismatchError)
     def test_invalid_postfix_function_folding_1(self):
         """
