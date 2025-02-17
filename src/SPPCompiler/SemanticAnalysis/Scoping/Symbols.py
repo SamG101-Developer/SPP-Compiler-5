@@ -98,7 +98,7 @@ class TypeSymbol:
         # Dump the TypeSymbol as a JSON string.
         return json.dumps(self)
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the TypeSymbol, but link the scope.
         return TypeSymbol(
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
@@ -110,7 +110,7 @@ class TypeSymbol:
         if self.is_generic:
             return fq_name
         if isinstance(self, AliasSymbol):
-            return self.old_type
+            return fq_name
         if self.name.value[0] == "$":
             return fq_name
 

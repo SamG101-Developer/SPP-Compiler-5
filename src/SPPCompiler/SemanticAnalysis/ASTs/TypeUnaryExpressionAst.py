@@ -5,6 +5,7 @@ from typing import Self, Optional, Dict, Tuple, Iterator
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -39,7 +40,8 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
 
     def analyse_semantics(self, scope_manager: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
-            type_scope = (type_scope or scope_manager.current_scope).get_symbol(self.op.name).scope
+            temp_manager = ScopeManager(scope_manager.global_scope, type_scope or scope_manager.current_scope)
+            type_scope = AstTypeManagement.get_namespaced_scope_with_error(temp_manager, Seq([self.op.name]))
         self.rhs.analyse_semantics(scope_manager, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
 
     def without_generics(self) -> Self:
