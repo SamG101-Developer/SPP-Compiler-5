@@ -5,7 +5,8 @@ from typing import Any, Optional, Tuple, TYPE_CHECKING
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol, AliasSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol, \
+    AliasSymbol
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -164,10 +165,6 @@ class Scope:
 
         return _depth_difference(self, scope, 0)
 
-    def to_namespace(self) -> Seq[Asts.IdentifierAst]:
-        # Convert the scope to a namespace.
-        return Seq([node.name for node in self.ancestors.reverse()[1:] if isinstance(node.name, Asts.IdentifierAst)])
-
     @property
     def name(self) -> Any:
         # Get the name of the scope.
@@ -253,14 +250,3 @@ def confirm_type_with_alias(scope: Scope, symbol: Symbol, ignore_alias: bool) ->
         case AliasSymbol() if symbol.old_type and not ignore_alias:
             symbol = scope.get_symbol(symbol.old_type)
     return symbol
-
-
-"""
-get attribute symbol:
-
-    scope, rhs = self, name.op.attribute
-    while is_valid_postfix(name):
-        scope = scope.get_variable_symbol(name.lhs).scope
-        name = name.lhs
-    symbol = scope.get_variable_symbol(rhs)
-"""

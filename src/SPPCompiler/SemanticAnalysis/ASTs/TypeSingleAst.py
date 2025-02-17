@@ -155,8 +155,8 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
                 new_scope.type_symbol.old_type.analyse_semantics(scope_manager, **kwargs)
 
     def infer_type(self, scope_manager: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> InferredTypeInfo:
-        type_scope = type_scope or scope_manager.current_scope
-        type_symbol = type_scope.get_symbol(self.name, ignore_alias=False)
+        type_scope  = type_scope or scope_manager.current_scope
+        type_symbol = type_scope.get_symbol(self.name)
         return InferredTypeInfo(type_symbol.fq_name)
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
