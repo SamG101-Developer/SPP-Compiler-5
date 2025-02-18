@@ -38,7 +38,7 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
     @staticmethod
     def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:
         value = symbol.scope.type_symbol.fq_name if symbol.scope else symbol.scope
-        return GenericTypeArgumentNamedAst(name=Asts.TypeAst.from_generic_identifier(symbol.name), value=value)
+        return GenericTypeArgumentNamedAst(name=Asts.TypeSingleAst.from_generic_identifier(symbol.name), value=value)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the name and value of the generic type argument.

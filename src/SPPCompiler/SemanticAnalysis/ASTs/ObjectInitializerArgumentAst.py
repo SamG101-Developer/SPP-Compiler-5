@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type ObjectInitializerArgumentAst = Union[
+ObjectInitializerArgumentAst = Union[
     Asts.ObjectInitializerArgumentUnnamedAst,
     Asts.ObjectInitializerArgumentNamedAst]
 

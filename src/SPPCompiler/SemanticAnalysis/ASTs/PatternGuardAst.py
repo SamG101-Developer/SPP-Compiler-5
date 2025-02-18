@@ -8,6 +8,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -36,10 +37,10 @@ class PatternGuardAst(Ast):
         self.expression.analyse_semantics(scope_manager, **kwargs)
 
         # Check the guard's type is boolean.
-        target_type = CommonTypes.Bool(self.pos)
-        return_type = self.expression.infer_type(scope_manager).type
+        target_type = InferredTypeInfo(CommonTypes.Bool(self.pos))
+        return_type = self.expression.infer_type(scope_manager)
         if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
-            raise SemanticErrors.ExpressionNotBooleanError().add(self.expression, return_type, "pattern guard")
+            raise SemanticErrors.ExpressionNotBooleanError().add(self.expression, return_type.type, "pattern guard")
 
 
 __all__ = ["PatternGuardAst"]

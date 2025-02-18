@@ -33,7 +33,7 @@ class GenericTypeParameterRequiredAst(Ast, Ordered):
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).
-        symbol = TypeSymbol(name=self.name.types[-1], type=None, is_generic=True)
+        symbol = TypeSymbol(name=self.name.type_parts()[0], type=None, is_generic=True)
         scope_manager.current_scope.add_symbol(symbol)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

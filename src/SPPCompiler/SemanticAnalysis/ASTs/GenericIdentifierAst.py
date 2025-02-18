@@ -39,7 +39,7 @@ class GenericIdentifierAst(Ast):
 
     @staticmethod
     def from_type(type: Asts.TypeAst) -> GenericIdentifierAst:
-        return type.types[-1]
+        return type.type_parts()[0]
 
     def without_generics(self) -> GenericIdentifierAst:
         return GenericIdentifierAst(self.pos, self.value)

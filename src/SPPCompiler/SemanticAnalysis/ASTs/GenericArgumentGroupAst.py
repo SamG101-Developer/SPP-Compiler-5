@@ -34,18 +34,26 @@ class GenericArgumentGroupAst(Ast):
 
     @property
     def type_arguments(self) -> Seq[Asts.GenericTypeArgumentAst]:
-        return self.arguments.filter_to_type(*Asts.GenericTypeArgumentAst.__value__.__args__)
+        return self.arguments.filter_to_type(*Asts.GenericTypeArgumentAst.__args__)
 
     @property
     def comp_arguments(self) -> Seq[Asts.GenericCompArgumentAst]:
-        return self.arguments.filter_to_type(*Asts.GenericCompArgumentAst.__value__.__args__)
+        return self.arguments.filter_to_type(*Asts.GenericCompArgumentAst.__args__)
+
+    @property
+    def named_arguments(self) -> Seq[Asts.GenericArgumentNamedAst]:
+        return self.arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__)
+
+    @property
+    def unnamed_arguments(self) -> Seq[Asts.GenericArgumentUnnamedAst]:
+        return self.arguments.filter_to_type(*Asts.GenericArgumentUnnamedAst.__args__)
 
     @staticmethod
     def from_parameter_group(parameters: Seq[Asts.GenericParameterAst]) -> GenericArgumentGroupAst:
 
         GenericArgumentCTor = {
-            **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__value__.__args__},
-            **{g: Asts.GenericTypeArgumentNamedAst for g in Asts.GenericTypeParameterAst.__value__.__args__}}
+            **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__args__},
+            **{g: Asts.GenericTypeArgumentNamedAst for g in Asts.GenericTypeParameterAst.__args__}}
 
         arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)](name=copy.deepcopy(p.name), value=p.name))
         return GenericArgumentGroupAst(arguments=arguments)
@@ -69,10 +77,8 @@ class GenericArgumentGroupAst(Ast):
         return self.arguments.filter_to_type(Asts.GenericCompArgumentUnnamedAst, Asts.GenericTypeArgumentUnnamedAst)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        # Code that is run before the overload is selected.
-
         # Check there are no duplicate argument names.
-        generic_argument_names = self.arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__value__.__args__).map(lambda a: a.name).flat()
+        generic_argument_names = self.arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__).map(lambda a: a.name.name)
         if duplicates := generic_argument_names.non_unique():
             raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named generic argument")
 

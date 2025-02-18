@@ -7,7 +7,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -55,7 +55,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
         symbol.memory_info.initialized_by(self)
         scope_manager.current_scope.add_symbol(symbol)
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
         self.type.analyse_semantics(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
@@ -68,7 +68,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
         self.value.analyse_semantics(scope_manager, **kwargs)
 
         # Check the value's type is the same as the type.
-        expected_type = InferredType.from_type(self.type)
+        expected_type = InferredTypeInfo(self.type)
         given_type = self.value.infer_type(scope_manager, **kwargs)
 
         if not expected_type.symbolic_eq(given_type, scope_manager.current_scope):

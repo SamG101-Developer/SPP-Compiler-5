@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type GenericParameterAst = Union[
+GenericParameterAst = Union[
     Asts.GenericCompParameterOptionalAst,
     Asts.GenericCompParameterRequiredAst,
     Asts.GenericCompParameterVariadicAst,
@@ -10,25 +10,25 @@ type GenericParameterAst = Union[
     Asts.GenericTypeParameterRequiredAst,
     Asts.GenericTypeParameterVariadicAst]
 
-type GenericCompParameterAst = Union[
+GenericCompParameterAst = Union[
     Asts.GenericCompParameterOptionalAst,
     Asts.GenericCompParameterRequiredAst,
     Asts.GenericCompParameterVariadicAst]
 
-type GenericTypeParameterAst = Union[
+GenericTypeParameterAst = Union[
     Asts.GenericTypeParameterOptionalAst,
     Asts.GenericTypeParameterRequiredAst,
     Asts.GenericTypeParameterVariadicAst]
 
-type GenericParameterRequiredAst = Union[
+GenericParameterRequiredAst = Union[
     Asts.GenericCompParameterRequiredAst,
     Asts.GenericTypeParameterRequiredAst]
 
-type GenericParameterOptionalAst = Union[
+GenericParameterOptionalAst = Union[
     Asts.GenericCompParameterOptionalAst,
     Asts.GenericTypeParameterOptionalAst]
 
-type GenericParameterVariadicAst = Union[
+GenericParameterVariadicAst = Union[
     Asts.GenericCompParameterVariadicAst,
     Asts.GenericTypeParameterVariadicAst]
 

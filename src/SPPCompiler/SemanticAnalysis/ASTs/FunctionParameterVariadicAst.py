@@ -21,7 +21,7 @@ class FunctionParameterVariadicAst(Ast, Ordered, VariableNameExtraction):
     tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
     variable: Asts.LocalVariableAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
-    convention: Asts.ConventionAst = field(default_factory=Asts.ConventionMovAst)
+    convention: Asts.ConventionAst = field(default_factory=lambda: Asts.ConventionMovAst())
     type: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:

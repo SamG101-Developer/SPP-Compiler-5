@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -27,10 +27,9 @@ class PinStatementAst(Ast, TypeInferrable):
             self.expressions.print(printer, ", ")]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # All statements are inferred as "void".
-        void_type = CommonTypes.Void(self.pos)
-        return InferredType.from_type(void_type)
+        return InferredTypeInfo(CommonTypes.Void(self.pos))
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the expressions.

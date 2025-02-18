@@ -5,13 +5,13 @@ __maintainer__ = "Sam Gardner"
 __email__ = "samuelgardner101@gmail.com"
 __status__ = "Development"
 
-import cProfile
-import datetime
+# import cProfile
+# import datetime
 import os
 from argparse import Namespace
 
-import gprof2dot
-import graphviz
+# import gprof2dot
+# import graphviz
 import json_fix
 
 from spp_cli import handle_build

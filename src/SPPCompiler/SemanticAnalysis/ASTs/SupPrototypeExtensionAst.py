@@ -50,7 +50,7 @@ class SupPrototypeExtensionAst(Ast):
         return "".join(string)
 
     def pre_process(self, context: PreProcessingContext) -> None:
-        if self.name.types[-1].value[0] == "$": return
+        if self.name.type_parts()[0].value[0] == "$": return
         super().pre_process(context)
         self.body.pre_process(self)
 
@@ -81,8 +81,8 @@ class SupPrototypeExtensionAst(Ast):
             raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type")
 
         # Ensure all the generic arguments are unnamed and match the class's generic parameters.
-        for generic_arg in self.name.types[-1].generic_argument_group.arguments:
-            if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__value__.__args__):
+        for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
+            if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__args__):
                 raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(generic_arg)
             if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
                 raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(generic_arg, self)
@@ -141,15 +141,15 @@ class SupPrototypeExtensionAst(Ast):
 
         scope_manager.move_out_of_current_scope()
 
-    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
-        self.body.regenerate_generic_aliases(scope_manager)
+        self.body.relink_sup_scopes_to_generic_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
         scope_manager.move_to_next_scope()
         self.super_class.analyse_semantics(scope_manager)
-        self.body.regenerate_generic_types(scope_manager)
+        self.body.relink_sup_scopes_to_generic_types(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
@@ -164,11 +164,9 @@ class SupPrototypeExtensionAst(Ast):
         self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
 
         # Check every generic parameter is constrained by the type.
-        if unconstrained := self.generic_parameter_group.parameters.filter(
-                lambda p: not self.name.contains_generic(p.name)):
-            if self.name.types[-1].value[0] != "$":
-                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
-                    unconstrained[0], self.name)
+        if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
+            if self.name.type_parts()[0].value[0] != "$":
+                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(unconstrained[0], self.name)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_opt():

@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type PatternVariantAst = Union[
+PatternVariantAst = Union[
     Asts.PatternVariantElseAst,
     Asts.PatternVariantElseCaseAst,
     Asts.PatternVariantExpressionAst,
@@ -12,12 +12,12 @@ type PatternVariantAst = Union[
     Asts.PatternVariantDestructureObjectAst,
     Asts.PatternVariantSingleIdentifierAst]
 
-type PatternGroupDestructureAst = Union[
+PatternGroupDestructureAst = Union[
     Asts.PatternVariantDestructureTupleAst,
     Asts.PatternVariantDestructureArrayAst,
     Asts.PatternVariantDestructureObjectAst]
 
-type PatternVariantNestedForDestructureArrayAst = Union[
+PatternVariantNestedForDestructureArrayAst = Union[
     Asts.PatternVariantDestructureArrayAst,
     Asts.PatternVariantDestructureTupleAst,
     Asts.PatternVariantDestructureObjectAst,
@@ -27,7 +27,7 @@ type PatternVariantNestedForDestructureArrayAst = Union[
     Asts.PatternVariantLiteralAst,
     Asts.PatternVariantSingleIdentifierAst]
 
-type PatternVariantNestedForDestructureTupleAst = Union[
+PatternVariantNestedForDestructureTupleAst = Union[
     Asts.PatternVariantDestructureArrayAst,
     Asts.PatternVariantDestructureTupleAst,
     Asts.PatternVariantDestructureObjectAst,
@@ -37,12 +37,12 @@ type PatternVariantNestedForDestructureTupleAst = Union[
     Asts.PatternVariantLiteralAst,
     Asts.PatternVariantSingleIdentifierAst]
 
-type PatternVariantNestedForDestructureObjectAst = Union[
+PatternVariantNestedForDestructureObjectAst = Union[
     Asts.PatternVariantAttributeBindingAst,
     Asts.PatternVariantDestructureSkipNArgumentsAst,
     Asts.PatternVariantSingleIdentifierAst]
 
-type PatternVariantNestedForAttributeBindingAst = Union[
+PatternVariantNestedForAttributeBindingAst = Union[
     Asts.PatternVariantDestructureArrayAst,
     Asts.PatternVariantDestructureTupleAst,
     Asts.PatternVariantDestructureObjectAst,

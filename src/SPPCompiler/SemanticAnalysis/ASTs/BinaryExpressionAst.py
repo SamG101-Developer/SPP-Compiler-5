@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -13,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Meta.AstBinUtils import AstBinUtils
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
@@ -22,7 +21,7 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class BinaryExpressionAst(Ast, TypeInferrable):
     lhs: Asts.ExpressionAst = field(default=None)
-    op: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAdd))
+    op: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst())
     rhs: Asts.ExpressionAst = field(default=None)
 
     _as_func: Optional[Asts.PostfixExpressionAst | Asts.CaseExpressionAst] = field(default=None, init=False, repr=False)
@@ -39,14 +38,13 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             self.rhs.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 
         # Comparisons using the "is" keyword are always boolean.
         if self.op.token.token_type == SppTokenType.KwIs:
-            bool_type = CommonTypes.Bool(self.pos)
-            return InferredType.from_type(bool_type)
+            return InferredTypeInfo(CommonTypes.Bool(self.pos))
 
         # Infer the type from the function equivalent of the binary expression.
         if not self._as_func:
@@ -87,11 +85,11 @@ class BinaryExpressionAst(Ast, TypeInferrable):
         # Handle lhs-folding
         if isinstance(self.lhs, Asts.TokenAst):
             # Check the rhs is a tuple.
-            rhs_tuple_type = self.rhs.infer_type(scope_manager, **kwargs).type
-            if not rhs_tuple_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
-                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, rhs_tuple_type, self.lhs)
+            rhs_tuple_type = self.rhs.infer_type(scope_manager, **kwargs)
+            if not rhs_tuple_type.without_generics().symbolic_eq(InferredTypeInfo(CommonTypes.Tup()), scope_manager.current_scope):
+                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, rhs_tuple_type.type, self.lhs)
 
-            rhs_num_elements = rhs_tuple_type.types[-1].generic_argument_group.arguments.length
+            rhs_num_elements = rhs_tuple_type.type.type_parts()[0].generic_argument_group.arguments.length
 
             # Get the parts of the tuple.
             new_asts = Seq()
@@ -110,11 +108,11 @@ class BinaryExpressionAst(Ast, TypeInferrable):
         # Handle rhs-folding
         elif isinstance(self.rhs, Asts.TokenAst):
             # Check the rhs is a tuple.
-            lhs_tuple_type = self.lhs.infer_type(scope_manager, **kwargs).type
-            if not lhs_tuple_type.without_generics().symbolic_eq(CommonTypes.Tup(), scope_manager.current_scope):
-                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, lhs_tuple_type, self.lhs)
+            lhs_tuple_type = self.lhs.infer_type(scope_manager, **kwargs)
+            if not lhs_tuple_type.without_generics().symbolic_eq(InferredTypeInfo(CommonTypes.Tup()), scope_manager.current_scope):
+                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, lhs_tuple_type.type, self.lhs)
 
-            lhs_num_elements = lhs_tuple_type.types[-1].generic_argument_group.arguments.length
+            lhs_num_elements = lhs_tuple_type.type.type_parts()[0].generic_argument_group.arguments.length
 
             # Get the parts of the tuple.
             new_asts = Seq()

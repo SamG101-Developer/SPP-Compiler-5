@@ -71,7 +71,8 @@ def handle_vcs() -> None:
         return
 
     # Parse the spp.toml file and check if the vcs section exists.
-    toml = tomllib.load(open(toml_file, "rb"))
+    with open(toml_file, "rb") as fo:
+        toml = tomllib.load(fo)
     vcs = toml.get("vcs")
     if not vcs: return
 
@@ -97,7 +98,7 @@ def handle_vcs() -> None:
     os.chdir(cwd)
 
 
-def handle_build(args: Namespace) -> None:
+def handle_build(args: Namespace, skip_vcs: bool = False) -> None:
     # Check if the bin directory exists, create it if it doesn't.
     cwd = Path.cwd()
     bin_directory = cwd / "out"
@@ -111,10 +112,16 @@ def handle_build(args: Namespace) -> None:
         return
 
     # Handle vcs operations.
-    handle_vcs()
+    if not skip_vcs:
+        handle_vcs()
 
     # Compile the code.
-    Compiler(Compiler.Mode.Dev if args.mode == "dev" else Compiler.Mode.Rel)
+    try:
+        Compiler(Compiler.Mode.Dev if args.mode == "dev" else Compiler.Mode.Rel)
+        os.chdir(cwd.parent)
+    except BaseException as e:
+        os.chdir(cwd.parent)
+        raise e
 
 
 def handle_run(args: Namespace) -> None:

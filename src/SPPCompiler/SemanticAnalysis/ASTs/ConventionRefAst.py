@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, Ast
 
 @dataclass
 class ConventionRefAst(Ast):
-    tok_borrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBorrow))
+    tok_borrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAmpersand))
 
     def __eq__(self, other: ConventionRefAst) -> bool:
         # Check both ASTs are the same type.

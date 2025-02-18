@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type FunctionParameterAst = Union[
+FunctionParameterAst = Union[
     Asts.FunctionParameterOptionalAst,
     Asts.FunctionParameterRequiredAst,
     Asts.FunctionParameterSelfAst,

@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type ArrayLiteralAst = Union[
+ArrayLiteralAst = Union[
     Asts.ArrayLiteral0ElementAst,
     Asts.ArrayLiteralNElementAst]
 

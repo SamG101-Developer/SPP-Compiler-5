@@ -4,7 +4,7 @@ import time
 
 import colorama
 
-SHOW_PROGRESS_BARS = 1
+SHOW_PROGRESS_BARS = os.getenv("SHOW_PROGRESS_BARS", "1") == "1"
 
 
 class ProgressBar:

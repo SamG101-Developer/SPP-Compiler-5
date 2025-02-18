@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
@@ -21,7 +21,7 @@ from SPPCompiler.Utils.Sequence import Seq
 class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
     variable: Asts.LocalVariableAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
-    convention: Asts.ConventionAst = field(default_factory=Asts.ConventionMovAst)
+    convention: Asts.ConventionAst = field(default_factory=lambda: Asts.ConventionMovAst())
     type: Asts.TypeAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
     default: Asts.ExpressionAst = field(default=None)
@@ -65,17 +65,11 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
         self.type.analyse_semantics(scope_manager, **kwargs)
         self.default.analyse_semantics(scope_manager, **kwargs)
 
-        # Check the convention is not a borrow (no way to give a default value as a borrow).
-        # Todo: remove this check, because of global constants being borrowed?
-        # Todo: otherwise, remove from the parser the possibility of a convention for an optional parameter.
-        if not isinstance(self.convention, Asts.ConventionMovAst):
-            raise SemanticErrors.ParameterOptionalNonBorrowTypeError().add(self.convention)
-
         # Make sure the default expression is of the correct type.
+        # Todo: are default_type and self.type the correct way around? test default with a variant.
         default_type = self.default.infer_type(scope_manager)
-        target_type = InferredType.from_type(self.type)
-        if not target_type.symbolic_eq(default_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(self.extract_name, target_type, self.default, default_type)
+        if not InferredTypeInfo(self.type, self.convention).symbolic_eq(default_type, scope_manager.current_scope):
+            raise SemanticErrors.TypeMismatchError().add(self.extract_name, self.type, self.default, default_type)
 
         # Create the variable for the parameter.
         ast = AstMutation.inject_code(

@@ -7,10 +7,11 @@ from typing import Optional
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility, VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -51,11 +52,9 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
             self.old_type.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # All statements are inferred as "void".
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
-        void_type = CommonTypes.Void(self.pos)
-        return InferredType.from_type(void_type)
+        return InferredTypeInfo(CommonTypes.Void(self.pos))
 
     def pre_process(self, context: PreProcessingContext) -> None:
         for a in self.annotations:
@@ -73,7 +72,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         # Create a scope for the alias' generics, so analysing can be done with the generics, without them leaking.
         scope_manager.create_and_move_into_new_scope(f"<type-alias:{self.new_type}:{self.pos}>", self)
         for generic_parameter in self.generic_parameter_group.parameters:
-            type_symbol = TypeSymbol(name=generic_parameter.name.types[-1], type=None, is_generic=True)
+            type_symbol = TypeSymbol(name=generic_parameter.name.type_parts()[0], type=None, is_generic=True)
             scope_manager.current_scope.add_symbol(type_symbol)
         scope_manager.move_out_of_current_scope()
 
@@ -81,20 +80,16 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         self._generated = True
 
     def generate_top_level_aliases(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-
         # Skip the class scope and move into the type-alias scope (generic access)
         scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()
 
         # Ensure the validity of the old type.
         self.old_type.analyse_semantics(scope_manager)
-        old_type_symbol = scope_manager.current_scope.get_symbol(self.old_type)
+        old_type_symbol = scope_manager.current_scope.get_symbol(self.old_type.infer_type(scope_manager).type)
 
         # Create a sup ast to allow the attribute and method access.
-        sup_ast = AstMutation.inject_code(f"sup {self.new_type} ext {self.old_type} {{}}", SppParser.parse_sup_prototype_extension)
-        sup_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)  # Todo: is this required?
+        sup_ast = AstMutation.inject_code(f"sup {self.generic_parameter_group} {self.new_type} ext {self.old_type} {{}}", SppParser.parse_sup_prototype_extension)
         sup_ast.generate_top_level_scopes(scope_manager)
 
         # Register the old type against the new alias symbol.
@@ -112,7 +107,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()
 
-    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()
@@ -124,7 +119,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()

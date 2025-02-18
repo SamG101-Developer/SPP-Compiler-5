@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis.ASTs as Asts
 
-type LoopConditionAst = Union[
+LoopConditionAst = Union[
     Asts.LoopConditionBooleanAst,
     Asts.LoopConditionIterableAst]
 

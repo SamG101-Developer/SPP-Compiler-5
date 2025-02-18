@@ -10,7 +10,6 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.PatternMapping import PatternMapping
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -37,19 +36,20 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping):
 
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureObjectAst:
         # Convert the object destructuring into a local variable object destructuring.
-        elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureObjectAst.__value__.__args__)
+        elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureObjectAst.__args__)
         converted_elements = elements.map(lambda e: e.convert_to_variable(**kwargs))
         return Asts.LocalVariableDestructureObjectAst(self.pos, self.type, self.tok_left_paren, converted_elements, self.tok_right_paren)
 
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         self.type.analyse_semantics(scope_manager, **kwargs)
 
+        # Todo: is InferredTypeInfo needed here for the comparison?
         # Flow type the condition symbol if necessary.
         condition_symbol = scope_manager.current_scope.get_symbol(condition)
         is_condition_symbol_variant = condition_symbol and condition_symbol.type.without_generics().symbolic_eq(CommonTypes.Var().without_generics(), scope_manager.current_scope)
         if condition_symbol and is_condition_symbol_variant:
-            if not condition_symbol.type.symbolic_eq(self.type, scope_manager.current_scope):
-                raise SemanticErrors.TypeMismatchError().add(condition, InferredType.from_type(condition_symbol.type), self.type, InferredType.from_type(self.type))
+            if not condition_symbol.type.symbolic_eq(self.type, scope_manager.current_scope, scope_manager.current_scope):
+                raise SemanticErrors.TypeMismatchError().add(condition, condition_symbol.type, self.type, self.type)
 
             flow_symbol = copy.deepcopy(condition_symbol)
             flow_symbol.type = self.type

@@ -59,7 +59,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 
         symbol_type = TypeSymbol if not self._is_alias else AliasSymbol
-        symbol_name = copy.deepcopy(self.name.types[-1])
+        symbol_name = copy.deepcopy(self.name.type_parts()[0])
         symbol_name.generic_argument_group = GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)
 
         symbol_1 = symbol_type(name=symbol_name, type=self, scope=scope_manager.current_scope, visibility=self._visibility[0])
@@ -67,7 +67,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         scope_manager.current_scope._type_symbol = symbol_1
 
         if self.generic_parameter_group.parameters:
-            symbol_2 = symbol_type(name=self.name.types[-1], type=self, visibility=self._visibility[0])
+            symbol_2 = symbol_type(name=self.name.type_parts()[0], type=self, visibility=self._visibility[0])
             symbol_2.scope = scope_manager.current_scope
             scope_manager.current_scope.parent.add_symbol(symbol_2)
 
@@ -79,7 +79,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
             a.pre_process(self)
         self.body.pre_process(self)
 
-    def generate_top_level_scopes(self, scope_manager: ScopeManager, is_alias: bool = False) -> None:
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a new scope for the class.
         scope_manager.create_and_move_into_new_scope(self.name, self)
         super().generate_top_level_scopes(scope_manager)
@@ -107,16 +107,16 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         self.body.load_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.generate_top_level_aliases(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
-        self.body.regenerate_generic_types(scope_manager)
+        self.body.relink_sup_scopes_to_generic_types(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

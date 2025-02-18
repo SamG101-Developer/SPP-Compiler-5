@@ -38,6 +38,9 @@ class Seq[T]:
     def map_attr[U](self, attr: str) -> Seq[U]:
         return Seq([getattr(v, attr) for v in self._value])
 
+    def map_method[U](self, method: str, *args, **kwargs) -> Seq[U]:
+        return Seq([getattr(v, method)(*args, **kwargs) for v in self._value])
+
     def filter(self, func: Callable[[T], bool]) -> Seq[T]:
         return Seq([v for v in self._value if func(v)])
 

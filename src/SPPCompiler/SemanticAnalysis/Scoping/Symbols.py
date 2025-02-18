@@ -98,7 +98,7 @@ class TypeSymbol:
         # Dump the TypeSymbol as a JSON string.
         return json.dumps(self)
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the TypeSymbol, but link the scope.
         return TypeSymbol(
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
@@ -106,23 +106,22 @@ class TypeSymbol:
 
     @property
     def fq_name(self) -> Asts.TypeAst:
-        from SPPCompiler.SemanticAnalysis import TypeAst, IdentifierAst
-
-        fq_name = TypeAst.from_generic_identifier(self.name)
+        fq_name = Asts.TypeSingleAst.from_generic_identifier(self.name)
         if self.is_generic:
             return fq_name
         if isinstance(self, AliasSymbol):
-            return self.old_type
+            return fq_name
         if self.name.value[0] == "$":
             return fq_name
 
         scope = self.scope.parent_module
         while scope.parent:
-            if isinstance(scope.name, IdentifierAst):
-                fq_name.namespace.insert(0, scope.name)
+            if isinstance(scope.name, Asts.IdentifierAst):
+                fq_name = fq_name.prepend_namespace_part(scope.name)
             else:
-                fq_name.types.insert(0, scope.name)
+                raise NotImplementedError("Nested types are not supported yet.")
             scope = scope.parent
+
         return fq_name
 
 

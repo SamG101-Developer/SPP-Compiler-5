@@ -22,7 +22,7 @@ class CoroutinePrototypeAst(Asts.FunctionPrototypeAst):
         kwargs["function_ret_type"] = scope_manager.current_scope.get_symbol(self.return_type).fq_name
 
         # Check the return type is a generator type.
-        allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(Asts.TypeAst.without_generics)
+        allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(lambda t: t.without_generics())
         if not allowed_types.any(lambda t: t.symbolic_eq(self.return_type.without_generics(), scope_manager.current_scope)):
             raise SemanticErrors.FunctionCoroutineInvalidReturnTypeError().add(self.return_type)
 

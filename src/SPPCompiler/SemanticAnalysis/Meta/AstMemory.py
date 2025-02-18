@@ -1,6 +1,7 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, Type, TYPE_CHECKING
+from typing import Optional, Tuple, TYPE_CHECKING
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -76,10 +77,13 @@ class MemoryInfo:
             self.ast_partially_moved.is_empty() and self.initialized_by(ast)
 
     @property
-    def convention(self) -> Type[Asts.ConventionAst]:
-        # Get the convention for the memory, based on the borrow status of the symbol.
-        import SPPCompiler.SemanticAnalysis as Asts
-        return Asts.ConventionMutAst if self.is_borrow_mut else Asts.ConventionRefAst if self.is_borrow_ref else Asts.ConventionMovAst
+    def convention(self) -> Optional[Asts.ConventionAst]:
+        # Return the convention of the symbol.
+        if self.is_borrow_mut:
+            return Asts.ConventionMutAst()
+        elif self.is_borrow_ref:
+            return Asts.ConventionRefAst()
+        return Asts.ConventionMovAst()
 
 
 class AstMemoryHandler:
@@ -117,6 +121,15 @@ class AstMemoryHandler:
 
         Returns:
             None
+
+        Raises:
+            MemoryNotInitializedUsageError: If a symbol is used before being initialized.
+            MemoryPartiallyInitializedUsageError: If a symbol is used before being fully initialized.
+            MemoryMovedFromBorrowedContextError: If a symbol is moved from a borrowed context.
+            MemoryMovedWhilstPinnedError: If a symbol is moved whilst pinned.
+            MemoryInconsistentlyInitializedError: If a symbol is inconsistently initialized from branches.
+            MemoryInconsistentlyMovedError: If a symbol is inconsistently moved from branches.
+            MemoryInconsistentlyPinnedError: If a symbol is inconsistently pinned from branches.
         """
 
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol

@@ -1,220 +1,170 @@
 from __future__ import annotations
 
-from typing import Type
-
 import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
 class CommonTypes:
     @staticmethod
-    def type_variant_to_convention(type: Asts.TypeAst) -> Type[Asts.ConventionAst]:
-        from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst
+    def type_variant_to_convention(type: Asts.TypeAst) -> Asts.ConventionAst:
 
-        match type.types[-1].value[-3:].lower():
-            case "mov": return ConventionMovAst
-            case "mut": return ConventionMutAst
-            case "ref": return ConventionRefAst
-            case _: raise ValueError(f"Invalid type variant: {type.types[-1].value}")
+        match type.type_parts()[0].value[-3:].lower():
+            case "mov":
+                return Asts.ConventionMovAst()
+            case "mut":
+                return Asts.ConventionMutAst()
+            case "ref":
+                return Asts.ConventionRefAst()
+            case _:
+                raise ValueError(f"Invalid type variant: {type.type_parts()[0].value}")
 
     @staticmethod
     def U8(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U8")]))
+        return AstMutation.inject_code(f"std::U8", SppParser.parse_type)
 
     @staticmethod
     def U16(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U16")]))
+        return AstMutation.inject_code(f"std::U16", SppParser.parse_type)
 
     @staticmethod
     def U32(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U32")]))
+        return AstMutation.inject_code(f"std::U32", SppParser.parse_type)
 
     @staticmethod
     def U64(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U64")]))
+        return AstMutation.inject_code(f"std::U64", SppParser.parse_type)
 
     @staticmethod
     def U128(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U128")]))
+        return AstMutation.inject_code(f"std::U128", SppParser.parse_type)
 
     @staticmethod
     def U256(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "U256")]))
+        return AstMutation.inject_code(f"std::U256", SppParser.parse_type)
 
     @staticmethod
     def I8(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I8")]))
+        return AstMutation.inject_code(f"std::I8", SppParser.parse_type)
 
     @staticmethod
     def I16(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I16")]))
+        return AstMutation.inject_code(f"std::I16", SppParser.parse_type)
 
     @staticmethod
     def I32(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I32")]))
+        return AstMutation.inject_code(f"std::I32", SppParser.parse_type)
 
     @staticmethod
     def I64(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I64")]))
+        return AstMutation.inject_code(f"std::I64", SppParser.parse_type)
 
     @staticmethod
     def I128(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I128")]))
+        return AstMutation.inject_code(f"std::I128", SppParser.parse_type)
 
     @staticmethod
     def I256(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "I256")]))
+        return AstMutation.inject_code(f"std::I256", SppParser.parse_type)
 
     @staticmethod
     def F8(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F8")]))
+        return AstMutation.inject_code(f"std::F8", SppParser.parse_type)
 
     @staticmethod
     def F16(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F16")]))
+        return AstMutation.inject_code(f"std::F16", SppParser.parse_type)
 
     @staticmethod
     def F32(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F32")]))
+        return AstMutation.inject_code(f"std::F32", SppParser.parse_type)
 
     @staticmethod
     def F64(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F64")]))
+        return AstMutation.inject_code(f"std::F64", SppParser.parse_type)
 
     @staticmethod
     def F128(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F128")]))
+        return AstMutation.inject_code(f"std::F128", SppParser.parse_type)
 
     @staticmethod
     def F256(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "F256")]))
-
-    @staticmethod
-    def Self(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([]), Seq([Asts.GenericIdentifierAst(pos, "Self")]))
+        return AstMutation.inject_code(f"std::F256", SppParser.parse_type)
 
     @staticmethod
     def Void(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Void")]))
+        return AstMutation.inject_code(f"std::Void", SppParser.parse_type)
 
     @staticmethod
     def Bool(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Bool")]))
+        return AstMutation.inject_code(f"std::Bool", SppParser.parse_type)
 
     @staticmethod
     def BigInt(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "BigInt")]))
+        return AstMutation.inject_code(f"std::BigInt", SppParser.parse_type)
 
     @staticmethod
     def BigDec(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "BigDec")]))
+        return AstMutation.inject_code(f"std::BigDec", SppParser.parse_type)
 
     @staticmethod
     def Str(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Str")]))
-
-    @staticmethod
-    def Rgx(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Rgx")]))
+        return AstMutation.inject_code(f"std::Str", SppParser.parse_type)
 
     @staticmethod
     def Copy(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Copy")]))
-
-    @staticmethod
-    def CtxRef(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "CtxRef")]))
-
-    @staticmethod
-    def CtxMut(pos: int = -1):
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "CtxMut")]))
-
-    @staticmethod
-    def Single(inner_type=None, pos: int = -1):
-        inner_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, inner_type)
-        generics = Asts.GenericArgumentGroupAst(arguments=Seq([inner_type_generic]))
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Box", generics)]))
+        return AstMutation.inject_code(f"std::Copy", SppParser.parse_type)
 
     @staticmethod
     def Fut(inner_type, pos: int = -1):
-        # Convert the inner type into a generic argument and load it into a group for the optional type.
-        inner_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, inner_type)
-        generics = Asts.GenericArgumentGroupAst(arguments=Seq([inner_type_generic]))
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Fut", generics)]))
+        return AstMutation.inject_code(f"std::Fut[{inner_type}]", SppParser.parse_type)
 
     @staticmethod
     def Arr(elem_type, size, pos: int = -1):
-        # Convert the element type and size into generic arguments and load them into a group for the array type.
-        elem_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, elem_type)
-        size_comp_generic = Asts.GenericCompArgumentUnnamedAst(-1, size)
-        generics = Asts.GenericArgumentGroupAst(arguments=Seq([elem_type_generic, size_comp_generic]))
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Arr", generics)]))
+        return AstMutation.inject_code(f"std::Arr[{elem_type}, {size}]", SppParser.parse_type)
 
     @staticmethod
     def Opt(inner_type, pos: int = -1):
-        # Convert the inner type into a generic argument and load it into a group for the optional type.
-        inner_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, inner_type)
-        generics = Asts.GenericArgumentGroupAst(arguments=Seq([inner_type_generic]))
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Opt", generics)]))
+        return AstMutation.inject_code(f"std::Opt[{inner_type}]", SppParser.parse_type)
 
     @staticmethod
     def Tup(inner_types: Seq = None, pos: int = -1):
-        # Convert the inner types into generic arguments and load them into a group for the tuple type.
-        inner_type_generics = (inner_types or Seq()).map(lambda x: Asts.GenericTypeArgumentUnnamedAst(-1, x))
-        generics = Asts.GenericArgumentGroupAst(arguments=inner_type_generics)
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Tup", generics)]))
+        return AstMutation.inject_code(f"std::Tup[{', '.join((inner_types or Seq()).map(str))}]", SppParser.parse_type)
 
     @staticmethod
     def Var(inner_types: Seq = None, pos: int = -1):
-        # Convert the inner types into generic arguments and load them into a group for the variant type.
-        inner_type_generics = (inner_types or Seq()).map(lambda x: Asts.GenericTypeArgumentUnnamedAst(-1, x))
-        generics = Asts.GenericArgumentGroupAst(arguments=inner_type_generics)
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "Var", generics)]))
+        return AstMutation.inject_code(f"std::Var[{', '.join((inner_types or Seq()).map(str))}]", SppParser.parse_type)
+
+    @staticmethod
+    def Isc(inner_types: Seq = None, pos: int = -1):
+        return AstMutation.inject_code(f"std::Isc[{', '.join((inner_types or Seq()).map(str))}]", SppParser.parse_type)
 
     @staticmethod
     def FunRef(param_types, return_type, pos: int = -1):
-        # Convert the parameter/return type(s) into generic arguments and load them into a group for the function type.
-        return_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, return_type)
-        param_types_generic = Asts.GenericTypeArgumentUnnamedAst(-1, param_types)
-        generics = Asts.GenericArgumentGroupAst(arguments=Seq([param_types_generic, return_type_generic]))
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "FunRef", generics)]))
+        return AstMutation.inject_code(f"std::FunRef[{param_types}, {return_type}]", SppParser.parse_type)
 
     @staticmethod
     def FunMut(param_types, return_type, pos: int = -1):
-        # Convert the parameter/return type(s) into generic arguments and load them into a group for the function type.
-        param_types_generic = Asts.GenericTypeArgumentUnnamedAst(-1, param_types)
-        return_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, return_type)
-        generics = Asts.GenericArgumentGroupAst(arguments=Seq([param_types_generic, return_type_generic]))
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "FunMut", generics)]))
+        return AstMutation.inject_code(f"std::FunMut[{param_types}, {return_type}]", SppParser.parse_type)
 
     @staticmethod
     def FunMov(param_types, return_type, pos: int = -1):
-        # Convert the parameter/return type(s) into generic arguments and load them into a group for the function type.
-        param_types_generic = Asts.GenericTypeArgumentUnnamedAst(-1, param_types)
-        return_type_generic = Asts.GenericTypeArgumentUnnamedAst(-1, return_type)
-        generics = Asts.GenericArgumentGroupAst(arguments=Seq([param_types_generic, return_type_generic]))
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "FunMov", generics)]))
+        return AstMutation.inject_code(f"std::FunMov[{param_types}, {return_type}]", SppParser.parse_type)
 
     @staticmethod
-    def GenRef(gen_type=None, ret_type=None, send_type=None, pos: int = -1):
-        # Convert the gen/send type(s) into generic arguments and load them into a group for the generator type.
-        gen_type = Asts.GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
-        send_type = Asts.GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
-        generics = Asts.GenericArgumentGroupAst(arguments=Seq([gen_type, send_type]))
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "GenRef", generics)]))
+    def GenRef(gen_type=None, send_type=None, pos: int = -1):
+        return AstMutation.inject_code(f"std::GenRef[{gen_type}, {send_type}]", SppParser.parse_type)
 
     @staticmethod
-    def GenMut(gen_type=None, ret_type=None, send_type=None, pos: int = -1):
-        # Convert the gen/send type(s) into generic arguments and load them into a group for the generator type.
-        gen_type = Asts.GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
-        send_type = Asts.GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
-        generics = Asts.GenericArgumentGroupAst(arguments=Seq([gen_type, send_type]))
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "GenMut", generics)]))
+    def GenMut(gen_type=None, send_type=None, pos: int = -1):
+        return AstMutation.inject_code(f"std::GenMut[{gen_type}, {send_type}]", SppParser.parse_type)
 
     @staticmethod
-    def GenMov(gen_type=None, ret_type=None, send_type=None, pos: int = -1):
-        # Convert the gen/send type(s) into generic arguments and load them into a group for the generator type.
-        gen_type = Asts.GenericTypeArgumentUnnamedAst(-1, gen_type or CommonTypes.Void())
-        send_type = Asts.GenericTypeArgumentUnnamedAst(-1, send_type or CommonTypes.Void())
-        generics = Asts.GenericArgumentGroupAst(arguments=Seq([gen_type, send_type]))
-        return Asts.TypeAst(pos, Seq([Asts.IdentifierAst(pos, "std")]), Seq([Asts.GenericIdentifierAst(pos, "GenMov", generics)]))
+    def GenMov(gen_type=None, send_type=None, pos: int = -1):
+        return AstMutation.inject_code(f"std::GenMov[{gen_type}, {send_type}]", SppParser.parse_type)
+
+    @staticmethod
+    def Self(pos: int = -1):
+        # Todo: change
+        return Asts.TypeSingleAst(pos=pos, name=Asts.GenericIdentifierAst(pos=pos, value="Self"))

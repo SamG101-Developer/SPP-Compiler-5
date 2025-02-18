@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type LiteralAst = Union[
+LiteralAst = Union[
     Asts.ArrayLiteralAst,
     Asts.BooleanLiteralAst,
     Asts.FloatLiteralAst,

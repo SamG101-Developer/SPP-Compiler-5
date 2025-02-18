@@ -1,36 +1,30 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Type, TYPE_CHECKING
+
+from dataclasses import dataclass, field
+from typing import Optional, TYPE_CHECKING
+
 import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass(kw_only=True)
-class InferredType:
-    convention: Type[Asts.ConventionAst]
-    type: Asts.TypeAst
-
-    def __str__(self) -> str:
-        return f"{self.convention()}{self.type}"
-
-    def __hash__(self) -> int:
-        return hash(self.type)
-
-    def symbolic_eq(self, that: InferredType, self_scope: Scope, that_scope: Scope = None) -> bool:
-        return self.convention is that.convention and self.type.symbolic_eq(that.type, self_scope, that_scope)
-
-    def without_generics(self) -> InferredType:
-        return InferredType(convention=self.convention, type=self.type.without_generics())
-
-    @staticmethod
-    def from_type(type: Asts.TypeAst) -> InferredType:
-        return InferredType(convention=Asts.ConventionMovAst, type=type)
+class TypeInferrable:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+        ...
 
 
 @dataclass
-class TypeInferrable:
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+class InferredTypeInfo:
+    type: Asts.TypeAst
+    convention: Asts.ConventionAst = field(default_factory=lambda: Asts.ConventionMovAst())
+
+    def __str__(self) -> str:
+        return f"{self.convention}{self.type}"
+
+    def symbolic_eq(self, that: InferredTypeInfo, self_scope: Scope, that_scope: Optional[Scope] = None) -> bool:
+        return type(self.convention) is type(that.convention) and self.type.symbolic_eq(that.type, self_scope, that_scope)
+
+    def without_generics(self) -> InferredTypeInfo:
+        return InferredTypeInfo(self.type.without_generics(), self.convention)

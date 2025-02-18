@@ -4,10 +4,12 @@ import difflib
 import hashlib
 from dataclasses import dataclass, field
 
+from convert_case import pascal_case
+
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
 
@@ -49,27 +51,26 @@ class IdentifierAst(Ast, TypeInferrable):
 
     @staticmethod
     def from_type(type: Asts.TypeAst) -> Asts.IdentifierAst:
-        # if type.namespace or type.types.length > 1:
-        #     warnings.warn(f"Type {type} has a namespace or nested types, which will be ignored.")
-        return IdentifierAst.from_generic_identifier(type.types[-1])
+        return IdentifierAst.from_generic_identifier(type.type_parts()[0])
 
     @staticmethod
     def from_generic_identifier(identifier: Asts.GenericIdentifierAst) -> IdentifierAst:
-        # if identifier.generic_argument_group.arguments:
-        #     warnings.warn(f"Generic identifier {identifier} has generic arguments, which will be ignored.")
         return IdentifierAst(identifier.pos, identifier.value)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+    def to_function_identifier(self) -> IdentifierAst:
+        return IdentifierAst(pos=self.pos, value=f"${pascal_case(self.value.replace("_", " "))}")
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # Extract the symbol from the current scope.
         symbol = scope_manager.current_scope.get_symbol(self)
 
         # If the symbol is a variable, then get its type.
         if isinstance(symbol, VariableSymbol):
-            return InferredType(convention=symbol.memory_info.convention, type=symbol.type)
+            return InferredTypeInfo(symbol.type, symbol.memory_info.convention)
 
         # If the symbol is a namespace, then return "self" as the type.
         elif isinstance(symbol, NamespaceSymbol):
-            return InferredType.from_type(self)
+            return InferredTypeInfo(self)
 
         else:
             raise ValueError(f"Symbol for {self} is not a variable or namespace.")

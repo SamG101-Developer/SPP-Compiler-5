@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type LetStatementAst = Union[
+LetStatementAst = Union[
     Asts.LetStatementInitializedAst,
     Asts.LetStatementUninitializedAst]
 

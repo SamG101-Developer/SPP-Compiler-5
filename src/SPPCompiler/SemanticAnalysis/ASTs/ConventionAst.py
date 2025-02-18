@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type ConventionAst = Union[
+ConventionAst = Union[
     Asts.ConventionMovAst,
     Asts.ConventionMutAst,
     Asts.ConventionRefAst]

@@ -55,8 +55,8 @@ class Analyser:
             self._ast.generate_top_level_scopes(self._scope_manager, progress_bars[1], module_tree)
             self._ast.generate_top_level_aliases(self._scope_manager, progress_bars[2])
             self._ast.load_super_scopes(self._scope_manager, progress_bars[3])
-            self._ast.regenerate_generic_aliases(self._scope_manager, progress_bars[4])
-            self._ast.regenerate_generic_types(self._scope_manager, progress_bars[5])
+            self._ast.relink_sup_scopes_to_generic_aliases(self._scope_manager, progress_bars[4])
+            self._ast.relink_sup_scopes_to_generic_types(self._scope_manager, progress_bars[5])
             self._ast.analyse_semantics(self._scope_manager, progress_bars[6])
 
         except SemanticError as error:

@@ -11,7 +11,6 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
-from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
@@ -84,14 +83,15 @@ class AstFunctions:
             f"{fn.generic_argument_group}({function_arguments.join(", ")}){fn.fold_token or ""}",
             SppParser.parse_postfix_op_function_call)
 
-        new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(scope_manager)
+        # Todo: convention too?
+        new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(scope_manager).type
 
         # Get the overload from the uniform function call.
         return new_function_access, new_function_call
 
     @staticmethod
     def get_all_function_scopes(function_name: Asts.IdentifierAst, function_owner_scope: Scope, exclusive: bool = False) -> Seq[Tuple[Scope, Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]]:
-        function_name = Asts.TypeAst.from_function_identifier(function_name)
+        function_name = function_name.to_function_identifier()
         generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
         overload_scopes_and_info = Seq()
 
@@ -142,14 +142,14 @@ class AstFunctions:
         # For overloads, the required parameters must have different types or conventions.
         if conflict_type == FunctionConflictCheckType.InvalidOverload:
             parameter_filter = lambda f: f.function_parameter_group.get_req()
-            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.convention == p2.convention
+            parameter_comp   = lambda p1, p2, s1, s2: type(p1.convention) is type(p2.convention) and p1.type.symbolic_eq(p2.type, s1, s2)
             extra_check      = lambda f1, f2, s1, s2: f1.tok_fun == f2.tok_fun
 
         # For overrides, all parameters must be direct matches (type and convention). Todo: Self convention check
         else:
             parameter_filter = lambda f: f.function_parameter_group.get_non_self()
-            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.convention == p2.convention and p1.variable.extract_names == p2.variable.extract_names and type(p1) is type(p2)
-            extra_check      = lambda f1, f2, s1, s2: f1.return_type.symbolic_eq(f2.return_type, s1, s2) and f1.tok_fun == f2.tok_fun
+            parameter_comp   = lambda p1, p2, s1, s2: type(p1.convention) is type(p2.convention) and p1.type.symbolic_eq(p2.type, s1, s2) and p1.variable.extract_names == p2.variable.extract_names and type(p1) is type(p2)
+            extra_check      = lambda f1, f2, s1, s2: f1.return_type.symbolic_eq(f2.return_type, s1, s2) and f1.tok_fun == f2.tok_fun and (type(f1.function_parameter_group.get_self().convention) is type(f2.function_parameter_group.get_self().convention) if f1.function_parameter_group.get_self() else True)
 
         # Check each parameter set for each overload: 1 match is a conflict.
         for existing_scope, existing_function in existing_scopes.zip(existing_functions):
@@ -208,27 +208,22 @@ class AstFunctions:
             return
 
         # Get the argument names and parameter names, and check for variadic parameters.
-        argument_names = arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__value__.__args__).map_attr("name")
-        parameter_names = parameters.map_attr("name")
-        is_variadic = parameters and isinstance(parameters[-1], Asts.GenericParameterVariadicAst.__value__.__args__)
+        argument_names = arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__).map(lambda a: a.name.name)
+        parameter_names = parameters.map(lambda p: p.name.name)
+        is_variadic = parameters and isinstance(parameters[-1], Asts.GenericParameterVariadicAst.__args__)
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
             raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_argument_names[0], "argument")
         parameter_names = parameter_names.set_subtract(argument_names)
 
-        # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
-        GenericArgumentCTor = {
-            Asts.GenericCompArgumentUnnamedAst: SppParser.parse_generic_comp_argument_named,
-            Asts.GenericTypeArgumentUnnamedAst: SppParser.parse_generic_type_argument_named}
-
         # Name all the unnamed arguments with leftover parameter names.
-        for i, unnamed_argument in arguments.filter_to_type(*Asts.GenericArgumentUnnamedAst.__value__.__args__).enumerate():
+        for i, unnamed_argument in arguments.filter_to_type(*Asts.GenericArgumentUnnamedAst.__args__).enumerate():
 
             # The variadic parameter requires a tuple of the remaining arguments.
             if parameter_names.length == 1 and is_variadic:
                 named_argument = f"{parameter_names.pop(0)}=({arguments[i:].join(", ")})"
-                named_argument = AstMutation.inject_code(named_argument, GenericArgumentCTor[type(unnamed_argument)])
+                named_argument = AstMutation.inject_code(named_argument, SppParser.parse_generic_argument)
                 arguments.replace(unnamed_argument, named_argument, 1)
                 arguments.pop_n(-1, arguments.length - i - 1)
                 break
@@ -237,8 +232,10 @@ class AstFunctions:
             else:
                 try:
                     named_argument = f"{parameter_names.pop(0)}={unnamed_argument}"
-                    named_argument = AstMutation.inject_code(named_argument, GenericArgumentCTor[type(unnamed_argument)])
+                    named_argument = AstMutation.inject_code(named_argument, SppParser.parse_generic_argument)
+                    named_argument.value = named_argument.value
                     arguments.replace(unnamed_argument, named_argument, 1)
+
                 except IndexError:
                     # Too many generic arguments passed.
                     raise SemanticErrors.GenericArgumentTooManyError().add(parameters, unnamed_argument)
@@ -277,6 +274,12 @@ class AstFunctions:
         if generic_parameters.is_empty():
             return explicit_generic_arguments
 
+        # print("#" * 100)
+        # print("generic_parameters", generic_parameters)
+        # print("explicit_generic_arguments", explicit_generic_arguments)
+        # print("infer_source", [f"{k}=>{v}" for k, v in infer_source.items()])
+        # print("infer_target", [f"{k}=>{v}" for k, v in infer_target.items()])
+
         # The inferred generics map is: {TypeAst: [TypeAst]}
         inferred_generic_arguments = defaultdict(Seq)
 
@@ -303,7 +306,10 @@ class AstFunctions:
 
                 # Handle the variadic parameter if it exists.
                 if variadic_parameter_identifier and infer_target_name == variadic_parameter_identifier:
-                    inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].types[-1].generic_argument_group.arguments[0].value
+                    inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].type_parts()[0].generic_argument_group.arguments[0].value
+
+        # print("inferred_generic_arguments", [f"{k}=>{v}" for k, v in inferred_generic_arguments.items()])
+        # print("#" * 100)
 
         # Check each generic argument name only has one unique inferred type.
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
@@ -316,16 +322,11 @@ class AstFunctions:
                 raise SemanticErrors.GenericParameterInferredConflictExplicitError().add(inferred_generic_argument_name, inferred_generic_argument_value[0], explicit_generic_arguments[inferred_generic_argument_name])
 
         # Check all the generic parameters have been inferred.
-        for generic_parameter in generic_parameters:
-            if generic_parameter.name not in inferred_generic_arguments:
-                raise SemanticErrors.GenericParameterNotInferredError().add(generic_parameter, owner)
-
-        # Create a construction mapping from unnamed to named generic arguments (parser functions for code injection).
-        GenericArgumentCTor = defaultdict(
-            lambda: SppParser.parse_generic_comp_argument_named,
-            {Asts.TypeAst: SppParser.parse_generic_type_argument_named})
+        for generic_parameter_name in generic_parameters.map_attr("name"):
+            if generic_parameter_name not in inferred_generic_arguments:
+                raise SemanticErrors.GenericParameterNotInferredError().add(generic_parameter_name, owner)
 
         # Create the inferred generic arguments.
         inferred_generic_arguments = {k: v[0] for k, v in inferred_generic_arguments.items()}
-        inferred_generic_arguments = [AstMutation.inject_code(f"{k}={v}", GenericArgumentCTor[type(v)]) for k, v in inferred_generic_arguments.items()]
+        inferred_generic_arguments = [AstMutation.inject_code(f"{k}={v}", SppParser.parse_generic_argument) for k, v in inferred_generic_arguments.items()]
         return Seq(inferred_generic_arguments)

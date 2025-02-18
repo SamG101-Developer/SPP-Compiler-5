@@ -55,7 +55,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         scope_manager.current_scope.add_symbol(symbol)
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
         self.type.analyse_semantics(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

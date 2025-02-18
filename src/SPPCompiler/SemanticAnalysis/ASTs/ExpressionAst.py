@@ -2,7 +2,7 @@ from typing import Union
 
 import SPPCompiler.SemanticAnalysis as Asts
 
-type ExpressionAst = Union[
+ExpressionAst = Union[
     Asts.BinaryExpressionAst,
     Asts.PostfixExpressionAst,
     Asts.UnaryExpressionAst,

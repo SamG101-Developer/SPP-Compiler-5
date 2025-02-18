@@ -4,15 +4,15 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+from SPPCompiler.SemanticAnalysis.Meta.AstBinUtils import AstBinUtils
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.Utils.Sequence import Seq
@@ -36,7 +36,8 @@ class CaseExpressionAst(Ast, TypeInferrable):
         branches = Seq([first_branch]) + p4
 
         # Return the case expression.
-        return CaseExpressionAst(c1, p1, Asts.ParenthesizedExpressionAst(pos=p2.pos, expression=p2), branches=branches)
+        out = CaseExpressionAst(c1, p1, Asts.ParenthesizedExpressionAst(pos=p2.pos, expression=p2), branches=branches)
+        return out
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -48,26 +49,22 @@ class CaseExpressionAst(Ast, TypeInferrable):
             self.branches.print(printer, "\n")]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # The checks here only apply when assigning from this expression.
-        from SPPCompiler.SemanticAnalysis import PatternVariantElseAst
-        branch_inferred_types = self.branches.map(lambda x: x.infer_type(scope_manager)).unique()
+        branch_inferred_types = self.branches.map(lambda x: x.infer_type(scope_manager))
 
         # All branches must return the same type.
-        if branch_inferred_types.length > 1:
-            raise SemanticErrors.CaseBranchesConflictingTypesError().add(branch_inferred_types[0], branch_inferred_types[1])
+        if mismatch := branch_inferred_types[1:].find(lambda x: not x.symbolic_eq(branch_inferred_types[0], scope_manager.current_scope, scope_manager.current_scope)):
+            raise SemanticErrors.CaseBranchesConflictingTypesError().add(branch_inferred_types[0], mismatch)
 
         # Ensure there is an "else" branch if the branches are not exhaustive.
-        if not isinstance(self.branches[-1].patterns[0], PatternVariantElseAst):
+        if not isinstance(self.branches[-1].patterns[0], Asts.PatternVariantElseAst):
             raise SemanticErrors.CaseBranchesMissingElseBranchError().add(self.condition, self.branches[-1])
 
-        # Return the branches' return type, if there are any branches.
+        # Return the branches' return type, if there are any branches, otherwise Void.
         if self.branches.length > 0:
             return branch_inferred_types[0]
-
-        # Otherwise, return the void type.
-        void_type = CommonTypes.Void(self.pos)
-        return InferredType.from_type(void_type)
+        return InferredTypeInfo(CommonTypes.Void(self.pos))
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
@@ -88,6 +85,18 @@ class CaseExpressionAst(Ast, TypeInferrable):
             # Destructures can only use 1 pattern.
             if branch.comp_operator and branch.comp_operator.token.token_type == SppTokenType.KwIs and branch.patterns.length > 1:
                 raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1])
+
+            # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
+            if branch.comp_operator and branch.comp_operator.token.token_type != SppTokenType.KwIs:
+                for pattern in branch.patterns:
+
+                    # Check the function exists. No check for Bool return type as it is enforced by comparison methods.
+                    # Dummy values as otherwise memory rules create conflicts - just need to test the existence of the
+                    # function.
+                    binary_lhs_ast = Asts.ObjectInitializerAst(class_type=self.condition.infer_type(scope_manager).type)
+                    binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expression.infer_type(scope_manager).type)
+                    binary_ast = Asts.BinaryExpressionAst(self.pos, binary_lhs_ast, branch.comp_operator, binary_rhs_ast)
+                    binary_ast.analyse_semantics(scope_manager, **kwargs)
 
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
             symbols_in_scope = scope_manager.current_scope.all_symbols().filter_to_type(VariableSymbol)
@@ -114,21 +123,6 @@ class CaseExpressionAst(Ast, TypeInferrable):
             # Check the "else" branch is the final branch (also ensures there is only 1).
             if isinstance(branch.patterns[0], Asts.PatternVariantElseAst) and branch != self.branches[-1]:
                 raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch, self.branches[-1])
-
-            # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
-            if branch.comp_operator and branch.comp_operator.token.token_type != SppTokenType.KwIs:
-                for pattern in branch.patterns:
-
-                    # Check the function exists.
-                    binary_ast = Asts.BinaryExpressionAst(self.pos, self.condition, branch.comp_operator, pattern.expression)
-                    binary_ast.analyse_semantics(scope_manager, **kwargs)
-
-                    # Check the function's return type is boolean.
-                    # Todo: is it possible it is non-boolean? comparisons are forced, and they all have Bool return.
-                    target_type = CommonTypes.Bool(self.pos)
-                    return_type = binary_ast.infer_type(scope_manager).type
-                    if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
-                        raise SemanticErrors.ExpressionNotBooleanError().add(self.condition, return_type, "case")
 
         # Update the memory status of the symbols.
         # Todo: tidy this up omg

@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -29,10 +29,9 @@ class RetStatementAst(Ast, TypeInferrable):
             self.expression.print(printer) if self.expression is not None else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
         # All statements are inferred as "void".
-        void_type = CommonTypes.Void(self.pos)
-        return InferredType.from_type(void_type)
+        return InferredTypeInfo(CommonTypes.Void(self.pos))
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a subroutine and not a coroutine.
@@ -45,11 +44,10 @@ class RetStatementAst(Ast, TypeInferrable):
             self.expression.analyse_semantics(scope_manager, **kwargs)
             expression_type = self.expression.infer_type(scope_manager, **kwargs)
         else:
-            void_type = CommonTypes.Void(self.pos)
-            expression_type = InferredType.from_type(void_type)
+            expression_type = InferredTypeInfo(CommonTypes.Void(self.pos))
 
         # Determine the return type of the enclosing function.
-        expected_type = InferredType.from_type(kwargs["function_ret_type"])
+        expected_type = InferredTypeInfo(kwargs["function_ret_type"])
 
         # Check the expression type matches the expected type.
         if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):

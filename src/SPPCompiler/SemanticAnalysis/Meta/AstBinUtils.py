@@ -100,7 +100,7 @@ class AstBinUtils:
             return ast
 
     @staticmethod
-    def _convert_to_function_call_inner(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst:
+    def _convert_to_function_call_inner(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst | Asts.CaseExpressionAst:
         """
         Convert the binary expression into a postfix expression, with the binary operator being a function call.
         """
@@ -121,6 +121,10 @@ class AstBinUtils:
                 f"case {ast.lhs} of is {ast.rhs} {{}}",
                 SppParser.parse_case_expression)
             return case_ast
+
+        # Error
+        else:
+            raise NotImplementedError(f"Binary operator {ast.op.token.token_type} not implemented.")
 
     @staticmethod
     def _convert_to_function_call(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst | Asts.BinaryExpressionAst:

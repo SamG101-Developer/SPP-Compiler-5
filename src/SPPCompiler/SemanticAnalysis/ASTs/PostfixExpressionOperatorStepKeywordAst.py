@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -32,15 +32,15 @@ class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable):
     def is_static_access(self) -> bool:
         return False
 
-    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredType:
+    def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredTypeInfo:
         # Next operations return the "Gen" generic parameter's argument.
-        function_return_type = lhs.infer_type(scope_manager, **kwargs).type.types[-1].generic_argument_group["Gen"].value
-        return InferredType.from_type(function_return_type)
+        function_return_type = lhs.infer_type(scope_manager, **kwargs).type.type_parts()[0].generic_argument_group["Gen"].value
+        return InferredTypeInfo(function_return_type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # Todo: Check for superimposition, not direct equality
         # Check the iterable is a generator type.
-        target_type = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(Asts.TypeAst.without_generics).map(InferredType.from_type)
+        target_type = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(InferredTypeInfo).map(lambda t: t.without_generics())
         return_type = lhs.infer_type(scope_manager, **kwargs)
         if not target_type.any(lambda t: t.symbolic_eq(return_type.without_generics(), scope_manager.current_scope)):
             raise SemanticErrors.ExpressionNotGeneratorError().add(lhs, return_type.type, "next expression")

@@ -28,7 +28,7 @@ class PatternVariantDestructureArrayAst(Ast, PatternMapping):
 
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureArrayAst:
         # Convert the array destructuring into a local variable array destructuring.
-        elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureArrayAst.__value__.__args__)
+        elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureArrayAst.__args__)
         converted_elements = elements.map(lambda e: e.convert_to_variable(**kwargs))
         return Asts.LocalVariableDestructureArrayAst(self.pos, self.tok_left_paren, converted_elements, self.tok_right_paren)
 

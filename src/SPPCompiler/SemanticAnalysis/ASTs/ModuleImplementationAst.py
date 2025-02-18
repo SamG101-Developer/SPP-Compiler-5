@@ -36,13 +36,13 @@ class ModuleImplementationAst(Ast):
         # Load the super scopes.
         for m in self.members: m.load_super_scopes(scope_manager)
 
-    def regenerate_generic_aliases(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
         # Alias the types in the members for regeneration.
-        for m in self.members: m.regenerate_generic_aliases(scope_manager)
+        for m in self.members: m.relink_sup_scopes_to_generic_aliases(scope_manager)
 
-    def regenerate_generic_types(self, scope_manager: ScopeManager) -> None:
+    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
         # Regenerate the generic types in the members.
-        for m in self.members: m.regenerate_generic_types(scope_manager)
+        for m in self.members: m.relink_sup_scopes_to_generic_types(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the members.

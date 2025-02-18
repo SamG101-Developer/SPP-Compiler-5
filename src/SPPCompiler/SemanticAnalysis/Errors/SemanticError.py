@@ -8,7 +8,7 @@ from colorama import Fore, Style
 from fastenum import Enum
 
 import SPPCompiler.SemanticAnalysis as Asts
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -218,24 +218,6 @@ class SemanticErrors:
                 tag=f"Second variadic parameter '{second_variadic_parameter}.",
                 msg="Only one variadic parameter is allowed.",
                 tip="Remove the second variadic parameter.")
-
-            return self
-
-    class ParameterOptionalNonBorrowTypeError(SemanticError):
-        """
-        The ParameterOptionalNonBorrowTypeError is raised if an optional parameter has a borrow convention. Optional
-        parameters cannot have borrow conventions, as borrows cannot be taken as part of an expression, only as a
-        function argument. Therefore there is no way to give a default value that is a borrow.
-
-        Todo: In the future, borrow conventions may be allowed as optional parameter expression prefixes.
-        """
-
-        def add(self, convention: Asts.ConventionAst) -> SemanticError:
-            self.add_error(
-                pos=convention.pos,
-                tag="Borrow convention on optional parameter.",
-                msg="Optional parameters cannot have borrow conventions.",
-                tip="Change the convention to a move convention, or remove the default value.")
 
             return self
 
@@ -478,7 +460,7 @@ class SemanticErrors:
         Todo: add more info?
         """
 
-        def add(self, function_call: Asts.ExpressionAst, function_definition: Asts.IdentifierAst) -> SemanticError:
+        def add(self, function_call: Asts.PostfixExpressionOperatorFunctionCallAst, function_definition: Asts.IdentifierAst) -> SemanticError:
             self.add_info(
                 pos=function_definition.pos,
                 tag="Function defined here")
@@ -563,7 +545,7 @@ class SemanticErrors:
         Todo: add potential alias's old type: (... aka: ...)
         """
 
-        def add(self, existing_ast: Ast, existing_type: InferredType, incoming_ast: Ast, incoming_type: InferredType) -> SemanticError:
+        def add(self, existing_ast: Ast, existing_type: InferredTypeInfo, incoming_ast: Ast, incoming_type: InferredTypeInfo) -> SemanticError:
             self.add_info(
                 pos=existing_ast.pos,
                 tag=f"Type inferred as '{existing_type}' here")
@@ -1301,13 +1283,13 @@ class SemanticErrors:
         and the case expression is being used for assignment.
         """
 
-        def add(self, return_type_1: InferredType, return_type_2: InferredType) -> SemanticError:
+        def add(self, return_type_1: Asts.TypeAst, return_type_2: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=return_type_1.type.pos,
+                pos=return_type_1.pos,
                 tag=f"Branch inferred as '{return_type_1}'")
 
             self.add_error(
-                pos=return_type_2.type.pos,
+                pos=return_type_2.pos,
                 tag=f"Branch inferred as '{return_type_2}'",
                 msg="The branches return conflicting types.",
                 tip="Ensure the branches return the same type.")

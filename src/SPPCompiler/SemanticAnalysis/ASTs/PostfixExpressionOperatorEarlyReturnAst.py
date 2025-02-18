@@ -6,7 +6,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredType
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -19,8 +19,8 @@ class PostfixExpressionOperatorEarlyReturnAst(Ast, TypeInferrable):
         # Print the AST with auto-formatting.
         return self.tok_qst.print(printer)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredType:
-        ...
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+        raise NotImplementedError("PostfixExpressionOperatorEarlyReturnAst not implemented yet")
 
 
 __all__ = ["PostfixExpressionOperatorEarlyReturnAst"]

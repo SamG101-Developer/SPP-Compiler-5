@@ -38,7 +38,7 @@ class GenericCompArgumentNamedAst(Ast, Ordered):
 
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
-        return GenericCompArgumentNamedAst(name=Asts.TypeAst.from_identifier(symbol.name), value=symbol.memory_info.ast_comptime_const)
+        return GenericCompArgumentNamedAst(name=Asts.TypeSingleAst.from_identifier(symbol.name), value=symbol.memory_info.ast_comptime_const)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
