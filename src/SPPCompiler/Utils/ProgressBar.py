@@ -31,6 +31,10 @@ class ProgressBar:
         self._current_label = label.split(os.path.sep)[-1]
         self._print()
 
+    def finish(self) -> None:
+        self._current_value = self._max_value
+        self._print()
+
     def _print(self) -> None:
         if not SHOW_PROGRESS_BARS:
             return

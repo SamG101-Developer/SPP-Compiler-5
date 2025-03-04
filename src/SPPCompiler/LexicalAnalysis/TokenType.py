@@ -176,6 +176,7 @@ class SppTokenType(TokenType):
     TkAssign = "="
     TkArrowR = "->"
     TkAt = "@"
+    TkSpeechMark = "\""
     TkUnderscore = "_"
     TkWhitespace = " "
     TkNewLine = "\n"

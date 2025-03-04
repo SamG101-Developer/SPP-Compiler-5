@@ -6,9 +6,9 @@ from glob import glob
 from typing import Iterable, List, Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import RawToken
-from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
+import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass
@@ -16,7 +16,7 @@ class Module:
     path: str
     code: str = field(default="")
     token_stream: List[RawToken] = field(default_factory=Seq)
-    module_ast: Optional[ModulePrototypeAst] = field(default=None)
+    module_ast: Optional[Asts.ModulePrototypeAst] = field(default=None)
     error_formatter: Optional[ErrorFormatter] = field(default=None)
 
 

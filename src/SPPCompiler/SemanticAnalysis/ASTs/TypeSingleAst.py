@@ -138,7 +138,7 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
             type_symbol_2.fq_name)
 
         # Infer generic arguments from information given from object initialization.
-        self.name.generic_argument_group.arguments = AstFunctions.inherit_generic_arguments(
+        self.name.generic_argument_group.arguments = AstFunctions.infer_generic_arguments(
             generic_parameters=type_symbol.type.generic_parameter_group.get_req(),
             explicit_generic_arguments=self.name.generic_argument_group.arguments,
             infer_source=generic_infer_source or {},

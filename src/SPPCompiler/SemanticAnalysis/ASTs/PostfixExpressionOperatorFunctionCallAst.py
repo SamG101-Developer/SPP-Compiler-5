@@ -98,7 +98,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                     raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_parameters[0], "parameter", "argument")
 
                 # Infer generic arguments and inherit from the function owner block.
-                generic_arguments = AstFunctions.inherit_generic_arguments(
+                generic_arguments = AstFunctions.infer_generic_arguments(
                     generic_parameters=function_overload.generic_parameter_group.get_req(),
                     explicit_generic_arguments=generic_arguments + owner_scope_generic_arguments,
                     infer_source=arguments.map(lambda a: (a.name, a.infer_type(scope_manager, **kwargs).type)).dict(),

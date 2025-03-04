@@ -1170,7 +1170,7 @@ class SppParser:
 
     def parse_object_initializer_argument_unnamed(self) -> Asts.ObjectInitializerArgumentUnnamedAst:
         c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_token_double_dot)
+        p1 = self.parse_optional(self.parse_token_double_dot)
         p2 = self.parse_once(self.parse_identifier)
         return Asts.ObjectInitializerArgumentUnnamedAst(c1, p1, p2)
 
@@ -1639,7 +1639,7 @@ class SppParser:
         return self.parse_token_raw(RawTokenType.TkAmpersand, SppTokenType.TkAmpersand)
 
     def parse_token_quote(self) -> Asts.TokenAst:
-        return self.parse_token_raw(RawTokenType.TkSpeechMark, SppTokenType.NoToken)
+        return self.parse_token_raw(RawTokenType.TkSpeechMark, SppTokenType.TkSpeechMark)
 
     def parse_token_dollar(self) -> Asts.TokenAst:
         return self.parse_token_raw(RawTokenType.TkDollar, SppTokenType.TkDollar)
@@ -1735,100 +1735,100 @@ class SppParser:
     # ===== KEYWORDS =====
 
     def parse_keyword_cls(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Cls, SppTokenType.KwCls)
+        return self.parse_keyword_raw(RawKeywordType.Cls, SppTokenType.KwCls, requires_following_space=True)
 
     def parse_keyword_sup(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Sup, SppTokenType.KwSup)
+        return self.parse_keyword_raw(RawKeywordType.Sup, SppTokenType.KwSup, requires_following_space=True)
 
     def parse_keyword_ext(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Ext, SppTokenType.KwExt)
+        return self.parse_keyword_raw(RawKeywordType.Ext, SppTokenType.KwExt, requires_following_space=True)
 
     def parse_keyword_fun(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Fun, SppTokenType.KwFun)
+        return self.parse_keyword_raw(RawKeywordType.Fun, SppTokenType.KwFun, requires_following_space=True)
 
     def parse_keyword_cor(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Cor, SppTokenType.KwCor)
+        return self.parse_keyword_raw(RawKeywordType.Cor, SppTokenType.KwCor, requires_following_space=True)
 
     def parse_keyword_mut(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Mut, SppTokenType.KwMut)
+        return self.parse_keyword_raw(RawKeywordType.Mut, SppTokenType.KwMut, requires_following_space=True)
 
     def parse_keyword_cmp(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Cmp, SppTokenType.KwCmp)
+        return self.parse_keyword_raw(RawKeywordType.Cmp, SppTokenType.KwCmp, requires_following_space=True)
 
     def parse_keyword_where(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Where, SppTokenType.KwWhere)
+        return self.parse_keyword_raw(RawKeywordType.Where, SppTokenType.KwWhere, requires_following_space=True)
 
     def parse_keyword_self_value(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.SelfVal, SppTokenType.KwSelfVal)
+        return self.parse_keyword_raw(RawKeywordType.SelfVal, SppTokenType.KwSelfVal, requires_following_space=False)
 
     def parse_keyword_case(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Case, SppTokenType.KwCase)
+        return self.parse_keyword_raw(RawKeywordType.Case, SppTokenType.KwCase, requires_following_space=True)
 
     def parse_keyword_of(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Of, SppTokenType.KwOf)
+        return self.parse_keyword_raw(RawKeywordType.Of, SppTokenType.KwOf, requires_following_space=False)  # space ? (\n)
 
     def parse_keyword_loop(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Loop, SppTokenType.KwLoop)
+        return self.parse_keyword_raw(RawKeywordType.Loop, SppTokenType.KwLoop, requires_following_space=True)
 
     def parse_keyword_in(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.In, SppTokenType.KwIn)
+        return self.parse_keyword_raw(RawKeywordType.In, SppTokenType.KwIn, requires_following_space=True)
 
     def parse_keyword_else(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Else, SppTokenType.KwElse)
+        return self.parse_keyword_raw(RawKeywordType.Else, SppTokenType.KwElse, requires_following_space=True)
 
     def parse_keyword_gen(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Gen, SppTokenType.KwGen)
+        return self.parse_keyword_raw(RawKeywordType.Gen, SppTokenType.KwGen, requires_following_space=True)
 
     def parse_keyword_with(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.With, SppTokenType.KwWith)
+        return self.parse_keyword_raw(RawKeywordType.With, SppTokenType.KwWith, requires_following_space=True)
 
     def parse_keyword_ret(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Ret, SppTokenType.KwRet)
+        return self.parse_keyword_raw(RawKeywordType.Ret, SppTokenType.KwRet, requires_following_space=False)  # =True, unless newline?
 
     def parse_keyword_exit(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Exit, SppTokenType.KwExit)
+        return self.parse_keyword_raw(RawKeywordType.Exit, SppTokenType.KwExit, requires_following_space=False)
 
     def parse_keyword_skip(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Skip, SppTokenType.KwSkip)
+        return self.parse_keyword_raw(RawKeywordType.Skip, SppTokenType.KwSkip, requires_following_space=False)
 
     def parse_keyword_pin(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Pin, SppTokenType.KwPin)
+        return self.parse_keyword_raw(RawKeywordType.Pin, SppTokenType.KwPin, requires_following_space=True)
 
     def parse_keyword_rel(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Rel, SppTokenType.KwRel)
+        return self.parse_keyword_raw(RawKeywordType.Rel, SppTokenType.KwRel, requires_following_space=True)
 
     def parse_keyword_use(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Use, SppTokenType.KwUse)
+        return self.parse_keyword_raw(RawKeywordType.Use, SppTokenType.KwUse, requires_following_space=True)
 
     def parse_keyword_let(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Let, SppTokenType.KwLet)
+        return self.parse_keyword_raw(RawKeywordType.Let, SppTokenType.KwLet, requires_following_space=True)
 
     def parse_keyword_as(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.As, SppTokenType.KwAs)
+        return self.parse_keyword_raw(RawKeywordType.As, SppTokenType.KwAs, requires_following_space=True)
 
     def parse_keyword_is(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Is, SppTokenType.KwIs)
+        return self.parse_keyword_raw(RawKeywordType.Is, SppTokenType.KwIs, requires_following_space=True)
 
     def parse_keyword_and(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.And, SppTokenType.KwAnd)
+        return self.parse_keyword_raw(RawKeywordType.And, SppTokenType.KwAnd, requires_following_space=True)
 
     def parse_keyword_or(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Or, SppTokenType.KwOr)
+        return self.parse_keyword_raw(RawKeywordType.Or, SppTokenType.KwOr, requires_following_space=True)
 
     def parse_keyword_async(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Async, SppTokenType.KwAsync)
+        return self.parse_keyword_raw(RawKeywordType.Async, SppTokenType.KwAsync, requires_following_space=True)
 
     def parse_keyword_not(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Not, SppTokenType.KwNot)
+        return self.parse_keyword_raw(RawKeywordType.Not, SppTokenType.KwNot, requires_following_space=False)
 
     def parse_keyword_step(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Step, SppTokenType.KwStep)
+        return self.parse_keyword_raw(RawKeywordType.Step, SppTokenType.KwStep, requires_following_space=False)
 
     def parse_keyword_true(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.True_, SppTokenType.KwTrue)
+        return self.parse_keyword_raw(RawKeywordType.True_, SppTokenType.KwTrue, requires_following_space=False)
 
     def parse_keyword_false(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.False_, SppTokenType.KwFalse)
+        return self.parse_keyword_raw(RawKeywordType.False_, SppTokenType.KwFalse, requires_following_space=False)
 
     # ===== LEXEMES =====
 
@@ -1850,15 +1850,13 @@ class SppParser:
 
         match self.current_tok().token_type:
             case RawTokenType.TkDigit:
-                p1 = self.parse_once(self.parse_lexeme_digit)
-                out.token_data += p1.token_data
+                out.token_data += self.parse_once(self.parse_lexeme_digit).token_data
             case _:
                 self.store_error(self.current_pos(), "Invalid decimal integer literal")
                 raise self._error
 
         while self.current_tok().token_type == RawTokenType.TkDigit:
-            p2 = self.parse_once(self.parse_lexeme_digit)
-            out.token_data += p2.token_data
+            out.token_data += self.parse_once(self.parse_lexeme_digit).token_data
 
         return out
 
@@ -1908,15 +1906,14 @@ class SppParser:
 
         return out
 
-    def parse_lexeme_double_quote_string(self) -> Asts.TokenAst:
+    def  parse_lexeme_double_quote_string(self) -> Asts.TokenAst:
         out = Asts.TokenAst(self.current_pos(), SppTokenType.LxString, "")
-        p1 = self.parse_once(self.parse_token_quote)
+        out.token_data += self.parse_once(self.parse_token_quote).token_data
 
         while self.current_tok().token_type == RawTokenType.TkCharacter:
-            p2 = self.parse_once(self.parse_lexeme_character)
-            out.token_data += p2.token_data
+            out.token_data += self.parse_once(self.parse_lexeme_character).token_data
 
-        p3 = self.parse_once(self.parse_token_quote)
+        out.token_data += self.parse_once(self.parse_token_quote).token_data
         return out
 
     def parse_lexeme_identifier(self) -> Asts.TokenAst:
@@ -1984,9 +1981,11 @@ class SppParser:
             raise self._error
         return p1
 
-    def parse_keyword_raw(self, keyword: RawKeywordType, mapped_keyword: SppTokenType) -> Asts.TokenAst:
+    def parse_keyword_raw(self, keyword: RawKeywordType, mapped_keyword: SppTokenType, *, requires_following_space: bool) -> Asts.TokenAst:
         p1 = Asts.TokenAst(self.current_pos(), mapped_keyword, keyword.value)
         self.parse_characters(keyword.value)
+        if requires_following_space:
+            self.parse_token_raw(RawTokenType.TkWhitespace, SppTokenType.NoToken)
         return p1
 
     def parse_token_raw(self, token: RawTokenType, mapped_token: SppTokenType) -> Asts.TokenAst:
@@ -1994,12 +1993,16 @@ class SppParser:
             self.store_error(self.current_pos(), "Unexpected end of input")
             raise self._error
 
-        if token != RawTokenType.TkNewLine:
+        if token != RawTokenType.TkNewLine and token != RawTokenType.TkWhitespace:
             while self.current_tok().token_type in [RawTokenType.TkNewLine, RawTokenType.TkWhitespace]:
                 self._pos += 1
 
-        else:
+        elif token == RawTokenType.TkNewLine:
             while self.current_tok().token_type == RawTokenType.TkWhitespace:
+                self._pos += 1
+
+        elif token == RawTokenType.TkWhitespace:
+            while self.current_tok().token_type == RawTokenType.TkNewLine:
                 self._pos += 1
 
         if token == RawTokenType.NoToken:

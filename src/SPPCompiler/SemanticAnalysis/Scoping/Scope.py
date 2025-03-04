@@ -4,6 +4,7 @@ import copy
 from typing import Any, Optional, Tuple, TYPE_CHECKING
 
 import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.Compiler.ModuleTree import Module
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol, \
     AliasSymbol
@@ -51,6 +52,20 @@ class Scope:
         self._direct_sub_scopes = Seq()
         self._type_symbol = None
         self._non_generic_scope = self
+
+    @staticmethod
+    def new_global_from_module(module: Module) -> Scope:
+        # Create a new global scope.
+        global_scope = Scope(name=Asts.IdentifierAst(-1, "_global"))
+
+        # Inject the "_global" namespace symbol into this scope (makes lookups orthogonal).
+        global_namespace_symbol = NamespaceSymbol(name=global_scope.name, scope=global_scope)
+        global_scope.add_symbol(global_namespace_symbol)
+        global_scope._type_symbol = global_namespace_symbol
+        global_scope._ast = module.module_ast
+
+        # Return the global scope.
+        return global_scope
 
     def __json__(self) -> dict:
         return {
