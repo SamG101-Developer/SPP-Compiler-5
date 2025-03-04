@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class PostfixExpressionOperatorEarlyReturnAst(Ast, TypeInferrable):
-    tok_qst: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkQst))
+    tok_qst: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkQuestionMark))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

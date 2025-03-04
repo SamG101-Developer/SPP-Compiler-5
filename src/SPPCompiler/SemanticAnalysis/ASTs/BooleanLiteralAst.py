@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class BooleanLiteralAst(Ast, TypeInferrable):
-    value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwFalse))
+    value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwFalse))
 
     def __eq__(self, other: BooleanLiteralAst) -> bool:
         # Check both ASTs are the same type and have the same value.
@@ -21,7 +21,7 @@ class BooleanLiteralAst(Ast, TypeInferrable):
 
     @staticmethod
     def from_python_literal(pos: int, value: bool) -> BooleanLiteralAst:
-        token = Asts.TokenAst.raw(pos=pos, token=SppTokenType.KwTrue if value else SppTokenType.KwFalse)
+        token = Asts.TokenAst.raw(pos=pos, token_type=SppTokenType.KwTrue if value else SppTokenType.KwFalse)
         return BooleanLiteralAst(pos, token)
 
     @ast_printer_method

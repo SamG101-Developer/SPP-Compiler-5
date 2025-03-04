@@ -43,7 +43,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
         from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 
         # Comparisons using the "is" keyword are always boolean.
-        if self.op.token.token_type == SppTokenType.KwIs:
+        if self.op.token_type == SppTokenType.KwIs:
             return InferredTypeInfo(CommonTypes.Bool(self.pos))
 
         # Infer the type from the function equivalent of the binary expression.
@@ -63,7 +63,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
         AstMemoryHandler.enforce_memory_integrity(self.lhs, self.op, scope_manager, update_memory_info=False)
 
         # If the RHS is a destructure, then analysis stops here (after analysing the conversion).
-        if self.op.token.token_type == SppTokenType.KwIs:
+        if self.op.token_type == SppTokenType.KwIs:
             n = scope_manager.current_scope.children.length
             self._as_func = AstBinUtils.convert_to_function_call(self)
             self._as_func.analyse_semantics(scope_manager, **kwargs)
@@ -78,7 +78,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             AstMemoryHandler.enforce_memory_integrity(self.rhs, self.op, scope_manager)
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
-        if self.op.token.token_type.name.endswith("Assign") and not scope_manager.current_scope.get_variable_symbol_outermost_part(self.lhs):
+        if self.op.token_type.name.endswith("Assign") and not scope_manager.current_scope.get_variable_symbol_outermost_part(self.lhs):
             raise SemanticErrors.AssignmentInvalidCompoundLhsError().add(self.lhs)
 
         # Todo: Check on the tuple size to be > 1 ?

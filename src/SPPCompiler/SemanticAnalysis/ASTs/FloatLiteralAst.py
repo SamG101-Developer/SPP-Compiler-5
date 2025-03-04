@@ -32,9 +32,9 @@ SIZE_MAPPING = {
 @dataclass
 class FloatLiteralAst(Ast, TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
-    integer_value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.LxDecInteger))
-    tok_dot: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDot))
-    decimal_value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.LxDecInteger))
+    integer_value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.LxNumber))
+    tok_dot: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkDot))
+    decimal_value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.LxNumber))
     type: Optional[Asts.TypeAst] = field(default=None)
 
     def __eq__(self, other: FloatLiteralAst) -> bool:
@@ -42,8 +42,8 @@ class FloatLiteralAst(Ast, TypeInferrable):
         return all([
             isinstance(other, FloatLiteralAst),
             self.tok_sign == other.tok_sign,
-            self.integer_value.token.token_metadata == other.integer_value.token.token_metadata,
-            self.decimal_value.token.token_metadata == other.decimal_value.token.token_metadata,
+            self.integer_value.token_data == other.integer_value.token_data,
+            self.decimal_value.token_data == other.decimal_value.token_data,
             self.type == other.type])
 
     @ast_printer_method
@@ -84,7 +84,7 @@ class FloatLiteralAst(Ast, TypeInferrable):
 
         # Check if the value is within the bounds.
         lower, upper = SIZE_MAPPING[self.type.type_parts()[0].value]
-        true_value = float(self.integer_value.token.token_metadata + "." + self.decimal_value.token.token_metadata)
+        true_value = float(self.integer_value.token_data + "." + self.decimal_value.token_data)
         if not (lower <= true_value < upper):
             raise SemanticErrors.NumberOutOfBoundsError(self, lower, upper, "float")
 

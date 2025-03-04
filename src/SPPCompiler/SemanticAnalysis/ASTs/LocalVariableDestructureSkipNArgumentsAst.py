@@ -14,7 +14,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class LocalVariableDestructureSkipNArgumentsAst(Ast, VariableNameExtraction):
-    tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
+    tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkDoubleDot))
     binding: Optional[Asts.LocalVariableSingleIdentifierAst] = field(default=None)
 
     @ast_printer_method

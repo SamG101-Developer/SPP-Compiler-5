@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class PatternVariantElseCaseAst(Ast):
-    tok_else: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwElse))
+    tok_else: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwElse))
     case_expression: Asts.CaseExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:

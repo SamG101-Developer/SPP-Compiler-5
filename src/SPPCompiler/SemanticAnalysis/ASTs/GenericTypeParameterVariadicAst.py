@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
 @dataclass
 class GenericTypeParameterVariadicAst(Ast, Ordered):
-    tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
+    tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkDoubleDot))
     name: Asts.TypeAst = field(default=None)
     constraints: Asts.GenericTypeParameterInlineConstraintsAst = field(default_factory=lambda: Asts.GenericTypeParameterInlineConstraintsAst())
 

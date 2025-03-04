@@ -21,11 +21,11 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class FunctionPrototypeAst(Ast, VisibilityEnabled):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
-    tok_fun: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwFun))
+    tok_fun: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwFun))
     name: Asts.IdentifierAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
     function_parameter_group: Asts.FunctionParameterGroupAst = field(default_factory=lambda: Asts.FunctionParameterGroupAst())
-    tok_arrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkArrowR))
+    tok_arrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkArrowR))
     return_type: Asts.TypeAst = field(default=None)
     where_block: Asts.WhereBlockAst = field(default_factory=lambda: Asts.WhereBlockAst())
     body: Asts.FunctionImplementationAst = field(default_factory=lambda: Asts.FunctionImplementationAst())

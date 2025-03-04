@@ -13,7 +13,7 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class TypeUnaryOperatorNamespaceAst(Ast, TypeInferrable):
     name: Asts.IdentifierAst = field(default_factory=lambda: Asts.IdentifierAst())
-    tok_dbl_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblColon))
+    tok_dbl_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkDoubleColon))
 
     def __eq__(self, other: TypeUnaryOperatorNamespaceAst) -> bool:
         return self.name == other.name

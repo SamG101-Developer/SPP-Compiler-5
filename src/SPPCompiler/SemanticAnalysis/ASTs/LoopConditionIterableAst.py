@@ -24,7 +24,7 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class LoopConditionIterableAst(Ast, TypeInferrable):
     variable: Asts.LocalVariableAst = field(default=None)
-    in_keyword: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwIn))
+    in_keyword: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwIn))
     iterable: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:

@@ -17,9 +17,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class FunctionParameterGroupAst(Ast):
-    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftParenthesis))
     parameters: Seq[Asts.FunctionParameterAst] = field(default_factory=Seq)
-    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightParenthesis))
 
     def __copy__(self) -> FunctionParameterGroupAst:
         return FunctionParameterGroupAst(parameters=self.parameters.copy())

@@ -15,9 +15,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class ArrayLiteralNElementAst(Ast, TypeInferrable):
-    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackL))
+    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftSquareBracket))
     elements: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
-    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackR))
+    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightSquareBracket))
 
     def __eq__(self, other: ArrayLiteralNElementAst) -> bool:
         # Check both ASTs are the same type and have the same elements.

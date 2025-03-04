@@ -20,9 +20,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class CaseExpressionAst(Ast, TypeInferrable):
-    tok_case: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCase))
+    tok_case: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwCase))
     condition: Asts.ExpressionAst = field(default=None)
-    kw_of: Optional[Asts.TokenAst] = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwOf))
+    kw_of: Optional[Asts.TokenAst] = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwOf))
     branches: Seq[Asts.CaseExpressionBranchAst] = field(default_factory=Seq)
 
     def __post_init__(self) -> None:
@@ -32,7 +32,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
     def from_simple(c1: int, p1: Asts.TokenAst, p2: Asts.ExpressionAst, p3: Asts.InnerScopeAst, p4: Seq[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
         # Convert condition into an "== true" comparison.
         first_pattern = Asts.PatternVariantExpressionAst(c1, Asts.BooleanLiteralAst.from_python_literal(c1, True))
-        first_branch = Asts.CaseExpressionBranchAst(c1, comp_operator=Asts.TokenAst.raw(pos=c1, token=SppTokenType.TkEq), patterns=Seq([first_pattern]), body=p3)
+        first_branch = Asts.CaseExpressionBranchAst(c1, comp_operator=Asts.TokenAst.raw(pos=c1, token_type=SppTokenType.TkEq), patterns=Seq([first_pattern]), body=p3)
         branches = Seq([first_branch]) + p4
 
         # Return the case expression.
@@ -83,11 +83,11 @@ class CaseExpressionAst(Ast, TypeInferrable):
         for branch in self.branches:
 
             # Destructures can only use 1 pattern.
-            if branch.comp_operator and branch.comp_operator.token.token_type == SppTokenType.KwIs and branch.patterns.length > 1:
+            if branch.comp_operator and branch.comp_operator.token_type == SppTokenType.KwIs and branch.patterns.length > 1:
                 raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1])
 
             # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
-            if branch.comp_operator and branch.comp_operator.token.token_type != SppTokenType.KwIs:
+            if branch.comp_operator and branch.comp_operator.token_type != SppTokenType.KwIs:
                 for pattern in branch.patterns:
 
                     # Check the function exists. No check for Bool return type as it is enforced by comparison methods.

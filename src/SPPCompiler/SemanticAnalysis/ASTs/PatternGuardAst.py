@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class PatternGuardAst(Ast):
-    guard_token: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwAnd))
+    guard_token: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwAnd))
     expression: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:

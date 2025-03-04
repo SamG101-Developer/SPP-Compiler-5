@@ -22,7 +22,7 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class ClassPrototypeAst(Ast, VisibilityEnabled):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
-    tok_cls: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCls))
+    tok_cls: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwCls))
     name: Asts.TypeAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
     where_block: Asts.WhereBlockAst = field(default_factory=lambda: Asts.WhereBlockAst())

@@ -12,8 +12,8 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 class TypeArrayAst(Ast):
     tok_l_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst())
     type: Asts.TypeAst = field(default_factory=lambda: Asts.TypeSingleAst())
-    comma: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkComma))
-    size: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.LxDecInteger))
+    comma: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkComma))
+    size: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.LxNumber))
     tok_r_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst())
 
     def convert(self) -> Asts.TypeSingleAst:

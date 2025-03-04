@@ -28,10 +28,10 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
-    tok_use: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwUse))
+    tok_use: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwUse))
     new_type: Asts.TypeAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
-    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkAssign))
     old_type: Asts.TypeAst = field(default=None)
 
     _generated: bool = field(default=False, init=False, repr=False)

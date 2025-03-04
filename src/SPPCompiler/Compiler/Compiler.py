@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import time
+from pprint import pprint
 from typing import TYPE_CHECKING
 
 from fastenum import Enum
@@ -41,11 +42,10 @@ class Compiler:
         self.compile()
 
     def compile(self) -> None:
-        from SParLex.Utils.ErrorFormatter import ErrorFormatter
         from SPPCompiler.LexicalAnalysis.Lexer import SppLexer
-        from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
         from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter
         from SPPCompiler.SemanticAnalysis.Analyser import Analyser
+        from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
         from SPPCompiler.Utils.ProgressBar import ProgressBar
         time_start = time.time()
@@ -60,11 +60,11 @@ class Compiler:
                 module.code = fo.read()
             module.token_stream = SppLexer(module.code).lex()
             progress_bars[0].next(module.path)
-            module.error_formatter = ErrorFormatter(SppTokenType, module.token_stream, module.path)
+            module.error_formatter = ErrorFormatter(module.token_stream, module.path)
 
         # Parsing stage.
         for module in self._module_tree.modules.copy():
-            module.module_ast = SppParser(module.token_stream, module.path, module.error_formatter).parse().root_ast
+            module.module_ast = SppParser(module.token_stream, module.path, module.error_formatter).parse()
             progress_bars[1].next(module.path)
 
             # Remove vcs "main.spp" files.

@@ -16,10 +16,10 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 @dataclass
 class GenericCompParameterVariadicAst(Ast, Ordered):
-    tok_cmp: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCmp))
-    tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
+    tok_cmp: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwCmp))
+    tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkDoubleDot))
     name: Asts.TypeAst = field(default=None)
-    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
+    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkColon))
     type: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:

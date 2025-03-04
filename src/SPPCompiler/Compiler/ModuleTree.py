@@ -5,10 +5,9 @@ from dataclasses import dataclass, field
 from glob import glob
 from typing import Iterable, List, Optional
 
-from SParLex.Utils.ErrorFormatter import ErrorFormatter
-
-from SPPCompiler.LexicalAnalysis.Token import Token
+from SPPCompiler.LexicalAnalysis.TokenType import RawToken
 from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
+from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -16,7 +15,7 @@ from SPPCompiler.Utils.Sequence import Seq
 class Module:
     path: str
     code: str = field(default="")
-    token_stream: List[Token] = field(default_factory=Seq)
+    token_stream: List[RawToken] = field(default_factory=Seq)
     module_ast: Optional[ModulePrototypeAst] = field(default=None)
     error_formatter: Optional[ErrorFormatter] = field(default=None)
 

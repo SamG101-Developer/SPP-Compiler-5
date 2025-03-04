@@ -34,7 +34,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
-        has_skip = isinstance(self.skip_or_expr, Asts.TokenAst) and self.skip_or_expr.token.token_type == SppTokenType.KwSkip
+        has_skip = isinstance(self.skip_or_expr, Asts.TokenAst) and self.skip_or_expr.token_type == SppTokenType.KwSkip
         if isinstance(self.skip_or_expr, (Asts.TokenAst, Asts.TypeAst)) and not has_skip:
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.skip_or_expr)
 

@@ -12,8 +12,8 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class WhereConstraintsAst(Ast):
     types: Seq[Asts.TypeAst] = field(default_factory=Seq)
-    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
-    constraints: Seq[Asts.TypeAst] = field(default_factory=Seq)
+    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkColon))
+    constraints: Asts.TypeAst = field(default=None)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

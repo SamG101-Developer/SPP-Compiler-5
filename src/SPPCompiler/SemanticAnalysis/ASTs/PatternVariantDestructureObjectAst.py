@@ -17,9 +17,9 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class PatternVariantDestructureObjectAst(Ast, PatternMapping):
     type: Asts.TypeAst = field(default=None)
-    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftParenthesis))
     elements: Seq[Asts.PatternVariantNestedForDestructureObjectAst] = field(default_factory=Seq)
-    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightParenthesis))
 
     def __post_init__(self) -> None:
         assert self.type

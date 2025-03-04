@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class ObjectInitializerArgumentUnnamedAst(Ast, TypeInferrable):
-    is_default: Optional[Asts.TokenAst] = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
+    is_default: Optional[Asts.TokenAst] = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkDoubleDot))
     name: Asts.IdentifierAst = field(default=None)
 
     def __post_init__(self) -> None:

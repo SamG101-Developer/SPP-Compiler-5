@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class LoopElseStatementAst(Ast, TypeInferrable):
-    tok_else: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwElse))
+    tok_else: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwElse))
     body: Asts.InnerScopeAst = field(default_factory=Asts.InnerScopeAst)
 
     @ast_printer_method

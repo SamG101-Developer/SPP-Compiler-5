@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, Ast
 
 @dataclass
 class LocalVariableSingleIdentifierAliasAst(Ast):
-    tok_as: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwAs))
+    tok_as: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwAs))
     name: Asts.IdentifierAst = field(default=None)
 
     def __post_init__(self) -> None:

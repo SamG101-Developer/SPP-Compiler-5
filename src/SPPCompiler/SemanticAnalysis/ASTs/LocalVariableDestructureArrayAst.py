@@ -19,9 +19,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
-    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftParenthesis))
     elements: Seq[Asts.LocalVariableNestedForDestructureArrayAst] = field(default_factory=Seq)
-    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightParenthesis))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -55,7 +55,7 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
 
         # Determine the number of elements in the lhs and rhs arrays.
         num_lhs_array_elements = self.elements.length
-        num_rhs_array_elements = int(value.infer_type(scope_manager, **kwargs).type.type_parts()[0].generic_argument_group.arguments[1].value.value.token.token_metadata)
+        num_rhs_array_elements = int(value.infer_type(scope_manager, **kwargs).type.type_parts()[0].generic_argument_group.arguments[1].value.value.token_data)
 
         # Ensure the lhs and rhs arrays have the same number of elements unless a multi-skip is present.
         if (num_lhs_array_elements < num_rhs_array_elements and not multi_arg_skips) or num_lhs_array_elements > num_rhs_array_elements:

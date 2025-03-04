@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class WhereBlockAst(Ast):
-    tok_where: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwWhere))
+    tok_where: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwWhere))
     constraint_group: Asts.WhereConstraintsGroupAst = field(default_factory=lambda: Asts.WhereConstraintsGroupAst())
 
     @ast_printer_method

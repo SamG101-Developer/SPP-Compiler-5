@@ -32,7 +32,7 @@ class AstTypeManagement:
 
         # Array type: get the "n" generic comp argument.
         if type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope):
-            return index < int(type.type_parts()[0].generic_argument_group.arguments[1].value.value.token.token_metadata)
+            return index < int(type.type_parts()[0].generic_argument_group.arguments[1].value.value.token_data)
 
         raise NotImplementedError("Only tuple and array types are indexable.")
 

@@ -50,6 +50,10 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
     def from_generic_identifier(ast: Asts.GenericIdentifierAst) -> TypeSingleAst:
         return TypeSingleAst(pos=ast.pos, name=ast)
 
+    @staticmethod
+    def from_token(ast: Asts.TokenAst) -> TypeSingleAst:
+        return TypeSingleAst.from_identifier(ast=Asts.IdentifierAst(pos=ast.pos, value=ast.token_data))
+
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return Seq([self.name])
 

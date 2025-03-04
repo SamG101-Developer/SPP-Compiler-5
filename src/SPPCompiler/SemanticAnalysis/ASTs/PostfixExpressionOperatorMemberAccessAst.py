@@ -35,10 +35,10 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
         return "".join(string)
 
     def is_runtime_access(self) -> bool:
-        return self.tok_access.token.token_type == SppTokenType.TkDot
+        return self.tok_access.token_type == SppTokenType.TkDot
 
     def is_static_access(self) -> bool:
-        return self.tok_access.token.token_type == SppTokenType.TkDblColon
+        return self.tok_access.token_type == SppTokenType.TkDoubleColon
 
     def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> InferredTypeInfo:
         lhs_type = lhs.infer_type(scope_manager).type
@@ -46,7 +46,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
 
         # Numerical access -> get the nth generic argument of the tuple.
         if isinstance(self.field, Asts.TokenAst):
-            element_type = AstTypeManagement.get_nth_type_of_indexable_type(int(self.field.token.token_metadata), lhs_type, scope_manager.current_scope)
+            element_type = AstTypeManagement.get_nth_type_of_indexable_type(int(self.field.token_data), lhs_type, scope_manager.current_scope)
             return InferredTypeInfo(element_type)
 
         # Accessing a member from the scope by the identifier.
@@ -85,7 +85,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(lhs, lhs_type, self.tok_access)
         
             # Check the index is within the bounds of the tuple/array.
-            if not AstTypeManagement.is_index_within_type_bound(int(self.field.token.token_metadata), lhs_type, scope_manager.current_scope):
+            if not AstTypeManagement.is_index_within_type_bound(int(self.field.token_data), lhs_type, scope_manager.current_scope):
                 raise SemanticErrors.MemberAccessIndexOutOfBoundsError().add(lhs, lhs_type, self.field)
         
         # Accessing a regular attribute/method, such as "class.attribute".

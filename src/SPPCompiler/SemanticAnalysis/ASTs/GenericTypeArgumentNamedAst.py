@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 @dataclass
 class GenericTypeArgumentNamedAst(Ast, Ordered):
     name: Asts.TypeAst = field(default=None)
-    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkAssign))
     value: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -29,6 +29,7 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
+
         string = [
             self.name.print(printer),
             self.tok_assign.print(printer),

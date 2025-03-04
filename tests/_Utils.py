@@ -2,9 +2,8 @@ import os.path
 from argparse import Namespace
 from unittest import TestCase
 
-from SParLex.Parser.ParserError import ParserError
-
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticError, SemanticErrors
+from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
 from spp_cli import handle_build
 
 
@@ -43,4 +42,4 @@ def should_fail_compilation(expected_error):
 
 __all__ = [
     "should_pass_compilation", "should_fail_compilation", "CustomTestCase",
-    "ParserError", "SemanticError", "SemanticErrors"]
+    "ParserErrors", "SemanticError", "SemanticErrors"]
