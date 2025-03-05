@@ -62,7 +62,7 @@ class VariableSymbol:
         # Dump the VariableSymbol as a JSON string.
         return json.dumps(self)
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memodict=None):
         # Copy the all the attributes of the VariableSymbol.
         return VariableSymbol(
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), is_mutable=self.is_mutable,

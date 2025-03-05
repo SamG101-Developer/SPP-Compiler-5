@@ -20,12 +20,18 @@ class SppParser:
     _error: ParserErrors.SyntaxError
     _error_formatter: ErrorFormatter
 
+    _identifier_characters: List[SppTokenType]
+    _upper_identifier_characters: List[SppTokenType]
+
     def __init__(self, tokens: List[RawToken], file_name: str = "", error_formatter: Optional[ErrorFormatter] = None) -> None:
         self._pos = 0
         self._tokens = tokens
         self._tokens_len = len(tokens)
         self._error = ParserErrors.SyntaxError()
         self._error_formatter = error_formatter or ErrorFormatter(tokens, file_name)
+
+        self._identifier_characters = [RawTokenType.TkCharacter, RawTokenType.TkDigit, RawTokenType.TkUnderscore]
+        self._upper_identifier_characters = [RawTokenType.TkCharacter, RawTokenType.TkDigit]
 
     def current_pos(self) -> int:
         return self._pos
@@ -1906,7 +1912,7 @@ class SppParser:
 
         return out
 
-    def  parse_lexeme_double_quote_string(self) -> Asts.TokenAst:
+    def parse_lexeme_double_quote_string(self) -> Asts.TokenAst:
         out = Asts.TokenAst(self.current_pos(), SppTokenType.LxString, "")
         out.token_data += self.parse_once(self.parse_token_quote).token_data
 
@@ -1930,7 +1936,7 @@ class SppParser:
             raise self._error
         out.token_data += p1.token_data
 
-        while self.current_tok().token_type in [RawTokenType.TkCharacter, RawTokenType.TkDigit, RawTokenType.TkUnderscore]:
+        while self.current_tok().token_type in self._identifier_characters:
             p2 = self.parse_once(self.parse_lexeme_character_or_digit_or_underscore)
             out.token_data += p2.token_data
 
@@ -1950,7 +1956,7 @@ class SppParser:
             raise self._error
         out.token_data += p1.token_data
 
-        while self.current_tok().token_type in [RawTokenType.TkCharacter, RawTokenType.TkDigit]:
+        while self.current_tok().token_type in self._upper_identifier_characters:
             p2 = self.parse_once(self.parse_lexeme_character_or_digit)
             out.token_data += p2.token_data
 
