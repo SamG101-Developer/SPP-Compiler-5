@@ -55,7 +55,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
         symbol.memory_info.initialized_by(self)
         scope_manager.current_scope.add_symbol(symbol)
 
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         self.type.analyse_semantics(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

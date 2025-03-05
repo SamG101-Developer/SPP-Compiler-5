@@ -141,17 +141,6 @@ class SupPrototypeExtensionAst(Ast):
 
         scope_manager.move_out_of_current_scope()
 
-    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
-        scope_manager.move_to_next_scope()
-        self.body.relink_sup_scopes_to_generic_aliases(scope_manager)
-        scope_manager.move_out_of_current_scope()
-
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
-        scope_manager.move_to_next_scope()
-        self.super_class.analyse_semantics(scope_manager)
-        self.body.relink_sup_scopes_to_generic_types(scope_manager)
-        scope_manager.move_out_of_current_scope()
-
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Move to the next scope.
         scope_manager.move_to_next_scope()

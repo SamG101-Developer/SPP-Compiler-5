@@ -61,25 +61,7 @@ class Program(CompilerStages):
             progress_bar.next(module.name.value)
         progress_bar.finish()
         scope_manager.reset()
-        scope_manager.strip_generics()
-
-    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager, progress_bar: Optional[ProgressBar] = None) -> None:
-        # Generate generic types for all the modules.
-        for module in self.modules:
-            self._current = module
-            module.relink_sup_scopes_to_generic_aliases(scope_manager)
-            progress_bar.next(module.name.value)
-        progress_bar.finish()
-        scope_manager.reset()
-
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager, progress_bar: Optional[ProgressBar] = None) -> None:
-        # Regenerate generic types for all the modules.
-        for module in self.modules:
-            self._current = module
-            module.relink_sup_scopes_to_generic_types(scope_manager)
-            progress_bar.next(module.name.value)
-        progress_bar.finish()
-        scope_manager.reset()
+        scope_manager.relink_generics()
 
     def analyse_semantics(self, scope_manager: ScopeManager, progress_bar: Optional[ProgressBar] = None, **kwargs) -> None:
         # Analyse the semantics for all the modules.

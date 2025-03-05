@@ -49,20 +49,6 @@ class CompilerStages:
         methods are on its superclasses, and is requires for symbol resolution.
         """
 
-    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
-        """
-        When generic types are created, they may not have all the generic-translated super scopes attached to them. The
-        easiest way to fix this is to remove their symbols, and regenerate them. For Aliases, this must be done to the
-        old types before the rest of the normal generic types.
-        """
-
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
-        """
-        When generic types are created, they may not have all the generic-translated super scopes attached to them. The
-        easiest way to fix this is to remove their symbols, and regenerate them. This is the regenerate generic types
-        stage.
-        """
-
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         """
         The semantic analysis stage is the most complex, and final analysis, stage of the semantic pipeline. This stage

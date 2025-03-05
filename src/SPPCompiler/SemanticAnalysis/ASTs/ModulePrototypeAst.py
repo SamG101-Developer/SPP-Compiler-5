@@ -48,14 +48,6 @@ class ModulePrototypeAst(Ast):
         # Load the super scopes.
         self.body.load_super_scopes(scope_manager)
 
-    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
-        # Alias the types in the module implementation.
-        self.body.relink_sup_scopes_to_generic_aliases(scope_manager)
-
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
-        # Regenerate the generic types in the module implementation.
-        self.body.relink_sup_scopes_to_generic_types(scope_manager)
-
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the module implementation.
         self.body.analyse_semantics(scope_manager, **kwargs)

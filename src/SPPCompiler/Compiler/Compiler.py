@@ -17,15 +17,13 @@ if TYPE_CHECKING:
     from SPPCompiler.Compiler.Program import Program
 
 COMPILER_STAGE_NAMES = [
-    "              Lexing",
-    "             Parsing",
-    "      Pre-processing",
-    "    Top-level scopes",
-    "   Top-level aliases",
-    "        Super scopes",
-    "Link Generic aliases",
-    "  Link Generic types",
-    "  Semantics analysis"]
+    "            Lexing",
+    "           Parsing",
+    "    Pre-processing",
+    "  Top-level scopes",
+    " Top-level aliases",
+    "      Super scopes",
+    "Semantics analysis"]
 
 
 class Compiler:
@@ -54,6 +52,7 @@ class Compiler:
 
     def compile(self) -> None:
         from SPPCompiler.LexicalAnalysis.Lexer import SppLexer
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
         from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter
         from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
@@ -79,6 +78,7 @@ class Compiler:
             module_namespace = module_namespace[module_namespace.index("src") + 1: -1]
             if module.path.startswith(os.path.sep + "vcs") and not module_namespace:
                 self._module_tree.modules.remove(module)
+        CommonTypesPrecompiled.initialize()
 
         # Save the modules into the ProgramAst
         self._ast.modules = Seq([module.module_ast for module in self._module_tree.modules])
@@ -88,9 +88,7 @@ class Compiler:
             self._ast.generate_top_level_scopes(self._scope_manager, progress_bars[3], self._module_tree)
             self._ast.generate_top_level_aliases(self._scope_manager, progress_bars[4])
             self._ast.load_super_scopes(self._scope_manager, progress_bars[5])
-            self._ast.relink_sup_scopes_to_generic_aliases(self._scope_manager, progress_bars[6])
-            self._ast.relink_sup_scopes_to_generic_types(self._scope_manager, progress_bars[7])
-            self._ast.analyse_semantics(self._scope_manager, progress_bars[8])
+            self._ast.analyse_semantics(self._scope_manager, progress_bars[6])
 
         except SemanticError as error:
             errored_module = self._module_tree.modules.find(lambda m: self._ast.current() is m.module_ast)

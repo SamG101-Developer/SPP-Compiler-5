@@ -51,10 +51,6 @@ class ClassImplementationAst(Ast):
         # Load the super scopes for the members.
         for m in self.members: m.load_super_scopes(scope_manager)
 
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
-        # Regenerate the generic types for the members.
-        for m in self.members: m.relink_sup_scopes_to_generic_types(scope_manager)
-
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the semantics of the members.
         for m in self.members:

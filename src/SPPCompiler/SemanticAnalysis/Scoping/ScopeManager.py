@@ -87,12 +87,22 @@ class ScopeManager:
 
             return scope
 
-    def strip_generics(self) -> None:
+    def relink_generics(self) -> None:
+        from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol
+
+        # Check every scope in the symbol table.
         for scope in self:
+
+            # Only check type and alias symbols that are not generic (ie not the T type for Vec[T]).
             for symbol in scope.all_symbols(exclusive=True).filter_to_type(TypeSymbol, AliasSymbol).filter(lambda t: not t.is_generic):
-                if symbol.name.generic_argument_group.arguments and symbol.scope._non_generic_scope is not symbol.scope:
-                    scope.rem_symbol(symbol.name)
+
+                # Check the type is a generic implementation (ie Vec[Str]), and remove the symbol.
+                if symbol.scope._non_generic_scope is not symbol.scope:
+                    self.reset(symbol.scope)
+                    base_symbol = scope.get_symbol(symbol.name.without_generics(), ignore_alias=True)
+                    symbol.scope._direct_sup_scopes = AstTypeManagement.create_generic_sup_scopes(self, base_symbol.scope, symbol.name.generic_argument_group)
+
         self.reset()
 
     @property

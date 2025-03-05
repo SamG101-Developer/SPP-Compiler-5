@@ -6,8 +6,7 @@ from typing import Any, Optional, Tuple, TYPE_CHECKING
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.Compiler.ModuleTree import Module
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol, \
-    AliasSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, AliasSymbol, Symbol
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:

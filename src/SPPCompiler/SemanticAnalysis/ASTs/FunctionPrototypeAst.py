@@ -154,18 +154,12 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         if conflict := AstFunctions.check_for_conflicting_method(scope_manager.current_scope, type_scope, self, FunctionConflictCheckType.InvalidOverload):
             raise SemanticErrors.FunctionPrototypeConflictError().add(self._orig, conflict._orig)
 
-        scope_manager.move_out_of_current_scope()
-
-    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
-        scope_manager.move_to_next_scope()
-        scope_manager.move_out_of_current_scope()
-
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
-        scope_manager.move_to_next_scope()
+        # Type analysis (loads generic types for later)
         for p in self.function_parameter_group.parameters:
             p.type.analyse_semantics(scope_manager)
         self.return_type.analyse_semantics(scope_manager)
         self.return_type = scope_manager.current_scope.get_symbol(self.return_type).fq_name
+
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

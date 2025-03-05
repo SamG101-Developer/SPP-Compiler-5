@@ -107,18 +107,6 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         self.body.load_super_scopes(scope_manager)
         scope_manager.move_out_of_current_scope()
 
-    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
-        # Skip the class scope (no sup-scope work to do).
-        scope_manager.move_to_next_scope()
-        self.body.generate_top_level_aliases(scope_manager)
-        scope_manager.move_out_of_current_scope()
-
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
-        # Skip the class scope (no sup-scope work to do).
-        scope_manager.move_to_next_scope()
-        self.body.relink_sup_scopes_to_generic_types(scope_manager)
-        scope_manager.move_out_of_current_scope()
-
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Move into the class scope.
         scope_manager.move_to_next_scope()
