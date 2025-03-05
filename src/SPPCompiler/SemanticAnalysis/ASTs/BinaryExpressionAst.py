@@ -84,7 +84,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
         # Todo: Check on the tuple size to be > 1 ?
         # Handle lhs-folding
         if isinstance(self.lhs, Asts.TokenAst):
-            # Check the rhs is a tuple.
+            # Check the rhs is a tuple. Todo: without_generics() => PrecompiledCommonTypes
             rhs_tuple_type = self.rhs.infer_type(scope_manager, **kwargs)
             if not rhs_tuple_type.without_generics().symbolic_eq(InferredTypeInfo(CommonTypes.Tup()), scope_manager.current_scope):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, rhs_tuple_type.type, self.lhs)
@@ -107,7 +107,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
 
         # Handle rhs-folding
         elif isinstance(self.rhs, Asts.TokenAst):
-            # Check the rhs is a tuple.
+            # Check the rhs is a tuple. Todo: without_generics() => PrecompiledCommonTypes
             lhs_tuple_type = self.lhs.infer_type(scope_manager, **kwargs)
             if not lhs_tuple_type.without_generics().symbolic_eq(InferredTypeInfo(CommonTypes.Tup()), scope_manager.current_scope):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, lhs_tuple_type.type, self.lhs)

@@ -8,7 +8,7 @@ from fastenum import Enum
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -204,7 +204,7 @@ class AstFunctions:
     def name_generic_arguments(arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], owner_type: Asts.TypeAst = None) -> None:
 
         # Special case for tuples to prevent infinite-recursion.
-        if owner_type and owner_type.without_generics() == CommonTypes.Tup().without_generics():
+        if owner_type and owner_type.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
             return
 
         # Get the argument names and parameter names, and check for variadic parameters.
@@ -269,7 +269,7 @@ class AstFunctions:
         """
 
         # Special case for tuples to prevent infinite-recursion.
-        if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypes.Tup().without_generics():
+        if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
             return explicit_generic_arguments
         if generic_parameters.is_empty():
             return explicit_generic_arguments

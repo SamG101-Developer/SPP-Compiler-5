@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -49,7 +49,7 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
 
         # Ensure the rhs value is a array.
         value_type = value.infer_type(scope_manager, **kwargs).without_generics()
-        array_type = InferredTypeInfo(CommonTypes.Arr(None, self.elements.length)).without_generics()
+        array_type = InferredTypeInfo(CommonTypesPrecompiled.EMPTY_ARRAY)
         if not value_type.symbolic_eq(array_type, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(self, array_type, value, value_type)
 

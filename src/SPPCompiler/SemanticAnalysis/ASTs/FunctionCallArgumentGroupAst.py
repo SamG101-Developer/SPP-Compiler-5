@@ -59,7 +59,7 @@ class FunctionCallArgumentGroupAst(Ast):
         if difference := AstOrdering.order_args(self.arguments):
             raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "argument")
 
-        # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ...").
+        # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ..."). Todo: without_generics() => PrecompiledCommonTypes
         for i, argument in self.arguments.enumerate():
             if isinstance(argument, Asts.FunctionCallArgumentUnnamedAst) and argument.tok_unpack:
 

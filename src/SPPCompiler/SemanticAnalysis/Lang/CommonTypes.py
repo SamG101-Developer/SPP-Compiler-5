@@ -168,3 +168,18 @@ class CommonTypes:
     def Self(pos: int = -1):
         # Todo: change
         return Asts.TypeSingleAst(pos=pos, name=Asts.GenericIdentifierAst(pos=pos, value="Self"))
+
+
+class CommonTypesPrecompiled:
+    EMPTY_TUPLE: Asts.TypeAst = "Pending..."
+    EMPTY_ARRAY: Asts.TypeAst = "Pending..."
+
+    @staticmethod
+    def initialize():
+        CommonTypesPrecompiled.EMPTY_TUPLE = CommonTypes.Tup().without_generics()
+        CommonTypesPrecompiled.EMPTY_ARRAY = CommonTypes.Arr(None, 0).without_generics()
+
+
+__all__ = [
+    "CommonTypes",
+    "CommonTypesPrecompiled"]
