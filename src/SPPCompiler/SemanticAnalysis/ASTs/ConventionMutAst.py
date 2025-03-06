@@ -10,8 +10,8 @@ from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, Ast
 
 @dataclass
 class ConventionMutAst(Ast):
-    tok_borrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAmpersand))
-    tok_mut: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwMut))
+    tok_borrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkAmpersand))
+    tok_mut: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwMut))
 
     def __eq__(self, other: ConventionMutAst) -> bool:
         # Check both ASTs are the same type.

@@ -23,7 +23,6 @@ PatternVariantNestedForDestructureArrayAst = Union[
     Asts.PatternVariantDestructureObjectAst,
     Asts.PatternVariantDestructureSkip1ArgumentAst,
     Asts.PatternVariantDestructureSkipNArgumentsAst,
-    Asts.PatternVariantExpressionAst,
     Asts.PatternVariantLiteralAst,
     Asts.PatternVariantSingleIdentifierAst]
 
@@ -33,7 +32,6 @@ PatternVariantNestedForDestructureTupleAst = Union[
     Asts.PatternVariantDestructureObjectAst,
     Asts.PatternVariantDestructureSkip1ArgumentAst,
     Asts.PatternVariantDestructureSkipNArgumentsAst,
-    Asts.PatternVariantExpressionAst,
     Asts.PatternVariantLiteralAst,
     Asts.PatternVariantSingleIdentifierAst]
 

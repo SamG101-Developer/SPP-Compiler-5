@@ -6,7 +6,7 @@ TypeAst = Union[
     Asts.TypeBinaryExpressionAst,
     Asts.TypePostfixExpressionAst,
     Asts.TypeUnaryExpressionAst,
-    Asts.TypePrimaryExpressionAst
+    Asts.TypeSingleAst
 ]
 
 __all__ = ["TypeAst"]

@@ -15,7 +15,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class RelStatementAst(Ast, TypeInferrable):
-    tok_rel: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwRel))
+    tok_rel: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwRel))
     expressions: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
 
     @ast_printer_method

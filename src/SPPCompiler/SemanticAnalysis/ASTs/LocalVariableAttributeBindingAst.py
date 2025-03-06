@@ -14,7 +14,7 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class LocalVariableAttributeBindingAst(Ast, VariableNameExtraction):
     name: Asts.IdentifierAst = field(default=None)
-    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkAssign))
     value: Asts.LocalVariableNestedForAttributeBindingAst = field(default=None)
 
     def __post_init__(self) -> None:

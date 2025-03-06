@@ -28,10 +28,10 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
-    tok_use: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwUse))
+    tok_use: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwUse))
     new_type: Asts.TypeAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
-    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkAssign))
     old_type: Asts.TypeAst = field(default=None)
 
     _generated: bool = field(default=False, init=False, repr=False)
@@ -103,26 +103,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         # Skip through the class, type-alias and superimposition scopes.
         scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()
-        scope_manager.move_to_next_scope()
-        scope_manager.move_out_of_current_scope()
-        scope_manager.move_out_of_current_scope()
-
-    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
-        # Skip through the class, type-alias and superimposition scopes.
-        scope_manager.move_to_next_scope()
-        scope_manager.move_to_next_scope()
-
-        # Ensure the validity of the old type.
         self.old_type.analyse_semantics(scope_manager)
-
-        scope_manager.move_to_next_scope()
-        scope_manager.move_out_of_current_scope()
-        scope_manager.move_out_of_current_scope()
-
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
-        # Skip through the class, type-alias and superimposition scopes.
-        scope_manager.move_to_next_scope()
-        scope_manager.move_to_next_scope()
         scope_manager.move_to_next_scope()
         scope_manager.move_out_of_current_scope()
         scope_manager.move_out_of_current_scope()

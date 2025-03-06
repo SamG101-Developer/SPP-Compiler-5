@@ -17,7 +17,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class RetStatementAst(Ast, TypeInferrable):
-    tok_ret: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwRet))
+    tok_ret: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwRet))
     expression: Optional[Asts.ExpressionAst] = field(default=None)
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
@@ -35,7 +35,7 @@ class RetStatementAst(Ast, TypeInferrable):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a subroutine and not a coroutine.
-        if kwargs["function_type"].token.token_type != SppTokenType.KwFun:
+        if kwargs["function_type"].token_type != SppTokenType.KwFun:
             raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(kwargs["function_type"], self.tok_ret)
         self._func_ret_type = kwargs["function_ret_type"]
 

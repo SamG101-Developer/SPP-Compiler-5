@@ -16,9 +16,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class FunctionImplementationAst(Ast):
-    tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceL))
+    tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkBraceL))
     members: Seq[Asts.FunctionMemberAst] = field(default_factory=Seq)
-    tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBraceR))
+    tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkBraceR))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

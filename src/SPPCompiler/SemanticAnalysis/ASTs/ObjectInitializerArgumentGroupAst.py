@@ -15,9 +15,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class ObjectInitializerArgumentGroupAst(Ast):
-    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftParenthesis))
     arguments: Seq[Asts.ObjectInitializerArgumentAst] = field(default_factory=Seq)
-    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightParenthesis))
 
     def __copy__(self) -> ObjectInitializerArgumentGroupAst:
         # Create a shallow copy of the AST.

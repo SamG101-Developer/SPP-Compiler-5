@@ -8,7 +8,7 @@ from fastenum import Enum
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -204,7 +204,7 @@ class AstFunctions:
     def name_generic_arguments(arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], owner_type: Asts.TypeAst = None) -> None:
 
         # Special case for tuples to prevent infinite-recursion.
-        if owner_type and owner_type.without_generics() == CommonTypes.Tup().without_generics():
+        if owner_type and owner_type.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
             return
 
         # Get the argument names and parameter names, and check for variadic parameters.
@@ -241,7 +241,7 @@ class AstFunctions:
                     raise SemanticErrors.GenericArgumentTooManyError().add(parameters, unnamed_argument)
 
     @staticmethod
-    def inherit_generic_arguments(
+    def infer_generic_arguments(
             generic_parameters: Seq[Asts.GenericParameterAst],
             explicit_generic_arguments: Seq[Asts.GenericArgumentAst],
             infer_source: Dict[Asts.IdentifierAst, Asts.TypeAst],
@@ -269,16 +269,10 @@ class AstFunctions:
         """
 
         # Special case for tuples to prevent infinite-recursion.
-        if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypes.Tup().without_generics():
+        if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
             return explicit_generic_arguments
         if generic_parameters.is_empty():
             return explicit_generic_arguments
-
-        # print("#" * 100)
-        # print("generic_parameters", generic_parameters)
-        # print("explicit_generic_arguments", explicit_generic_arguments)
-        # print("infer_source", [f"{k}=>{v}" for k, v in infer_source.items()])
-        # print("infer_target", [f"{k}=>{v}" for k, v in infer_target.items()])
 
         # The inferred generics map is: {TypeAst: [TypeAst]}
         inferred_generic_arguments = defaultdict(Seq)
@@ -307,9 +301,6 @@ class AstFunctions:
                 # Handle the variadic parameter if it exists.
                 if variadic_parameter_identifier and infer_target_name == variadic_parameter_identifier:
                     inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].type_parts()[0].generic_argument_group.arguments[0].value
-
-        # print("inferred_generic_arguments", [f"{k}=>{v}" for k, v in inferred_generic_arguments.items()])
-        # print("#" * 100)
 
         # Check each generic argument name only has one unique inferred type.
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():

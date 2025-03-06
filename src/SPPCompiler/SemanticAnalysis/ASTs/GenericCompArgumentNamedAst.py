@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 @dataclass
 class GenericCompArgumentNamedAst(Ast, Ordered):
     name: Asts.TypeAst = field(default=None)
-    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAssign))
+    tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkAssign))
     value: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:

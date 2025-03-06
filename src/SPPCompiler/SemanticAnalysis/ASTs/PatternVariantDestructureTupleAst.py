@@ -13,9 +13,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class PatternVariantDestructureTupleAst(Ast, PatternMapping):
-    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftParenthesis))
     elements: Seq[Asts.PatternVariantNestedForDestructureTupleAst] = field(default_factory=Seq)
-    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightParenthesis))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

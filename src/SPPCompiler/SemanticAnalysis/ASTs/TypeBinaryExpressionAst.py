@@ -16,13 +16,13 @@ class TypeBinaryExpressionAst(Ast):
     rhs: Asts.TypeAst = field(default=None)
 
     def convert(self) -> Asts.TypeSingleAst:
-        match self.op.token.token_type:
+        match self.op.token_type:
             case SppTokenType.KwOr:
                 return CommonTypes.Var(Seq([self.lhs, self.rhs]), self.pos)
             case SppTokenType.KwAnd:
                 return CommonTypes.Isc(Seq([self.lhs, self.rhs]), self.pos)
             case _:
-                raise Exception(f"Invalid binary operator {self.op.token}")
+                raise Exception(f"Invalid binary operator '{self.op.token_type}'")
 
 
 __all__ = ["TypeBinaryExpressionAst"]

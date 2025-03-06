@@ -11,9 +11,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class WhereConstraintsGroupAst(Ast):
-    tok_left_brack: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackL))
+    tok_left_brack: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftSquareBracket))
     constraints: Seq[Asts.WhereConstraintsAst] = field(default_factory=Seq)
-    tok_right_brack: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackR))
+    tok_right_brack: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightSquareBracket))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

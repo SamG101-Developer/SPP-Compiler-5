@@ -17,7 +17,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 @dataclass
 class GenExpressionAst(Ast, TypeInferrable):
-    tok_gen: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwGen))
+    tok_gen: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwGen))
     tok_with: Optional[Asts.TokenAst] = field(default=None)
     convention: Asts.ConventionAst = field(default=None)
     expression: Optional[Asts.ExpressionAst] = field(default=None)
@@ -42,7 +42,7 @@ class GenExpressionAst(Ast, TypeInferrable):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a coroutine and not a subroutine.
-        if kwargs["function_type"].token.token_type != SppTokenType.KwCor:
+        if kwargs["function_type"].token_type != SppTokenType.KwCor:
             raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(kwargs["function_type"], self.tok_gen)
         self._func_ret_type = kwargs["function_ret_type"]
 

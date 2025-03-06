@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, NoReturn, Optional, Tuple, TYPE_CHECKING
 
-from SParLex.Utils.ErrorFormatter import ErrorFormatter
 from colorama import Fore, Style
 from fastenum import Enum
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
+from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:

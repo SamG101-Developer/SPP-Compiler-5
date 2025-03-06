@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Mixins.PatternMapping import PatternMapping
 
 @dataclass
 class PatternVariantDestructureSkipNArgumentsAst(Ast, PatternMapping):
-    tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkDblDot))
+    tok_variadic: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkDoubleDot))
     binding: Optional[Asts.PatternVariantSingleIdentifierAst] = field(default=None)
 
     @ast_printer_method

@@ -21,11 +21,11 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class FunctionPrototypeAst(Ast, VisibilityEnabled):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
-    tok_fun: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwFun))
+    tok_fun: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwFun))
     name: Asts.IdentifierAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
     function_parameter_group: Asts.FunctionParameterGroupAst = field(default_factory=lambda: Asts.FunctionParameterGroupAst())
-    tok_arrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkArrowR))
+    tok_arrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkArrowR))
     return_type: Asts.TypeAst = field(default=None)
     where_block: Asts.WhereBlockAst = field(default_factory=lambda: Asts.WhereBlockAst())
     body: Asts.FunctionImplementationAst = field(default_factory=lambda: Asts.FunctionImplementationAst())
@@ -154,18 +154,12 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         if conflict := AstFunctions.check_for_conflicting_method(scope_manager.current_scope, type_scope, self, FunctionConflictCheckType.InvalidOverload):
             raise SemanticErrors.FunctionPrototypeConflictError().add(self._orig, conflict._orig)
 
-        scope_manager.move_out_of_current_scope()
-
-    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
-        scope_manager.move_to_next_scope()
-        scope_manager.move_out_of_current_scope()
-
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
-        scope_manager.move_to_next_scope()
+        # Type analysis (loads generic types for later)
         for p in self.function_parameter_group.parameters:
             p.type.analyse_semantics(scope_manager)
         self.return_type.analyse_semantics(scope_manager)
         self.return_type = scope_manager.current_scope.get_symbol(self.return_type).fq_name
+
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
@@ -195,24 +189,22 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         scope_handler.move_out_of_current_scope()
 
     def _deduce_mock_class_type(self) -> Asts.TypeAst:
-        from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst
-        from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
         # Module-level functions are always FunRef.
-        if isinstance(self._ctx, ModulePrototypeAst) or not self.function_parameter_group.get_self():
+        if isinstance(self._ctx, Asts.ModulePrototypeAst) or not self.function_parameter_group.get_self():
             return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         # Class methods with "self" are the FunMov type.
-        if isinstance(self.function_parameter_group.get_self().convention, ConventionMovAst):
+        if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionMovAst):
             return CommonTypes.FunMov(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         # Class methods with "&mut self" are the FunMut type.
-        if isinstance(self.function_parameter_group.get_self().convention, ConventionMutAst):
+        if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionMutAst):
             return CommonTypes.FunMut(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         # Class methods with "&self" are the FunRef type.
-        if isinstance(self.function_parameter_group.get_self().convention, ConventionRefAst):
+        if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionRefAst):
             return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         raise NotImplementedError(f"Unknown convention for function {self.name}")

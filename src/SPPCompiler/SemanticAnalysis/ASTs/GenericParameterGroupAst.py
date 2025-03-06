@@ -14,9 +14,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class GenericParameterGroupAst(Ast):
-    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackL))
+    tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftSquareBracket))
     parameters: Seq[Asts.GenericParameterAst] = field(default_factory=Seq)
-    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkBrackR))
+    tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightSquareBracket))
 
     def __copy__(self) -> GenericParameterGroupAst:
         return GenericParameterGroupAst(parameters=self.parameters.copy())

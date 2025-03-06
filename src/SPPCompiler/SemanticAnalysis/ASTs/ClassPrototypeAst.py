@@ -22,7 +22,7 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class ClassPrototypeAst(Ast, VisibilityEnabled):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
-    tok_cls: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwCls))
+    tok_cls: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwCls))
     name: Asts.TypeAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
     where_block: Asts.WhereBlockAst = field(default_factory=lambda: Asts.WhereBlockAst())
@@ -105,18 +105,6 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         # Skip the class scope (no sup-scope work to do).
         scope_manager.move_to_next_scope()
         self.body.load_super_scopes(scope_manager)
-        scope_manager.move_out_of_current_scope()
-
-    def relink_sup_scopes_to_generic_aliases(self, scope_manager: ScopeManager) -> None:
-        # Skip the class scope (no sup-scope work to do).
-        scope_manager.move_to_next_scope()
-        self.body.generate_top_level_aliases(scope_manager)
-        scope_manager.move_out_of_current_scope()
-
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
-        # Skip the class scope (no sup-scope work to do).
-        scope_manager.move_to_next_scope()
-        self.body.relink_sup_scopes_to_generic_types(scope_manager)
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

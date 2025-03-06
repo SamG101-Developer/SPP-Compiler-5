@@ -7,7 +7,6 @@ from typing import Generator, Optional, Tuple
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -19,31 +18,37 @@ from SPPCompiler.Utils.Sequence import Seq
 class AstTypeManagement:
     @staticmethod
     def is_type_indexable(type: Asts.TypeAst, scope: Scope) -> bool:
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
+
         # Only tuple and array types are indexable.
-        is_tuple = type.without_generics().symbolic_eq(CommonTypes.Tup().without_generics(), scope)
-        is_array = type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope)
+        is_tuple = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope)
+        is_array = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, scope)
         return is_tuple or is_array
 
     @staticmethod
     def is_index_within_type_bound(index: int, type: Asts.TypeAst, scope: Scope) -> bool:
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
+
         # Tuple type: count the number of generic arguments.
-        if type.without_generics().symbolic_eq(CommonTypes.Tup().without_generics(), scope):
+        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope):
             return index < type.type_parts()[0].generic_argument_group.arguments.length
 
         # Array type: get the "n" generic comp argument.
-        if type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope):
-            return index < int(type.type_parts()[0].generic_argument_group.arguments[1].value.value.token.token_metadata)
+        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, scope):
+            return index < int(type.type_parts()[0].generic_argument_group.arguments[1].value.value.token_data)
 
         raise NotImplementedError("Only tuple and array types are indexable.")
 
     @staticmethod
     def get_nth_type_of_indexable_type(index: int, type: Asts.TypeAst, scope: Scope) -> Asts.TypeAst:
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
+
         # Tuple type: get the nth generic argument.
-        if type.without_generics().symbolic_eq(CommonTypes.Tup().without_generics(), scope):
+        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope):
             return type.type_parts()[0].generic_argument_group.arguments[index].value
 
         # Array type: get the first generic argument.
-        if type.without_generics().symbolic_eq(CommonTypes.Arr(None, 0).without_generics(), scope):
+        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, scope):
             return type.type_parts()[0].generic_argument_group.arguments[0].value
 
         raise NotImplementedError("Only tuple and array types are indexable.")
@@ -82,6 +87,8 @@ class AstTypeManagement:
 
     @staticmethod
     def create_generic_scope(scope_manager: ScopeManager, type: Asts.TypeAst, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol) -> Scope:
+        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
+
         # Create a new scope & symbol for the generic substituted type.
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.scope._ast))
         new_symbol = builtins.type(base_symbol)(name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable, is_abstract=base_symbol.is_abstract, visibility=base_symbol.visibility)
@@ -97,7 +104,7 @@ class AstTypeManagement:
         new_scope._non_generic_scope = base_symbol.scope
 
         # No more checks for the tuple type (avoid recursion, is textual because it is to do with generics).
-        if type and type.without_generics() == CommonTypes.Tup().without_generics():
+        if type and type.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
             return new_scope
 
         # Substitute the generics of the attribute types in the new class prototype.
@@ -160,7 +167,7 @@ class AstTypeManagement:
         true_value_symbol = scope_manager.current_scope.get_symbol(generic_argument.value)
 
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
-            return TypeSymbol(name=generic_argument.name.type_parts()[0], type=true_value_symbol.type, scope=true_value_symbol.scope, is_generic=True)
+            return TypeSymbol(name=generic_argument.name.type_parts()[0], type=true_value_symbol.type if true_value_symbol else None, scope=true_value_symbol.scope if true_value_symbol else None, is_generic=True)
 
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
             return VariableSymbol(name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(scope_manager).type, is_generic=True)

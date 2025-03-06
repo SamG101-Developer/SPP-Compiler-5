@@ -37,7 +37,7 @@ SIZE_MAPPING = {
 @dataclass
 class IntegerLiteralAst(Ast, TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
-    value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.LxDecInteger))
+    value: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.LxNumber))
     type: Optional[Asts.TypeAst] = field(default=None)
 
     def __post_init__(self) -> None:
@@ -45,7 +45,7 @@ class IntegerLiteralAst(Ast, TypeInferrable):
 
     def __eq__(self, other: IntegerLiteralAst) -> bool:
         # Check both ASTs are the same type and have the same sign, value and type.
-        return isinstance(other, IntegerLiteralAst) and self.tok_sign == other.tok_sign and self.value.token.token_metadata == other.value.token.token_metadata and self.type == other.type
+        return isinstance(other, IntegerLiteralAst) and self.tok_sign == other.tok_sign and self.value.token_data == other.value.token_data and self.type == other.type
 
     @staticmethod
     def from_token(value: Asts.TokenAst, pos: int = -1) -> IntegerLiteralAst:
@@ -53,7 +53,7 @@ class IntegerLiteralAst(Ast, TypeInferrable):
 
     @staticmethod
     def from_python_literal(value: int) -> IntegerLiteralAst:
-        token = Asts.TokenAst.raw(token=SppTokenType.LxDecInteger, token_metadata=str(value))
+        token = Asts.TokenAst.raw(token_type=SppTokenType.LxNumber, token_metadata=str(value))
         return IntegerLiteralAst.from_token(token)
 
     @ast_printer_method
@@ -106,7 +106,7 @@ class IntegerLiteralAst(Ast, TypeInferrable):
 
         # Check if the value is within the bounds.
         lower, upper = SIZE_MAPPING[self.type.type_parts()[0].value]
-        true_value = float(self.value.token.token_metadata)
+        true_value = float(self.value.token_data)
         if not (lower <= true_value < upper):
             raise SemanticErrors.NumberOutOfBoundsError(self, lower, upper, "integer")
 

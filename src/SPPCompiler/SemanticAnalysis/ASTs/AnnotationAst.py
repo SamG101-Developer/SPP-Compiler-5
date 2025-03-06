@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict
 
-
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
@@ -38,7 +37,7 @@ class _Annotations(Enum):
 
 @dataclass
 class AnnotationAst(Ast):
-    tok_at: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkAt))
+    tok_at: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkAt))
     name: Asts.IdentifierAst = field(default=None)
 
     def __post_init__(self) -> None:

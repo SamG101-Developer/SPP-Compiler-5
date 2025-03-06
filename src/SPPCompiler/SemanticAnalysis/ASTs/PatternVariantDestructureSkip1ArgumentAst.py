@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Mixins.PatternMapping import PatternMapping
 
 @dataclass
 class PatternVariantDestructureSkip1ArgumentAst(Ast, PatternMapping):
-    tok_underscore: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkUnderscore))
+    tok_underscore: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkUnderscore))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

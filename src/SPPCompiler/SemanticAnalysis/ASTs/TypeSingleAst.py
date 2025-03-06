@@ -50,6 +50,10 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
     def from_generic_identifier(ast: Asts.GenericIdentifierAst) -> TypeSingleAst:
         return TypeSingleAst(pos=ast.pos, name=ast)
 
+    @staticmethod
+    def from_token(ast: Asts.TokenAst) -> TypeSingleAst:
+        return TypeSingleAst.from_identifier(ast=Asts.IdentifierAst(pos=ast.pos, value=ast.token_data))
+
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return Seq([self.name])
 
@@ -134,7 +138,7 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
             type_symbol_2.fq_name)
 
         # Infer generic arguments from information given from object initialization.
-        self.name.generic_argument_group.arguments = AstFunctions.inherit_generic_arguments(
+        self.name.generic_argument_group.arguments = AstFunctions.infer_generic_arguments(
             generic_parameters=type_symbol.type.generic_parameter_group.get_req(),
             explicit_generic_arguments=self.name.generic_argument_group.arguments,
             infer_source=generic_infer_source or {},

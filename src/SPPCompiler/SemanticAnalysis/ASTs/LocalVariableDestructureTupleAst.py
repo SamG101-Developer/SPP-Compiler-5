@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -19,9 +19,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
-    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftParenthesis))
     elements: Seq[Asts.LocalVariableNestedForDestructureTupleAst] = field(default_factory=Seq)
-    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightParenthesis))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -49,7 +49,7 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
 
         # Ensure the rhs value is a tuple.
         value_type = value.infer_type(scope_manager, **kwargs).without_generics()
-        tuple_type = InferredTypeInfo(CommonTypes.Tup()).without_generics()
+        tuple_type = InferredTypeInfo(CommonTypesPrecompiled.EMPTY_TUPLE)
         if not value_type.symbolic_eq(tuple_type, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(self, tuple_type, value, value_type)
 

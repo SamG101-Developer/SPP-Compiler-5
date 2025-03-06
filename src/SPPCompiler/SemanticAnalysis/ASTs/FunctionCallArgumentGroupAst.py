@@ -19,9 +19,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class FunctionCallArgumentGroupAst(Ast):
-    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenL))
+    tok_left_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftParenthesis))
     arguments: Seq[Asts.FunctionCallArgumentAst] = field(default_factory=Seq)
-    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkParenR))
+    tok_right_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightParenthesis))
 
     def __copy__(self) -> FunctionCallArgumentGroupAst:
         return FunctionCallArgumentGroupAst(arguments=self.arguments.copy())
@@ -59,7 +59,7 @@ class FunctionCallArgumentGroupAst(Ast):
         if difference := AstOrdering.order_args(self.arguments):
             raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "argument")
 
-        # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ...").
+        # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ..."). Todo: without_generics() => PrecompiledCommonTypes
         for i, argument in self.arguments.enumerate():
             if isinstance(argument, Asts.FunctionCallArgumentUnnamedAst) and argument.tok_unpack:
 

@@ -16,7 +16,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class PinStatementAst(Ast, TypeInferrable):
-    tok_pin: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.KwPin))
+    tok_pin: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwPin))
     expressions: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
 
     @ast_printer_method

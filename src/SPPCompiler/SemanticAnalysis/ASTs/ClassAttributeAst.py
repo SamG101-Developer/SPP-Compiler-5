@@ -21,7 +21,7 @@ from SPPCompiler.Utils.Sequence import Seq
 class ClassAttributeAst(Ast, VisibilityEnabled):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     name: Asts.IdentifierAst = field(default=None)
-    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token=SppTokenType.TkColon))
+    tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkColon))
     type: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -55,7 +55,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         scope_manager.current_scope.add_symbol(symbol)
 
-    def relink_sup_scopes_to_generic_types(self, scope_manager: ScopeManager) -> None:
+    def load_super_scopes(self, scope_manager: ScopeManager) -> None:
         self.type.analyse_semantics(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:

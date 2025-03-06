@@ -41,7 +41,7 @@ class TypePostfixExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
                 AstTypeManagement.get_type_part_symbol_with_error(lhs_type_scope, self.op.name.name, ignore_alias=True)
 
             case Asts.TypePostfixOperatorIndexedTypeAst():
-                AstTypeManagement.get_nth_type_of_indexable_type(int(self.op.index.token.token_metadata), lhs_type, lhs_type_scope)
+                AstTypeManagement.get_nth_type_of_indexable_type(int(self.op.index.token_data), lhs_type, lhs_type_scope)
 
             case Asts.TypePostfixOperatorOptionalTypeAst():
                 optional_type = CommonTypes.Opt(lhs_type.infer_type(scope_manager, **kwargs).type)
@@ -58,7 +58,7 @@ class TypePostfixExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
                 return InferredTypeInfo(AstTypeManagement.get_type_part_symbol_with_error(lhs_type_scope, self.op.name.name, ignore_alias=True).fq_name)
 
             case Asts.TypePostfixOperatorIndexedTypeAst():
-                return InferredTypeInfo(AstTypeManagement.get_nth_type_of_indexable_type(int(self.op.index.token.token_metadata), lhs_type, lhs_type_scope))
+                return InferredTypeInfo(AstTypeManagement.get_nth_type_of_indexable_type(int(self.op.index.token_data), lhs_type, lhs_type_scope))
 
             case Asts.TypePostfixOperatorOptionalTypeAst():
                 return InferredTypeInfo(CommonTypes.Opt(lhs_type.infer_type(scope_manager, **kwargs).type))
