@@ -9,4 +9,4 @@ class AstMutation:
         from SPPCompiler.LexicalAnalysis.Lexer import SppLexer
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
         parser = SppParser(SppLexer(code + "\n").lex())
-        return parser.parse_once(lambda: parsing_function(parser))
+        return parsing_function(parser)

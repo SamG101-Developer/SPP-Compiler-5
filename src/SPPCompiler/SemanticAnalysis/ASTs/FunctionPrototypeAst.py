@@ -189,24 +189,22 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         scope_handler.move_out_of_current_scope()
 
     def _deduce_mock_class_type(self) -> Asts.TypeAst:
-        from SPPCompiler.SemanticAnalysis import ConventionMovAst, ConventionMutAst, ConventionRefAst
-        from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 
         # Module-level functions are always FunRef.
-        if isinstance(self._ctx, ModulePrototypeAst) or not self.function_parameter_group.get_self():
+        if isinstance(self._ctx, Asts.ModulePrototypeAst) or not self.function_parameter_group.get_self():
             return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         # Class methods with "self" are the FunMov type.
-        if isinstance(self.function_parameter_group.get_self().convention, ConventionMovAst):
+        if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionMovAst):
             return CommonTypes.FunMov(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         # Class methods with "&mut self" are the FunMut type.
-        if isinstance(self.function_parameter_group.get_self().convention, ConventionMutAst):
+        if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionMutAst):
             return CommonTypes.FunMut(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         # Class methods with "&self" are the FunRef type.
-        if isinstance(self.function_parameter_group.get_self().convention, ConventionRefAst):
+        if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionRefAst):
             return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
 
         raise NotImplementedError(f"Unknown convention for function {self.name}")

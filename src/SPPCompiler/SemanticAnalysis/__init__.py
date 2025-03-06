@@ -140,7 +140,6 @@ from SPPCompiler.SemanticAnalysis.ASTs.TypePostfixOperatorIndexedTypeAst import 
 from SPPCompiler.SemanticAnalysis.ASTs.TypePostfixOperatorNestedTypeAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TypePostfixOperatorOptionalTypeAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TypePostfixOperatorAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.TypePrimaryAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TypeUnaryExpressionAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TypeUnaryOperatorNamespaceAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.TypeUnaryOperatorAst import *
