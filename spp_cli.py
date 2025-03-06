@@ -14,6 +14,8 @@ print(__file__)
 sys.path.append(str(Path(__file__).parent / "src"))
 from SPPCompiler.Compiler.Compiler import Compiler
 
+NULL_STDOUT = " > /dev/null 2>&1" if os.name == "posix" else " > NUL 2>&1"
+
 
 def cli() -> ArgumentParser:
     # Create the parser and add the subcommands holder.
@@ -87,11 +89,11 @@ def handle_vcs() -> None:
         repo_folder = vcs_folder / repo_name
         if not repo_folder.exists():
             os.system(f"git clone {repo_url} {repo_folder}")
-            os.system(f"git -C {repo_folder} checkout {repo_branch}")
+            os.system(f"git -C {repo_folder} checkout {repo_branch} {NULL_STDOUT}")
             print(f"Cloned {repo_name} repository")
         else:
             os.system(f"git -C {repo_folder} pull origin {repo_branch}")
-            os.system(f"git -C {repo_folder} checkout {repo_branch}")
+            os.system(f"git -C {repo_folder} checkout {repo_branch} {NULL_STDOUT}")
             print(f"Updated {repo_name} repository")
 
     # Reset the working directory.
