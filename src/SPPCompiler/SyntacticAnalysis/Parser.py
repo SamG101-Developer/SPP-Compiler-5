@@ -792,7 +792,7 @@ class SppParser:
 
     def parse_local_variable_destructure_object(self) -> Asts.LocalVariableDestructureObjectAst:
         c1 = self._pos
-        p1 = self.parse_once(self.parse_type)  # MARK
+        p1 = self.parse_once(self.parse_type_simple)
         p2 = self.parse_once(self.parse_token_left_parenthesis)
         p3 = self.parse_zero_or_more(self.parse_local_variable_nested_for_destructure_object, self.parse_token_comma)
         p4 = self.parse_once(self.parse_token_right_parenthesis)
@@ -932,7 +932,7 @@ class SppParser:
 
     def parse_pattern_variant_destructure_object(self) -> Asts.PatternVariantDestructureObjectAst:
         c1 = self._pos
-        p1 = self.parse_once(self.parse_type)  # MARK
+        p1 = self.parse_once(self.parse_type_simple)
         p2 = self.parse_once(self.parse_token_left_parenthesis)
         p3 = self.parse_zero_or_more(self.parse_pattern_variant_nested_for_destructure_object, self.parse_token_comma)
         p4 = self.parse_once(self.parse_token_right_parenthesis)
@@ -1160,7 +1160,7 @@ class SppParser:
 
     def parse_object_initializer(self) -> Asts.ObjectInitializerAst:
         c1 = self._pos
-        p1 = self.parse_once(self.parse_type)  # MARK
+        p1 = self.parse_once(self.parse_type_simple)
         p2 = self.parse_once(self.parse_object_initializer_arguments)
         return Asts.ObjectInitializerAst(c1, p1, p2)
 
@@ -1257,6 +1257,12 @@ class SppParser:
             self.parse_type_binary_expression_precedence_level_1)
         return p1
 
+    def parse_type_simple(self) -> Asts.TypeSingleAst:
+        c1 = self._pos
+        p1 = self.parse_zero_or_more(self.parse_type_unary_op_namespace, self.parse_nothing)
+        p2 = self.parse_once(self.parse_type_single)
+        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(c1, x, acc), p1.reverse().list(), p2)
+
     def parse_type_binary_expression_precedence_level_1(self) -> Asts.TypeAst:
         return self.parse_binary_type_expression_precedence_level_n(
             self.parse_type_binary_expression_precedence_level_2,
@@ -1336,7 +1342,7 @@ class SppParser:
     def parse_type_postfix_op_nested_type(self) -> Asts.TypePostfixOperatorNestedTypeAst:
         c1 = self._pos
         p1 = self.parse_once(self.parse_token_double_colon)
-        p2 = self.parse_once(self.parse_type)  # MARK
+        p2 = self.parse_once(self.parse_type_simple)
         return Asts.TypePostfixOperatorNestedTypeAst(c1, p1, p2)
 
     def parse_type_postfix_op_indexed_type(self) -> Asts.TypePostfixOperatorIndexedTypeAst:
@@ -1554,7 +1560,7 @@ class SppParser:
 
     def parse_global_object_initializer(self) -> Asts.ObjectInitializerAst:
         c1 = self._pos
-        p1 = self.parse_once(self.parse_type)  # MARK
+        p1 = self.parse_once(self.parse_type_simple)
         p2 = self.parse_once(self.parse_global_object_initializer_arguments)
         return Asts.ObjectInitializerAst(c1, p1, p2)
 
