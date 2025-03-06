@@ -1082,10 +1082,10 @@ class SppParser:
     def parse_postfix_op(self) -> Asts.PostfixExpressionOperatorAst:
         p1 = self.parse_alternate(
             self.parse_postfix_op_function_call,
-            self.parse_postfix_op_member_access,
-            self.parse_postfix_op_early_return,
             self.parse_postfix_op_not_keyword,
-            self.parse_postfix_op_step_keyword)
+            self.parse_postfix_op_step_keyword,
+            self.parse_postfix_op_member_access,
+            self.parse_postfix_op_early_return)
         return p1
 
     def parse_postfix_op_function_call(self) -> Asts.PostfixExpressionOperatorFunctionCallAst:
