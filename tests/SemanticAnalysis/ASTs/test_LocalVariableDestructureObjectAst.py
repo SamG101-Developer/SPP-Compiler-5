@@ -208,7 +208,7 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
         }
         """
 
-    @should_pass_compilation()
+    @should_pass_compilation()  # todo: this should be invalid (what if its Point2?)
     def test_valid_local_variable_destructure_object_variant_type_2(self):
         """
         cls Point1 {
