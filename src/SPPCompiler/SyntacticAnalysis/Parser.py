@@ -10,9 +10,6 @@ from SPPCompiler.Utils.Functools import reduce
 from SPPCompiler.Utils.Sequence import Seq
 
 
-# Todo: add newlines after multi-expression/statement blocks (ie between multiple ret/gen/let etc)
-
-
 class SppParser:
     _pos: int
     _tokens: List[RawToken]
