@@ -20,3 +20,11 @@ Specialization.
 
 Function folding.
 - Binary and regular function folding.
+
+Equality methods
+* Should all be (&Self, &Self), not (&Self, Self) conventions.
+* Change a == b at the compiler level into a == &b.
+
+Smart pointers.
+* Allow the "self" parameter to be a smart pointer.
+* For example, "fun f(&self: Shared) -> Void" should work. "self" is then inferred as Shared[Self].
