@@ -58,11 +58,16 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         return CommonTypes.Void(self.pos)
 
     def pre_process(self, context: PreProcessingContext) -> None:
+        # Pre-process the annotations.
         for a in self.annotations:
             a.pre_process(self)
         super().pre_process(context)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager, visibility: Optional[AstVisibility] = None) -> None:
+        # Run top level scope logic for the annotations.
+        for a in self.annotations:
+            a.generate_top_level_scopes(scope_manager)
+
         # Ensure the old type does not have a convention.
         if type(c := self.old_type.get_convention()) is not Asts.ConventionMovAst:
             raise SemanticErrors.InvalidConventionLocationError().add(c, self.old_type, "use statement old type").scopes(scope_manager.current_scope)
@@ -118,6 +123,10 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         scope_manager.move_out_of_current_scope()
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Analyse the annotations.
+        for a in self.annotations:
+            a.analyse_semantics(scope_manager, **kwargs)
+
         # If the symbol has already been generated (module/sup level, skip the scopes).
         if self._generated:
             scope_manager.move_to_next_scope()
