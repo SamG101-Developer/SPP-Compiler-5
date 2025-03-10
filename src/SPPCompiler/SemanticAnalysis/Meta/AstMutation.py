@@ -5,8 +5,8 @@ from typing import Callable
 
 class AstMutation:
     @staticmethod
-    def inject_code[T](code: str, parsing_function: Callable[..., T]) -> T:
+    def inject_code[T](code: str, parsing_function: Callable[..., T], pos_adjust: int = 0) -> T:
         from SPPCompiler.LexicalAnalysis.Lexer import SppLexer
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-        parser = SppParser(SppLexer(code + "\n").lex())
+        parser = SppParser(SppLexer(code + "\n").lex(), injection_adjust_pos=pos_adjust)
         return parsing_function(parser)
