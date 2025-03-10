@@ -41,11 +41,10 @@ class GenericCompArgumentNamedAst(Ast, Ordered):
         return GenericCompArgumentNamedAst(name=Asts.TypeSingleAst.from_identifier(symbol.name), value=symbol.memory_info.ast_comptime_const)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
-        if isinstance(self.value, (TokenAst, TypeAst)):
+        if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.value)
 
         # Analyse the value of the named argument.
