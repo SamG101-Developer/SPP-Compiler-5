@@ -30,7 +30,7 @@ class AstFunctions:
             -> Tuple[Ast, Optional[Scope], Asts.IdentifierAst]:
 
         # Special function: ".next()" on generators.
-        if isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.op, Asts.PostfixExpressionOperatorStepKeywordAst):
+        if isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.op, Asts.PostfixExpressionOperatorResKeywordAst):
             function_owner_type = lhs.lhs.infer_type(scope_manager)
             function_name = Asts.IdentifierAst(lhs.op.pos, "next_")
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope

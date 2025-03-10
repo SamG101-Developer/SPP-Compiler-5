@@ -112,7 +112,7 @@ from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorEarlyReturnAst i
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorFunctionCallAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorMemberAccessAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorNotKeywordAst import *
-from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorStepKeywordAst import *
+from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorResKeywordAst import *
 from SPPCompiler.SemanticAnalysis.ASTs.PostfixExpressionOperatorAst import *
 
 from SPPCompiler.SemanticAnalysis.ASTs.PinStatementAst import *

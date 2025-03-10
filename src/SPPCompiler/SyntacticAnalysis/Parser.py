@@ -1076,7 +1076,7 @@ class SppParser:
         p1 = self.parse_alternate(
             self.parse_postfix_op_function_call,
             self.parse_postfix_op_not_keyword,
-            self.parse_postfix_op_step_keyword,
+            self.parse_postfix_op_res_keyword,
             self.parse_postfix_op_member_access,
             self.parse_postfix_op_early_return)
         return p1
@@ -1119,11 +1119,11 @@ class SppParser:
         p2 = self.parse_once(self.parse_keyword_not)
         return Asts.PostfixExpressionOperatorNotKeywordAst(c1, p1, p2)
 
-    def parse_postfix_op_step_keyword(self) -> Asts.PostfixExpressionOperatorStepKeywordAst:
+    def parse_postfix_op_res_keyword(self) -> Asts.PostfixExpressionOperatorResKeywordAst:
         c1 = self._pos
         p1 = self.parse_once(self.parse_token_dot)
-        p2 = self.parse_once(self.parse_keyword_step)
-        return Asts.PostfixExpressionOperatorStepKeywordAst(c1, p1, p2)
+        p2 = self.parse_once(self.parse_keyword_res)
+        return Asts.PostfixExpressionOperatorResKeywordAst(c1, p1, p2)
 
     # ===== CONVENTIONS =====
 
@@ -1844,8 +1844,8 @@ class SppParser:
     def parse_keyword_not(self) -> Asts.TokenAst:
         return self.parse_keyword_raw(RawKeywordType.Not, SppTokenType.KwNot, requires_following_space=False)
 
-    def parse_keyword_step(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Step, SppTokenType.KwStep, requires_following_space=False)
+    def parse_keyword_res(self) -> Asts.TokenAst:
+        return self.parse_keyword_raw(RawKeywordType.Res, SppTokenType.KwRes, requires_following_space=False)
 
     def parse_keyword_true(self) -> Asts.TokenAst:
         return self.parse_keyword_raw(RawKeywordType.True_, SppTokenType.KwTrue, requires_following_space=False)

@@ -13,16 +13,16 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 @dataclass
-class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable):
+class PostfixExpressionOperatorResKeywordAst(Ast, TypeInferrable):
     tok_dot: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkDot))
-    tok_step: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwStep))
+    tok_res: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwRes))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
             self.tok_dot.print(printer),
-            self.tok_step.print(printer)]
+            self.tok_res.print(printer)]
         return "".join(string)
 
     def is_runtime_access(self) -> bool:
@@ -52,10 +52,10 @@ class PostfixExpressionOperatorStepKeywordAst(Ast, TypeInferrable):
                 if coroutine_symbol.memory_info.pin_target.not_empty():
                     current_borrow = coroutine_symbol.memory_info.pin_target.pop(0)
                     current_borrow_symbol = scope_manager.current_scope.get_symbol(current_borrow)
-                    current_borrow_symbol.memory_info.ast_moved = self.tok_step
+                    current_borrow_symbol.memory_info.ast_moved = self.tok_res
 
                 # Attach the new borrow to the coroutine's memory information.
                 coroutine_symbol.memory_info.pin_target.append(kwargs["assignment"][0])
 
 
-__all__ = ["PostfixExpressionOperatorStepKeywordAst"]
+__all__ = ["PostfixExpressionOperatorResKeywordAst"]

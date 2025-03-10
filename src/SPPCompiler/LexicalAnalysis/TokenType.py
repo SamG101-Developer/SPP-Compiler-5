@@ -95,7 +95,7 @@ class RawKeywordType(TokenType):
     And = "and"
     Not = "not"
     Async = "async"
-    Step = "step"
+    Res = "res"
     True_ = "true"
     False_ = "false"
 
@@ -121,7 +121,7 @@ class SppTokenType(TokenType):
     KwWith = "with"
     KwSkip = "skip"
     KwExit = "exit"
-    KwStep = "step"
+    KwRes = "res"
     KwRet = "ret"
     KwGen = "gen"
     KwWhere = "where"
