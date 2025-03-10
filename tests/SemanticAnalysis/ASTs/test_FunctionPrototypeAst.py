@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -33,10 +31,17 @@ class TestFunctionPrototypeAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
-    def test_invalid_function_prototype_conflict_different_param_variation(self):
+    def test_invalid_function_prototype_conflict_different_param_variation_1_param(self):
         """
-        fun f(&self, a: std::Bool = false) -> std::Void { }
-        fun f(&self, a: std::Bool) -> std::Void { }
+        fun f(a: std::Bool = false) -> std::Void { }
+        fun f(a: std::Bool) -> std::Void { }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
+    def test_invalid_function_prototype_conflict_different_param_variation_n_params(self):
+        """
+        fun f(a: std::Str, b: std::Bool = false) -> std::Void { }
+        fun f(a: std::Str, b: std::Bool) -> std::Void { }
         """
 
     @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
@@ -69,6 +74,24 @@ class TestFunctionPrototypeAst(CustomTestCase):
         sup A {
             fun f(&self) -> std::Void { }
         }
+        """
+
+    @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
+    def test_invalid_function_prototype_self_outside_superimposition(self):
+        """
+        fun f(&self) -> std::Void { }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_function_prototype_convention_mut(self):
+        """
+        fun f() -> &mut std::Void { }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_function_prototype_convention_ref(self):
+        """
+        fun f() -> &std::Void { }
         """
 
     @should_pass_compilation()

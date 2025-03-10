@@ -361,3 +361,17 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
             f(x, y)..
         }
         """
+
+    @should_pass_compilation()
+    def test_valid_postfix_function_generic_substitution_void(self):
+        """
+        cls Type[T] { }
+        sup [T] Type[T] {
+            fun f(self, a: T) -> std::Void { }
+        }
+
+        fun f() -> std::Void {
+            let x = Type[std::Void]()
+            x.f()
+        }
+        """

@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -44,15 +42,24 @@ class TestLetStatementAst(CustomTestCase):
     def test_valid_let_statement_uninitialized(self):
         """
         fun f() -> std::Void {
-            let x = false
+            let x: std::Bool
         }
         """
 
     @should_pass_compilation()
-    def test_valid_let_statement(self):
+    def test_valid_let_statement_uninitialized_with_convention(self):
+        """
+        fun f(x: &std::Bool) -> std::Void {
+            let mut y: &std::Bool
+            y = x
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_let_statement_initialized(self):
         """
         fun f() -> std::Void {
-            let x: std::BigInt
+            let x = true
         }
         """
 

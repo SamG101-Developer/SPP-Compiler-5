@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -49,6 +47,22 @@ class TestClassAttributeAst(CustomTestCase):
         }
 
         sup B ext A {}
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_class_attribute_convention_mut(self):
+        """
+        cls A {
+            a: &mut std::Str
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_class_attribute_convention_ref(self):
+        """
+        cls A {
+            a: &std::Str
+        }
         """
 
     @should_pass_compilation()

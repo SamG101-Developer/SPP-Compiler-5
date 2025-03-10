@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -43,6 +41,20 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
         sup [T] T {
             fun f(&self) -> std::Void { }
         }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_superimposition_extension_type_convention_mut(self):
+        """
+        cls A { }
+        sup &mut A { }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_superimposition_extension_type_convention_ref(self):
+        """
+        cls A { }
+        sup &A { }
         """
 
     @should_pass_compilation()

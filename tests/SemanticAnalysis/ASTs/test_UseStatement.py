@@ -1,9 +1,19 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
 class TestUseStatementAst(CustomTestCase):
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_use_statement_old_type_convention_mut(self):
+        """
+        use MyType = &mut std::Bool
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_use_statement_old_type_convention_ref(self):
+        """
+        use MyType = &std::Bool
+        """
+
     @should_pass_compilation()
     def test_valid_use_statement_simple_alias(self):
         """

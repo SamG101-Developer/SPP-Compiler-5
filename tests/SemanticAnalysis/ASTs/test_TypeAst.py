@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -80,7 +78,13 @@ class TestTypeAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_type_shorthand_variant_tuple(self):
+    def test_valid_type_shorthand_variant_tuple_1(self):
+        """
+        fun f(mut a: (std::Str,)) -> std::Void { a = ("hello",) }
+        """
+
+    @should_pass_compilation()
+    def test_valid_type_shorthand_variant_tuple_n(self):
         """
         fun f(mut a: (std::Str, std::Bool)) -> std::Void { a = ("hello", true) }
         """
@@ -89,4 +93,22 @@ class TestTypeAst(CustomTestCase):
     def test_valid_type_shorthand_variant_tuple_default(self):
         """
         fun f(a: (std::Str, std::Bool) = ("hello", true)) -> std::Void { }
+        """
+
+    @should_pass_compilation()
+    def test_valid_type_function_type_with_function_call_1(self):
+        """
+        fun f(a: std::FunRef[(std::Str, std::Str), std::Bool]) -> std::Void {
+            let mut x = a("hello", "world")
+            x = false
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_type_function_type_with_function_call_2(self):
+        """
+        fun f(a: std::FunRef[(&std::Str, &std::Str), std::Bool], b: &std::Str, c: &std::Str) -> std::Void {
+            let mut x = a(b, c)
+            x = false
+        }
         """

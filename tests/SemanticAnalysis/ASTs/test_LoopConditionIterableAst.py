@@ -1,5 +1,4 @@
 from tests._Utils import *
-import json_fix
 
 
 class TestLoopConditionIterableAst(CustomTestCase):

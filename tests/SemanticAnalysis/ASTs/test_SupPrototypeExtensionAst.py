@@ -1,37 +1,35 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
-class TestSupPrototypeInheritanceAst(CustomTestCase):
+class TestSupPrototypeExtensionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
-    def test_invalid_superimposition_inheritance_generic_name(self):
+    def test_invalid_superimposition_extension_generic_name(self):
         """
         sup [T] T ext std::BigInt { }
         """
 
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
-    def test_invalid_superimposition_inheritance_generic_superclass(self):
+    def test_invalid_superimposition_extension_generic_superclass(self):
         """
         sup [T] std::BigInt ext T { }
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceDuplicateSuperclassError)
-    def test_invalid_superimposition_inheritance_duplication_superclass(self):
+    def test_invalid_superimposition_extension_duplication_superclass(self):
         """
         sup std::BigInt ext std::Str { }
         sup std::BigInt ext std::Str { }
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceCyclicInheritanceError)
-    def test_invalid_superimposition_inheritance_cyclic_inheritance(self):
+    def test_invalid_superimposition_extension_cyclic_extension(self):
         """
         sup std::BigInt ext std::Str { }
         sup std::Str ext std::BigInt { }
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceMethodInvalidError)
-    def test_invalid_superimposition_inheritance_invalid_override_method_1(self):
+    def test_invalid_superimposition_extension_invalid_override_method_1(self):
         """
         cls A { }
         sup A {
@@ -45,7 +43,7 @@ class TestSupPrototypeInheritanceAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceMethodInvalidError)
-    def test_invalid_superimposition_inheritance_invalid_override_method_2(self):
+    def test_invalid_superimposition_extension_invalid_override_method_2(self):
         """
         cls A { }
         sup A {
@@ -59,7 +57,7 @@ class TestSupPrototypeInheritanceAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceMethodInvalidError)
-    def test_invalid_superimposition_inheritance_invalid_override_method_3(self):
+    def test_invalid_superimposition_extension_invalid_override_method_3(self):
         """
         cls A { }
         sup A {
@@ -73,7 +71,7 @@ class TestSupPrototypeInheritanceAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceMethodInvalidError)
-    def test_invalid_superimposition_inheritance_invalid_override_method_4(self):
+    def test_invalid_superimposition_extension_invalid_override_method_4(self):
         """
         cls A { }
         sup A {
@@ -87,7 +85,7 @@ class TestSupPrototypeInheritanceAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceNonVirtualMethodOverriddenError)
-    def test_invalid_superimposition_inheritance_non_virtual_method_override(self):
+    def test_invalid_superimposition_extension_non_virtual_method_override(self):
         """
         cls A { }
         sup A {
@@ -100,8 +98,36 @@ class TestSupPrototypeInheritanceAst(CustomTestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_superimposition_extension_type_convention_mut(self):
+        """
+        cls A { }
+        sup &mut A ext std::BigInt { }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_superimposition_extension_type_convention_ref(self):
+        """
+        cls A { }
+        sup &A ext std::BigInt { }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_superimposition_extension_supertype_convention_mut(self):
+        """
+        cls A { }
+        sup A ext &mut std::BigInt { }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_superimposition_extension_supertype_convention_ref(self):
+        """
+        cls A { }
+        sup A ext &std::BigInt { }
+        """
+
     @should_pass_compilation()
-    def test_valid_superimposition_inheritance_generic_variants(self):
+    def test_valid_superimposition_extension_generic_variants(self):
         """
         cls BaseClass[T] { }
 
@@ -111,7 +137,7 @@ class TestSupPrototypeInheritanceAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_superimposition_inheritance_stateful(self):
+    def test_valid_superimposition_extension_stateful(self):
         """
         cls A { a: std::BigInt }
         cls B { b: std::BigInt }
@@ -135,7 +161,7 @@ class TestSupPrototypeInheritanceAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_superimposition_inheritance_generics_1(self):
+    def test_valid_superimposition_extension_generics_1(self):
         """
         cls A[T] { a: T }
         cls B[T] { b: T }
