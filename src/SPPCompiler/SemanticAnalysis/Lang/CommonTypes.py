@@ -153,21 +153,12 @@ class CommonTypes:
         return AstMutation.inject_code(f"std::FunMov[{param_types}, {return_type}]", SppParser.parse_type)
 
     @staticmethod
-    def GenRef(gen_type=None, send_type=None, pos: int = -1):
-        return AstMutation.inject_code(f"std::GenRef[{gen_type}, {send_type}]", SppParser.parse_type)
-
-    @staticmethod
-    def GenMut(gen_type=None, send_type=None, pos: int = -1):
-        return AstMutation.inject_code(f"std::GenMut[{gen_type}, {send_type}]", SppParser.parse_type)
-
-    @staticmethod
-    def GenMov(gen_type=None, send_type=None, pos: int = -1):
-        return AstMutation.inject_code(f"std::GenMov[{gen_type}, {send_type}]", SppParser.parse_type)
+    def Gen(yield_type=None, send_type=None, pos: int = -1):
+        return AstMutation.inject_code(f"std::Gen[{yield_type}, {send_type}]", SppParser.parse_type)
 
     @staticmethod
     def Self(pos: int = -1):
-        # Todo: change
-        return Asts.TypeSingleAst(pos=pos, name=Asts.GenericIdentifierAst(pos=pos, value="Self"))
+        return AstMutation.inject_code(f"Self", SppParser.parse_type)
 
 
 class CommonTypesPrecompiled:

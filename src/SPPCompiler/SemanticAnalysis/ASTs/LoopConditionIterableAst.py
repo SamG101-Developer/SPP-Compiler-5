@@ -10,10 +10,9 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-from SPPCompiler.Utils.Sequence import Seq
 
 
 # Todo:
@@ -40,7 +39,7 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
             self.iterable.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Infer the type from the iterable.
         return self.iterable.infer_type(scope_manager, **kwargs)
 
@@ -58,16 +57,14 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
         AstMemoryHandler.enforce_memory_integrity(self.iterable, self.iterable, scope_manager, update_memory_info=False)
 
         # Check the iterable is a generator type.
-        iterable_type = self.iterable.infer_type(scope_manager, **kwargs).type
-        allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(lambda t: t.without_generics())
-        superimposed_types = scope_manager.current_scope.get_symbol(iterable_type).scope.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name.without_generics())
+        iterable_type = self.iterable.infer_type(scope_manager, **kwargs)
+        superimposed_types = scope_manager.current_scope.get_symbol(iterable_type).scope.sup_types.map(lambda t: t.without_generics())
         superimposed_types.append(scope_manager.current_scope.get_symbol(iterable_type).fq_name.without_generics())
-
-        if not any(superimposed_types.any(lambda t: t.symbolic_eq(s, scope_manager.current_scope)) for s in allowed_types):
+        if not superimposed_types.any(lambda t: t.without_generics().symbolic_eq(CommonTypes.Gen().without_generics(), scope_manager.current_scope)):
             raise SemanticErrors.ExpressionNotGeneratorError().add(self.iterable, iterable_type, "loop")
 
         # Create a "let" statement to introduce the loop variable into the scope.
-        gen_type = iterable_type.type_parts()[0].generic_argument_group["Gen"].value
+        gen_type = iterable_type.type_parts()[0].generic_argument_group["Yield"].value
         let_ast = AstMutation.inject_code(f"let {self.variable}: {gen_type}", SppParser.parse_let_statement_uninitialized)
         let_ast.analyse_semantics(scope_manager, **kwargs)
 

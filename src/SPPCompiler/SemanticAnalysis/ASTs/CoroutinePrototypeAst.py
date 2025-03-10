@@ -6,7 +6,6 @@ import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.Utils.Sequence import Seq
 
 
 # Todo:
@@ -21,9 +20,10 @@ class CoroutinePrototypeAst(Asts.FunctionPrototypeAst):
         kwargs["function_type"] = self.tok_fun
         kwargs["function_ret_type"] = scope_manager.current_scope.get_symbol(self.return_type).fq_name
 
-        # Check the return type is a generator type.
-        allowed_types = Seq([CommonTypes.GenMov(), CommonTypes.GenMut(), CommonTypes.GenRef()]).map(lambda t: t.without_generics())
-        if not allowed_types.any(lambda t: t.symbolic_eq(self.return_type.without_generics(), scope_manager.current_scope)):
+        # Check the return type superimposes the generator type.
+        superimposed_types = scope_manager.current_scope.get_symbol(self.return_type).scope.sup_types.map(lambda t: t.without_generics())
+        superimposed_types.append(scope_manager.current_scope.get_symbol(self.return_type).fq_name.without_generics())
+        if not superimposed_types.any(lambda t: t.without_generics().symbolic_eq(CommonTypes.Gen().without_generics(), scope_manager.current_scope)):
             raise SemanticErrors.FunctionCoroutineInvalidReturnTypeError().add(self.return_type)
 
         # Analyse the semantics of the function body.
