@@ -28,8 +28,12 @@ class GenericTypeArgumentUnnamedAst(Ast, Ordered):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the value of the generic type argument.
+        convention = self.value.get_convention()
         self.value.analyse_semantics(scope_manager, **kwargs)
-        self.value = scope_manager.current_scope.get_symbol(self.value).fq_name
+        self.value = scope_manager.current_scope.get_symbol(self.value).fq_name.with_convention(convention)
+
+        if type(convention) is not Asts.ConventionMovAst:
+            self.value = self.value.with_convention(convention)
 
 
 __all__ = ["GenericTypeArgumentUnnamedAst"]

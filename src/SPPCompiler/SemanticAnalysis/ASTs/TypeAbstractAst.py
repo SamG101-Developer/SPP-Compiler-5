@@ -51,6 +51,7 @@ class TypeAbstractAst(Ast):
         ...
 
     def with_convention(self, convention: Asts.ConventionAst) -> Asts.TypeAst:
+        if convention is None: return self
         if isinstance(self, Asts.TypeUnaryExpressionAst) and isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst):
             self.op.convention = convention
             return self

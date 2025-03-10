@@ -55,15 +55,16 @@ class GenExpressionAst(Ast, TypeInferrable):
             expression_type = void_type
 
         # Determine the yield type of the enclosing function.
-        yield_type = kwargs["function_ret_type"].type_parts()[0].generic_argument_group["Yield"].value
-
-        # If the "with" keyword is being used, the expression type is the Gen generic type parameter.
-        if self.tok_with:
-            expression_type = yield_type  # ?
+        generator_type = kwargs["function_ret_type"]
+        yield_type = generator_type.type_parts()[0].generic_argument_group["Yield"].value
 
         # Check the expression type matches the expected type.
-        if not yield_type.symbolic_eq(expression_type, scope_manager.current_scope):
+        if not self.tok_with and not yield_type.symbolic_eq(expression_type, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(yield_type, yield_type, expression_type, expression_type)
+
+        # If the "with" keyword is being used, the expression type must be a Gen type that matches the function_ret_type.
+        if self.tok_with and not generator_type.symbolic_eq(expression_type, scope_manager.current_scope):
+            raise SemanticErrors.TypeMismatchError().add(generator_type, generator_type, expression_type, self.expression)
 
         # Apply the function argument law of exclusivity checks to the expression.
         if self.expression:
