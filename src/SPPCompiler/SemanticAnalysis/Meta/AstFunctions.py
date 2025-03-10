@@ -70,21 +70,23 @@ class AstFunctions:
             -> Tuple[Asts.PostfixExpressionAst, Asts.PostfixExpressionOperatorFunctionCallAst]:
 
         # Create an argument for self, which is the object being called (convention tested later).
-        self_argument = AstMutation.inject_code(f"{lhs.lhs}", SppParser.parse_function_call_argument_unnamed)
+        self_argument = AstMutation.inject_code(
+            f"{lhs.lhs}",
+            SppParser.parse_function_call_argument_unnamed, lhs.lhs.pos)
         function_arguments = fn.function_argument_group.arguments.copy()
         function_arguments.insert(0, self_argument)
 
         # Create a new function call with the object as the first argument.
         new_function_access = AstMutation.inject_code(
             f"{function_owner_type}::{function_name}",
-            SppParser.parse_postfix_expression)
+            SppParser.parse_postfix_expression, lhs.pos)
 
         new_function_call = AstMutation.inject_code(
             f"{fn.generic_argument_group}({function_arguments.join(", ")}){fn.fold_token or ""}",
-            SppParser.parse_postfix_op_function_call)
+            SppParser.parse_postfix_op_function_call, fn.pos)
 
-        # Todo: convention too?
         new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(scope_manager)
+        new_function_call.function_argument_group.arguments[0].value.pos = lhs.lhs.pos
 
         # Get the overload from the uniform function call.
         return new_function_access, new_function_call
