@@ -43,10 +43,15 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
         return "".join(string)
 
     def pre_process(self, context: PreProcessingContext) -> None:
+        # Pre-process the annotations.
         for a in self.annotations:
             a.pre_process(self)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
+        # Run top level scope logic for the annotations.
+        for a in self.annotations:
+            a.generate_top_level_scopes(scope_manager)
+
         # Ensure the old type does not have a convention.
         if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
             raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "global constant type").scopes(scope_manager.current_scope)
@@ -62,6 +67,10 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
         self.type.analyse_semantics(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
+        # Analyse the annotations.
+        for a in self.annotations:
+            a.analyse_semantics(scope_manager, **kwargs)
+
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.value).scopes(scope_manager.current_scope)

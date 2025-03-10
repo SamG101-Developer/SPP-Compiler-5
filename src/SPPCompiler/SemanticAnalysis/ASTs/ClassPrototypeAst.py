@@ -84,6 +84,10 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         scope_manager.create_and_move_into_new_scope(self.name, self)
         super().generate_top_level_scopes(scope_manager)
 
+        # Run top level scope logic for the annotations.
+        for a in self.annotations:
+            a.generate_top_level_scopes(scope_manager)
+
         # Create a new symbol for the class.
         self._generate_symbols(scope_manager)
 
@@ -110,6 +114,10 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Move into the class scope.
         scope_manager.move_to_next_scope()
+
+        # Analyse the annotations.
+        for a in self.annotations:
+            a.analyse_semantics(scope_manager, **kwargs)
 
         # Analyse the generic parameter group, where block, and body of the class.
         self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)

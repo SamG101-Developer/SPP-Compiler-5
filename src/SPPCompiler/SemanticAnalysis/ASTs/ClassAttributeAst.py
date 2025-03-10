@@ -51,6 +51,10 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
             a.pre_process(self)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
+        # Run top level scope logic for the annotations.
+        for a in self.annotations:
+            a.generate_top_level_scopes(scope_manager)
+
         # Ensure the attribute type does not have a convention.
         if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
             raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "attribute type").scopes(scope_manager.current_scope)

@@ -126,6 +126,10 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
 
+        # Run top level scope logic for the annotations.
+        for a in self.annotations:
+            a.generate_top_level_scopes(scope_manager)
+
         # Ensure the function return type does not have a convention.
         if type(c := self.return_type.get_convention()) is not Asts.ConventionMovAst:
             raise SemanticErrors.InvalidConventionLocationError().add(c, self.return_type, "function return type").scopes(scope_manager.current_scope)
