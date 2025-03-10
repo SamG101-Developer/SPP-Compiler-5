@@ -8,6 +8,7 @@ from llvmlite import ir as llvm
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -126,6 +127,10 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
 
+        # Ensure the function return type does not have a convention.
+        if type(c := self.return_type.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.return_type, "function return type")
+
         # Generate the generic parameters and attributes of the function.
         for p in self.generic_parameter_group.parameters:
             p.generate_top_level_scopes(scope_manager)
@@ -139,15 +144,13 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         scope_manager.move_out_of_current_scope()
 
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
-        from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         scope_manager.move_to_next_scope()
 
         # Get the owner scope for function conflict checking.
         match self._ctx:
-            case ModulePrototypeAst(): type_scope = scope_manager.current_scope.parent_module
+            case Asts.ModulePrototypeAst(): type_scope = scope_manager.current_scope.parent_module
             case _: type_scope = self._ctx._scope_cls
 
         # Check for function conflicts.
