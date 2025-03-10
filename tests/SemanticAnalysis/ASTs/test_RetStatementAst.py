@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -7,7 +5,7 @@ class TestRetStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCoroutineContainsReturnStatementError)
     def test_invalid_ret_statement_in_coroutine(self):
         """
-        cor f() -> std::GenMov[std::BigInt] {
+        cor f() -> std::Gen[std::BigInt] {
             ret
         }
         """

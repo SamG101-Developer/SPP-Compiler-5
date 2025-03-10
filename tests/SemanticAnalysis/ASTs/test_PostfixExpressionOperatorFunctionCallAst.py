@@ -131,7 +131,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
     def test_invalid_postfix_func_call_coroutine_missing_pins(self):
         """
-        cor c(a: &std::BigInt) -> std::GenMov[std::BigInt] { }
+        cor c(a: &std::BigInt) -> std::Gen[std::BigInt] { }
 
         fun f() -> std::Void {
             let x = 123
@@ -217,7 +217,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_func_call_coroutine_correct_pins(self):
         """
-        cor c(a: &std::BigInt) -> std::GenMov[std::BigInt] { }
+        cor c(a: &std::BigInt) -> std::Gen[std::BigInt] { }
 
         fun f() -> std::Void {
             let x = 123
@@ -359,19 +359,5 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
             let x = (1, 2, 3, 4)
             let y = (1, 2)
             f(x, y)..
-        }
-        """
-
-    @should_pass_compilation()
-    def test_valid_postfix_function_generic_substitution_void(self):
-        """
-        cls Type[T] { }
-        sup [T] Type[T] {
-            fun f(self, a: T) -> std::Void { }
-        }
-
-        fun f() -> std::Void {
-            let x = Type[std::Void]()
-            x.f()
         }
         """

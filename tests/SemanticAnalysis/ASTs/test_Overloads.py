@@ -85,13 +85,13 @@ class TestOverloads(CustomTestCase):
         cls B[T] { }
 
         sup [T] A[T] {
-            @virtual_method cor c(&self) -> std::GenRef[T] { }
-            @virtual_method cor c(&self, a: T) -> std::GenRef[T] { }
-            @virtual_method cor c(&self, a: std::Bool, b: std::BigInt) -> std::GenRef[T] { }
+            @virtual_method cor c(&self) -> std::Gen[&T] { }
+            @virtual_method cor c(&self, a: T) -> std::Gen[&T] { }
+            @virtual_method cor c(&self, a: std::Bool, b: std::BigInt) -> std::Gen[&T] { }
         }
 
         sup [T] B[T] ext A[T] {
-            cor c(&self) -> std::GenRef[T] { }
+            cor c(&self) -> std::Gen[T] { }
         }
 
         fun test() -> std::Void {

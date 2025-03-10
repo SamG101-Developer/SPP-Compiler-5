@@ -372,7 +372,7 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
     def test_invalid_unpinned_values_for_coroutine(self):
         """
-        cor foo(x: &std::BigInt) -> std::GenRef[std::BigInt] {
+        cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt] {
             gen &1
         }
 
@@ -397,7 +397,7 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_coroutine_yielded_value_use(self):
         """
-        cor foo() -> std::GenRef[std::BigInt] {
+        cor foo() -> std::Gen[&std::BigInt] {
             gen &1
         }
 
@@ -412,7 +412,7 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_use_of_moving_coro_during_pin_from_pinned_borrow(self):
         """
-        cor foo(x: &std::BigInt) -> std::GenRef[std::BigInt] {
+        cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt] {
             gen &1
         }
 
@@ -427,7 +427,7 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_use_of_coroutine_post_invalidation(self):
         """
-        cor foo(x: &std::BigInt) -> std::GenRef[std::BigInt] {
+        cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt] {
             gen &1
         }
 
@@ -458,7 +458,7 @@ class TestAstMemory(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pinned_values_for_coroutine(self):
         """
-        cor foo(x: &std::BigInt) -> std::GenRef[std::BigInt] {
+        cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt] {
             gen &1
         }
 
