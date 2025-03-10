@@ -50,7 +50,7 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.iterable, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.iterable)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.iterable).scopes(scope_manager.current_scope)
 
         # Analyse the iterable.
         self.iterable.analyse_semantics(scope_manager, **kwargs)
@@ -61,7 +61,7 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
         superimposed_types = scope_manager.current_scope.get_symbol(iterable_type).scope.sup_types.map(lambda t: t.without_generics())
         superimposed_types.append(scope_manager.current_scope.get_symbol(iterable_type).fq_name.without_generics())
         if not superimposed_types.any(lambda t: t.without_generics().symbolic_eq(CommonTypes.Gen().without_generics(), scope_manager.current_scope)):
-            raise SemanticErrors.ExpressionNotGeneratorError().add(self.iterable, iterable_type, "loop")
+            raise SemanticErrors.ExpressionNotGeneratorError().add(self.iterable, iterable_type, "loop").scopes(scope_manager.current_scope)
 
         # Create a "let" statement to introduce the loop variable into the scope.
         gen_type = iterable_type.type_parts()[0].generic_argument_group["Yield"].value

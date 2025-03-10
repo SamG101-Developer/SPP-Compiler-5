@@ -54,11 +54,11 @@ class CaseExpressionAst(Ast, TypeInferrable):
 
         # All branches must return the same type.
         if mismatch := branch_inferred_types[1:].find(lambda x: not x.symbolic_eq(branch_inferred_types[0], scope_manager.current_scope, scope_manager.current_scope)):
-            raise SemanticErrors.CaseBranchesConflictingTypesError().add(branch_inferred_types[0], mismatch)
+            raise SemanticErrors.CaseBranchesConflictingTypesError().add(branch_inferred_types[0], mismatch).scopes(scope_manager.current_scope)
 
         # Ensure there is an "else" branch if the branches are not exhaustive.
         if not isinstance(self.branches[-1].patterns[0], Asts.PatternVariantElseAst):
-            raise SemanticErrors.CaseBranchesMissingElseBranchError().add(self.condition, self.branches[-1])
+            raise SemanticErrors.CaseBranchesMissingElseBranchError().add(self.condition, self.branches[-1]).scopes(scope_manager.current_scope)
 
         # Return the branches' return type, if there are any branches, otherwise Void.
         if self.branches.length > 0:
@@ -68,7 +68,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
         if isinstance(self.condition, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.condition)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.condition).scopes(scope_manager.current_scope)
 
         # Analyse the condition and enforce memory integrity (outside the new scope).
         self.condition.analyse_semantics(scope_manager)
@@ -83,7 +83,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
 
             # Destructures can only use 1 pattern.
             if branch.comp_operator and branch.comp_operator.token_type == SppTokenType.KwIs and branch.patterns.length > 1:
-                raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1])
+                raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1]).scopes(scope_manager.current_scope)
 
             # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
             if branch.comp_operator and branch.comp_operator.token_type != SppTokenType.KwIs:
@@ -121,7 +121,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
 
             # Check the "else" branch is the final branch (also ensures there is only 1).
             if isinstance(branch.patterns[0], Asts.PatternVariantElseAst) and branch != self.branches[-1]:
-                raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch, self.branches[-1])
+                raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch, self.branches[-1]).scopes(scope_manager.current_scope)
 
         # Update the memory status of the symbols.
         # Todo: tidy this up omg

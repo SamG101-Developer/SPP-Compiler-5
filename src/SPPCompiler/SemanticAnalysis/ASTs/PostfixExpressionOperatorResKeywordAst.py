@@ -37,10 +37,11 @@ class PostfixExpressionOperatorResKeywordAst(Ast, TypeInferrable):
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # Todo: Check for superimposition, not direct equality
+
         # Check the iterable is a generator type.
         return_type = lhs.infer_type(scope_manager, **kwargs)
         if not return_type.without_generics().symbolic_eq(CommonTypes.Gen().without_generics(), scope_manager.current_scope):
-            raise SemanticErrors.ExpressionNotGeneratorError().add(lhs, return_type, "next expression")
+            raise SemanticErrors.ExpressionNotGeneratorError().add(lhs, return_type, "next expression").scopes(scope_manager.current_scope)
 
         # Tie borrows to coroutine pin outputs, for auto invalidation.
         if "assignment" in kwargs:

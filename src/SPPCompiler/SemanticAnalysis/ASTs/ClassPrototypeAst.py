@@ -118,7 +118,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
 
         # Check the type isn't recursive, by recursing through all attribute types.
         if recursion := AstTypeManagement.is_type_recursive(self, scope_manager):
-            raise SemanticErrors.RecursiveTypeDefinitionError(self, recursion)
+            raise SemanticErrors.RecursiveTypeDefinitionError(self, recursion).scopes(scope_manager.current_scope)
 
         # Move out of the class scope.
         scope_manager.move_out_of_current_scope()

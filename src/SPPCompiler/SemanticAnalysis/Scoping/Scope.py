@@ -6,7 +6,9 @@ from typing import Any, Optional, Tuple, TYPE_CHECKING
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.Compiler.ModuleTree import Module
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, AliasSymbol, Symbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, AliasSymbol, \
+    Symbol
+from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -38,7 +40,9 @@ class Scope:
     _type_symbol: Optional[TypeSymbol | NamespaceSymbol]
     _non_generic_scope: Optional[Scope]
 
-    def __init__(self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Ast] = None) -> None:
+    _error_formatter: ErrorFormatter
+
+    def __init__(self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Ast] = None, error_formatter: Optional[ErrorFormatter] = None) -> None:
         # Initialize the scope with the given name, parent, and AST.
         self._name = name
         self._parent = parent
@@ -52,10 +56,13 @@ class Scope:
         self._type_symbol = None
         self._non_generic_scope = self
 
+        # Error formatter is either new for the module scope, or inherited from the parent scope.
+        self._error_formatter = error_formatter or parent._error_formatter
+
     @staticmethod
     def new_global_from_module(module: Module) -> Scope:
         # Create a new global scope.
-        global_scope = Scope(name=Asts.IdentifierAst(-1, "_global"))
+        global_scope = Scope(name=Asts.IdentifierAst(-1, "_global"), error_formatter=module.error_formatter)
 
         # Inject the "_global" namespace symbol into this scope (makes lookups orthogonal).
         global_namespace_symbol = NamespaceSymbol(name=global_scope.name, scope=global_scope)

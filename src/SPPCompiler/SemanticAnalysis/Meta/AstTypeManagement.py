@@ -64,7 +64,7 @@ class AstTypeManagement:
             if not scope_manager.get_namespaced_scope(sub_namespace):
                 alternatives = namespace_scope.all_symbols().filter_to_type(NamespaceSymbol).map_attr("name")
                 closest_match = difflib.get_close_matches(sub_namespace[-1].value, alternatives.map_attr("value"), n=1, cutoff=0)
-                raise SemanticErrors.IdentifierUnknownError().add(sub_namespace[-1], "namespace", closest_match[0] if closest_match else None)
+                raise SemanticErrors.IdentifierUnknownError().add(sub_namespace[-1], "namespace", closest_match[0] if closest_match else None).scopes(scope_manager.current_scope)
 
             # Move into the next part of the namespace.
             namespace_scope = scope_manager.get_namespaced_scope(sub_namespace)
@@ -80,7 +80,7 @@ class AstTypeManagement:
             alternatives = scope.all_symbols().filter_to_type(TypeSymbol).map_attr("name")
             alternatives.remove_if(lambda a: a.value[0] == "$")
             closest_match = difflib.get_close_matches(type_part.value, alternatives.map_attr("value"), n=1, cutoff=0)
-            raise SemanticErrors.IdentifierUnknownError().add(type_part, "type", closest_match[0] if closest_match else None)
+            raise SemanticErrors.IdentifierUnknownError().add(type_part, "type", closest_match[0] if closest_match else None).scopes(scope)
 
         # Return the type part's scope from the symbol.
         return type_symbol

@@ -122,14 +122,13 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             a.pre_process(function_ast)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
-
         # Create a new scope for the function.
         scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
 
         # Ensure the function return type does not have a convention.
         if type(c := self.return_type.get_convention()) is not Asts.ConventionMovAst:
-            raise SemanticErrors.InvalidConventionLocationError().add(c, self.return_type, "function return type")
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.return_type, "function return type").scopes(scope_manager.current_scope)
 
         # Generate the generic parameters and attributes of the function.
         for p in self.generic_parameter_group.parameters:
@@ -155,7 +154,7 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
 
         # Check for function conflicts.
         if conflict := AstFunctions.check_for_conflicting_method(scope_manager.current_scope, type_scope, self, FunctionConflictCheckType.InvalidOverload):
-            raise SemanticErrors.FunctionPrototypeConflictError().add(self._orig, conflict._orig)
+            raise SemanticErrors.FunctionPrototypeConflictError().add(self._orig, conflict._orig).scopes(scope_manager.current_scope)
 
         # Type analysis (loads generic types for later)
         for p in self.function_parameter_group.parameters:

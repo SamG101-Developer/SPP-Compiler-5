@@ -43,7 +43,7 @@ class GenExpressionAst(Ast, TypeInferrable):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a coroutine and not a subroutine.
         if kwargs["function_type"].token_type != SppTokenType.KwCor:
-            raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(kwargs["function_type"], self.tok_gen)
+            raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(kwargs["function_type"], self.tok_gen).scopes(scope_manager.current_scope)
         self._func_ret_type = kwargs["function_ret_type"]
 
         # Analyse the expression if it exists, and determine the type of the expression.
@@ -60,11 +60,11 @@ class GenExpressionAst(Ast, TypeInferrable):
 
         # Check the expression type matches the expected type.
         if not self.tok_with and not yield_type.symbolic_eq(expression_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(yield_type, yield_type, expression_type, expression_type)
+            raise SemanticErrors.TypeMismatchError().add(yield_type, yield_type, expression_type, expression_type).scopes(scope_manager.current_scope)
 
         # If the "with" keyword is being used, the expression type must be a Gen type that matches the function_ret_type.
         if self.tok_with and not generator_type.symbolic_eq(expression_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(generator_type, generator_type, expression_type, self.expression)
+            raise SemanticErrors.TypeMismatchError().add(generator_type, generator_type, expression_type, self.expression).scopes(scope_manager.current_scope)
 
         # Apply the function argument law of exclusivity checks to the expression.
         if self.expression:

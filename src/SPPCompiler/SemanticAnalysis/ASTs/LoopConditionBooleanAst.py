@@ -31,7 +31,7 @@ class LoopConditionBooleanAst(Ast, TypeInferrable):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
         if isinstance(self.condition, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.condition)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.condition).scopes(scope_manager.current_scope)
 
         # Analyse the condition expression.
         self.condition.analyse_semantics(scope_manager, **kwargs)
@@ -42,7 +42,7 @@ class LoopConditionBooleanAst(Ast, TypeInferrable):
         return_type = self.condition.infer_type(scope_manager)
         target_type = CommonTypes.Bool(self.pos)
         if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
-            raise SemanticErrors.ExpressionNotBooleanError().add(self.condition, return_type, "loop")
+            raise SemanticErrors.ExpressionNotBooleanError().add(self.condition, return_type, "loop").scopes(scope_manager.current_scope)
 
 
 __all__ = ["LoopConditionBooleanAst"]

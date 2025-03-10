@@ -40,13 +40,13 @@ class PinStatementAst(Ast, TypeInferrable):
         symbols = self.expressions.map(scope_manager.current_scope.get_variable_symbol_outermost_part)
         if symbols.filter_out_none().length < self.expressions.length:
             non_symbolic_pin_target = self.expressions[symbols.index(None)]
-            raise SemanticErrors.MemoryPinTargetInvalidError().add(self, non_symbolic_pin_target, True)
+            raise SemanticErrors.MemoryPinTargetInvalidError().add(self, non_symbolic_pin_target, True).scopes(scope_manager.current_scope)
 
         # Prevent overlapping symbols from being created.
         symbols.remove_none()
         for pin_target, symbol in self.expressions.zip(symbols):
             if overlap := symbol.memory_info.ast_pinned.filter(lambda p: AstMemoryHandler.overlaps(p, pin_target)):
-                raise SemanticErrors.MemoryPinOverlapError().add(pin_target, overlap[0])
+                raise SemanticErrors.MemoryPinOverlapError().add(pin_target, overlap[0]).scopes(scope_manager.current_scope)
             symbol.memory_info.ast_pinned.append(pin_target)
 
 

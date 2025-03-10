@@ -35,7 +35,7 @@ class GenericTypeParameterInlineConstraintsAst(Ast):
         for i, t in self.constraints.enumerate():
             for j, u in self.constraints[i + 1:].enumerate():
                 if t.symbolic_eq(u, scope_manager.current_scope):
-                    raise SemanticErrors.IdentifierDuplicationError(t, u)
+                    raise SemanticErrors.IdentifierDuplicationError(t, u).scopes(scope_manager.current_scope)
 
 
 __all__ = ["GenericTypeParameterInlineConstraintsAst"]

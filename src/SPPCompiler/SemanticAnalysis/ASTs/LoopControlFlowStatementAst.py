@@ -36,7 +36,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         has_skip = isinstance(self.skip_or_expr, Asts.TokenAst) and self.skip_or_expr.token_type == SppTokenType.KwSkip
         if isinstance(self.skip_or_expr, (Asts.TokenAst, Asts.TypeAst)) and not has_skip:
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.skip_or_expr)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.skip_or_expr).scopes(scope_manager.current_scope)
 
         # Get the number of control flow statement, and the loop's nesting level.
         number_of_controls = self.tok_seq_exit.length + (has_skip is True)
@@ -44,7 +44,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
 
         # Check the depth of the loop is greater than or equal to the number of control statements.
         if number_of_controls > nested_loop_depth:
-            raise SemanticErrors.LoopTooManyControlFlowStatementsError().add(kwargs["loop_ast"], self, number_of_controls, nested_loop_depth)
+            raise SemanticErrors.LoopTooManyControlFlowStatementsError().add(kwargs["loop_ast"], self, number_of_controls, nested_loop_depth).scopes(scope_manager.current_scope)
 
         # Save and compare the loop's "exiting" type against other nested loop's exit statement types.
         if not isinstance(self.skip_or_expr, Asts.TokenAst):
@@ -68,7 +68,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
 
                 # Todo: should be 2 different scopes in case of a typedef inside 1 of the scopes
                 if not exit_type.symbolic_eq(that_exit_type, scope_manager.current_scope):
-                    raise SemanticErrors.TypeMismatchError().add(that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type)
+                    raise SemanticErrors.TypeMismatchError().add(that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type).scopes(scope_manager.current_scope)
 
 
 __all__ = ["LoopControlFlowStatementAst"]

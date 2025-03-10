@@ -41,13 +41,14 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
         # Todo: Change this to detecting FunMov/Mut/Ref superimpositions over the type
         function_owner_type, function_owner_scope, function_name = AstFunctions.get_function_owner_type_and_function_name(scope_manager, lhs)
         if not function_name:
-            raise SemanticErrors.FunctionCallOnNoncallableTypeError().add(lhs)
+            raise SemanticErrors.FunctionCallOnNoncallableTypeError().add(lhs).scopes(scope_manager.current_scope)
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
             transformed_lhs, transformed_function_call = AstFunctions.convert_method_to_function_form(scope_manager, function_owner_type, function_name, lhs, self, **kwargs)
             transformed_function_call.determine_overload(scope_manager, transformed_lhs, **kwargs)
             self._overload = transformed_function_call._overload
+            self.function_argument_group = transformed_function_call.function_argument_group
             return
 
         # Record the "pass" and "fail" overloads
@@ -74,23 +75,24 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
             try:
                 # Can't call an abstract function.
                 if function_overload._abstract:
-                    raise SemanticErrors.FunctionCallAbstractFunctionError().add(function_overload.name, self)
+                    raise SemanticErrors.FunctionCallAbstractFunctionError().add(function_overload.name, self).scopes(scope_manager.current_scope)
 
                 # Can't call non-implemented functions (dummy functions).
                 if function_overload._non_implemented:
-                    ...  # Todo: raise SemanticErrors.FunctionCallNonImplementedMethodError()
+                    ...  # Todo: raise SemanticErrors.FunctionCallNonImplementedMethodError
 
                 # Check if there are too many arguments for the function (non-variadic).
                 if arguments.length > parameters.length and not is_variadic:
-                    raise SemanticErrors.FunctionCallTooManyArgumentsError().add(self, function_overload.name)
+                    raise SemanticErrors.FunctionCallTooManyArgumentsError().add(self, function_overload.name).scopes(scope_manager.current_scope)
 
                 # Check for any named arguments without a corresponding parameter.
+                # Todo: Generic=Void means this parameter is removed.
                 if invalid_arguments := argument_names.set_subtract(parameter_names):
-                    raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_arguments[0], "argument")
+                    raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_arguments[0], "argument").scopes(scope_manager.current_scope)
 
                 # Remove all the used parameters names from the set of parameter names, and name the unnamed arguments.
-                AstFunctions.name_function_arguments(arguments, parameters)
-                AstFunctions.name_generic_arguments(generic_arguments, generic_parameters)
+                AstFunctions.name_function_arguments(arguments, parameters, scope_manager)
+                AstFunctions.name_generic_arguments(generic_arguments, generic_parameters, scope_manager)
                 argument_names = arguments.map_attr("name")
 
                 # Check if there are too few arguments for the function (by missing names).
@@ -165,13 +167,13 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
         if pass_overloads.is_empty():
             failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {type(f[2]).__name__}").join("\n")
             argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(scope_manager, **kwargs)).join(", ")})"
-            raise SemanticErrors.FunctionCallNoValidSignaturesError().add(self, failed_signatures_and_errors, argument_usage_signature)
+            raise SemanticErrors.FunctionCallNoValidSignaturesError().add(self, failed_signatures_and_errors, argument_usage_signature).scopes(scope_manager.current_scope)
 
         # If there are multiple pass overloads, raise an error.
         elif pass_overloads.length > 1:
             passed_signatures = pass_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name)).join("\n")
             argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(scope_manager, **kwargs)).join(", ")})"
-            raise SemanticErrors.FunctionCallAmbiguousSignaturesError().add(self, passed_signatures, argument_usage_signature)
+            raise SemanticErrors.FunctionCallAmbiguousSignaturesError().add(self, passed_signatures, argument_usage_signature).scopes(scope_manager.current_scope)
 
         # Set the overload to the only pass overload.
         self._overload = pass_overloads[0]
@@ -196,7 +198,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
         self.function_argument_group.analyse_pre_semantics(scope_manager, **kwargs)
         self.generic_argument_group.analyse_semantics(scope_manager, **kwargs)
         self.determine_overload(scope_manager, lhs, **kwargs)  # Also adds the "self" argument if needed.
-        self.function_argument_group.analyse_semantics(scope_manager, target=self._overload[1], is_async=self._is_async, **kwargs)
+        self.function_argument_group.analyse_semantics(scope_manager, target_scope=self._overload[0], target_proto=self._overload[1], is_async=self._is_async, **kwargs)
 
 
 __all__ = ["PostfixExpressionOperatorFunctionCallAst"]

@@ -54,9 +54,9 @@ class BinaryExpressionAst(Ast, TypeInferrable):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The TypeAst cannot be used as an expression for a binary operation.
         if isinstance(self.lhs, Asts.TypeAst):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs).scopes(scope_manager.current_scope)
         if isinstance(self.rhs, Asts.TypeAst):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs).scopes(scope_manager.current_scope)
 
         # Analyse the LHS of the binary expression.
         self.lhs.analyse_semantics(scope_manager, **kwargs)
@@ -79,7 +79,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
         if self.op.token_type.name.endswith("Assign") and not scope_manager.current_scope.get_variable_symbol_outermost_part(self.lhs):
-            raise SemanticErrors.AssignmentInvalidCompoundLhsError().add(self.lhs)
+            raise SemanticErrors.AssignmentInvalidCompoundLhsError().add(self.lhs).scopes(scope_manager.current_scope)
 
         # Todo: Check on the tuple size to be > 1 ?
         # Handle lhs-folding
@@ -87,7 +87,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             # Check the rhs is a tuple. Todo: without_generics() => PrecompiledCommonTypes
             rhs_tuple_type = self.rhs.infer_type(scope_manager, **kwargs)
             if not rhs_tuple_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope_manager.current_scope):
-                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, rhs_tuple_type, self.lhs)
+                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, rhs_tuple_type, self.lhs).scopes(scope_manager.current_scope)
 
             rhs_num_elements = rhs_tuple_type.type_parts()[0].generic_argument_group.arguments.length
 
@@ -110,7 +110,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             # Check the rhs is a tuple. Todo: without_generics() => PrecompiledCommonTypes
             lhs_tuple_type = self.lhs.infer_type(scope_manager, **kwargs)
             if not lhs_tuple_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope_manager.current_scope):
-                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, lhs_tuple_type, self.lhs)
+                raise SemanticErrors.MemberAccessNonIndexableError().add(self.rhs, lhs_tuple_type, self.lhs).scopes(scope_manager.current_scope)
 
             lhs_num_elements = lhs_tuple_type.type_parts()[0].generic_argument_group.arguments.length
 

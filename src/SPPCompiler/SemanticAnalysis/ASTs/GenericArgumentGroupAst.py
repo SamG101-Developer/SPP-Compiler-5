@@ -80,11 +80,11 @@ class GenericArgumentGroupAst(Ast):
         # Check there are no duplicate argument names.
         generic_argument_names = self.arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__).map(lambda a: a.name.name)
         if duplicates := generic_argument_names.non_unique():
-            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named generic argument")
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named generic argument").scopes(scope_manager.current_scope)
 
         # Check the generic arguments are in the correct order.
         if difference := AstOrdering.order_args(self.arguments):
-            raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "generic argument")
+            raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "generic argument").scopes(scope_manager.current_scope)
 
         # Analyse the arguments.
         for a in self.arguments:

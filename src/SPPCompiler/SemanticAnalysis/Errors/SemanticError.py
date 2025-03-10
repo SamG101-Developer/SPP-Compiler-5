@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, NoReturn, Optional, Tuple, TYPE_CHECKING
+from typing import NoReturn, Optional, Tuple, TYPE_CHECKING
 
 from colorama import Fore, Style
 from fastenum import Enum
@@ -28,14 +28,20 @@ class SemanticError(BaseException):
         tip: str
         fmt: SemanticError.Format
 
-    error_info: List[ErrorInfo]
+    error_info: Seq[ErrorInfo]
+    error_formatters: Seq[ErrorFormatter]
 
     def __init__(self, *args) -> None:
         super().__init__(args)
-        self.error_info = []
+        self.error_info = Seq()
 
     def add(self, *args, **kwargs) -> SemanticError:
         ...
+
+    def scopes(self, *scopes) -> SemanticError:
+        # Register the error formatters against the instance.
+        self.error_formatters = Seq([*scopes]).map_attr("_error_formatter")
+        return self
 
     def add_error(self, pos: int, tag: str, msg: str, tip: str, fmt: Format = Format.NORMAL) -> SemanticError:
         # Add an error into the output list.
@@ -56,10 +62,10 @@ class SemanticError(BaseException):
         f = f"\n{Style.BRIGHT}{type(self).__name__}: {Style.NORMAL}{error_info.msg}\n{Fore.LIGHTCYAN_EX}{Style.BRIGHT}Tip: {Style.NORMAL}{error_info.tip}{Fore.RESET}"
         return f, False
 
-    def throw(self, error_formatter: ErrorFormatter) -> NoReturn:
+    def throw(self) -> NoReturn:
         # Format the error messages and raise the error.
         error_message = ""
-        for error in self.error_info:
+        for error, error_formatter in self.error_info.zip(Seq([next(self.error_formatters.cycle()) for i in range(self.error_info.length)])):
             formatted_message, is_minimal = self._format_message(error)
             error_message += error_formatter.error(error.pos, formatted_message, error.tag, is_minimal)
         print(error_message)
@@ -838,7 +844,7 @@ class SemanticErrors:
         borrow. This occurs when a borrow is used without being pinned.
         """
 
-        def add(self, ast: Ast, pinned_required_ast: Ast) -> SemanticError:
+        def add(self, pinned_required_ast: Ast, ast: Ast) -> SemanticError:
             self.add_info(
                 pos=pinned_required_ast.pos,
                 tag="Context declared where pins are required.")

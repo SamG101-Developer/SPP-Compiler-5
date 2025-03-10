@@ -44,13 +44,13 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
         # Only 1 "multi-skip" allowed in a destructure.
         multi_arg_skips = self.elements.filter_to_type(Asts.LocalVariableDestructureSkipNArgumentsAst)
         if multi_arg_skips.length > 1:
-            raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1])
+            raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1]).scopes(scope_manager.current_scope)
 
         # Ensure the rhs value is a tuple.
         value_type = value.infer_type(scope_manager, **kwargs).without_generics()
         tuple_type = CommonTypesPrecompiled.EMPTY_TUPLE
         if not value_type.symbolic_eq(tuple_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(self, tuple_type, value, value_type)
+            raise SemanticErrors.TypeMismatchError().add(self, tuple_type, value, value_type).scopes(scope_manager.current_scope)
 
         # Determine the number of elements in the lhs and rhs tuples.
         num_lhs_tuple_elements = self.elements.length
@@ -58,7 +58,7 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
 
         # Ensure the lhs and rhs tuples have the same number of elements unless a multi-skip is present.
         if (num_lhs_tuple_elements < num_rhs_tuple_elements and not multi_arg_skips) or num_lhs_tuple_elements > num_rhs_tuple_elements:
-            raise SemanticErrors.VariableTupleDestructureTupleSizeMismatchError().add(self, num_lhs_tuple_elements, value, num_rhs_tuple_elements)
+            raise SemanticErrors.VariableTupleDestructureTupleSizeMismatchError().add(self, num_lhs_tuple_elements, value, num_rhs_tuple_elements).scopes(scope_manager.current_scope)
 
         # For a binding ".." destructure, ie "let (a, ..b, c) = t", create an intermediary rhs tuple.
         if multi_arg_skips and multi_arg_skips[0].binding:

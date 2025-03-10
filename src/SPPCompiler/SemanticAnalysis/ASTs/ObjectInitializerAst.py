@@ -38,7 +38,7 @@ class ObjectInitializerAst(Ast, TypeInferrable):
         # Get the base symbol and make sure it isn't generic.
         base_symbol = scope_manager.current_scope.get_symbol(self.class_type.without_generics())
         if base_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.class_type, self.class_type, "object initializer")
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.class_type, self.class_type, "object initializer").scopes(scope_manager.current_scope)
 
         self.object_argument_group.pre_analyse_semantics(scope_manager, **kwargs)
 

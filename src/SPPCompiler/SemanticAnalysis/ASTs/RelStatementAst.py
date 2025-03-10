@@ -39,7 +39,7 @@ class RelStatementAst(Ast, TypeInferrable):
         symbols = self.expressions.map(scope_manager.current_scope.get_variable_symbol_outermost_part)
         if symbols.filter_out_none().length < self.expressions.length:
             non_symbolic_pin_target = self.expressions[symbols.index(None)]
-            raise SemanticErrors.MemoryPinTargetInvalidError().add(self, non_symbolic_pin_target, False)
+            raise SemanticErrors.MemoryPinTargetInvalidError().add(self, non_symbolic_pin_target, False).scopes(scope_manager.current_scope)
 
         # Prevent overlapping symbols from being created.
         symbols.remove_none()
@@ -48,13 +48,11 @@ class RelStatementAst(Ast, TypeInferrable):
 
             # Check for a direct match in the pin list.
             if not pins.find(lambda pin: str(rel_target) == str(pin)):
-                raise SemanticErrors.MemoryReleasingNonPinnedSymbolError().add(
-                    self, rel_target)
+                raise SemanticErrors.MemoryReleasingNonPinnedSymbolError().add(self, rel_target).scopes(scope_manager.current_scope)
 
             # Check the rel target isn't a compile-time constant.
             if symbol.memory_info.ast_comptime_const:
-                raise SemanticErrors.MemoryReleasingConstantSymbolError().add(
-                    self, rel_target, symbol.memory_info.ast_initialization)
+                raise SemanticErrors.MemoryReleasingConstantSymbolError().add(self, rel_target, symbol.memory_info.ast_initialization).scopes(scope_manager.current_scope)
 
             # Cause a pinned generator/future to be invalidated.
             for pin_target in symbol.memory_info.pin_target:

@@ -49,7 +49,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Ensure the type does not have a convention.
         if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
-            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "comp generic parameter type")
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "comp generic parameter type").scopes(scope_manager.current_scope)
 
         # Create a variable symbol for this constant in the current scope (class / function).
         symbol = VariableSymbol(
@@ -63,7 +63,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default.
         if isinstance(self.default, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.default)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.default).scopes(scope_manager.current_scope)
 
         # Analyse the type of the default expression.
         self.type.analyse_semantics(scope_manager)
@@ -73,7 +73,7 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
         default_type = self.default.infer_type(scope_manager)
         target_type = self.type
         if not target_type.symbolic_eq(default_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(self.name, target_type, self.default, default_type)
+            raise SemanticErrors.TypeMismatchError().add(self.name, target_type, self.default, default_type).scopes(scope_manager.current_scope)
 
         # Create the variable for the const parameter.
         ast = AstMutation.inject_code(f"let {self.name}: {self.type}", SppParser.parse_let_statement_uninitialized)

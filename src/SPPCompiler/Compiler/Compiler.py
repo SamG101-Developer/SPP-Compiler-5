@@ -92,7 +92,7 @@ class Compiler:
 
         except SemanticError as error:
             errored_module = self._module_tree.modules.find(lambda m: self._ast.current() is m.module_ast)
-            error.throw(errored_module.error_formatter)
+            error.throw()
 
         finally:
 

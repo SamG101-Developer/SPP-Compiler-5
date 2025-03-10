@@ -108,7 +108,7 @@ class IntegerLiteralAst(Ast, TypeInferrable):
         lower, upper = SIZE_MAPPING[self.type.type_parts()[0].value]
         true_value = float(self.value.token_data)
         if not (lower <= true_value < upper):
-            raise SemanticErrors.NumberOutOfBoundsError(self, lower, upper, "integer")
+            raise SemanticErrors.NumberOutOfBoundsError(self, lower, upper, "integer").scopes(scope_manager.current_scope)
 
 
 __all__ = ["IntegerLiteralAst"]

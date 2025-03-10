@@ -59,7 +59,7 @@ class ClassImplementationAst(Ast):
         # Check there are no duplicate attribute names.
         attribute_names = self.members.map_attr("name")
         if duplicates := attribute_names.non_unique():
-            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "attribute")
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "attribute").scopes(scope_manager.current_scope)
 
 
 __all__ = ["ClassImplementationAst"]

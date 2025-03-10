@@ -83,7 +83,7 @@ class IdentifierAst(Ast, TypeInferrable):
         if not scope_manager.current_scope.has_symbol(self):
             alternatives = scope_manager.current_scope.all_symbols().filter_to_type(VariableSymbol).map_attr("name")
             closest_match = difflib.get_close_matches(self.value, alternatives.map_attr("value"), n=1, cutoff=0)
-            raise SemanticErrors.IdentifierUnknownError().add(self, "identifier", closest_match[0] if closest_match else None)
+            raise SemanticErrors.IdentifierUnknownError().add(self, "identifier", closest_match[0] if closest_match else None).scopes(scope_manager.current_scope)
 
 
 __all__ = ["IdentifierAst"]

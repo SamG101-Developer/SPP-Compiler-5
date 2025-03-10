@@ -34,7 +34,7 @@ class UnaryExpressionAst(Ast, TypeInferrable):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the rhs.
         if isinstance(self.rhs, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs).scopes(scope_manager.current_scope)
 
         # Analyse the "op" and the "rhs".
         self.op.analyse_semantics(scope_manager, rhs=self.rhs, **kwargs)

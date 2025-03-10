@@ -52,11 +52,11 @@ class FunctionCallArgumentGroupAst(Ast):
         # Check there are no duplicate argument names.
         argument_names = self.arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst).map(lambda a: a.name)
         if duplicates := argument_names.non_unique():
-            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named arguments")
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named arguments").scopes(scope_manager.current_scope)
 
         # Check the arguments are in the correct order.
         if difference := AstOrdering.order_args(self.arguments):
-            raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "argument")
+            raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "argument").scopes(scope_manager.current_scope)
 
         # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ..."). Todo: without_generics() => PrecompiledCommonTypes
         for i, argument in self.arguments.enumerate():
@@ -65,7 +65,7 @@ class FunctionCallArgumentGroupAst(Ast):
                 # Check the argument type is a tuple
                 tuple_argument_type = argument.infer_type(scope_manager, **kwargs)
                 if not tuple_argument_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope_manager.current_scope):
-                    raise SemanticErrors.ArgumentTupleExpansionOfNonTupleError().add(argument.value, tuple_argument_type)
+                    raise SemanticErrors.ArgumentTupleExpansionOfNonTupleError().add(argument.value, tuple_argument_type).scopes(scope_manager.current_scope)
 
                 # Replace the tuple-expansion argument with the expanded arguments
                 self.arguments.pop(i)
@@ -108,24 +108,24 @@ class FunctionCallArgumentGroupAst(Ast):
 
                 # Check the move doesn't overlap with any borrows.
                 if overlap := (borrows_ref + borrows_mut).find(lambda b: AstMemoryHandler.overlaps(b, argument.value)):
-                    raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value)
+                    raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value).scopes(scope_manager.current_scope)
 
             elif isinstance(argument.convention, Asts.ConventionMutAst):
                 # Check the argument being mutably borrowed isn't an immutable borrow.
                 if symbol.memory_info.is_borrow_ref:
-                    raise SemanticErrors.MutabilityInvalidMutationError().add(argument.value, argument.convention, symbol.memory_info.ast_borrowed)
+                    raise SemanticErrors.MutabilityInvalidMutationError().add(argument.value, argument.convention, symbol.memory_info.ast_borrowed).scopes(scope_manager.current_scope)
 
                 # Check the argument's value is mutable.
                 if not symbol.is_mutable:
-                    raise SemanticErrors.MutabilityInvalidMutationError().add(argument.value, argument.convention, symbol.memory_info.ast_initialization)
+                    raise SemanticErrors.MutabilityInvalidMutationError().add(argument.value, argument.convention, symbol.memory_info.ast_initialization).scopes(scope_manager.current_scope)
 
                 # Check the mutable borrow doesn't overlap with any other borrow in the same scope.
                 if overlap := (borrows_ref + borrows_mut).find(lambda b: AstMemoryHandler.overlaps(b, argument.value)):
-                    raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value)
+                    raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value).scopes(scope_manager.current_scope)
 
                 # If the target requires pinning, ensure the borrow is pinned.
                 if pins_required and not (overlap := symbol.memory_info.ast_pinned.find(lambda p: AstMemoryHandler.left_overlap(p, argument.value))):
-                    raise SemanticErrors.MemoryUsageOfUnpinnedBorrowError().add(argument.value, pin_error_ast)
+                    raise SemanticErrors.MemoryUsageOfUnpinnedBorrowError().add(pin_error_ast, argument.value).scopes(target_scope, scope_manager.current_scope)
 
                 # No error with pinning -> mark the pin target.
                 elif pins_required and "assignment" in kwargs and (target := kwargs["assignment"]):
@@ -137,11 +137,11 @@ class FunctionCallArgumentGroupAst(Ast):
             elif isinstance(argument.convention, Asts.ConventionRefAst):
                 # Check the immutable borrow doesn't overlap with any other mutable borrow in the same scope.
                 if overlap := borrows_mut.find(lambda b: AstMemoryHandler.overlaps(b, argument.value)):
-                    raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value)
+                    raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value).scopes(scope_manager.current_scope)
 
                 # If the target requires pinning, ensure the borrow is pinned.
                 if pins_required and not (overlap := symbol.memory_info.ast_pinned.find(lambda p: AstMemoryHandler.left_overlap(p, argument.value))):
-                    raise SemanticErrors.MemoryUsageOfUnpinnedBorrowError().add(argument.value, pin_error_ast)
+                    raise SemanticErrors.MemoryUsageOfUnpinnedBorrowError().add(pin_error_ast, argument.value).scopes(scope_manager.current_scope)
 
                 # No error with pinning -> mark the pin target.
                 elif pins_required and "assignment" in kwargs and (target := kwargs["assignment"]):

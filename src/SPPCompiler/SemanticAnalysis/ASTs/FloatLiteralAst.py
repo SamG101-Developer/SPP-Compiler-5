@@ -86,7 +86,7 @@ class FloatLiteralAst(Ast, TypeInferrable):
         lower, upper = SIZE_MAPPING[self.type.type_parts()[0].value]
         true_value = float(self.integer_value.token_data + "." + self.decimal_value.token_data)
         if not (lower <= true_value < upper):
-            raise SemanticErrors.NumberOutOfBoundsError(self, lower, upper, "float")
+            raise SemanticErrors.NumberOutOfBoundsError(self, lower, upper, "float").scopes(scope_manager.current_scope)
 
 
 __all__ = ["FloatLiteralAst"]

@@ -37,7 +37,7 @@ class PostfixExpressionAst(Ast, TypeInferrable):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst cannot be used as an expression for the lhs.
         if isinstance(self.lhs, Asts.TokenAst):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs).scopes(scope_manager.current_scope)
 
         # Analyse the "lhs" and "op".
         self.lhs.analyse_semantics(scope_manager, **kwargs)

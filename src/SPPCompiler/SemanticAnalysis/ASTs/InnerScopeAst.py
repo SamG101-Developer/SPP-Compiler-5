@@ -50,7 +50,7 @@ class InnerScopeAst(Ast, TypeInferrable):
         # Todo: this is inefficient; check from the last statement and work backwards.
         for i, member in self.members.enumerate():
             if isinstance(member, (Asts.LoopControlFlowStatementAst, Asts.RetStatementAst)) and member is not self.members[-1]:
-                raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1])
+                raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1]).scopes(scope_manager.current_scope)
 
         # Analyse the semantics of each member.
         for m in self.members:

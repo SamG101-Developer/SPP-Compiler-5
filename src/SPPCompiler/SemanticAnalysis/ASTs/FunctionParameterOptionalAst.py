@@ -56,7 +56,7 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default value.
         if isinstance(self.default, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.default)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.default).scopes(scope_manager.current_scope)
 
         # Analyse the type of the default expression.
         self.type.analyse_semantics(scope_manager, **kwargs)
@@ -66,7 +66,7 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
         # Todo: are default_type and self.type the correct way around? test default with a variant.
         default_type = self.default.infer_type(scope_manager)
         if not self.type.symbolic_eq(default_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(self.extract_name, self.type, self.default, default_type)
+            raise SemanticErrors.TypeMismatchError().add(self.extract_name, self.type, self.default, default_type).scopes(scope_manager.current_scope)
 
         # Create the variable for the parameter.
         ast = AstMutation.inject_code(

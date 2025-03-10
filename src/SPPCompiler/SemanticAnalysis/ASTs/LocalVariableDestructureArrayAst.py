@@ -44,13 +44,13 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
         # Only 1 "multi-skip" allowed in a destructure.
         multi_arg_skips = self.elements.filter_to_type(Asts.LocalVariableDestructureSkipNArgumentsAst)
         if multi_arg_skips.length > 1:
-            raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1])
+            raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1]).scopes(scope_manager.current_scope)
 
         # Ensure the rhs value is a array.
         value_type = value.infer_type(scope_manager, **kwargs).without_generics()
         array_type = CommonTypesPrecompiled.EMPTY_ARRAY
         if not value_type.symbolic_eq(array_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(self, array_type, value, value_type)
+            raise SemanticErrors.TypeMismatchError().add(self, array_type, value, value_type).scopes(scope_manager.current_scope)
 
         # Determine the number of elements in the lhs and rhs arrays.
         num_lhs_array_elements = self.elements.length
@@ -58,7 +58,7 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
 
         # Ensure the lhs and rhs arrays have the same number of elements unless a multi-skip is present.
         if (num_lhs_array_elements < num_rhs_array_elements and not multi_arg_skips) or num_lhs_array_elements > num_rhs_array_elements:
-            raise SemanticErrors.VariableArrayDestructureArraySizeMismatchError().add(self, num_lhs_array_elements, value, num_rhs_array_elements)
+            raise SemanticErrors.VariableArrayDestructureArraySizeMismatchError().add(self, num_lhs_array_elements, value, num_rhs_array_elements).scopes(scope_manager.current_scope)
 
         # For a binding ".." destructure, ie "let (a, ..b, c) = t", create an intermediary rhs array.
         if multi_arg_skips and multi_arg_skips[0].binding:

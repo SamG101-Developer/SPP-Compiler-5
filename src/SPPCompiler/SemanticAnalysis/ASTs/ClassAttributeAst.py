@@ -53,7 +53,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Ensure the attribute type does not have a convention.
         if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
-            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "attribute type")
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "attribute type").scopes(scope_manager.current_scope)
 
         # Create a variable symbol for this attribute in the current scope (class).
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
@@ -66,7 +66,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
         # Ensure the attribute type is not void.
         void_type = CommonTypes.Void(self.pos)
         if self.type.symbolic_eq(void_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeVoidInvalidUsageError().add(self.type)
+            raise SemanticErrors.TypeVoidInvalidUsageError().add(self.type).scopes(scope_manager.current_scope)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
 

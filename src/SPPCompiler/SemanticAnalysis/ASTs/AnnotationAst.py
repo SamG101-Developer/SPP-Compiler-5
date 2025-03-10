@@ -60,100 +60,129 @@ class AnnotationAst(Ast):
         super().pre_process(context)
 
         if self.name.value == _Annotations.VirtualMethod.value:
-            # The "virtual_method" annotation can only be applied to function asts.
-            if not isinstance(context, Asts.FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(
-                    self.name, context.name, "function")
-
-            # The function ast must be a class method, not a free function.
-            if isinstance(context._ctx, Asts.ModulePrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(
-                    self.name, context.name, "class-method")
-
-            # The "virtual_method" annotation cannot be applied to an "abstract_method" annotation.
-            if context._abstract:
-                raise SemanticErrors.AnnotationConflictError().add(
-                    self.name, context._abstract.name)
-
             context._virtual = self
 
         elif self.name.value == _Annotations.AbstractMethod.value:
-            # The "abstract_method" annotation can only be applied to function asts.
-            if not isinstance(context, Asts.FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
-
-            # The function ast must be a class method, not a free function.
-            if isinstance(context._ctx, Asts.ModulePrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "class-method")
-
-            # The "abstract_method" annotation cannot be applied to a "virtual_method" annotation.
-            if context._virtual:
-                raise SemanticErrors.AnnotationConflictError().add(self.name, context._virtual.name)
-
             context._abstract = self
 
         elif self.name.value in [_Annotations.NonImplementedMethod.value, _Annotations.CompilerBuiltin.value]:
-            # The "non_implemented_method" annotation can only be applied to functions.
-            if not isinstance(context, Asts.FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
             context._non_implemented = self
 
         elif self.name.value == _Annotations.Public.value:
-            # The "public" access modifier annotation can only be applied to visibility enabled objects.
-            if not isinstance(context, VisibilityEnabled):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "visibility-enabled")
-            if context._visibility[1] and context._visibility[0] != AstVisibility.Public:
-                raise SemanticErrors.AnnotationConflictError().add(self.name, context._visibility[1].name)
             context._visibility = (AstVisibility.Public, self)
 
         elif self.name.value == _Annotations.Protected.value:
-            # The "protected" access modifier annotation can only be applied to visibility enabled objects.
-            if not isinstance(context, VisibilityEnabled):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "visibility-enabled")
-            if context._visibility[1] and context._visibility[0] != AstVisibility.Protected:
-                raise SemanticErrors.AnnotationConflictError().add(self.name, context._visibility[1].name)
             context._visibility = (AstVisibility.Protected, self)
 
         elif self.name.value == _Annotations.Private.value:
-            # The "private" access modifier annotation can only be applied to visibility enabled objects.
-            if not isinstance(context, VisibilityEnabled):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "visibility-enabled")
-            if context._visibility[1] and context._visibility[0] != AstVisibility.Private:
-                raise SemanticErrors.AnnotationConflictError().add(self.name, context._visibility[1].name)
             context._visibility = (AstVisibility.Private, self)
 
         elif self.name.value == _Annotations.Hidden.value:
-            # The "hidden" access modifier annotation can only be applied to visibility enabled objects.
-            if not isinstance(context, VisibilityEnabled):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "visibility-enabled")
-            if context._visibility[1] and context._visibility[0] != AstVisibility.Hidden:
-                raise SemanticErrors.AnnotationConflictError().add(self.name, context._visibility[1].name)
             context._visibility = (AstVisibility.Hidden, self)
 
         elif self.name.value == _Annotations.Cold.value:
-            # The "cold" annotation can only be applied to functions.
-            if not isinstance(context, Asts.FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
-            if context._hot:
-                raise SemanticErrors.AnnotationConflictError().add(self.name, context._hot.name)
             context._cold = self
 
         elif self.name.value == _Annotations.Hot.value:
-            # The "hot" annotation can only be applied to functions.
-            if not isinstance(context, Asts.FunctionPrototypeAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, context.name, "function")
-            if context._cold:
-                raise SemanticErrors.AnnotationConflictError().add(self.name, context._cold.name)
             context._hot = self
 
+    def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
+        # Import the necessary classes for type-comparisons to ensure annotation compatibility.
+        super().generate_top_level_scopes(scope_manager)
+
+        if self.name.value == _Annotations.VirtualMethod.value:
+            # The "virtual_method" annotation can only be applied to function asts.
+            if not isinstance(self._ctx, Asts.FunctionPrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "function").scopes(self._scope)
+
+            # The function ast must be a class method, not a free function.
+            if isinstance(self._ctx._ctx, Asts.ModulePrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "class-method").scopes(self._scope)
+
+            # The "virtual_method" annotation cannot be applied to an "abstract_method" annotation.
+            if self._ctx._abstract:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, self._ctx._abstract.name).scopes(self._scope)
+
+        elif self.name.value == _Annotations.AbstractMethod.value:
+            # The "abstract_method" annotation can only be applied to function asts.
+            if not isinstance(self._ctx, Asts.FunctionPrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "function").scopes(self._scope)
+
+            # The function ast must be a class method, not a free function.
+            if isinstance(self._ctx._ctx, Asts.ModulePrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "class-method").scopes(self._scope)
+
+            # The "abstract_method" annotation cannot be applied to a "virtual_method" annotation.
+            if self._ctx._virtual:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, self._ctx._virtual.name).scopes(self._scope)
+
+        elif self.name.value in [_Annotations.NonImplementedMethod.value, _Annotations.CompilerBuiltin.value]:
+            # The "non_implemented_method" annotation can only be applied to functions.
+            if not isinstance(self._ctx, Asts.FunctionPrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "function").scopes(self._scope)
+
+        elif self.name.value == _Annotations.Public.value:
+            # The "public" access modifier annotation can only be applied to visibility enabled objects.
+            if not isinstance(self._ctx, VisibilityEnabled):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "visibility-enabled").scopes(self._scope)
+
+            # There cannot be any other access modifier annotations applied to the object.
+            if self._ctx._visibility[1] and self._ctx._visibility[0] != AstVisibility.Public:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, self._ctx._visibility[1].name).scopes(self._scope)
+
+        elif self.name.value == _Annotations.Protected.value:
+            # The "protected" access modifier annotation can only be applied to visibility enabled objects.
+            if not isinstance(self._ctx, VisibilityEnabled):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "visibility-enabled").scopes(self._scope)
+
+            # There cannot be any other access modifier annotations applied to the object.
+            if self._ctx._visibility[1] and self._ctx._visibility[0] != AstVisibility.Protected:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, self._ctx._visibility[1].name).scopes(self._scope)
+
+        elif self.name.value == _Annotations.Private.value:
+            # The "private" access modifier annotation can only be applied to visibility enabled objects.
+            if not isinstance(self._ctx, VisibilityEnabled):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "visibility-enabled").scopes(self._scope)
+
+            # There cannot be any other access modifier annotations applied to the object.
+            if self._ctx._visibility[1] and self._ctx._visibility[0] != AstVisibility.Private:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, self._ctx._visibility[1].name).scopes(self._scope)
+
+        elif self.name.value == _Annotations.Hidden.value:
+            # The "hidden" access modifier annotation can only be applied to visibility enabled objects.
+            if not isinstance(self._ctx, VisibilityEnabled):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "visibility-enabled").scopes(self._scope)
+
+            # There cannot be any other access modifier annotations applied to the object.
+            if self._ctx._visibility[1] and self._ctx._visibility[0] != AstVisibility.Hidden:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, self._ctx._visibility[1].name).scopes(self._scope)
+
+        elif self.name.value == _Annotations.Cold.value:
+            # The "cold" annotation can only be applied to functions.
+            if not isinstance(self._ctx, Asts.FunctionPrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "function").scopes(self._scope)
+
+            # There cannot be any other access modifier annotations applied to the object.
+            if self._ctx._hot:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, self._ctx._hot.name).scopes(self._scope)
+
+        elif self.name.value == _Annotations.Hot.value:
+            # The "hot" annotation can only be applied to functions.
+            if not isinstance(self._ctx, Asts.FunctionPrototypeAst):
+                raise SemanticErrors.AnnotationInvalidApplicationError().add(self.name, self._ctx.name, "function").scopes(self._scope)
+
+            # There cannot be any other access modifier annotations applied to the object.
+            if self._ctx._cold:
+                raise SemanticErrors.AnnotationConflictError().add(self.name, self._ctx._cold.name).scopes(self._scope)
+
         else:
-            raise SemanticErrors.AnnotationInvalidError().add(self.name)
+            raise SemanticErrors.AnnotationInvalidError().add(self.name).scopes(self._scope)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Prevent duplicate annotations from being applied to an AST.
         annotation_names = self._ctx.annotations.map_attr("name")
         if duplicate_annotations := annotation_names.filter(lambda a: a == self.name).remove(self.name):
-            raise SemanticErrors.AnnotationDuplicateError().add(self.name, duplicate_annotations[0])
+            raise SemanticErrors.AnnotationDuplicateError().add(self.name, duplicate_annotations[0]).scopes(self._scope)
 
 
 __all__ = ["AnnotationAst"]

@@ -24,7 +24,7 @@ class CoroutinePrototypeAst(Asts.FunctionPrototypeAst):
         superimposed_types = scope_manager.current_scope.get_symbol(self.return_type).scope.sup_types.map(lambda t: t.without_generics())
         superimposed_types.append(scope_manager.current_scope.get_symbol(self.return_type).fq_name.without_generics())
         if not superimposed_types.any(lambda t: t.without_generics().symbolic_eq(CommonTypes.Gen().without_generics(), scope_manager.current_scope)):
-            raise SemanticErrors.FunctionCoroutineInvalidReturnTypeError().add(self.return_type)
+            raise SemanticErrors.FunctionCoroutineInvalidReturnTypeError().add(self.return_type).scopes(scope_manager.current_scope)
 
         # Analyse the semantics of the function body.
         self.body.analyse_semantics(scope_manager, **kwargs)

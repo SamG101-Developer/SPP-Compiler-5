@@ -40,7 +40,7 @@ class PostfixExpressionOperatorNotKeywordAst(Ast, TypeInferrable):
         target_type = CommonTypes.Bool(self.pos)
         return_type = lhs.infer_type(scope_manager)
         if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
-            raise SemanticErrors.ExpressionNotBooleanError().add(lhs, return_type, "not expression")
+            raise SemanticErrors.ExpressionNotBooleanError().add(lhs, return_type, "not expression").scopes(scope_manager.current_scope)
 
 
 __all__ = ["PostfixExpressionOperatorNotKeywordAst"]

@@ -53,11 +53,11 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction):
         # Only 1 "multi-skip" allowed in a destructure.
         multi_arg_skips = self.elements.filter_to_type(Asts.LocalVariableDestructureSkipNArgumentsAst)
         if multi_arg_skips.length > 1:
-            raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1])
+            raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1]).scopes(scope_manager.current_scope)
 
         # Multi-skip cannot contain a binding for object destructuring.
         if multi_arg_skips and multi_arg_skips[0].binding:
-            raise SemanticErrors.VariableObjectDestructureWithBoundMultiSkipError().add(self, multi_arg_skips[0])
+            raise SemanticErrors.VariableObjectDestructureWithBoundMultiSkipError().add(self, multi_arg_skips[0]).scopes(scope_manager.current_scope)
 
         # Create expanded "let" statements for each part of the destructure.
         for element in self.elements:
@@ -80,7 +80,7 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction):
             assigned_attributes = self.elements.filter_not_type(Asts.LocalVariableDestructureSkipNArgumentsAst).map(lambda e: e.name)
             missing_attributes = attributes.filter(lambda a: a.name not in assigned_attributes)
             if missing_attributes:
-                raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_attributes[0], "attribute", "destructure argument")
+                raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_attributes[0], "attribute", "destructure argument").scopes(scope_manager.current_scope)
 
 
 __all__ = ["LocalVariableDestructureObjectAst"]

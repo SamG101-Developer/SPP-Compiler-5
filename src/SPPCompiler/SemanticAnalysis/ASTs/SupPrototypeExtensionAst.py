@@ -61,11 +61,11 @@ class SupPrototypeExtensionAst(Ast):
 
         # Ensure the superimposition type does not have a convention.
         if type(c := self.name.get_convention()) is not Asts.ConventionMovAst:
-            raise SemanticErrors.InvalidConventionLocationError().add(c, self.name, "superimposition type")
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.name, "superimposition type").scopes(scope_manager.current_scope)
 
         # Ensure the superimposition supertype does not have a convention.
         if type(c := self.super_class.get_convention()) is not Asts.ConventionMovAst:
-            raise SemanticErrors.InvalidConventionLocationError().add(c, self.super_class, "superimposition supertype")
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.super_class, "superimposition supertype").scopes(scope_manager.current_scope)
 
         # Generate the symbols for the generic parameter group, and the self type.
         for p in self.generic_parameter_group.parameters:
@@ -86,14 +86,14 @@ class SupPrototypeExtensionAst(Ast):
         # Cannot superimpose with a generic super class.
         cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
         if cls_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type")
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type").scopes(scope_manager.current_scope)
 
         # Ensure all the generic arguments are unnamed and match the class's generic parameters.
         for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
             if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__args__):
-                raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(generic_arg)
+                raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(generic_arg).scopes(scope_manager.current_scope)
             if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
-                raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(generic_arg, self)
+                raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(generic_arg, self).scopes(scope_manager.current_scope)
 
         # Ensure the validity of the superclass, along with its generics.
         self.super_class.analyse_semantics(scope_manager)
@@ -111,15 +111,13 @@ class SupPrototypeExtensionAst(Ast):
                 lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
                 lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, scope_manager.current_scope)):
             if cls_symbol.name.value[0] != "$":
-                raise SemanticErrors.SuperimpositionInheritanceDuplicateSuperclassError(
-                    existing_sup_scope._ast.super_class, self.super_class)
+                raise SemanticErrors.SuperimpositionInheritanceDuplicateSuperclassError(existing_sup_scope._ast.super_class, self.super_class).scopes(scope_manager.current_scope)
 
         # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
         if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(
                 lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
                 lambda s: s._ast.super_class.symbolic_eq(self.name, s, scope_manager.current_scope)):
-            raise SemanticErrors.SuperimpositionInheritanceCyclicInheritanceError(
-                existing_sup_scope._ast.super_class, self.name)
+            raise SemanticErrors.SuperimpositionInheritanceCyclicInheritanceError(existing_sup_scope._ast.super_class, self.name).scopes(scope_manager.current_scope)
 
         # Register sup and sub scopes.
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
@@ -141,7 +139,7 @@ class SupPrototypeExtensionAst(Ast):
         existing_attribute_names = (cls_symbol.scope.sup_scopes + Seq([cls_symbol.scope])).filter(
             lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s._ast.body.members).flat().map_attr("name")
         if duplicates := (existing_attribute_names + super_class_attribute_names).non_unique():
-            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "attribute")
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "attribute").scopes(scope_manager.current_scope)
 
         # Mark the type as abstract if the superclass is abstract.
         if sup_symbol.is_abstract:
@@ -163,11 +161,11 @@ class SupPrototypeExtensionAst(Ast):
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
             if self.name.type_parts()[0].value[0] != "$":
-                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(unconstrained[0], self.name)
+                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(unconstrained[0], self.name).scopes(scope_manager.current_scope)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_opt():
-            raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(optional[0])
+            raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(optional[0]).scopes(scope_manager.current_scope)
 
         # Analyse the name, where block, and body.
         self.name.analyse_semantics(scope_manager, **kwargs)
@@ -183,13 +181,11 @@ class SupPrototypeExtensionAst(Ast):
 
             # Check the base method exists.
             if not base_method:
-                raise SemanticErrors.SuperimpositionInheritanceMethodInvalidError().add(
-                    this_method.name, self.super_class)
+                raise SemanticErrors.SuperimpositionInheritanceMethodInvalidError().add(this_method.name, self.super_class).scopes(scope_manager.current_scope)
 
             # Check the base method is virtual or abstract.
             if not (base_method._virtual or base_method._abstract):
-                raise SemanticErrors.SuperimpositionInheritanceNonVirtualMethodOverriddenError().add(
-                    base_method.name, self.super_class)
+                raise SemanticErrors.SuperimpositionInheritanceNonVirtualMethodOverriddenError().add(base_method.name, self.super_class).scopes(scope_manager.current_scope)
 
         # Move out of the current scope.
         scope_manager.move_out_of_current_scope()

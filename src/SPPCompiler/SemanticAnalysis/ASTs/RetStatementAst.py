@@ -36,7 +36,7 @@ class RetStatementAst(Ast, TypeInferrable):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token_type != SppTokenType.KwFun:
-            raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(kwargs["function_type"], self.tok_ret)
+            raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(kwargs["function_type"], self.tok_ret).scopes(scope_manager.current_scope)
         self._func_ret_type = kwargs["function_ret_type"]
 
         # Analyse the expression if it exists, and determine the type of the expression.
@@ -51,7 +51,7 @@ class RetStatementAst(Ast, TypeInferrable):
 
         # Check the expression type matches the expected type.
         if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(expression_type, expected_type, self.expression, expected_type)
+            raise SemanticErrors.TypeMismatchError().add(expression_type, expected_type, self.expression, expected_type).scopes(scope_manager.current_scope)
 
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         # Create a return instruction with the expression if it exists.

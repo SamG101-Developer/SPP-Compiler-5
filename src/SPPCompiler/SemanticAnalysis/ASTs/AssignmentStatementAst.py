@@ -47,7 +47,7 @@ class AssignmentStatementAst(Ast, TypeInferrable):
         # Ensure the lhs targets are all symbolic (assignable to).
         lhs_syms = self.lhs.map(lambda e: scope_manager.current_scope.get_variable_symbol_outermost_part(e))
         if non_symbolic := lhs_syms.zip(self.lhs).find(lambda s: not s[0]):
-            raise SemanticErrors.AssignmentInvalidLhsError().add(non_symbolic[1])
+            raise SemanticErrors.AssignmentInvalidLhsError().add(non_symbolic[1]).scopes(scope_manager.current_scope)
 
         # For each assignment, check mutability, types compatibility, and resolve partial moves.
         for (lhs_expr, rhs_expr), lhs_sym in self.lhs.zip(self.rhs).zip(lhs_syms):
@@ -58,21 +58,21 @@ class AssignmentStatementAst(Ast, TypeInferrable):
 
             # Full assignment (ie "x = y") requires the "x" symbol to be marked as "mut".
             if isinstance(lhs_expr, Asts.IdentifierAst) and not (lhs_sym.is_mutable or lhs_sym.memory_info.initialization_counter == 0):
-                raise SemanticErrors.MutabilityInvalidMutationError().add(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
+                raise SemanticErrors.MutabilityInvalidMutationError().add(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(scope_manager.current_scope)
 
             # Attribute assignment (ie "x.y = z"), for a non-borrowed symbol, requires an outermost "mut" symbol.
             elif isinstance(lhs_expr, Asts.PostfixExpressionAst) and (not lhs_sym.memory_info.ast_borrowed and not lhs_sym.is_mutable):
-                raise SemanticErrors.MutabilityInvalidMutationError().add(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
+                raise SemanticErrors.MutabilityInvalidMutationError().add(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(scope_manager.current_scope)
 
             # Attribute assignment (ie "x.y = z"), for a borrowed symbol, requires an outermost mutable borrow.
             elif isinstance(lhs_expr, Asts.PostfixExpressionAst) and (lhs_sym.memory_info.ast_borrowed and lhs_sym.memory_info.is_borrow_ref):
-                raise SemanticErrors.MutabilityInvalidMutationError().add(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization)
+                raise SemanticErrors.MutabilityInvalidMutationError().add(lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(scope_manager.current_scope)
 
             # Ensure the lhs and rhs have the same type and convention (cannot do "Str = &Str" for example).
             lhs_type = lhs_expr.infer_type(scope_manager, **kwargs)
             rhs_type = rhs_expr.infer_type(scope_manager, **kwargs)
             if not lhs_type.symbolic_eq(rhs_type, scope_manager.current_scope):
-                raise SemanticErrors.TypeMismatchError().add(lhs_sym.memory_info.ast_initialization, lhs_type, rhs_expr, rhs_type)
+                raise SemanticErrors.TypeMismatchError().add(lhs_sym.memory_info.ast_initialization, lhs_type, rhs_expr, rhs_type).scopes(scope_manager.current_scope)
 
             # Resolve memory status, by marking lhs identifiers as initialized, or removing partial moves.
             if isinstance(lhs_expr, Asts.IdentifierAst):

@@ -125,7 +125,7 @@ class AstMemoryHandler:
         """
         Runs a number of checks to ensure the memory integrity of an AST is maintained. This function is responsible for
         all memory safety enforcement operations, except for the law of exclusivity, which is maintained by the
-        FunctionArgumentGroupAst checker, as this maintains that status of mut/ref borrows.
+        FunctionCallArgumentGroupAst checker, as this maintains that status of mut/ref borrows.
 
         Args:
             value_ast: The AST being analysed for memory integrity.
@@ -166,47 +166,47 @@ class AstMemoryHandler:
 
         # An identifier that is a namespace cannot be used as an expression.
         if isinstance(symbol, NamespaceSymbol):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(value_ast)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(value_ast).scopes(scope_manager.current_scope)
 
         # Check for "inconsistent" memory move status, from branches.
         if check_move and (m := symbol.memory_info.is_inconsistently_moved):
-            raise SemanticErrors.MemoryInconsistentlyInitializedError().add(value_ast, m[0], m[1], "moved")
+            raise SemanticErrors.MemoryInconsistentlyInitializedError().add(value_ast, m[0], m[1], "moved").scopes(scope_manager.current_scope)
 
         # Check for "inconsistent" memory initialization status, from branches.
         if check_move and (m := symbol.memory_info.is_inconsistently_initialized):
-            raise SemanticErrors.MemoryInconsistentlyInitializedError().add(value_ast, m[0], m[1], "initialized")
+            raise SemanticErrors.MemoryInconsistentlyInitializedError().add(value_ast, m[0], m[1], "initialized").scopes(scope_manager.current_scope)
 
         # Check for "inconsistent" memory move status, from branches.
         if check_move and (m := symbol.memory_info.is_inconsistently_partially_moved):
-            raise SemanticErrors.MemoryInconsistentlyInitializedError().add(value_ast, m[0], m[1], "partially moved")
+            raise SemanticErrors.MemoryInconsistentlyInitializedError().add(value_ast, m[0], m[1], "partially moved").scopes(scope_manager.current_scope)
 
         # Check for "inconsistent" memory pin status, from branches.
         if check_pins and (m := symbol.memory_info.is_inconsistently_pinned):
-            raise SemanticErrors.MemoryInconsistentlyPinnedError().add(value_ast, m[0], m[1])
+            raise SemanticErrors.MemoryInconsistentlyPinnedError().add(value_ast, m[0], m[1]).scopes(scope_manager.current_scope)
 
         # Check the symbol has not already been moved by another operation.
         if check_move and symbol.memory_info.ast_moved:  # and isinstance(value_ast, IdentifierAst):
-            raise SemanticErrors.MemoryNotInitializedUsageError().add(value_ast, symbol.memory_info.ast_moved)
+            raise SemanticErrors.MemoryNotInitializedUsageError().add(value_ast, symbol.memory_info.ast_moved).scopes(scope_manager.current_scope)
 
         # Check the symbol doesn't have any outstanding partial moves.
         if check_partial_move and symbol.memory_info.ast_partially_moved and isinstance(value_ast, Asts.IdentifierAst):
-            raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(value_ast, symbol.memory_info.ast_partially_moved[0])
+            raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(value_ast, symbol.memory_info.ast_partially_moved[0]).scopes(scope_manager.current_scope)
 
         # Check there are overlapping partial moves (for an attribute move)
         if check_partial_move and symbol.memory_info.ast_partially_moved and not isinstance(value_ast, Asts.IdentifierAst):
             if overlaps := symbol.memory_info.ast_partially_moved.filter(lambda p: AstMemoryHandler.left_overlap(p, value_ast)):
-                raise SemanticErrors.MemoryNotInitializedUsageError().add(value_ast, overlaps[0])
+                raise SemanticErrors.MemoryNotInitializedUsageError().add(value_ast, overlaps[0]).scopes(scope_manager.current_scope)
             if overlaps := symbol.memory_info.ast_partially_moved.filter(lambda p: AstMemoryHandler.overlaps(p, value_ast)):
-                raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(value_ast, overlaps[0])
+                raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(value_ast, overlaps[0]).scopes(scope_manager.current_scope)
 
         # Check the symbol is not being moved from a borrowed context (for an attribute move).
         if check_move_from_borrowed_context and symbol.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst):
-            raise SemanticErrors.MemoryMovedFromBorrowedContextError().add(value_ast, symbol.memory_info.ast_borrowed)
+            raise SemanticErrors.MemoryMovedFromBorrowedContextError().add(value_ast, symbol.memory_info.ast_borrowed).scopes(scope_manager.current_scope)
 
         # Check the symbol being moved is not pinned.
         if check_pins and symbol.memory_info.ast_pinned and not isinstance(value_ast, Asts.IdentifierAst):
             if overlaps := symbol.memory_info.ast_pinned.filter(lambda p: AstMemoryHandler.overlaps(p, value_ast)):
-                raise SemanticErrors.MemoryMovedWhilstPinnedError().add(value_ast, overlaps[0])
+                raise SemanticErrors.MemoryMovedWhilstPinnedError().add(value_ast, overlaps[0]).scopes(scope_manager.current_scope)
 
         # Markt the symbol as either moved or partially moved (for non-copy types).
         if update_memory_info and not copies:

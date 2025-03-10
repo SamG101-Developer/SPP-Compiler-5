@@ -38,7 +38,7 @@ class FunctionImplementationAst(Ast):
         # Check there is no code after a "ret" statement, as this is unreachable.
         for i, member in self.members.enumerate():
             if isinstance(member, (Asts.LoopControlFlowStatementAst, Asts.RetStatementAst)) and member is not self.members[-1]:
-                raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1])
+                raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1]).scopes(scope_manager.current_scope)
 
         # Analyse each member of the class implementation.
         for m in self.members:

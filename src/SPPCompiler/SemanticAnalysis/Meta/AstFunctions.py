@@ -170,7 +170,7 @@ class AstFunctions:
             if parameter_set_1.zip(parameter_set_2).all(lambda p1p2: parameter_comp(*p1p2, existing_scope, this_scope)): return existing_function
 
     @staticmethod
-    def name_function_arguments(arguments: Seq[Asts.FunctionCallArgumentAst], parameters: Seq[Asts.FunctionParameterAst]) -> None:
+    def name_function_arguments(arguments: Seq[Asts.FunctionCallArgumentAst], parameters: Seq[Asts.FunctionParameterAst], scope_manager: ScopeManager) -> None:
 
         # Get the argument names and parameter names, and check for variadic parameters.
         argument_names = arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst).map_attr("name")
@@ -179,7 +179,7 @@ class AstFunctions:
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
-            raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_argument_names[0], "argument")
+            raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_argument_names[0], "argument").scopes(scope_manager.current_scope)
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
@@ -203,7 +203,7 @@ class AstFunctions:
                 arguments.replace(unnamed_argument, named_argument, 1)
 
     @staticmethod
-    def name_generic_arguments(arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], owner_type: Asts.TypeAst = None) -> None:
+    def name_generic_arguments(arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], scope_manager: ScopeManager, owner_type: Asts.TypeAst = None) -> None:
 
         # Special case for tuples to prevent infinite-recursion.
         if owner_type and owner_type.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
@@ -216,7 +216,7 @@ class AstFunctions:
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
-            raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_argument_names[0], "argument")
+            raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_argument_names[0], "argument").scopes(scope_manager.current_scope)
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
@@ -307,17 +307,17 @@ class AstFunctions:
         # Check each generic argument name only has one unique inferred type.
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
             if mismatch := Seq(inferred_generic_arguments.copy()[1:].values()).find(lambda t: not t.symbolic_eq(inferred_generic_argument_value[0], scope_manager.current_scope)):
-                raise SemanticErrors.GenericParameterInferredConflictInferredError().add(inferred_generic_argument_name, inferred_generic_argument_value[0], mismatch)
+                raise SemanticErrors.GenericParameterInferredConflictInferredError().add(inferred_generic_argument_name, inferred_generic_argument_value[0], mismatch).scopes(scope_manager.current_scope)
 
         # Check inferred generics aren't passed explicitly.
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
             if inferred_generic_argument_name in explicit_generic_arguments and inferred_generic_argument_value.length > 1:
-                raise SemanticErrors.GenericParameterInferredConflictExplicitError().add(inferred_generic_argument_name, inferred_generic_argument_value[0], explicit_generic_arguments[inferred_generic_argument_name])
+                raise SemanticErrors.GenericParameterInferredConflictExplicitError().add(inferred_generic_argument_name, inferred_generic_argument_value[0], explicit_generic_arguments[inferred_generic_argument_name]).scopes(scope_manager.current_scope)
 
         # Check all the generic parameters have been inferred.
         for generic_parameter_name in generic_parameters.map_attr("name"):
             if generic_parameter_name not in inferred_generic_arguments:
-                raise SemanticErrors.GenericParameterNotInferredError().add(generic_parameter_name, owner)
+                raise SemanticErrors.GenericParameterNotInferredError().add(generic_parameter_name, owner).scopes(scope_manager.current_scope)
 
         # Create the inferred generic arguments.
         inferred_generic_arguments = {k: v[0] for k, v in inferred_generic_arguments.items()}

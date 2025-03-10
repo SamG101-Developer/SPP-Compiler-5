@@ -30,7 +30,7 @@ class GenericCompArgumentUnnamedAst(Ast, Ordered):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.value)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.value).scopes(scope_manager.current_scope)
 
         # Analyse the value of the unnamed argument.
         self.value.analyse_semantics(scope_manager, **kwargs)

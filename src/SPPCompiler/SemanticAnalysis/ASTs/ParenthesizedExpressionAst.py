@@ -36,7 +36,7 @@ class ParenthesizedExpressionAst(Ast, TypeInferrable):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the expression.
         if isinstance(self.expression, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.expression)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.expression).scopes(scope_manager.current_scope)
 
         # Analyse the expression.
         self.expression.analyse_semantics(scope_manager, **kwargs)

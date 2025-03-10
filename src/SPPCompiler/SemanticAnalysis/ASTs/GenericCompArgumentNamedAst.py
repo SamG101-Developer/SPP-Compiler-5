@@ -45,7 +45,7 @@ class GenericCompArgumentNamedAst(Ast, Ordered):
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.value)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.value).scopes(scope_manager.current_scope)
 
         # Analyse the value of the named argument.
         self.value.analyse_semantics(scope_manager, **kwargs)

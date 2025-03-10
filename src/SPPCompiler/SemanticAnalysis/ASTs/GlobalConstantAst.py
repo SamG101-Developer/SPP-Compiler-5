@@ -49,7 +49,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Ensure the old type does not have a convention.
         if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
-            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "global constant type")
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "global constant type").scopes(scope_manager.current_scope)
 
         # Create a type symbol for this type in the current scope (class / function).
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
@@ -64,7 +64,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.value)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.value).scopes(scope_manager.current_scope)
 
         # Analyse the type and value.
         self.type.analyse_semantics(scope_manager, **kwargs)
@@ -75,7 +75,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
         given_type = self.value.infer_type(scope_manager, **kwargs)
 
         if not expected_type.symbolic_eq(given_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(self.type, expected_type, self.value, given_type)
+            raise SemanticErrors.TypeMismatchError().add(self.type, expected_type, self.value, given_type).scopes(scope_manager.current_scope)
 
 
 __all__ = ["GlobalConstantAst"]
