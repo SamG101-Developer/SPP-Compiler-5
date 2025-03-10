@@ -85,6 +85,24 @@ class MemoryInfo:
             return Asts.ConventionRefAst()
         return Asts.ConventionMovAst()
 
+    def __json__(self) -> dict:
+        # Dump the MemoryInfo as a JSON object.
+        return {
+            "ast_initialization": str(self.ast_initialization),
+            "ast_moved": str(self.ast_moved),
+            "ast_borrowed": str(self.ast_borrowed),
+            "ast_partially_moved": self.ast_partially_moved.map(str),
+            "ast_pinned": self.ast_pinned.map(str),
+            "is_borrow_mut": self.is_borrow_mut,
+            "is_borrow_ref": self.is_borrow_ref,
+            "ast_comptime_const": str(self.ast_comptime_const),
+            "initialization_counter": self.initialization_counter,
+            "is_inconsistently_initialized": self.is_inconsistently_initialized,
+            "is_inconsistently_moved": self.is_inconsistently_moved,
+            "is_inconsistently_partially_moved": self.is_inconsistently_partially_moved,
+            "is_inconsistently_pinned": self.is_inconsistently_pinned,
+            "pin_target": self.pin_target.map(str)}
+
 
 class AstMemoryHandler:
     @staticmethod
