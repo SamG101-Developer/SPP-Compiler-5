@@ -22,7 +22,9 @@ class TestLoopConditionIterableAst(CustomTestCase):
     def test_valid_loop_condition_iterable(self):
         """
         fun f(y: &mut std::Str) -> std::Void {
-            let v = std::Vec[std::Str]()
+            let mut v = std::Vec[std::Str]()
+            pin v
+
             loop mut x in v.iter_mut() {
                 x = y
             }
@@ -34,6 +36,8 @@ class TestLoopConditionIterableAst(CustomTestCase):
         """
         fun f() -> std::Void {
             let v = std::Vec[std::Str]()
+            pin v
+
             loop mut x in v.iter_mov() {
                 x = "hello"
             }
@@ -44,7 +48,9 @@ class TestLoopConditionIterableAst(CustomTestCase):
     def test_invalid_loop_assign_to_iterator(self):
         """
         fun f() -> std::Void {
-            let v = std::Vec[std::Str]()
+            let mut v = std::Vec[std::Str]()
+            pin v
+
             loop mut x in v.iter_mut() {
                 x = "hello"
             }
@@ -55,7 +61,9 @@ class TestLoopConditionIterableAst(CustomTestCase):
     def test_valid_loop_assign_to_iterator(self):
         """
         fun f(s: &mut std::Str) -> std::Void {
-            let v = std::Vec[std::Str]()
+            let mut v = std::Vec[std::Str]()
+            pin v
+
             loop mut x in v.iter_mut() {
                 x = s
             }

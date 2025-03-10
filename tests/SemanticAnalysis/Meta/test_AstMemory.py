@@ -395,22 +395,44 @@ class TestAstMemory(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_coroutine_yielded_value_use(self):
+    def test_invalid_coroutine_yielded_borrowed_value_use(self):
         """
-        cor foo() -> std::Gen[&std::BigInt] {
-            gen &1
+        cls MyType[T] { }
+        sup [T] MyType[T] {
+            cor custom_iter_mut(&mut self) -> std::Gen[&mut T, std::Bool] { }
         }
 
         fun test() -> std::Void {
-            let coro = foo()
-            let x = coro.res()
-            let y = coro.res()
+            let mut coro = MyType[std::BigInt]()
+            pin coro
+
+            let iter = coro.custom_iter_mut()
+            let x = iter.res(false)
+            let y = iter.res(false)
             let z = x + y
         }
         """
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_use_of_moving_coro_during_pin_from_pinned_borrow(self):
+    def test_invalid_coroutine_yielded_borrowed_value_use_2(self):
+        """
+        cls MyType[T] { }
+        sup [T] MyType[T] {
+            cor custom_iter_mut(&mut self) -> std::Gen[&mut T, std::Bool] { }
+        }
+
+        fun test() -> std::Void {
+            let mut coro = MyType[std::BigInt]()
+            pin coro
+
+            let x = coro.custom_iter_mut().res(false)
+            let y = coro.custom_iter_mut().res(false)
+            let a = x
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_use_of_moving_coro_during_inherited_pin_status_from_pinned_borrow(self):
         """
         cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt] {
             gen &1
@@ -427,7 +449,7 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_use_of_coroutine_post_invalidation(self):
         """
-        cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt] {
+        cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt, std::Bool] {
             gen &1
         }
 
@@ -436,7 +458,7 @@ class TestAstMemory(CustomTestCase):
             pin x
             let coro = foo(&x)
             rel x
-            let y = coro.res
+            let y = coro.res(false)
         }
         """
 
@@ -479,5 +501,68 @@ class TestAstMemory(CustomTestCase):
             let x = 123
             pin x
             async foo(&x)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_mut_borrow_usage_invalidated(self):
+        """
+        cls MyType {
+            x: std::BigInt
+        }
+
+        sup MyType {
+            cor custom_iter_mut(&mut self) -> std::Gen[&mut std::BigInt, std::Bool] { }
+        }
+
+        fun f() -> std::Void {
+            let mut my_type = MyType(x=123)
+            pin my_type
+
+            let generator1 = my_type.custom_iter_mut()
+            let generator2 = my_type.custom_iter_mut()
+            let a = generator1.res(false)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_mut_borrow_usage_invalidated(self):
+        """
+        cls MyType {
+            x: std::BigInt
+        }
+
+        sup MyType {
+            cor custom_iter_mut(&mut self) -> std::Gen[&mut std::BigInt, std::Bool] { }
+        }
+
+        fun f() -> std::Void {
+            let mut my_type = MyType(x=123)
+            pin my_type
+
+            let generator1 = my_type.custom_iter_mut()
+            let generator2 = my_type.custom_iter_mut()
+            let a = generator2.res(false)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_ref_borrow_usage_invalidated(self):
+        """
+        cls MyType {
+            x: std::BigInt
+        }
+
+        sup MyType {
+            cor custom_iter_ref(&self) -> std::Gen[&std::BigInt, std::Bool] { }
+        }
+
+        fun f() -> std::Void {
+            let my_type = MyType(x=123)
+            pin my_type
+
+            let generator1 = my_type.custom_iter_ref()
+            let generator2 = my_type.custom_iter_ref()
+            let a = generator2.res(false)
         }
         """
