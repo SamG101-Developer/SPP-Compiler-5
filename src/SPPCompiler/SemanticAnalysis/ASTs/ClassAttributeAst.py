@@ -51,23 +51,28 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
             a.pre_process(self)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
+        # Ensure the attribute type does not have a convention.
+        if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "attribute type")
+
         # Create a variable symbol for this attribute in the current scope (class).
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         scope_manager.current_scope.add_symbol(symbol)
 
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
+        # Type checks must be done before semantic analysis, as other ASTs may use this attribute prior to its analysis.
         self.type.analyse_semantics(scope_manager)
+
+        # Ensure the attribute type is not void.
+        void_type = CommonTypes.Void(self.pos)
+        if self.type.symbolic_eq(void_type, scope_manager.current_scope):
+            raise SemanticErrors.TypeVoidInvalidUsageError().add(self.type)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
 
         # Analyse the semantics of the annotations and the type of the attribute.
         for a in self.annotations:
             a.analyse_semantics(scope_manager, **kwargs)
-
-        # Ensure the attribute type is not void.
-        void_type = CommonTypes.Void(self.pos)
-        if self.type.symbolic_eq(void_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeVoidInvalidUsageError().add(self.type)
 
 
 __all__ = ["ClassAttributeAst"]

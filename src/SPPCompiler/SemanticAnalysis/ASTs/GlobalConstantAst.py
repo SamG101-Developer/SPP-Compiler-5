@@ -7,7 +7,6 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -48,6 +47,10 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
             a.pre_process(self)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
+        # Ensure the old type does not have a convention.
+        if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "global constant type")
+
         # Create a type symbol for this type in the current scope (class / function).
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         symbol.memory_info.ast_pinned.append(self.name)

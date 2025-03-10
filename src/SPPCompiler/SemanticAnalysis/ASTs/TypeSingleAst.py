@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
@@ -98,7 +98,7 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
         return any(g == Asts.GenericIdentifierAst.from_type(generic_name) for g in self)
 
-    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
+    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, debug: bool = False) -> bool:
         that_scope = that_scope or self_scope
         that_scope, that = that.split_to_scope_and_type(that_scope)
 
@@ -106,10 +106,19 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
         self_symbol = self_scope.get_symbol(self.name)
         that_symbol = that_scope.get_symbol(that.name)
 
+        # Assume if the symbol cannot be found, its a generic (should have been analysed before-hand).
+        # if self_symbol is None or that_symbol is None:
+        #     return True
+
+        if debug:
+            print("-" * 100)
+            print(self, self_scope, self_symbol)
+            print(that, that_scope, that_symbol)
+
         # Variant type: one of the generic arguments must match the type.
         if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(), self_scope, that_scope, check_variant=False):
             composite_types = self_symbol.name.generic_argument_group.arguments[0].value.type_parts()[0].generic_argument_group.arguments
-            if composite_types.any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope)):
+            if composite_types.any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope, debug=debug)):
                 return True
 
         # # Intersections type: all the generic arguments must be superimposed over the type.
@@ -158,13 +167,16 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
                 new_scope.type_symbol.old_type = new_scope.type_symbol.old_type.sub_generics(self.name.generic_argument_group.arguments)
                 new_scope.type_symbol.old_type.analyse_semantics(scope_manager, **kwargs)
 
-    def infer_type(self, scope_manager: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> InferredTypeInfo:
+    def infer_type(self, scope_manager: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or scope_manager.current_scope
         type_symbol = type_scope.get_symbol(self.name)
-        return InferredTypeInfo(type_symbol.fq_name)
+        return type_symbol.fq_name
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         return scope, self
+
+    def get_convention(self) -> Optional[Asts.ConventionAst]:
+        return Asts.ConventionMovAst(pos=self.pos)
 
 
 __all__ = ["TypeSingleAst"]

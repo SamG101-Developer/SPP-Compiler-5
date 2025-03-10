@@ -63,6 +63,14 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         super().pre_process(context)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager, visibility: Optional[AstVisibility] = None) -> None:
+        # Ensure the old type does not have a convention.
+        if type(c := self.old_type.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.old_type, "use statement old type")
+
+        # Ensure the new type does not have a convention.
+        if type(c := self.new_type.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.new_type, "use statement new type")
+
         # Create a class ast for the aliased type, and generate it.
         cls_ast = AstMutation.inject_code(f"cls {self.new_type} {{}}", SppParser.parse_class_prototype)
         cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)

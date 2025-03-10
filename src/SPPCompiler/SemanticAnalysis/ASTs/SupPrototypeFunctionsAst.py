@@ -44,6 +44,10 @@ class SupPrototypeFunctionsAst(Ast):
         scope_manager.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
 
+        # Ensure the superimposition type does not have a convention.
+        if type(c := self.name.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.name, "superimposition type")
+
         # Generate the symbols for the generic parameter group, and the self type.
         for p in self.generic_parameter_group.parameters:
             p.generate_top_level_scopes(scope_manager)

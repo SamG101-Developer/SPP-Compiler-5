@@ -47,6 +47,10 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
         return "".join(string)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
+        # Ensure the type does not have a convention.
+        if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "comp generic parameter type")
+
         # Create a variable symbol for this constant in the current scope (class / function).
         symbol = VariableSymbol(
             name=Asts.IdentifierAst.from_type(self.name),

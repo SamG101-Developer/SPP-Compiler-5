@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -43,6 +44,10 @@ class GenericCompParameterVariadicAst(Ast, Ordered):
         return "".join(string)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
+        # Ensure the type does not have a convention.
+        if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "comp generic parameter type")
+
         # Create a variable symbol for this constant in the current scope (class / function).
         symbol = VariableSymbol(
             name=Asts.IdentifierAst.from_type(self.name),
