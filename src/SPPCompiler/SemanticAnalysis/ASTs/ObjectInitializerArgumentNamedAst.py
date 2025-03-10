@@ -30,6 +30,10 @@ class ObjectInitializerArgumentNamedAst(Ast, TypeInferrable):
             self.value.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Infer the type of the value of the argument.
         return self.value.infer_type(scope_manager, **kwargs)

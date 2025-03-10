@@ -35,6 +35,12 @@ class ObjectInitializerArgumentGroupAst(Ast):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
+    # TODO: make the following @property methods
+
     def get_arg_val(self, argument: Asts.ObjectInitializerArgumentAst) -> Asts.ExpressionAst:
         return argument.value if isinstance(argument, Asts.ObjectInitializerArgumentNamedAst) else argument.name
 

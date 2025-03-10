@@ -37,6 +37,10 @@ class LetStatementInitializedAst(Ast, TypeInferrable):
             self.value.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
         return CommonTypes.Void(self.pos)

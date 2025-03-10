@@ -21,5 +21,9 @@ class ConventionRefAst(Ast):
         # Print the AST with auto-formatting.
         return self.tok_borrow.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_borrow.pos_end
+
 
 __all__ = ["ConventionRefAst"]

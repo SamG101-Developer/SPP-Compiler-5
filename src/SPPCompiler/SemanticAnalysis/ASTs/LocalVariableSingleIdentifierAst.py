@@ -33,6 +33,10 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction):
             (" " + self.alias.print(printer)) if self.alias is not None else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.alias.pos_end if self.alias else self.name.pos_end
+
     @functools.cached_property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return Seq([self.name])

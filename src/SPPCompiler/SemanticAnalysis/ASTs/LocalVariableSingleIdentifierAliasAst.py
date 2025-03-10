@@ -16,6 +16,10 @@ class LocalVariableSingleIdentifierAliasAst(Ast):
     def __post_init__(self) -> None:
         assert self.name
 
+    @property
+    def pos_end(self) -> int:
+        return self.name.pos_end
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

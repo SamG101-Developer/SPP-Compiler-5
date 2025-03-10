@@ -37,6 +37,10 @@ class LoopExpressionAst(Ast, TypeInferrable):
             self.else_block.print(printer) if self.else_block else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.else_block.pos_end if self.else_block else self.body.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Get the loop type set by exit expressions inside the loop.
         loop_type = self._loop_type_info.get(self._loop_level, (None, None))[1]

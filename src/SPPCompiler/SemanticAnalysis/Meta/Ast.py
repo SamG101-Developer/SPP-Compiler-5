@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class Ast(CompilerStages):
-    pos: int = field(default=-1)
+    pos: int = field(default=0)
 
     _ctx: PreProcessingContext = field(default=None, kw_only=True, repr=False)
     _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
@@ -23,6 +23,10 @@ class Ast(CompilerStages):
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         ...
+
+    @property
+    def pos_end(self) -> int:
+        return 0
 
     def __eq__(self, other: Ast) -> bool:
         return isinstance(other, Ast)

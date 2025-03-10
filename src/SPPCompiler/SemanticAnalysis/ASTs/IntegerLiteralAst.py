@@ -48,7 +48,7 @@ class IntegerLiteralAst(Ast, TypeInferrable):
         return isinstance(other, IntegerLiteralAst) and self.tok_sign == other.tok_sign and self.value.token_data == other.value.token_data and self.type == other.type
 
     @staticmethod
-    def from_token(value: Asts.TokenAst, pos: int = -1) -> IntegerLiteralAst:
+    def from_token(value: Asts.TokenAst, pos: int = 0) -> IntegerLiteralAst:
         return IntegerLiteralAst(pos, None, value, None)
 
     @staticmethod
@@ -64,6 +64,11 @@ class IntegerLiteralAst(Ast, TypeInferrable):
             self.value.print(printer),
             self.type.print(printer) if self.type else ""]
         return "".join(string)
+
+    @property
+    def pos_end(self) -> int:
+        print("INT", self.pos, self.value.pos_end)
+        return self.type.pos_end if self.type else self.value.pos_end
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Create an integer type based on the (optional) type postfix.

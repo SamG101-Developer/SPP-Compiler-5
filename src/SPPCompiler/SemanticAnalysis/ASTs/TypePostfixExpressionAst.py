@@ -20,6 +20,10 @@ class TypePostfixExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
     def print(self, printer: AstPrinter) -> str:
         return f"{self.lhs}{self.op}"
 
+    @property
+    def pos_end(self) -> int:
+        return self.op.pos_end
+
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         if isinstance(self.op, Asts.TypePostfixOperatorOptionalTypeAst):
             return CommonTypes.Opt(self.lhs).fq_type_parts()

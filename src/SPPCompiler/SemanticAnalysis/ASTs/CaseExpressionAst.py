@@ -48,6 +48,10 @@ class CaseExpressionAst(Ast, TypeInferrable):
             self.branches.print(printer, "\n")]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.branches[-1].pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # The checks here only apply when assigning from this expression.
         branch_inferred_types = self.branches.map(lambda x: x.infer_type(scope_manager))

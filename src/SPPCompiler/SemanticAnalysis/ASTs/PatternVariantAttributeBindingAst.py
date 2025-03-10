@@ -28,6 +28,10 @@ class PatternVariantAttributeBindingAst(Ast, PatternMapping):
             self.value.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableAttributeBindingAst:
         # Convert the attribute binding into a local variable attribute binding.
         return Asts.LocalVariableAttributeBindingAst(self.pos, self.name, self.tok_assign, self.value.convert_to_variable(**kwargs))

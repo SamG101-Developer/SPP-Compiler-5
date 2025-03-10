@@ -35,6 +35,10 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
             self.field.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.field.pos_end
+
     def is_runtime_access(self) -> bool:
         return self.tok_access.token_type == SppTokenType.TkDot
 

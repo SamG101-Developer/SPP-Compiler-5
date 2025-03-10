@@ -36,6 +36,10 @@ class GenericCompArgumentNamedAst(Ast, Ordered):
             self.value.print(printer)]
         return " ".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
         return GenericCompArgumentNamedAst(name=Asts.TypeSingleAst.from_identifier(symbol.name), value=symbol.memory_info.ast_comptime_const)

@@ -34,6 +34,10 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
             self.fold_token.print(printer) if self.fold_token else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.function_argument_group.pos_end
+
     def determine_overload(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
         # function's name and its owner type/namespace.

@@ -33,6 +33,10 @@ class InnerScopeAst(Ast, TypeInferrable):
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_brace.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
 
         # Return the last member's inferred type, if there are any members.

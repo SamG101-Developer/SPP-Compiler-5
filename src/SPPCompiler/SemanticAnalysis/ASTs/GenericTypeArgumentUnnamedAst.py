@@ -26,6 +26,10 @@ class GenericTypeArgumentUnnamedAst(Ast, Ordered):
         # Print the AST with auto-formatting.
         return self.value.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the value of the generic type argument.
         convention = self.value.get_convention()

@@ -36,6 +36,10 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
             self.value.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     @staticmethod
     def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:
         value = symbol.scope.type_symbol.fq_name if symbol.scope else symbol.scope

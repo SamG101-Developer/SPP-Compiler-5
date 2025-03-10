@@ -27,6 +27,10 @@ class GenericCompArgumentUnnamedAst(Ast, Ordered):
         # Print the AST with auto-formatting.
         return self.value.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):

@@ -30,6 +30,10 @@ class LocalVariableAttributeBindingAst(Ast, VariableNameExtraction):
             self.value.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     @functools.cached_property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.value.extract_names

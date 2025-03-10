@@ -54,6 +54,10 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
             self.body.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.body.pos_end
+
     def _generate_symbols(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol

@@ -39,6 +39,10 @@ class FunctionCallArgumentGroupAst(Ast):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
     def get_named(self) -> Seq[Asts.FunctionCallArgumentNamedAst]:
         # Get all the named function call arguments.
         return self.arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst)

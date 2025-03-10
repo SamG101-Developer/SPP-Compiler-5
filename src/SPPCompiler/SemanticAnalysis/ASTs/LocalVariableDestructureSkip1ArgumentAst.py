@@ -20,6 +20,10 @@ class LocalVariableDestructureSkip1ArgumentAst(Ast, VariableNameExtraction):
         # Print the AST with auto-formatting.
         return self.tok_underscore.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_underscore.pos_end
+
     @functools.cached_property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return Seq()

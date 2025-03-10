@@ -43,6 +43,10 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
             self.type.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.type.pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         super().pre_process(context)
 

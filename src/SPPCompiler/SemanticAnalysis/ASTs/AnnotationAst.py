@@ -55,6 +55,10 @@ class AnnotationAst(Ast):
             self.name.print(printer) + " "]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.name.pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
         super().pre_process(context)

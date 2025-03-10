@@ -49,6 +49,10 @@ class SupPrototypeExtensionAst(Ast):
             self.body.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.body.pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         if self.name.type_parts()[0].value[0] == "$": return
         super().pre_process(context)

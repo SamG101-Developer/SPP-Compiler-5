@@ -38,6 +38,10 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             self.rhs.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.rhs.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
         from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType

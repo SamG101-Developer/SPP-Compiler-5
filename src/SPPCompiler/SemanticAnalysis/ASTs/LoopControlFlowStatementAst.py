@@ -28,6 +28,10 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
             self.skip_or_expr.print(printer) if self.skip_or_expr else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.skip_or_expr.pos_end if self.skip_or_expr else self.tok_seq_exit[-1].pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
         return CommonTypes.Void(self.pos)

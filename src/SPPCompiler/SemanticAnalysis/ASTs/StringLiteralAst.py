@@ -20,6 +20,10 @@ class StringLiteralAst(Ast, TypeInferrable):
         # Print the AST with auto-formatting.
         return self.value.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Create the standard "std::Str" type.
         return CommonTypes.Str(self.pos)

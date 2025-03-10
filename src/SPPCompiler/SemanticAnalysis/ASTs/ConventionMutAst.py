@@ -25,5 +25,9 @@ class ConventionMutAst(Ast):
             self.tok_mut.print(printer) + " "]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_mut.pos_end
+
 
 __all__ = ["ConventionMutAst"]

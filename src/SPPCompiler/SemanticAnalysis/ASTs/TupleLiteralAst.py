@@ -28,6 +28,10 @@ class TupleLiteralAst(Ast, TypeInferrable):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Create the standard "std::Tup[..Items]" type, with generic items.
         inner_types = self.elements.map(lambda element: element.infer_type(scope_manager, **kwargs))

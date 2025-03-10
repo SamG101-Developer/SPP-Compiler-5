@@ -46,6 +46,10 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
             self.default.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.default.pos_end
+
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Ensure the type does not have a convention.
         if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:

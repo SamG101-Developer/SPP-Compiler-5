@@ -21,6 +21,10 @@ class GenericArgumentGroupAst(Ast):
     arguments: Seq[Asts.GenericArgumentAst] = field(default_factory=Seq)
     tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightSquareBracket))
 
+    def __post_init__(self) -> None:
+        self.tok_left_bracket.pos = self.tok_left_bracket.pos or self.pos
+        self.tok_right_bracket.pos = self.tok_right_bracket.pos or self.pos
+
     def __copy__(self) -> GenericArgumentGroupAst:
         return GenericArgumentGroupAst(arguments=self.arguments.copy())
 
@@ -31,22 +35,6 @@ class GenericArgumentGroupAst(Ast):
     def __getitem__(self, item: str) -> Optional[Asts.GenericArgumentAst]:
         assert isinstance(item, str)
         return self.arguments.find(lambda a: Asts.IdentifierAst.from_type(a.name).value == item)
-
-    @property
-    def type_arguments(self) -> Seq[Asts.GenericTypeArgumentAst]:
-        return self.arguments.filter_to_type(*Asts.GenericTypeArgumentAst.__args__)
-
-    @property
-    def comp_arguments(self) -> Seq[Asts.GenericCompArgumentAst]:
-        return self.arguments.filter_to_type(*Asts.GenericCompArgumentAst.__args__)
-
-    @property
-    def named_arguments(self) -> Seq[Asts.GenericArgumentNamedAst]:
-        return self.arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__)
-
-    @property
-    def unnamed_arguments(self) -> Seq[Asts.GenericArgumentUnnamedAst]:
-        return self.arguments.filter_to_type(*Asts.GenericArgumentUnnamedAst.__args__)
 
     @staticmethod
     def from_parameter_group(parameters: Seq[Asts.GenericParameterAst]) -> GenericArgumentGroupAst:
@@ -70,11 +58,25 @@ class GenericArgumentGroupAst(Ast):
             string = []
         return "".join(string)
 
-    def get_named(self) -> Seq[Asts.GenericArgumentNamedAst]:
-        return self.arguments.filter_to_type(Asts.GenericCompArgumentNamedAst, Asts.GenericTypeArgumentNamedAst)
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_bracket.pos_end
 
-    def get_unnamed(self) -> Seq[Asts.GenericArgumentUnnamedAst]:
-        return self.arguments.filter_to_type(Asts.GenericCompArgumentUnnamedAst, Asts.GenericTypeArgumentUnnamedAst)
+    @property
+    def type_arguments(self) -> Seq[Asts.GenericTypeArgumentAst]:
+        return self.arguments.filter_to_type(*Asts.GenericTypeArgumentAst.__args__)
+
+    @property
+    def comp_arguments(self) -> Seq[Asts.GenericCompArgumentAst]:
+        return self.arguments.filter_to_type(*Asts.GenericCompArgumentAst.__args__)
+
+    @property
+    def named_arguments(self) -> Seq[Asts.GenericArgumentNamedAst]:
+        return self.arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__)
+
+    @property
+    def unnamed_arguments(self) -> Seq[Asts.GenericArgumentUnnamedAst]:
+        return self.arguments.filter_to_type(*Asts.GenericArgumentUnnamedAst.__args__)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate argument names.

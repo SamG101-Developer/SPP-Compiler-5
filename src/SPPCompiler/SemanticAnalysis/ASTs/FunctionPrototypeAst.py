@@ -80,6 +80,10 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             string.insert(0, owner.print(printer) + "::")
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.body.pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         super().pre_process(context)
 

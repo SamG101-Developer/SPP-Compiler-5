@@ -21,10 +21,14 @@ class UnaryExpressionOperatorAsyncAst(Ast, TypeInferrable):
         # Print the AST with auto-formatting.
         return self.tok_async.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_async.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, rhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # Async calls wrap the return type in a future type.
         inner_type = rhs.infer_type(scope_manager)
-        future_type = CommonTypes.Fut(inner_type)
+        future_type = CommonTypes.Fut(inner_type, self.tok_async.pos)
         future_type.analyse_semantics(scope_manager)
         return future_type
 

@@ -30,6 +30,10 @@ class PostfixExpressionAst(Ast, TypeInferrable):
             self.op.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.op.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Infer the type of the postfix operation being applied to the "lhs".
         return self.op.infer_type(scope_manager, lhs=self.lhs, **kwargs)

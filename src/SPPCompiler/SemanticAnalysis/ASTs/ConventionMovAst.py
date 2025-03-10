@@ -17,5 +17,9 @@ class ConventionMovAst(Ast):
         # Print the AST with auto-formatting.
         return ""
 
+    @property
+    def pos_end(self) -> int:
+        return self.pos
+
 
 __all__ = ["ConventionMovAst"]

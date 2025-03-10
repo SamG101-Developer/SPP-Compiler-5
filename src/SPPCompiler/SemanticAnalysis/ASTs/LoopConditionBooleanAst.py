@@ -24,6 +24,10 @@ class LoopConditionBooleanAst(Ast, TypeInferrable):
         # Print the AST with auto-formatting.
         return self.condition.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.condition.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Boolean conditions are inferred as "bool".
         return CommonTypes.Bool(self.pos)

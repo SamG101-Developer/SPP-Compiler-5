@@ -35,6 +35,10 @@ class CaseExpressionBranchAst(Ast, TypeInferrable):
             self.body.print(printer) if self.body else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.body.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Infer the type of the body.
         return self.body.infer_type(scope_manager, **kwargs)

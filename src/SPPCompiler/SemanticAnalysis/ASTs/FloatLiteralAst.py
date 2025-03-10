@@ -57,6 +57,10 @@ class FloatLiteralAst(Ast, TypeInferrable):
             self.type.print(printer) if self.type else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.type.pos_end if self.type else self.decimal_value.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Match the type against the allowed type postfixes (no postfix is BigDec).
         match self.type:

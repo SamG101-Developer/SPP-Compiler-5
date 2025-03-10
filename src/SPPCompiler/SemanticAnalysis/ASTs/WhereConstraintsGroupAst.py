@@ -24,5 +24,9 @@ class WhereConstraintsGroupAst(Ast):
             self.tok_right_brack.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_brack.pos_end
+
 
 __all__ = ["WhereConstraintsGroupAst"]

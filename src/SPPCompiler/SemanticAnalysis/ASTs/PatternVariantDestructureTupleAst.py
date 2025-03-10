@@ -26,6 +26,10 @@ class PatternVariantDestructureTupleAst(Ast, PatternMapping):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureTupleAst:
         # Convert the tuple destructuring into a local variable tuple destructuring.
         elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureTupleAst.__args__)

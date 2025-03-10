@@ -24,5 +24,9 @@ class WhereConstraintsAst(Ast):
             self.constraints.print(printer, ", ")]
         return " ".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.constraints.pos_end
+
 
 __all__ = ["WhereConstraintsAst"]

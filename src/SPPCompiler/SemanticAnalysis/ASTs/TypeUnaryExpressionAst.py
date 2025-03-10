@@ -30,6 +30,10 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
     def print(self, printer: AstPrinter) -> str:
         return f"{self.op}{self.rhs}"
 
+    @property
+    def pos_end(self) -> int:
+        return self.rhs.pos_end
+
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             return self.op.fq_type_parts() + self.rhs.fq_type_parts()

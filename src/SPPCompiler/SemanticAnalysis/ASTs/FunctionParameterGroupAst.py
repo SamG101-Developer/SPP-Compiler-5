@@ -37,6 +37,10 @@ class FunctionParameterGroupAst(Ast):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
     def get_self(self) -> Optional[Asts.FunctionParameterSelfAst]:
         # Get the "self" function parameter (if it exists).
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst

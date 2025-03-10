@@ -33,6 +33,10 @@ class ArrayLiteral0ElementAst(Ast, TypeInferrable):
             self.tok_right_bracket.print(printer)]
         return " ".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_bracket.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Create the standard "std::Arr[T, n: BigNum]" type, with generic items.
         size = Asts.IntegerLiteralAst.from_token(self.size, self.size.pos)

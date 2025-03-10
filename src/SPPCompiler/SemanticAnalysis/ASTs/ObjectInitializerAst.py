@@ -30,6 +30,10 @@ class ObjectInitializerAst(Ast, TypeInferrable):
             self.object_argument_group.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.object_argument_group.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Use the type of the object initializer.
         return self.class_type

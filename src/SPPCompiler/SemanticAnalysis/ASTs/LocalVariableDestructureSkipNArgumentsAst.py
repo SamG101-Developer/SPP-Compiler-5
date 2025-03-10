@@ -25,6 +25,10 @@ class LocalVariableDestructureSkipNArgumentsAst(Ast, VariableNameExtraction):
             self.binding.print(printer) if self.binding is not None else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.binding.pos_end if self.binding else self.tok_variadic.pos_end
+
     @functools.cached_property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.binding.extract_names if self.binding else Seq()

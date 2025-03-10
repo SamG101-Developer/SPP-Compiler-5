@@ -45,6 +45,10 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
             self.default.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.default.pos_end
+
     @functools.cached_property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.variable.extract_names

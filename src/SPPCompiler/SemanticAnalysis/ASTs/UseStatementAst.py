@@ -53,6 +53,10 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
             self.old_type.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.old_type.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
         return CommonTypes.Void(self.pos)

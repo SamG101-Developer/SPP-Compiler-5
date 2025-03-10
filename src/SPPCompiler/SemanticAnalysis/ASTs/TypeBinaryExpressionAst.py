@@ -15,6 +15,10 @@ class TypeBinaryExpressionAst(Ast):
     op: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst())
     rhs: Asts.TypeAst = field(default=None)
 
+    @property
+    def pos_end(self) -> int:
+        return self.rhs.pos_end
+
     def convert(self) -> Asts.TypeSingleAst:
         match self.op.token_type:
             case SppTokenType.KwOr:

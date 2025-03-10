@@ -22,5 +22,9 @@ class TypeUnaryOperatorBorrowAst(Ast, TypeInferrable):
     def print(self, printer: AstPrinter) -> str:
         return self.convention.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.convention.pos_end
+
 
 __all__ = ["TypeUnaryOperatorBorrowAst"]

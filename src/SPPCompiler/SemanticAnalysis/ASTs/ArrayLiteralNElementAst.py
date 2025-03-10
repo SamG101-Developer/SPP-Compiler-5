@@ -32,6 +32,10 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable):
             self.tok_right_bracket.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_bracket.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Create the standard "std::Arr[T, n: BigNum]" type, with generic items.
         size = Asts.IntegerLiteralAst.from_python_literal(self.elements.length)
@@ -48,10 +52,10 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable):
                 raise SemanticErrors.ExpressionTypeInvalidError().add(element).scopes(scope_manager.current_scope)
 
         # Check all elements have the same type as the 0th element.
-        element_types = self.elements.map(lambda e: e.infer_type(scope_manager, **kwargs))
-        for element_type in element_types[1:]:
-            if not element_types[0].symbolic_eq(element_type, scope_manager.current_scope):
-                raise SemanticErrors.ArrayElementsDifferentTypesError().add(element_types[0], element_type).scopes(scope_manager.current_scope)
+        element_types_and_ast = self.elements.map(lambda e: e.infer_type(scope_manager, **kwargs)).zip(self.elements)
+        for element_type, element_ast in element_types_and_ast[1:]:
+            if not element_types_and_ast[0][0].symbolic_eq(element_type, scope_manager.current_scope):
+                raise SemanticErrors.ArrayElementsDifferentTypesError().add(element_types_and_ast[0][1], element_types_and_ast[0][0], element_ast, element_type).scopes(scope_manager.current_scope)
 
         # Check all elements are "owned", and not "borrowed".
         for element in self.elements:

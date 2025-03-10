@@ -21,6 +21,10 @@ class PatternVariantLiteralAst(Ast, PatternMapping):
         # Print the AST with auto-formatting.
         return self.literal.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.literal.pos_end
+
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableSingleIdentifierAst:
         # Convert the dummy single identifier into a local variable single identifier.
         return Asts.LocalVariableSingleIdentifierAst(pos=self.pos, name=Asts.IdentifierAst(self.pos, f"$l{id(self)}"))

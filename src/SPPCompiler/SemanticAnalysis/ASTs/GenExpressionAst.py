@@ -34,6 +34,10 @@ class GenExpressionAst(Ast, TypeInferrable):
             self.expression.print(printer) if self.expression else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.expression.pos_end if self.expression else self.tok_gen.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # The inferred type of a gen expression is the type of the value being sent back into the coroutine.
         generator_type = self._func_ret_type

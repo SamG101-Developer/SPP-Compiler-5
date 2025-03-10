@@ -38,10 +38,6 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
             else:
                 yield from g.value
 
-    @ast_printer_method
-    def print(self, printer: AstPrinter) -> str:
-        return f"{self.name}"
-
     @staticmethod
     def from_identifier(ast: Asts.IdentifierAst) -> TypeSingleAst:
         return TypeSingleAst(pos=ast.pos, name=Asts.GenericIdentifierAst.from_identifier(ast))
@@ -53,6 +49,14 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
     @staticmethod
     def from_token(ast: Asts.TokenAst) -> TypeSingleAst:
         return TypeSingleAst.from_identifier(ast=Asts.IdentifierAst(pos=ast.pos, value=ast.token_data))
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        return f"{self.name}"
+
+    @property
+    def pos_end(self) -> int:
+        return self.name.pos_end
 
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return Seq([self.name])

@@ -18,6 +18,10 @@ class PatternVariantDestructureSkip1ArgumentAst(Ast, PatternMapping):
         # Print the AST with auto-formatting.
         return self.tok_underscore.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_underscore.pos_end
+
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureSkip1ArgumentAst:
         # Convert the skip 1 argument destructuring into a local variable skip 1 argument destructuring.
         return Asts.LocalVariableDestructureSkip1ArgumentAst(self.pos, self.tok_underscore)

@@ -25,6 +25,10 @@ class PostfixExpressionOperatorNotKeywordAst(Ast, TypeInferrable):
             self.tok_not.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_not.pos_end
+
     def is_runtime_access(self) -> bool:
         return True
 

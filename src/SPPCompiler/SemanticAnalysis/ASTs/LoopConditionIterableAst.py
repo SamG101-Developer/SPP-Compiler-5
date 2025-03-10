@@ -39,6 +39,10 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
             self.iterable.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.iterable.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Infer the type from the iterable.
         return self.iterable.infer_type(scope_manager, **kwargs)

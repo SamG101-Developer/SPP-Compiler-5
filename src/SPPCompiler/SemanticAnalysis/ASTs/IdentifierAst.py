@@ -49,6 +49,10 @@ class IdentifierAst(Ast, TypeInferrable):
         # Print the internal string.
         return self.value
 
+    @property
+    def pos_end(self) -> int:
+        return self.pos + len(self.value)
+
     @staticmethod
     def from_type(type: Asts.TypeAst) -> Asts.IdentifierAst:
         return IdentifierAst.from_generic_identifier(type.type_parts()[0])

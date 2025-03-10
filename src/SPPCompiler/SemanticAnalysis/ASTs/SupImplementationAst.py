@@ -31,6 +31,10 @@ class SupImplementationAst(Ast):
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_brace.pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         for member in self.members: member.pre_process(context)
 

@@ -29,6 +29,10 @@ class RetStatementAst(Ast, TypeInferrable):
             self.expression.print(printer) if self.expression is not None else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.expression.pos_end if self.expression else self.tok_ret.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
         return CommonTypes.Void(self.pos)

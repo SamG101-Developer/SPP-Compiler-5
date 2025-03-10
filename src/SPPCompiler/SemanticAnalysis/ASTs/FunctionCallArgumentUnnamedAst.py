@@ -36,6 +36,10 @@ class FunctionCallArgumentUnnamedAst(Ast, Ordered, TypeInferrable):
             self.value.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         if self._type_from_self:
             return self._type_from_self

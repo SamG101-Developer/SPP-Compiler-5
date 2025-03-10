@@ -14,6 +14,9 @@ class GenericIdentifierAst(Ast):
     value: str = field(default="")
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default_factory=lambda: Asts.GenericArgumentGroupAst())
 
+    def __post_init__(self) -> None:
+        self.generic_argument_group.pos = self.generic_argument_group.pos or self.pos
+
     def __eq__(self, other: GenericIdentifierAst) -> bool:
         # Check both ASTs are the same type and have the same value and generic argument group.
         return isinstance(other, GenericIdentifierAst) and self.value == other.value and self.generic_argument_group == other.generic_argument_group
@@ -32,6 +35,10 @@ class GenericIdentifierAst(Ast):
             self.value,
             self.generic_argument_group.print(printer)]
         return "".join(string)
+
+    @property
+    def pos_end(self) -> int:
+        return self.generic_argument_group.pos_end
 
     @staticmethod
     def from_identifier(identifier: Asts.IdentifierAst) -> GenericIdentifierAst:

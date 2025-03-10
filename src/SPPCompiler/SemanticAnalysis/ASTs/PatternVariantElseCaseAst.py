@@ -25,6 +25,10 @@ class PatternVariantElseCaseAst(Ast):
             self.case_expression.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.case_expression.pos_end
+
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Analyse the case expression.
         self.case_expression.analyse_semantics(scope_manager, **kwargs)

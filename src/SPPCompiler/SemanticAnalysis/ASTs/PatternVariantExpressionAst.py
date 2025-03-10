@@ -22,6 +22,10 @@ class PatternVariantExpressionAst(Ast):
         # Print the AST with auto-formatting.
         return self.expression.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.expression.pos_end
+
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the expression.
         if isinstance(self.expression, (Asts.TokenAst, Asts.TypeAst)):

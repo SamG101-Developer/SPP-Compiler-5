@@ -19,6 +19,10 @@ class PostfixExpressionOperatorEarlyReturnAst(Ast, TypeInferrable):
         # Print the AST with auto-formatting.
         return self.tok_qst.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_qst.pos_end
+
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         raise NotImplementedError("PostfixExpressionOperatorEarlyReturnAst not implemented yet")
 

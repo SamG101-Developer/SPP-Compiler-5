@@ -31,6 +31,10 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
     @functools.cached_property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.elements.map(lambda e: e.extract_names).flat()

@@ -37,6 +37,10 @@ class GenericTypeParameterOptionalAst(Ast, Ordered):
             self.default.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.default.pos_end
+
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).
         symbol = TypeSymbol(name=self.name.type_parts()[0], type=None, is_generic=True)

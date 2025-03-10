@@ -17,6 +17,10 @@ class TypePostfixOperatorNestedTypeAst(Ast):
     def print(self, printer: AstPrinter) -> str:
         return f"{self.tok_dbl_colon}{self.name}"
 
+    @property
+    def pos_end(self) -> int:
+        return self.name.pos_end
+
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return self.name.fq_type_parts()
 

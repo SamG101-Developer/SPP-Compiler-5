@@ -42,6 +42,10 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
             self.value.print(printer) + "\n"]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.value.pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         # Pre-process the annotations.
         for a in self.annotations:

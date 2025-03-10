@@ -25,6 +25,10 @@ class WhereBlockAst(Ast):
             string = []
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.constraint_group.pos_end
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         ...
 

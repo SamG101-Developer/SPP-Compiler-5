@@ -37,6 +37,10 @@ class GenericParameterGroupAst(Ast):
             string = []
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_bracket.pos_end
+
     def get_req(self) -> Seq[Asts.GenericParameterRequiredAst]:
         # Get all the required generic parameters.
         return self.parameters.filter_to_type(Asts.GenericCompParameterRequiredAst, Asts.GenericTypeParameterRequiredAst)

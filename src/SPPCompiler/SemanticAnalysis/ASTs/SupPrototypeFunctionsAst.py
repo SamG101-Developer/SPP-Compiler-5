@@ -34,6 +34,10 @@ class SupPrototypeFunctionsAst(Ast):
             self.body.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.body.pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         # Pre-process the members of this superimposition.
         super().pre_process(context)
