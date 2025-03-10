@@ -177,6 +177,8 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
 
         # Set the overload to the only pass overload.
         self._overload = pass_overloads[0]
+        if self_param := self._overload[1].function_parameter_group.get_self():
+            self.function_argument_group.arguments[0].convention = self_param.convention
         return
 
     def infer_type(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
