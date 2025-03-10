@@ -142,13 +142,13 @@ class AstFunctions:
         # For overloads, the required parameters must have different types or conventions.
         if conflict_type == FunctionConflictCheckType.InvalidOverload:
             parameter_filter = lambda f: f.function_parameter_group.get_req()
-            parameter_comp   = lambda p1, p2, s1, s2: type(p1.convention) is type(p2.convention) and p1.type.symbolic_eq(p2.type, s1, s2)
+            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2)
             extra_check      = lambda f1, f2, s1, s2: f1.tok_fun == f2.tok_fun
 
         # For overrides, all parameters must be direct matches (type and convention). Todo: Self convention check
         else:
             parameter_filter = lambda f: f.function_parameter_group.get_non_self()
-            parameter_comp   = lambda p1, p2, s1, s2: type(p1.convention) is type(p2.convention) and p1.type.symbolic_eq(p2.type, s1, s2) and p1.variable.extract_names == p2.variable.extract_names and type(p1) is type(p2)
+            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.variable.extract_names == p2.variable.extract_names and type(p1) is type(p2)
             extra_check      = lambda f1, f2, s1, s2: f1.return_type.symbolic_eq(f2.return_type, s1, s2) and f1.tok_fun == f2.tok_fun and (type(f1.function_parameter_group.get_self().convention) is type(f2.function_parameter_group.get_self().convention) if f1.function_parameter_group.get_self() else True)
 
         # Check each parameter set for each overload: 1 match is a conflict.
