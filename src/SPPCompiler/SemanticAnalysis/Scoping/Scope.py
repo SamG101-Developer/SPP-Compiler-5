@@ -220,7 +220,7 @@ class Scope:
 
     @property
     def sup_types(self) -> Seq[Asts.TypeAst]:
-        return self.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map_attr("fq_name")
+        return self.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name)
 
     @property
     def sub_scopes(self) -> Seq[Scope]:

@@ -32,7 +32,7 @@ class AstFunctions:
         # Special function: ".next()" on generators.
         if isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.op, Asts.PostfixExpressionOperatorResKeywordAst):
             function_owner_type = lhs.lhs.infer_type(scope_manager)
-            function_name = Asts.IdentifierAst(lhs.op.pos, "next_")
+            function_name = Asts.IdentifierAst(lhs.op.pos, "resume")
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Runtime access into an object: "object.method()"
