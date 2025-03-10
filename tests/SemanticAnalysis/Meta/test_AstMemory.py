@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -405,8 +403,8 @@ class TestAstMemory(CustomTestCase):
 
         fun test() -> std::Void {
             let coro = foo()
-            let x = coro.step
-            let y = coro.step
+            let x = coro.res()
+            let y = coro.res()
             let z = x + y
         }
         """
@@ -438,7 +436,7 @@ class TestAstMemory(CustomTestCase):
             pin x
             let coro = foo(&x)
             rel x
-            let y = coro.step
+            let y = coro.res
         }
         """
 

@@ -1,17 +1,17 @@
 from tests._Utils import *
 
 
-class TestPostfixExpressionStepKeywordAst(CustomTestCase):
+class TestPostfixExpressionResKeywordAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ExpressionNotGeneratorError)
-    def test_invalid_postfix_expression_step_keyword_type_mismatch(self):
+    def test_invalid_postfix_expression_res_keyword_type_mismatch(self):
         """
         fun f() -> std::Void {
-            123.step()
+            123.res()
         }
         """
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_postfix_expression_step_borrow_invalidation_1(self):
+    def test_invalid_postfix_expression_res_borrow_invalidation_1(self):
         """
         cor x() -> std::Gen[Yield=std::BigInt, Send=std::BigInt] {
             let (a, b) = (1, 2)
@@ -21,14 +21,14 @@ class TestPostfixExpressionStepKeywordAst(CustomTestCase):
 
         fun f() -> std::Void {
             let generator = x()
-            let a = generator.step(0)
-            let b = generator.step(0)
+            let a = generator.res(0)
+            let b = generator.res(0)
             let c = a
         }
         """
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_postfix_expression_step_borrow_invalidation_2(self):
+    def test_invalid_postfix_expression_res_borrow_invalidation_2(self):
         """
         cor x() -> std::Gen[Yield=std::BigInt, Send=std::BigInt] {
             let (a, b) = (1, 2)
@@ -38,15 +38,15 @@ class TestPostfixExpressionStepKeywordAst(CustomTestCase):
 
         fun f() -> std::Void {
             let generator = x()
-            let a = generator.step(0)
-            let b = generator.step(0)
-            let c = generator.step(0)
+            let a = generator.res(0)
+            let b = generator.res(0)
+            let c = generator.res(0)
             let d = a
         }
         """
 
     @should_pass_compilation()
-    def test_valid_postfix_expression_step_keyword(self):
+    def test_valid_postfix_expression_res_keyword(self):
         """
         cor x() -> std::Gen[Yield=std::BigInt, Send=std::Str] {
             gen 1
@@ -54,12 +54,12 @@ class TestPostfixExpressionStepKeywordAst(CustomTestCase):
 
         fun f() -> std::Void {
             let generator = x()
-            let a = generator.step("hello")
+            let a = generator.res("hello")
         }
         """
 
     @should_pass_compilation()
-    def test_valid_postfix_expression_step_keyword_send_void(self):
+    def test_valid_postfix_expression_res_keyword_send_void(self):
         """
         cor x() -> std::Gen[Yield=std::BigInt, Send=std::Void] {
             gen 1
@@ -67,6 +67,6 @@ class TestPostfixExpressionStepKeywordAst(CustomTestCase):
 
         fun f() -> std::Void {
             let generator = x()
-            let a = generator.step()
+            let a = generator.res()
         }
         """

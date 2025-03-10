@@ -97,7 +97,7 @@ class TestOverloads(CustomTestCase):
         fun test() -> std::Void {
             let b = B[std::BigInt]()
             let coroutine = b.c(123)
-            coroutine.step()
+            coroutine.res()
         }
         """
 
