@@ -170,7 +170,7 @@ class AstTypeManagement:
             return TypeSymbol(name=generic_argument.name.type_parts()[0], type=true_value_symbol.type if true_value_symbol else None, scope=true_value_symbol.scope if true_value_symbol else None, is_generic=True)
 
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
-            return VariableSymbol(name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(scope_manager).type, is_generic=True)
+            return VariableSymbol(name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(scope_manager), is_generic=True)
 
         raise Exception(f"Unknown generic argument type: {type(generic_argument).__name__}")
 

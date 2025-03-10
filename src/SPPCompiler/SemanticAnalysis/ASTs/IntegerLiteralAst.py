@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -65,37 +65,37 @@ class IntegerLiteralAst(Ast, TypeInferrable):
             self.type.print(printer) if self.type else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Create an integer type based on the (optional) type postfix.
 
         # Match the type against the allowed type postfixes (no postfix is BigInt).
         match self.type:
             case None:
-                return InferredTypeInfo(CommonTypes.BigInt(self.pos))
+                return CommonTypes.BigInt(self.pos)
             case type if type.type_parts()[0].value == "i8":
-                return InferredTypeInfo(CommonTypes.I8(self.pos))
+                return CommonTypes.I8(self.pos)
             case type if type.type_parts()[0].value == "u8":
-                return InferredTypeInfo(CommonTypes.U8(self.pos))
+                return CommonTypes.U8(self.pos)
             case type if type.type_parts()[0].value == "i16":
-                return InferredTypeInfo(CommonTypes.I16(self.pos))
+                return CommonTypes.I16(self.pos)
             case type if type.type_parts()[0].value == "u16":
-                return InferredTypeInfo(CommonTypes.U16(self.pos))
+                return CommonTypes.U16(self.pos)
             case type if type.type_parts()[0].value == "i32":
-                return InferredTypeInfo(CommonTypes.I32(self.pos))
+                return CommonTypes.I32(self.pos)
             case type if type.type_parts()[0].value == "u32":
-                return InferredTypeInfo(CommonTypes.U32(self.pos))
+                return CommonTypes.U32(self.pos)
             case type if type.type_parts()[0].value == "i64":
-                return InferredTypeInfo(CommonTypes.I64(self.pos))
+                return CommonTypes.I64(self.pos)
             case type if type.type_parts()[0].value == "u64":
-                return InferredTypeInfo(CommonTypes.U64(self.pos))
+                return CommonTypes.U64(self.pos)
             case type if type.type_parts()[0].value == "i128":
-                return InferredTypeInfo(CommonTypes.I128(self.pos))
+                return CommonTypes.I128(self.pos)
             case type if type.type_parts()[0].value == "u128":
-                return InferredTypeInfo(CommonTypes.U128(self.pos))
+                return CommonTypes.U128(self.pos)
             case type if type.type_parts()[0].value == "i256":
-                return InferredTypeInfo(CommonTypes.I256(self.pos))
+                return CommonTypes.I256(self.pos)
             case type if type.type_parts()[0].value == "u256":
-                return InferredTypeInfo(CommonTypes.U256(self.pos))
+                return CommonTypes.U256(self.pos)
             case _:
                 raise
 

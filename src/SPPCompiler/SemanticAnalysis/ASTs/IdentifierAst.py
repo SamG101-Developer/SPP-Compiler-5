@@ -9,7 +9,7 @@ from convert_case import pascal_case
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
 
@@ -60,17 +60,17 @@ class IdentifierAst(Ast, TypeInferrable):
     def to_function_identifier(self) -> IdentifierAst:
         return IdentifierAst(pos=self.pos, value=f"${pascal_case(self.value.replace("_", " "))}")
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Extract the symbol from the current scope.
         symbol = scope_manager.current_scope.get_symbol(self)
 
         # If the symbol is a variable, then get its type.
         if isinstance(symbol, VariableSymbol):
-            return InferredTypeInfo(symbol.type, symbol.memory_info.convention)
+            return symbol.type
 
         # If the symbol is a namespace, then return "self" as the type.
         elif isinstance(symbol, NamespaceSymbol):
-            return InferredTypeInfo(self)
+            return self
 
         else:
             raise ValueError(f"Symbol for {self} is not a variable or namespace.")

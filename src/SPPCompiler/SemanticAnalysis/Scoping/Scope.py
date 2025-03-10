@@ -219,6 +219,10 @@ class Scope:
         return all_sup_scopes
 
     @property
+    def sup_types(self) -> Seq[Asts.TypeAst]:
+        return self.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map_attr("fq_name")
+
+    @property
     def sub_scopes(self) -> Seq[Scope]:
         # Get all the sub scopes recursively.
         all_sub_scopes = Seq()

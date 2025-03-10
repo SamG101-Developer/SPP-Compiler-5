@@ -305,28 +305,25 @@ class SppParser:
         c1 = self._pos
         p1 = self.parse_once(self.parse_local_variable)
         p2 = self.parse_once(self.parse_token_colon)
-        p3 = self.parse_once(self.parse_convention)
-        p4 = self.parse_once(self.parse_type)
-        return Asts.FunctionParameterRequiredAst(c1, p1, p2, p3, p4)
+        p3 = self.parse_once(self.parse_type)
+        return Asts.FunctionParameterRequiredAst(c1, p1, p2, p3)
 
     def parse_function_parameter_optional(self) -> Asts.FunctionParameterOptionalAst:
         c1 = self._pos
         p1 = self.parse_once(self.parse_local_variable)
         p2 = self.parse_once(self.parse_token_colon)
-        p3 = self.parse_once(self.parse_convention)
-        p4 = self.parse_once(self.parse_type)
-        p5 = self.parse_once(self.parse_token_assign)
-        p6 = self.parse_once(self.parse_expression)
-        return Asts.FunctionParameterOptionalAst(c1, p1, p2, p3, p4, p5, p6)
+        p3 = self.parse_once(self.parse_type)
+        p4 = self.parse_once(self.parse_token_assign)
+        p5 = self.parse_once(self.parse_expression)
+        return Asts.FunctionParameterOptionalAst(c1, p1, p2, p3, p4, p5)
 
     def parse_function_parameter_variadic(self) -> Asts.FunctionParameterVariadicAst:
         c1 = self._pos
         p1 = self.parse_once(self.parse_token_double_dot)
         p2 = self.parse_once(self.parse_local_variable)
         p3 = self.parse_once(self.parse_token_colon)
-        p4 = self.parse_once(self.parse_convention)
-        p5 = self.parse_once(self.parse_type)
-        return Asts.FunctionParameterVariadicAst(c1, p1, p2, p3, p4, p5)
+        p4 = self.parse_once(self.parse_type)
+        return Asts.FunctionParameterVariadicAst(c1, p1, p2, p3, p4)
 
     # ===== GENERICS =====
 
@@ -459,7 +456,7 @@ class SppParser:
         c1 = self._pos
         p1 = self.parse_one_or_more(self.parse_type, self.parse_token_comma)
         p2 = self.parse_once(self.parse_token_colon)
-        p3 = self.parse_once(self.parse_type)
+        p3 = self.parse_once(self.parse_type)  # todo: remember to ban conventions here
         return Asts.WhereConstraintsAst(c1, p1, p2, p3)
 
     # ===== ANNOTATIONS =====
@@ -737,9 +734,8 @@ class SppParser:
         p1 = self.parse_once(self.parse_keyword_let)
         p2 = self.parse_once(self.parse_local_variable)
         p3 = self.parse_once(self.parse_token_colon)
-        p4 = self.parse_once(self.parse_convention)
-        p5 = self.parse_once(self.parse_type)
-        return Asts.LetStatementUninitializedAst(c1, p1, p2, p3, p4, p5)
+        p4 = self.parse_once(self.parse_type)
+        return Asts.LetStatementUninitializedAst(c1, p1, p2, p3, p4)
 
     def parse_local_variable(self) -> Asts.LocalVariableAst:
         p1 = self.parse_alternate(
@@ -1295,7 +1291,7 @@ class SppParser:
     def parse_type_parenthesized(self) -> Asts.TypeSingleAst:
         c1 = self._pos
         p1 = self.parse_once(self.parse_token_left_parenthesis)
-        p2 = self.parse_once(self.parse_type)
+        p2 = self.parse_once(self.parse_type)  # todo: convention allowed here?
         p3 = self.parse_once(self.parse_token_right_parenthesis)
         return Asts.TypeParenthesizedAst(c1, p1, p2, p3).convert()
 
@@ -1308,7 +1304,7 @@ class SppParser:
     def parse_type_array(self) -> Asts.TypeSingleAst:
         c1 = self._pos
         p1 = self.parse_once(self.parse_token_left_square_bracket)
-        p2 = self.parse_once(self.parse_type)
+        p2 = self.parse_once(self.parse_type)  # todo: convention allowed here?
         p3 = self.parse_once(self.parse_token_comma)
         p4 = self.parse_once(self.parse_lexeme_dec_integer)
         p5 = self.parse_once(self.parse_token_right_square_bracket)
@@ -1316,11 +1312,20 @@ class SppParser:
 
     def parse_type_single(self) -> Asts.TypeSingleAst:
         c1 = self._pos
-        p1 = self.parse_once(self.parse_generic_identifier)
+        p1 = self.parse_alternate(
+            self.parse_generic_identifier,
+            self.parse_type_self)
         return Asts.TypeSingleAst(c1, p1)
 
+    def parse_type_self(self) -> Asts.GenericIdentifierAst:
+        c1 = self._pos
+        p1 = self.parse_once(self.parse_keyword_self_type)
+        return Asts.GenericIdentifierAst(c1, p1.token_data, Asts.GenericArgumentGroupAst(pos=c1))
+
     def parse_type_unary_op(self) -> Asts.TypeUnaryOperatorAst:
-        p1 = self.parse_once(self.parse_type_unary_op_namespace)
+        p1 = self.parse_alternate(
+            self.parse_type_unary_op_namespace,
+            self.parse_type_unary_op_borrow)
         return p1
 
     def parse_type_unary_op_namespace(self) -> Asts.TypeUnaryOperatorNamespaceAst:
@@ -1328,6 +1333,13 @@ class SppParser:
         p1 = self.parse_once(self.parse_identifier)
         p2 = self.parse_once(self.parse_token_double_colon)
         return Asts.TypeUnaryOperatorNamespaceAst(c1, p1, p2)
+
+    def parse_type_unary_op_borrow(self) -> Asts.TypeUnaryOperatorBorrowAst:
+        c1 = self._pos
+        p1 = self.parse_alternate(
+            self.parse_convention_mut,
+            self.parse_convention_ref)
+        return Asts.TypeUnaryOperatorBorrowAst(c1, p1)
 
     def parse_type_postfix_op(self) -> Asts.TypePostfixOperatorAst:
         p1 = self.parse_alternate(
@@ -1356,7 +1368,7 @@ class SppParser:
     def parse_type_tuple_1_items(self) -> Asts.TypeSingleAst:
         c1 = self._pos
         p1 = self.parse_once(self.parse_token_left_parenthesis)
-        p2 = self.parse_once(self.parse_type)
+        p2 = self.parse_once(self.parse_type)  # todo: convention allowed here?
         p3 = self.parse_once(self.parse_token_comma)
         p4 = self.parse_once(self.parse_token_right_parenthesis)
         return Asts.TypeTupleAst(c1, p1, Seq([p2]), p4).convert()
@@ -1528,7 +1540,7 @@ class SppParser:
     def parse_literal_array_0_items(self) -> Asts.ArrayLiteral0ElementAst:
         c1 = self._pos
         p1 = self.parse_once(self.parse_token_left_square_bracket)
-        p2 = self.parse_once(self.parse_type)
+        p2 = self.parse_once(self.parse_type)  # todo: convention allowed here?
         p3 = self.parse_once(self.parse_token_comma)
         p4 = self.parse_once(self.parse_lexeme_dec_integer)
         p5 = self.parse_once(self.parse_token_right_square_bracket)
@@ -1768,6 +1780,9 @@ class SppParser:
 
     def parse_keyword_self_value(self) -> Asts.TokenAst:
         return self.parse_keyword_raw(RawKeywordType.SelfVal, SppTokenType.KwSelfVal, requires_following_space=False)
+
+    def parse_keyword_self_type(self) -> Asts.TokenAst:
+        return self.parse_keyword_raw(RawKeywordType.SelfType, SppTokenType.KwSelfType, requires_following_space=False)
 
     def parse_keyword_case(self) -> Asts.TokenAst:
         return self.parse_keyword_raw(RawKeywordType.Case, SppTokenType.KwCase, requires_following_space=True)

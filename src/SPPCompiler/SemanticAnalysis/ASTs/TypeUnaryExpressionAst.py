@@ -6,7 +6,7 @@ from typing import Self, Optional, Dict, Tuple, Iterator
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
@@ -17,8 +17,8 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
     op: Asts.TypeUnaryOperatorAst = field(default=None)
     rhs: Asts.TypeAst = field(default=None)
 
-    def __eq__(self, other: TypeUnaryExpressionAst) -> bool:
-        return isinstance(other, TypeUnaryExpressionAst) and self.op == other.op and self.rhs == other.rhs
+    def __eq__(self, that: TypeUnaryExpressionAst) -> bool:
+        return isinstance(that, TypeUnaryExpressionAst) and type(self.op) is type(that.op) and self.op == that.op and self.rhs == that.rhs
 
     def __hash__(self) -> int:
         return hash((self.op, self.rhs))
@@ -52,32 +52,35 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
         return self
 
     def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
-        if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
-            return self.rhs.get_generic(generic_name)
-        return None
+        return self.rhs.get_generic(generic_name)
 
     def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
-        if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
-            return self.rhs.get_generic_parameter_for_argument(argument)
-        return None
+        return self.rhs.get_generic_parameter_for_argument(argument)
 
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
-        if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
-            return self.rhs.contains_generic(generic_name)
-        return False
+        return self.rhs.contains_generic(generic_name)
 
-    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
+    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, debug: bool = False) -> bool:
+        if type(self.get_convention()) is not type(that.get_convention()):
+            return False
+        elif isinstance(that, Asts.TypeUnaryExpressionAst) and isinstance(that.op, Asts.TypeUnaryOperatorBorrowAst):
+            that = that.rhs
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             self_scope = self_scope.get_symbol(self.op.name).scope
-        return self.rhs.symbolic_eq(that, self_scope, that_scope, check_variant)
+        return self.rhs.symbolic_eq(that, self_scope, that_scope, check_variant, debug)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
-        return InferredTypeInfo(self)
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
+        return self
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             scope = scope.get_symbol(self.op.name).scope
         return self.rhs.split_to_scope_and_type(scope)
+
+    def get_convention(self) -> Optional[Asts.ConventionAst]:
+        if isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst):
+            return self.op.convention
+        return Asts.ConventionMovAst(pos=self.pos)
 
 
 __all__ = ["TypeUnaryExpressionAst"]

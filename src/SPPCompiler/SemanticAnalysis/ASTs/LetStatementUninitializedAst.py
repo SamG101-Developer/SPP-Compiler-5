@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -17,7 +17,6 @@ class LetStatementUninitializedAst(Ast, TypeInferrable):
     tok_let: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwLet))
     assign_to: Asts.LocalVariableAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkColon))
-    convention: Asts.ConventionAst = field(default_factory=lambda: Asts.ConventionMovAst())
     type: Asts.TypeAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -33,9 +32,9 @@ class LetStatementUninitializedAst(Ast, TypeInferrable):
             self.type.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
-        return InferredTypeInfo(CommonTypes.Void(self.pos), self.convention)
+        return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the variable's type.

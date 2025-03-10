@@ -34,11 +34,11 @@ class GenExpressionAst(Ast, TypeInferrable):
             self.expression.print(printer) if self.expression else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # The inferred type of a gen expression is the type of the value being sent back into the coroutine.
         generator_type = self._func_ret_type
         send_type = generator_type.type_parts()[0].generic_argument_group["Send"].value
-        return InferredTypeInfo(send_type)
+        return send_type
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a coroutine and not a subroutine.
@@ -49,7 +49,7 @@ class GenExpressionAst(Ast, TypeInferrable):
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expression:
             self.expression.analyse_semantics(scope_manager, **kwargs)
-            expression_type = self.expression.infer_type(scope_manager, **kwargs)
+            expression_type = self.expression.infer_type(scope_manager, **kwargs).with_convention(self.convention)
         else:
             void_type = CommonTypes.Void(self.pos)
             expression_type = void_type

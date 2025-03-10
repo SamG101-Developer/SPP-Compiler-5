@@ -1,8 +1,5 @@
 Generators.
 * Add the `BorrowRef[T]` and `BorrowMut[T]` types & code generation.
-* Change GenRef[Yield, Send] to be &(Yield or GenFinished)
-* Change GenMut[Yield, Send] to be &mut (Yield or GenFinished)
-* Change GenMov[Yield, Send] to be (Yield or GenFinished)
 
 Iterative loops.
 * Work with the new generator types.
@@ -19,12 +16,16 @@ Specialization.
 * Generic arguments must match their parameters exactly for sup Type[T=T] to work (generic type regeneration)
 
 Function folding.
-- Binary and regular function folding.
+* Binary and regular function folding.
 
-Equality methods
+Equality methods.
 * Should all be (&Self, &Self), not (&Self, Self) conventions.
 * Change a == b at the compiler level into a == &b.
 
 Smart pointers.
 * Allow the "self" parameter to be a smart pointer.
 * For example, "fun f(&self: Shared) -> Void" should work. "self" is then inferred as Shared[Self].
+
+Types.
+* Change single tuple type back to (T) not (T, )
+* Callables: should be able to call variables that are a function type.

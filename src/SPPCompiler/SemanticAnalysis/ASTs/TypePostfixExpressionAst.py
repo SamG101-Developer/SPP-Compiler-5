@@ -6,7 +6,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -32,7 +32,7 @@ class TypePostfixExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         self.lhs.analyse_semantics(scope_manager, **kwargs)
-        lhs_type = self.lhs.infer_type(scope_manager, **kwargs).type
+        lhs_type = self.lhs.infer_type(scope_manager, **kwargs)
         lhs_type_symbol = scope_manager.current_scope.get_symbol(lhs_type)
         lhs_type_scope = scope_manager.get_namespaced_scope(self.lhs.namespace_parts())
 
@@ -44,24 +44,24 @@ class TypePostfixExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
                 AstTypeManagement.get_nth_type_of_indexable_type(int(self.op.index.token_data), lhs_type, lhs_type_scope)
 
             case Asts.TypePostfixOperatorOptionalTypeAst():
-                optional_type = CommonTypes.Opt(lhs_type.infer_type(scope_manager, **kwargs).type)
+                optional_type = CommonTypes.Opt(lhs_type.infer_type(scope_manager, **kwargs))
                 optional_type.analyse_semantics(scope_manager, **kwargs)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         self.lhs.analyse_semantics(scope_manager, **kwargs)
-        lhs_type = self.lhs.infer_type(scope_manager, **kwargs).type
+        lhs_type = self.lhs.infer_type(scope_manager, **kwargs)
         lhs_type_symbol = scope_manager.current_scope.get_symbol(lhs_type)
         lhs_type_scope = scope_manager.get_namespaced_scope(self.lhs.namespace_parts())
 
         match self.op:
             case Asts.TypePostfixOperatorNestedTypeAst():
-                return InferredTypeInfo(AstTypeManagement.get_type_part_symbol_with_error(lhs_type_scope, self.op.name.name, ignore_alias=True).fq_name)
+                return AstTypeManagement.get_type_part_symbol_with_error(lhs_type_scope, self.op.name.name, ignore_alias=True).fq_name
 
             case Asts.TypePostfixOperatorIndexedTypeAst():
-                return InferredTypeInfo(AstTypeManagement.get_nth_type_of_indexable_type(int(self.op.index.token_data), lhs_type, lhs_type_scope))
+                return AstTypeManagement.get_nth_type_of_indexable_type(int(self.op.index.token_data), lhs_type, lhs_type_scope)
 
             case Asts.TypePostfixOperatorOptionalTypeAst():
-                return InferredTypeInfo(CommonTypes.Opt(lhs_type.infer_type(scope_manager, **kwargs).type))
+                return CommonTypes.Opt(lhs_type.infer_type(scope_manager, **kwargs))
 
             case _:
                 raise Exception("Invalid type postfix operator")

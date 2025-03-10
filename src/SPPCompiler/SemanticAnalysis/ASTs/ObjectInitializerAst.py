@@ -6,7 +6,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -30,9 +30,9 @@ class ObjectInitializerAst(Ast, TypeInferrable):
             self.object_argument_group.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Use the type of the object initializer.
-        return InferredTypeInfo(self.class_type)
+        return self.class_type
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Get the base symbol and make sure it isn't generic.
@@ -44,7 +44,7 @@ class ObjectInitializerAst(Ast, TypeInferrable):
 
         # Determine the generic inference source and target
         generic_infer_source = {
-            a.name: self.object_argument_group.get_arg_val(a).infer_type(scope_manager, **kwargs).type
+            a.name: self.object_argument_group.get_arg_val(a).infer_type(scope_manager, **kwargs)
             for a in self.object_argument_group.arguments.filter(lambda a: isinstance(a.name, Asts.IdentifierAst))}
         generic_infer_target = {
             a.name: a.type

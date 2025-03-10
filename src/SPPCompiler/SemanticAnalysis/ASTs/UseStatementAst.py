@@ -7,11 +7,12 @@ from typing import Optional
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Mixins.VisibilityEnabled import AstVisibility, VisibilityEnabled
 from SPPCompiler.SemanticAnalysis.MultiStage.Stages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -52,9 +53,9 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
             self.old_type.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
-        return InferredTypeInfo(CommonTypes.Void(self.pos))
+        return CommonTypes.Void(self.pos)
 
     def pre_process(self, context: PreProcessingContext) -> None:
         for a in self.annotations:
@@ -86,7 +87,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
 
         # Ensure the validity of the old type.
         self.old_type.analyse_semantics(scope_manager)
-        old_type_symbol = scope_manager.current_scope.get_symbol(self.old_type.infer_type(scope_manager).type)
+        old_type_symbol = scope_manager.current_scope.get_symbol(self.old_type.infer_type(scope_manager))
 
         # Create a sup ast to allow the attribute and method access.
         sup_ast = AstMutation.inject_code(f"sup {self.generic_parameter_group} {self.new_type} ext {self.old_type} {{}}", SppParser.parse_sup_prototype_extension)

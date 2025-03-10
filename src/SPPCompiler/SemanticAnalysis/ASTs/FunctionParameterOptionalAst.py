@@ -10,7 +10,6 @@ from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Mixins.Ordered import Ordered
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
@@ -21,7 +20,6 @@ from SPPCompiler.Utils.Sequence import Seq
 class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
     variable: Asts.LocalVariableAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkColon))
-    convention: Asts.ConventionAst = field(default_factory=lambda: Asts.ConventionMovAst())
     type: Asts.TypeAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkAssign))
     default: Asts.ExpressionAst = field(default=None)
@@ -42,7 +40,6 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
         string = [
             self.variable.print(printer),
             self.tok_colon.print(printer) + " ",
-            self.convention.print(printer),
             self.type.print(printer) + " ",
             self.tok_assign.print(printer) + " ",
             self.default.print(printer)]
@@ -68,7 +65,7 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
         # Make sure the default expression is of the correct type.
         # Todo: are default_type and self.type the correct way around? test default with a variant.
         default_type = self.default.infer_type(scope_manager)
-        if not InferredTypeInfo(self.type, self.convention).symbolic_eq(default_type, scope_manager.current_scope):
+        if not self.type.symbolic_eq(default_type, scope_manager.current_scope):
             raise SemanticErrors.TypeMismatchError().add(self.extract_name, self.type, self.default, default_type)
 
         # Create the variable for the parameter.
@@ -78,11 +75,12 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
         ast.analyse_semantics(scope_manager, **kwargs)
 
         # Mark the symbol as initialized.
+        convention = self.type.get_convention()
         for name in self.variable.extract_names:
             symbol = scope_manager.current_scope.get_symbol(name)
-            symbol.memory_info.ast_borrowed = self.convention if type(self.convention) is not Asts.ConventionMovAst else None
-            symbol.memory_info.is_borrow_mut = isinstance(self.convention, Asts.ConventionMutAst)
-            symbol.memory_info.is_borrow_ref = isinstance(self.convention, Asts.ConventionRefAst)
+            symbol.memory_info.ast_borrowed = convention if type(convention) is not Asts.ConventionMovAst else None
+            symbol.memory_info.is_borrow_mut = isinstance(convention, Asts.ConventionMutAst)
+            symbol.memory_info.is_borrow_ref = isinstance(convention, Asts.ConventionRefAst)
             symbol.memory_info.initialized_by(self)
 
 

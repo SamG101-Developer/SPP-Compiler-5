@@ -47,7 +47,7 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction):
         # Create a variable symbol for this identifier and value.
         symbol = VariableSymbol(
             name=self.alias.name if self.alias else self.name,
-            type=value.infer_type(scope_manager, **kwargs).type,
+            type=value.infer_type(scope_manager, **kwargs),
             is_mutable=self.tok_mut is not None,
             visibility=AstVisibility.Public)
 

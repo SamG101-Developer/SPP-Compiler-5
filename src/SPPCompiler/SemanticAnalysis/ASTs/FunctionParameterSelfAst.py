@@ -19,7 +19,7 @@ class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
     convention: Asts.ConventionAst = field(default_factory=lambda: Asts.ConventionMovAst())
     name: Asts.IdentifierAst = field(default=None)
-    type: Asts.TypeAst = field(default=None, init=False)
+    type: Asts.TypeAst = field(default_factory=lambda: CommonTypes.Self())
 
     def __post_init__(self) -> None:
         assert self.name
@@ -50,6 +50,13 @@ class FunctionParameterSelfAst(Ast, Ordered, VariableNameExtraction):
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the type.
         self.type.analyse_semantics(scope_manager, **kwargs)
+
+        # Check the "type" is either "Self" or superimposes "Deref[Self]". If not, raise an error.
+        # if not self.type.symbolic_eq(CommonTypes.Self(), scope_manager.current_scope, scope_manager.current_scope):
+        #     deref_type = CommonTypes.Deref(CommonTypes.Self())
+        #     self_type_super_types = scope_manager.current_scope.get_symbol(self.type).scope.sup_types
+        #     if not self_type_super_types.any(lambda t: t.symbolic_eq(deref_type, scope_manager.current_scope, scope_manager.current_scope)):
+        #         raise SemanticErrors.InvalidSelfType()
 
         # Create the variable using ASTs, because "let self: ..." will be a parse error.
         ast = Asts.LetStatementUninitializedAst(

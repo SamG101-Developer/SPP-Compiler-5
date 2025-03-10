@@ -5,13 +5,12 @@ from dataclasses import dataclass, field
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
@@ -65,12 +64,12 @@ class FunctionCallArgumentGroupAst(Ast):
 
                 # Check the argument type is a tuple
                 tuple_argument_type = argument.infer_type(scope_manager, **kwargs)
-                if not tuple_argument_type.without_generics().symbolic_eq(InferredTypeInfo(CommonTypes.Tup()), scope_manager.current_scope):
-                    raise SemanticErrors.ArgumentTupleExpansionOfNonTupleError().add(argument.value, tuple_argument_type.type)
+                if not tuple_argument_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope_manager.current_scope):
+                    raise SemanticErrors.ArgumentTupleExpansionOfNonTupleError().add(argument.value, tuple_argument_type)
 
                 # Replace the tuple-expansion argument with the expanded arguments
                 self.arguments.pop(i)
-                for j in range(tuple_argument_type.type.type_parts()[0].generic_argument_group.arguments.length - 1, -1, -1):
+                for j in range(tuple_argument_type.type_parts()[0].generic_argument_group.arguments.length - 1, -1, -1):
                     new_argument = AstMutation.inject_code(f"{argument.value}.{j}", SppParser.parse_function_call_argument_unnamed)
                     new_argument.convention = argument.convention
                     self.arguments.insert(i, new_argument)

@@ -68,7 +68,7 @@ class GlobalConstantAst(Ast, VisibilityEnabled):
         self.value.analyse_semantics(scope_manager, **kwargs)
 
         # Check the value's type is the same as the type.
-        expected_type = InferredTypeInfo(self.type)
+        expected_type = self.type
         given_type = self.value.infer_type(scope_manager, **kwargs)
 
         if not expected_type.symbolic_eq(given_type, scope_manager.current_scope):

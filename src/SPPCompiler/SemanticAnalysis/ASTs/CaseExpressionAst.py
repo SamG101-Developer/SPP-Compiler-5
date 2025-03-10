@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.Utils.Sequence import Seq
@@ -48,7 +48,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
             self.branches.print(printer, "\n")]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # The checks here only apply when assigning from this expression.
         branch_inferred_types = self.branches.map(lambda x: x.infer_type(scope_manager))
 
@@ -63,7 +63,7 @@ class CaseExpressionAst(Ast, TypeInferrable):
         # Return the branches' return type, if there are any branches, otherwise Void.
         if self.branches.length > 0:
             return branch_inferred_types[0]
-        return InferredTypeInfo(CommonTypes.Void(self.pos))
+        return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
@@ -92,8 +92,8 @@ class CaseExpressionAst(Ast, TypeInferrable):
                     # Check the function exists. No check for Bool return type as it is enforced by comparison methods.
                     # Dummy values as otherwise memory rules create conflicts - just need to test the existence of the
                     # function.
-                    binary_lhs_ast = Asts.ObjectInitializerAst(class_type=self.condition.infer_type(scope_manager).type)
-                    binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expression.infer_type(scope_manager).type)
+                    binary_lhs_ast = Asts.ObjectInitializerAst(class_type=self.condition.infer_type(scope_manager))
+                    binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expression.infer_type(scope_manager))
                     binary_ast = Asts.BinaryExpressionAst(self.pos, binary_lhs_ast, branch.comp_operator, binary_rhs_ast)
                     binary_ast.analyse_semantics(scope_manager, **kwargs)
 

@@ -31,13 +31,13 @@ class AstFunctions:
 
         # Special function: ".next()" on generators.
         if isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.op, Asts.PostfixExpressionOperatorStepKeywordAst):
-            function_owner_type = lhs.lhs.infer_type(scope_manager).type
+            function_owner_type = lhs.lhs.infer_type(scope_manager)
             function_name = Asts.IdentifierAst(lhs.op.pos, "next_")
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
         # Runtime access into an object: "object.method()"
         elif isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
-            function_owner_type = lhs.lhs.infer_type(scope_manager).type
+            function_owner_type = lhs.lhs.infer_type(scope_manager)
             function_name = lhs.op.field
             function_owner_scope = scope_manager.current_scope.get_symbol(function_owner_type).scope
 
@@ -84,7 +84,7 @@ class AstFunctions:
             SppParser.parse_postfix_op_function_call)
 
         # Todo: convention too?
-        new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(scope_manager).type
+        new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(scope_manager)
 
         # Get the overload from the uniform function call.
         return new_function_access, new_function_call
@@ -196,7 +196,7 @@ class AstFunctions:
                 parameter_name = parameter_names.pop(0)
                 named_argument = f"${parameter_name}={unnamed_argument}"
                 named_argument = AstMutation.inject_code(named_argument, SppParser.parse_function_call_argument_named)
-                named_argument.name = parameter_name
+                named_argument.name = parameter_name  # todo: comment this and inline "parameter_name"? see next fn
                 named_argument._type_from_self = unnamed_argument._type_from_self
                 arguments.replace(unnamed_argument, named_argument, 1)
 
@@ -218,6 +218,7 @@ class AstFunctions:
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
+        # Todo: does this work with comp and type unnamed args?
         for i, unnamed_argument in arguments.filter_to_type(*Asts.GenericArgumentUnnamedAst.__args__).enumerate():
 
             # The variadic parameter requires a tuple of the remaining arguments.
@@ -233,7 +234,6 @@ class AstFunctions:
                 try:
                     named_argument = f"{parameter_names.pop(0)}={unnamed_argument}"
                     named_argument = AstMutation.inject_code(named_argument, SppParser.parse_generic_argument)
-                    named_argument.value = named_argument.value
                     arguments.replace(unnamed_argument, named_argument, 1)
 
                 except IndexError:
