@@ -11,6 +11,7 @@ from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstOrdering import AstOrdering
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
@@ -78,12 +79,12 @@ class FunctionCallArgumentGroupAst(Ast):
         for a in self.arguments:
             a.analyse_semantics(scope_manager, **kwargs)
 
-    def analyse_semantics(self, scope_manager: ScopeManager, target: Asts.FunctionPrototypeAst = None, is_async: Asts.TokenAst = None, **kwargs) -> None:
+    def analyse_semantics(self, scope_manager: ScopeManager, target_scope: Scope = None, target_proto: Asts.FunctionPrototypeAst = None, is_async: Asts.TokenAst = None, **kwargs) -> None:
         # Code that is run after the overload is selected.
 
         # Mark if pins are required, and the ast to mark as errored if required.
-        pins_required = is_async or isinstance(target, Asts.CoroutinePrototypeAst)
-        pin_error_ast = is_async or target
+        pins_required = is_async or isinstance(target_proto, Asts.CoroutinePrototypeAst)
+        pin_error_ast = is_async or target_proto
 
         # Define the borrow sets to maintain the law of exclusivity.
         borrows_ref = Seq()
@@ -129,7 +130,10 @@ class FunctionCallArgumentGroupAst(Ast):
 
                 # No error with pinning -> mark the pin target.
                 elif pins_required and "assignment" in kwargs and (target := kwargs["assignment"]):
+                    old_pin_target = symbol.memory_info.pin_target.copy()
                     symbol.memory_info.pin_target = target
+                    if old_pin_target:
+                        for o in old_pin_target: scope_manager.current_scope.get_symbol(o).memory_info.moved_by(self)
 
                 # Add the mutable borrow to the mutable borrow set.
                 borrows_mut.append(argument.value)
@@ -145,7 +149,10 @@ class FunctionCallArgumentGroupAst(Ast):
 
                 # No error with pinning -> mark the pin target.
                 elif pins_required and "assignment" in kwargs and (target := kwargs["assignment"]):
+                    old_pin_target = symbol.memory_info.pin_target.copy()
                     symbol.memory_info.pin_target = target
+                    if old_pin_target:
+                        for o in old_pin_target: scope_manager.current_scope.get_symbol(o).memory_info.moved_by(self)
 
                 # Add the immutable borrow to the immutable borrow set.
                 borrows_ref.append(argument.value)
