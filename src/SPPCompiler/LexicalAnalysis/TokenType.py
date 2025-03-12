@@ -145,7 +145,6 @@ class SppTokenType(TokenType):
     TkGe = ">="
     TkLt = "<"
     TkGt = ">"
-    TkSs = "<=>"
     TkPlus = "+"
     TkMinus = "-"
     TkMultiply = "*"

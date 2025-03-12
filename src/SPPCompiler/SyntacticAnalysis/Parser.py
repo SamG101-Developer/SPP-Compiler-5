@@ -1032,8 +1032,7 @@ class SppParser:
             self.parse_token_less_than_or_equals,
             self.parse_token_greater_than_or_equals,
             self.parse_token_less_than,
-            self.parse_token_greater_than,
-            self.parse_token_spaceship)
+            self.parse_token_greater_than)
         return p1
 
     def parse_binary_op_precedence_level_5(self) -> Asts.TokenAst:
@@ -1737,12 +1736,6 @@ class SppParser:
     def parse_token_double_colon(self) -> Asts.TokenAst:
         p1 = self.parse_token_raw(RawTokenType.TkColon, SppTokenType.TkDoubleColon)
         p2 = self.parse_token_raw(RawTokenType.TkColon, SppTokenType.TkDoubleColon)
-        return p1
-
-    def parse_token_spaceship(self) -> Asts.TokenAst:
-        p1 = self.parse_token_raw(RawTokenType.TkLessThanSign, SppTokenType.TkSs)
-        p2 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkSs)
-        p3 = self.parse_token_raw(RawTokenType.TkGreaterThanSign, SppTokenType.TkSs)
         return p1
 
     def parse_token_remainder_assign(self) -> Asts.TokenAst:
