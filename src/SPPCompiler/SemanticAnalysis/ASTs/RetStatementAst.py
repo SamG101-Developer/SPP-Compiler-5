@@ -26,7 +26,7 @@ class RetStatementAst(Ast, TypeInferrable):
         # Print the AST with auto-formatting.
         string = [
             self.tok_ret.print(printer),
-            self.expression.print(printer) if self.expression is not None else ""]
+            f" {self.expression.print(printer)}" if self.expression is not None else ""]
         return "".join(string)
 
     @property

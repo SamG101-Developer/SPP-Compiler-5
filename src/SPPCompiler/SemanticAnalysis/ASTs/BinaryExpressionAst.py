@@ -64,7 +64,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
 
         # Analyse the LHS of the binary expression.
         self.lhs.analyse_semantics(scope_manager, **kwargs)
-        AstMemoryHandler.enforce_memory_integrity(self.lhs, self.op, scope_manager, update_memory_info=False)
+        AstMemoryHandler.enforce_memory_integrity(self.lhs, self.op, scope_manager, update_memory_info=False, check_move_from_borrowed_context=False)
 
         # If the RHS is a destructure, then analysis stops here (after analysing the conversion).
         if self.op.token_type == SppTokenType.KwIs:
