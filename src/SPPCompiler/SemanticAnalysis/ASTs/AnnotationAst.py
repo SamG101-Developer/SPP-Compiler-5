@@ -23,6 +23,11 @@ Todo - ideas:
 
 
 class _Annotations(Enum):
+    """!
+    The _Annotations class is used to define the possible annotations that can be applied to ASTs. As Custom annotations
+    are not yet supported, the annotations are defined as an Enum.
+    """
+
     VirtualMethod = "virtual_method"
     AbstractMethod = "abstract_method"
     NonImplementedMethod = "no_impl"
@@ -37,6 +42,12 @@ class _Annotations(Enum):
 
 @dataclass
 class AnnotationAst(Ast):
+    """!
+    The AnnotationAst class is used to represent annotations applied to ASTs. Annotations alter the behaviour of an AST,
+    but do not generate code. For example marking a method as "virtual_method" will trigger specific compiler behaviour,
+    but will not generate any code.
+    """
+
     tok_at: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkAt))
     name: Asts.IdentifierAst = field(default=None)
 

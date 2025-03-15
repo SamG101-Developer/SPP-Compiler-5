@@ -13,6 +13,19 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class ArrayLiteral0ElementAst(Ast, TypeInferrable):
+    """!
+    The ArrayLiteral0ElementAst class is an AST node that represents an array literal with no elements. Because types
+    must be known immediately (no deferred inference), the type and size of the array must be given at declaration. This
+    literal handles this by accepting the information within the square brackets.
+
+    Example:
+        let x = [BigInt, 10]
+
+    This will create a std::Arr[BigInt, 10] type. The value itself is "initialized" to an empty array, and this is safe
+    because accessors return the Opt[T] type, allowing for safe access. Bounds checking is also be handled by the
+    optional type.
+    """
+
     tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftSquareBracket))
     element_type: Asts.TypeAst = field(default=None)
     tok_comma: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkComma))

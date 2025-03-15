@@ -41,6 +41,12 @@ BINARY_COMPARISON_OPERATORS = {
 
 
 class AstBinUtils:
+    """!
+    AstBinUtils contains a number of utility functions for working with binary expressions in the AST. There are
+    functions to map binary expressions into postfix function calls (x + y => x.add(y)), to fix the associativity, and
+    restructure comparison operators to support the Pythonic "0 < x < 1" syntax.
+    """
+
     @staticmethod
     def convert_to_function_call(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst:
         ast = AstBinUtils._fix_associativity(ast)

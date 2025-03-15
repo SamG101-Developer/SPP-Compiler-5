@@ -16,6 +16,15 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class AssignmentStatementAst(Ast, TypeInferrable):
+    """!
+    The AssignmentStatementAst class is an AST node that represents an assignment statement. This AST can be used to
+    assign n values at once, including Pythons "a, b = b, a" syntax. The assignment operator is always the "=" token.
+    There must be an equal number of expressions on the left and right hand side.
+    
+    Example:
+        x, y = y, 100
+    """
+    
     lhs: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
     op: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkAssign))
     rhs: Seq[Asts.ExpressionAst] = field(default_factory=Seq)

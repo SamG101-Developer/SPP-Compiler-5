@@ -15,6 +15,19 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class ArrayLiteralNElementAst(Ast, TypeInferrable):
+    """!
+    The ArrayLiteralNElementAst class is an AST node that represents an array literal with n elements. The type of the
+    element is never given, because every expression in S++ is type-inferrable on declaration. This means that the type
+    of the array is inferred from the first element in the array.
+
+    Example:
+        let x = [1, 2, 3, 4]
+
+    This will create a std::Arr[std::U8, 4] type. Arrays in S++ are low-level constructs, and map directly to memory.
+    For example, this array will be stored in memory as 4 consecutive bytes. It is analogous to a C array[], but as a
+    first-class, safe type.
+    """
+
     tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftSquareBracket))
     elements: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
     tok_right_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightSquareBracket))
