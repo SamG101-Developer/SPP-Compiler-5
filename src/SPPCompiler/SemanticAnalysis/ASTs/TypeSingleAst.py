@@ -157,7 +157,7 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
             explicit_generic_arguments=self.name.generic_argument_group.arguments,
             infer_source=generic_infer_source or {},
             infer_target=generic_infer_target or {},
-            scope_manager=scope_manager, owner=self, **kwargs)
+            scope_manager=scope_manager, owner=self)
 
         # Analyse the semantics of the generic arguments.
         self.name.generic_argument_group.analyse_semantics(scope_manager)

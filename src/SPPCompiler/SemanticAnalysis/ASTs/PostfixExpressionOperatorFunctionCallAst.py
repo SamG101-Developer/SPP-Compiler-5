@@ -49,7 +49,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
-            transformed_lhs, transformed_function_call = AstFunctions.convert_method_to_function_form(scope_manager, function_owner_type, function_name, lhs, self, **kwargs)
+            transformed_lhs, transformed_function_call = AstFunctions.convert_method_to_function_form(scope_manager, function_owner_type, function_name, lhs, self)
             transformed_function_call.determine_overload(scope_manager, transformed_lhs, **kwargs)
             self._overload = transformed_function_call._overload
             self.function_argument_group = transformed_function_call.function_argument_group
@@ -110,8 +110,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                     infer_source=arguments.map(lambda a: (a.name, a.infer_type(scope_manager, **kwargs))).dict(),
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
                     scope_manager=scope_manager, owner=lhs,
-                    variadic_parameter_identifier=function_overload.function_parameter_group.get_var().extract_name if is_variadic else None,
-                    **kwargs)
+                    variadic_parameter_identifier=function_overload.function_parameter_group.get_var().extract_name if is_variadic else None)
 
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
