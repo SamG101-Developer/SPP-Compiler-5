@@ -164,7 +164,14 @@ class SppParser:
         p2 = self.parse_once(self.parse_identifier)
         p3 = self.parse_once(self.parse_token_colon)
         p4 = self.parse_once(self.parse_type)
-        return Asts.ClassAttributeAst(c1, p1, p2, p3, p4)
+        p5 = self.parse_optional(self.parse_class_attribute_default_value)
+        return Asts.ClassAttributeAst(c1, p1, p2, p3, p4, p5)
+
+    def parse_class_attribute_default_value(self) -> Asts.ExpressionAst:
+        c1 = self.current_pos()
+        p1 = self.parse_once(self.parse_token_assign)
+        p2 = self.parse_once(self.parse_expression)
+        return p2
 
     # ===== SUPERIMPOSITION =====
 
@@ -1037,24 +1044,24 @@ class SppParser:
 
     def parse_binary_op_precedence_level_5(self) -> Asts.TokenAst:
         p1 = self.parse_alternate(
-            self.parse_token_plus,
-            self.parse_token_minus,
             self.parse_token_plus_assign,
-            self.parse_token_minus_assign)
+            self.parse_token_minus_assign,
+            self.parse_token_plus,
+            self.parse_token_minus)
         return p1
 
     def parse_binary_op_precedence_level_6(self) -> Asts.TokenAst:
         p1 = self.parse_alternate(
-            self.parse_token_multiply,
-            self.parse_token_divide,
-            self.parse_token_remainder,
-            self.parse_token_modulo,
-            self.parse_token_exponent,
             self.parse_token_multiply_assign,
             self.parse_token_divide_assign,
             self.parse_token_remainder_assign,
             self.parse_token_modulo_assign,
-            self.parse_token_exponent_assign)
+            self.parse_token_exponent_assign,
+            self.parse_token_multiply,
+            self.parse_token_divide,
+            self.parse_token_remainder,
+            self.parse_token_modulo,
+            self.parse_token_exponent)
         return p1
 
     def parse_boolean_comparison_op(self) -> Asts.TokenAst:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, Optional
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -23,6 +23,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
     name: Asts.IdentifierAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkColon))
     type: Asts.TypeAst = field(default=None)
+    default_value: Optional[Asts.ExpressionAst] = None
 
     def __post_init__(self) -> None:
         assert self.name
@@ -81,6 +82,14 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
         # Analyse the semantics of the annotations and the type of the attribute.
         for a in self.annotations:
             a.analyse_semantics(scope_manager, **kwargs)
+            
+        # If a default value is present, analyse it and check its type.
+        if self.default_value:
+            self.default_value.analyse_semantics(scope_manager)
+            default_type = self.default_value.infer_type(scope_manager)
+
+            if not self.type.symbolic_eq(default_type, scope_manager.current_scope):
+                raise SemanticErrors.TypeMismatchError().add(self                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             , self.type, self.default_value, default_type).scopes(scope_manager.current_scope)
 
 
 __all__ = ["ClassAttributeAst"]

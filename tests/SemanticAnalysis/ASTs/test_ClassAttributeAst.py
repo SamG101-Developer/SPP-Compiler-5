@@ -94,3 +94,19 @@ class TestClassAttributeAst(CustomTestCase):
         sup C ext A {}
         sup C ext B {}
         """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_class_attribute_default_value(self):
+        """
+        cls A {
+            a: std::Str = 1
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_class_attribute_default_value(self):
+        """
+        cls A {
+            a: std::Str = "Hello"
+        }
+        """
