@@ -86,12 +86,18 @@ class AstTypeManagement:
         return type_symbol
 
     @staticmethod
-    def create_generic_scope(scope_manager: ScopeManager, type: Asts.TypeAst, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol) -> Scope:
+    def create_generic_scope(
+            scope_manager: ScopeManager, type: Asts.TypeAst, type_part: Asts.GenericIdentifierAst,
+            base_symbol: TypeSymbol)\
+            -> Scope:
+
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 
         # Create a new scope & symbol for the generic substituted type.
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.scope._ast))
-        new_symbol = builtins.type(base_symbol)(name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable, is_abstract=base_symbol.is_abstract, visibility=base_symbol.visibility)
+        new_symbol = builtins.type(base_symbol)(
+            name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
+            is_abstract=base_symbol.is_abstract, visibility=base_symbol.visibility)
         if isinstance(base_symbol, AliasSymbol):
             new_symbol.old_type = base_symbol.old_type
 
@@ -121,7 +127,10 @@ class AstTypeManagement:
         return new_scope
 
     @staticmethod
-    def create_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
+    def create_generic_sup_scopes(
+            scope_manager: ScopeManager, base_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst)\
+            -> Seq[Scope]:
+
         old_scopes = base_scope._direct_sup_scopes
         new_scopes = Seq()
 
@@ -163,7 +172,10 @@ class AstTypeManagement:
         return new_scopes
 
     @staticmethod
-    def create_generic_symbol(scope_manager: ScopeManager, generic_argument: Asts.GenericArgumentAst) -> TypeSymbol | VariableSymbol:
+    def create_generic_symbol(
+            scope_manager: ScopeManager, generic_argument: Asts.GenericArgumentAst)\
+            -> TypeSymbol | VariableSymbol:
+
         true_value_symbol = scope_manager.current_scope.get_symbol(generic_argument.value)
 
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
