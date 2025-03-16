@@ -85,7 +85,7 @@ class ObjectInitializerArgumentGroupAst(Ast):
         # Type check the regular arguments against the class attributes.
         for argument in self.get_val_args():
             attribute, sup_scope = all_attributes.find(lambda x: x[0].name == argument.name)
-            attribute_type = attribute.type
+            attribute_type = class_symbol.scope.get_symbol(attribute.name).type
             argument_type = argument.infer_type(scope_manager, **kwargs)
 
             if not attribute_type.symbolic_eq(argument_type, sup_scope, scope_manager.current_scope):

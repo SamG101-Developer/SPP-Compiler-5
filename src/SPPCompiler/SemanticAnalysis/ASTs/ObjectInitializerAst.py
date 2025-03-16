@@ -39,8 +39,10 @@ class ObjectInitializerAst(Ast, TypeInferrable):
         return self.class_type
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        # Get the base symbol and make sure it isn't generic.
+        # Get the base symbol.
         base_symbol = scope_manager.current_scope.get_symbol(self.class_type.without_generics())
+        if not base_symbol:
+            raise SemanticErrors.IdentifierUnknownError().add(self.class_type, "type", None).scopes(scope_manager.current_scope)
         if base_symbol.is_generic:
             raise SemanticErrors.GenericTypeInvalidUsageError().add(self.class_type, self.class_type, "object initializer").scopes(scope_manager.current_scope)
 
