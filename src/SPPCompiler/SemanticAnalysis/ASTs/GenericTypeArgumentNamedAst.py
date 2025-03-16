@@ -38,7 +38,7 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
 
     @property
     def pos_end(self) -> int:
-        return self.value.pos_end
+        return (self.value or self.name).pos_end
 
     @staticmethod
     def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:

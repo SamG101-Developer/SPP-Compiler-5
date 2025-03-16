@@ -15,7 +15,9 @@ class GenericIdentifierAst(Ast):
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default_factory=lambda: Asts.GenericArgumentGroupAst())
 
     def __post_init__(self) -> None:
-        self.generic_argument_group.pos = self.generic_argument_group.pos or self.pos
+        if not self.generic_argument_group.pos:
+            self.generic_argument_group.pos = self.pos + len(self.value)
+            self.generic_argument_group.tok_right_bracket.pos = self.pos + len(self.value)
 
     def __eq__(self, other: GenericIdentifierAst) -> bool:
         # Check both ASTs are the same type and have the same value and generic argument group.
