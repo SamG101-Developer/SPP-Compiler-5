@@ -23,9 +23,9 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable):
     Example:
         let x = [1, 2, 3, 4]
 
-    This will create a std::Arr[std::U8, 4] type. Arrays in S++ are low-level constructs, and map directly to memory.
-    For example, this array will be stored in memory as 4 consecutive bytes. It is analogous to a C array[], but as a
-    first-class, safe type.
+    This will create a std::array::Arr[std::number::U8, 4] type. Arrays in S++ are low-level constructs, and map
+    directly to memory. For example, this array will be stored in memory as 4 consecutive bytes. It is analogous to a C
+    array[], but as a first-class, safe type.
     """
 
     tok_left_bracket: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftSquareBracket))
@@ -50,7 +50,7 @@ class ArrayLiteralNElementAst(Ast, TypeInferrable):
         return self.tok_right_bracket.pos_end
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
-        # Create the standard "std::Arr[T, n: BigNum]" type, with generic items.
+        # Create the standard "std::array::Arr[T, n: BigNum]" type, with generic items.
         size = Asts.IntegerLiteralAst.from_python_literal(self.elements.length)
         element_type = self.elements[0].infer_type(scope_manager, **kwargs)
         array_type = CommonTypes.Arr(element_type, size, self.pos)

@@ -21,7 +21,7 @@ class ArrayLiteral0ElementAst(Ast, TypeInferrable):
     Example:
         let x = [BigInt, 10]
 
-    This will create a std::Arr[BigInt, 10] type. The value itself is "initialized" to an empty array, and this is safe
+    This will create a std::array::Arr[BigInt, 10] type. The value itself is "initialized" to an empty array, and this is safe
     because accessors return the Opt[T] type, allowing for safe access. Bounds checking is also be handled by the
     optional type.
     """
@@ -51,7 +51,7 @@ class ArrayLiteral0ElementAst(Ast, TypeInferrable):
         return self.tok_right_bracket.pos_end
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
-        # Create the standard "std::Arr[T, n: BigNum]" type, with generic items.
+        # Create the standard "std::array::Arr[T, n: BigNum]" type, with generic items.
         size = Asts.IntegerLiteralAst.from_token(self.size, self.size.pos)
         array_type = CommonTypes.Arr(self.element_type, size, self.pos)
         array_type.analyse_semantics(scope_manager, **kwargs)
