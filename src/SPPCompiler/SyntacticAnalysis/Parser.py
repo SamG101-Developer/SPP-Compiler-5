@@ -300,6 +300,7 @@ class SppParser:
 
     def parse_function_parameter(self) -> Asts.FunctionParameterAst:
         p1 = self.parse_alternate(
+            self.parse_function_parameter_self_with_arbitrary_type,
             self.parse_function_parameter_variadic,
             self.parse_function_parameter_optional,
             self.parse_function_parameter_required,
@@ -312,6 +313,15 @@ class SppParser:
         p2 = self.parse_once(self.parse_convention)
         p3 = self.parse_once(self.parse_self_keyword)
         return Asts.FunctionParameterSelfAst(c1, p1, p2, p3)
+
+    def parse_function_parameter_self_with_arbitrary_type(self) -> Asts.FunctionParameterSelfAst:
+        c1 = self.current_pos()
+        p1 = self.parse_optional(self.parse_keyword_mut)
+        p2 = self.parse_once(self.parse_convention_mov)
+        p3 = self.parse_once(self.parse_self_keyword)
+        p4 = self.parse_once(self.parse_token_colon)
+        p5 = self.parse_once(self.parse_type)
+        return Asts.FunctionParameterSelfAst(c1, p1, p2, p3, p5)
 
     def parse_function_parameter_required(self) -> Asts.FunctionParameterRequiredAst:
         c1 = self.current_pos()

@@ -1567,3 +1567,19 @@ class SemanticErrors:
                 tip="Remove the convention.")
 
             return self
+
+    class InvalidSelfTypeError(SemanticError):
+        """
+        The InvalidSelfTypeError is raised if an arbitrary type passed to a self parameter does not superimpose the
+        "Deref[Self]" type. This is because all "self" parameters must be either be "Self", with the inclusion of
+        dereferencing to "Self".
+        """
+
+        def add(self, type: Asts.TypeAst) -> SemanticError:
+            self.add_error(
+                ast=type,
+                tag=f"Type inferred as '{type}'",
+                msg="The type does not superimpose 'Deref[Self]'.",
+                tip="Change the type to superimpose 'Deref[Self]'.")
+
+            return self

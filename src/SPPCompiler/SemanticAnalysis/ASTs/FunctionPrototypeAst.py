@@ -9,6 +9,7 @@ from llvmlite import ir as llvm
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -89,7 +90,10 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
 
         # Substitute the "Self" parameter's type with the name of the method.
         if not isinstance(context, Asts.ModulePrototypeAst) and self.function_parameter_group.get_self():
-            self.function_parameter_group.get_self().type = context.name
+            generic_substitution = Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(), value=context.name)
+            generic_substitution = Seq([generic_substitution])
+            self.function_parameter_group.get_self()._true_self_type = context.name
+            self.function_parameter_group.get_self().type = self.function_parameter_group.get_self().type.sub_generics(generic_substitution)
 
         # Pre-process the annotations.
         for a in self.annotations:
@@ -204,19 +208,19 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
 
         # Module-level functions are always FunRef.
         if isinstance(self._ctx, Asts.ModulePrototypeAst) or not self.function_parameter_group.get_self():
-            return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
+            return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type"), pos=self.pos), self.return_type, pos=self.pos)
 
         # Class methods with "self" are the FunMov type.
         if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionMovAst):
-            return CommonTypes.FunMov(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
+            return CommonTypes.FunMov(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type"), pos=self.pos), self.return_type, pos=self.pos)
 
         # Class methods with "&mut self" are the FunMut type.
         if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionMutAst):
-            return CommonTypes.FunMut(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
+            return CommonTypes.FunMut(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type"), pos=self.pos), self.return_type, pos=self.pos)
 
         # Class methods with "&self" are the FunRef type.
         if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionRefAst):
-            return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
+            return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type"), pos=self.pos), self.return_type, pos=self.pos)
 
         raise NotImplementedError(f"Unknown convention for function {self.name}")
 
