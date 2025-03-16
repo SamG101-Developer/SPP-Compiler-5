@@ -80,7 +80,8 @@ class Program(CompilerStages):
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
         module_namespace = module.path.split(os.path.sep)
-        module_namespace = module_namespace[module_namespace.index("src") + 1 : -1]
+        module_namespace = module_namespace[module_namespace.index("src") + 1:]
+        module_namespace[-1] = module_namespace[-1].split(".")[0]
 
         for part in module_namespace:
             part = Asts.IdentifierAst(-1, part)
@@ -91,7 +92,7 @@ class Program(CompilerStages):
 
             else:
                 scope_manager.current_scope.add_symbol(namespace_symbol := NamespaceSymbol(name=part))
-                scope = scope_manager.create_and_move_into_new_scope(part)
+                scope = scope_manager.create_and_move_into_new_scope(part, error_formatter=module.error_formatter)
                 namespace_symbol.scope = scope
                 namespace_symbol.scope._type_symbol = namespace_symbol
                 namespace_symbol.scope._ast = module.module_ast

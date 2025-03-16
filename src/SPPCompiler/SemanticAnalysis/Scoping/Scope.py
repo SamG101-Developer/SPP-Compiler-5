@@ -16,19 +16,6 @@ if TYPE_CHECKING:
 
 
 class Scope:
-    """
-    Attributes:
-        _name: The name of the scope: TypeAst/SupFunctionsIdentifier/SupInheritanceIdentifier/str.
-        _parent: The parent scope (always exists unless this is the global scope).
-        _children: The children scopes.
-        _symbol_table: The symbol table.
-        _ast: The AST (is this is a cls/fun/sup scope).
-
-        _direct_sup_scopes: The direct super scopes (TypeScopes).
-        _direct_sub_scopes: The direct sub scopes (TypeScopes).
-        _type_symbol: The type symbol (if this is a type scope).
-    """
-
     _name: Any
     _parent: Optional[Scope]
     _children: Seq[Scope]
@@ -103,6 +90,7 @@ class Scope:
     def add_symbol(self, symbol: Symbol) -> None:
         if isinstance(symbol, TypeSymbol):
             assert isinstance(symbol.name, Asts.GenericIdentifierAst)
+
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
 
@@ -134,7 +122,7 @@ class Scope:
         if self != self._non_generic_scope:
             return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias))
 
-        # Get the symbol from the symbol table if it exists.
+        # Namespace adjust, and get the symbol from the symbol table if it exists.
         scope = self
         if isinstance(name, Asts.TypeAst):
             scope, name = shift_scope_for_namespaced_type(self, name)
@@ -150,6 +138,12 @@ class Scope:
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
+
+    def get_namespace_symbol(self, name: Asts.IdentifierAst, exclusive: bool = False) -> Optional[Symbol]:
+        # An optimized version of get_symbol for namespace symbols.
+        for symbol in self.all_symbols(exclusive=exclusive):
+            if isinstance(symbol, NamespaceSymbol) and symbol.name == name:
+                return symbol
 
     def get_multiple_symbols(self, name: Asts.IdentifierAst, original_scope: Scope = None) -> Seq[Tuple[Symbol, Scope, int]]:
         # Get all the symbols with the given name (ambiguity checks, function overloads etc), and their "depth".
@@ -226,6 +220,10 @@ class Scope:
         return all_sup_scopes
 
     @property
+    def direct_sup_types(self) -> Seq[Asts.TypeAst]:
+        return self._direct_sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name)
+
+    @property
     def sup_types(self) -> Seq[Asts.TypeAst]:
         return self.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name)
 
@@ -240,10 +238,10 @@ class Scope:
 
 
 def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[Scope, Asts.GenericIdentifierAst]:
-    # For TypeAsts, move through each namespace/type part accessing the namespace scope.#
+    # For TypeAsts, move through each namespace/type part accessing the namespace scope.
     for part in type.fq_type_parts()[:-1]:
         # Get the next type/namespace symbol from the scope.
-        inner_symbol = scope.get_symbol(part)
+        inner_symbol = scope.get_namespace_symbol(part)
         match inner_symbol:
             case None: break
             case _: scope = inner_symbol.scope
