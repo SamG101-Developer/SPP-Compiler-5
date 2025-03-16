@@ -34,7 +34,7 @@ class BooleanLiteralAst(Ast, TypeInferrable):
         return self.value.pos_end
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
-        # Create the standard "std::Bool" type.
+        # Create the standard "std::boolean::Bool" type.
         return CommonTypes.Bool(self.pos)
 
 

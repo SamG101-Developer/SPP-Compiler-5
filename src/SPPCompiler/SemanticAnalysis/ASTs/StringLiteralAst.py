@@ -25,7 +25,7 @@ class StringLiteralAst(Ast, TypeInferrable):
         return self.value.pos_end
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
-        # Create the standard "std::Str" type.
+        # Create the standard "std::string::Str" type.
         return CommonTypes.Str(self.pos)
 
 

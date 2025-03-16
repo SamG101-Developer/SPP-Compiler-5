@@ -67,7 +67,6 @@ class IntegerLiteralAst(Ast, TypeInferrable):
 
     @property
     def pos_end(self) -> int:
-        print("INT", self.pos, self.value.pos_end)
         return self.type.pos_end if self.type else self.value.pos_end
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
