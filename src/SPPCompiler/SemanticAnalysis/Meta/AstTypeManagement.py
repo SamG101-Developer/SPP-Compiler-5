@@ -73,14 +73,14 @@ class AstTypeManagement:
         return namespace_scope
 
     @staticmethod
-    def get_type_part_symbol_with_error(scope: Scope, type_part: Asts.GenericIdentifierAst, ignore_alias: bool = False, **kwargs) -> TypeSymbol:
+    def get_type_part_symbol_with_error(scope: Scope, scope_manager: ScopeManager, type_part: Asts.GenericIdentifierAst, ignore_alias: bool = False, **kwargs) -> TypeSymbol:
         # Get the type part's symbol, and raise an error if it does not exist.
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
         if not type_symbol:
             alternatives = scope.all_symbols().filter_to_type(TypeSymbol).map_attr("name")
             alternatives.remove_if(lambda a: a.value[0] == "$")
             closest_match = difflib.get_close_matches(type_part.value, alternatives.map_attr("value"), n=1, cutoff=0)
-            raise SemanticErrors.IdentifierUnknownError().add(type_part, "type", closest_match[0] if closest_match else None).scopes(scope)
+            raise SemanticErrors.IdentifierUnknownError().add(type_part, "type", closest_match[0] if closest_match else None).scopes(scope_manager.current_scope)
 
         # Return the type part's scope from the symbol.
         return type_symbol
@@ -113,15 +113,19 @@ class AstTypeManagement:
         if type and type.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
             return new_scope
 
-        # Substitute the generics of the attribute types in the new class prototype.
-        for attribute in new_scope._ast.body.members:
-            attribute.type = attribute.type.sub_generics(type_part.generic_argument_group.arguments)
-            attribute.type.analyse_semantics(scope_manager)
-
         # Register the generic arguments as type symbols in the new scope.
         for generic_argument in type_part.generic_argument_group.arguments:
             generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
             new_scope.add_symbol(generic_symbol)
+
+        # Substitute the generics of the attribute types in the new class prototype.
+        # temp_manager = ScopeManager(global_scope=scope_manager.global_scope, current_scop=new_scope)
+        # print("\tTEMP MANAGER:", temp_manager.current_scope)
+        # for attribute in new_scope._ast.body.members:
+        #     print("\tATTR:", attribute)
+        #     attribute.type = attribute.type.sub_generics(type_part.generic_argument_group.arguments)
+        #     print("\t\tSUBBED ATTR:", attribute)
+        #     attribute.type.analyse_semantics(temp_manager)
 
         # Return the new scope.
         return new_scope
@@ -154,7 +158,7 @@ class AstTypeManagement:
                     new_scopes.append(modified_class_scope)
 
             # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
-            new_scope_name = AstTypeManagement.generic_convert_sup_scope_name(scope.name, generic_arguments)
+            new_scope_name = AstTypeManagement.generic_convert_sup_scope_name(scope.name, generic_arguments, scope._ast.name.pos)
             new_scope = Scope(new_scope_name, scope.parent, ast=scope._ast)
             new_scope._children = scope._children
             new_scope._symbol_table = copy.copy(scope._symbol_table)
@@ -187,7 +191,7 @@ class AstTypeManagement:
         raise Exception(f"Unknown generic argument type: {type(generic_argument).__name__}")
 
     @staticmethod
-    def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst) -> str:
+    def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst, pos: int) -> str:
         parts = name.split(":")
 
         if " ext " not in parts:
@@ -201,14 +205,18 @@ class AstTypeManagement:
 
     @staticmethod
     def is_type_recursive(type: Asts.ClassPrototypeAst, scope_manager: ScopeManager) -> Optional[Asts.TypeAst]:
-        def get_attribute_types(class_prototype: Asts.ClassPrototypeAst) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
+
+        def get_attribute_types(class_prototype: Asts.ClassPrototypeAst, class_scope: Scope) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
+
             for attribute in class_prototype.body.members:
                 raw_attribute_type = attribute.type
-                symbol = scope_manager.current_scope.get_symbol(raw_attribute_type)
-                yield symbol.type, attribute.type
-                if symbol.type:
-                    yield from get_attribute_types(symbol.type)
+                symbol = class_scope.get_symbol(raw_attribute_type)
 
-        for attribute_cls_prototype, attribute_ast in get_attribute_types(type):
+                # Skip generics (can never be a "recursive" type). Todo: this is a hack that works
+                if symbol and symbol.type:
+                    yield symbol.type, attribute.type
+                    yield from get_attribute_types(symbol.type, symbol.scope)
+
+        for attribute_cls_prototype, attribute_ast in get_attribute_types(type, scope_manager.current_scope):
             if attribute_cls_prototype is type:
                 return attribute_ast
