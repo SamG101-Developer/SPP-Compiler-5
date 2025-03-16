@@ -104,8 +104,7 @@ class SupPrototypeExtensionAst(Ast):
         sup_symbol = scope_manager.current_scope.get_symbol(self.super_class.without_generics())
 
         if sup_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(
-                self.super_class, self.super_class, "superimposition supertype")
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.super_class, self.super_class, "superimposition supertype").scopes(scope_manager.current_scope)
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         sup_symbol = scope_manager.current_scope.get_symbol(self.super_class)
