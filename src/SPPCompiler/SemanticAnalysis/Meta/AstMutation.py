@@ -5,19 +5,17 @@ from typing import Callable
 
 class AstMutation:
     @staticmethod
-    def inject_code[T](code: str, parsing_function: Callable[..., T], pos_adjust: int = 0) -> T:
+    def inject_code[T](code: str, parsing_function: Callable[..., T], *, pos_adjust: int) -> T:
         """!
         The code injection function is a utility function to generate extra code during semantic analysis to simplify
         AST construction. This is seen in preprocessing, and a range of argument manipulation and type generation.
 
-        Args:
-            code: The s++ code in string format to inject.
-            parsing_function: The parsing rule to apply to the injected code.
-            pos_adjust: An position adjustment for all ASTs parsed (so errors can print the injected code).
+        @param code The s++ code in string format to inject.
+        @param parsing_function The parsing rule to apply to the injected code.
+        @param pos_adjust An position adjustment for all ASTs parsed (so errors can print the injected code).
 
-        Returns:
-            The AST generated from the parser rule being applied over the code. All "pos" attributes will reflect the
-            "pos_adjust" value.
+        @return The AST generated from the parser rule being applied over the code. All "pos" attributes will reflect
+        the "pos_adjust" value.
         """
 
         # Import the Lexer and Parser here to prevent circular imports.

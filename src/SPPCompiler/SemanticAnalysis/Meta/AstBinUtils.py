@@ -116,14 +116,14 @@ class AstBinUtils:
         if method_name := BINARY_METHODS.get(ast.op.token_type, None):
             function_call_ast = AstMutation.inject_code(
                 f"{ast.lhs}.{method_name}({ast.rhs})",
-                SppParser.parse_postfix_expression)
+                SppParser.parse_postfix_expression, pos_adjust=ast.pos)
             return function_call_ast
 
         # Convert the "is" expression into a case-pattern block.
         elif ast.op.token_type == SppTokenType.KwIs:
             case_ast = AstMutation.inject_code(
                 f"case {ast.lhs} of is {ast.rhs} {{}}",
-                SppParser.parse_case_expression)
+                SppParser.parse_case_expression, pos_adjust=ast.pos)
             return case_ast
 
         # Error

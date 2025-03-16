@@ -116,19 +116,19 @@ class AstFunctions:
         # Create an argument for self, which is the object being called (convention tested later).
         self_argument = AstMutation.inject_code(
             f"{lhs.lhs}",
-            SppParser.parse_function_call_argument_unnamed, lhs.lhs.pos)
+            SppParser.parse_function_call_argument_unnamed, pos_adjust=lhs.lhs.pos)
         function_arguments = fn.function_argument_group.arguments.copy()
         function_arguments.insert(0, self_argument)
 
         # Create the static method access (without the unction call and arguments).
         new_function_access = AstMutation.inject_code(
             f"{function_owner_type}::{function_name}",
-            SppParser.parse_postfix_expression, lhs.pos)
+            SppParser.parse_postfix_expression, pos_adjust=lhs.pos)
 
         # Create the function call with the object as the first argument (represents "self").
         new_function_call = AstMutation.inject_code(
             f"{fn.generic_argument_group}({function_arguments.join(", ")}){fn.fold_token or ""}",
-            SppParser.parse_postfix_op_function_call, fn.pos)
+            SppParser.parse_postfix_op_function_call, pos_adjust=fn.pos)
 
         # Tell the "self" argument what type it is (keyword "self" inference requires outer AST knowledge).
         new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(scope_manager)
@@ -221,7 +221,7 @@ class AstFunctions:
             * Check if a method is overriding a base class method (ie there is a signature conflict).
 
         Typically, conflicting overloads are checked for in the same type or module when checking if an overload of an
-        existing function has been defined. `f(std::Str)` conflicts with `f(std::Str)` if they are in the same type.
+        existing function has been defined. `f(std::string::Str)` conflicts with `f(std::string::Str)` if they are in the same type.
 
         @param this_scope The scope of the new function being checked.
         @param target_scope The scope to check for conflicts in (for example a class).
@@ -306,7 +306,7 @@ class AstFunctions:
             # tuple, and named by the variadic parameter.
             if parameter_names.length == 1 and is_variadic:
                 named_argument = f"{parameter_names.pop(0)}=({arguments[i:].join(", ")})"
-                named_argument = AstMutation.inject_code(named_argument, SppParser.parse_function_call_argument_named)
+                named_argument = AstMutation.inject_code(named_argument, SppParser.parse_function_call_argument_named, pos_adjust=unnamed_argument.pos)
                 arguments.replace(unnamed_argument, named_argument, 1)
                 arguments.pop_n(-1, arguments.length - i - 1)
                 break
@@ -316,7 +316,7 @@ class AstFunctions:
             else:
                 parameter_name = parameter_names.pop(0)
                 named_argument = f"${parameter_name}={unnamed_argument}"
-                named_argument = AstMutation.inject_code(named_argument, SppParser.parse_function_call_argument_named)
+                named_argument = AstMutation.inject_code(named_argument, SppParser.parse_function_call_argument_named, pos_adjust=unnamed_argument.pos)
                 named_argument.name = parameter_name
                 named_argument._type_from_self = unnamed_argument._type_from_self
                 arguments.replace(unnamed_argument, named_argument, 1)
@@ -369,7 +369,7 @@ class AstFunctions:
             # tuple, and named by the variadic parameter.
             if parameter_names.length == 1 and is_variadic:
                 named_argument = f"{parameter_names.pop(0)}=({arguments[i:].join(", ")})"
-                named_argument = AstMutation.inject_code(named_argument, SppParser.parse_generic_argument)
+                named_argument = AstMutation.inject_code(named_argument, SppParser.parse_generic_argument, pos_adjust=unnamed_argument.pos)
                 arguments.replace(unnamed_argument, named_argument, 1)
                 arguments.pop_n(-1, arguments.length - i - 1)
                 break
@@ -381,7 +381,7 @@ class AstFunctions:
             else:
                 try:
                     named_argument = f"{parameter_names.pop(0)}={unnamed_argument}"
-                    named_argument = AstMutation.inject_code(named_argument, SppParser.parse_generic_argument)
+                    named_argument = AstMutation.inject_code(named_argument, SppParser.parse_generic_argument, pos_adjust=unnamed_argument.pos)
                     arguments.replace(unnamed_argument, named_argument, 1)
 
                 except IndexError:
@@ -435,6 +435,12 @@ class AstFunctions:
             * infer_source: {x: BigInt, y: Str, z: Bool}
             * infer_target: {x: T, y: U, z: V}
         """
+
+        # print("-" * 100)
+        # print("generic_parameters", generic_parameters)
+        # print("explicit_generic_arguments", explicit_generic_arguments)
+        # print("infer_source", Seq([f"{k}={v}" for k, v in infer_source.items()]))
+        # print("infer_target", Seq([f"{k}={v}" for k, v in infer_target.items()]))
 
         # Special case for tuples to prevent infinite-recursion.
         if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
@@ -499,7 +505,13 @@ class AstFunctions:
                 raise SemanticErrors.GenericParameterNotInferredError().add(generic_parameter_name, owner).scopes(scope_manager.current_scope)
 
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
-        # GenericXXXArgumentASTs.
+        # GenericXXXArgumentASTs. Todo: pos_adjust?
+        pos_adjust = owner.pos if owner else 0
         inferred_generic_arguments = {k: v[0] for k, v in inferred_generic_arguments.items()}
-        inferred_generic_arguments = [AstMutation.inject_code(f"{k}={v}", SppParser.parse_generic_argument) for k, v in inferred_generic_arguments.items()]
+        inferred_generic_arguments = [
+            AstMutation.inject_code(f"{k}={v}", SppParser.parse_generic_argument, pos_adjust=pos_adjust)
+            for k, v in inferred_generic_arguments.items()]
+
+        # print("inferred_generic_arguments", Seq(inferred_generic_arguments))
+
         return Seq(inferred_generic_arguments)

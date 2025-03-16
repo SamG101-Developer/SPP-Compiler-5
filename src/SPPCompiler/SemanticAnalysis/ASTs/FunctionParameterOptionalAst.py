@@ -74,8 +74,8 @@ class FunctionParameterOptionalAst(Ast, Ordered, VariableNameExtraction):
 
         # Create the variable for the parameter.
         ast = AstMutation.inject_code(
-            f"let {self.variable}: {self.type}",
-            SppParser.parse_let_statement_uninitialized)
+            f"let {self.variable}: {self.type}", SppParser.parse_let_statement_uninitialized,
+            pos_adjust=self.variable.pos)
         ast.analyse_semantics(scope_manager, **kwargs)
 
         # Mark the symbol as initialized.

@@ -80,7 +80,8 @@ class GenericCompParameterOptionalAst(Ast, Ordered):
             raise SemanticErrors.TypeMismatchError().add(self.name, target_type, self.default, default_type).scopes(scope_manager.current_scope)
 
         # Create the variable for the const parameter.
-        ast = AstMutation.inject_code(f"let {self.name}: {self.type}", SppParser.parse_let_statement_uninitialized)
+        ast = AstMutation.inject_code(
+            f"let {self.name}: {self.type}", SppParser.parse_let_statement_uninitialized, pos_adjust=self.pos)
         ast.analyse_semantics(scope_manager, **kwargs)
 
         # Mark the symbol as initialized.

@@ -72,7 +72,9 @@ class GenExpressionAst(Ast, TypeInferrable):
 
         # Apply the function argument law of exclusivity checks to the expression.
         if self.expression:
-            ast = AstMutation.inject_code(f"({self.convention} {self.expression})", SppParser.parse_function_call_arguments)
+            ast = AstMutation.inject_code(
+                f"({self.convention} {self.expression})", SppParser.parse_function_call_arguments,
+                pos_adjust=self.convention.pos)
             ast.analyse_semantics(scope_manager, **kwargs)
 
 

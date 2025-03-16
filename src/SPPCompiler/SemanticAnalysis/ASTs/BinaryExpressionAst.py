@@ -98,7 +98,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             # Get the parts of the tuple.
             new_asts = Seq()
             for i in range(rhs_num_elements):
-                new_ast = AstMutation.inject_code(f"{self.rhs}.{i}", SppParser.parse_postfix_expression)
+                new_ast = AstMutation.inject_code(f"{self.rhs}.{i}", SppParser.parse_postfix_expression, pos_adjust=self.rhs.pos)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
                 new_asts.append(new_ast)
 
@@ -121,7 +121,7 @@ class BinaryExpressionAst(Ast, TypeInferrable):
             # Get the parts of the tuple.
             new_asts = Seq()
             for i in range(lhs_num_elements):
-                new_ast = AstMutation.inject_code(f"{self.lhs}.{i}", SppParser.parse_postfix_expression)
+                new_ast = AstMutation.inject_code(f"{self.lhs}.{i}", SppParser.parse_postfix_expression, pos_adjust=self.lhs.pos)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
                 new_asts.append(new_ast)
 

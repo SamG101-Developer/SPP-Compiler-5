@@ -67,7 +67,9 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
         # For a binding ".." destructure, ie "let (a, ..b, c) = t", create an intermediary rhs tuple.
         if multi_arg_skips and multi_arg_skips[0].binding:
             indexes = [i - self.elements.index(multi_arg_skips[0]) - 1 for i in range(num_lhs_tuple_elements, num_rhs_tuple_elements + 1)]
-            new_ast = AstMutation.inject_code(f"({", ".join([f"{value}.{i}" for i in indexes])})", SppParser.parse_literal_tuple)
+            new_ast = AstMutation.inject_code(
+                f"({", ".join([f"{value}.{i}" for i in indexes])})", SppParser.parse_literal_tuple,
+                pos_adjust=value.pos)
             bound_multi_skip = new_ast
 
         # Create new indexes like [0, 1, 2, 6, 7] if elements 3->5 are skipped (and possibly bound).
@@ -77,14 +79,18 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
         # Create expanded "let" statements for each part of the destructure.
         for i, element in indexes.zip(self.elements):
             if isinstance(element, Asts.LocalVariableDestructureSkipNArgumentsAst) and multi_arg_skips[0].binding:
-                new_ast = AstMutation.inject_code(f"let {element.binding} = {bound_multi_skip}", SppParser.parse_let_statement_initialized)
+                new_ast = AstMutation.inject_code(
+                    f"let {element.binding} = {bound_multi_skip}", SppParser.parse_let_statement_initialized,
+                    pos_adjust=element.pos)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
             elif isinstance(element, (Asts.LocalVariableDestructureSkip1ArgumentAst, Asts.LocalVariableDestructureSkipNArgumentsAst)):
                 continue
 
             else:
-                new_ast = AstMutation.inject_code(f"let {element} = {value}.{i}", SppParser.parse_let_statement_initialized)
+                new_ast = AstMutation.inject_code(
+                    f"let {element} = {value}.{i}", SppParser.parse_let_statement_initialized,
+                    pos_adjust=element.pos)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
 

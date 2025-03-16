@@ -96,7 +96,8 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             a.pre_process(self)
 
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
-        mock_class_name = AstMutation.inject_code(self.name.to_function_identifier().value, SppParser.parse_type)
+        mock_class_name = AstMutation.inject_code(
+            self.name.to_function_identifier().value, SppParser.parse_type, pos_adjust=self.pos)
         function_type = self._deduce_mock_class_type()
         function_call = Asts.IdentifierAst(self.name.pos, "call")
 
@@ -104,14 +105,14 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         if context.body.members.filter_to_type(Asts.ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
             mock_class_ast = AstMutation.inject_code(
                 f"cls {mock_class_name} {{}}",
-                SppParser.parse_class_prototype)
+                SppParser.parse_class_prototype, pos_adjust=self.pos)
             mock_constant_ast = AstMutation.inject_code(
                 f"cmp {self.name}: {mock_class_name} = {mock_class_name}()",
-                SppParser.parse_global_constant)
+                SppParser.parse_global_constant, pos_adjust=self.pos)
             context.body.members.append(mock_class_ast)
             context.body.members.append(mock_constant_ast)
 
-        # Superimpose the function type over the mock class.
+        # Superimpose the function type over the mock class. Todo: switch to parser?
         function_ast = copy.deepcopy(self)
         function_ast._orig = self.name
         mock_superimposition_body = Asts.SupImplementationAst(members=Seq([function_ast]))

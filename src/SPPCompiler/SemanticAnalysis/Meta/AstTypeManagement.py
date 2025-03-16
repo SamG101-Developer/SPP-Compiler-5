@@ -191,12 +191,12 @@ class AstTypeManagement:
         parts = name.split(":")
 
         if " ext " not in parts:
-            t = AstMutation.inject_code(parts[1], SppParser.parse_type).sub_generics(generics.arguments)
+            t = AstMutation.inject_code(parts[1], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
             return f"{parts[0]}:{t}:{parts[2]}"
 
         else:
-            t = AstMutation.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type).sub_generics(generics.arguments)
-            u = AstMutation.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type).sub_generics(generics.arguments)
+            t = AstMutation.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
+            u = AstMutation.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
             return f"{parts[0]}:#{t} ext {u}:{parts[2]}"
 
     @staticmethod

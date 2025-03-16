@@ -69,14 +69,18 @@ class LocalVariableDestructureObjectAst(Ast, VariableNameExtraction):
                 continue
 
             elif isinstance(element, Asts.LocalVariableSingleIdentifierAst):
-                new_ast = AstMutation.inject_code(f"let {element} = {value}.{element.name}", SppParser.parse_let_statement_initialized)
+                new_ast = AstMutation.inject_code(
+                    f"let {element} = {value}.{element.name}", SppParser.parse_let_statement_initialized,
+                    pos_adjust=element.pos)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
             elif isinstance(element, Asts.LocalVariableAttributeBindingAst) and isinstance(element.value, Asts.LocalVariableSingleIdentifierAst):
                 continue
 
             elif isinstance(element, Asts.LocalVariableAttributeBindingAst):
-                new_ast = AstMutation.inject_code(f"let {element.value} = {value}.{element.name}", SppParser.parse_let_statement_initialized)
+                new_ast = AstMutation.inject_code(
+                    f"let {element.value} = {value}.{element.name}", SppParser.parse_let_statement_initialized,
+                    pos_adjust=element.pos)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
         # Check for any missing attributes in the destructure, unless a multi-skip is present.

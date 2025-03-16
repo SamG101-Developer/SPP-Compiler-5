@@ -69,7 +69,9 @@ class LoopConditionIterableAst(Ast, TypeInferrable):
 
         # Create a "let" statement to introduce the loop variable into the scope.
         gen_type = iterable_type.type_parts()[0].generic_argument_group["Yield"].value
-        let_ast = AstMutation.inject_code(f"let {self.variable}: {gen_type}", SppParser.parse_let_statement_uninitialized)
+        let_ast = AstMutation.inject_code(
+            f"let {self.variable}: {gen_type}", SppParser.parse_let_statement_uninitialized,
+            pos_adjust=self.variable.pos)
         let_ast.analyse_semantics(scope_manager, **kwargs)
 
         # Set the memory information of the symbol based on the type of iteration.
