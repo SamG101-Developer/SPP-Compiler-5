@@ -81,7 +81,9 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
             raise SemanticErrors.InvalidConventionLocationError().add(c, self.new_type, "use statement new type").scopes(scope_manager.current_scope)
 
         # Create a class ast for the aliased type, and generate it.
-        cls_ast = AstMutation.inject_code(f"cls {self.new_type} {{}}", SppParser.parse_class_prototype)
+        cls_ast = AstMutation.inject_code(
+            f"cls {self.new_type} {{}}",
+            SppParser.parse_class_prototype, pos_adjust=self.pos)
         cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
         cls_ast._is_alias = True
         cls_ast._visibility = (visibility, None)
@@ -107,7 +109,9 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         old_type_symbol = scope_manager.current_scope.get_symbol(self.old_type.infer_type(scope_manager))
 
         # Create a sup ast to allow the attribute and method access.
-        sup_ast = AstMutation.inject_code(f"sup {self.generic_parameter_group} {self.new_type} ext {self.old_type} {{}}", SppParser.parse_sup_prototype_extension)
+        sup_ast = AstMutation.inject_code(
+            f"sup {self.generic_parameter_group} {self.new_type} ext {self.old_type} {{}}",
+            SppParser.parse_sup_prototype_extension, pos_adjust=self.pos)
         sup_ast.generate_top_level_scopes(scope_manager)
 
         # Register the old type against the new alias symbol.
