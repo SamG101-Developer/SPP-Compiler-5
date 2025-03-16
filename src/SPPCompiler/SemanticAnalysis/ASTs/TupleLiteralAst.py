@@ -33,7 +33,7 @@ class TupleLiteralAst(Ast, TypeInferrable):
         return self.tok_right_paren.pos_end
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
-        # Create the standard "std::Tup[..Items]" type, with generic items.
+        # Create the standard "std::tuple::Tup[..Items]" type, with generic items.
         inner_types = self.elements.map(lambda element: element.infer_type(scope_manager, **kwargs))
         tuple_type = CommonTypes.Tup(inner_types, self.pos)
         tuple_type.analyse_semantics(scope_manager, **kwargs)
