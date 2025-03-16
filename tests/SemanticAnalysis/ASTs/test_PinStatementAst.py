@@ -7,7 +7,7 @@ class TestPinStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryPinTargetInvalidError)
     def test_invalid_pin_statement_non_symbolic_target(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             pin 5
         }
         """
@@ -16,11 +16,11 @@ class TestPinStatementAst(CustomTestCase):
     def test_invalid_pin_statement_overlap_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             pin p.x
             pin p
         }
@@ -30,11 +30,11 @@ class TestPinStatementAst(CustomTestCase):
     def test_invalid_pin_statement_overlap_2(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             pin p
             pin p.x
         }
@@ -44,11 +44,11 @@ class TestPinStatementAst(CustomTestCase):
     def test_invalid_pin_statement_overlap_3(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             pin p.x
             pin p.x
         }
@@ -58,11 +58,11 @@ class TestPinStatementAst(CustomTestCase):
     def test_invalid_pin_statement_overlap_4(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             pin p
             pin p
         }
@@ -72,11 +72,11 @@ class TestPinStatementAst(CustomTestCase):
     def test_valid_pin_statement(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             pin p.x
             pin p.y
         }
@@ -86,11 +86,11 @@ class TestPinStatementAst(CustomTestCase):
     def test_valid_pin_statement_multiple(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             pin p.x, p.y
         }
         """

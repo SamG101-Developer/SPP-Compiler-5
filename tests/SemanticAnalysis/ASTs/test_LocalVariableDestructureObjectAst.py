@@ -8,11 +8,11 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_invalid_local_variable_destructure_object_multiple_multi_skip(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let Point(.., ..) = p
         }
         """
@@ -21,11 +21,11 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_invalid_local_variable_destructure_object_bound_multi_skip(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let Point(..mut x) = p
         }
         """
@@ -34,11 +34,11 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_invalid_local_variable_destructure_object_missing_attribute(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let Point(x) = p
         }
         """
@@ -47,11 +47,11 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_invalid_local_variable_destructure_object_invalid_attribute(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let Point(x, y, z) = p
         }
         """
@@ -59,8 +59,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_local_variable_destructure_object_variant_type_1(self):
         """
-        fun f(o: std::Opt[std::Str]) -> std::Void {
-            let std::Pass(val) = o
+        fun f(o: std::option::Opt[std::string::Str]) -> std::void::Void {
+            let std::result::Pass(val) = o
         }
         """
 
@@ -68,11 +68,11 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let Point(x, y) = p
         }
         """
@@ -81,11 +81,11 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_skip_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let Point(x, ..) = p
         }
         """
@@ -94,11 +94,11 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_skip_2(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let Point(.., y) = p
         }
         """
@@ -107,11 +107,11 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_skip_3(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let Point(..) = p
         }
         """
@@ -120,8 +120,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_nested_object(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
         cls Line {
@@ -129,7 +129,7 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
             end: Point
         }
 
-        fun f(l: Line) -> std::Void {
+        fun f(l: Line) -> std::void::Void {
             let Line(start=Point(x, y), ..) = l
         }
         """
@@ -138,8 +138,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_invalid_local_variable_destructure_object_check_symbols_introduced(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
         cls Line {
@@ -147,7 +147,7 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
             end: Point
         }
 
-        fun f(l: Line) -> std::Void {
+        fun f(l: Line) -> std::void::Void {
             let Line(start=Point(x, y), ..) = l
             let t = start
         }
@@ -157,8 +157,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_check_symbols_introduced(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
         cls Line {
@@ -166,7 +166,7 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
             end: Point
         }
 
-        fun f(l: Line) -> std::Void {
+        fun f(l: Line) -> std::void::Void {
             let Line(start=Point(x, y), ..) = l
             let mut t = 100
             t = y
@@ -177,10 +177,10 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_nested_tuple(self):
         """
         cls TestType {
-            a: (std::Bool, std::BigInt)
+            a: (std::boolean::Bool, std::number::BigInt)
         }
 
-        fun f(t: TestType) -> std::Void {
+        fun f(t: TestType) -> std::void::Void {
             let TestType(a=(b, mut other_variable)) = t
             other_variable = 2
         }
@@ -190,10 +190,10 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_nested_array(self):
         """
         cls TestType {
-            a: std::Arr[std::Bool, 2]
+            a: std::array::Arr[std::boolean::Bool, 2]
         }
 
-        fun f(t: TestType) -> std::Void {
+        fun f(t: TestType) -> std::void::Void {
             let TestType(a=[b, mut other_variable]) = t
             other_variable = true
         }
@@ -202,8 +202,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_local_variable_destructure_object_variant_type_1(self):
         """
-        fun f(o: std::Opt[std::Str]) -> std::Void {
-            let std::Some(mut val) = o
+        fun f(o: std::option::Opt[std::string::Str]) -> std::void::Void {
+            let std::option::Some(mut val) = o
             val = "hello world"
         }
         """
@@ -212,16 +212,16 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_variant_type_2(self):
         """
         cls Point1 {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
         cls Point2 {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point1 or Point2) -> std::Void {
+        fun f(p: Point1 or Point2) -> std::void::Void {
             let Point1(x, y) = p
         }
         """

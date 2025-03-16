@@ -7,20 +7,20 @@ class TestGenericArgumentGroupAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
     def test_invalid_generic_argument_group_duplicate_named_argument(self):
         """
-        fun f[T, U]() -> std::Void { }
+        fun f[T, U]() -> std::void::Void { }
 
-        fun g() -> std::Void {
-            f[T=std::Bool, T=std::Bool]()
+        fun g() -> std::void::Void {
+            f[T=std::boolean::Bool, T=std::boolean::Bool]()
         }
         """
 
     @should_fail_compilation(SemanticErrors.OrderInvalidError)
     def test_invalid_generic_argument_group_invalid_argument_order(self):
         """
-        fun f[T, U]() -> std::Void { }
+        fun f[T, U]() -> std::void::Void { }
 
-        fun g() -> std::Void {
-            f[T=std::Bool, std::Bool]()
+        fun g() -> std::void::Void {
+            f[T=std::boolean::Bool, std::boolean::Bool]()
         }
         """
 
@@ -30,10 +30,10 @@ class TestGenericArgumentGroupAst(CustomTestCase):
         cls A[T] { a: T }
 
         sup [T] A[T] {
-            fun f(&self) -> std::Void { }
+            fun f(&self) -> std::void::Void { }
         }
 
-        fun g() -> std::Void {
+        fun g() -> std::void::Void {
             let a = A(a=5)
             a.f()
         }
@@ -48,7 +48,7 @@ class TestGenericArgumentGroupAst(CustomTestCase):
             fun f(&self) -> T { ret self.a }
         }
 
-        fun g() -> std::Void {
+        fun g() -> std::void::Void {
             let a = A(a=5)
             let mut b = a.f()
             b = a.a

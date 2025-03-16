@@ -7,9 +7,9 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
     def test_invalid_function_call_argument_group_duplicate_named_argument(self):
         """
-        fun f(a: std::Bool, b: std::Bool) -> std::Void { }
+        fun f(a: std::boolean::Bool, b: std::boolean::Bool) -> std::void::Void { }
 
-        fun g() -> std::Void {
+        fun g() -> std::void::Void {
             f(a=true, a=false)
         }
         """
@@ -17,9 +17,9 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.OrderInvalidError)
     def test_invalid_function_call_argument_group_invalid_argument_order(self):
         """
-        fun f(a: std::Bool, b: std::Bool) -> std::Void { }
+        fun f(a: std::boolean::Bool, b: std::boolean::Bool) -> std::void::Void { }
 
-        fun g() -> std::Void {
+        fun g() -> std::void::Void {
             f(a=true, false)
         }
         """
@@ -27,9 +27,9 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ArgumentTupleExpansionOfNonTupleError)
     def test_invalid_function_call_argument_group_invalid_tuple_expansion(self):
         """
-        fun f(a: std::Bool, b: std::Bool) -> std::Void { }
+        fun f(a: std::boolean::Bool, b: std::boolean::Bool) -> std::void::Void { }
 
-        fun g() -> std::Void {
+        fun g() -> std::void::Void {
             let x = 1
             f(..x)
         }
@@ -38,9 +38,9 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MutabilityInvalidMutationError)
     def test_invalid_function_call_argument_group_mut_borrow_from_ref_borrow(self):
         """
-        fun f(a: &mut std::Bool) -> std::Void { }
+        fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
 
-        fun g(a: &std::Bool) -> std::Void {
+        fun g(a: &std::boolean::Bool) -> std::void::Void {
             f(&mut a)
         }
         """
@@ -48,9 +48,9 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MutabilityInvalidMutationError)
     def test_invalid_function_call_argument_group_mut_borrow_from_immutable_value(self):
         """
-        fun f(a: &mut std::Bool) -> std::Void { }
+        fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
 
-        fun g(a: std::Bool) -> std::Void {
+        fun g(a: std::boolean::Bool) -> std::void::Void {
             f(&mut a)
         }
         """
@@ -60,13 +60,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow variable & mut borrow attribute
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut A, b: &mut std::Bool) -> std::Void { }
+        fun f(a: &mut A, b: &mut std::boolean::Bool) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a, &mut a.b)
         }
         """
@@ -76,13 +76,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow variable & move attribute
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &A, b: std::Bool) -> std::Void { }
+        fun f(a: &A, b: std::boolean::Bool) -> std::void::Void { }
 
-        fun g(a: A) -> std::Void {
+        fun g(a: A) -> std::void::Void {
             f(&a, a.b)
         }
         """
@@ -92,13 +92,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow variable & move attribute
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut A, b: std::Bool) -> std::Void { }
+        fun f(a: &mut A, b: std::boolean::Bool) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a, a.b)
         }
         """
@@ -108,13 +108,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow variable & mut borrow attribute
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &A, b: &mut std::Bool) -> std::Void { }
+        fun f(a: &A, b: &mut std::boolean::Bool) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&a, &mut a.b)
         }
         """
@@ -124,13 +124,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow variable & ref borrow attribute
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut A, b: &std::Bool) -> std::Void { }
+        fun f(a: &mut A, b: &std::boolean::Bool) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a, &a.b)
         }
         """
@@ -140,13 +140,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow attribute & mut borrow variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut std::Bool, b: &mut A) -> std::Void { }
+        fun f(a: &mut std::boolean::Bool, b: &mut A) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a.b, &mut a)
         }
         """
@@ -156,13 +156,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow attribute & move variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &std::Bool, b: A) -> std::Void { }
+        fun f(a: &std::boolean::Bool, b: A) -> std::void::Void { }
 
-        fun g(a: A) -> std::Void {
+        fun g(a: A) -> std::void::Void {
             f(&a.b, a)
         }
         """
@@ -172,13 +172,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow attribute & move variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut std::Bool, b: A) -> std::Void { }
+        fun f(a: &mut std::boolean::Bool, b: A) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a.b, a)
         }
         """
@@ -188,13 +188,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow attribute & mut borrow variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &std::Bool, b: &mut A) -> std::Void { }
+        fun f(a: &std::boolean::Bool, b: &mut A) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&a.b, &mut a)
         }
         """
@@ -204,13 +204,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow attribute & ref borrow variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut std::Bool, b: &A) -> std::Void { }
+        fun f(a: &mut std::boolean::Bool, b: &A) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a.b, &a)
         }
         """
@@ -220,13 +220,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow variable & mut borrow variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut A, b: &mut A) -> std::Void { }
+        fun f(a: &mut A, b: &mut A) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a, &mut a)
         }
         """
@@ -236,13 +236,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow variable & move variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &A, b: A) -> std::Void { }
+        fun f(a: &A, b: A) -> std::void::Void { }
 
-        fun g(a: A) -> std::Void {
+        fun g(a: A) -> std::void::Void {
             f(&a, a)
         }
         """
@@ -252,13 +252,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow variable & move variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut A, b: A) -> std::Void { }
+        fun f(a: &mut A, b: A) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a, a)
         }
         """
@@ -268,13 +268,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow variable & mut borrow variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &A, b: &mut A) -> std::Void { }
+        fun f(a: &A, b: &mut A) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&a, &mut a)
         }
         """
@@ -284,13 +284,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow variable & ref borrow variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut A, b: &A) -> std::Void { }
+        fun f(a: &mut A, b: &A) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a, &a)
         }
         """
@@ -300,13 +300,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow variable & ref borrow attribute
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &A, b: &std::Bool) -> std::Void { }
+        fun f(a: &A, b: &std::boolean::Bool) -> std::void::Void { }
 
-        fun g(a: A) -> std::Void {
+        fun g(a: A) -> std::void::Void {
             f(&a, &a.b)
         }
         """
@@ -316,13 +316,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow attribute & ref borrow variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &std::Bool, b: &A) -> std::Void { }
+        fun f(a: &std::boolean::Bool, b: &A) -> std::void::Void { }
 
-        fun g(a: A) -> std::Void {
+        fun g(a: A) -> std::void::Void {
             f(&a.b, &a)
         }
         """
@@ -332,13 +332,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow variable & ref borrow variable
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &A, b: &A) -> std::Void { }
+        fun f(a: &A, b: &A) -> std::void::Void { }
 
-        fun g(a: A) -> std::Void {
+        fun g(a: A) -> std::void::Void {
             f(&a, &a)
         }
         """
@@ -348,13 +348,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow attribute 1 & ref borrow attribute 2
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut std::Bool, b: &std::Bool) -> std::Void { }
+        fun f(a: &mut std::boolean::Bool, b: &std::boolean::Bool) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a.a, &a.b)
         }
         """
@@ -364,13 +364,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow attribute 1 & mut borrow attribute 2
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &std::Bool, b: &mut std::Bool) -> std::Void { }
+        fun f(a: &std::boolean::Bool, b: &mut std::boolean::Bool) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&a.a, &mut a.b)
         }
         """
@@ -380,13 +380,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow attribute 1 & mut borrow attribute 2
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut std::Bool, b: &mut std::Bool) -> std::Void { }
+        fun f(a: &mut std::boolean::Bool, b: &mut std::boolean::Bool) -> std::void::Void { }
 
-        fun g(mut a: A) -> std::Void {
+        fun g(mut a: A) -> std::void::Void {
             f(&mut a.a, &mut a.b)
         }
         """
@@ -396,13 +396,13 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow attribute 1 & ref borrow attribute 2
         """
         cls A {
-            a: std::Bool
-            b: std::Bool
+            a: std::boolean::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &std::Bool, b: &std::Bool) -> std::Void { }
+        fun f(a: &std::boolean::Bool, b: &std::boolean::Bool) -> std::void::Void { }
 
-        fun g(a: A) -> std::Void {
+        fun g(a: A) -> std::void::Void {
             f(&a.a, &a.b)
         }
         """

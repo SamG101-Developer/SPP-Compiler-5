@@ -9,16 +9,16 @@ class TestOverloads(CustomTestCase):
         cls B { }
 
         sup A {
-            @virtual_method fun f(&self) -> std::Void { }
-            @virtual_method fun f(&self, a: A) -> std::Void { }
-            @virtual_method fun f(&self, a: std::Bool, b: std::BigInt) -> std::Void { }
+            @virtual_method fun f(&self) -> std::void::Void { }
+            @virtual_method fun f(&self, a: A) -> std::void::Void { }
+            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::void::Void { }
         }
 
         sup B ext A {
-            fun f(&self) -> std::Void { }
+            fun f(&self) -> std::void::Void { }
         }
 
-        fun test() -> std::Void {
+        fun test() -> std::void::Void {
             let b = B()
             b.f()
             b.f(A())
@@ -33,18 +33,18 @@ class TestOverloads(CustomTestCase):
         cls B[T] { }
 
         sup [T] A[T] {
-            @virtual_method fun f(&self) -> std::Void { }
+            @virtual_method fun f(&self) -> std::void::Void { }
             @virtual_method
             @no_impl fun f(&self, a: T) -> T { }
-            @virtual_method fun f(&self, a: std::Bool, b: std::BigInt) -> std::Void { }
+            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::void::Void { }
         }
 
         sup [T] B[T] ext A[T] {
-            fun f(&self) -> std::Void { }
+            fun f(&self) -> std::void::Void { }
         }
 
-        fun test() -> std::Void {
-            let b = B[std::BigInt]()
+        fun test() -> std::void::Void {
+            let b = B[std::number::BigInt]()
             b.f()
             let mut x = b.f(1)
             x = 123
@@ -59,21 +59,21 @@ class TestOverloads(CustomTestCase):
         cls B[T] { }
 
         sup [T] A[T] {
-            @virtual_method fun f(&self) -> std::Void { }
+            @virtual_method fun f(&self) -> std::void::Void { }
             @virtual_method
-            @no_impl fun f(&self, a: T) -> std::Vec[T] { }
-            @virtual_method fun f(&self, a: std::Bool, b: std::BigInt) -> std::Void { }
+            @no_impl fun f(&self, a: T) -> std::vector::Vec[T] { }
+            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::void::Void { }
         }
 
         sup [T] B[T] ext A[T] {
-            fun f(&self) -> std::Void { }
+            fun f(&self) -> std::void::Void { }
         }
 
-        fun test() -> std::Void {
-            let b = B[std::BigInt]()
+        fun test() -> std::void::Void {
+            let b = B[std::number::BigInt]()
             b.f()
             let mut x = b.f(1)
-            x = std::Vec[std::BigInt]()
+            x = std::vector::Vec[std::number::BigInt]()
             b.f(true, 1)
         }
         """
@@ -85,17 +85,19 @@ class TestOverloads(CustomTestCase):
         cls B[T] { }
 
         sup [T] A[T] {
-            @virtual_method cor c(&self) -> std::Gen[&T] { }
-            @virtual_method cor c(&self, a: T) -> std::Gen[&T] { }
-            @virtual_method cor c(&self, a: std::Bool, b: std::BigInt) -> std::Gen[&T] { }
+            @virtual_method cor c(&self) -> std::generator::Gen[&T] { }
+            @virtual_method cor c(&self, a: T) -> std::generator::Gen[&T] { }
+            @virtual_method cor c(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::generator::Gen[&T] { }
         }
 
         sup [T] B[T] ext A[T] {
-            cor c(&self) -> std::Gen[T] { }
+            cor c(&self) -> std::generator::Gen[T] { }
         }
 
-        fun test() -> std::Void {
-            let b = B[std::BigInt]()
+        fun test() -> std::void::Void {
+            let b = B[std::number::BigInt]()
+            pin b
+
             let coroutine = b.c(123)
             coroutine.res()
         }
@@ -108,16 +110,16 @@ class TestOverloads(CustomTestCase):
         cls B { }
 
         sup A {
-            @virtual_method fun f(&self) -> std::Void { }
-            @virtual_method fun f(&self, a: A) -> std::Void { }
-            @virtual_method fun f(&self, a: std::Bool, b: std::BigInt) -> std::Void { }
+            @virtual_method fun f(&self) -> std::void::Void { }
+            @virtual_method fun f(&self, a: A) -> std::void::Void { }
+            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::void::Void { }
         }
 
         sup B ext A {
-            fun f(&self) -> std::Void { }
+            fun f(&self) -> std::void::Void { }
         }
 
-        fun test() -> std::Void {
+        fun test() -> std::void::Void {
             let b = B()
             b.f("a")
         }

@@ -12,7 +12,7 @@ Generic types.
 * Passing too many generic arguments causes a Python error.
 
 Specialization.
-* `sup std::Vec[std::Str]` applies to all `std::Vec` types.
+* `sup std::vector::Vec[std::string::Str]` applies to all `std::vector::Vec` types.
 * Generic arguments must match their parameters exactly for sup Type[T=T] to work (generic type regeneration)
 
 Function folding.
@@ -23,8 +23,7 @@ Equality methods.
 * Change a == b at the compiler level into a == &b.
 
 Smart pointers.
-* Allow the "self" parameter to be a smart pointer.
-* For example, "fun f(&self: Shared) -> Void" should work. "self" is then inferred as Shared[Self].
+* Attribute access to deferred types
 
 Types.
 * Change single tuple type back to (T) not (T, )

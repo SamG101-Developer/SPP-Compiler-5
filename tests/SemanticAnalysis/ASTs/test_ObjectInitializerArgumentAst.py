@@ -8,11 +8,11 @@ class TestObjectInitializerArgumentAst(CustomTestCase):
     def test_invalid_object_initializer_named_argument_expression_type(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
-        fun f() -> std::Void {
-            let foo = Foo(a=std::BigInt)
+        fun f() -> std::void::Void {
+            let foo = Foo(a=std::number::BigInt)
         }
         """
 
@@ -20,10 +20,10 @@ class TestObjectInitializerArgumentAst(CustomTestCase):
     def test_valid_object_initializer_named_argument(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = Foo(a=1)
         }
         """
@@ -32,10 +32,10 @@ class TestObjectInitializerArgumentAst(CustomTestCase):
     def test_valid_object_initializer_unnamed_argument(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let a = 1
             let foo = Foo(a)
         }

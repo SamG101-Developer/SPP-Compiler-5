@@ -6,8 +6,8 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
     def test_invalid_sup_prototype_functions_unconstrained_generic_parameter_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
         sup [T] Point { }
@@ -32,14 +32,14 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
             y: T
         }
 
-        sup [T=std::Bool] Point[T] { }
+        sup [T=std::boolean::Bool] Point[T] { }
         """
 
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
     def test_invalid_sup_prototype_functions_onto_generic_type(self):
         """
         sup [T] T {
-            fun f(&self) -> std::Void { }
+            fun f(&self) -> std::void::Void { }
         }
         """
 
@@ -62,7 +62,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
         """
         cls A { }
         sup A {
-            fun f(&self) -> std::Void { }
+            fun f(&self) -> std::void::Void { }
         }
         """
 
@@ -76,8 +76,8 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
             fun f(&self) -> T { }
         }
 
-        fun f() -> std::Void {
-            let x = BaseClass[std::Bool] ()
+        fun f() -> std::void::Void {
+            let x = BaseClass[std::boolean::Bool] ()
             let mut y = x.f()
             y = false
         }
@@ -93,7 +93,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
             fun f(&self) -> T { }
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let x = BaseClass(a=false)
             let mut y = x.f()
             y = false

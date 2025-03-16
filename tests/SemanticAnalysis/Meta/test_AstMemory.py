@@ -6,11 +6,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_initialized_moved(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
 
             case 1 of
@@ -25,11 +25,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_initialized_initialized(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p: Point
             case 1 of
                 == 1 { p = Point(x=5, y=6) }
@@ -43,11 +43,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_initialized_partially_initialized_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=6)
             case 1 of
                 == 1 { let x = p.x }
@@ -61,11 +61,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_initialized_partially_initialized_2(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=6)
             case 1 of
                 == 1 { let x = p.x }
@@ -79,11 +79,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_initialized_partially_initialized_3(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let mut p = Point(x=5, y=6)
             let x = p.x
 
@@ -99,11 +99,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_pinned_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             case 1 of
                 == 1 { pin p }
@@ -117,11 +117,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_pinned_2(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             case 1 of
                 == 1 { pin p.x }
@@ -135,11 +135,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_pinned_3(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             case 1 of
                 == 1 { pin p.x }
@@ -153,11 +153,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_pinned_4(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             pin p
             case 1 of
@@ -172,11 +172,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_pinned_5(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             pin p.x, p.y
             case 1 of
@@ -191,11 +191,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_inconsistently_pinned_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             pin p.x, p.y
             case 1 of
@@ -210,11 +210,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_not_initialized_usage_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p: Point
             let q = p
         }
@@ -224,11 +224,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_not_initialized_usage_2(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             let q = p
             let r = p
@@ -239,11 +239,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_not_initialized_usage_3(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             let q = p
             let x = p.x
@@ -254,11 +254,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_partially_initialized_usage_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             let x1 = p.x
             let x2 = p.x
@@ -269,11 +269,11 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_memory_partially_initialized_usage_2(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             let x = p.x
             let q = p
@@ -290,7 +290,7 @@ class TestAstMemory(CustomTestCase):
             y: T
         }
 
-        fun f(p: &Point) -> std::Void {
+        fun f(p: &Point) -> std::void::Void {
             let x = p.x
         }
         """
@@ -305,7 +305,7 @@ class TestAstMemory(CustomTestCase):
             y: T
         }
 
-        fun f(p: &mut Point) -> std::Void {
+        fun f(p: &mut Point) -> std::void::Void {
             let x = p.x
         }
         """
@@ -314,11 +314,11 @@ class TestAstMemory(CustomTestCase):
     def test_valid_memory_multiple_partial_moves(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             let x = p.x
             let y = p.y
@@ -328,7 +328,7 @@ class TestAstMemory(CustomTestCase):
     @should_pass_compilation()
     def test_valid_memory_copy(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let x = 123
             let a = x
             let b = x
@@ -339,13 +339,13 @@ class TestAstMemory(CustomTestCase):
     def test_valid_memory_copy_custom(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        sup Point ext std::Copy { }
+        sup Point ext std::copy::Copy { }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             let a = p
             let b = p
@@ -360,9 +360,9 @@ class TestAstMemory(CustomTestCase):
             y: T
         }
 
-        sup [T] Point[T] ext std::Copy { }
+        sup [T] Point[T] ext std::copy::Copy { }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             let a = p
             let b = p
@@ -372,11 +372,11 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
     def test_invalid_unpinned_values_for_coroutine(self):
         """
-        cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt] {
+        cor foo(x: &std::number::BigInt) -> std::generator::Gen[&std::number::BigInt] {
             gen &1
         }
 
-        fun test() -> std::Void {
+        fun test() -> std::void::Void {
             let x = 123
             foo(&x)
         }
@@ -385,10 +385,10 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
     def test_invalid_unpinned_values_for_async(self):
         """
-        fun foo(x: &std::BigInt) -> std::Void {
+        fun foo(x: &std::number::BigInt) -> std::void::Void {
         }
 
-        fun test() -> std::Void {
+        fun test() -> std::void::Void {
             let x = 123
             async foo(&x)
         }
@@ -399,11 +399,11 @@ class TestAstMemory(CustomTestCase):
         """
         cls MyType[T] { }
         sup [T] MyType[T] {
-            cor custom_iter_mut(&mut self) -> std::Gen[&mut T, std::Bool] { }
+            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut T, std::boolean::Bool] { }
         }
 
-        fun test() -> std::Void {
-            let mut coro = MyType[std::BigInt]()
+        fun test() -> std::void::Void {
+            let mut coro = MyType[std::number::BigInt]()
             pin coro
 
             let iter = coro.custom_iter_mut()
@@ -418,11 +418,11 @@ class TestAstMemory(CustomTestCase):
         """
         cls MyType[T] { }
         sup [T] MyType[T] {
-            cor custom_iter_mut(&mut self) -> std::Gen[&mut T, std::Bool] { }
+            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut T, std::boolean::Bool] { }
         }
 
-        fun test() -> std::Void {
-            let mut coro = MyType[std::BigInt]()
+        fun test() -> std::void::Void {
+            let mut coro = MyType[std::number::BigInt]()
             pin coro
 
             let x = coro.custom_iter_mut().res(false)
@@ -434,11 +434,11 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_use_of_moving_coro_during_inherited_pin_status_from_pinned_borrow(self):
         """
-        cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt] {
+        cor foo(x: &std::number::BigInt) -> std::generator::Gen[&std::number::BigInt] {
             gen &1
         }
 
-        fun test() -> std::Void {
+        fun test() -> std::void::Void {
             let x = 1
             pin x
             let coro = foo(&x)
@@ -449,11 +449,11 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_use_of_coroutine_post_invalidation(self):
         """
-        cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt, std::Bool] {
+        cor foo(x: &std::number::BigInt) -> std::generator::Gen[&std::number::BigInt, std::boolean::Bool] {
             gen &1
         }
 
-        fun test() -> std::Void {
+        fun test() -> std::void::Void {
             let x = 1
             pin x
             let coro = foo(&x)
@@ -465,10 +465,10 @@ class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_use_of_future_post_invalidation(self):
         """
-        fun foo(x: &std::BigInt) -> std::Void {
+        fun foo(x: &std::number::BigInt) -> std::void::Void {
         }
 
-        fun test() -> std::Void {
+        fun test() -> std::void::Void {
             let x = 1
             pin x
             let fut = async foo(&x)
@@ -480,11 +480,11 @@ class TestAstMemory(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pinned_values_for_coroutine(self):
         """
-        cor foo(x: &std::BigInt) -> std::Gen[&std::BigInt] {
+        cor foo(x: &std::number::BigInt) -> std::generator::Gen[&std::number::BigInt] {
             gen &1
         }
 
-        fun test() -> std::Void {
+        fun test() -> std::void::Void {
             let x = 123
             pin x
             foo(&x)
@@ -494,10 +494,10 @@ class TestAstMemory(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pinned_values_for_async(self):
         """
-        fun foo(x: &std::BigInt) -> std::Void {
+        fun foo(x: &std::number::BigInt) -> std::void::Void {
         }
 
-        fun test() -> std::Void {
+        fun test() -> std::void::Void {
             let x = 123
             pin x
             async foo(&x)
@@ -508,14 +508,14 @@ class TestAstMemory(CustomTestCase):
     def test_invalid_mut_borrow_usage_invalidated(self):
         """
         cls MyType {
-            x: std::BigInt
+            x: std::number::BigInt
         }
 
         sup MyType {
-            cor custom_iter_mut(&mut self) -> std::Gen[&mut std::BigInt, std::Bool] { }
+            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut std::number::BigInt, std::boolean::Bool] { }
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let mut my_type = MyType(x=123)
             pin my_type
 
@@ -529,14 +529,14 @@ class TestAstMemory(CustomTestCase):
     def test_valid_mut_borrow_usage_invalidated(self):
         """
         cls MyType {
-            x: std::BigInt
+            x: std::number::BigInt
         }
 
         sup MyType {
-            cor custom_iter_mut(&mut self) -> std::Gen[&mut std::BigInt, std::Bool] { }
+            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut std::number::BigInt, std::boolean::Bool] { }
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let mut my_type = MyType(x=123)
             pin my_type
 
@@ -550,14 +550,14 @@ class TestAstMemory(CustomTestCase):
     def test_valid_ref_borrow_usage_invalidated(self):
         """
         cls MyType {
-            x: std::BigInt
+            x: std::number::BigInt
         }
 
         sup MyType {
-            cor custom_iter_ref(&self) -> std::Gen[&std::BigInt, std::Bool] { }
+            cor custom_iter_ref(&self) -> std::generator::Gen[&std::number::BigInt, std::boolean::Bool] { }
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let my_type = MyType(x=123)
             pin my_type
 

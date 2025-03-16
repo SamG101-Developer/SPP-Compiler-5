@@ -7,7 +7,7 @@ class TestAssignmentStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_assignment_variable(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let mut a = 1
             a = 2
         }
@@ -17,10 +17,10 @@ class TestAssignmentStatementAst(CustomTestCase):
     def test_valid_assignment_attribute_owned(self):
         """
         cls A {
-            b: std::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(mut a: A) -> std::Void {
+        fun f(mut a: A) -> std::void::Void {
             a.b = true
         }
         """
@@ -29,10 +29,10 @@ class TestAssignmentStatementAst(CustomTestCase):
     def test_valid_assignment_attribute_mut_borrow(self):
         """
         cls A {
-            b: std::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &mut A) -> std::Void {
+        fun f(a: &mut A) -> std::void::Void {
             a.b = true
         }
         """
@@ -40,7 +40,7 @@ class TestAssignmentStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_assignment_mutable_value_ref_borrow(self):
         """
-        fun f(mut a: &std::Bool, b: &std::Bool) -> std::Void {
+        fun f(mut a: &std::boolean::Bool, b: &std::boolean::Bool) -> std::void::Void {
             a = b
         }
         """
@@ -48,8 +48,8 @@ class TestAssignmentStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_assignment_non_initialized_non_mut_variable(self):
         """
-        fun f() -> std::Void {
-            let a: std::Bool
+        fun f() -> std::void::Void {
+            let a: std::boolean::Bool
             a = false
         }
         """
@@ -57,8 +57,8 @@ class TestAssignmentStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_assignment_non_initialized_mut_variable(self):
         """
-        fun f() -> std::Void {
-            let mut a: std::Bool
+        fun f() -> std::void::Void {
+            let mut a: std::boolean::Bool
             a = false
             a = true
         }
@@ -67,7 +67,7 @@ class TestAssignmentStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_assignment_variable(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let mut a = 1
             a = "2"
         }
@@ -77,10 +77,10 @@ class TestAssignmentStatementAst(CustomTestCase):
     def test_invalid_assignment_attribute(self):
         """
         cls A {
-            b: std::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(mut a: A) -> std::Void {
+        fun f(mut a: A) -> std::void::Void {
             a.b = "1"
         }
         """
@@ -88,7 +88,7 @@ class TestAssignmentStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MutabilityInvalidMutationError)
     def test_invalid_assignment_non_mut_variable(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let a = 1
             a = 2
         }
@@ -98,10 +98,10 @@ class TestAssignmentStatementAst(CustomTestCase):
     def test_invalid_assignment_non_mut_attribute(self):
         """
         cls A {
-            b: std::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: A) -> std::Void {
+        fun f(a: A) -> std::void::Void {
             a.b = true
         }
         """
@@ -110,10 +110,10 @@ class TestAssignmentStatementAst(CustomTestCase):
     def test_invalid_assignment_ref_borrow_attribute(self):
         """
         cls A {
-            b: std::Bool
+            b: std::boolean::Bool
         }
 
-        fun f(a: &A) -> std::Void {
+        fun f(a: &A) -> std::void::Void {
             a.b = true
         }
         """
@@ -121,7 +121,7 @@ class TestAssignmentStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.AssignmentInvalidLhsError)
     def test_invalid_assignment_ref_borrow_variable(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             1 = 2
         }
         """
@@ -129,8 +129,8 @@ class TestAssignmentStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MutabilityInvalidMutationError)
     def test_invalid_assignment_non_initialized_non_mut_variable(self):
         """
-        fun f() -> std::Void {
-            let a: std::Bool
+        fun f() -> std::void::Void {
+            let a: std::boolean::Bool
             a = false
             a = true
         }

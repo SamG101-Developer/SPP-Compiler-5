@@ -10,7 +10,7 @@ class TestAnnotationAst(CustomTestCase):
         cls A { }
         sup A {
             @virtual_method
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
         """
 
@@ -45,11 +45,11 @@ class TestAnnotationAst(CustomTestCase):
 
         sup A {
             @public
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
         @public
-        fun g() -> std::Void { }
+        fun g() -> std::void::Void { }
         """
 
     @should_pass_compilation()
@@ -60,11 +60,11 @@ class TestAnnotationAst(CustomTestCase):
 
         sup A {
             @protected
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
         @protected
-        fun g() -> std::Void { }
+        fun g() -> std::void::Void { }
         """
 
     @should_pass_compilation()
@@ -75,11 +75,11 @@ class TestAnnotationAst(CustomTestCase):
 
         sup A {
             @private
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
         @private
-        fun g() -> std::Void { }
+        fun g() -> std::void::Void { }
         """
 
     @should_pass_compilation()
@@ -90,11 +90,11 @@ class TestAnnotationAst(CustomTestCase):
 
         sup A {
             @hidden
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
         @hidden
-        fun g() -> std::Void { }
+        fun g() -> std::void::Void { }
         """
 
     @should_pass_compilation()
@@ -104,11 +104,11 @@ class TestAnnotationAst(CustomTestCase):
 
         sup A {
             @cold
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
         @cold
-        fun g() -> std::Void { }
+        fun g() -> std::void::Void { }
         """
 
     @should_pass_compilation()
@@ -118,11 +118,11 @@ class TestAnnotationAst(CustomTestCase):
 
         sup A {
             @hot
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
         @hot
-        fun g() -> std::Void { }
+        fun g() -> std::void::Void { }
         """
 
     @should_fail_compilation(SemanticErrors.AnnotationInvalidApplicationError)

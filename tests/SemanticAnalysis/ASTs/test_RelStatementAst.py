@@ -7,7 +7,7 @@ class TestRelStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryPinTargetInvalidError)
     def test_invalid_pin_statement_non_symbolic_target(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             rel 5
         }
         """
@@ -16,11 +16,11 @@ class TestRelStatementAst(CustomTestCase):
     def test_invalid_rel_statement_non_pinned_target_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             pin p
             rel p.x
         }
@@ -30,11 +30,11 @@ class TestRelStatementAst(CustomTestCase):
     def test_invalid_rel_statement_non_pinned_target_2(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             pin p.x
             rel p
         }
@@ -46,11 +46,11 @@ class TestRelStatementAst(CustomTestCase):
         cmp p: Point = Point(x=5, y=5)
 
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             rel p
         }
         """
@@ -59,11 +59,11 @@ class TestRelStatementAst(CustomTestCase):
     def test_valid_rel_statement(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             pin p.x
             pin p.y
             rel p.x
@@ -75,11 +75,11 @@ class TestRelStatementAst(CustomTestCase):
     def test_valid_rel_statement_multiple(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             pin p.x, p.y
             rel p.x, p.y
         }

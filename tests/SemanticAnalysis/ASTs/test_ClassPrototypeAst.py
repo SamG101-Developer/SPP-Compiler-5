@@ -30,6 +30,6 @@ class TestClassPrototypeAst(CustomTestCase):
         }
 
         cls B {
-            a: std::Str
+            a: std::string::Str
         }
         """
