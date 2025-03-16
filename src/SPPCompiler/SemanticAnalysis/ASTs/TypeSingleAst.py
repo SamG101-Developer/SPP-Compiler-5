@@ -139,7 +139,7 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
         type_scope = type_scope or scope_manager.current_scope
 
         # Determine the type scope and type symbol.
-        type_symbol = AstTypeManagement.get_type_part_symbol_with_error(type_scope, self.name.without_generics(), ignore_alias=True)
+        type_symbol = AstTypeManagement.get_type_part_symbol_with_error(type_scope, scope_manager, self.name.without_generics(), ignore_alias=True)
         type_symbol_2 = type_scope.get_symbol(self.name.without_generics(), ignore_alias=False)
         type_scope = type_symbol.scope
         if type_symbol.is_generic: return

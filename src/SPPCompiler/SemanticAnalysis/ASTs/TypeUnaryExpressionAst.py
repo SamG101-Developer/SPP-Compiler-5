@@ -70,7 +70,7 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
         elif isinstance(that, Asts.TypeUnaryExpressionAst) and isinstance(that.op, Asts.TypeUnaryOperatorBorrowAst):
             that = that.rhs
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
-            self_scope = self_scope.get_symbol(self.op.name).scope
+            self_scope = self_scope.get_namespace_symbol(self.op.name).scope
         return self.rhs.symbolic_eq(that, self_scope, that_scope, check_variant, debug)
 
     def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
@@ -78,7 +78,7 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
-            scope = scope.get_symbol(self.op.name).scope
+            scope = scope.get_namespace_symbol(self.op.name).scope
         return self.rhs.split_to_scope_and_type(scope)
 
     def get_convention(self) -> Optional[Asts.ConventionAst]:

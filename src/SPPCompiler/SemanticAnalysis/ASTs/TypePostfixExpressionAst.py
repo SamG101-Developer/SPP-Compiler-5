@@ -42,7 +42,7 @@ class TypePostfixExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
 
         match self.op:
             case Asts.TypePostfixOperatorNestedTypeAst():
-                AstTypeManagement.get_type_part_symbol_with_error(lhs_type_scope, self.op.name.name, ignore_alias=True)
+                AstTypeManagement.get_type_part_symbol_with_error(lhs_type_scope, scope_manager, self.op.name.name, ignore_alias=True)
 
             case Asts.TypePostfixOperatorIndexedTypeAst():
                 AstTypeManagement.get_nth_type_of_indexable_type(int(self.op.index.token_data), lhs_type, lhs_type_scope)
@@ -59,7 +59,7 @@ class TypePostfixExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
 
         match self.op:
             case Asts.TypePostfixOperatorNestedTypeAst():
-                return AstTypeManagement.get_type_part_symbol_with_error(lhs_type_scope, self.op.name.name, ignore_alias=True).fq_name
+                return AstTypeManagement.get_type_part_symbol_with_error(lhs_type_scope, scope_manager, self.op.name.name, ignore_alias=True).fq_name
 
             case Asts.TypePostfixOperatorIndexedTypeAst():
                 return AstTypeManagement.get_nth_type_of_indexable_type(int(self.op.index.token_data), lhs_type, lhs_type_scope)
