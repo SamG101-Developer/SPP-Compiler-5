@@ -46,8 +46,6 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction):
         return self.name
 
     def analyse_semantics(self, scope_manager: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
-        # Todo: mark borrows?
-
         # Create a variable symbol for this identifier and value.
         symbol = VariableSymbol(
             name=self.alias.name if self.alias else self.name,

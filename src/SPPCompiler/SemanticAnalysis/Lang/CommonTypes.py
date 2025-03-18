@@ -157,11 +157,11 @@ class CommonTypes:
         return AstMutation.inject_code(f"std::generator::Gen[{yield_type}, {send_type}]", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
-    def DerefRef(inner_type, pos: int = 0):
+    def DerefRef(inner_type=None, pos: int = 0):
         return AstMutation.inject_code(f"std::ops::deref::DerefRef[{inner_type}]", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
-    def DerefMut(inner_type, pos: int = 0):
+    def DerefMut(inner_type=None, pos: int = 0):
         return AstMutation.inject_code(f"std::ops::deref::DerefMut[{inner_type}]", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod

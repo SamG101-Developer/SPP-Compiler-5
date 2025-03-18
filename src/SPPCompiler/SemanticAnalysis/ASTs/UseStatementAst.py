@@ -21,9 +21,13 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-# Todo:
-#  - this class is a major nasty
-#  - it can be in the module/sup scope (all stages normally), or in a runtime block (all stages at once)
+def _skip_all_use_statement_scopes(scope_manager: ScopeManager) -> None:
+    # Skip through the class, type-alias and superimposition scopes.
+    scope_manager.move_to_next_scope()
+    scope_manager.move_to_next_scope()
+    scope_manager.move_to_next_scope()
+    scope_manager.move_out_of_current_scope()
+    scope_manager.move_out_of_current_scope()
 
 
 @dataclass
@@ -122,13 +126,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
         scope_manager.move_out_of_current_scope()
 
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
-        # Skip through the class, type-alias and superimposition scopes.
-        scope_manager.move_to_next_scope()
-        scope_manager.move_to_next_scope()
-        self.old_type.analyse_semantics(scope_manager)
-        scope_manager.move_to_next_scope()
-        scope_manager.move_out_of_current_scope()
-        scope_manager.move_out_of_current_scope()
+        _skip_all_use_statement_scopes(scope_manager)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the annotations.
@@ -137,11 +135,7 @@ class UseStatementAst(Ast, VisibilityEnabled, TypeInferrable):
 
         # If the symbol has already been generated (module/sup level, skip the scopes).
         if self._generated:
-            scope_manager.move_to_next_scope()
-            scope_manager.move_to_next_scope()
-            scope_manager.move_to_next_scope()
-            scope_manager.move_out_of_current_scope()
-            scope_manager.move_out_of_current_scope()
+            _skip_all_use_statement_scopes(scope_manager)
 
         # Otherwise, run all the generation and analysis stages, resetting the scope each time.
         else:

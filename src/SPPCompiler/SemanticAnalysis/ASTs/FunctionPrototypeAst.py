@@ -225,9 +225,9 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         raise NotImplementedError(f"Unknown convention for function {self.name}")
 
     def __deepcopy__(self, memodict: Dict = None) -> FunctionPrototypeAst:
-        # Copy all attributes except for "_protected" attributes, which are re-linked.
+        # Copy all attributes except for "_protected" attributes, which are re-linked by reference.
         return type(self)(
-            copy.deepcopy(self.pos), self.annotations, self.tok_fun,
+            self.pos, self.annotations, self.tok_fun,
             copy.deepcopy(self.name), copy.deepcopy(self.generic_parameter_group),
             copy.deepcopy(self.function_parameter_group), self.tok_arrow,
             copy.deepcopy(self.return_type), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
