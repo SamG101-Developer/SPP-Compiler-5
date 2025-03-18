@@ -90,7 +90,7 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                     raise SemanticErrors.FunctionCallTooManyArgumentsError().add(self, function_overload.name).scopes(scope_manager.current_scope)
 
                 # Check for any named arguments without a corresponding parameter.
-                # Todo: Generic=Void means this parameter is removed.
+                # Todo: Generic=Void means the associated parameters should be removed.
                 if invalid_arguments := argument_names.set_subtract(parameter_names):
                     raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_arguments[0], "argument").scopes(scope_manager.current_scope)
 
@@ -138,14 +138,15 @@ class PostfixExpressionOperatorFunctionCallAst(Ast, TypeInferrable):
                     if isinstance(parameter, Asts.FunctionParameterVariadicAst):
                         parameter_type = CommonTypes.Tup(Seq([parameter_type] * argument_type.type_parts()[0].generic_argument_group.arguments.length))
                         parameter_type.analyse_semantics(scope_manager, **kwargs)
-                        parameter_type = parameter_type
 
                     if isinstance(parameter, Asts.FunctionParameterSelfAst):
                         argument.convention = parameter.convention
-                        argument_type = argument_type.with_convention(parameter.convention)
-                        continue
+                        argument_type = argument_type.without_generics()
 
-                    if not parameter_type.symbolic_eq(argument_type, function_scope, scope_manager.current_scope):
+                        if function_overload.function_parameter_group.get_self()._arbitrary and not parameter_type.without_generics().without_convention().symbolic_eq_relaxed(argument_type.without_generics(), function_scope, scope_manager.current_scope, debug=True):
+                            raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
+
+                    elif not parameter_type.symbolic_eq(argument_type, function_scope, scope_manager.current_scope):
                         raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
                 # Mark the overload as a pass.
