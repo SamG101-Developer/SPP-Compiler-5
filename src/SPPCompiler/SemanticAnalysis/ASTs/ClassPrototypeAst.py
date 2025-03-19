@@ -61,18 +61,17 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
     def _generate_symbols(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
+        SymbolType = TypeSymbol if not self._is_alias else AliasSymbol
 
-        symbol_type = TypeSymbol if not self._is_alias else AliasSymbol
         symbol_name = copy.deepcopy(self.name.type_parts()[0])
         symbol_name.generic_argument_group = GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)
 
-        symbol_1 = symbol_type(name=symbol_name, type=self, scope=scope_manager.current_scope, visibility=self._visibility[0])
+        symbol_1 = SymbolType(name=symbol_name, type=self, scope=scope_manager.current_scope, visibility=self._visibility[0])
         scope_manager.current_scope.parent.add_symbol(symbol_1)
         scope_manager.current_scope._type_symbol = symbol_1
 
         if self.generic_parameter_group.parameters:
-            symbol_2 = symbol_type(name=self.name.type_parts()[0], type=self, visibility=self._visibility[0])
-            symbol_2.scope = scope_manager.current_scope
+            symbol_2 = SymbolType(name=self.name.type_parts()[0], type=self, scope=scope_manager.current_scope, visibility=self._visibility[0])
             scope_manager.current_scope.parent.add_symbol(symbol_2)
 
     def pre_process(self, context: PreProcessingContext) -> None:
