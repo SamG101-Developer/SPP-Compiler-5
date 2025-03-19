@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Self, Optional, Tuple, Type
+from typing import Self, Optional, Tuple
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
@@ -12,6 +12,9 @@ from SPPCompiler.Utils.Sequence import Seq
 class TypeAbstractAst(Ast):
     def __json__(self) -> str:
         return self.print(AstPrinter())
+
+    def convert(self) -> Asts.TypeAst:
+        ...
 
     def prepend_namespace_part(self, part: Asts.IdentifierAst) -> Asts.TypeAst:
         return Asts.TypeUnaryExpressionAst(

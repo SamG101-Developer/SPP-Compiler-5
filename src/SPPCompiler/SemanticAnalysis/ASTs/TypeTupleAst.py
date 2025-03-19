@@ -18,7 +18,7 @@ class TypeTupleAst(Ast):
     def pos_end(self) -> int:
         return self.tok_r_paren.pos_end
 
-    def convert(self) -> Asts.TypeSingleAst:
+    def convert(self) -> Asts.TypeAst:
         return CommonTypes.Tup(self.type_list, self.pos)
 
 

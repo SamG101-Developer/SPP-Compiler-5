@@ -20,7 +20,7 @@ class TypeArrayAst(Ast):
     def pos_end(self) -> int:
         return self.tok_r_bracket.pos_end
 
-    def convert(self) -> Asts.TypeSingleAst:
+    def convert(self) -> Asts.TypeAst:
         return CommonTypes.Arr(self.type, self.size, self.pos)
 
 

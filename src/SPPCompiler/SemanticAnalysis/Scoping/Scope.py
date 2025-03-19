@@ -6,8 +6,7 @@ from typing import Any, Optional, Tuple, TYPE_CHECKING
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.Compiler.ModuleTree import Module
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, AliasSymbol, \
-    Symbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -133,8 +132,8 @@ class Scope:
             symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
-        if not symbol and (isinstance(name, Asts.IdentifierAst) or name.value[0] == "$"):
-            symbol = search_super_scopes(scope, name)
+        if not symbol:
+            symbol = search_super_scopes(scope, name, ignore_alias=ignore_alias)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
@@ -228,6 +227,10 @@ class Scope:
         return self.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name)
 
     @property
+    def sup_types_and_scopes(self) -> Seq[(Asts.TypeAst, Scope)]:
+        return self.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: (s.type_symbol.fq_name, s))
+
+    @property
     def sub_scopes(self) -> Seq[Scope]:
         # Get all the sub scopes recursively.
         all_sub_scopes = Seq()
@@ -249,11 +252,11 @@ def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[S
     return scope, type
 
 
-def search_super_scopes(scope: Scope, name: Asts.IdentifierAst | Asts.GenericIdentifierAst) -> Optional[VariableSymbol]:
+def search_super_scopes(scope: Scope, name: Asts.IdentifierAst | Asts.GenericIdentifierAst, ignore_alias: bool) -> Optional[VariableSymbol]:
     # Recursively search the super scopes for a variable symbol.
     symbol = None
     for super_scope in scope._direct_sup_scopes:
-        symbol = super_scope.get_symbol(name)
+        symbol = super_scope.get_symbol(name, exclusive=True, ignore_alias=ignore_alias)
         if symbol: break
     return symbol
 

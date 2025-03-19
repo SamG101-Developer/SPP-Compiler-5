@@ -34,6 +34,9 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
     def pos_end(self) -> int:
         return self.rhs.pos_end
 
+    def convert(self) -> Asts.TypeAst:
+        return self
+
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             return self.op.fq_type_parts() + self.rhs.fq_type_parts()

@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Self, Dict, Tuple, Iterator
 
 import SPPCompiler.SemanticAnalysis as Asts
-from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
@@ -57,6 +57,9 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
     @property
     def pos_end(self) -> int:
         return self.name.pos_end
+
+    def convert(self) -> Asts.TypeAst:
+        return self
 
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return Seq([self.name])
@@ -110,10 +113,6 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
         self_symbol = self_scope.get_symbol(self.name)
         that_symbol = that_scope.get_symbol(that.name)
 
-        # Assume if the symbol cannot be found, its a generic (should have been analysed before-hand).
-        # if self_symbol is None or that_symbol is None:
-        #     return True
-
         if debug:
             print("-" * 100)
             print(self, self_scope, self_symbol)
@@ -125,31 +124,24 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
             if composite_types.any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope, debug=debug)):
                 return True
 
-        # # Intersections type: all the generic arguments must be superimposed over the type.
-        # if self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Isc(), self_scope):
-        #     composite_types = self_symbol.name.generic_argument_group.arguments[0].value.type_parts()[0].generic_argument_group.arguments
-        #     superimposed_types = self_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda sc: sc.type_symbol.fq_name)
-        #     if not composite_types.all(lambda t: superimposed_types.any(lambda s: t.value.symbolic_eq(s, self_scope, that_scope))):
-        #         return False
-
         # Otherwise check the symbols are equal.
         return self_symbol.type is that_symbol.type
 
     def analyse_semantics(self, scope_manager: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
         type_scope = type_scope or scope_manager.current_scope
+        # owner_generics = AstTypeManagement.get_generics_in_scope(type_scope).arguments.filter(lambda g: g.value is not None)
 
         # Determine the type scope and type symbol.
         type_symbol = AstTypeManagement.get_type_part_symbol_with_error(type_scope, scope_manager, self.name.without_generics(), ignore_alias=True)
-        type_symbol_2 = type_scope.get_symbol(self.name.without_generics(), ignore_alias=False)
         type_scope = type_symbol.scope
         if type_symbol.is_generic: return
 
         # Name all the generic arguments.
+        is_tuple = type_symbol.fq_name.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE
         AstFunctions.name_generic_arguments(
             self.name.generic_argument_group.arguments,
             type_symbol.type.generic_parameter_group.parameters,
-            scope_manager,
-            type_symbol_2.fq_name)
+            scope_manager, is_tuple_owner=is_tuple)
 
         # Infer generic arguments from information given from object initialization.
         self.name.generic_argument_group.arguments = AstFunctions.infer_generic_arguments(
@@ -164,7 +156,7 @@ class TypeSingleAst(Asts.TypeAbstractAst, TypeInferrable):
 
         # If the generically filled type doesn't exist (Vec[Str]), but the base does (Vec[T]), create it.
         if not type_scope.parent.has_symbol(self.name):
-            new_scope = AstTypeManagement.create_generic_scope(scope_manager, type_symbol_2.fq_name, self.name, type_symbol)
+            new_scope = AstTypeManagement.create_generic_scope(scope_manager, self.name, type_symbol, is_tuple=is_tuple)
 
             # Handle type aliasing (providing generics to the original type).
             if isinstance(new_scope.type_symbol, AliasSymbol):
