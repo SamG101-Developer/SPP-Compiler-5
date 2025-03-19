@@ -76,8 +76,10 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
             self_scope = self_scope.get_namespace_symbol(self.op.name).scope
         return self.rhs.symbolic_eq(that, self_scope, that_scope, check_variant, debug)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
-        return self
+    def infer_type(self, scope_manager: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
+        type_scope  = type_scope or scope_manager.current_scope
+        type_symbol = type_scope.get_symbol(self)
+        return type_symbol.fq_name
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
