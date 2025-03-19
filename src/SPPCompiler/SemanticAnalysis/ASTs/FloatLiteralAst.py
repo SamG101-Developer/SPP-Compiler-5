@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Tuple
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -13,20 +13,17 @@ from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-def float_limits(*, e: int, m: int) -> tuple[int, int]:
-    b = pow(2, e) - 1
-    upper = (1 + (1 - pow(2, -m))) * pow(2, pow(2, e - 1 - b - 1))
-    lower = -upper
-    return lower, upper
+def _signed_integer_limits(e: int, m: int) -> Tuple[int, int]:
+    return 0, 0
 
 
 SIZE_MAPPING = {
-    "f8": float_limits(e=4, m=3),
-    "f16": float_limits(e=5, m=10),
-    "f32": float_limits(e=8, m=23),
-    "f64": float_limits(e=11, m=52),
-    "f128": float_limits(e=14, m=113),
-    "f256": float_limits(e=18, m=237)}
+    "f8": _signed_integer_limits(e=4, m=3),
+    "f16": _signed_integer_limits(e=5, m=10),
+    "f32": _signed_integer_limits(e=8, m=23),
+    "f64": _signed_integer_limits(e=11, m=52),
+    "f128": _signed_integer_limits(e=14, m=113),
+    "f256": _signed_integer_limits(e=18, m=237)}
 
 
 @dataclass
@@ -54,7 +51,7 @@ class FloatLiteralAst(Ast, TypeInferrable):
             self.integer_value.print(printer),
             self.tok_dot.print(printer),
             self.decimal_value.print(printer),
-            self.type.print(printer) if self.type else ""]
+            ("_" + self.type.print(printer)) if self.type else ""]
         return "".join(string)
 
     @property
@@ -89,8 +86,8 @@ class FloatLiteralAst(Ast, TypeInferrable):
         # Check if the value is within the bounds.
         lower, upper = SIZE_MAPPING[self.type.type_parts()[0].value]
         true_value = float(self.integer_value.token_data + "." + self.decimal_value.token_data)
-        if not (lower <= true_value < upper):
-            raise SemanticErrors.NumberOutOfBoundsError(self, lower, upper, "float").scopes(scope_manager.current_scope)
+        if False:  # Todo: true_value < lower or true_value > upper:
+            raise SemanticErrors.NumberOutOfBoundsError().add(self, lower, upper, "float").scopes(scope_manager.current_scope)
 
 
 __all__ = ["FloatLiteralAst"]
