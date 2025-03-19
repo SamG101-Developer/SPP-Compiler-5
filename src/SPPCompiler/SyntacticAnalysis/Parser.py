@@ -675,18 +675,6 @@ class SppParser:
         p1 = self.parse_once(self.parse_keyword_skip)
         return Asts.LoopControlFlowStatementAst(c1, Seq(), p1)
 
-    def parse_pin_statement(self) -> Asts.PinStatementAst:
-        c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_keyword_pin)
-        p2 = self.parse_one_or_more(self.parse_expression, self.parse_token_comma)
-        return Asts.PinStatementAst(c1, p1, p2)
-
-    def parse_rel_statement(self) -> Asts.RelStatementAst:
-        c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_keyword_rel)
-        p2 = self.parse_one_or_more(self.parse_expression, self.parse_token_comma)
-        return Asts.RelStatementAst(c1, p1, p2)
-
     def parse_inner_scope(self) -> Asts.InnerScopeAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_left_curly_brace)
@@ -701,8 +689,6 @@ class SppParser:
             self.parse_ret_statement,
             self.parse_exit_statement,
             self.parse_skip_statement,
-            self.parse_pin_statement,
-            self.parse_rel_statement,
             self.parse_assignment_statement,
             self.parse_expression)
         return p1
@@ -1828,12 +1814,6 @@ class SppParser:
 
     def parse_keyword_skip(self) -> Asts.TokenAst:
         return self.parse_keyword_raw(RawKeywordType.Skip, SppTokenType.KwSkip, requires_following_space=False)
-
-    def parse_keyword_pin(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Pin, SppTokenType.KwPin, requires_following_space=True)
-
-    def parse_keyword_rel(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Rel, SppTokenType.KwRel, requires_following_space=True)
 
     def parse_keyword_use(self) -> Asts.TokenAst:
         return self.parse_keyword_raw(RawKeywordType.Use, SppTokenType.KwUse, requires_following_space=True)

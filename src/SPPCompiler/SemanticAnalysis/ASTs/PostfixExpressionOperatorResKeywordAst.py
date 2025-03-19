@@ -49,18 +49,13 @@ class PostfixExpressionOperatorResKeywordAst(Ast, TypeInferrable):
 
         # Tie borrows to coroutine pin outputs, for auto invalidation.
         if "assignment" in kwargs:
+
             # If the coroutine is symbolic (saved to a variable/attribute), then borrows can be tied to it.
-            # Todo: only do this for borrow convention coroutines.
             if coroutine_symbol := scope_manager.current_scope.get_variable_symbol_outermost_part(lhs):
 
-                # Invalidate the previously yielded borrow from this coroutine.
-                if coroutine_symbol.memory_info.pin_target.not_empty():
-                    current_borrow = coroutine_symbol.memory_info.pin_target.pop(0)
-                    current_borrow_symbol = scope_manager.current_scope.get_symbol(current_borrow)
-                    current_borrow_symbol.memory_info.moved_by(self.tok_res)
-
-                # Attach the new borrow to the coroutine's memory information.
-                coroutine_symbol.memory_info.pin_target.append(kwargs["assignment"][0])
+                # Invalidate old generated borrow and attach the new borrow to the coroutine's memory information.
+                for old_pin_link in coroutine_symbol.memory_info.pin_links: scope_manager.current_scope.get_symbol(old_pin_link).memory_info.moved_by(self.tok_res)
+                coroutine_symbol.memory_info.pin_links = kwargs["assignment"]
 
 
 __all__ = ["PostfixExpressionOperatorResKeywordAst"]
