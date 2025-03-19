@@ -28,3 +28,5 @@ Smart pointers.
 Types.
 * Change single tuple type back to (T) not (T, )
 * Callables: should be able to call variables that are a function type.
+* Postfix types cannot be used as parameters, return types or attributes.
+* Aliases with generics fail (uses newtype args with oldtype params)
