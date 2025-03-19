@@ -79,7 +79,7 @@ class TypeUnaryExpressionAst(Asts.TypeAbstractAst, TypeInferrable):
     def infer_type(self, scope_manager: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or scope_manager.current_scope
         type_symbol = type_scope.get_symbol(self)
-        return type_symbol.fq_name
+        return type_symbol.fq_name.with_convention(self.get_convention())
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
