@@ -17,6 +17,14 @@ from SPPCompiler.Utils.Sequence import Seq
 
 class AstTypeManagement:
     @staticmethod
+    def get_generics_in_scope(scope: Scope) -> Asts.GenericArgumentGroupAst:
+        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
+        generics = scope._symbol_table.all().filter(lambda s: s.is_generic)
+        generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
+        generics = Asts.GenericArgumentGroupAst(arguments=generics)
+        return generics
+
+    @staticmethod
     def is_type_indexable(type: Asts.TypeAst, scope: Scope) -> bool:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 
@@ -87,11 +95,8 @@ class AstTypeManagement:
 
     @staticmethod
     def create_generic_scope(
-            scope_manager: ScopeManager, type: Asts.TypeAst, type_part: Asts.GenericIdentifierAst,
-            base_symbol: TypeSymbol)\
+            scope_manager: ScopeManager, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol, is_tuple: bool)\
             -> Scope:
-
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 
         # Create a new scope & symbol for the generic substituted type.
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.scope._ast))
@@ -110,22 +115,12 @@ class AstTypeManagement:
         new_scope._non_generic_scope = base_symbol.scope
 
         # No more checks for the tuple type (avoid recursion, is textual because it is to do with generics).
-        if type and type.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
-            return new_scope
+        if is_tuple: return new_scope
 
         # Register the generic arguments as type symbols in the new scope.
         for generic_argument in type_part.generic_argument_group.arguments:
             generic_symbol = AstTypeManagement.create_generic_symbol(scope_manager, generic_argument)
             new_scope.add_symbol(generic_symbol)
-
-        # Substitute the generics of the attribute types in the new class prototype.
-        # temp_manager = ScopeManager(global_scope=scope_manager.global_scope, current_scop=new_scope)
-        # print("\tTEMP MANAGER:", temp_manager.current_scope)
-        # for attribute in new_scope._ast.body.members:
-        #     print("\tATTR:", attribute)
-        #     attribute.type = attribute.type.sub_generics(type_part.generic_argument_group.arguments)
-        #     print("\t\tSUBBED ATTR:", attribute)
-        #     attribute.type.analyse_semantics(temp_manager)
 
         # Return the new scope.
         return new_scope

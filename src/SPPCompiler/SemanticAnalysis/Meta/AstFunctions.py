@@ -11,9 +11,9 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
+from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, VariableSymbol
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -159,7 +159,6 @@ class AstFunctions:
 
         # Get the function-type name from teh function: "$Func" from "func()".
         function_name = function_name.to_function_identifier()
-        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
         overload_scopes_and_info = Seq()
 
         # Functions at the module level will have no inheritable generics (no enclosing superimposition). They can
@@ -190,9 +189,7 @@ class AstFunctions:
             # generics from the superimposition.
             for sup_scope in sup_scopes:
                 for sup_ast in sup_scope._ast.body.members.filter_to_type(Asts.SupPrototypeExtensionAst).filter(lambda m: m.name == function_name):
-                    generics = sup_scope._symbol_table.all().filter(lambda s: s.is_generic)
-                    generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
-                    generics = Asts.GenericArgumentGroupAst(arguments=generics)
+                    generics = AstTypeManagement.get_generics_in_scope(sup_scope)
                     overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))
 
             # When a derived class has overridden a function, the overridden base class function(s) must be removed.
@@ -324,7 +321,7 @@ class AstFunctions:
     @staticmethod
     def name_generic_arguments(
             arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst],
-            scope_manager: ScopeManager, owner_type: Asts.TypeAst = None) -> None:
+            scope_manager: ScopeManager, is_tuple_owner: bool = False) -> None:
 
         """!
         Name all generic arguments being passed to a function call or a type declaration, by removing used names from
@@ -338,7 +335,7 @@ class AstFunctions:
         @param arguments The list of generic arguments being passed to the function.
         @param parameters The list of generic parameters the function accepts.
         @param scope_manager The scope manager to access the current scope.
-        @param owner_type The type that the generic arguments are being passed to.
+        @param is_tuple_owner If the owner type is a tuple (early return).
 
         @return None (the generic arguments are modified in-place).
 
@@ -348,8 +345,7 @@ class AstFunctions:
         """
 
         # Special case for tuples to prevent infinite-recursion.
-        if owner_type and owner_type.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
-            return
+        if is_tuple_owner: return
 
         # Get the argument names and parameter names, and check for the existence of a variadic parameter.
         argument_names = arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__).map(lambda a: a.name.name)
@@ -486,8 +482,8 @@ class AstFunctions:
                     inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].type_parts()[0].generic_argument_group.arguments[0].value
 
         # Check each generic argument name only has one unique inferred type. This is to prevent conflicts for a generic
-        # type. For example, "T" can't be inferred as a "Str" and then a "BigInt". All instances must match teh first
-        # inference, in this case "Str">
+        # type. For example, "T" can't be inferred as a "Str" and then a "BigInt". All instances must match the first
+        # inference, in this case "Str".
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
             if mismatch := Seq(inferred_generic_arguments.copy()[1:].values()).find(lambda t: not t.symbolic_eq(inferred_generic_argument_value[0], scope_manager.current_scope)):
                 raise SemanticErrors.GenericParameterInferredConflictInferredError().add(inferred_generic_argument_name, inferred_generic_argument_value[0], mismatch).scopes(scope_manager.current_scope)
