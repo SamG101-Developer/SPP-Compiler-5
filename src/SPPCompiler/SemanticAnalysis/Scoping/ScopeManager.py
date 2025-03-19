@@ -88,13 +88,13 @@ class ScopeManager:
 
     def relink_generics(self) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 
         # Check every scope in the symbol table.
         for scope in self:
 
             # Only check type and alias symbols that are not generic (ie not the T type for Vec[T]).
-            for symbol in scope.all_symbols(exclusive=True).filter_to_type(TypeSymbol, AliasSymbol).filter(lambda t: not t.is_generic):
+            for symbol in scope.all_symbols(exclusive=True).filter_to_type(AliasSymbol, TypeSymbol).filter(lambda t: not t.is_generic):
 
                 # Check the type is a generic implementation (ie Vec[Str]), and remove the symbol.
                 if symbol.scope._non_generic_scope is not symbol.scope:

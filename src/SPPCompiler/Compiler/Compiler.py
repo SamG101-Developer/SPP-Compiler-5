@@ -91,7 +91,6 @@ class Compiler:
             self._ast.analyse_semantics(self._scope_manager, progress_bars[6])
 
         except SemanticError as error:
-            errored_module = self._module_tree.modules.find(lambda m: self._ast.current() is m.module_ast)
             error.throw()
 
         finally:

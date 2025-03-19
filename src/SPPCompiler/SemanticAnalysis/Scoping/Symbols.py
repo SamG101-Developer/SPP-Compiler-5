@@ -141,11 +141,11 @@ class AliasSymbol(TypeSymbol):
             old_type=copy.deepcopy(self.old_type))
 
 
-type Symbol = NamespaceSymbol | VariableSymbol | TypeSymbol | AliasSymbol
+type Symbol = AliasSymbol | NamespaceSymbol | VariableSymbol | TypeSymbol
 
 __all__ = [
     "Symbol",
+    "AliasSymbol",
     "NamespaceSymbol",
     "VariableSymbol",
-    "TypeSymbol",
-    "AliasSymbol"]
+    "TypeSymbol"]
