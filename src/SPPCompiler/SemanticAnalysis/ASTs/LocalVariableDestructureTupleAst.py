@@ -64,9 +64,11 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
         if (num_lhs_tuple_elements < num_rhs_tuple_elements and not multi_arg_skips) or num_lhs_tuple_elements > num_rhs_tuple_elements:
             raise SemanticErrors.VariableTupleDestructureTupleSizeMismatchError().add(self, num_lhs_tuple_elements, value, num_rhs_tuple_elements).scopes(scope_manager.current_scope)
 
-        # For a binding ".." destructure, ie "let (a, ..b, c) = t", create an intermediary rhs tuple.
+        # For a binding ".." destructure, ie "let (a, b, ..c, d, e, f) = t", create an intermediary rhs tuple.
+        # if t  = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9), then c = (2, 3, 4, 5, 6)
         if multi_arg_skips and multi_arg_skips[0].binding:
-            indexes = [i - self.elements.index(multi_arg_skips[0]) - 1 for i in range(num_lhs_tuple_elements, num_rhs_tuple_elements + 1)]
+            m = self.elements.index(multi_arg_skips[0])
+            indexes = [*range(m, m + num_rhs_tuple_elements - num_lhs_tuple_elements + 1)]
             new_ast = AstMutation.inject_code(
                 f"({", ".join([f"{value}.{i}" for i in indexes])})", SppParser.parse_literal_tuple,
                 pos_adjust=value.pos)

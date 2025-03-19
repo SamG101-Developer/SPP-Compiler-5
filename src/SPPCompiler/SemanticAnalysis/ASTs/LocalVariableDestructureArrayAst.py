@@ -66,10 +66,11 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
 
         # For a binding ".." destructure, ie "let (a, ..b, c) = t", create an intermediary rhs array.
         if multi_arg_skips and multi_arg_skips[0].binding:
-            indexes = [i - self.elements.index(multi_arg_skips[0]) - 1 for i in range(num_lhs_array_elements, num_rhs_array_elements + 1)]
-            parse_func = lambda parser: parser.parse_literal_array(parser.parse_expression)
+            m = self.elements.index(multi_arg_skips[0])
+            indexes = [*range(m, m + num_rhs_array_elements - num_lhs_array_elements + 1)]
             new_ast = AstMutation.inject_code(
-                f"[{", ".join([f"{value}.{i}" for i in indexes])}]", parse_func, pos_adjust=value.pos)
+                f"[{", ".join([f"{value}.{i}" for i in indexes])}]", lambda parser: parser.parse_literal_array(parser.parse_expression),
+                pos_adjust=value.pos)
             bound_multi_skip = new_ast
 
         # Create new indexes like [0, 1, 2, 6, 7] if elements 3->5 are skipped (and possibly bound).
