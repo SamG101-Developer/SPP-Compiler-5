@@ -6,7 +6,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -30,21 +30,27 @@ class ObjectInitializerAst(Ast, TypeInferrable):
             self.object_argument_group.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    @property
+    def pos_end(self) -> int:
+        return self.object_argument_group.pos_end
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Use the type of the object initializer.
-        return InferredTypeInfo(self.class_type)
+        return self.class_type
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        # Get the base symbol and make sure it isn't generic.
+        # Get the base symbol.
         base_symbol = scope_manager.current_scope.get_symbol(self.class_type.without_generics())
+        if not base_symbol:
+            raise SemanticErrors.IdentifierUnknownError().add(self.class_type, "type", None).scopes(scope_manager.current_scope)
         if base_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.class_type, self.class_type, "object initializer")
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.class_type, self.class_type, "object initializer").scopes(scope_manager.current_scope)
 
         self.object_argument_group.pre_analyse_semantics(scope_manager, **kwargs)
 
         # Determine the generic inference source and target
         generic_infer_source = {
-            a.name: self.object_argument_group.get_arg_val(a).infer_type(scope_manager, **kwargs).type
+            a.name: self.object_argument_group.get_arg_val(a).infer_type(scope_manager, **kwargs)
             for a in self.object_argument_group.arguments.filter(lambda a: isinstance(a.name, Asts.IdentifierAst))}
         generic_infer_target = {
             a.name: a.type

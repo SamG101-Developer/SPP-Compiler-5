@@ -33,20 +33,23 @@ class GenericCompArgumentNamedAst(Ast, Ordered):
         string = [
             self.name.print(printer),
             self.tok_assign.print(printer),
-            self.value.print(printer)]
+            self.value.print(printer) if self.value else "?"]
         return " ".join(string)
+
+    @property
+    def pos_end(self) -> int:
+        return (self.value or self.tok_assign).pos_end
 
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
         return GenericCompArgumentNamedAst(name=Asts.TypeSingleAst.from_identifier(symbol.name), value=symbol.memory_info.ast_comptime_const)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
-        from SPPCompiler.SemanticAnalysis import TokenAst, TypeAst
         from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
-        if isinstance(self.value, (TokenAst, TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.value)
+        if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.value).scopes(scope_manager.current_scope)
 
         # Analyse the value of the named argument.
         self.value.analyse_semantics(scope_manager, **kwargs)

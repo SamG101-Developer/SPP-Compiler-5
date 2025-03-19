@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, NoReturn, Optional, Tuple, TYPE_CHECKING
+from typing import NoReturn, Optional, Tuple, TYPE_CHECKING
 
 from colorama import Fore, Style
 from fastenum import Enum
 
 import SPPCompiler.SemanticAnalysis as Asts
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -23,29 +22,35 @@ class SemanticError(BaseException):
 
     @dataclass
     class ErrorInfo:
-        pos: int
+        ast: Ast
         tag: str
         msg: str
         tip: str
         fmt: SemanticError.Format
 
-    error_info: List[ErrorInfo]
+    error_info: Seq[ErrorInfo]
+    error_formatters: Seq[ErrorFormatter]
 
     def __init__(self, *args) -> None:
         super().__init__(args)
-        self.error_info = []
+        self.error_info = Seq()
 
     def add(self, *args, **kwargs) -> SemanticError:
         ...
 
-    def add_error(self, pos: int, tag: str, msg: str, tip: str, fmt: Format = Format.NORMAL) -> SemanticError:
-        # Add an error into the output list.
-        self.error_info.append(SemanticError.ErrorInfo(pos, tag, msg, tip, fmt))
+    def scopes(self, *scopes) -> SemanticError:
+        # Register the error formatters against the instance.
+        self.error_formatters = Seq([*scopes]).map_attr("_error_formatter")
         return self
 
-    def add_info(self, pos: int, tag: str) -> SemanticError:
+    def add_error(self, ast: Ast, tag: str, msg: str, tip: str, fmt: Format = Format.NORMAL) -> SemanticError:
+        # Add an error into the output list.
+        self.error_info.append(SemanticError.ErrorInfo(ast, tag, msg, tip, fmt))
+        return self
+
+    def add_info(self, ast: Ast, tag: str) -> SemanticError:
         # Add an info message (minimal error metadata) into the output list.
-        self.add_error(pos, tag, "", "", SemanticError.Format.MINIMAL)
+        self.add_error(ast, tag, "", "", SemanticError.Format.MINIMAL)
         return self
 
     def _format_message(self, error_info: ErrorInfo) -> (str, bool):
@@ -57,18 +62,17 @@ class SemanticError(BaseException):
         f = f"\n{Style.BRIGHT}{type(self).__name__}: {Style.NORMAL}{error_info.msg}\n{Fore.LIGHTCYAN_EX}{Style.BRIGHT}Tip: {Style.NORMAL}{error_info.tip}{Fore.RESET}"
         return f, False
 
-    def throw(self, error_formatter: ErrorFormatter) -> NoReturn:
+    def throw(self) -> NoReturn:
         # Format the error messages and raise the error.
         error_message = ""
-        for error in self.error_info:
+        for error, error_formatter in self.error_info.zip(Seq([next(self.error_formatters.cycle()) for i in range(self.error_info.length)])):
             formatted_message, is_minimal = self._format_message(error)
-            error_message += error_formatter.error(error.pos, formatted_message, error.tag, is_minimal)
+            error_message += error_formatter.error_ast(error.ast, formatted_message, error.tag, is_minimal)
         print(error_message)
         raise type(self)()
 
 
 class SemanticErrors:
-
     class AnnotationInvalidApplicationError(SemanticError):
         """
         The AnnotationInvalidApplicationError is raised if a standard annotation is applied to a non-compatible AST.
@@ -78,11 +82,11 @@ class SemanticErrors:
 
         def add(self, annotation: Asts.IdentifierAst, applied_to: Ast, allow_list: str) -> SemanticError:
             self.add_info(
-                pos=annotation.pos,
+                ast=annotation,
                 tag=f"Annotation '{annotation}' defined here")
 
             self.add_error(
-                pos=applied_to.pos,
+                ast=applied_to,
                 tag=f"Non-{allow_list} AST defined here.",
                 msg=f"The '{annotation}' annotation can only be applied to {allow_list} ASTs.",
                 tip=f"Remove the annotation from here.")
@@ -98,7 +102,7 @@ class SemanticErrors:
 
         def add(self, annotation: Asts.IdentifierAst) -> SemanticError:
             self.add_error(
-                pos=annotation.pos,
+                ast=annotation,
                 tag="Invalid annotation.",
                 msg=f"The annotation '{annotation}' is not a valid annotation.",
                 tip=f"Remove the annotation from here.")
@@ -114,11 +118,11 @@ class SemanticErrors:
 
         def add(self, first_annotation: Asts.IdentifierAst, second_annotation: Asts.IdentifierAst) -> SemanticError:
             self.add_info(
-                pos=first_annotation.pos,
+                ast=first_annotation,
                 tag=f"Annotation '{first_annotation}' applied here")
 
             self.add_error(
-                pos=second_annotation.pos,
+                ast=second_annotation,
                 tag="Duplicate annotation.",
                 msg=f"The annotation '{second_annotation}' is already applied.",
                 tip=f"Remove the duplicate annotation.")
@@ -132,13 +136,15 @@ class SemanticErrors:
         error.
         """
 
-        def add(self, first_annotation: Asts.IdentifierAst, conflicting_annotation: Asts.IdentifierAst) -> SemanticError:
+        def add(
+                self, first_annotation: Asts.IdentifierAst,
+                conflicting_annotation: Asts.IdentifierAst) -> SemanticError:
             self.add_info(
-                pos=first_annotation.pos,
+                ast=first_annotation,
                 tag=f"Annotation '{first_annotation}' applied here")
 
             self.add_error(
-                pos=conflicting_annotation.pos,
+                ast=conflicting_annotation,
                 tag="Conflicting annotation.",
                 msg=f"The annotation '{conflicting_annotation}' conflicts with the first annotation.",
                 tip=f"Remove the conflicting annotation.")
@@ -151,13 +157,15 @@ class SemanticErrors:
         This could be for class attributes, function parameter names, generic parameter names etc.
         """
 
-        def add(self, first_occurrence: Asts.IdentifierAst, second_occurrence: Asts.IdentifierAst, what: str) -> SemanticError:
+        def add(
+                self, first_occurrence: Asts.IdentifierAst, second_occurrence: Asts.IdentifierAst,
+                what: str) -> SemanticError:
             self.add_info(
-                pos=first_occurrence.pos,
+                ast=first_occurrence,
                 tag=f"{what.capitalize()} '{first_occurrence}' defined here")
 
             self.add_error(
-                pos=second_occurrence.pos,
+                ast=second_occurrence,
                 tag=f"Duplicate {what}.",
                 msg=f"The {what} '{second_occurrence}' is already defined.",
                 tip=f"Remove or rename the duplicate {what}.")
@@ -172,11 +180,11 @@ class SemanticErrors:
 
         def add(self, first_what: str, first: Ast, second_what: str, second: Ast, what: str) -> SemanticError:
             self.add_info(
-                pos=first.pos,
+                ast=first,
                 tag=f"{first_what.capitalize()} {what} '{first}' defined here")
 
             self.add_error(
-                pos=second.pos,
+                ast=second,
                 tag=f"Invalid {what} order.",
                 msg=f"The {second_what.lower()} {what} '{second}' is in the wrong position.",
                 tip=f"Move the {second_what.lower()} {what} to after the {first_what.lower()} {what}.")
@@ -189,13 +197,15 @@ class SemanticErrors:
         maximum one "self" parameter is allowed per function.
         """
 
-        def add(self, first_self_parameter: Asts.FunctionParameterAst, second_self_parameter: Asts.FunctionParameterAst) -> SemanticError:
+        def add(
+                self, first_self_parameter: Asts.FunctionParameterAst,
+                second_self_parameter: Asts.FunctionParameterAst) -> SemanticError:
             self.add_info(
-                pos=first_self_parameter.pos,
+                ast=first_self_parameter,
                 tag=f"Self parameter defined here")
 
             self.add_error(
-                pos=second_self_parameter.pos,
+                ast=second_self_parameter,
                 tag=f"Second 'self' parameter.",
                 msg="Only one 'self' parameter is allowed.",
                 tip="Remove the second 'self' parameter.")
@@ -208,13 +218,15 @@ class SemanticErrors:
         A maximum one variadic parameter is allowed per function.
         """
 
-        def add(self, first_variadic_parameter: Asts.FunctionParameterAst, second_variadic_parameter: Asts.FunctionParameterAst) -> SemanticError:
+        def add(
+                self, first_variadic_parameter: Asts.FunctionParameterAst,
+                second_variadic_parameter: Asts.FunctionParameterAst) -> SemanticError:
             self.add_info(
-                pos=first_variadic_parameter.pos,
+                ast=first_variadic_parameter,
                 tag=f"Variadic parameter '{first_variadic_parameter}' defined here")
 
             self.add_error(
-                pos=second_variadic_parameter.pos,
+                ast=second_variadic_parameter,
                 tag=f"Second variadic parameter '{second_variadic_parameter}.",
                 msg="Only one variadic parameter is allowed.",
                 tip="Remove the second variadic parameter.")
@@ -224,15 +236,15 @@ class SemanticErrors:
     class FunctionCoroutineInvalidReturnTypeError(SemanticError):
         """
         The FunctionCoroutineInvalidReturnTypeError is raised if a coroutine has a return type that is not a generator.
-        All coroutines must return either GenMov, GenMut or GenRef (with optional generic type parameters).
+        All coroutines must return Gen[T] (with optional generic type parameters).
         """
 
         def add(self, return_type: Asts.TypeAst) -> SemanticError:
             self.add_error(
-                pos=return_type.pos,
+                ast=return_type,
                 tag="Invalid coroutine return type.",
                 msg="The return type of a coroutine must be a generator.",
-                tip="Change the return type to one of 'GenMov', 'GenMut' or 'GenRef'.")
+                tip="Change the return type to the 'Gen' type.")
 
             return self
 
@@ -245,11 +257,11 @@ class SemanticErrors:
 
         def add(self, coroutine_definition: Asts.TokenAst, return_statement: Asts.TokenAst) -> SemanticError:
             self.add_info(
-                pos=coroutine_definition.pos,
+                ast=coroutine_definition,
                 tag="Coroutine defined here")
 
             self.add_error(
-                pos=return_statement.pos,
+                ast=return_statement,
                 tag="Return statement in coroutine.",
                 msg="Coroutines cannot contain return statements.",
                 tip="Remove the return statement.")
@@ -264,11 +276,11 @@ class SemanticErrors:
 
         def add(self, subroutine_definition: Asts.TokenAst, gen_expression: Asts.TokenAst) -> SemanticError:
             self.add_info(
-                pos=subroutine_definition.pos,
+                ast=subroutine_definition,
                 tag="Subroutine defined here")
 
             self.add_error(
-                pos=gen_expression.pos,
+                ast=gen_expression,
                 tag="Gen expression in subroutine.",
                 msg="Subroutines cannot contain gen expressions.",
                 tip="Remove the gen expression.")
@@ -283,11 +295,11 @@ class SemanticErrors:
 
         def add(self, final_member: Asts.TokenAst, return_type: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=final_member.pos,
+                ast=final_member,
                 tag="Non-ret statement found here")
 
             self.add_error(
-                pos=return_type.pos,
+                ast=return_type,
                 tag="Missing return statement.",
                 msg="Non-void subroutines must return a value.",
                 tip="Add a return statement to the subroutine.")
@@ -301,13 +313,13 @@ class SemanticErrors:
         considered a duplicate.
         """
 
-        def add(self, first_prototype: Asts. IdentifierAst, second_prototype: Asts.IdentifierAst) -> SemanticError:
+        def add(self, first_prototype: Asts.IdentifierAst, second_prototype: Asts.IdentifierAst) -> SemanticError:
             self.add_info(
-                pos=first_prototype.pos,
+                ast=first_prototype,
                 tag="First prototype defined here")
 
             self.add_error(
-                pos=second_prototype.pos,
+                ast=second_prototype,
                 tag="Duplicate prototype.",
                 msg="The function prototype is a duplicate of another prototype.",
                 tip="Remove the duplicate prototype.")
@@ -323,11 +335,11 @@ class SemanticErrors:
 
         def add(self, target: Ast, what_target: str, source: Ast, what_source: str) -> SemanticError:
             self.add_info(
-                pos=target.pos,
+                ast=target,
                 tag=f"{what_target.capitalize()} '{target}' defined here")
 
             self.add_error(
-                pos=source.pos,
+                ast=source,
                 tag=f"Invalid {what_source} name for '{source}'.",
                 msg=f"{what_target}/{what_source} name mismatch.",
                 tip="Use a name found on the target.")
@@ -343,11 +355,11 @@ class SemanticErrors:
 
         def add(self, where: Ast, target: Ast, what_target: str, what_source: str) -> SemanticError:
             self.add_info(
-                pos=target.pos,
+                ast=target,
                 tag=f"{what_target.capitalize()} defined here")
 
             self.add_error(
-                pos=where.pos,
+                ast=where,
                 tag=f"Missing {what_source} name.",
                 msg=f"Missing the {what_source} '{target}'.",
                 tip=f"Add the missing {what_target} name.")
@@ -362,7 +374,7 @@ class SemanticErrors:
 
         def add(self, expansion_arg: Ast, arg_type: Asts.TypeAst) -> SemanticError:
             self.add_error(
-                pos=expansion_arg.pos,
+                ast=expansion_arg,
                 tag=f"Type inferred as '{arg_type}' here",
                 msg="Tuple expansions can only be used on tuples.",
                 tip="Remove the '..' from the argument.")
@@ -377,7 +389,7 @@ class SemanticErrors:
 
         def add(self, function_call: Ast, signatures: str, attempted: str) -> SemanticError:
             self.add_error(
-                pos=function_call.pos,
+                ast=function_call,
                 tag="Invalid arguments for function call",
                 msg="There are no overloads accepting the given arguments",
                 tip=f"\n\t{signatures.replace("\n", "\n\t")}\n\nAttempted signature:\n\t{attempted}")
@@ -390,13 +402,15 @@ class SemanticErrors:
         type definition, or a function call.
         """
 
-        def add(self, generic_parameters: Seq[Asts.GenericParameterAst], extra_generic_argument: Asts.GenericArgumentAst) -> SemanticError:
+        def add(
+                self, generic_parameters: Seq[Asts.GenericParameterAst],
+                extra_generic_argument: Asts.GenericArgumentAst) -> SemanticError:
             self.add_info(
-                pos=generic_parameters[0].pos,
+                ast=generic_parameters[0],
                 tag="Generic parameters defined here")
 
             self.add_error(
-                pos=extra_generic_argument.pos,
+                ast=extra_generic_argument,
                 tag="Extra generic argument provided here.",
                 msg="Too many generic arguments.",
                 tip="Remove the extra generic argument.")
@@ -412,7 +426,7 @@ class SemanticErrors:
 
         def add(self, function_call: Ast, signatures: str, attempted: str) -> SemanticError:
             self.add_error(
-                pos=function_call.pos,
+                ast=function_call,
                 tag="Ambiguous function call",
                 msg="There are multiple overloads accepting the given arguments",
                 tip=f"\n\t{signatures.replace("\n", "\n\t")}\n\nAttempted signature:\n\t{attempted}")
@@ -426,13 +440,15 @@ class SemanticErrors:
         implementation.
         """
 
-        def add(self, function: Asts.IdentifierAst, function_call: Asts.PostfixExpressionOperatorFunctionCallAst) -> SemanticError:
+        def add(
+                self, function: Asts.IdentifierAst,
+                function_call: Asts.PostfixExpressionOperatorFunctionCallAst) -> SemanticError:
             self.add_info(
-                pos=function.pos,
+                ast=function,
                 tag="Function annotated as abstract")
 
             self.add_error(
-                pos=function_call.pos,
+                ast=function_call,
                 tag="Abstract method called here.",
                 msg="Cannot call abstract methods.",
                 tip="Call the method on a subtype")
@@ -447,26 +463,28 @@ class SemanticErrors:
 
         def add(self, function_call: Asts.ExpressionAst) -> SemanticError:
             self.add_error(
-                pos=function_call.pos,
+                ast=function_call,
                 tag="Non-callable inferred here.",
                 msg="The type is not callable.",
                 tip="Change the type to a callable type.")
 
             return self
-            
+
     class FunctionCallTooManyArgumentsError(SemanticError):
         """
         The FunctionCallTooManyArgumentsError is raised if a function call has too many arguments.
         Todo: add more info?
         """
 
-        def add(self, function_call: Asts.PostfixExpressionOperatorFunctionCallAst, function_definition: Asts.IdentifierAst) -> SemanticError:
+        def add(
+                self, function_call: Asts.PostfixExpressionOperatorFunctionCallAst,
+                function_definition: Asts.IdentifierAst) -> SemanticError:
             self.add_info(
-                pos=function_definition.pos,
+                ast=function_definition,
                 tag="Function defined here")
 
             self.add_error(
-                pos=function_call.pos,
+                ast=function_call,
                 tag="Too many arguments.",
                 msg="The function call has too many arguments.",
                 tip="Remove the extra arguments.")
@@ -481,11 +499,11 @@ class SemanticErrors:
 
         def add(self, return_ast: Asts.RetStatementAst, next_ast: Ast) -> SemanticError:
             self.add_info(
-                pos=return_ast.pos,
+                ast=return_ast,
                 tag="Return statement defined here")
 
             self.add_error(
-                pos=next_ast.pos,
+                ast=next_ast,
                 tag="Unreachable code.",
                 msg="The code after the return statement is unreachable.",
                 tip="Remove the unreachable code or move the return statement.")
@@ -498,9 +516,11 @@ class SemanticErrors:
         literals that are too large or too small, and float literals that are too large or too small.
         """
 
-        def add(self, number: Asts.IntegerLiteralAst | Asts.FloatLiteralAst, minimum: int, maximum: int, what: str) -> SemanticError:
+        def add(
+                self, number: Asts.IntegerLiteralAst | Asts.FloatLiteralAst, minimum: int, maximum: int,
+                what: str) -> SemanticError:
             self.add_error(
-                pos=number.pos,
+                ast=number,
                 tag=f"{what.capitalize()} out of range.",
                 msg=f"The {what} '{number}' is out of range [{minimum}, {maximum}].",
                 tip=f"Change the number to be within the range, or change the type specifier.")
@@ -513,9 +533,11 @@ class SemanticErrors:
         could be a variable, attribute, namespace, type etc.
         """
 
-        def add(self, identifier: Asts.IdentifierAst | Asts.GenericIdentifierAst, what: str, closest_match: Optional[str]) -> SemanticError:
+        def add(
+                self, identifier: Asts.IdentifierAst | Asts.GenericIdentifierAst, what: str,
+                closest_match: Optional[str]) -> SemanticError:
             self.add_error(
-                pos=identifier.pos,
+                ast=identifier,
                 tag=f"Undefined {what}: '{identifier}'.",
                 msg=f"The {what} '{identifier}' is not defined.",
                 tip=f"Did you mean '{closest_match}'?" if closest_match else f"Define the {what}.")
@@ -530,7 +552,7 @@ class SemanticErrors:
 
         def add(self, type: Asts.TypeAst) -> SemanticError:
             self.add_error(
-                pos=type.pos,
+                ast=type,
                 tag="Invalid use of void.",
                 msg="The void type cannot be used in this context.",
                 tip="Change the type to a valid type.")
@@ -545,13 +567,15 @@ class SemanticErrors:
         Todo: add potential alias's old type: (... aka: ...)
         """
 
-        def add(self, existing_ast: Ast, existing_type: InferredTypeInfo, incoming_ast: Ast, incoming_type: InferredTypeInfo) -> SemanticError:
+        def add(
+                self, existing_ast: Ast, existing_type: Asts.TypeAst, incoming_ast: Ast,
+                incoming_type: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=existing_ast.pos,
+                ast=existing_ast,
                 tag=f"Type inferred as '{existing_type}' here")
 
             self.add_error(
-                pos=incoming_ast.pos,
+                ast=incoming_ast,
                 tag=f"Type inferred as '{incoming_type}' here",
                 msg="Type mismatch.",
                 tip="Change the rhs type to match the lhs type.")
@@ -566,11 +590,11 @@ class SemanticErrors:
 
         def add(self, generic_parameter: Asts.GenericParameterAst, caller_context: Asts.ExpressionAst) -> SemanticError:
             self.add_info(
-                pos=caller_context.pos,
+                ast=caller_context,
                 tag="Type created here")
 
             self.add_error(
-                pos=generic_parameter.pos,
+                ast=generic_parameter,
                 tag="Non-inferred generic parameter.",
                 msg="Non-inferred generic parameters must be passed explicitly.",
                 tip="Pass the missing generic argument into the call.")
@@ -582,20 +606,20 @@ class SemanticErrors:
         The GenericParameterInferenceConflictError is raised if a generic parameter is inferred from multiple contexts,
         with different types. For example, "f[T](a: T, b: T)" called as "f(1, true)" would infer T as both BigInt and Bool.
         """
-            
+
         def add(self, generic_parameter: Asts.GenericParameterAst, inferred_1: Ast, inferred_2: Ast) -> SemanticError:
             self.add_info(
-                pos=inferred_1.pos,
+                ast=inferred_1,
                 tag=f"Generic inferred as '{inferred_1}' here")
 
             self.add_error(
-                pos=inferred_2.pos,
+                ast=inferred_2,
                 tag=f"Generic inferred as '{inferred_2}' here",
                 msg="Generic parameter inferred as multiple types.",
                 tip="Ensure the generic parameter is inferred as a single type.")
 
             return self
-            
+
     class GenericParameterInferredConflictExplicitError(SemanticError):
         """
         The GenericParameterInferencePassesExplicitlyError is raised if a generic parameter is inferred from its caller
@@ -605,11 +629,11 @@ class SemanticErrors:
 
         def add(self, generic_parameter: Asts.GenericParameterAst, explicit: Ast, inferred: Ast) -> SemanticError:
             self.add_info(
-                pos=inferred.pos,
+                ast=inferred,
                 tag=f"Generic parameter {generic_parameter} inferred from here")
 
             self.add_error(
-                pos=explicit.pos,
+                ast=explicit,
                 tag=f"Explicit generic argument '{explicit}'",
                 msg="Explicit generic argument is redundant.",
                 tip="Remove the explicit generic argument.")
@@ -624,7 +648,7 @@ class SemanticErrors:
 
         def add(self, generic_value: Ast, generic_type: Asts.TypeAst, context: str) -> SemanticError:
             self.add_error(
-                pos=generic_value.pos,
+                ast=generic_value,
                 tag=f"Type inferred as '{generic_type}' (generic) here.",
                 msg=f"Generic types cannot be used in a {context}.",
                 tip=f"Change the generic type to a concrete type.")
@@ -637,13 +661,13 @@ class SemanticErrors:
         an array must have the same type.
         """
 
-        def add(self, element_type_1: Asts.TypeAst, element_type_2: Asts.TypeAst) -> SemanticError:
+        def add(self, element_ast_1: Asts.ExpressionAst, element_type_1: Asts.TypeAst, element_ast_2: Asts.TypeAst, element_type_2: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=element_type_1.pos,
+                ast=element_ast_1,
                 tag=f"Element inferred as '{element_type_1}'")
 
             self.add_error(
-                pos=element_type_2.pos,
+                ast=element_ast_2,
                 tag=f"Element inferred as '{element_type_2}'",
                 msg="All elements in an array must have the same type.",
                 tip="Change the element types to be the same.")
@@ -658,11 +682,11 @@ class SemanticErrors:
 
         def add(self, element: Asts.ExpressionAst, borrow_location: Ast) -> SemanticError:
             self.add_info(
-                pos=borrow_location.pos,
+                ast=borrow_location,
                 tag="Array element borrowed here")
 
             self.add_error(
-                pos=element.pos,
+                ast=element,
                 tag="Array element borrowed.",
                 msg="Array elements cannot be borrowed.",
                 tip="Remove the borrow from the array element.")
@@ -675,17 +699,19 @@ class SemanticErrors:
         branches of the code. This could be a move in one branch and not in another.
         """
 
-        def add(self, ast: Asts.ExpressionAst, branch_1: Tuple[Asts.CaseExpressionBranchAst, bool], branch_2: Tuple[Asts.CaseExpressionBranchAst, bool], what: str) -> SemanticError:
+        def add(
+                self, ast: Asts.ExpressionAst, branch_1: Tuple[Asts.CaseExpressionBranchAst, bool],
+                branch_2: Tuple[Asts.CaseExpressionBranchAst, bool], what: str) -> SemanticError:
             self.add_info(
-                pos=branch_1[0].pos,
+                ast=branch_1[0],
                 tag=f"Symbol '{ast}' {what} in this branch")
 
             self.add_info(
-                pos=branch_2[0].pos,
+                ast=branch_2[0],
                 tag=f"Symbol '{ast}' not {what} in this branch")
 
             self.add_error(
-                pos=ast.pos,
+                ast=ast,
                 tag="Inconsistently initialized symbol.",
                 msg="Branches inconsistently initialize the symbol.",
                 tip="Ensure the symbol is consistently initialized.")
@@ -698,17 +724,19 @@ class SemanticErrors:
         of the code. This could be pinned in one branch and not in another.
         """
 
-        def add(self, ast: Asts.ExpressionAst, branch_1: Tuple[Asts.CaseExpressionBranchAst, bool], branch_2: Tuple[Asts.CaseExpressionBranchAst, bool]) -> SemanticError:
+        def add(
+                self, ast: Asts.ExpressionAst, branch_1: Tuple[Asts.CaseExpressionBranchAst, bool],
+                branch_2: Tuple[Asts.CaseExpressionBranchAst, bool]) -> SemanticError:
             self.add_info(
-                pos=branch_1[0].pos,
+                ast=branch_1[0],
                 tag=f"Symbol '{ast}' {'pinned' if branch_1[1] else 'not pinned'} in this branch")
 
             self.add_info(
-                pos=branch_2[0].pos,
+                ast=branch_2[0],
                 tag=f"Symbol '{ast}' {'pinned' if branch_2[1] else 'not pinned'} in this branch")
 
             self.add_error(
-                pos=ast.pos,
+                ast=ast,
                 tag="Inconsistently pinned symbol.",
                 msg="Branches inconsistently pin the symbol.",
                 tip="Ensure the symbol is consistently pinned.")
@@ -723,11 +751,11 @@ class SemanticErrors:
 
         def add(self, ast: Asts.ExpressionAst, move_location: Ast) -> SemanticError:
             self.add_info(
-                pos=move_location.pos,
+                ast=move_location,
                 tag=f"Symbol '{ast}' moved/uninitialized here")
 
             self.add_error(
-                pos=ast.pos,
+                ast=ast,
                 tag="Uninitialized memory used here.",
                 msg="The memory has not been initialized or has been moved.",
                 tip="Ensure the memory is initialized before use.")
@@ -742,11 +770,11 @@ class SemanticErrors:
 
         def add(self, ast: Asts.ExpressionAst, partial_move_location: Ast) -> SemanticError:
             self.add_info(
-                pos=partial_move_location.pos,
+                ast=partial_move_location,
                 tag=f"Symbol '{ast}' partially moved here")
 
             self.add_error(
-                pos=ast.pos,
+                ast=ast,
                 tag="Partially initialized memory used here.",
                 msg="The memory has already been partially moved.",
                 tip="Ensure the memory is fully initialized before use.")
@@ -761,11 +789,11 @@ class SemanticErrors:
 
         def add(self, move_location: Ast, borrow_location: Ast) -> SemanticError:
             self.add_info(
-                pos=borrow_location.pos,
+                ast=borrow_location,
                 tag="Symbol borrowed here")
 
             self.add_error(
-                pos=move_location.pos,
+                ast=move_location,
                 tag="Moving from borrowed context.",
                 msg="The memory is borrowed and cannot be moved.",
                 tip="Remove the move operation.")
@@ -780,11 +808,11 @@ class SemanticErrors:
 
         def add(self, move_location: Ast, pin_location: Ast) -> SemanticError:
             self.add_info(
-                pos=pin_location.pos,
+                ast=pin_location,
                 tag="Symbol pinned here")
 
             self.add_error(
-                pos=move_location.pos,
+                ast=move_location,
                 tag="Moving pinned memory.",
                 msg="The memory is pinned and cannot be moved.",
                 tip="Remove the move operation.")
@@ -799,112 +827,14 @@ class SemanticErrors:
 
         def add(self, overlap: Ast, ast: Ast) -> SemanticError:
             self.add_info(
-                pos=overlap.pos,
+                ast=overlap,
                 tag="Memory overlap defined here")
 
             self.add_error(
-                pos=ast.pos,
+                ast=ast,
                 tag="Memory overlap conflict.",
                 msg="The memory overlap conflicts with another memory use.",
                 tip="Remove the memory overlap conflict.")
-
-            return self
-
-    class MemoryUsageOfUnpinnedBorrowError(SemanticError):
-        """
-        The MemoryUsageOfUnpinnedBorrowError is raised if a memory symbol is used whilst it is an unpinned
-        borrow. This occurs when a borrow is used without being pinned.
-        """
-
-        def add(self, ast: Ast, pinned_required_ast: Ast) -> SemanticError:
-            self.add_info(
-                pos=pinned_required_ast.pos,
-                tag="Context declared where pins are required.")
-
-            self.add_error(
-                pos=ast.pos,
-                tag="Unpinned borrow used.",
-                msg="Borrow must be pinned for use in this.",
-                tip="Pin the borrow.")
-
-            return self
-
-    class MemoryPinTargetInvalidError(SemanticError):
-        """
-        The MemoryPinTargetInvalidError is raised if a memory symbol is pinned to an invalid target. This occurs when a
-        non-symbolic value, ie "1" is used as the pin target.
-        """
-
-        def add(self, pin_rel_statement: Asts.PinStatementAst | Asts.RelStatementAst, pin_target: Ast, pin: bool) -> SemanticError:
-            self.add_info(
-                pos=pin_rel_statement.pos,
-                tag=f"{"Pin" if pin else "Rel"} statement defined here")
-
-            self.add_error(
-                pos=pin_target.pos,
-                tag="Invalid pin target.",
-                msg="The pin target must be a symbolic.",
-                tip="Change the pin target to a symbolic value.")
-
-            return self
-            
-    class MemoryPinOverlapError(SemanticError):
-        """
-        The MemoryPinOverlapError is raised if 2 memory pins overlap. For example, "pin a" and "pin a.b" would overlap,
-        and therefore raise this error.
-        """
-        
-        def add(self, pin_1: Ast, pin_2: Ast) -> SemanticError:
-            self.add_info(
-                pos=pin_1.pos,
-                tag="Pin target pinned here")
-
-            self.add_error(
-                pos=pin_2.pos,
-                tag="Second pin target pinned here",
-                msg="Memory pins overlap.",
-                tip="Remove the more refined pin target.")
-
-            return self
-
-    class MemoryReleasingNonPinnedSymbolError(SemanticError):
-        """
-        The MemoryReleasingNonPinnedSymbolError is raised if a memory symbol is released without being pinned.
-        """
-
-        def add(self, rel_statement: Asts.RelStatementAst, release_target: Ast) -> SemanticError:
-            self.add_info(
-                pos=rel_statement.pos,
-                tag="Release statement defined here")
-
-            self.add_error(
-                pos=release_target.pos,
-                tag="Non-pinned memory released.",
-                msg="Memory must be pinned before being released.",
-                tip="Remove the rel target.")
-
-            return self
-
-    class MemoryReleasingConstantSymbolError(SemanticError):
-        """
-        The MemoryReleasingConstantSymbolError is raised if a constant memory symbol is released. Constants cannot be
-        released as they must be statically pinned (ie permanently pinned).
-        """
-
-        def add(self, rel_statement: Asts.RelStatementAst, release_target: Ast, target_initialization_ast: Ast) -> SemanticError:
-            self.add_info(
-                pos=rel_statement.pos,
-                tag="Release statement defined here")
-
-            self.add_info(
-                pos=target_initialization_ast.pos,
-                tag="Constant memory defined here")
-
-            self.add_error(
-                pos=release_target.pos,
-                tag="Constant memory released.",
-                msg="Constants cannot be released.",
-                tip="Remove the rel target.")
 
             return self
 
@@ -916,11 +846,11 @@ class SemanticErrors:
 
         def add(self, ast: Asts.ExpressionAst, move_location: Ast, immutable_definition: Ast) -> SemanticError:
             self.add_info(
-                pos=immutable_definition.pos,
+                ast=immutable_definition,
                 tag="Symbol defined as immutable here")
 
             self.add_error(
-                pos=move_location.pos,
+                ast=move_location,
                 tag="Attempting to mutate immutable symbol.",
                 msg="The symbol is immutable and cannot be mutated.",
                 tip="Change the symbol to be mutable.")
@@ -935,7 +865,7 @@ class SemanticErrors:
 
         def add(self, lhs: Ast) -> SemanticError:
             self.add_error(
-                pos=lhs.pos,
+                ast=lhs,
                 tag="Invalid assignment left-hand-side expression.",
                 msg="The LHS of the assignment is invalid.",
                 tip="Use a valid LHS for the assignment.")
@@ -950,7 +880,7 @@ class SemanticErrors:
 
         def add(self, lhs: Ast) -> SemanticError:
             self.add_error(
-                pos=lhs.pos,
+                ast=lhs,
                 tag="Invalid compound assignment left-hand-side expression.",
                 msg="The LHS of the compound assignment is invalid.",
                 tip="Use a valid LHS for the compound assignment.")
@@ -965,7 +895,7 @@ class SemanticErrors:
 
         def add(self, expression: Asts.ExpressionAst) -> SemanticError:
             self.add_error(
-                pos=expression.pos,
+                ast=expression,
                 tag="Invalid expression.",
                 msg="The expression is not valid.",
                 tip="Use a non-type and non-token expression.")
@@ -980,7 +910,7 @@ class SemanticErrors:
 
         def add(self, expression: Asts.ExpressionAst, type: Asts.TypeAst, what: str) -> SemanticError:
             self.add_error(
-                pos=expression.pos,
+                ast=expression,
                 tag=f"{what.capitalize()} expression inferred as '{type}'",
                 msg=f"A {what} expression must be a boolean type.",
                 tip="Change the expression to be a boolean type.")
@@ -995,7 +925,7 @@ class SemanticErrors:
 
         def add(self, expression: Asts.ExpressionAst, type: Asts.TypeAst, what: str) -> SemanticError:
             self.add_error(
-                pos=expression.pos,
+                ast=expression,
                 tag=f"{what.capitalize()} expression inferred as '{type}'",
                 msg=f"A {what} expression must be a generator type.",
                 tip="Change the expression to be a generator type.")
@@ -1010,11 +940,11 @@ class SemanticErrors:
 
         def add(self, lhs: Ast, access_token: Asts.TokenAst) -> SemanticError:
             self.add_info(
-                pos=lhs.pos,
+                ast=lhs,
                 tag="Static expression defined here")
 
             self.add_error(
-                pos=access_token.pos,
+                ast=access_token,
                 tag="Runtime member access found.",
                 msg="The member access operator '.' can only be used on runtime expressions.",
                 tip="Use the member access operator '::' instead of '.'.")
@@ -1029,11 +959,11 @@ class SemanticErrors:
 
         def add(self, lhs: Ast, access_token: Asts.TokenAst) -> SemanticError:
             self.add_info(
-                pos=lhs.pos,
+                ast=lhs,
                 tag="Runtime expression defined here")
 
             self.add_error(
-                pos=access_token.pos,
+                ast=access_token,
                 tag="Static member access found.",
                 msg="The member access operator '::' can only be used on static expressions.",
                 tip="Use the member access operator '.' instead of '::'.")
@@ -1048,7 +978,7 @@ class SemanticErrors:
 
         def add(self, member: Asts.IdentifierAst, scopes: Seq[Asts.IdentifierAst]) -> SemanticError:
             self.add_error(
-                pos=member.pos,
+                ast=member,
                 tag=f"Ambiguous member access: {scopes.join(", ")}",
                 msg="The member access is ambiguous.",
                 tip="Use 'std::upcast[T](...)' to select the base class.")
@@ -1063,11 +993,11 @@ class SemanticErrors:
 
         def add(self, lhs: Ast, lhs_type: Asts.TypeAst, access_token: Asts.TokenAst) -> SemanticError:
             self.add_info(
-                pos=lhs.pos,
+                ast=lhs,
                 tag=f"Type '{lhs_type}' inferred here")
 
             self.add_error(
-                pos=access_token.pos,
+                ast=access_token,
                 tag="Member access on non-indexable type.",
                 msg="The type does not support member access.",
                 tip="Use a type that supports member access.")
@@ -1082,11 +1012,11 @@ class SemanticErrors:
 
         def add(self, lhs: Ast, lhs_type: Asts.TypeAst, number_token: Asts.TokenAst) -> SemanticError:
             self.add_info(
-                pos=lhs.pos,
+                ast=lhs,
                 tag=f"Type '{lhs_type}' inferred here")
 
             self.add_error(
-                pos=number_token.pos,
+                ast=number_token,
                 tag="Member access out of bounds.",
                 msg="The member access is out of bounds.",
                 tip="Use a valid member access.")
@@ -1102,7 +1032,7 @@ class SemanticErrors:
 
         def add(self, named_argument: Asts.GenericArgumentNamedAst) -> SemanticError:
             self.add_error(
-                pos=named_argument.pos,
+                ast=named_argument,
                 tag="Named argument in superimposition.",
                 msg="Named arguments are not allowed in superimpositions.",
                 tip="Remove the named argument or convert it to unnamed form. This will be relaxed in future versions.")
@@ -1115,13 +1045,15 @@ class SemanticErrors:
         superimposition. For the "cls Point[T, U]" type, the superimposition must look like "sup [T, U] Point[T, U]".
         """
 
-        def add(self, generic_argument: Asts.GenericArgumentAst, superimposition: Asts.SupPrototypeAst) -> SemanticError:
+        def add(
+                self, generic_argument: Asts.GenericArgumentAst,
+                superimposition: Asts.SupPrototypeAst) -> SemanticError:
             self.add_info(
-                pos=superimposition.pos,
+                ast=superimposition,
                 tag="Superimposition defined here")
 
             self.add_error(
-                pos=generic_argument.pos,
+                ast=generic_argument,
                 tag="Generic argument mismatch.",
                 msg="The superimposition generic argument does not match the class generic argument.",
                 tip="Change the superimposition generic argument to match the class generic argument. This will be relaxed in future versions.")
@@ -1136,11 +1068,11 @@ class SemanticErrors:
 
         def add(self, new_method: Asts.IdentifierAst, super_class: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=super_class.pos,
+                ast=super_class,
                 tag=f"Super class '{super_class}' extended here")
 
             self.add_error(
-                pos=new_method.pos,
+                ast=new_method,
                 tag="Invalid member.",
                 msg=f"The subclass member '{new_method}' does not exist in the superclass '{super_class}'.",
                 tip="Use a valid super member.")
@@ -1155,11 +1087,11 @@ class SemanticErrors:
 
         def add(self, base_method: Asts.IdentifierAst, super_class: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=super_class.pos,
+                ast=super_class,
                 tag=f"Super class '{super_class}' extended here")
 
             self.add_error(
-                pos=base_method.pos,
+                ast=base_method,
                 tag="Non-virtual method on base class.",
                 msg=f"The super member '{base_method}' is not virtual and cannot be overridden in the subclass.",
                 tip="Use a virtual method.")
@@ -1174,11 +1106,11 @@ class SemanticErrors:
 
         def add(self, first_inheritance: Asts.TypeAst, second_inheritance: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=first_inheritance.pos,
+                ast=first_inheritance,
                 tag=f"Type '{first_inheritance}' inherited here")
 
             self.add_error(
-                pos=second_inheritance.pos,
+                ast=second_inheritance,
                 tag=f"Duplicate superimposition here",
                 msg="Cannot superimpose the same type twice",
                 tip="Remove the second superimposition definition")
@@ -1193,11 +1125,11 @@ class SemanticErrors:
 
         def add(self, first_inheritance: Asts.TypeAst, second_inheritance: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=first_inheritance.pos,
+                ast=first_inheritance,
                 tag=f"Valid inheritance defined here")
 
             self.add_error(
-                pos=second_inheritance.pos,
+                ast=second_inheritance,
                 tag=f"Cyclic superimposition here",
                 msg="Two types cannot superimpose each other",
                 tip="Remove the second superimposition definition")
@@ -1213,11 +1145,11 @@ class SemanticErrors:
 
         def add(self, unconstrained_generic_parameter: Asts.GenericParameterAst, type: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=type.pos,
+                ast=type,
                 tag="Type defined here")
 
             self.add_error(
-                pos=unconstrained_generic_parameter.pos,
+                ast=unconstrained_generic_parameter,
                 tag="Unconstrained generic parameter.",
                 msg=f"The generic parameter '{unconstrained_generic_parameter}' is unconstrained.",
                 tip="Remove the generic parameter.")
@@ -1232,7 +1164,7 @@ class SemanticErrors:
 
         def add(self, optional_generic_parameter: Asts.GenericParameterAst) -> SemanticError:
             self.add_error(
-                pos=optional_generic_parameter.pos,
+                ast=optional_generic_parameter,
                 tag="Optional generic parameter.",
                 msg=f"The generic parameter '{optional_generic_parameter}' is optional.",
                 tip="Remove the optional generic parameter.")
@@ -1245,13 +1177,15 @@ class SemanticErrors:
         number of control flow statements is equal to the loop depth.
         """
 
-        def add(self, loop: Asts.LoopExpressionAst, loop_control: Asts.LoopControlFlowStatementAst, number_of_controls: int, depth_of_loop: int) -> SemanticError:
+        def add(
+                self, loop: Asts.LoopExpressionAst, loop_control: Asts.LoopControlFlowStatementAst,
+                number_of_controls: int, depth_of_loop: int) -> SemanticError:
             self.add_info(
-                pos=loop.pos,
+                ast=loop,
                 tag="Loop defined here")
 
             self.add_error(
-                pos=loop_control.pos,
+                ast=loop_control,
                 tag="Too many control flow statements.",
                 msg=f"The loop has {number_of_controls} control flow statements, but the loop depth is only {depth_of_loop}.",
                 tip="Remove some control flow statements from the loop.")
@@ -1266,11 +1200,11 @@ class SemanticErrors:
 
         def add(self, element: Asts.ExpressionAst, borrow_location: Ast) -> SemanticError:
             self.add_info(
-                pos=borrow_location.pos,
+                ast=borrow_location,
                 tag="Tuple element borrowed here")
 
             self.add_error(
-                pos=element.pos,
+                ast=element,
                 tag="Tuple element borrowed.",
                 msg="Tuple elements cannot be borrowed.",
                 tip="Remove the borrow from the tuple element.")
@@ -1285,11 +1219,11 @@ class SemanticErrors:
 
         def add(self, return_type_1: Asts.TypeAst, return_type_2: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=return_type_1.pos,
+                ast=return_type_1,
                 tag=f"Branch inferred as '{return_type_1}'")
 
             self.add_error(
-                pos=return_type_2.pos,
+                ast=return_type_2,
                 tag=f"Branch inferred as '{return_type_2}'",
                 msg="The branches return conflicting types.",
                 tip="Ensure the branches return the same type.")
@@ -1304,11 +1238,11 @@ class SemanticErrors:
 
         def add(self, condition: Asts.ExpressionAst, final_branch: Asts.CaseExpressionBranchAst) -> SemanticError:
             self.add_info(
-                pos=condition.pos,
+                ast=condition,
                 tag="Case expression defined here")
 
             self.add_error(
-                pos=final_branch.pos,
+                ast=final_branch,
                 tag="Missing else branch.",
                 msg="The case statement is missing an else branch.",
                 tip="Add an else branch to the case statement.")
@@ -1320,13 +1254,15 @@ class SemanticErrors:
         The CaseBranchesElseBranchNotLastError is raised if the else branch is not the last branch in a case statement.
         """
 
-        def add(self, else_branch: Asts.CaseExpressionBranchAst, last_branch: Asts.CaseExpressionBranchAst) -> SemanticError:
+        def add(
+                self, else_branch: Asts.CaseExpressionBranchAst,
+                last_branch: Asts.CaseExpressionBranchAst) -> SemanticError:
             self.add_info(
-                pos=else_branch.pos,
+                ast=else_branch,
                 tag="Else branch defined here")
 
             self.add_error(
-                pos=last_branch.pos,
+                ast=last_branch,
                 tag="Branch defined after else branch.",
                 msg="The else branch must be the last branch in the case statement.",
                 tip="Move the else branch to the end of the case statement.")
@@ -1341,11 +1277,11 @@ class SemanticErrors:
 
         def add(self, first_pattern: Asts.PatternVariantAst, second_pattern: Asts.PatternVariantAst) -> SemanticError:
             self.add_info(
-                pos=first_pattern.pos,
+                ast=first_pattern,
                 tag="First destructure pattern defined here")
 
             self.add_error(
-                pos=second_pattern.pos,
+                ast=second_pattern,
                 tag="Second destructure pattern defined here",
                 msg="The case branch can only have one destructure pattern.",
                 tip="Remove the second destructure pattern, or move it into another branch.")
@@ -1359,13 +1295,15 @@ class SemanticErrors:
         invalid.
         """
 
-        def add(self, first_multi_skip: Asts.PatternVariantDestructureSkipNArgumentsAst, second_multi_skip: Asts.PatternVariantDestructureSkipNArgumentsAst) -> SemanticError:
+        def add(
+                self, first_multi_skip: Asts.PatternVariantDestructureSkipNArgumentsAst,
+                second_multi_skip: Asts.PatternVariantDestructureSkipNArgumentsAst) -> SemanticError:
             self.add_info(
-                pos=first_multi_skip.pos,
+                ast=first_multi_skip,
                 tag="First multi-skip defined here")
 
             self.add_error(
-                pos=second_multi_skip.pos,
+                ast=second_multi_skip,
                 tag="Second multi-skip defined here.",
                 msg="Only one multi-skip is allowed per destructure.",
                 tip="Remove the one of the multi-skip tokens.")
@@ -1379,13 +1317,15 @@ class SemanticErrors:
         invalid.
         """
 
-        def add(self, object_destructure: Asts.LocalVariableDestructureObjectAst, bound_multi_skip: Asts.PatternVariantDestructureSkipNArgumentsAst) -> SemanticError:
+        def add(
+                self, object_destructure: Asts.LocalVariableDestructureObjectAst,
+                bound_multi_skip: Asts.PatternVariantDestructureSkipNArgumentsAst) -> SemanticError:
             self.add_info(
-                pos=object_destructure.pos,
+                ast=object_destructure,
                 tag="Object destructure defined here")
 
             self.add_error(
-                pos=bound_multi_skip.pos,
+                ast=bound_multi_skip,
                 tag="Multi-skip with binding found.",
                 msg="Multi-skip cannot contain a binding.",
                 tip="Remove the binding from the multi-skip.")
@@ -1398,13 +1338,15 @@ class SemanticErrors:
         number of elements than the tuple being destructured. For example, "let (a, b) = (1, 2, 3)" is invalid.
         """
 
-        def add(self, lhs: Asts.LocalVariableDestructureTupleAst, lhs_count: int, rhs: Ast, rhs_count: int) -> SemanticError:
+        def add(
+                self, lhs: Asts.LocalVariableDestructureTupleAst, lhs_count: int, rhs: Ast,
+                rhs_count: int) -> SemanticError:
             self.add_info(
-                pos=lhs.pos,
+                ast=lhs,
                 tag=f"{lhs_count}-tuple destructure defined here")
 
             self.add_error(
-                pos=rhs.pos,
+                ast=rhs,
                 tag=f"Type inferred as a {rhs_count}-tuple here",
                 msg="The tuple destructure has a different number of elements than the tuple being destructure.",
                 tip="Change the tuple destructure to have the same number of elements as the tuple.")
@@ -1417,13 +1359,15 @@ class SemanticErrors:
         number of elements than the array being destructured. For example, "let [a, b] = [1, 2, 3]" is invalid.
         """
 
-        def add(self, lhs: Asts.LocalVariableDestructureArrayAst, lhs_count: int, rhs: Ast, rhs_count: int) -> SemanticError:
+        def add(
+                self, lhs: Asts.LocalVariableDestructureArrayAst, lhs_count: int, rhs: Ast,
+                rhs_count: int) -> SemanticError:
             self.add_info(
-                pos=lhs.pos,
+                ast=lhs,
                 tag=f"{lhs_count}-array destructure defined here")
 
             self.add_error(
-                pos=rhs.pos,
+                ast=rhs,
                 tag=f"Type inferred as a {rhs_count}-array here",
                 msg="The array destructure has a different number of elements than the array being destructure.",
                 tip="Change the array destructure to have the same number of elements as the array.")
@@ -1438,11 +1382,11 @@ class SemanticErrors:
 
         def add(self, async_modifier: Ast, target: Ast) -> SemanticError:
             self.add_info(
-                pos=async_modifier.pos,
+                ast=async_modifier,
                 tag="Async modifier used here")
 
             self.add_error(
-                pos=target.pos,
+                ast=target,
                 tag="Invalid async function call target.",
                 msg="The target of an async function call must be a function.",
                 tip="Remove the async call modifier, or change the target to a function.")
@@ -1457,11 +1401,11 @@ class SemanticErrors:
 
         def add(self, first_else: Ast, second_else: Ast) -> SemanticError:
             self.add_info(
-                pos=first_else.pos,
+                ast=first_else,
                 tag="First default argument defined here")
 
             self.add_error(
-                pos=second_else.pos,
+                ast=second_else,
                 tag="Second default argument defined here",
                 msg="Only one default argument is allowed in an object initializer.",
                 tip="Remove the second default argument.")
@@ -1477,7 +1421,7 @@ class SemanticErrors:
 
         def add(self, class_type: Asts.TypeAst) -> SemanticError:
             self.add_error(
-                pos=class_type.pos,
+                ast=class_type,
                 tag=f"Abstract type '{class_type}' initialized here",
                 msg="An abstract class cannot be instantiated.",
                 tip="Use a non-abstract class instead.")
@@ -1492,13 +1436,48 @@ class SemanticErrors:
 
         def add(self, class_prototype: Asts.ClassPrototypeAst, recursion_type: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                pos=class_prototype.pos,
+                ast=class_prototype,
                 tag="Type defined here")
 
             self.add_error(
-                pos=recursion_type.pos,
+                ast=recursion_type,
                 tag="Recursive type definition.",
                 msg="Cannot refer to the enclosing type within the definition of the type.",
                 tip="Use Single[T] or Shared[T] instead.")
+
+            return self
+
+    class InvalidConventionLocationError(SemanticError):
+        """
+        The InvalidConventionLocationError is raised if a type has been declared with a convention, somewhere where a
+        convention is not allowed. This includes attributes, return types etc.
+        """
+
+        def add(self, convention: Asts.ConventionAst, location: Ast, what: str) -> SemanticError:
+            self.add_info(
+                ast=convention,
+                tag="Convention applied here")
+
+            self.add_error(
+                ast=location,
+                tag="Invalid convention location.",
+                msg=f"Conventions cannot be applied to {what}s.",
+                tip="Remove the convention.")
+
+            return self
+
+    class InvalidSelfTypeError(SemanticError):
+        """
+        The InvalidSelfTypeError is raised if an arbitrary type passed to a self parameter does not superimpose the
+        "Deref[Self]" type. This is because all "self" parameters must be either be "Self", with the inclusion of
+        dereferencing to "Self".
+        """
+
+        def add(self, type: Asts.TypeAst) -> SemanticError:
+            self.add_error(
+                ast=type,
+                tag=f"Type inferred as '{type}'",
+                msg="The type does not superimpose 'Deref[Self]'.",
+                tip="Change the type to superimpose 'Deref[Self]'.")
 
             return self

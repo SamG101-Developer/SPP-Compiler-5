@@ -18,6 +18,10 @@ class PatternVariantElseAst(Ast):
         # Print the AST with auto-formatting.
         return self.tok_else.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_else.pos_end
+
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Modified signature to include a condition, uniform with other "PatternXXXAst" types.
         ...

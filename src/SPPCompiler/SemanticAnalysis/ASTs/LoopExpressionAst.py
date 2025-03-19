@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -37,7 +37,11 @@ class LoopExpressionAst(Ast, TypeInferrable):
             self.else_block.print(printer) if self.else_block else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    @property
+    def pos_end(self) -> int:
+        return self.else_block.pos_end if self.else_block else self.body.pos_end
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Get the loop type set by exit expressions inside the loop.
         loop_type = self._loop_type_info.get(self._loop_level, (None, None))[1]
         if not loop_type:
@@ -48,7 +52,7 @@ class LoopExpressionAst(Ast, TypeInferrable):
             else_type = self.else_block.infer_type(scope_manager, **kwargs)
             if not loop_type.symbolic_eq(else_type, scope_manager.current_scope):
                 final_member = self.body.members[-1] if self.body.members else self.body.tok_right_brace
-                raise SemanticErrors.TypeMismatchError().add(self, loop_type, final_member, else_type)
+                raise SemanticErrors.TypeMismatchError().add(self, loop_type, final_member, else_type).scopes(scope_manager.current_scope)
 
         return loop_type
 

@@ -34,6 +34,10 @@ class SupPrototypeFunctionsAst(Ast):
             self.body.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.body.pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         # Pre-process the members of this superimposition.
         super().pre_process(context)
@@ -43,6 +47,10 @@ class SupPrototypeFunctionsAst(Ast):
         # Create a new scope for the superimposition.
         scope_manager.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
+
+        # Ensure the superimposition type does not have a convention.
+        if type(c := self.name.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.name, "superimposition type").scopes(scope_manager.current_scope)
 
         # Generate the symbols for the generic parameter group, and the self type.
         for p in self.generic_parameter_group.parameters:
@@ -63,14 +71,14 @@ class SupPrototypeFunctionsAst(Ast):
         # Cannot superimpose over a generic type.
         cls_symbol = scope_manager.current_scope.get_symbol(self.name.without_generics())
         if cls_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type")
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(self.name, self.name, "superimposition type").scopes(scope_manager.current_scope)
 
         # Ensure all the generic arguments are unnamed and match the class's generic parameters.
         for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
             if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__args__):
-                raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(generic_arg)
+                raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(generic_arg).scopes(scope_manager.current_scope)
             if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
-                raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(generic_arg, self)
+                raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(generic_arg, self).scopes(scope_manager.current_scope)
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         cls_symbol.scope._direct_sup_scopes.append(scope_manager.current_scope)
@@ -93,11 +101,11 @@ class SupPrototypeFunctionsAst(Ast):
 
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
-            raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(unconstrained[0], self.name)
+            raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(unconstrained[0], self.name).scopes(scope_manager.current_scope)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_opt():
-            raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(optional[0])
+            raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(optional[0]).scopes(scope_manager.current_scope)
 
         # Analyse the name, where block, and body.
         self.name.analyse_semantics(scope_manager, **kwargs)

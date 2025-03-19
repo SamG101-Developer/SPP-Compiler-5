@@ -5,10 +5,10 @@ from dataclasses import dataclass, field
 from glob import glob
 from typing import Iterable, List, Optional
 
+import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import RawToken
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
-import SPPCompiler.SemanticAnalysis as Asts
 
 
 @dataclass

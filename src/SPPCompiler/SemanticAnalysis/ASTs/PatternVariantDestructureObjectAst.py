@@ -34,6 +34,10 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureObjectAst:
         # Convert the object destructuring into a local variable object destructuring.
         elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureObjectAst.__args__)
@@ -43,13 +47,12 @@ class PatternVariantDestructureObjectAst(Ast, PatternMapping):
     def analyse_semantics(self, scope_manager: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         self.type.analyse_semantics(scope_manager, **kwargs)
 
-        # Todo: is InferredTypeInfo needed here for the comparison?
         # Flow type the condition symbol if necessary.
         condition_symbol = scope_manager.current_scope.get_symbol(condition)
         is_condition_symbol_variant = condition_symbol and condition_symbol.type.without_generics().symbolic_eq(CommonTypes.Var().without_generics(), scope_manager.current_scope)
         if condition_symbol and is_condition_symbol_variant:
             if not condition_symbol.type.symbolic_eq(self.type, scope_manager.current_scope, scope_manager.current_scope):
-                raise SemanticErrors.TypeMismatchError().add(condition, condition_symbol.type, self.type, self.type)
+                raise SemanticErrors.TypeMismatchError().add(condition, condition_symbol.type, self.type, self.type).scopes(scope_manager.current_scope)
 
             flow_symbol = copy.deepcopy(condition_symbol)
             flow_symbol.type = self.type

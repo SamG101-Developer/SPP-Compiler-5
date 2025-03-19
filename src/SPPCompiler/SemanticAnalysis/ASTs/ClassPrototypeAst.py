@@ -54,21 +54,24 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
             self.body.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.body.pos_end
+
     def _generate_symbols(self, scope_manager: ScopeManager) -> None:
         from SPPCompiler.SemanticAnalysis import GenericArgumentGroupAst
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
+        SymbolType = TypeSymbol if not self._is_alias else AliasSymbol
 
-        symbol_type = TypeSymbol if not self._is_alias else AliasSymbol
         symbol_name = copy.deepcopy(self.name.type_parts()[0])
         symbol_name.generic_argument_group = GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)
 
-        symbol_1 = symbol_type(name=symbol_name, type=self, scope=scope_manager.current_scope, visibility=self._visibility[0])
+        symbol_1 = SymbolType(name=symbol_name, type=self, scope=scope_manager.current_scope, visibility=self._visibility[0])
         scope_manager.current_scope.parent.add_symbol(symbol_1)
         scope_manager.current_scope._type_symbol = symbol_1
 
         if self.generic_parameter_group.parameters:
-            symbol_2 = symbol_type(name=self.name.type_parts()[0], type=self, visibility=self._visibility[0])
-            symbol_2.scope = scope_manager.current_scope
+            symbol_2 = SymbolType(name=self.name.type_parts()[0], type=self, scope=scope_manager.current_scope, visibility=self._visibility[0])
             scope_manager.current_scope.parent.add_symbol(symbol_2)
 
     def pre_process(self, context: PreProcessingContext) -> None:
@@ -83,6 +86,10 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         # Create a new scope for the class.
         scope_manager.create_and_move_into_new_scope(self.name, self)
         super().generate_top_level_scopes(scope_manager)
+
+        # Run top level scope logic for the annotations.
+        for a in self.annotations:
+            a.generate_top_level_scopes(scope_manager)
 
         # Create a new symbol for the class.
         self._generate_symbols(scope_manager)
@@ -111,6 +118,10 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
         # Move into the class scope.
         scope_manager.move_to_next_scope()
 
+        # Analyse the annotations.
+        for a in self.annotations:
+            a.analyse_semantics(scope_manager, **kwargs)
+
         # Analyse the generic parameter group, where block, and body of the class.
         self.generic_parameter_group.analyse_semantics(scope_manager, **kwargs)
         self.where_block.analyse_semantics(scope_manager, **kwargs)
@@ -118,7 +129,7 @@ class ClassPrototypeAst(Ast, VisibilityEnabled):
 
         # Check the type isn't recursive, by recursing through all attribute types.
         if recursion := AstTypeManagement.is_type_recursive(self, scope_manager):
-            raise SemanticErrors.RecursiveTypeDefinitionError(self, recursion)
+            raise SemanticErrors.RecursiveTypeDefinitionError(self, recursion).scopes(scope_manager.current_scope)
 
         # Move out of the class scope.
         scope_manager.move_out_of_current_scope()

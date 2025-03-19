@@ -7,8 +7,6 @@ StatementAst = Union[
     Asts.ExpressionAst,
     Asts.LetStatementAst,
     Asts.LoopControlFlowStatementAst,
-    Asts.PinStatementAst,
-    Asts.RelStatementAst,
     Asts.RetStatementAst,
     Asts.UseStatementAst]
 

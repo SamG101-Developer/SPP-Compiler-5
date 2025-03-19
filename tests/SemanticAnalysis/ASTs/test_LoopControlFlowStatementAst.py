@@ -7,9 +7,9 @@ class TestLoopControlFlowStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_control_flow_statement_exit_expr(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             loop true {
-                exit std::Bool
+                exit std::boolean::Bool
             }
         }
         """
@@ -17,7 +17,7 @@ class TestLoopControlFlowStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.LoopTooManyControlFlowStatementsError)
     def test_invalid_control_flow_statement_too_many_control_statements(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             loop true {
                 exit exit
             }
@@ -27,7 +27,7 @@ class TestLoopControlFlowStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_control_flow_statement_exit_types_1(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             loop true {
                 case false
                     == true { exit 1 }
@@ -39,7 +39,7 @@ class TestLoopControlFlowStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_control_flow_statement_exit_types_2(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             loop true {
                 loop true {
                     exit exit 1
@@ -52,7 +52,7 @@ class TestLoopControlFlowStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_control_flow_statement_exit_types(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             loop true {
                 case true {
                     exit 1
@@ -67,7 +67,7 @@ class TestLoopControlFlowStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_control_flow_statement_exit_skip(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             loop true {
                 loop true {
                     exit skip
@@ -80,7 +80,7 @@ class TestLoopControlFlowStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_control_flow_statement_exit_types_nested(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             loop true {
                 loop true {
                     exit exit 1
@@ -93,7 +93,7 @@ class TestLoopControlFlowStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_control_flow_statement_exit_types_assigned(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let mut x = loop true {
                 exit "hello"
             }

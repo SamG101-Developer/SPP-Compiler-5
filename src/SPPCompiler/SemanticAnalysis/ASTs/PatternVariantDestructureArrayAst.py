@@ -26,6 +26,10 @@ class PatternVariantDestructureArrayAst(Ast, PatternMapping):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureArrayAst:
         # Convert the array destructuring into a local variable array destructuring.
         elements = self.elements.filter_to_type(*Asts.PatternVariantNestedForDestructureArrayAst.__args__)

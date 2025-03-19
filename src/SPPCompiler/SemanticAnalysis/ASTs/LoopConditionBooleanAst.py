@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -24,14 +24,18 @@ class LoopConditionBooleanAst(Ast, TypeInferrable):
         # Print the AST with auto-formatting.
         return self.condition.print(printer)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    @property
+    def pos_end(self) -> int:
+        return self.condition.pos_end
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Boolean conditions are inferred as "bool".
-        return InferredTypeInfo(CommonTypes.Bool(self.pos))
+        return CommonTypes.Bool(self.pos)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
         if isinstance(self.condition, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.condition)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.condition).scopes(scope_manager.current_scope)
 
         # Analyse the condition expression.
         self.condition.analyse_semantics(scope_manager, **kwargs)
@@ -40,9 +44,9 @@ class LoopConditionBooleanAst(Ast, TypeInferrable):
 
         # Check the loop condition is boolean.
         return_type = self.condition.infer_type(scope_manager)
-        target_type = InferredTypeInfo(CommonTypes.Bool(self.pos))
+        target_type = CommonTypes.Bool(self.pos)
         if not target_type.symbolic_eq(return_type, scope_manager.current_scope):
-            raise SemanticErrors.ExpressionNotBooleanError().add(self.condition, return_type, "loop")
+            raise SemanticErrors.ExpressionNotBooleanError().add(self.condition, return_type, "loop").scopes(scope_manager.current_scope)
 
 
 __all__ = ["LoopConditionBooleanAst"]

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, Optional
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -23,6 +23,7 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
     name: Asts.IdentifierAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkColon))
     type: Asts.TypeAst = field(default=None)
+    default_value: Optional[Asts.ExpressionAst] = None
 
     def __post_init__(self) -> None:
         assert self.name
@@ -43,6 +44,10 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
             self.type.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.type.pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         super().pre_process(context)
 
@@ -51,23 +56,40 @@ class ClassAttributeAst(Ast, VisibilityEnabled):
             a.pre_process(self)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
+        # Run top level scope logic for the annotations.
+        for a in self.annotations:
+            a.generate_top_level_scopes(scope_manager)
+
+        # Ensure the attribute type does not have a convention.
+        if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "attribute type").scopes(scope_manager.current_scope)
+
         # Create a variable symbol for this attribute in the current scope (class).
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         scope_manager.current_scope.add_symbol(symbol)
 
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
+        # Type checks must be done before semantic analysis, as other ASTs may use this attribute prior to its analysis.
         self.type.analyse_semantics(scope_manager)
+
+        # Ensure the attribute type is not void.
+        void_type = CommonTypes.Void(self.pos)
+        if self.type.symbolic_eq(void_type, scope_manager.current_scope):
+            raise SemanticErrors.TypeVoidInvalidUsageError().add(self.type).scopes(scope_manager.current_scope)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
 
         # Analyse the semantics of the annotations and the type of the attribute.
         for a in self.annotations:
             a.analyse_semantics(scope_manager, **kwargs)
+            
+        # If a default value is present, analyse it and check its type.
+        if self.default_value:
+            self.default_value.analyse_semantics(scope_manager)
+            default_type = self.default_value.infer_type(scope_manager)
 
-        # Ensure the attribute type is not void.
-        void_type = CommonTypes.Void(self.pos)
-        if self.type.symbolic_eq(void_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeVoidInvalidUsageError().add(self.type)
+            if not self.type.symbolic_eq(default_type, scope_manager.current_scope):
+                raise SemanticErrors.TypeMismatchError().add(self                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             , self.type, self.default_value, default_type).scopes(scope_manager.current_scope)
 
 
 __all__ = ["ClassAttributeAst"]

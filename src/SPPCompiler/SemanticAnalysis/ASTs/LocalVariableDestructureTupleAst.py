@@ -10,7 +10,6 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Mixins.VariableNameExtraction import VariableNameExtraction
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
@@ -32,6 +31,10 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
     @functools.cached_property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return self.elements.map(lambda e: e.extract_names).flat()
@@ -45,26 +48,30 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
         # Only 1 "multi-skip" allowed in a destructure.
         multi_arg_skips = self.elements.filter_to_type(Asts.LocalVariableDestructureSkipNArgumentsAst)
         if multi_arg_skips.length > 1:
-            raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1])
+            raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(multi_arg_skips[0], multi_arg_skips[1]).scopes(scope_manager.current_scope)
 
         # Ensure the rhs value is a tuple.
         value_type = value.infer_type(scope_manager, **kwargs).without_generics()
-        tuple_type = InferredTypeInfo(CommonTypesPrecompiled.EMPTY_TUPLE)
+        tuple_type = CommonTypesPrecompiled.EMPTY_TUPLE
         if not value_type.symbolic_eq(tuple_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(self, tuple_type, value, value_type)
+            raise SemanticErrors.TypeMismatchError().add(self, tuple_type, value, value_type).scopes(scope_manager.current_scope)
 
         # Determine the number of elements in the lhs and rhs tuples.
         num_lhs_tuple_elements = self.elements.length
-        num_rhs_tuple_elements = value.infer_type(scope_manager, **kwargs).type.type_parts()[0].generic_argument_group.arguments.length
+        num_rhs_tuple_elements = value.infer_type(scope_manager, **kwargs).type_parts()[0].generic_argument_group.arguments.length
 
         # Ensure the lhs and rhs tuples have the same number of elements unless a multi-skip is present.
         if (num_lhs_tuple_elements < num_rhs_tuple_elements and not multi_arg_skips) or num_lhs_tuple_elements > num_rhs_tuple_elements:
-            raise SemanticErrors.VariableTupleDestructureTupleSizeMismatchError().add(self, num_lhs_tuple_elements, value, num_rhs_tuple_elements)
+            raise SemanticErrors.VariableTupleDestructureTupleSizeMismatchError().add(self, num_lhs_tuple_elements, value, num_rhs_tuple_elements).scopes(scope_manager.current_scope)
 
-        # For a binding ".." destructure, ie "let (a, ..b, c) = t", create an intermediary rhs tuple.
+        # For a binding ".." destructure, ie "let (a, b, ..c, d, e, f) = t", create an intermediary rhs tuple.
+        # if t  = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9), then c = (2, 3, 4, 5, 6)
         if multi_arg_skips and multi_arg_skips[0].binding:
-            indexes = [i - self.elements.index(multi_arg_skips[0]) - 1 for i in range(num_lhs_tuple_elements, num_rhs_tuple_elements + 1)]
-            new_ast = AstMutation.inject_code(f"({", ".join([f"{value}.{i}" for i in indexes])})", SppParser.parse_literal_tuple)
+            m = self.elements.index(multi_arg_skips[0])
+            indexes = [*range(m, m + num_rhs_tuple_elements - num_lhs_tuple_elements + 1)]
+            new_ast = AstMutation.inject_code(
+                f"({", ".join([f"{value}.{i}" for i in indexes])})", SppParser.parse_literal_tuple,
+                pos_adjust=value.pos)
             bound_multi_skip = new_ast
 
         # Create new indexes like [0, 1, 2, 6, 7] if elements 3->5 are skipped (and possibly bound).
@@ -74,14 +81,18 @@ class LocalVariableDestructureTupleAst(Ast, VariableNameExtraction):
         # Create expanded "let" statements for each part of the destructure.
         for i, element in indexes.zip(self.elements):
             if isinstance(element, Asts.LocalVariableDestructureSkipNArgumentsAst) and multi_arg_skips[0].binding:
-                new_ast = AstMutation.inject_code(f"let {element.binding} = {bound_multi_skip}", SppParser.parse_let_statement_initialized)
+                new_ast = AstMutation.inject_code(
+                    f"let {element.binding} = {bound_multi_skip}", SppParser.parse_let_statement_initialized,
+                    pos_adjust=element.pos)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
             elif isinstance(element, (Asts.LocalVariableDestructureSkip1ArgumentAst, Asts.LocalVariableDestructureSkipNArgumentsAst)):
                 continue
 
             else:
-                new_ast = AstMutation.inject_code(f"let {element} = {value}.{i}", SppParser.parse_let_statement_initialized)
+                new_ast = AstMutation.inject_code(
+                    f"let {element} = {value}.{i}", SppParser.parse_let_statement_initialized,
+                    pos_adjust=element.pos)
                 new_ast.analyse_semantics(scope_manager, **kwargs)
 
 

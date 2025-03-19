@@ -37,6 +37,10 @@ class FunctionParameterGroupAst(Ast):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
     def get_self(self) -> Optional[Asts.FunctionParameterSelfAst]:
         # Get the "self" function parameter (if it exists).
         from SPPCompiler.SemanticAnalysis import FunctionParameterSelfAst
@@ -66,21 +70,21 @@ class FunctionParameterGroupAst(Ast):
         # Check there are no duplicate parameter names.
         parameter_names = self.get_non_self().map_attr("extract_names").flat()
         if duplicates := parameter_names.non_unique():
-            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "parameter")
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "parameter").scopes(scope_manager.current_scope)
 
         # Check the parameters are in the correct order.
         if difference := AstOrdering.order_params(self.parameters):
-            raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "parameter")
+            raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "parameter").scopes(scope_manager.current_scope)
 
         # Check there is only 1 "self" parameter.
         self_parameters = self.parameters.filter_to_type(Asts.FunctionParameterSelfAst)
         if self_parameters.length > 1:
-            raise SemanticErrors.ParameterMultipleSelfError().add(self_parameters[0], self_parameters[1])
+            raise SemanticErrors.ParameterMultipleSelfError().add(self_parameters[0], self_parameters[1]).scopes(scope_manager.current_scope)
 
         # Check there is only 1 variadic parameter.
         variadic_parameters = self.parameters.filter_to_type(Asts.FunctionParameterVariadicAst)
         if variadic_parameters.length > 1:
-            raise SemanticErrors.ParameterMultipleVariadicError().add(variadic_parameters[0], variadic_parameters[1])
+            raise SemanticErrors.ParameterMultipleVariadicError().add(variadic_parameters[0], variadic_parameters[1]).scopes(scope_manager.current_scope)
 
         # Analyse the parameters.
         for p in self.parameters:

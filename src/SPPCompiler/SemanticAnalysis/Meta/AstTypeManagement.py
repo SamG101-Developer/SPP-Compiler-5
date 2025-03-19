@@ -17,6 +17,14 @@ from SPPCompiler.Utils.Sequence import Seq
 
 class AstTypeManagement:
     @staticmethod
+    def get_generics_in_scope(scope: Scope) -> Asts.GenericArgumentGroupAst:
+        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
+        generics = scope._symbol_table.all().filter(lambda s: s.is_generic)
+        generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
+        generics = Asts.GenericArgumentGroupAst(arguments=generics)
+        return generics
+
+    @staticmethod
     def is_type_indexable(type: Asts.TypeAst, scope: Scope) -> bool:
         from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
 
@@ -64,7 +72,7 @@ class AstTypeManagement:
             if not scope_manager.get_namespaced_scope(sub_namespace):
                 alternatives = namespace_scope.all_symbols().filter_to_type(NamespaceSymbol).map_attr("name")
                 closest_match = difflib.get_close_matches(sub_namespace[-1].value, alternatives.map_attr("value"), n=1, cutoff=0)
-                raise SemanticErrors.IdentifierUnknownError().add(sub_namespace[-1], "namespace", closest_match[0] if closest_match else None)
+                raise SemanticErrors.IdentifierUnknownError().add(sub_namespace[-1], "namespace", closest_match[0] if closest_match else None).scopes(scope_manager.current_scope)
 
             # Move into the next part of the namespace.
             namespace_scope = scope_manager.get_namespaced_scope(sub_namespace)
@@ -73,25 +81,28 @@ class AstTypeManagement:
         return namespace_scope
 
     @staticmethod
-    def get_type_part_symbol_with_error(scope: Scope, type_part: Asts.GenericIdentifierAst, ignore_alias: bool = False, **kwargs) -> TypeSymbol:
+    def get_type_part_symbol_with_error(scope: Scope, scope_manager: ScopeManager, type_part: Asts.GenericIdentifierAst, ignore_alias: bool = False, **kwargs) -> TypeSymbol:
         # Get the type part's symbol, and raise an error if it does not exist.
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
         if not type_symbol:
             alternatives = scope.all_symbols().filter_to_type(TypeSymbol).map_attr("name")
             alternatives.remove_if(lambda a: a.value[0] == "$")
             closest_match = difflib.get_close_matches(type_part.value, alternatives.map_attr("value"), n=1, cutoff=0)
-            raise SemanticErrors.IdentifierUnknownError().add(type_part, "type", closest_match[0] if closest_match else None)
+            raise SemanticErrors.IdentifierUnknownError().add(type_part, "type", closest_match[0] if closest_match else None).scopes(scope_manager.current_scope)
 
         # Return the type part's scope from the symbol.
         return type_symbol
 
     @staticmethod
-    def create_generic_scope(scope_manager: ScopeManager, type: Asts.TypeAst, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol) -> Scope:
-        from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypesPrecompiled
+    def create_generic_scope(
+            scope_manager: ScopeManager, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol, is_tuple: bool)\
+            -> Scope:
 
         # Create a new scope & symbol for the generic substituted type.
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.scope._ast))
-        new_symbol = builtins.type(base_symbol)(name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable, is_abstract=base_symbol.is_abstract, visibility=base_symbol.visibility)
+        new_symbol = builtins.type(base_symbol)(
+            name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
+            is_abstract=base_symbol.is_abstract, visibility=base_symbol.visibility)
         if isinstance(base_symbol, AliasSymbol):
             new_symbol.old_type = base_symbol.old_type
 
@@ -104,13 +115,7 @@ class AstTypeManagement:
         new_scope._non_generic_scope = base_symbol.scope
 
         # No more checks for the tuple type (avoid recursion, is textual because it is to do with generics).
-        if type and type.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
-            return new_scope
-
-        # Substitute the generics of the attribute types in the new class prototype.
-        for attribute in new_scope._ast.body.members:
-            attribute.type = attribute.type.sub_generics(type_part.generic_argument_group.arguments)
-            attribute.type.analyse_semantics(scope_manager)
+        if is_tuple: return new_scope
 
         # Register the generic arguments as type symbols in the new scope.
         for generic_argument in type_part.generic_argument_group.arguments:
@@ -121,7 +126,10 @@ class AstTypeManagement:
         return new_scope
 
     @staticmethod
-    def create_generic_sup_scopes(scope_manager: ScopeManager, base_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
+    def create_generic_sup_scopes(
+            scope_manager: ScopeManager, base_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst)\
+            -> Seq[Scope]:
+
         old_scopes = base_scope._direct_sup_scopes
         new_scopes = Seq()
 
@@ -145,7 +153,7 @@ class AstTypeManagement:
                     new_scopes.append(modified_class_scope)
 
             # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
-            new_scope_name = AstTypeManagement.generic_convert_sup_scope_name(scope.name, generic_arguments)
+            new_scope_name = AstTypeManagement.generic_convert_sup_scope_name(scope.name, generic_arguments, scope._ast.name.pos)
             new_scope = Scope(new_scope_name, scope.parent, ast=scope._ast)
             new_scope._children = scope._children
             new_scope._symbol_table = copy.copy(scope._symbol_table)
@@ -163,40 +171,47 @@ class AstTypeManagement:
         return new_scopes
 
     @staticmethod
-    def create_generic_symbol(scope_manager: ScopeManager, generic_argument: Asts.GenericArgumentAst) -> TypeSymbol | VariableSymbol:
+    def create_generic_symbol(
+            scope_manager: ScopeManager, generic_argument: Asts.GenericArgumentAst)\
+            -> TypeSymbol | VariableSymbol:
+
         true_value_symbol = scope_manager.current_scope.get_symbol(generic_argument.value)
 
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
             return TypeSymbol(name=generic_argument.name.type_parts()[0], type=true_value_symbol.type if true_value_symbol else None, scope=true_value_symbol.scope if true_value_symbol else None, is_generic=True)
 
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
-            return VariableSymbol(name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(scope_manager).type, is_generic=True)
+            return VariableSymbol(name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(scope_manager), is_generic=True)
 
         raise Exception(f"Unknown generic argument type: {type(generic_argument).__name__}")
 
     @staticmethod
-    def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst) -> str:
+    def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst, pos: int) -> str:
         parts = name.split(":")
 
         if " ext " not in parts:
-            t = AstMutation.inject_code(parts[1], SppParser.parse_type).sub_generics(generics.arguments)
+            t = AstMutation.inject_code(parts[1], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
             return f"{parts[0]}:{t}:{parts[2]}"
 
         else:
-            t = AstMutation.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type).sub_generics(generics.arguments)
-            u = AstMutation.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type).sub_generics(generics.arguments)
+            t = AstMutation.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
+            u = AstMutation.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
             return f"{parts[0]}:#{t} ext {u}:{parts[2]}"
 
     @staticmethod
     def is_type_recursive(type: Asts.ClassPrototypeAst, scope_manager: ScopeManager) -> Optional[Asts.TypeAst]:
-        def get_attribute_types(class_prototype: Asts.ClassPrototypeAst) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
+
+        def get_attribute_types(class_prototype: Asts.ClassPrototypeAst, class_scope: Scope) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
+
             for attribute in class_prototype.body.members:
                 raw_attribute_type = attribute.type
-                symbol = scope_manager.current_scope.get_symbol(raw_attribute_type)
-                yield symbol.type, attribute.type
-                if symbol.type:
-                    yield from get_attribute_types(symbol.type)
+                symbol = class_scope.get_symbol(raw_attribute_type)
 
-        for attribute_cls_prototype, attribute_ast in get_attribute_types(type):
+                # Skip generics (can never be a "recursive" type). Todo: this is a hack that works
+                if symbol and symbol.type:
+                    yield symbol.type, attribute.type
+                    yield from get_attribute_types(symbol.type, symbol.scope)
+
+        for attribute_cls_prototype, attribute_ast in get_attribute_types(type, scope_manager.current_scope):
             if attribute_cls_prototype is type:
                 return attribute_ast

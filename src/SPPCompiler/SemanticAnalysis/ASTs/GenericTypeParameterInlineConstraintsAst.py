@@ -27,6 +27,10 @@ class GenericTypeParameterInlineConstraintsAst(Ast):
             string = []
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.constraints[-1].pos_end
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         for c in self.constraints:
             c.analyse_semantics(scope_manager, **kwargs)
@@ -35,7 +39,7 @@ class GenericTypeParameterInlineConstraintsAst(Ast):
         for i, t in self.constraints.enumerate():
             for j, u in self.constraints[i + 1:].enumerate():
                 if t.symbolic_eq(u, scope_manager.current_scope):
-                    raise SemanticErrors.IdentifierDuplicationError(t, u)
+                    raise SemanticErrors.IdentifierDuplicationError(t, u).scopes(scope_manager.current_scope)
 
 
 __all__ = ["GenericTypeParameterInlineConstraintsAst"]

@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
@@ -34,48 +34,47 @@ class GenExpressionAst(Ast, TypeInferrable):
             self.expression.print(printer) if self.expression else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    @property
+    def pos_end(self) -> int:
+        return self.expression.pos_end if self.expression else self.tok_gen.pos_end
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # The inferred type of a gen expression is the type of the value being sent back into the coroutine.
         generator_type = self._func_ret_type
         send_type = generator_type.type_parts()[0].generic_argument_group["Send"].value
-        return InferredTypeInfo(send_type)
+        return send_type
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a coroutine and not a subroutine.
         if kwargs["function_type"].token_type != SppTokenType.KwCor:
-            raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(kwargs["function_type"], self.tok_gen)
+            raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(kwargs["function_type"], self.tok_gen).scopes(scope_manager.current_scope)
         self._func_ret_type = kwargs["function_ret_type"]
 
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expression:
             self.expression.analyse_semantics(scope_manager, **kwargs)
-            expression_type = self.expression.infer_type(scope_manager, **kwargs)
+            expression_type = self.expression.infer_type(scope_manager, **kwargs).with_convention(self.convention)
         else:
             void_type = CommonTypes.Void(self.pos)
             expression_type = void_type
 
-        # Determine the yield's convention (based on convention token and symbol information)
-        match self.convention, expression_type.convention:
-            case Asts.ConventionMovAst(), symbol_convention: expression_type.convention = symbol_convention
-            case _: expression_type.convention = self.convention
-
         # Determine the yield type of the enclosing function.
-        external_gen_type = kwargs["function_ret_type"]
-        internal_gen_type = external_gen_type.type_parts()[0].generic_argument_group["Gen"].value
-        expected_type = InferredTypeInfo(internal_gen_type, CommonTypes.type_variant_to_convention(external_gen_type))
-
-        # If the "with" keyword is being used, the expression type is the Gen generic type parameter.
-        # Todo: this doesnt actually do anything?
-        if self.tok_with:
-            expression_type = InferredTypeInfo(internal_gen_type)
+        generator_type = kwargs["function_ret_type"]
+        yield_type = generator_type.type_parts()[0].generic_argument_group["Yield"].value
 
         # Check the expression type matches the expected type.
-        if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(internal_gen_type, expected_type, self.expression, expression_type)
+        if not self.tok_with and not yield_type.symbolic_eq(expression_type, scope_manager.current_scope):
+            raise SemanticErrors.TypeMismatchError().add(yield_type, yield_type, expression_type, expression_type).scopes(scope_manager.current_scope)
+
+        # If the "with" keyword is being used, the expression type must be a Gen type that matches the function_ret_type.
+        if self.tok_with and not generator_type.symbolic_eq(expression_type, scope_manager.current_scope):
+            raise SemanticErrors.TypeMismatchError().add(generator_type, generator_type, expression_type, self.expression).scopes(scope_manager.current_scope)
 
         # Apply the function argument law of exclusivity checks to the expression.
         if self.expression:
-            ast = AstMutation.inject_code(f"({self.convention} {self.expression})", SppParser.parse_function_call_arguments)
+            ast = AstMutation.inject_code(
+                f"({self.convention} {self.expression})", SppParser.parse_function_call_arguments,
+                pos_adjust=self.convention.pos)
             ast.analyse_semantics(scope_manager, **kwargs)
 
 

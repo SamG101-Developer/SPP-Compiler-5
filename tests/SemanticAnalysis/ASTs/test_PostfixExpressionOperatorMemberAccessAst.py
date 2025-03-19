@@ -8,15 +8,15 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     def test_invalid_postfix_member_access_static_operator_expected_on_type(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
         sup Point {
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             Point.f()
         }
         """
@@ -25,15 +25,15 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     def test_valid_postfix_member_access_static_operator_on_type(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
         sup Point {
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             Point::f()
         }
         """
@@ -42,11 +42,11 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     def test_invalid_postfix_member_access_unknown_field_on_type(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             Point::f()
         }
         """
@@ -54,7 +54,7 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
     def test_invalid_postfix_member_access_indexing_generic_type(self):
         """
-        fun f[T](p: T) -> std::Void {
+        fun f[T](p: T) -> std::void::Void {
             p.0
         }
         """
@@ -63,11 +63,11 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     def test_invalid_postfix_member_access_non_indexable_type(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             p.0
         }
         """
@@ -75,7 +75,7 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemberAccessIndexOutOfBoundsError)
     def test_invalid_postfix_member_access_index_out_of_bounds_tuple(self):
         """
-        fun f(p: (std::BigInt, std::BigInt)) -> std::Void {
+        fun f(p: (std::number::BigInt, std::number::BigInt)) -> std::void::Void {
             p.3
         }
         """
@@ -83,7 +83,7 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_member_access_tuple(self):
         """
-        fun f(p: (std::BigInt, std::BigInt)) -> std::Void {
+        fun f(p: (std::number::BigInt, std::number::BigInt)) -> std::void::Void {
             p.0
         }
         """
@@ -91,7 +91,7 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemberAccessIndexOutOfBoundsError)
     def test_invalid_postfix_member_access_index_out_of_bounds_array(self):
         """
-        fun f(p: std::Arr[std::BigInt, 2]) -> std::Void {
+        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
             p.3
         }
         """
@@ -99,7 +99,7 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_member_access_array(self):
         """
-        fun f(p: std::Arr[std::BigInt, 2]) -> std::Void {
+        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
             p.0
         }
         """
@@ -107,7 +107,7 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
     def test_invalid_postfix_member_access_generic_type(self):
         """
-        fun f[T](p: T) -> std::Void {
+        fun f[T](p: T) -> std::void::Void {
             p.x
         }
         """
@@ -115,7 +115,7 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemberAccessStaticOperatorExpectedError)
     def test_invalid_postfix_member_access_static_operator_expected_on_namespace(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             std.print()
         }
         """
@@ -123,15 +123,15 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_member_access_static_operator_on_namespace(self):
         """
-        fun f() -> std::Void {
-            std::print("hello")
+        fun f() -> std::void::Void {
+            std::console::print("hello")
         }
         """
 
     @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
     def test_invalid_postfix_member_access_unknown_field_on_variable(self):
         """
-        fun f(p: std::BigInt) -> std::Void {
+        fun f(p: std::number::BigInt) -> std::void::Void {
             p.x
         }
         """
@@ -140,11 +140,11 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     def test_valid_postfix_member_on_variable(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             p.x
         }
         """
@@ -153,11 +153,11 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     def test_invalid_postfix_member_access_runtime_operator_expected_on_variable(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let x = p::x
         }
         """
@@ -166,11 +166,11 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     def test_valid_postfix_member_access_runtime_operator_on_variable(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let x = p.x
         }
         """
@@ -178,7 +178,7 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
     def test_invalid_postfix_member_access_unknown_field_on_namespace(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let x = std::non_existent()
         }
         """
@@ -186,7 +186,7 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_member_access_on_namespace(self):
         """
-        fun f() -> std::Void {
-            let x = std::print("hello")
+        fun f() -> std::void::Void {
+            let x = std::console::print("hello")
         }
         """

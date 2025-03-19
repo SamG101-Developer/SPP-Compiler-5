@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -26,17 +26,21 @@ class RetStatementAst(Ast, TypeInferrable):
         # Print the AST with auto-formatting.
         string = [
             self.tok_ret.print(printer),
-            self.expression.print(printer) if self.expression is not None else ""]
+            f" {self.expression.print(printer)}" if self.expression is not None else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    @property
+    def pos_end(self) -> int:
+        return self.expression.pos_end if self.expression else self.tok_ret.pos_end
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
-        return InferredTypeInfo(CommonTypes.Void(self.pos))
+        return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token_type != SppTokenType.KwFun:
-            raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(kwargs["function_type"], self.tok_ret)
+            raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(kwargs["function_type"], self.tok_ret).scopes(scope_manager.current_scope)
         self._func_ret_type = kwargs["function_ret_type"]
 
         # Analyse the expression if it exists, and determine the type of the expression.
@@ -44,14 +48,14 @@ class RetStatementAst(Ast, TypeInferrable):
             self.expression.analyse_semantics(scope_manager, **kwargs)
             expression_type = self.expression.infer_type(scope_manager, **kwargs)
         else:
-            expression_type = InferredTypeInfo(CommonTypes.Void(self.pos))
+            expression_type = CommonTypes.Void(self.pos)
 
         # Determine the return type of the enclosing function.
-        expected_type = InferredTypeInfo(kwargs["function_ret_type"])
+        expected_type = kwargs["function_ret_type"]
 
         # Check the expression type matches the expected type.
         if not expected_type.symbolic_eq(expression_type, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(expression_type.type, expected_type, self.expression, expected_type)
+            raise SemanticErrors.TypeMismatchError().add(expression_type, expected_type, self.expression, expected_type).scopes(scope_manager.current_scope)
 
     def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
         # Create a return instruction with the expression if it exists.

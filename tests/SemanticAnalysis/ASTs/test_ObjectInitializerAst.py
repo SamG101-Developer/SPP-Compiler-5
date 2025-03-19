@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -7,7 +5,7 @@ class TestObjectInitializerAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
     def test_generic_type_invalid_usage(self):
         """
-        fun f[T]() -> std::Void {
+        fun f[T]() -> std::void::Void {
             let foo = T()
         }
         """
@@ -16,15 +14,15 @@ class TestObjectInitializerAst(CustomTestCase):
     def test_object_initializer_abstract_class(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
         sup Foo {
             @abstract_method
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = Foo()
         }
         """
@@ -33,19 +31,19 @@ class TestObjectInitializerAst(CustomTestCase):
     def test_object_initializer_abstract_base_class(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
         cls Bar { }
 
         sup Foo {
             @abstract_method
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
         sup Bar ext Foo { }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = Bar()
         }
         """
@@ -54,10 +52,10 @@ class TestObjectInitializerAst(CustomTestCase):
     def test_valid_object_initializer(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = Foo(a=1)
         }
         """
@@ -66,21 +64,21 @@ class TestObjectInitializerAst(CustomTestCase):
     def test_object_initializer_overridden_abstract_base_class(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
         cls Bar { }
 
         sup Foo {
             @abstract_method
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
         sup Bar ext Foo {
-            fun f() -> std::Void { }
+            fun f() -> std::void::Void { }
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = Bar()
         }
         """

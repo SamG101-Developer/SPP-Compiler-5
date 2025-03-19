@@ -34,6 +34,10 @@ class GenericTypeParameterVariadicAst(Ast, Ordered):
             self.constraints.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.name.pos_end  # check this
+
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).
         symbol = TypeSymbol(name=self.name.type_parts()[0], type=None, is_generic=True)

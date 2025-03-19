@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -7,56 +5,47 @@ class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_async_bad_target_1(self):
         """
-        fun g() -> std::Void {
-            async std::Bool
+        fun g() -> std::void::Void {
+            async std::boolean::Bool
         }
         """
 
     @should_fail_compilation(SemanticErrors.AsyncFunctionCallInvalidTargetError)
     def test_invalid_async_bad_target_2(self):
         """
-        fun g() -> std::Void {
+        fun g() -> std::void::Void {
             async 123
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
-    def test_invalid_async_unpinned_borrows_1(self):
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_async_invalidated_by_moving_borrow(self):
         """
-        fun g(a: &std::BigInt) -> std::Str { ret "hello" }
-        fun f() -> std::Void {
+        fun f() -> std::string::Str { ret "hello" }
+        fun g() -> std::void::Void {
             let x = 123
-            async g(&x)
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
-    def test_invalid_async_unpinned_borrows_2(self):
-        """
-        fun g(a: &mut std::Bool, b: &std::BigInt) -> std::Str { ret "hello" }
-        fun f() -> std::Void {
-            let (mut x, y) = (false, 123)
-            async g(&mut x, &y)
+            let future = async c(&x)
+            let y = x
+            let h = future
         }
         """
 
     @should_pass_compilation()
     def test_valid_async_good_target(self):
         """
-        fun f() -> std::Str { ret "hello" }
-        fun g() -> std::Void {
+        fun f() -> std::string::Str { ret "hello" }
+        fun g() -> std::void::Void {
             let mut x = async f()
-            x = std::Fut[std::Str]()
+            x = std::future::Fut[std::string::Str]()
         }
         """
 
     @should_pass_compilation()
-    def test_valid_async_unpinned_borrows(self):
+    def test_valid_async_good_target_with_args(self):
         """
-        fun g(a: &mut std::Bool, b: &std::BigInt) -> std::Str { ret "hello" }
-        fun f() -> std::Void {
-            let (mut x, y) = (false, 123)
-            pin x, y
-            async g(&mut x, &y)
+        fun f(a: &std::string::Str) -> std::void::Void { }
+        fun g() -> std::void::Void {
+            let mut x = async f("hello")
+            x = std::future::Fut[std::void::Void]()
         }
         """

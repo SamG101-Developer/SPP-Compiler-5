@@ -16,9 +16,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class FunctionImplementationAst(Ast):
-    tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkBraceL))
+    tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftCurlyBrace))
     members: Seq[Asts.FunctionMemberAst] = field(default_factory=Seq)
-    tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkBraceR))
+    tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightCurlyBrace))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -34,11 +34,15 @@ class FunctionImplementationAst(Ast):
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_brace.pos_end
+
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Check there is no code after a "ret" statement, as this is unreachable.
         for i, member in self.members.enumerate():
             if isinstance(member, (Asts.LoopControlFlowStatementAst, Asts.RetStatementAst)) and member is not self.members[-1]:
-                raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1])
+                raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1]).scopes(scope_manager.current_scope)
 
         # Analyse each member of the class implementation.
         for m in self.members:

@@ -33,6 +33,10 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction):
             (" " + self.alias.print(printer)) if self.alias is not None else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.alias.pos_end if self.alias else self.name.pos_end
+
     @functools.cached_property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
         return Seq([self.name])
@@ -42,12 +46,10 @@ class LocalVariableSingleIdentifierAst(Ast, VariableNameExtraction):
         return self.name
 
     def analyse_semantics(self, scope_manager: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
-        # Todo: mark borrows?
-
         # Create a variable symbol for this identifier and value.
         symbol = VariableSymbol(
             name=self.alias.name if self.alias else self.name,
-            type=value.infer_type(scope_manager, **kwargs).type,
+            type=value.infer_type(scope_manager, **kwargs),
             is_mutable=self.tok_mut is not None,
             visibility=AstVisibility.Public)
 

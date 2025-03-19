@@ -8,7 +8,6 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import InferredTypeInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -36,6 +35,12 @@ class ObjectInitializerArgumentGroupAst(Ast):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
+    # TODO: make the following @property methods
+
     def get_arg_val(self, argument: Asts.ObjectInitializerArgumentAst) -> Asts.ExpressionAst:
         return argument.value if isinstance(argument, Asts.ObjectInitializerArgumentNamedAst) else argument.name
 
@@ -55,7 +60,7 @@ class ObjectInitializerArgumentGroupAst(Ast):
         # Get the symbol of the class type, and check it isn't abstract.
         class_symbol = scope_manager.current_scope.get_symbol(class_type)
         # if class_symbol.is_abstract:
-        #     raise SemanticErrors.ObjectInitializerAbstractClassError().add(class_type)
+        #     raise SemanticErrors.ObjectInitializerAbstractClassError().add(class_type).scopes(scope_manager.current_scope)
 
         # Get the attribute information from the class type.
         all_attributes = Seq([(c, class_symbol.scope) for c in class_symbol.type.body.members])
@@ -66,31 +71,31 @@ class ObjectInitializerArgumentGroupAst(Ast):
         # Check there are no duplicate argument names.
         argument_names = self.get_val_args().map(lambda a: a.name)
         if duplicates := argument_names.non_unique():
-            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named object arguments")
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "named object arguments").scopes(scope_manager.current_scope)
 
         # Check there is at most 1 default argument.
         if (default_arguments := self.get_def_args()).length > 1:
-            raise SemanticErrors.ObjectInitializerMultipleDefArgumentsError().add(default_arguments[0], default_arguments[1])
+            raise SemanticErrors.ObjectInitializerMultipleDefArgumentsError().add(default_arguments[0], default_arguments[1]).scopes(scope_manager.current_scope)
         def_argument = self.get_def_args().first()
 
         # Check there are no invalidly named arguments.
         if invalid_arguments := argument_names.set_subtract(all_attribute_names):
-            raise SemanticErrors.ArgumentNameInvalidError().add(self, "attribute", invalid_arguments[0], "object initialization argument")
+            raise SemanticErrors.ArgumentNameInvalidError().add(self, "attribute", invalid_arguments[0], "object initialization argument").scopes(scope_manager.current_scope)
 
         # Type check the regular arguments against the class attributes.
         for argument in self.get_val_args():
             attribute, sup_scope = all_attributes.find(lambda x: x[0].name == argument.name)
-            attribute_type = InferredTypeInfo(attribute.type)
+            attribute_type = class_symbol.scope.get_symbol(attribute.name).type
             argument_type = argument.infer_type(scope_manager, **kwargs)
 
             if not attribute_type.symbolic_eq(argument_type, sup_scope, scope_manager.current_scope):
-                raise SemanticErrors.TypeMismatchError().add(attribute, attribute_type, argument, argument_type)
+                raise SemanticErrors.TypeMismatchError().add(attribute, attribute_type, argument, argument_type).scopes(scope_manager.current_scope)
 
         # Type check the default argument if it exists.
-        target_def_type = InferredTypeInfo(class_type)
+        target_def_type = class_type
         def_argument_type = def_argument.name.infer_type(scope_manager, **kwargs) if def_argument else None
         if def_argument and not def_argument_type.symbolic_eq(target_def_type, class_symbol.scope, scope_manager.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(class_type, target_def_type, def_argument.name, def_argument_type)
+            raise SemanticErrors.TypeMismatchError().add(class_type, target_def_type, def_argument.name, def_argument_type).scopes(scope_manager.current_scope)
 
 
 __all__ = ["ObjectInitializerArgumentGroupAst"]

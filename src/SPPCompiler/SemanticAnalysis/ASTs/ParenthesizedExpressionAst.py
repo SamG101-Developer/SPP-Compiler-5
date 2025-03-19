@@ -7,7 +7,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -29,14 +29,18 @@ class ParenthesizedExpressionAst(Ast, TypeInferrable):
             self.tok_right_paren.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_paren.pos_end
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Infer the type of the expression.
         return self.expression.infer_type(scope_manager, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the expression.
         if isinstance(self.expression, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.expression)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.expression).scopes(scope_manager.current_scope)
 
         # Analyse the expression.
         self.expression.analyse_semantics(scope_manager, **kwargs)

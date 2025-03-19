@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -33,7 +33,11 @@ class InnerScopeAst(Ast, TypeInferrable):
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_brace.pos_end
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
 
         # Return the last member's inferred type, if there are any members.
         if self.members:
@@ -41,7 +45,7 @@ class InnerScopeAst(Ast, TypeInferrable):
             return self.members[-1].infer_type(temp_manager, **kwargs)
 
         # An empty scope is inferred to have a void type.
-        return InferredTypeInfo(CommonTypes.Void(self.pos))
+        return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, scope_manager: ScopeManager, inline: bool = False, **kwargs) -> None:
         self._scope = scope_manager.current_scope
@@ -50,7 +54,7 @@ class InnerScopeAst(Ast, TypeInferrable):
         # Todo: this is inefficient; check from the last statement and work backwards.
         for i, member in self.members.enumerate():
             if isinstance(member, (Asts.LoopControlFlowStatementAst, Asts.RetStatementAst)) and member is not self.members[-1]:
-                raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1])
+                raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1]).scopes(scope_manager.current_scope)
 
         # Analyse the semantics of each member.
         for m in self.members:

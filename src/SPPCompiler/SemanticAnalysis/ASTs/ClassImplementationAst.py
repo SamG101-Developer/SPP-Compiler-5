@@ -16,9 +16,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class ClassImplementationAst(Ast):
-    tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkBraceL))
+    tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftCurlyBrace))
     members: Seq[Asts.ClassMemberAst] = field(default_factory=Seq)
-    tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkBraceR))
+    tok_right_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkRightCurlyBrace))
 
     def __deepcopy__(self, memodict: Dict = None) -> ClassImplementationAst:
         return ClassImplementationAst(
@@ -38,6 +38,10 @@ class ClassImplementationAst(Ast):
                 self.tok_left_brace.print(printer),
                 self.tok_right_brace.print(printer) + "\n"]
         return "".join(string)
+
+    @property
+    def pos_end(self) -> int:
+        return self.tok_right_brace.pos_end
 
     def pre_process(self, context: PreProcessingContext) -> None:
         # Pre-process the members.
@@ -59,7 +63,7 @@ class ClassImplementationAst(Ast):
         # Check there are no duplicate attribute names.
         attribute_names = self.members.map_attr("name")
         if duplicates := attribute_names.non_unique():
-            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "attribute")
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "attribute").scopes(scope_manager.current_scope)
 
 
 __all__ = ["ClassImplementationAst"]

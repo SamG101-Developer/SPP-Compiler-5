@@ -28,6 +28,10 @@ class PatternVariantSingleIdentifierAst(Ast, PatternMapping):
             (" " + self.alias.print(printer)) if self.alias is not None else ""]
         return " ".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.alias.pos_end if self.alias else self.name.pos_end
+
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableSingleIdentifierAst:
         # Convert the single identifier into a local variable single identifier.
         from SPPCompiler.SemanticAnalysis import LocalVariableSingleIdentifierAst

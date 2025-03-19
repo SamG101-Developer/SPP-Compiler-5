@@ -23,6 +23,10 @@ class PatternVariantDestructureSkipNArgumentsAst(Ast, PatternMapping):
             self.binding.print(printer) if self.binding is not None else ""]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.binding.pos_end if self.binding else self.tok_variadic.pos_end
+
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureSkipNArgumentsAst:
         # Convert the skip n arguments destructuring into a local variable skip n arguments destructuring.
         converted_binding = self.binding.convert_to_variable(**kwargs) if self.binding else None

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator, Optional, TYPE_CHECKING
 
+from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -36,11 +37,11 @@ class ScopeManager:
         self._current_scope = scope or self._global_scope
         self._iterator = iterator or iter(self)
 
-    def create_and_move_into_new_scope(self, name: Any, ast: Optional[Ast] = None) -> Scope:
+    def create_and_move_into_new_scope(self, name: Any, ast: Optional[Ast] = None, error_formatter: Optional[ErrorFormatter] = None) -> Scope:
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         # Create a new scope (parent is the current scope) and move into it.
-        scope = Scope(name, self._current_scope, ast=ast)
+        scope = Scope(name, self._current_scope, ast=ast, error_formatter=error_formatter)
         self._current_scope._children.append(scope)
 
         # Set the new scope as the current scope, and advance the iterator to match.
@@ -73,15 +74,13 @@ class ScopeManager:
     def get_namespaced_scope(self, namespace: Seq[Asts.IdentifierAst]) -> Optional[Scope]:
         # Find the first scope that matches the first part of the namespace.
         namespace_symbol = None
-        for scope in self._current_scope.ancestors:
-            namespace_symbol = scope.get_symbol(namespace[0])
-            if namespace_symbol: break
+        namespace_symbol = self._current_scope.get_namespace_symbol(namespace[0])
 
         # If the namespace symbol is found, move through the namespace parts to find the scope.
         if namespace_symbol:
             scope = namespace_symbol.scope
             for part in namespace[1:]:
-                namespace_symbol = scope.get_symbol(part)
+                namespace_symbol = scope.get_namespace_symbol(part, exclusive=True)
                 if not namespace_symbol: return None
                 scope = namespace_symbol.scope
 
@@ -89,13 +88,13 @@ class ScopeManager:
 
     def relink_generics(self) -> None:
         from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 
         # Check every scope in the symbol table.
         for scope in self:
 
             # Only check type and alias symbols that are not generic (ie not the T type for Vec[T]).
-            for symbol in scope.all_symbols(exclusive=True).filter_to_type(TypeSymbol, AliasSymbol).filter(lambda t: not t.is_generic):
+            for symbol in scope.all_symbols(exclusive=True).filter_to_type(AliasSymbol, TypeSymbol).filter(lambda t: not t.is_generic):
 
                 # Check the type is a generic implementation (ie Vec[Str]), and remove the symbol.
                 if symbol.scope._non_generic_scope is not symbol.scope:

@@ -6,7 +6,7 @@ import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
@@ -30,14 +30,18 @@ class PostfixExpressionAst(Ast, TypeInferrable):
             self.op.print(printer)]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    @property
+    def pos_end(self) -> int:
+        return self.op.pos_end
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Infer the type of the postfix operation being applied to the "lhs".
         return self.op.infer_type(scope_manager, lhs=self.lhs, **kwargs)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst cannot be used as an expression for the lhs.
         if isinstance(self.lhs, Asts.TokenAst):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs).scopes(scope_manager.current_scope)
 
         # Analyse the "lhs" and "op".
         self.lhs.analyse_semantics(scope_manager, **kwargs)

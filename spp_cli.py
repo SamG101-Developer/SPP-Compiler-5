@@ -59,7 +59,7 @@ def handle_init() -> None:
 
     # Create src/main.spp and spp.toml files.
     with open(main_file, "w") as fo:
-        fo.write("fun main(args: std::Vec[std::Str]) -> std::Void {\n    ret\n}\n")
+        fo.write("fun main(args: std::vector::Vec[std::string::Str]) -> std::void::Void {\n    ret\n}\n")
     with open(toml_file, "w") as fo:
         fo.write(f"[project]\nname = \"{cwd.name}\"\nversion = \"0.1.0\"\n\n[vcs]\nstd = {{ git = \"https://github.com/SamG101-Developer/SPP-STL\", branch = \"master\" }}")
 

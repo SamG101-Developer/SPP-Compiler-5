@@ -8,11 +8,11 @@ class TestObjectInitializerArgumentGroupAst(CustomTestCase):
     def test_invalid_object_initializer_argument_group_duplicate_argument_names(self):
         """
         cls Foo {
-            a: std::BigInt
-            b: std::BigInt
+            a: std::number::BigInt
+            b: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = Foo(a=1, a=2)
         }
         """
@@ -21,10 +21,10 @@ class TestObjectInitializerArgumentGroupAst(CustomTestCase):
     def test_invalid_object_initializer_argument_group_invalid_attribute(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = Foo(a=1, b=1)
         }
         """
@@ -33,10 +33,10 @@ class TestObjectInitializerArgumentGroupAst(CustomTestCase):
     def test_invalid_object_initializer_argument_group_type_mismatch(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = Foo(a=true)
         }
         """
@@ -45,10 +45,10 @@ class TestObjectInitializerArgumentGroupAst(CustomTestCase):
     def test_invalid_object_initializer_argument_group_def_type_mismatch(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let b = true
             let foo = Foo(..b)
         }
@@ -58,11 +58,11 @@ class TestObjectInitializerArgumentGroupAst(CustomTestCase):
     def test_valid_object_initializer_argument_group(self):
         """
         cls Foo {
-            a: std::BigInt
-            b: std::BigInt
+            a: std::number::BigInt
+            b: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = Foo(a=1, b=2)
         }
         """
@@ -71,11 +71,11 @@ class TestObjectInitializerArgumentGroupAst(CustomTestCase):
     def test_valid_object_initializer_argument_group_missing_attribute(self):
         """
         cls Foo {
-            a: std::BigInt
-            b: std::BigInt
+            a: std::number::BigInt
+            b: std::number::BigInt
         }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = Foo(a=1)
         }
         """
@@ -84,10 +84,10 @@ class TestObjectInitializerArgumentGroupAst(CustomTestCase):
     def test_valid_object_initializer_argument_group_default(self):
         """
         cls Foo {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
-        fun f(d: Foo) -> std::Void {
+        fun f(d: Foo) -> std::void::Void {
             let foo = Foo(..d)
         }
         """
@@ -96,16 +96,16 @@ class TestObjectInitializerArgumentGroupAst(CustomTestCase):
     def test_valid_object_initializer_superclasses(self):
         """
         cls A {
-            a: std::BigInt
+            a: std::number::BigInt
         }
 
         cls B {
-            b: std::BigInt
+            b: std::number::BigInt
         }
 
         sup B ext A { }
 
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let foo = B(a=1, b=2)
         }
         """

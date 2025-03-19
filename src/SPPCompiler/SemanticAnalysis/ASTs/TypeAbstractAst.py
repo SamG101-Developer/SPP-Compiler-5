@@ -10,8 +10,11 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 class TypeAbstractAst(Ast):
-    def __json__(self):
+    def __json__(self) -> str:
         return self.print(AstPrinter())
+
+    def convert(self) -> Asts.TypeAst:
+        ...
 
     def prepend_namespace_part(self, part: Asts.IdentifierAst) -> Asts.TypeAst:
         return Asts.TypeUnaryExpressionAst(
@@ -41,11 +44,26 @@ class TypeAbstractAst(Ast):
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
         ...
 
-    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True) -> bool:
+    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, debug: bool = False) -> bool:
         ...
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         ...
+
+    def get_convention(self) -> Optional[Asts.ConventionAst]:
+        ...
+
+    def with_convention(self, convention: Asts.ConventionAst) -> Asts.TypeAst:
+        if convention is None: return self
+        if isinstance(self, Asts.TypeUnaryExpressionAst) and isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst):
+            self.op.convention = convention
+            return self
+        return Asts.TypeUnaryExpressionAst(pos=self.pos, op=Asts.TypeUnaryOperatorBorrowAst(pos=self.pos, convention=convention), rhs=self)
+
+    def without_convention(self) -> Asts.TypeAst:
+        if isinstance(self, Asts.TypeUnaryExpressionAst) and isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst):
+            return self.rhs
+        return self
 
 
 __all__ = ["TypeAbstractAst"]

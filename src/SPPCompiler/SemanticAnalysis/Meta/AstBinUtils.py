@@ -10,7 +10,7 @@ BINARY_METHODS = {
     SppTokenType.TkPlus: "add", SppTokenType.TkMinus: "sub", SppTokenType.TkMultiply: "mul", SppTokenType.TkDivide: "div",
     SppTokenType.TkRemainder: "rem", SppTokenType.TkModulo: "mod", SppTokenType.TkExponent: "pow", SppTokenType.KwAnd: "and_",
     SppTokenType.KwOr: "ior_", SppTokenType.TkEq: "eq", SppTokenType.TkNe: "ne", SppTokenType.TkLt: "lt",
-    SppTokenType.TkGt: "gt", SppTokenType.TkLe: "le", SppTokenType.TkGe: "ge", SppTokenType.TkSs: "cmp",
+    SppTokenType.TkGt: "gt", SppTokenType.TkLe: "le", SppTokenType.TkGe: "ge",
     SppTokenType.TkPlusAssign: "add_assign", SppTokenType.TkMinusAssign: "sub_assign",
     SppTokenType.TkMultiplyAssign: "mul_assign", SppTokenType.TkDivideAssign: "div_assign",
     SppTokenType.TkRemainderAssign: "rem_assign", SppTokenType.TkModuloAssign: "mod_assign",
@@ -26,7 +26,6 @@ BINARY_OPERATOR_PRECEDENCE = {
     SppTokenType.TkGt: 4,
     SppTokenType.TkLe: 4,
     SppTokenType.TkGe: 4,
-    SppTokenType.TkSs: 4,
     SppTokenType.TkPlus: 5,
     SppTokenType.TkMinus: 5,
     SppTokenType.TkMultiply: 6,
@@ -42,6 +41,12 @@ BINARY_COMPARISON_OPERATORS = {
 
 
 class AstBinUtils:
+    """!
+    AstBinUtils contains a number of utility functions for working with binary expressions in the AST. There are
+    functions to map binary expressions into postfix function calls (x + y => x.add(y)), to fix the associativity, and
+    restructure comparison operators to support the Pythonic "0 < x < 1" syntax.
+    """
+
     @staticmethod
     def convert_to_function_call(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst:
         ast = AstBinUtils._fix_associativity(ast)
@@ -111,14 +116,14 @@ class AstBinUtils:
         if method_name := BINARY_METHODS.get(ast.op.token_type, None):
             function_call_ast = AstMutation.inject_code(
                 f"{ast.lhs}.{method_name}({ast.rhs})",
-                SppParser.parse_postfix_expression)
+                SppParser.parse_postfix_expression, pos_adjust=ast.pos)
             return function_call_ast
 
         # Convert the "is" expression into a case-pattern block.
         elif ast.op.token_type == SppTokenType.KwIs:
             case_ast = AstMutation.inject_code(
                 f"case {ast.lhs} of is {ast.rhs} {{}}",
-                SppParser.parse_case_expression)
+                SppParser.parse_case_expression, pos_adjust=ast.pos)
             return case_ast
 
         # Error

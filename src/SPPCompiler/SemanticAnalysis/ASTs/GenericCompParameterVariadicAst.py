@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -42,7 +43,15 @@ class GenericCompParameterVariadicAst(Ast, Ordered):
             self.type.print(printer)]
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.type.pos_end
+
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
+        # Ensure the type does not have a convention.
+        if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.type, "comp generic parameter type").scopes(scope_manager.current_scope)
+
         # Create a variable symbol for this constant in the current scope (class / function).
         symbol = VariableSymbol(
             name=Asts.IdentifierAst.from_type(self.name),
@@ -57,7 +66,8 @@ class GenericCompParameterVariadicAst(Ast, Ordered):
         self.type.analyse_semantics(scope_manager)
 
         # Create the variable for the const parameter.
-        ast = AstMutation.inject_code(f"let {self.name}: {self.type}", SppParser.parse_let_statement_uninitialized)
+        ast = AstMutation.inject_code(
+            f"let {self.name}: {self.type}", SppParser.parse_let_statement_uninitialized, pos_adjust=self.pos)
         ast.analyse_semantics(scope_manager, **kwargs)
 
         # Mark the symbol as initialized.

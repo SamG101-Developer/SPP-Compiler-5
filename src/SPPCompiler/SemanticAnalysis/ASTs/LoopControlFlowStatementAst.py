@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMemory import AstMemoryHandler
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable, InferredTypeInfo
+from SPPCompiler.SemanticAnalysis.Mixins.TypeInferrable import TypeInferrable
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -28,15 +28,19 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
             self.skip_or_expr.print(printer) if self.skip_or_expr else ""]
         return "".join(string)
 
-    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> InferredTypeInfo:
+    @property
+    def pos_end(self) -> int:
+        return self.skip_or_expr.pos_end if self.skip_or_expr else self.tok_seq_exit[-1].pos_end
+
+    def infer_type(self, scope_manager: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
-        return InferredTypeInfo(CommonTypes.Void(self.pos))
+        return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         has_skip = isinstance(self.skip_or_expr, Asts.TokenAst) and self.skip_or_expr.token_type == SppTokenType.KwSkip
         if isinstance(self.skip_or_expr, (Asts.TokenAst, Asts.TypeAst)) and not has_skip:
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.skip_or_expr)
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.skip_or_expr).scopes(scope_manager.current_scope)
 
         # Get the number of control flow statement, and the loop's nesting level.
         number_of_controls = self.tok_seq_exit.length + (has_skip is True)
@@ -44,7 +48,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
 
         # Check the depth of the loop is greater than or equal to the number of control statements.
         if number_of_controls > nested_loop_depth:
-            raise SemanticErrors.LoopTooManyControlFlowStatementsError().add(kwargs["loop_ast"], self, number_of_controls, nested_loop_depth)
+            raise SemanticErrors.LoopTooManyControlFlowStatementsError().add(kwargs["loop_ast"], self, number_of_controls, nested_loop_depth).scopes(scope_manager.current_scope)
 
         # Save and compare the loop's "exiting" type against other nested loop's exit statement types.
         if not isinstance(self.skip_or_expr, Asts.TokenAst):
@@ -56,7 +60,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
 
             # Infer the exit type of this loop control flow statement.
             match self.skip_or_expr:
-                case None: exit_type = InferredTypeInfo(CommonTypes.Void(self.tok_seq_exit[-1].pos))
+                case None: exit_type = CommonTypes.Void(self.tok_seq_exit[-1].pos)
                 case _   : exit_type = self.skip_or_expr.infer_type(scope_manager, **kwargs)
 
             # Insert or check the depth's corresponding exit type.
@@ -68,7 +72,7 @@ class LoopControlFlowStatementAst(Ast, TypeInferrable):
 
                 # Todo: should be 2 different scopes in case of a typedef inside 1 of the scopes
                 if not exit_type.symbolic_eq(that_exit_type, scope_manager.current_scope):
-                    raise SemanticErrors.TypeMismatchError().add(that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type)
+                    raise SemanticErrors.TypeMismatchError().add(that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type).scopes(scope_manager.current_scope)
 
 
 __all__ = ["LoopControlFlowStatementAst"]

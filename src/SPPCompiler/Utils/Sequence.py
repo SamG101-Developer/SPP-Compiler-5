@@ -132,6 +132,11 @@ class Seq[T]:
     def index(self, value: T) -> int:
         return self._value.index(value)
 
+    def cycle(self) -> Iterator[T]:
+        while True:
+            for x in self._value:
+                yield x
+
     # All/any operations
 
     def all(self, func: Callable[[T], bool]) -> bool:
@@ -177,8 +182,8 @@ class Seq[T]:
                     break
         return self
 
-    def pop(self, index: int = -1) -> T:
-        return self._value.pop(index)
+    def pop(self, index: int = -1, default: T = None) -> T:
+        return self._value.pop(index) if index < len(self._value) else default
 
     def pop_n(self, index: int = -1, n: int = 1) -> Seq[T]:
         return Seq([self._value.pop(index) for _ in range(n)])

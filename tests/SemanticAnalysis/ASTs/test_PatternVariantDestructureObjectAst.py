@@ -10,11 +10,11 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_invalid_pattern_variant_destructure_object_multiple_multi_skip(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             case p is Point(.., ..) { }
         }
         """
@@ -23,11 +23,11 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_invalid_pattern_variant_destructure_object_bound_multi_skip(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             case p is Point(..x) { }
         }
         """
@@ -36,11 +36,11 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_invalid_pattern_variant_destructure_object_missing_attribute(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             case p is Point(x) { }
         }
         """
@@ -49,11 +49,11 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_invalid_pattern_variant_destructure_object_invalid_attribute(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             case p is Point(x, y, z) { }
         }
         """
@@ -62,11 +62,11 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_invalid_pattern_variant_destructure_object_aliasing_attributes(self):
         """
         cls Point1 {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point1) -> std::Void {
+        fun f(p: Point1) -> std::void::Void {
             case p is Point1(x as x_value, ..) { let xxx = x }
         }
         """
@@ -75,11 +75,11 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             case p is Point(x, y) { }
         }
         """
@@ -88,11 +88,11 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object_skip_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             case p is Point(x, ..) { }
         }
         """
@@ -101,16 +101,16 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object_variant_type(self):
         """
         cls Point1 {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
         cls Point2 {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point1 or Point2) -> std::Void {
+        fun f(p: Point1 or Point2) -> std::void::Void {
             case p of
                 is Point1(x, y) { }
                 is Point2(x, y) { }
@@ -121,11 +121,11 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object_aliasing_attributes(self):
         """
         cls Point1 {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point1) -> std::Void {
+        fun f(p: Point1) -> std::void::Void {
             case p of
                 is Point1(x as x_value, ..) { let xxx = x_value }
                 is Point1(y as y_value, ..) { let yyy = y_value }
@@ -136,8 +136,8 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object_nested_1(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
         cls Line {
@@ -145,7 +145,7 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
             b: Point
         }
 
-        fun f(l: Line) -> std::Void {
+        fun f(l: Line) -> std::void::Void {
             case l of
                 is Line(a=Point(x as x1, y as y1), b=Point(x as x2, y as y2)) and x1 == 10 { }
                 is Line(a=Point(x as x1, y as y1), b=Point(x as x2, y as y2)) and x1 == 20 { }

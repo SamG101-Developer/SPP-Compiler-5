@@ -14,7 +14,11 @@ class TypeTupleAst(Ast):
     type_list: Seq[Asts.TypeAst] = field(default_factory=Seq)
     tok_r_paren: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst())
 
-    def convert(self) -> Asts.TypeSingleAst:
+    @property
+    def pos_end(self) -> int:
+        return self.tok_r_paren.pos_end
+
+    def convert(self) -> Asts.TypeAst:
         return CommonTypes.Tup(self.type_list, self.pos)
 
 

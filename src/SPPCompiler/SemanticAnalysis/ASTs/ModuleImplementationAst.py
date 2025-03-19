@@ -20,6 +20,10 @@ class ModuleImplementationAst(Ast):
         # Print the AST with auto-formatting.
         return self.members.print(printer, "\n")
 
+    @property
+    def pos_end(self) -> int:
+        return self.members[-1].pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         # Pre-process the members.
         for m in self.members: m.pre_process(context)

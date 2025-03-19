@@ -8,6 +8,8 @@ from llvmlite import ir as llvm
 
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Lang.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 from SPPCompiler.SemanticAnalysis.Meta.AstMutation import AstMutation
 from SPPCompiler.SemanticAnalysis.Meta.AstPrinter import ast_printer_method, AstPrinter
@@ -79,19 +81,27 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             string.insert(0, owner.print(printer) + "::")
         return "".join(string)
 
+    @property
+    def pos_end(self) -> int:
+        return self.body.pos_end
+
     def pre_process(self, context: PreProcessingContext) -> None:
         super().pre_process(context)
 
         # Substitute the "Self" parameter's type with the name of the method.
         if not isinstance(context, Asts.ModulePrototypeAst) and self.function_parameter_group.get_self():
-            self.function_parameter_group.get_self().type = context.name
+            generic_substitution = Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(), value=context.name)
+            generic_substitution = Seq([generic_substitution])
+            self.function_parameter_group.get_self()._true_self_type = context.name
+            self.function_parameter_group.get_self().type = self.function_parameter_group.get_self().type.sub_generics(generic_substitution)
 
         # Pre-process the annotations.
         for a in self.annotations:
             a.pre_process(self)
 
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
-        mock_class_name = AstMutation.inject_code(self.name.to_function_identifier().value, SppParser.parse_type)
+        mock_class_name = AstMutation.inject_code(
+            self.name.to_function_identifier().value, SppParser.parse_type, pos_adjust=self.pos)
         function_type = self._deduce_mock_class_type()
         function_call = Asts.IdentifierAst(self.name.pos, "call")
 
@@ -99,14 +109,14 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         if context.body.members.filter_to_type(Asts.ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
             mock_class_ast = AstMutation.inject_code(
                 f"cls {mock_class_name} {{}}",
-                SppParser.parse_class_prototype)
+                SppParser.parse_class_prototype, pos_adjust=self.pos)
             mock_constant_ast = AstMutation.inject_code(
                 f"cmp {self.name}: {mock_class_name} = {mock_class_name}()",
-                SppParser.parse_global_constant)
+                SppParser.parse_global_constant, pos_adjust=self.pos)
             context.body.members.append(mock_class_ast)
             context.body.members.append(mock_constant_ast)
 
-        # Superimpose the function type over the mock class.
+        # Superimpose the function type over the mock class. Todo: switch to parser?
         function_ast = copy.deepcopy(self)
         function_ast._orig = self.name
         mock_superimposition_body = Asts.SupImplementationAst(members=Seq([function_ast]))
@@ -121,10 +131,17 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
             a.pre_process(function_ast)
 
     def generate_top_level_scopes(self, scope_manager: ScopeManager) -> None:
-
         # Create a new scope for the function.
         scope_manager.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
         super().generate_top_level_scopes(scope_manager)
+
+        # Run top level scope logic for the annotations.
+        for a in self.annotations:
+            a.generate_top_level_scopes(scope_manager)
+
+        # Ensure the function return type does not have a convention.
+        if type(c := self.return_type.get_convention()) is not Asts.ConventionMovAst:
+            raise SemanticErrors.InvalidConventionLocationError().add(c, self.return_type, "function return type").scopes(scope_manager.current_scope)
 
         # Generate the generic parameters and attributes of the function.
         for p in self.generic_parameter_group.parameters:
@@ -139,20 +156,18 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
         scope_manager.move_out_of_current_scope()
 
     def load_super_scopes(self, scope_manager: ScopeManager) -> None:
-        from SPPCompiler.SemanticAnalysis import ModulePrototypeAst
         from SPPCompiler.SemanticAnalysis.Meta.AstFunctions import AstFunctions, FunctionConflictCheckType
-        from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticErrors
 
         scope_manager.move_to_next_scope()
 
         # Get the owner scope for function conflict checking.
         match self._ctx:
-            case ModulePrototypeAst(): type_scope = scope_manager.current_scope.parent_module
+            case Asts.ModulePrototypeAst(): type_scope = scope_manager.current_scope.parent_module
             case _: type_scope = self._ctx._scope_cls
 
         # Check for function conflicts.
         if conflict := AstFunctions.check_for_conflicting_method(scope_manager.current_scope, type_scope, self, FunctionConflictCheckType.InvalidOverload):
-            raise SemanticErrors.FunctionPrototypeConflictError().add(self._orig, conflict._orig)
+            raise SemanticErrors.FunctionPrototypeConflictError().add(self._orig, conflict._orig).scopes(scope_manager.current_scope)
 
         # Type analysis (loads generic types for later)
         for p in self.function_parameter_group.parameters:
@@ -193,26 +208,26 @@ class FunctionPrototypeAst(Ast, VisibilityEnabled):
 
         # Module-level functions are always FunRef.
         if isinstance(self._ctx, Asts.ModulePrototypeAst) or not self.function_parameter_group.get_self():
-            return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
+            return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type"), pos=self.pos), self.return_type, pos=self.pos)
 
         # Class methods with "self" are the FunMov type.
         if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionMovAst):
-            return CommonTypes.FunMov(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
+            return CommonTypes.FunMov(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type"), pos=self.pos), self.return_type, pos=self.pos)
 
         # Class methods with "&mut self" are the FunMut type.
         if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionMutAst):
-            return CommonTypes.FunMut(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
+            return CommonTypes.FunMut(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type"), pos=self.pos), self.return_type, pos=self.pos)
 
         # Class methods with "&self" are the FunRef type.
         if isinstance(self.function_parameter_group.get_self().convention, Asts.ConventionRefAst):
-            return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type")), self.return_type)
+            return CommonTypes.FunRef(CommonTypes.Tup(self.function_parameter_group.parameters.map_attr("type"), pos=self.pos), self.return_type, pos=self.pos)
 
         raise NotImplementedError(f"Unknown convention for function {self.name}")
 
     def __deepcopy__(self, memodict: Dict = None) -> FunctionPrototypeAst:
-        # Copy all attributes except for "_protected" attributes, which are re-linked.
+        # Copy all attributes except for "_protected" attributes, which are re-linked by reference.
         return type(self)(
-            copy.deepcopy(self.pos), self.annotations, self.tok_fun,
+            self.pos, self.annotations, self.tok_fun,
             copy.deepcopy(self.name), copy.deepcopy(self.generic_parameter_group),
             copy.deepcopy(self.function_parameter_group), self.tok_arrow,
             copy.deepcopy(self.return_type), copy.deepcopy(self.where_block), copy.deepcopy(self.body),

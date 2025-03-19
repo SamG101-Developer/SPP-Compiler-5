@@ -11,7 +11,12 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 @dataclass
 class Ast(CompilerStages):
-    pos: int = field(default=-1)
+    """!
+    The Ast class is the base class of all ASTs created by the parser. Common methods and properties are defined here.
+    The "CompilerStages" class is inherited to allow the AST to be processed by the compiler.
+    """
+
+    pos: int = field(default=0)
 
     _ctx: PreProcessingContext = field(default=None, kw_only=True, repr=False)
     _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
@@ -23,6 +28,10 @@ class Ast(CompilerStages):
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         ...
+
+    @property
+    def pos_end(self) -> int:
+        return 0
 
     def __eq__(self, other: Ast) -> bool:
         return isinstance(other, Ast)

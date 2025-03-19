@@ -16,5 +16,9 @@ class TypePostfixOperatorOptionalTypeAst(Ast, TypeInferrable):
     def print(self, printer: AstPrinter) -> str:
         return f"{self.tok_qst}"
 
+    @property
+    def pos_end(self) -> int:
+        return self.tok_qst.pos_end
+
 
 __all__ = ["TypePostfixOperatorOptionalTypeAst"]

@@ -7,15 +7,15 @@ class TestCaseExpressionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_case_expression(self):
         """
-        fun f() -> std::Void {
-            case std::Bool == 1 { }
+        fun f() -> std::void::Void {
+            case std::boolean::Bool == 1 { }
         }
         """
 
     @should_fail_compilation(SemanticErrors.CaseBranchMultipleDestructurePatternsError)
     def test_invalid_case_expression_multiple_destructures_on_single_branch(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             case (1, 2) of
                 is (a, b), (a, 1) { }
         }
@@ -24,7 +24,7 @@ class TestCaseExpressionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.CaseBranchesElseBranchNotLastError)
     def test_invalid_case_expression_else_branch_not_last(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             case 1 of
                 else { }
                 == 2 { }
@@ -34,7 +34,7 @@ class TestCaseExpressionAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_case_expression_1(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             case 1 of
                 == 1 { }
                 == 2 { }
@@ -45,7 +45,7 @@ class TestCaseExpressionAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_case_expression_2(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             case [1, 2, 3] of
                 is [1, a, b] { }
                 is [2, c, d] { }
@@ -55,7 +55,7 @@ class TestCaseExpressionAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_case_expression_3(self):
         """
-        fun f(a: std::BigInt, b: std::BigInt) -> std::Void {
+        fun f(a: std::number::BigInt, b: std::number::BigInt) -> std::void::Void {
             let x = case a == 1 {
                 "hello world"
             }
@@ -72,11 +72,11 @@ class TestCaseExpressionAst(CustomTestCase):
     def test_valid_case_expression_4(self):
         """
         cls Point {
-            x: std::BigInt
-            y: std::BigInt
+            x: std::number::BigInt
+            y: std::number::BigInt
         }
 
-        fun f(p: Point) -> std::Void {
+        fun f(p: Point) -> std::void::Void {
             let x = case p is Point(x=10, y) {
                 y
             }

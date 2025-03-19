@@ -33,8 +33,12 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
         string = [
             self.name.print(printer),
             self.tok_assign.print(printer),
-            self.value.print(printer)]
+            self.value.print(printer) if self.value else "?"]
         return "".join(string)
+
+    @property
+    def pos_end(self) -> int:
+        return (self.value or self.name).pos_end
 
     @staticmethod
     def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:
@@ -43,8 +47,12 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
 
     def analyse_semantics(self, scope_manager: ScopeManager, **kwargs) -> None:
         # Analyse the name and value of the generic type argument.
+        convention = self.value.get_convention()
         self.value.analyse_semantics(scope_manager, **kwargs)
         self.value = scope_manager.current_scope.get_symbol(self.value).fq_name
+
+        if type(convention) is not Asts.ConventionMovAst:
+            self.value = self.value.with_convention(convention)
 
 
 __all__ = ["GenericTypeArgumentNamedAst"]

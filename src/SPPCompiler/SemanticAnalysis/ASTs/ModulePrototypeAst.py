@@ -21,6 +21,10 @@ class ModulePrototypeAst(Ast):
         # Print the AST with auto-formatting.
         return self.body.print(printer)
 
+    @property
+    def pos_end(self) -> int:
+        return self.body.pos_end
+
     @functools.cached_property
     def name(self) -> Asts.IdentifierAst:
         from SPPCompiler.SemanticAnalysis import IdentifierAst

@@ -7,9 +7,9 @@ class TestGenericArgumentAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_generic_comp_argument_unnamed_expression(self):
         """
-        fun f[cmp n: std::Bool]() -> std::Void { }
+        fun f[cmp n: std::boolean::Bool]() -> std::void::Void { }
 
-        fun g() -> std::Void {
+        fun g() -> std::void::Void {
             f[n=true]()
         }
         """
@@ -17,9 +17,9 @@ class TestGenericArgumentAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_generic_comp_argument_named_expression(self):
         """
-        fun f[cmp n: std::Bool]() -> std::Void { }
+        fun f[cmp n: std::boolean::Bool]() -> std::void::Void { }
 
-        fun g() -> std::Void {
+        fun g() -> std::void::Void {
             f[true]()
         }
         """
@@ -27,19 +27,19 @@ class TestGenericArgumentAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_generic_type_argument_named_expression(self):
         """
-        fun f[T]() -> std::Void { }
+        fun f[T]() -> std::void::Void { }
 
-        fun g() -> std::Void {
-            f[T=std::Bool]()
+        fun g() -> std::void::Void {
+            f[T=std::boolean::Bool]()
         }
         """
 
     @should_pass_compilation()
     def test_valid_generic_type_argument_unnamed_expression(self):
         """
-        fun f[T]() -> std::Void { }
+        fun f[T]() -> std::void::Void { }
 
-        fun g() -> std::Void {
-            f[std::Bool]()
+        fun g() -> std::void::Void {
+            f[std::boolean::Bool]()
         }
         """

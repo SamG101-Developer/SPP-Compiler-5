@@ -6,7 +6,8 @@ from typing import Any, Optional, Tuple, TYPE_CHECKING
 import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.Compiler.ModuleTree import Module
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol, AliasSymbol, Symbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol
+from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -14,19 +15,6 @@ if TYPE_CHECKING:
 
 
 class Scope:
-    """
-    Attributes:
-        _name: The name of the scope: TypeAst/SupFunctionsIdentifier/SupInheritanceIdentifier/str.
-        _parent: The parent scope (always exists unless this is the global scope).
-        _children: The children scopes.
-        _symbol_table: The symbol table.
-        _ast: The AST (is this is a cls/fun/sup scope).
-
-        _direct_sup_scopes: The direct super scopes (TypeScopes).
-        _direct_sub_scopes: The direct sub scopes (TypeScopes).
-        _type_symbol: The type symbol (if this is a type scope).
-    """
-
     _name: Any
     _parent: Optional[Scope]
     _children: Seq[Scope]
@@ -38,7 +26,9 @@ class Scope:
     _type_symbol: Optional[TypeSymbol | NamespaceSymbol]
     _non_generic_scope: Optional[Scope]
 
-    def __init__(self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Ast] = None) -> None:
+    _error_formatter: ErrorFormatter
+
+    def __init__(self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Ast] = None, error_formatter: Optional[ErrorFormatter] = None) -> None:
         # Initialize the scope with the given name, parent, and AST.
         self._name = name
         self._parent = parent
@@ -52,10 +42,13 @@ class Scope:
         self._type_symbol = None
         self._non_generic_scope = self
 
+        # Error formatter is either new for the module scope, or inherited from the parent scope.
+        self._error_formatter = error_formatter or parent._error_formatter
+
     @staticmethod
     def new_global_from_module(module: Module) -> Scope:
         # Create a new global scope.
-        global_scope = Scope(name=Asts.IdentifierAst(-1, "_global"))
+        global_scope = Scope(name=Asts.IdentifierAst(-1, "_global"), error_formatter=module.error_formatter)
 
         # Inject the "_global" namespace symbol into this scope (makes lookups orthogonal).
         global_namespace_symbol = NamespaceSymbol(name=global_scope.name, scope=global_scope)
@@ -96,6 +89,7 @@ class Scope:
     def add_symbol(self, symbol: Symbol) -> None:
         if isinstance(symbol, TypeSymbol):
             assert isinstance(symbol.name, Asts.GenericIdentifierAst)
+
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
 
@@ -127,7 +121,7 @@ class Scope:
         if self != self._non_generic_scope:
             return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias))
 
-        # Get the symbol from the symbol table if it exists.
+        # Namespace adjust, and get the symbol from the symbol table if it exists.
         scope = self
         if isinstance(name, Asts.TypeAst):
             scope, name = shift_scope_for_namespaced_type(self, name)
@@ -138,11 +132,17 @@ class Scope:
             symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
-        if not symbol and (isinstance(name, Asts.IdentifierAst) or name.value[0] == "$"):
-            symbol = search_super_scopes(scope, name)
+        if not symbol:
+            symbol = search_super_scopes(scope, name, ignore_alias=ignore_alias)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
+
+    def get_namespace_symbol(self, name: Asts.IdentifierAst, exclusive: bool = False) -> Optional[Symbol]:
+        # An optimized version of get_symbol for namespace symbols.
+        for symbol in self.all_symbols(exclusive=exclusive):
+            if isinstance(symbol, NamespaceSymbol) and symbol.name == name:
+                return symbol
 
     def get_multiple_symbols(self, name: Asts.IdentifierAst, original_scope: Scope = None) -> Seq[Tuple[Symbol, Scope, int]]:
         # Get all the symbols with the given name (ambiguity checks, function overloads etc), and their "depth".
@@ -219,6 +219,18 @@ class Scope:
         return all_sup_scopes
 
     @property
+    def direct_sup_types(self) -> Seq[Asts.TypeAst]:
+        return self._direct_sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name)
+
+    @property
+    def sup_types(self) -> Seq[Asts.TypeAst]:
+        return self.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name)
+
+    @property
+    def sup_types_and_scopes(self) -> Seq[(Asts.TypeAst, Scope)]:
+        return self.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: (s.type_symbol.fq_name, s))
+
+    @property
     def sub_scopes(self) -> Seq[Scope]:
         # Get all the sub scopes recursively.
         all_sub_scopes = Seq()
@@ -229,10 +241,10 @@ class Scope:
 
 
 def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[Scope, Asts.GenericIdentifierAst]:
-    # For TypeAsts, move through each namespace/type part accessing the namespace scope.#
+    # For TypeAsts, move through each namespace/type part accessing the namespace scope.
     for part in type.fq_type_parts()[:-1]:
         # Get the next type/namespace symbol from the scope.
-        inner_symbol = scope.get_symbol(part)
+        inner_symbol = scope.get_namespace_symbol(part)
         match inner_symbol:
             case None: break
             case _: scope = inner_symbol.scope
@@ -240,11 +252,11 @@ def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[S
     return scope, type
 
 
-def search_super_scopes(scope: Scope, name: Asts.IdentifierAst | Asts.GenericIdentifierAst) -> Optional[VariableSymbol]:
+def search_super_scopes(scope: Scope, name: Asts.IdentifierAst | Asts.GenericIdentifierAst, ignore_alias: bool) -> Optional[VariableSymbol]:
     # Recursively search the super scopes for a variable symbol.
     symbol = None
     for super_scope in scope._direct_sup_scopes:
-        symbol = super_scope.get_symbol(name)
+        symbol = super_scope.get_symbol(name, exclusive=True, ignore_alias=ignore_alias)
         if symbol: break
     return symbol
 

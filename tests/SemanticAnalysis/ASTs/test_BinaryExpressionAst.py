@@ -10,7 +10,7 @@ class TestBinaryExpressionAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_binary_operation(self):
         """
-        fun f() -> std::Void {
+        fun f() -> std::void::Void {
             let a = 1 + 2
         }
         """
@@ -18,7 +18,7 @@ class TestBinaryExpressionAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_binary_operation_lhs_folding(self):
         """
-        fun f(b: (std::BigInt, std::BigInt, std::BigInt, std::BigInt)) -> std::Void {
+        fun f(b: (std::number::BigInt, std::number::BigInt, std::number::BigInt, std::number::BigInt)) -> std::void::Void {
             let a = .. + b
         }
         """
@@ -26,7 +26,7 @@ class TestBinaryExpressionAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_binary_operation_rhs_folding(self):
         """
-        fun f(a: (std::BigInt, std::BigInt, std::BigInt, std::BigInt)) -> std::Void {
+        fun f(a: (std::number::BigInt, std::number::BigInt, std::number::BigInt, std::number::BigInt)) -> std::void::Void {
             let b = a + ..
         }
         """
@@ -34,23 +34,23 @@ class TestBinaryExpressionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_binary_operation_lhs_value(self):
         """
-        fun f() -> std::Void {
-            let a = std::BigInt + 2
+        fun f() -> std::void::Void {
+            let a = std::number::BigInt + 2
         }
         """
 
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_binary_operation_rhs_value(self):
         """
-        fun f() -> std::Void {
-            let a = 1 + std::BigInt
+        fun f() -> std::void::Void {
+            let a = 1 + std::number::BigInt
         }
         """
 
     @should_fail_compilation(SemanticErrors.MemberAccessNonIndexableError)
     def test_invalid_binary_operation_lhs_folding(self):
         """
-        fun f(b: std::BigInt) -> std::Void {
+        fun f(b: std::number::BigInt) -> std::void::Void {
             let a = .. + b
         }
         """
@@ -58,7 +58,7 @@ class TestBinaryExpressionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemberAccessNonIndexableError)
     def test_invalid_binary_operation_rhs_folding(self):
         """
-        fun f(a: std::BigInt) -> std::Void {
+        fun f(a: std::number::BigInt) -> std::void::Void {
             let b = a + ..
         }
         """
