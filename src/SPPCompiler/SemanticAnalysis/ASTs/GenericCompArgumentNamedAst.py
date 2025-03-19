@@ -33,12 +33,12 @@ class GenericCompArgumentNamedAst(Ast, Ordered):
         string = [
             self.name.print(printer),
             self.tok_assign.print(printer),
-            self.value.print(printer)]
+            self.value.print(printer) if self.value else "?"]
         return " ".join(string)
 
     @property
     def pos_end(self) -> int:
-        return self.value.pos_end
+        return (self.value or self.tok_assign).pos_end
 
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:

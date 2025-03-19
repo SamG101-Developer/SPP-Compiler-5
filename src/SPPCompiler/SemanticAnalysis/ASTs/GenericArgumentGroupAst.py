@@ -23,7 +23,7 @@ class GenericArgumentGroupAst(Ast):
 
     def __post_init__(self) -> None:
         self.tok_left_bracket.pos = self.tok_left_bracket.pos or self.pos
-        self.tok_right_bracket.pos = self.tok_right_bracket.pos or self.arguments[-1].pos_end if self.arguments else self.pos
+        self.tok_right_bracket.pos = self.tok_right_bracket.pos or (self.arguments[-1].pos_end if self.arguments else self.pos)
 
     def __copy__(self) -> GenericArgumentGroupAst:
         return GenericArgumentGroupAst(arguments=self.arguments.copy())

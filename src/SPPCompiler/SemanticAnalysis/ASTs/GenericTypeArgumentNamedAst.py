@@ -33,7 +33,7 @@ class GenericTypeArgumentNamedAst(Ast, Ordered):
         string = [
             self.name.print(printer),
             self.tok_assign.print(printer),
-            self.value.print(printer)]
+            self.value.print(printer) if self.value else "?"]
         return "".join(string)
 
     @property
