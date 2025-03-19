@@ -1,5 +1,5 @@
 Generators.
-* Add the `BorrowRef[T]` and `BorrowMut[T]` types & code generation.
+* Add the `BorrowRef[T]` and `BorrowMut[T]` types & code generation?
 
 Iterative loops.
 * Work with the new generator types.
@@ -7,9 +7,6 @@ Iterative loops.
 Encapsulation annotations.
 * Add support for method encapsulation (methods map to attributes with $Type right now).
 * Overriding functions must keep the same encapsulation level.
-
-Generic types.
-* Passing too many generic arguments causes a Python error.
 
 Specialization.
 * `sup std::vector::Vec[std::string::Str]` applies to all `std::vector::Vec` types.
@@ -26,7 +23,7 @@ Smart pointers.
 * Attribute access to deferred types
 
 Types.
-* Change single tuple type back to (T) not (T, )
 * Callables: should be able to call variables that are a function type.
 * Postfix types cannot be used as parameters, return types or attributes.
 * Aliases with generics fail (uses newtype args with oldtype params)
+* Aliases with generics fail (uses newtype args with oldtype params).
