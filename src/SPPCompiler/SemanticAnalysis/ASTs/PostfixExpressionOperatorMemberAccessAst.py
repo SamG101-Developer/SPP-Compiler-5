@@ -62,6 +62,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
         raise NotImplementedError("Unknown member access type.")
 
     def analyse_semantics(self, scope_manager: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
+
         # Accessing static methods off of a type, such as "Str::new()".
         if isinstance(lhs, Asts.TypeAst):
             lhs_symbol = scope_manager.current_scope.get_symbol(lhs)
@@ -97,7 +98,7 @@ class PostfixExpressionOperatorMemberAccessAst(Ast, TypeInferrable):
         elif isinstance(self.field, Asts.IdentifierAst) and self.is_runtime_access():
             lhs_type = lhs.infer_type(scope_manager)
             lhs_symbol = scope_manager.current_scope.get_symbol(lhs_type)
-            
+
             # Check the lhs is a variable and not a namespace.
             if isinstance(lhs_symbol, NamespaceSymbol):
                 raise SemanticErrors.MemberAccessStaticOperatorExpectedError().add(lhs, self.tok_access).scopes(scope_manager.current_scope)
