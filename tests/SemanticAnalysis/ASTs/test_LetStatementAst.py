@@ -19,15 +19,6 @@ class TestLetStatementAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_type_convention(self):
-        """
-        fun f(b: &std::boolean::Bool) -> std::void::Void {
-            let mut x: &mut std::boolean::Bool
-            x = b
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_variant_destructure(self):
         """
         cls A { a: std::boolean::Bool }
@@ -64,10 +55,28 @@ class TestLetStatementAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_convention(self):
+    def test_valid_convention_1(self):
+        """
+        fun f(b: std::boolean::Bool) -> std::void::Void {
+            let mut x: std::boolean::Bool
+            x = b
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_convention_2(self):
+        """
+        fun f(b: &mut std::boolean::Bool) -> std::void::Void {
+            let mut x: &mut std::boolean::Bool
+            x = b
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_convention_3(self):
         """
         fun f(b: &std::boolean::Bool) -> std::void::Void {
-            let mut x: & std::boolean::Bool
+            let mut x: &std::boolean::Bool
             x = b
         }
         """

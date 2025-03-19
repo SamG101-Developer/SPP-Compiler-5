@@ -103,10 +103,12 @@ class TestAstMemory(CustomTestCase):
             y: std::number::BigInt
         }
 
+        cor c(p: &Point) -> std::generator::Gen[std::boolean::Bool] { }
+
         fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             case 1 of
-                == 1 { pin p }
+                == 1 { c(&p) }
                 == 2 { }
 
             let r = p
@@ -121,10 +123,12 @@ class TestAstMemory(CustomTestCase):
             y: std::number::BigInt
         }
 
+        cor c(x: &std::number::BigInt) -> std::generator::Gen[std::boolean::Bool] { }
+
         fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
             case 1 of
-                == 1 { pin p.x }
+                == 1 { c(&p.x) }
                 == 2 { }
 
             let r = p
@@ -139,68 +143,13 @@ class TestAstMemory(CustomTestCase):
             y: std::number::BigInt
         }
 
-        fun f() -> std::void::Void {
-            let p = Point(x=5, y=5)
-            case 1 of
-                == 1 { pin p.x }
-                == 2 { pin p.y }
-
-            let r = p
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryInconsistentlyPinnedError)
-    def test_invalid_memory_inconsistently_pinned_4(self):
-        """
-        cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
-        }
+        cor c(x: &std::number::BigInt) -> std::generator::Gen[std::boolean::Bool] { }
 
         fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
-            pin p
             case 1 of
-                == 1 { rel p }
-                == 2 { }
-
-            let r = p
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryInconsistentlyPinnedError)
-    def test_invalid_memory_inconsistently_pinned_5(self):
-        """
-        cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
-        }
-
-        fun f() -> std::void::Void {
-            let p = Point(x=5, y=5)
-            pin p.x, p.y
-            case 1 of
-                == 1 { rel p.x }
-                == 2 { }
-
-            let r = p
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryInconsistentlyPinnedError)
-    def test_invalid_memory_inconsistently_pinned_1(self):
-        """
-        cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
-        }
-
-        fun f() -> std::void::Void {
-            let p = Point(x=5, y=5)
-            pin p.x, p.y
-            case 1 of
-                == 1 { rel p.x }
-                == 2 { rel p.y }
+                == 1 { c(&p.x) }
+                == 2 { c(&p.y) }
 
             let r = p
         }
@@ -369,31 +318,6 @@ class TestAstMemory(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
-    def test_invalid_unpinned_values_for_coroutine(self):
-        """
-        cor foo(x: &std::number::BigInt) -> std::generator::Gen[&std::number::BigInt] {
-            gen &1
-        }
-
-        fun test() -> std::void::Void {
-            let x = 123
-            foo(&x)
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
-    def test_invalid_unpinned_values_for_async(self):
-        """
-        fun foo(x: &std::number::BigInt) -> std::void::Void {
-        }
-
-        fun test() -> std::void::Void {
-            let x = 123
-            async foo(&x)
-        }
-        """
-
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_coroutine_yielded_borrowed_value_use(self):
         """
@@ -403,10 +327,8 @@ class TestAstMemory(CustomTestCase):
         }
 
         fun test() -> std::void::Void {
-            let mut coro = MyType[std::number::BigInt]()
-            pin coro
-
-            let iter = coro.custom_iter_mut()
+            let mut g = MyType[std::number::BigInt]()
+            let iter = g.custom_iter_mut()
             let x = iter.res(false)
             let y = iter.res(false)
             let z = x + y
@@ -422,85 +344,10 @@ class TestAstMemory(CustomTestCase):
         }
 
         fun test() -> std::void::Void {
-            let mut coro = MyType[std::number::BigInt]()
-            pin coro
-
-            let x = coro.custom_iter_mut().res(false)
-            let y = coro.custom_iter_mut().res(false)
+            let mut g = MyType[std::number::BigInt]()
+            let x = g.custom_iter_mut().res(false)
+            let y = g.custom_iter_mut().res(false)
             let a = x
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_use_of_moving_coro_during_inherited_pin_status_from_pinned_borrow(self):
-        """
-        cor foo(x: &std::number::BigInt) -> std::generator::Gen[&std::number::BigInt] {
-            gen &1
-        }
-
-        fun test() -> std::void::Void {
-            let x = 1
-            pin x
-            let coro = foo(&x)
-            let y = coro
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_use_of_coroutine_post_invalidation(self):
-        """
-        cor foo(x: &std::number::BigInt) -> std::generator::Gen[&std::number::BigInt, std::boolean::Bool] {
-            gen &1
-        }
-
-        fun test() -> std::void::Void {
-            let x = 1
-            pin x
-            let coro = foo(&x)
-            rel x
-            let y = coro.res(false)
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_use_of_future_post_invalidation(self):
-        """
-        fun foo(x: &std::number::BigInt) -> std::void::Void {
-        }
-
-        fun test() -> std::void::Void {
-            let x = 1
-            pin x
-            let fut = async foo(&x)
-            rel x
-            let y = fut
-        }
-        """
-
-    @should_pass_compilation()
-    def test_valid_pinned_values_for_coroutine(self):
-        """
-        cor foo(x: &std::number::BigInt) -> std::generator::Gen[&std::number::BigInt] {
-            gen &1
-        }
-
-        fun test() -> std::void::Void {
-            let x = 123
-            pin x
-            foo(&x)
-        }
-        """
-
-    @should_pass_compilation()
-    def test_valid_pinned_values_for_async(self):
-        """
-        fun foo(x: &std::number::BigInt) -> std::void::Void {
-        }
-
-        fun test() -> std::void::Void {
-            let x = 123
-            pin x
-            async foo(&x)
         }
         """
 
@@ -517,8 +364,6 @@ class TestAstMemory(CustomTestCase):
 
         fun f() -> std::void::Void {
             let mut my_type = MyType(x=123)
-            pin my_type
-
             let generator1 = my_type.custom_iter_mut()
             let generator2 = my_type.custom_iter_mut()
             let a = generator1.res(false)
@@ -538,8 +383,6 @@ class TestAstMemory(CustomTestCase):
 
         fun f() -> std::void::Void {
             let mut my_type = MyType(x=123)
-            pin my_type
-
             let generator1 = my_type.custom_iter_mut()
             let generator2 = my_type.custom_iter_mut()
             let a = generator2.res(false)
@@ -559,8 +402,6 @@ class TestAstMemory(CustomTestCase):
 
         fun f() -> std::void::Void {
             let my_type = MyType(x=123)
-            pin my_type
-
             let generator1 = my_type.custom_iter_ref()
             let generator2 = my_type.custom_iter_ref()
             let a = generator2.res(false)

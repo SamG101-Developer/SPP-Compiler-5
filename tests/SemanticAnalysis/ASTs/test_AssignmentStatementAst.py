@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -65,7 +63,61 @@ class TestAssignmentStatementAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_assignment_variable(self):
+    def test_invalid_assignment_convention_mismatch_1(self):
+        """
+        fun f(b: std::boolean::Bool) -> std::void::Void {
+            let mut x: &mut std::boolean::Bool
+            x = b
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_assignment_convention_mismatch_2(self):
+        """
+        fun f(b: std::boolean::Bool) -> std::void::Void {
+            let mut x: &std::boolean::Bool
+            x = b
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_assignment_convention_mismatch_3(self):
+        """
+        fun f(b: &mut std::boolean::Bool) -> std::void::Void {
+            let mut x: std::boolean::Bool
+            x = b
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_assignment_convention_mismatch_4(self):
+        """
+        fun f(b: &mut std::boolean::Bool) -> std::void::Void {
+            let mut x: &std::boolean::Bool
+            x = b
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_assignment_convention_mismatch_5(self):
+        """
+        fun f(b: &std::boolean::Bool) -> std::void::Void {
+            let mut x: std::boolean::Bool
+            x = b
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_assignment_convention_mismatch_6(self):
+        """
+        fun f(b: &std::boolean::Bool) -> std::void::Void {
+            let mut x: &mut std::boolean::Bool
+            x = b
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_assignment_variable_type(self):
         """
         fun f() -> std::void::Void {
             let mut a = 1
@@ -74,7 +126,7 @@ class TestAssignmentStatementAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_assignment_attribute(self):
+    def test_invalid_assignment_attribute_type(self):
         """
         cls A {
             b: std::boolean::Bool

@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -20,23 +18,15 @@ class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
-    def test_invalid_async_unpinned_borrows_1(self):
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_async_invalidated_by_moving_borrow(self):
         """
-        fun g(a: &std::number::BigInt) -> std::string::Str { ret "hello" }
-        fun f() -> std::void::Void {
+        fun f() -> std::string::Str { ret "hello" }
+        fun g() -> std::void::Void {
             let x = 123
-            async g(&x)
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryUsageOfUnpinnedBorrowError)
-    def test_invalid_async_unpinned_borrows_2(self):
-        """
-        fun g(a: &mut std::boolean::Bool, b: &std::number::BigInt) -> std::string::Str { ret "hello" }
-        fun f() -> std::void::Void {
-            let (mut x, y) = (false, 123)
-            async g(&mut x, &y)
+            let future = async c(&x)
+            let y = x
+            let h = future
         }
         """
 
@@ -51,12 +41,11 @@ class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_async_unpinned_borrows(self):
+    def test_valid_async_good_target_with_args(self):
         """
-        fun g(a: &mut std::boolean::Bool, b: &std::number::BigInt) -> std::string::Str { ret "hello" }
-        fun f() -> std::void::Void {
-            let (mut x, y) = (false, 123)
-            pin x, y
-            async g(&mut x, &y)
+        fun f(a: &std::string::Str) -> std::void::Void { }
+        fun g() -> std::void::Void {
+            let mut x = async f("hello")
+            x = std::future::Fut[std::void::Void]()
         }
         """

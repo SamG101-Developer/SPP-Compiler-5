@@ -85,21 +85,19 @@ class TestOverloads(CustomTestCase):
         cls B[T] { }
 
         sup [T] A[T] {
-            @virtual_method cor c(&self) -> std::generator::Gen[&T] { }
-            @virtual_method cor c(&self, a: T) -> std::generator::Gen[&T] { }
-            @virtual_method cor c(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::generator::Gen[&T] { }
+            @virtual_method cor c(&self) -> std::generator::Gen[&T, std::boolean::Bool] { }
+            @virtual_method cor c(&self, a: T) -> std::generator::Gen[&T, std::boolean::Bool] { }
+            @virtual_method cor c(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::generator::Gen[&T, std::boolean::Bool] { }
         }
 
         sup [T] B[T] ext A[T] {
-            cor c(&self) -> std::generator::Gen[T] { }
+            cor c(&self) -> std::generator::Gen[&T, std::boolean::Bool] { }
         }
 
         fun test() -> std::void::Void {
             let b = B[std::number::BigInt]()
-            pin b
-
             let coroutine = b.c(123)
-            coroutine.res()
+            coroutine.res(false)
         }
         """
 

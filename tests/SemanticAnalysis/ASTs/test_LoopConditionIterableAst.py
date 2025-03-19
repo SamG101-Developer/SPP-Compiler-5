@@ -23,8 +23,6 @@ class TestLoopConditionIterableAst(CustomTestCase):
         """
         fun f(y: &mut std::string::Str) -> std::void::Void {
             let mut v = std::vector::Vec[std::string::Str]()
-            pin v
-
             loop mut x in v.iter_mut() {
                 x = y
             }
@@ -36,8 +34,6 @@ class TestLoopConditionIterableAst(CustomTestCase):
         """
         fun f() -> std::void::Void {
             let v = std::vector::Vec[std::string::Str]()
-            pin v
-
             loop mut x in v.iter_mov() {
                 x = "hello"
             }
@@ -49,8 +45,6 @@ class TestLoopConditionIterableAst(CustomTestCase):
         """
         fun f() -> std::void::Void {
             let mut v = std::vector::Vec[std::string::Str]()
-            pin v
-
             loop mut x in v.iter_mut() {
                 x = "hello"
             }
@@ -62,8 +56,6 @@ class TestLoopConditionIterableAst(CustomTestCase):
         """
         fun f(s: &mut std::string::Str) -> std::void::Void {
             let mut v = std::vector::Vec[std::string::Str]()
-            pin v
-
             loop mut x in v.iter_mut() {
                 x = s
             }
