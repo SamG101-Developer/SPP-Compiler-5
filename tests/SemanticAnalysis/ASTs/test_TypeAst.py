@@ -1,9 +1,6 @@
 from tests._Utils import *
 
 
-# Todo: Nested types are not supported yet.
-
-
 class TestTypeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
     def test_invalid_unknown_type(self):
@@ -56,13 +53,13 @@ class TestTypeAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_type_shorthand_optional(self):
         """
-        fun f(mut a: std::string::Str?) -> std::void::Void { a = std::option::Some("hello") }
+        fun f(mut a: std::string::Str?) -> std::void::Void { a = std::option::Some(val="hello") }
         """
 
     @should_pass_compilation()
     def test_valid_type_shorthand_optional_default(self):
         """
-        fun f(a: std::string::Str? = std::option::Some("hello")) -> std::void::Void { }
+        fun f(a: std::string::Str? = std::option::Some(val="hello")) -> std::void::Void { }
         """
 
     @should_pass_compilation()
@@ -110,5 +107,79 @@ class TestTypeAst(CustomTestCase):
         fun f(a: std::function::FunRef[(&std::string::Str, &std::string::Str), std::boolean::Bool], b: &std::string::Str, c: &std::string::Str) -> std::void::Void {
             let mut x = a(b, c)
             x = false
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_nested_type(self):
+        """
+        cls MyType { }
+        sup MyType {
+            use X = std::string::Str
+        }
+
+        fun f() -> std::void::Void {
+            let x: MyType::X
+            x = "hello"
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_multiple_nested_type(self):
+        """
+        cls MyTypeA { }
+        cls MyTypeB { }
+        cls MyTypeC { }
+
+        sup MyTypeA {
+            use X = MyTypeB
+        }
+
+        sup MyTypeB {
+            use Y = MyTypeC
+        }
+
+        fun f() -> std::void::Void {
+            let x: MyTypeA::X::Y
+            x = MyTypeC()
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_nested_type_generic(self):
+        """
+        cls MyType[T] { }
+        sup [T] MyType[T] {
+            use X = T
+        }
+
+        fun f() -> std::void::Void {
+            let x: MyType[std::number::BigInt]::X
+            x = 10
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_nested_type_nested_generics(self):
+        """
+        cls TypeA[T, A, B] { }
+        cls TypeB[U, B] { }
+        cls TypeC[V] { }
+
+        sup [V] TypeC[V] {
+            use InnerC[P] = TypeB[V, P]
+        }
+
+        sup [U, B] TypeB[U, B] {
+            use InnerB[Q] = TypeA[U, Q, B]
+        }
+
+        sup [T, A, B] TypeA[T, A, B] {
+            use InnerA[R] = (T, B, A, R)
+        }
+
+        fun f() -> std::void::Void {
+            let x: TypeC[std::number::BigInt]::InnerC[std::string::Str]::InnerB[std::boolean::Bool]::InnerA[std::number::U64]
+            x = (10_u64, false, "hello", 10)
         }
         """
