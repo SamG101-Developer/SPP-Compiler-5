@@ -64,7 +64,7 @@ class LocalVariableDestructureArrayAst(Ast, VariableNameExtraction):
         if (num_lhs_array_elements < num_rhs_array_elements and not multi_arg_skips) or num_lhs_array_elements > num_rhs_array_elements:
             raise SemanticErrors.VariableArrayDestructureArraySizeMismatchError().add(self, num_lhs_array_elements, value, num_rhs_array_elements).scopes(scope_manager.current_scope)
 
-        # For a binding ".." destructure, ie "let (a, ..b, c) = t", create an intermediary rhs array.
+        # For a binding ".." destructure, ie "let [a, ..b, c] = t", create an intermediary rhs array.
         if multi_arg_skips and multi_arg_skips[0].binding:
             m = self.elements.index(multi_arg_skips[0])
             indexes = [*range(m, m + num_rhs_array_elements - num_lhs_array_elements + 1)]
