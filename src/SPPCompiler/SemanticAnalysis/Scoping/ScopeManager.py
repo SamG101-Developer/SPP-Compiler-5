@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from typing import Any, Iterator, Optional, TYPE_CHECKING
 
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    import SPPCompiler.SemanticAnalysis as Asts
-    from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
+    from SPPCompiler.SemanticAnalysis import Asts
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
@@ -37,7 +38,7 @@ class ScopeManager:
         self._current_scope = scope or self._global_scope
         self._iterator = iterator or iter(self)
 
-    def create_and_move_into_new_scope(self, name: Any, ast: Optional[Ast] = None, error_formatter: Optional[ErrorFormatter] = None) -> Scope:
+    def create_and_move_into_new_scope(self, name: Any, ast: Optional[Asts.Ast] = None, error_formatter: Optional[ErrorFormatter] = None) -> Scope:
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         # Create a new scope (parent is the current scope) and move into it.
@@ -87,9 +88,6 @@ class ScopeManager:
             return scope
 
     def relink_generics(self) -> None:
-        from SPPCompiler.SemanticAnalysis.Meta.AstTypeManagement import AstTypeManagement
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
-
         # Check every scope in the symbol table.
         for scope in self:
 
@@ -100,7 +98,7 @@ class ScopeManager:
                 if symbol.scope._non_generic_scope is not symbol.scope:
                     self.reset(symbol.scope)
                     base_symbol = scope.get_symbol(symbol.name.without_generics(), ignore_alias=True)
-                    symbol.scope._direct_sup_scopes = AstTypeManagement.create_generic_sup_scopes(self, base_symbol.scope, symbol.name.generic_argument_group)
+                    symbol.scope._direct_sup_scopes = AstTypeUtils.create_generic_sup_scopes(self, base_symbol.scope, symbol.name.generic_argument_group)
 
         self.reset()
 
@@ -111,3 +109,7 @@ class ScopeManager:
     @property
     def current_scope(self) -> Scope:
         return self._current_scope
+
+
+__all__ = [
+    "ScopeManager"]

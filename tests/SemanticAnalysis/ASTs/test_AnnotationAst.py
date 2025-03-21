@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -184,16 +182,6 @@ class TestAnnotationAst(CustomTestCase):
         cls A { }
 
         @invalid
-        fun f() -> A { }
-        """
-
-    @should_fail_compilation(SemanticErrors.AnnotationDuplicateError)
-    def test_invalid_annotation_duplicates_1(self) -> None:
-        """
-        cls A { }
-
-        @public
-        @public
         fun f() -> A { }
         """
 

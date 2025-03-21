@@ -4,7 +4,7 @@ from typing import Dict, Optional, TYPE_CHECKING
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
-    import SPPCompiler.SemanticAnalysis as Asts
+    from SPPCompiler.SemanticAnalysis import Asts
     from SPPCompiler.SemanticAnalysis.Scoping.Symbols import Symbol
 
 
@@ -47,4 +47,5 @@ class SymbolTable:
         return SymbolTable(self._table.copy())
 
 
-__all__ = ["SymbolTable"]
+__all__ = [
+    "SymbolTable"]

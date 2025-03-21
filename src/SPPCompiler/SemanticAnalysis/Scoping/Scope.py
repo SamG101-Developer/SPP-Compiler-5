@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import copy
-from typing import Any, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Optional, Tuple
 
-import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.Compiler.ModuleTree import Module
+from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, \
+    Symbol
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 
 
 class Scope:
@@ -28,7 +26,11 @@ class Scope:
 
     _error_formatter: ErrorFormatter
 
-    def __init__(self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Ast] = None, error_formatter: Optional[ErrorFormatter] = None) -> None:
+    def __init__(
+            self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Asts.Ast] = None,
+            error_formatter: Optional[ErrorFormatter] = None)\
+            -> None:
+
         # Initialize the scope with the given name, parent, and AST.
         self._name = name
         self._parent = parent
@@ -276,3 +278,7 @@ def confirm_type_with_alias(scope: Scope, symbol: Symbol, ignore_alias: bool) ->
         case AliasSymbol() if symbol.old_type and not ignore_alias:
             symbol = scope.get_symbol(symbol.old_type)
     return symbol
+
+
+__all__ = [
+    "Scope"]

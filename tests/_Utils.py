@@ -2,7 +2,7 @@ import os.path
 from argparse import Namespace
 from unittest import TestCase
 
-from SPPCompiler.SemanticAnalysis.Errors.SemanticError import SemanticError, SemanticErrors
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticError, SemanticErrors
 from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
 from spp_cli import handle_build
 

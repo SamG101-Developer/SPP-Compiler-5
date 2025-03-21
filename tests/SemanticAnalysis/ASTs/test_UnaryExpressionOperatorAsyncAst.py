@@ -21,10 +21,10 @@ class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_async_invalidated_by_moving_borrow(self):
         """
-        fun f() -> std::string::Str { ret "hello" }
+        fun f(a: &std::string::Str) -> std::string::Str { ret "hello" }
         fun g() -> std::void::Void {
-            let x = 123
-            let future = async c(&x)
+            let x = "hello"
+            let future = async f(&x)
             let y = x
             let h = future
         }
@@ -45,7 +45,7 @@ class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
         """
         fun f(a: &std::string::Str) -> std::void::Void { }
         fun g() -> std::void::Void {
-            let mut x = async f("hello")
+            let mut x = async f(&"hello")
             x = std::future::Fut[std::void::Void]()
         }
         """

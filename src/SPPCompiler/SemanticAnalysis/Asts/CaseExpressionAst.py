@@ -1,0 +1,194 @@
+from __future__ import annotations
+
+from collections import defaultdict
+from dataclasses import dataclass, field
+from typing import Optional
+
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.Sequence import Seq
+
+
+@dataclass
+class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
+    kw_case: Asts.TokenAst = field(default=None)
+    cond: Asts.ExpressionAst = field(default=None)
+    kw_of: Optional[Asts.TokenAst] = field(default=None)
+    branches: Seq[Asts.CaseExpressionBranchAst] = field(default_factory=Seq)
+
+    def __post_init__(self) -> None:
+        self.kw_case = self.kw_case or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwCase)
+        self.kw_of = self.kw_of or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwOf)
+        assert self.cond is not None
+
+    @staticmethod
+    def from_simple(c1: int, p1: Asts.TokenAst, p2: Asts.ExpressionAst, p3: Asts.InnerScopeAst, p4: Seq[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
+        # Convert condition into an "== true" comparison.
+        first_pattern = Asts.PatternVariantExpressionAst(c1, expr=Asts.BooleanLiteralAst.from_python_literal(c1, True))
+        first_branch = Asts.CaseExpressionBranchAst(c1, patterns=Seq([first_pattern]), body=p3)
+        branches = Seq([first_branch]) + p4
+
+        # Return the case expression.
+        out = CaseExpressionAst(c1, p1, Asts.ParenthesizedExpressionAst(p2.pos, expr=p2), branches=branches)
+        return out
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            self.kw_case.print(printer) + " ",
+            self.cond.print(printer) + " ",
+            self.kw_of.print(printer) if self.kw_of else "",
+            self.branches.print(printer, "\n")]
+        return "".join(string)
+
+    @property
+    def pos_end(self) -> int:
+        return self.branches[-1].pos_end
+
+    def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
+        """!
+        The type of the 0th branch is used. To ensure type-safety, all branches must return the same value, but this
+        check is only required if the "case" expression is being assigned to a variable (ie the return type is
+        required). Also, an "else" branch is required in-case the other branches don't execute. If there are no
+        branches, the return type is Void (which will be an error in the caller function).
+
+        @param sm The scope manager.
+        @param kwargs Additional keyword arguments.
+        @return The type of the case expression.
+
+        @throw CaseBranchesConflictingTypesError If the branches return different types.
+        @throw CaseBranchesMissingElseBranchError If there is no "else" branch.
+
+        @todo: don't require "else" for exhaustive variant destructure.
+        @todo: checking for an "else" branch will error for 0-branch case expressions.
+        """
+
+        # The checks here only apply when assigning from this expression.
+        branch_inferred_types = self.branches.map(lambda x: x.infer_type(sm))
+
+        # All branches must return the same type.
+        zeroth_branch_type = branch_inferred_types[0]
+        if mismatch := branch_inferred_types[1:].find(lambda x: not x.symbolic_eq(zeroth_branch_type, sm.current_scope, sm.current_scope)):
+            raise SemanticErrors.CaseBranchesConflictingTypesError().add(
+                zeroth_branch_type, mismatch).scopes(sm.current_scope)
+
+        # Ensure there is an "else" branch if the branches are not exhaustive.
+        if not isinstance(self.branches[-1].patterns[0], Asts.PatternVariantElseAst):
+            raise SemanticErrors.CaseBranchesMissingElseBranchError().add(
+                self.cond, self.branches[-1]).scopes(sm.current_scope)
+
+        # Return the branches' return type, if there are any branches, otherwise Void.
+        if self.branches.length > 0:
+            return branch_inferred_types[0]
+        return CommonTypes.Void(self.pos)
+
+    def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        """!
+        The case expression requires complex semantic analysis, to ensure that all control paths are consistent over a
+        number of memory-related symbolic attributes. For each control path, if a symbol has a different final
+        initialization, move, partial move or pinning status, then it is marked with a special value. Then, if that
+        symbol is used after the case block, an error is thrown for inconsistent memory status. This is to ensure that
+        the memory status of a symbol is consistent across all control paths.
+
+        @param sm The scope manager.
+        @param kwargs Additional keyword arguments.
+
+        @throw ExpressionTypeInvalidError If the condition is an invalid expression.
+        @throw CaseBranchMultipleDestructurePatternsError If a branch has multiple patterns for destructuring.
+        @throw CaseBranchesElseBranchNotLastError If the "else" branch is not the last branch.
+        """
+
+        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.
+        if isinstance(self.cond, (Asts.TokenAst, Asts.TypeAst)):
+            raise SemanticErrors.ExpressionTypeInvalidError().add(self.cond).scopes(sm.current_scope)
+
+        # Analyse the condition and enforce memory integrity (outside the new scope).
+        self.cond.analyse_semantics(sm)
+        AstMemoryUtils.enforce_memory_integrity(self.cond, self.cond, sm, update_memory_info=False)
+
+        # Create the scope for the case expression.
+        sm.create_and_move_into_new_scope(f"<case-expr:{self.pos}>")
+
+        # Analyse each branch of the case expression.
+        symbol_mem_info = defaultdict(Seq)
+        for branch in self.branches:
+
+            # Destructures can only use 1 pattern.
+            if branch.op and branch.op.token_type == SppTokenType.KwIs and branch.patterns.length > 1:
+                raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1]).scopes(sm.current_scope)
+
+            # Check the "else" branch is the final branch (also ensures there is only 1).
+            if isinstance(branch.patterns[0], Asts.PatternVariantElseAst) and branch != self.branches[-1]:
+                raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch, self.branches[-1]).scopes(sm.current_scope)
+
+            # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
+            if branch.op and branch.op.token_type != SppTokenType.KwIs:
+                for pattern in branch.patterns:
+
+                    # Check the function exists. No check for Bool return type as it is enforced by comparison methods.
+                    # Dummy values as otherwise memory rules create conflicts - just need to test the existence of the
+                    # function.
+                    binary_lhs_ast = Asts.ObjectInitializerAst(class_type=self.cond.infer_type(sm))
+                    binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expr.infer_type(sm))
+                    binary_ast = Asts.BinaryExpressionAst(self.pos, binary_lhs_ast, branch.op, binary_rhs_ast)
+                    binary_ast.analyse_semantics(sm, **kwargs)
+
+            # Make a record of the symbols' memory status in the scope before the branch is analysed.
+            var_symbols_in_scope = sm.current_scope.all_symbols().filter_to_type(VariableSymbol)
+            old_symbol_mem_info = {s: s.memory_info.consistency_attrs() for s in var_symbols_in_scope}
+            branch.analyse_semantics(sm, cond=self.cond, **kwargs)
+            new_symbol_mem_info = {s: s.memory_info.consistency_attrs() for s in var_symbols_in_scope}
+
+            # Reset the memory status of the symbols for the next branch to be analysed in the same state.
+            for symbol, old_memory_status in old_symbol_mem_info.items():
+                symbol.memory_info.ast_initialization = old_memory_status[0]
+                symbol.memory_info.ast_moved = old_memory_status[1]
+                symbol.memory_info.ast_partially_moved = old_memory_status[2]
+                symbol.memory_info.ast_pinned = old_memory_status[3]
+                symbol.memory_info.initialization_counter = old_memory_status[4]
+
+                # Insert or append the new memory status of the symbol.
+                symbol_mem_info[symbol].append((branch, new_symbol_mem_info[symbol]))
+
+        # Update the memory status of the symbols.
+        # Todo: tidy this up omg
+        for symbol, new_memory_info_list in symbol_mem_info.items():
+
+            # Assuming all new memory states are consistent across branches, update to the first "new" state list.
+            symbol.memory_info.ast_initialization = new_memory_info_list[0][1][0]
+            symbol.memory_info.ast_moved = new_memory_info_list[0][1][1]
+            symbol.memory_info.ast_partially_moved = new_memory_info_list[0][1][2]
+            symbol.memory_info.ast_pinned = new_memory_info_list[0][1][3]
+
+            # Check the new memory status for each symbol is consistent across all branches.
+            for branch, memory_info_list in new_memory_info_list:
+
+                # Check for consistent initialization.
+                if new_memory_info_list[0][1][0] != memory_info_list[0]:
+                    symbol.memory_info.is_inconsistently_initialized = ((self.branches[0], new_memory_info_list[0][1][0]), (branch, memory_info_list[0]))
+
+                # Check for consistent movement.
+                if new_memory_info_list[0][1][1] != memory_info_list[1]:
+                    symbol.memory_info.is_inconsistently_moved = ((self.branches[0], new_memory_info_list[0][1][1]), (branch, memory_info_list[1]))
+
+                # Check for consistent partial movement.
+                if new_memory_info_list[0][1][2] != memory_info_list[2]:
+                    symbol.memory_info.is_inconsistently_partially_moved = ((self.branches[0], new_memory_info_list[0][1][2]), (branch, memory_info_list[2]))
+
+                # Check for consistent pinning.
+                if new_memory_info_list[0][1][3] != memory_info_list[3]:
+                    symbol.memory_info.is_inconsistently_pinned = ((self.branches[0], new_memory_info_list[0][1][3]), (branch, memory_info_list[3]))
+
+        # Move out of the case expression scope.
+        sm.move_out_of_current_scope()
+
+
+__all__ = [
+    "CaseExpressionAst"]

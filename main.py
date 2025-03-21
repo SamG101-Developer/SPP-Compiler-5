@@ -10,6 +10,7 @@ import os
 from argparse import Namespace
 
 from spp_cli import handle_build
+import json_fix
 
 PROFILE = False
 

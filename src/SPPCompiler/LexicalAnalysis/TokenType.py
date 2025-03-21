@@ -1,10 +1,15 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from fastenum import Enum
-import json_fix
 
 
 class TokenType(Enum):
+    """!
+    The base class for all token types. Provides uniform access to newline and whitespace tokens.
+    """
+
     @staticmethod
     def newline_token() -> TokenType:
         ...
@@ -21,6 +26,11 @@ class TokenType(Enum):
 
 
 class RawTokenType(TokenType):
+    """!
+    The RawTokenType class is a set of tokens that the lexer can recognize. These tokens are single-length, and will be
+    combined in the parser to make more advanced tokens.
+    """
+
     TkCharacter = 0
     TkDigit = 1
     TkEqualsSign = 2
@@ -65,6 +75,11 @@ class RawTokenType(TokenType):
 
 
 class RawKeywordType(TokenType):
+    """!
+    The RawKeywordType class is a set of keywords that are used for the parser to know, for a specific keyword, which
+    characters to parse. The final TokenAst will not contain a RawKeywordType, but the matching SppTokenType.
+    """
+
     Cls = "cls"
     Fun = "fun"
     Cor = "cor"
@@ -99,6 +114,11 @@ class RawKeywordType(TokenType):
 
 
 class SppTokenType(TokenType):
+    """!
+    The SppTokenType class contains all the keyword and tokens that are created by the parser, and stored inside
+    TokenAsts.
+    """
+
     LxNumber = "<char>"
     LxString = "<num>"
 
@@ -180,18 +200,27 @@ class SppTokenType(TokenType):
     NoToken = ""
 
     @staticmethod
-    def whitespace_token() -> SppTokenType:
-        return SppTokenType.TkWhitespace
-
-    @staticmethod
     def newline_token() -> SppTokenType:
         return SppTokenType.TkNewLine
+
+    @staticmethod
+    def whitespace_token() -> SppTokenType:
+        return SppTokenType.TkWhitespace
 
 
 @dataclass
 class RawToken:
+    """!
+    A RawToken allows for pairing metadata will a RawTokenType. For example, when "a" is lexed, the RawToken will
+    contain a RawTokenType.TkCharacter with the data "a".
+    """
+
     token_type: RawTokenType
     token_data: str
 
 
-__all__ = ["SppTokenType"]
+__all__ = [
+    "RawTokenType",
+    "RawKeywordType",
+    "RawToken",
+    "SppTokenType"]

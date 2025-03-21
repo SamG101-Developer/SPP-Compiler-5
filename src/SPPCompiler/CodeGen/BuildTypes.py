@@ -3,17 +3,17 @@ from typing import TYPE_CHECKING
 from llvmlite import ir
 
 if TYPE_CHECKING:
-    import SPPCompiler.SemanticAnalysis as Asts
+    from SPPCompiler.SemanticAnalysis import Asts
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
     from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, TypeSymbol, VariableSymbol
 
 
 class BuildTypes:
-    _scope_manager: ScopeManager
+    _sm: ScopeManager
 
-    def __init__(self, scope_manager: ScopeManager) -> None:
-        self._scope_manager = scope_manager
+    def __init__(self, sm: ScopeManager) -> None:
+        self._sm = sm
 
     def build(self) -> None:
         ...
@@ -46,10 +46,8 @@ class BuildTypes:
         return llvm_type
 
     def _create_memory_layout(self, module: ir.Module, type: TypeSymbol) -> None:
-        from SPPCompiler.SemanticAnalysis import ClassPrototypeAst
-
         super_class_types = []
-        for super_class in type.scope._direct_sup_scopes.filter(lambda s: isinstance(s._ast, ClassPrototypeAst)):
+        for super_class in type.scope._direct_sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)):
             super_class_types.append(super_class.type_symbol.llvm_info.llvm_type)
 
         attribute_types = []

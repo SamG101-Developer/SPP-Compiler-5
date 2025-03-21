@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, List, Optional, Tuple, Union
 
-import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType, RawToken, RawTokenType, RawKeywordType
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
@@ -500,11 +500,12 @@ class SppParser:
         p2 = self.parse_once(rhs)
         return p1, p2
 
-    def parse_binary_expression_precedence_level_n(self, lhs, op, rhs) -> Asts.BinaryExpressionAst:
+    def parse_binary_expression_precedence_level_n(self, lhs, op, rhs, is_: bool = False) -> Asts.BinaryExpressionAst | Asts.IsExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_once(lhs)
         p2 = self.parse_optional(lambda: self.parse_binary_expression_precedence_level_n_rhs(op, rhs))
-        return Asts.BinaryExpressionAst(c1, p1, p2[0], p2[1]) if p2 else p1
+        Constructor = Asts.BinaryExpressionAst if not is_ else Asts.IsExpressionAst
+        return Constructor(c1, p1, p2[0], p2[1]) if p2 else p1
 
     def parse_binary_expression_precedence_level_1(self) -> Asts.ExpressionAst:
         return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_2, self.parse_binary_op_precedence_level_1, self.parse_binary_expression_precedence_level_1)
@@ -513,7 +514,7 @@ class SppParser:
         return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_3, self.parse_binary_op_precedence_level_2, self.parse_binary_expression_precedence_level_2)
 
     def parse_binary_expression_precedence_level_3(self) -> Asts.ExpressionAst:
-        return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_4, self.parse_binary_op_precedence_level_3, self.parse_pattern_group_destructure)
+        return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_4, self.parse_binary_op_precedence_level_3, self.parse_pattern_group_destructure, is_=True)
 
     def parse_binary_expression_precedence_level_4(self) -> Asts.ExpressionAst:
         return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_5, self.parse_binary_op_precedence_level_4, self.parse_binary_expression_precedence_level_4)
@@ -1351,7 +1352,6 @@ class SppParser:
     def parse_type_postfix_op(self) -> Asts.TypePostfixOperatorAst:
         p1 = self.parse_alternate(
             self.parse_type_postfix_op_nested_type,
-            self.parse_type_postfix_op_indexed_type,
             self.parse_type_postfix_op_optional_type)
         return p1
 
@@ -1360,12 +1360,6 @@ class SppParser:
         p1 = self.parse_once(self.parse_token_double_colon)
         p2 = self.parse_once(self.parse_type_simple)
         return Asts.TypePostfixOperatorNestedTypeAst(c1, p1, p2)
-
-    def parse_type_postfix_op_indexed_type(self) -> Asts.TypePostfixOperatorIndexedTypeAst:
-        c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_token_double_colon)
-        p2 = self.parse_once(self.parse_lexeme_dec_integer)
-        return Asts.TypePostfixOperatorIndexedTypeAst(c1, p1, p2)
 
     def parse_type_postfix_op_optional_type(self) -> Asts.TypePostfixOperatorOptionalTypeAst:
         c1 = self.current_pos()
