@@ -120,9 +120,9 @@ class AnnotationAst(Asts.Ast):
         The following checks have to be in tis method, because they need access to the "scope" for potential errors. All
         context checks, annotation conflict checks, and unknown annotation checks are handled here.
         @param sm The scope manager.
-        @throw AnnotationInvalidApplicationError If the annotation is applied to an invalid context.
-        @throw AnnotationConflictError If the annotation conflicts with another annotation.
-        @throw AnnotationInvalidError If the annotation is unknown.
+        @throw SemanticErrors.AnnotationInvalidApplicationError If the annotation is applied to an invalid context.
+        @throw SemanticErrors.AnnotationConflictError If the annotation conflicts with another annotation.
+        @throw SemanticErrors.AnnotationInvalidError If the annotation is unknown.
         """
 
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
