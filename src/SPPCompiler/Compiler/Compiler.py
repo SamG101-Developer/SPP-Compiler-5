@@ -53,6 +53,12 @@ class Compiler:
     _scope_manager: Optional[ScopeManager]
 
     def __init__(self, mode: Mode) -> None:
+        """!
+        Construct the compiler instance, add the source path, and create the module tree. A "Program" instance is
+        created, which takes the modules and runs compiler stages on them.
+        @param mode The mode in which the compiler is running.
+        """
+
         from SPPCompiler.Compiler.ModuleTree import ModuleTree
         from SPPCompiler.Compiler.Program import Program
 
