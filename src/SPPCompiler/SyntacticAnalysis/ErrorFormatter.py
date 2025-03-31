@@ -56,8 +56,6 @@ class ErrorFormatter:
         start_pos = ast.pos
         end_pos = ast.pos_end
 
-        print(ast, ast.pos, ast.pos_end)
-
         # Get the tokens at the start and end of the line containing the error. Skip the leading newline.
         err_line_start_pos = ([i for i, x in enumerate(self._tokens[:start_pos]) if x.token_type == RawTokenType.newline_token()] or [1])[-1] + 1
         err_line_end_pos = ([i for i, x in enumerate(self._tokens[start_pos:]) if x.token_type == RawTokenType.newline_token()] or [len(self._tokens) - 1])[0] + start_pos
