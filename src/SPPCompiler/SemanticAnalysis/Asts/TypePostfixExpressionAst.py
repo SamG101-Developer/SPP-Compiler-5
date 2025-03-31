@@ -68,7 +68,7 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def symbolic_eq(
             self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True,
             debug: bool = False) -> bool:
-        self_scope = self_scope.get_symbol(self.lhs).scope
+        self_scope = self_scope.get_symbol(self.lhs.infer_type(ScopeManager(self_scope, self_scope))).scope
         return self.lhs.symbolic_eq(that, self_scope, that_scope, check_variant, debug)
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
