@@ -55,3 +55,45 @@ class TestFunctionParameterSelfAst(CustomTestCase):
             fun f(self: &std::single::Single[Self]) -> std::void::Void { }
         }
         """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_function_parameter_self_ast_call_with_arbitrary_type_1(self):
+        """
+        cls TestType { }
+        sup TestType {
+            fun f(self: &std::single::Single[Self]) -> std::void::Void { }
+        }
+
+        fun f() -> std::void::Void {
+            let s = TestType()
+            s.f()
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_function_parameter_self_ast_call_with_arbitrary_type_2(self):
+        """
+        cls TestType { }
+        sup TestType {
+            fun f(&self) -> std::void::Void { }
+        }
+
+        fun f() -> std::void::Void {
+            let s = std::single::Single[TestType]()
+            s.f()
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_function_parameter_self_ast_call_with_arbitrary_type(self):
+        """
+        cls TestType { }
+        sup TestType {
+            fun f(self: &std::single::Single[Self]) -> std::void::Void { }
+        }
+
+        fun f() -> std::void::Void {
+            let s = std::single::Single[TestType]()
+            s.f()
+        }
+        """

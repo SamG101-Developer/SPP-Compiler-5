@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE instance-profile
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
+
+<instance-profile id="main"
+                 name="docs-language"
+                 start-page="Introduction.md">
+
+    <toc-element topic="Introduction.md">
+    </toc-element>
+    <toc-element topic="Getting-Started.md">
+        <toc-element topic="Installation.md"/>
+        <toc-element topic="Tooling.md"/>
+        <toc-element topic="Hello-World.md"/>
+        <toc-element topic="Terms-Definitions.md"/>
+    </toc-element>
+    <toc-element topic="Language-Basics.md">
+        <toc-element topic="Keywords-Identifiers.md"/>
+        <toc-element topic="Tokens-Operators.md"/>
+        <toc-element topic="Comments.md"/>
+        <toc-element topic="Literals.md"/>
+    </toc-element>
+    <toc-element topic="Expressions.md">
+        <toc-element topic="Conditional-Blocks.md"/>
+        <toc-element topic="Looping-Blocks.md"/>
+        <toc-element topic="Anonymous-Blocks.md"/>
+        <toc-element topic="Binary-Expressions.md"/>
+    </toc-element>
+    <toc-element topic="Type-System.md">
+        <toc-element topic="First-Class-Types.md"/>
+        <toc-element topic="Basic-Types.md"/>
+        <toc-element topic="Specialization.md"/>
+    </toc-element>
+    <toc-element topic="Memory-Management.md">
+        <toc-element topic="Memory-Model.md"/>
+        <toc-element topic="Initialization-Destruction.md"/>
+        <toc-element topic="Smart-Pointers.md"/>
+        <toc-element topic="Pinning.md"/>
+        <toc-element topic="Volatile.md"/>
+        <toc-element topic="Compiled-Memory-Safety.md"/>
+    </toc-element>
+    <toc-element topic="Parallelism-Concurrency.md">
+        <toc-element topic="Concurrency.md"/>
+    </toc-element>
+    <toc-element topic="STL.md">
+        <toc-element topic="STL-Structure.md"/>
+    </toc-element>
+
+</instance-profile>

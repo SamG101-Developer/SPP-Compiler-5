@@ -147,8 +147,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                         argument.convention = parameter.convention
                         argument_type = argument_type.without_generics()
 
-                        # if function_overload.function_parameter_group.get_self()._arbitrary and not parameter_type.without_generics().without_convention().symbolic_eq(argument_type.without_generics(), function_scope, scope_manager.current_scope, debug=True):
-                        #     raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
+                        if function_overload.function_parameter_group.get_self_param()._arbitrary and not parameter_type.symbolic_eq(argument_type, function_scope, sm.current_scope):
+                            raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
                     elif not parameter_type.symbolic_eq(argument_type, function_scope, sm.current_scope):
                         raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
