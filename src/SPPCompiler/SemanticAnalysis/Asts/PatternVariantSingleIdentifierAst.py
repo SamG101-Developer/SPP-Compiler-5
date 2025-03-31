@@ -32,7 +32,9 @@ class PatternVariantSingleIdentifierAst(Asts.Ast, Asts.Mixins.AbstractPatternVar
 
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableSingleIdentifierAst:
         # Convert the single identifier into a local variable single identifier.
-        return Asts.LocalVariableSingleIdentifierAst(self.pos, self.tok_mut, self.name, self.alias)
+        variable = Asts.LocalVariableSingleIdentifierAst(self.pos, self.tok_mut, self.name, self.alias)
+        variable._from_pattern = True
+        return variable
 
     def analyse_semantics(self, sm: ScopeManager, condition: Asts.ExpressionAst = None, **kwargs) -> None:
         # Create the new variable from the pattern in the patterns scope.

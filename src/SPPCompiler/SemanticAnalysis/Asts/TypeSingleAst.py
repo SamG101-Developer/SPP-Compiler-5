@@ -147,6 +147,10 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             type_symbol.type.generic_parameter_group.parameters,
             sm, is_tuple_owner=is_tuple)
 
+        # If there is a directive to skip generic checks, then return.
+        if "skip_generic_check" in kwargs:
+            return
+
         # Infer generic arguments from information given from object initialization.
         self.name.generic_argument_group.arguments = AstFunctionUtils.infer_generic_arguments(
             generic_parameters=type_symbol.type.generic_parameter_group.get_required_params(),

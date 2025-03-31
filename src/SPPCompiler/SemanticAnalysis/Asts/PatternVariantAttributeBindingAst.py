@@ -33,7 +33,9 @@ class PatternVariantAttributeBindingAst(Asts.Ast, Asts.Mixins.AbstractPatternVar
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableAttributeBindingAst:
         # Convert the attribute binding into a local variable attribute binding.
         inner_value = self.value.convert_to_variable(**kwargs)
-        return Asts.LocalVariableAttributeBindingAst(self.pos, self.name, self.tok_assign, inner_value)
+        variable = Asts.LocalVariableAttributeBindingAst(self.pos, self.name, self.tok_assign, inner_value)
+        variable._from_pattern = True
+        return variable
 
 
 __all__ = [

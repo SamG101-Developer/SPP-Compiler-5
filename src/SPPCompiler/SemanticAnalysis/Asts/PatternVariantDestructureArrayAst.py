@@ -36,7 +36,9 @@ class PatternVariantDestructureArrayAst(Asts.Ast, Asts.Mixins.AbstractPatternVar
         # Convert the array destructuring into a local variable array destructuring.
         elems = self.elems.filter_to_type(*Asts.PatternVariantNestedForDestructureArrayAst.__args__)
         converted_elems = elems.map(lambda e: e.convert_to_variable(**kwargs))
-        return Asts.LocalVariableDestructureArrayAst(self.pos, self.tok_l, converted_elems, self.tok_r)
+        variable = Asts.LocalVariableDestructureArrayAst(self.pos, self.tok_l, converted_elems, self.tok_r)
+        variable._from_pattern = True
+        return variable
 
     def analyse_semantics(self, sm: ScopeManager, cond: Asts.ExpressionAst = None, **kwargs) -> None:
         # Create the new variables from the pattern in the patterns scope.

@@ -42,7 +42,9 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
         # Convert the object destructuring into a local variable object destructuring.
         elems = self.elems.filter_to_type(*Asts.PatternVariantNestedForDestructureObjectAst.__args__)
         converted_elems = elems.map(lambda e: e.convert_to_variable(**kwargs))
-        return Asts.LocalVariableDestructureObjectAst(self.pos, self.class_type, self.tok_l, converted_elems, self.tok_r)
+        variable = Asts.LocalVariableDestructureObjectAst(self.pos, self.class_type, self.tok_l, converted_elems, self.tok_r)
+        variable._from_pattern = True
+        return variable
 
     def analyse_semantics(self, sm: ScopeManager, cond: Asts.ExpressionAst = None, **kwargs) -> None:
         self.class_type.analyse_semantics(sm, **kwargs)

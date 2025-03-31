@@ -36,7 +36,9 @@ class PatternVariantDestructureTupleAst(Asts.Ast, Asts.Mixins.AbstractPatternVar
         # Convert the tuple destructuring into a local variable tuple destructuring.
         elements = self.elems.filter_to_type(*Asts.PatternVariantNestedForDestructureTupleAst.__args__)
         converted_elements = elements.map(lambda e: e.convert_to_variable(**kwargs))
-        return Asts.LocalVariableDestructureTupleAst(self.pos, self.tok_l, converted_elements, self.tok_r)
+        variable = Asts.LocalVariableDestructureTupleAst(self.pos, self.tok_l, converted_elements, self.tok_r)
+        variable._from_pattern = True
+        return variable
 
     def analyse_semantics(self, sm: ScopeManager, cond: Asts.ExpressionAst = None, **kwargs) -> None:
         # Create the new variables from the pattern in the patterns scope.

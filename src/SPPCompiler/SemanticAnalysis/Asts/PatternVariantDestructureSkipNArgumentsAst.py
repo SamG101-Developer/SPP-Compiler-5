@@ -31,7 +31,9 @@ class PatternVariantDestructureSkipNArgumentsAst(Asts.Ast, Asts.Mixins.AbstractP
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureSkipNArgumentsAst:
         # Convert the skip n arguments destructuring into a local variable skip n arguments destructuring.
         converted_binding = self.binding.convert_to_variable(**kwargs) if self.binding else None
-        return Asts.LocalVariableDestructureSkipNArgumentsAst(self.pos, self.tok_variadic, converted_binding)
+        variable = Asts.LocalVariableDestructureSkipNArgumentsAst(self.pos, self.tok_variadic, converted_binding)
+        variable._from_pattern = True
+        return variable
 
 
 __all__ = [
