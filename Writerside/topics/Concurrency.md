@@ -8,9 +8,9 @@ S++ uses coroutines as the primary concurrency mechanism. They can be suspended 
 data flow between the caller and the coroutine. They are defined in the same way as a function or method, but they
 require the `cor` keyword rather than `fun`.
 
-Coroutine return types are constrained to generators or borrows, as explored below. Typically, there will be `gen`
+Coroutine return types are constrained to generators, as explored below. Typically, there will be any number of `gen`
 expressions inside the coroutine, to generate or yield values to the caller. Assigning a value from the `gen` expression
-allows data back into the function on resuming (for generators).
+allows for sending data back into the coroutine on resuming.
 
 ## Coroutine Return Types
 
@@ -18,45 +18,21 @@ allows data back into the function on resuming (for generators).
 
 <secondary-label ref="feature-wip"/>
 
-The generator type in S++ is the `std::Gen[Yield, Send]` type. The `Gen` type is special in that setting the `Yield`
-generic type parameter can be set to a borrow to interact with the `gen` expression.
+The generator type in S++ is the `std::generator::Gen[Yield, Send=std::void::Void]` type. This is a compiler known type,
+and has special behaviour for coroutine and yielding analysis.
 
-Each generator type's `Yield` generic parameter corresponds to the convention on the `gen` expression. For example, if
-values are generated with `gen &mut value`, then the `Gen[&mut T]` type is used as the return value. All values being
-generated must use the same convention, and generate the same type.
+The `Yield` generic parameter's corresponding argument determines the type of value being yielded from the coroutine.
+Whilst this is inferrable, a design decision was taken to mark it explicitly in the return type, in the same way that a
+subroutine's return type must always be explicitly given, despite is being inferrable from `ret` statements.
 
-The `Gen` generic parameter represents the type being generated. The return type `Gen[Gen=BigInt]` means that big
-integers are being generated and moved: `gen 123`. This means that both the expression type and expression convention
-are represented in the return type.
+A convention can be applied to the generic argument for the `Yield` parameter. Because borrows can be yielded from
+coroutines, the yielding convention must match the convention of the `Yield` argument. For example, if the gen
+expressions look like `gen &mut 123`, then the generator type would be `Gen[&mut BigInt]`. This allows for the full
+convention and type knowledge of the generated values to be accessible from the function signature alone.
 
 The `Send` generic parameter represents the type being sent back to the coroutine. This defaults to `Void`, disallowing
 data to be sent back (cannot have a `Void` variable), but can be set to any type. Only owned objects can be sent back
 into a coroutine.
-
-### Singly Generating Types
-
-<secondary-label ref="feature-not-impl-yet"/>
-
-The `std::GenOnce[Yield]` type is a type that will act as a one-time generator. This is used for indexing, rather than
-iteration. Indexing only requires one value to be yielded, but the value cannot be returned, as yielding a borrow, for a
-`get_ref` method is a requirement.
-
-```
-let vector = std::Vec[std::BigInt]::with_capacity(10)
-let generator = value.get_ref(1)
-let value = generator.step()
-...
-generator.step()
-```
-
-The `GenOnce` types allow for a more concise syntax:
-
-```
-let value = value.get_ref(1)
-```
-
-In the background, the compiler interprets the coroutine return type as a generator, and automatically steps the value
-into the variable.
 
 ## Advancing a Generator
 
@@ -64,8 +40,8 @@ into the variable.
 
 <secondary-label ref="feature-not-impl-yet"/>
 
-A generator is advanced by using the `.step()` method. As this requires compiler specific code to invalidate the
-previously yielded borrow, `step` is a callable postfix keyword, rather than a method.
+A generator is advanced by using the `.res()` method. As this requires compiler specific code to invalidate the
+previously yielded borrow, `res` is a callable postfix keyword, rather than a method.
 
 ```
 cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> GenRef[Gen=BigInt] {
@@ -76,18 +52,13 @@ cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> GenRef[Gen=BigInt] {
 
 fun main() -> Void {
     let generator = coroutine(1, 2, 3)
-    let a = generator.step()
-    let b = generator.step()  # invalidates "a"
-    let c = generator.step()  # invalidates "b"
+    let a = generator.res()
+    let b = generator.res()  # invalidates "a"
+    let c = generator.res()  # invalidates "b"
 }
 ```
 
-Invalidating is done by assignment or variable definition statements marking their left-hand-side symbolic value as
-borrow-bound to the generator rhs (check the postfix expression type for the `.step` postfix operation), and the
-generator is subsequently advanced.
-
-For `BorrowXXX` types, the `step` keyword is not applicable, and an error will be thrown if it is used. Instead, the
-generator is advanced by the compiler, and the borrow is dropped when the variable goes out of scope.
+See the [](#invalidating-borrows) section for how and why earlier generated borrows are invalidated.
 
 ## Passing Data Out of a Coroutine
 
@@ -116,7 +87,7 @@ cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> GenRef[Gen=BigInt] {
 
 <secondary-label ref="feature-impl"/>
 
-When borrowed values are yielded from a coroutine, they are only valid until the next `step()` call is made to the
+When borrowed values are yielded from a coroutine, they are only valid until the next `.res()` call is made to the
 coroutine. This is to ensure they remain valid for the coroutine to use in steps up to the next yield.
 
 ```
@@ -146,9 +117,9 @@ is yielded, the previous borrow will be invalidated in the caller.
 
 <secondary-label ref="feature-impl"/>
 
-The `.step()` method takes a single argument, whose type matches the `Send` generic parameter of the generator (
+The `.res()` method takes a single argument, whose type matches the `Send` generic parameter of the generator (
 coroutine return type). Because substituting `Void` as a generic parameter causes function parameters of that type to be
-removed from the signature, `.step()` can be used for th default `Send=Void` generic parameter.
+removed from the signature, `.res()` can be used for th default `Send=Void` generic parameter.
 
 Values are received by placing the `gen` expression on the right-hand-side of a variable definition statement. Variables
 are always moved into a coroutine, not borrowed. This means that receiving a second value into the coroutine doesn't

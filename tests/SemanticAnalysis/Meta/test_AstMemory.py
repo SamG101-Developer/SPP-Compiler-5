@@ -4,6 +4,7 @@ from tests._Utils import *
 class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryInconsistentlyInitializedError)
     def test_invalid_memory_inconsistently_initialized_moved(self):
+        # Move an initialized  value in one branch and not in the other.
         """
         cls Point {
             x: std::number::BigInt
@@ -23,6 +24,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_fail_compilation(SemanticErrors.MemoryInconsistentlyInitializedError)
     def test_invalid_memory_inconsistently_initialized_initialized(self):
+        # Initialize a non-initialized value in one branch and not in the other.
         """
         cls Point {
             x: std::number::BigInt
@@ -40,7 +42,8 @@ class TestAstMemory(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.MemoryInconsistentlyInitializedError)
-    def test_invalid_memory_inconsistently_initialized_partially_initialized_1(self):
+    def test_invalid_memory_inconsistently_initialized_partially_moved_1(self):
+        # Partially move an initialized value in one branch and not in the other.
         """
         cls Point {
             x: std::number::BigInt
@@ -58,7 +61,8 @@ class TestAstMemory(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.MemoryInconsistentlyInitializedError)
-    def test_invalid_memory_inconsistently_initialized_partially_initialized_2(self):
+    def test_invalid_memory_inconsistently_initialized_partially_moved_2(self):
+        # Partially move different parts of an initialized value in both branches.
         """
         cls Point {
             x: std::number::BigInt
@@ -76,7 +80,8 @@ class TestAstMemory(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.MemoryInconsistentlyInitializedError)
-    def test_invalid_memory_inconsistently_initialized_partially_initialized_3(self):
+    def test_invalid_memory_inconsistently_initialized_partially_initialized_1(self):
+        # Partially initialize different parts of a partially initialized value in one branch and not the other.
         """
         cls Point {
             x: std::number::BigInt
@@ -95,8 +100,31 @@ class TestAstMemory(CustomTestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.MemoryInconsistentlyInitializedError)
+    def test_invalid_memory_inconsistently_initialized_partially_initialized_2(self):
+        # Partially initialize different parts of a partially initialized value in both branches.
+        """
+        cls Point {
+            x: std::number::BigInt
+            y: std::number::BigInt
+        }
+
+        fun f() -> std::void::Void {
+            let mut p = Point(x=5, y=6)
+            let x = p.x
+            let y = p.y
+
+            case 1 of
+                == 1 { p.x = 123 }
+                == 2 { p.y = 456 }
+
+            let r = p
+        }
+        """
+
     @should_fail_compilation(SemanticErrors.MemoryInconsistentlyPinnedError)
     def test_invalid_memory_inconsistently_pinned_1(self):
+        # Cause a value to be pinned in one branch and not in the other.
         """
         cls Point {
             x: std::number::BigInt
@@ -117,6 +145,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_fail_compilation(SemanticErrors.MemoryInconsistentlyPinnedError)
     def test_invalid_memory_inconsistently_pinned_2(self):
+        # Cause part of a value to be pinned in one branch and not in the other.
         """
         cls Point {
             x: std::number::BigInt
@@ -137,6 +166,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_fail_compilation(SemanticErrors.MemoryInconsistentlyPinnedError)
     def test_invalid_memory_inconsistently_pinned_3(self):
+        # Cause different parts of a value to be pinned in both branches.
         """
         cls Point {
             x: std::number::BigInt
@@ -157,6 +187,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_memory_not_initialized_usage_1(self):
+        # Use a non-initialized value (never given a value / use-after-free).
         """
         cls Point {
             x: std::number::BigInt
@@ -171,6 +202,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_memory_not_initialized_usage_2(self):
+        # Use a non-initialized value (value has been moved already / double-free).
         """
         cls Point {
             x: std::number::BigInt
@@ -186,6 +218,22 @@ class TestAstMemory(CustomTestCase):
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_memory_not_initialized_usage_3(self):
+        # Use part of a non-initialized value (never given a value / use-after-free).
+        """
+        cls Point {
+            x: std::number::BigInt
+            y: std::number::BigInt
+        }
+
+        fun f() -> std::void::Void {
+            let p: Point
+            let x = p.x
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_memory_not_initialized_usage_4(self):
+        # Use part of a non-initialized value (value has been moved already / double-free).
         """
         cls Point {
             x: std::number::BigInt
@@ -201,6 +249,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_memory_partially_initialized_usage_1(self):
+        # Use part of a partially-initialized value (value has been moved already / double-free).
         """
         cls Point {
             x: std::number::BigInt
@@ -216,6 +265,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_fail_compilation(SemanticErrors.MemoryPartiallyInitializedUsageError)
     def test_invalid_memory_partially_initialized_usage_2(self):
+        # Use a value that has been partially moved.
         """
         cls Point {
             x: std::number::BigInt
@@ -230,22 +280,8 @@ class TestAstMemory(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.MemoryMovedFromBorrowedContextError)
-    def test_invalid_memory_moved_from_borrowed_context_1(self):
-        """
-        cls T { }
-
-        cls Point {
-            x: T
-            y: T
-        }
-
-        fun f(p: &Point) -> std::void::Void {
-            let x = p.x
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryMovedFromBorrowedContextError)
-    def test_invalid_memory_moved_from_borrowed_context_2(self):
+    def test_invalid_memory_moved_from_borrowed_context_mut(self):
+        # Create a partial move on a mutable borrow.
         """
         cls T { }
 
@@ -259,8 +295,25 @@ class TestAstMemory(CustomTestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.MemoryMovedFromBorrowedContextError)
+    def test_invalid_memory_moved_from_borrowed_context_ref(self):
+        # Create a partial move in an immutable borrow.
+        """
+        cls T { }
+
+        cls Point {
+            x: T
+            y: T
+        }
+
+        fun f(p: &Point) -> std::void::Void {
+            let x = p.x
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_memory_multiple_partial_moves(self):
+        # Move different parts of a value over multiple expressions.
         """
         cls Point {
             x: std::number::BigInt
@@ -276,6 +329,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_pass_compilation()
     def test_valid_memory_copy(self):
+        # Perform a "double move" when the compiler superimposes Copy over the type.
         """
         fun f() -> std::void::Void {
             let x = 123
@@ -286,6 +340,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_pass_compilation()
     def test_valid_memory_copy_custom(self):
+        # Perform a "double move" when the use supseimposes Copy over the type.
         """
         cls Point {
             x: std::number::BigInt
@@ -303,6 +358,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_pass_compilation()
     def test_valid_memory_copy_custom_generic(self):
+        # Perform a "double move" when the use supseimposes Copy over the generic type.
         """
         cls Point[T] {
             x: T
@@ -329,8 +385,8 @@ class TestAstMemory(CustomTestCase):
         fun test() -> std::void::Void {
             let mut g = MyType[std::number::BigInt]()
             let iter = g.custom_iter_mut()
-            let x = iter.res(false)
-            let y = iter.res(false)
+            let x = iter.resume(false)
+            let y = iter.resume(false)
             let z = x + y
         }
         """
@@ -345,8 +401,8 @@ class TestAstMemory(CustomTestCase):
 
         fun test() -> std::void::Void {
             let mut g = MyType[std::number::BigInt]()
-            let x = g.custom_iter_mut().res(false)
-            let y = g.custom_iter_mut().res(false)
+            let x = g.custom_iter_mut().resume(false)
+            let y = g.custom_iter_mut().resume(false)
             let a = x
         }
         """
@@ -366,7 +422,7 @@ class TestAstMemory(CustomTestCase):
             let mut my_type = MyType(x=123)
             let generator1 = my_type.custom_iter_mut()
             let generator2 = my_type.custom_iter_mut()
-            let a = generator1.res(false)
+            let a = generator1.resume(false)
         }
         """
 
@@ -385,7 +441,7 @@ class TestAstMemory(CustomTestCase):
             let mut my_type = MyType(x=123)
             let generator1 = my_type.custom_iter_mut()
             let generator2 = my_type.custom_iter_mut()
-            let a = generator2.res(false)
+            let a = generator2.resume(false)
         }
         """
 
@@ -404,6 +460,6 @@ class TestAstMemory(CustomTestCase):
             let my_type = MyType(x=123)
             let generator1 = my_type.custom_iter_ref()
             let generator2 = my_type.custom_iter_ref()
-            let a = generator2.res(false)
+            let a = generator2.resume(false)
         }
         """

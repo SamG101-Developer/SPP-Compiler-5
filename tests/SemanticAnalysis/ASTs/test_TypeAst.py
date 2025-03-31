@@ -32,7 +32,7 @@ class TestTypeAst(CustomTestCase):
         fun f() -> std::string::Str::Type { }
         """
 
-    @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
+    @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
     def test_invalid_type_generic_nested_type(self):
         """
         fun f[T]() -> T::Type { }

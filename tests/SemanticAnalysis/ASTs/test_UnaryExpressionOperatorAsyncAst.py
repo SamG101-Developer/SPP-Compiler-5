@@ -18,15 +18,14 @@ class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_async_invalidated_by_moving_borrow(self):
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    def test_invalid_async_moving_pinned_borrow(self):
         """
         fun f(a: &std::string::Str) -> std::string::Str { ret "hello" }
         fun g() -> std::void::Void {
             let x = "hello"
             let future = async f(&x)
             let y = x
-            let h = future
         }
         """
 

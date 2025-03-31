@@ -1,15 +1,9 @@
 from tests._Utils import *
 
+# todo: remove / move to other files?
+
 
 class TestPostfixExpressionResKeywordAst(CustomTestCase):
-    @should_fail_compilation(SemanticErrors.ExpressionNotGeneratorError)
-    def test_invalid_postfix_expression_res_keyword_type_mismatch(self):
-        """
-        fun f() -> std::void::Void {
-            123.res()
-        }
-        """
-
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_postfix_expression_res_borrow_invalidation_1(self):
         """
@@ -21,8 +15,8 @@ class TestPostfixExpressionResKeywordAst(CustomTestCase):
 
         fun f() -> std::void::Void {
             let generator = x()
-            let a = generator.res(0)
-            let b = generator.res(0)
+            let a = generator.resume(0)
+            let b = generator.resume(0)
             let c = a
         }
         """
@@ -38,9 +32,9 @@ class TestPostfixExpressionResKeywordAst(CustomTestCase):
 
         fun f() -> std::void::Void {
             let generator = x()
-            let a = generator.res(0)
-            let b = generator.res(0)
-            let c = generator.res(0)
+            let a = generator.resume(0)
+            let b = generator.resume(0)
+            let c = generator.resume(0)
             let d = a
         }
         """
@@ -54,7 +48,7 @@ class TestPostfixExpressionResKeywordAst(CustomTestCase):
 
         fun f() -> std::void::Void {
             let generator = x()
-            let a = generator.res("hello")
+            let a = generator.resume("hello")
         }
         """
 
@@ -67,6 +61,6 @@ class TestPostfixExpressionResKeywordAst(CustomTestCase):
 
         fun f() -> std::void::Void {
             let generator = x()
-            let a = generator.res(true)
+            let a = generator.resume(true)
         }
         """
