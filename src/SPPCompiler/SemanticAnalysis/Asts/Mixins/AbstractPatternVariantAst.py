@@ -16,7 +16,7 @@ class AbstractPatternVariantAst(ABC):
     """
 
     @abstractmethod
-    def convert_to_variable(self) -> Asts.LocalVariableAst:
+    def convert_to_variable(self, **kwargs) -> Asts.LocalVariableAst:
         """!
         The convert_to_variable method is a method that converts the current pattern variant into a local variable
         declaration. This is useful for the semantic analysis phase, as it allows for the pattern to be analysed as a
