@@ -98,10 +98,6 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         self._scope_cls = cls_symbol.scope
         self.body.load_super_scopes(sm)
 
-        # Mark the type as abstract if any of the functions are abstract.
-        if self.body.members.filter_to_type(Asts.SupPrototypeExtensionAst).map(lambda s: s.body.members[-1]).filter(lambda m: m._abstract):
-            cls_symbol.is_abstract = True
-
         sm.move_out_of_current_scope()
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:

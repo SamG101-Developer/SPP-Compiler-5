@@ -165,10 +165,6 @@ class SupPrototypeExtensionAst(Asts.Ast):
             raise SemanticErrors.IdentifierDuplicationError().add(
                 duplicates[0][0], duplicates[0][1], "attribute").scopes(sm.current_scope)
 
-        # Mark the type as abstract if the superclass is abstract.
-        if sup_symbol.is_abstract:
-            cls_symbol.is_abstract = True
-
         sm.move_out_of_current_scope()
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:

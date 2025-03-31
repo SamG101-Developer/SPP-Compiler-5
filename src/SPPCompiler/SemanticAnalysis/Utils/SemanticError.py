@@ -1391,22 +1391,6 @@ class SemanticErrors:
 
             return self
 
-    class ObjectInitializerAbstractClassError(SemanticError):
-        """
-        The ObjectInitializerAbstractClassError is raised if an object initializer is used on an abstract class. An
-        abstract class cannot be instantiated. An abstract class is defined as a class with 1 or more non-implemented
-        abstract methods.
-        """
-
-        def add(self, class_type: Asts.TypeAst) -> SemanticError:
-            self.add_error(
-                ast=class_type,
-                tag=f"Abstract type '{class_type}' initialized here",
-                msg="An abstract class cannot be instantiated.",
-                tip="Use a non-abstract class instead.")
-
-            return self
-
     class RecursiveTypeDefinitionError(SemanticError):
         """
         The RecursiveTypeDefinitionError is raised if a type definition is recursive. This is when a type definition
