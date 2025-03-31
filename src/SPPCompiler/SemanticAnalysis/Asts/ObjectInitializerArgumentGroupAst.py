@@ -60,8 +60,6 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
     def analyse_semantics(self, sm: ScopeManager, class_type: Asts.TypeAst = None, **kwargs) -> None:
         # Get the symbol of the class type, and check it isn't abstract.
         class_symbol = sm.current_scope.get_symbol(class_type)
-        # if class_symbol.is_abstract:
-        #     raise SemanticErrors.ObjectInitializerAbstractClassError().add(class_type).scopes(scope_manager.current_scope)
 
         # Get the attribute information from the class type.
         all_attributes = Seq([(c, class_symbol.scope) for c in class_symbol.type.body.members])
