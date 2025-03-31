@@ -16,13 +16,11 @@ class Visibility(Enum):
     * Public: The object is visible to all other objects and modules.
     * Protected: The object is visible to the object itself and its subclasses.
     * Private: The object is visible only to the object itself and this module.
-    * Hidden: Complete invisibility, even to the same module.
     """
 
     Public = 0
     Protected = 1
     Private = 2
-    Hidden = 3
 
     def __str__(self) -> str:
         """!

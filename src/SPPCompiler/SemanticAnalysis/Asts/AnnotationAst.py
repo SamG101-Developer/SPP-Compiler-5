@@ -33,7 +33,6 @@ class _Annotations(Enum):
     Public = "public"
     Protected = "protected"
     Private = "private"
-    Hidden = "hidden"
     Cold = "cold"
     Hot = "hot"
     CompilerBuiltin = "compiler_builtin"
@@ -102,10 +101,6 @@ class AnnotationAst(Asts.Ast):
         # Mark a context as private.
         elif self.name.value == _Annotations.Private.value:
             ctx._visibility = (Visibility.Private, self)
-
-        # Mark a context as hidden.
-        elif self.name.value == _Annotations.Hidden.value:
-            ctx._visibility = (Visibility.Hidden, self)
 
         # Mark a function context as cold.
         elif self.name.value == _Annotations.Cold.value:
@@ -195,17 +190,6 @@ class AnnotationAst(Asts.Ast):
 
         elif self.name.value == _Annotations.Private.value:
             # The "private" access modifier annotation can only be applied to visibility enabled objects.
-            if not isinstance(self._ctx, VisibilityEnabledAst):
-                raise SemanticErrors.AnnotationInvalidApplicationError().add(
-                    self.name, self._ctx.name, "visibility-enabled").scopes(self._scope)
-
-            # There cannot be any other access modifier annotations applied to the object.
-            if (c := self._ctx._visibility[1]) and c is not self:
-                raise SemanticErrors.AnnotationConflictError().add(
-                    self.name, self._ctx._visibility[1].name).scopes(self._scope)
-
-        elif self.name.value == _Annotations.Hidden.value:
-            # The "hidden" access modifier annotation can only be applied to visibility enabled objects.
             if not isinstance(self._ctx, VisibilityEnabledAst):
                 raise SemanticErrors.AnnotationInvalidApplicationError().add(
                     self.name, self._ctx.name, "visibility-enabled").scopes(self._scope)
