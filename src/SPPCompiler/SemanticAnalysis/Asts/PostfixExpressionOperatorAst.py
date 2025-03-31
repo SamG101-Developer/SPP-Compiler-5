@@ -8,8 +8,7 @@ PostfixExpressionOperatorAst = Union[
     Asts.PostfixExpressionOperatorEarlyReturnAst,
     Asts.PostfixExpressionOperatorFunctionCallAst,
     Asts.PostfixExpressionOperatorMemberAccessAst,
-    Asts.PostfixExpressionOperatorNotKeywordAst,
-    Asts.PostfixExpressionOperatorResKeywordAst]
+    Asts.PostfixExpressionOperatorNotKeywordAst]
 
 __all__ = [
     "PostfixExpressionOperatorAst"]
