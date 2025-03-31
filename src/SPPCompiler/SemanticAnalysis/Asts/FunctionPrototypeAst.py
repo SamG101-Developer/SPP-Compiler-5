@@ -88,11 +88,14 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         super().pre_process(ctx)
 
         # Substitute the "Self" parameter's type with the name of the method.
+        generic_substitution = Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(pos=0), value=ctx.name)
+        generic_substitution = Seq([generic_substitution])
         if not isinstance(ctx, Asts.ModulePrototypeAst) and self.function_parameter_group.get_self_param():
-            generic_substitution = Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(pos=0), value=ctx.name)
-            generic_substitution = Seq([generic_substitution])
             self.function_parameter_group.get_self_param()._true_self_type = ctx.name
             self.function_parameter_group.get_self_param().type = self.function_parameter_group.get_self_param().type.sub_generics(generic_substitution)
+        for p in self.function_parameter_group.params:
+            p.type = p.type.sub_generics(generic_substitution)
+        self.return_type = self.return_type.sub_generics(generic_substitution)
 
         # Pre-process the annotations.
         for a in self.annotations:
