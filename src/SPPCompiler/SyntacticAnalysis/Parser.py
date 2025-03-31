@@ -1084,7 +1084,6 @@ class SppParser:
         p1 = self.parse_alternate(
             self.parse_postfix_op_function_call,
             self.parse_postfix_op_not_keyword,
-            self.parse_postfix_op_res_keyword,
             self.parse_postfix_op_member_access,
             self.parse_postfix_op_early_return)
         return p1
@@ -1126,12 +1125,6 @@ class SppParser:
         p1 = self.parse_once(self.parse_token_dot)
         p2 = self.parse_once(self.parse_keyword_not)
         return Asts.PostfixExpressionOperatorNotKeywordAst(c1, p1, p2)
-
-    def parse_postfix_op_res_keyword(self) -> Asts.PostfixExpressionOperatorResKeywordAst:
-        c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_token_dot)
-        p2 = self.parse_once(self.parse_keyword_res)
-        return Asts.PostfixExpressionOperatorResKeywordAst(c1, p1, p2)
 
     # ===== CONVENTIONS =====
 

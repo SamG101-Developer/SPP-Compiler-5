@@ -57,14 +57,8 @@ class AstFunctionUtils:
 
         # Todo: variables that are FunXXX types don't work here. They don't have their own scopes.
 
-        # Special function: ".next()" on generators.
-        if isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.op, Asts.PostfixExpressionOperatorResKeywordAst):
-            function_owner_type = lhs.lhs.infer_type(sm)
-            function_name = Asts.IdentifierAst(lhs.op.pos, "resume")
-            function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
-
         # Runtime access into an object: "object.method()"
-        elif isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
+        if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
             function_owner_type = lhs.lhs.infer_type(sm)
             function_name = lhs.op.field
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
