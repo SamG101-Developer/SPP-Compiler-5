@@ -4,6 +4,7 @@ import copy
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, TYPE_CHECKING
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -45,6 +46,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     def determine_overload(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
         # function's name and its owner type/namespace.
+        from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         # Todo: Change this to detecting FunMov/Mut/Ref superimpositions over the type
         function_owner_type, function_owner_scope, function_name = AstFunctionUtils.get_function_owner_type_and_function_name(sm, lhs)
@@ -118,20 +120,30 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
-                    temp_manager = ScopeManager(sm.global_scope, function_scope)
-
                     new_overload = copy.deepcopy(function_overload)
-                    new_overload.generic_parameter_group.params = Seq()
+                    tm = ScopeManager(sm.global_scope, function_scope)
+
+                    new_overload.generic_parameter_group.parameters = Seq()
                     for p in new_overload.function_parameter_group.params:
                         p.type = p.type.sub_generics(generic_arguments)
-                    for p in new_overload.function_parameter_group.params:
-                        p.type.analyse_semantics(temp_manager, **kwargs)
+                        p.type.analyse_semantics(tm, **kwargs)
                     new_overload.return_type = new_overload.return_type.sub_generics(generic_arguments)
-                    new_overload.return_type.analyse_semantics(temp_manager, **kwargs)
+                    new_overload.return_type.analyse_semantics(tm, **kwargs)
+
+                    # Todo: I don't want this here
+                    if (cs := new_overload.return_type.get_conventions()).not_empty():
+                        raise SemanticErrors.InvalidConventionLocationError().add(
+                            cs[0], new_overload.return_type, "function return type").scopes(sm.current_scope)
+
+                    # new_overload.generate_top_level_scopes(tm)
+                    # tm.reset(new_overload._scope)
 
                     parameters = new_overload.function_parameter_group.params.copy()
+                    # if new_overload not in function_overload._generic_overrides:
+                    #     function_overload._generic_overrides.append(new_overload)
+                    #     new_overload.analyse_semantics(tm, **(kwargs | {"no_scope": True}))
                     function_overload = new_overload
-                    function_scope = temp_manager.current_scope
+                    function_scope = tm.current_scope
 
                 # Type check the arguments against the parameters.
                 sorted_arguments = arguments.sort(key=lambda a: parameter_names.index(a.name))
@@ -209,6 +221,36 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         self.generic_argument_group.analyse_semantics(sm, **kwargs)
         self.determine_overload(sm, lhs, **kwargs)  # Also adds the "self" argument if needed.
         self.function_argument_group.analyse_semantics(sm, target_proto=self._overload[1], is_async=self._is_async, **kwargs)
+
+        print("-" * 100)
+        print(f"Check: {lhs}{self}")
+        print(f"Is coroutine?: {self._overload[1].tok_fun.token_type == SppTokenType.KwCor}")
+
+        # Link references created by the function call to the overload.
+        if self._overload[1].tok_fun.token_type == SppTokenType.KwCor:
+            coro_return_type = self.infer_type(sm, lhs, **kwargs)
+            print(f"Coro return type: {coro_return_type}")
+
+            # Immutable reference invalidates all mutable references.
+            if Asts.ConventionRefAst in coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_conventions().map(type):
+                print("Immutable reference returned")
+                outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
+                for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
+                    if is_mutable:
+                        outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
+
+                print(f"Adding new referents: {kwargs.get("assignment", Seq())}")
+                outermost.memory_info.refer_to_asts = Seq([(ast, False) for ast in kwargs.get("assignment", Seq())])
+
+            # Mutable reference invalidates all mutable and immutable references.
+            elif Asts.ConventionMutAst in coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_conventions().map(type):
+                print("Mutable reference returned")
+                outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
+                for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
+                    outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
+
+                print(f"Adding new referents: {kwargs.get("assignment", Seq())}")
+                outermost.memory_info.refer_to_asts = Seq([(ast, True) for ast in kwargs.get("assignment", Seq())])
 
 
 __all__ = ["PostfixExpressionOperatorFunctionCallAst"]

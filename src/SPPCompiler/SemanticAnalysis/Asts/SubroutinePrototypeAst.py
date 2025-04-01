@@ -27,7 +27,8 @@ class SubroutinePrototypeAst(Asts.FunctionPrototypeAst):
                 final_member, self.return_type).scopes(sm.current_scope)
 
         # Move out of the current scope.
-        sm.move_out_of_current_scope()
+        if "no_scope" not in kwargs:
+            sm.move_out_of_current_scope()
 
 
 __all__ = [

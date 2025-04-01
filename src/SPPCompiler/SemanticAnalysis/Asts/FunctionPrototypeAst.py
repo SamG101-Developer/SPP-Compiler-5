@@ -176,7 +176,8 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         sm.move_out_of_current_scope()
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        sm.move_to_next_scope()
+        if "no_scope" not in kwargs:
+            sm.move_to_next_scope()
 
         # Analyse the semantics of everything except the body (subclasses handle this).
         for a in self.annotations:
@@ -214,7 +215,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             return CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
 
         # Class methods with "self" are the FunMov type.
-        if isinstance(self.function_parameter_group.get_self_param().convention, Asts.ConventionMovAst):
+        if self.function_parameter_group.get_self_param().convention is None:
             return CommonTypes.FunMov(self.pos, CommonTypes.Tup(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
 
         # Class methods with "&mut self" are the FunMut type.

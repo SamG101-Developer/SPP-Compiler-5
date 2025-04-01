@@ -117,7 +117,8 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Move into the class scope.
-        sm.move_to_next_scope()
+        if "no_scope" not in kwargs:
+            sm.move_to_next_scope()
 
         # Analyse the annotations.
         for a in self.annotations:
@@ -133,7 +134,8 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             raise SemanticErrors.RecursiveTypeDefinitionError(self, recursion).scopes(sm.current_scope)
 
         # Move out of the class scope.
-        sm.move_out_of_current_scope()
+        if "no_scope" not in kwargs:
+            sm.move_out_of_current_scope()
 
     def generate_llvm_declarations(self, sm: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
         # Move into the class scope.
