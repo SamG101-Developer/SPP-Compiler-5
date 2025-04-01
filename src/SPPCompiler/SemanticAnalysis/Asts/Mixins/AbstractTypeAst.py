@@ -127,37 +127,36 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @abstractmethod
-    def get_convention(self) -> Optional[Asts.ConventionAst]:
+    def get_conventions(self) -> Seq[Asts.ConventionAst]:
         """!
         Get the convention attached to a type.
         @return The convention attached to the type, or None if no convention is attached.
         """
 
-    @abstractmethod
-    def with_convention(self, convention: Asts.ConventionAst) -> Asts.TypeAst:
-        """
+    def with_conventions(self, conventions: Seq[Asts.ConventionAst]) -> Asts.TypeAst:
+        """!
         Create a new instance of a type (that contains this original type), which acts as a unary type wrapper, with the
         given convention. This is used to attach conventions to types, for example, "&T".
         @param convention The convention to attach to the type.
         @return The new type ast with the attached convention.
         """
 
+        if conventions.is_empty():
+            return self
+
+        main_type = self
+        for c in conventions.reverse():
+            main_type = Asts.TypeUnaryExpressionAst(
+                pos=main_type.pos, op=Asts.TypeUnaryOperatorBorrowAst(pos=main_type.pos, convention=c), rhs=main_type)
+        return main_type
+
     @abstractmethod
-    def without_convention(self) -> Asts.TypeAst:
-        """
+    def without_conventions(self) -> Asts.TypeAst:
+        """!
         Get this type without its associated convention, if it exists. This is used to remove the convention from a type
         when it is no longer needed.
         @return The type ast without the convention.
-
-        @todo Move the implementations into the subclasses.
         """
-
-        # If the type is a unary type expression with a borrow operator, then return the rhs of the expression.
-        if isinstance(self, Asts.TypeUnaryExpressionAst) and isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst):
-            return self.rhs
-
-        # Otherwise, return the type as is.
-        return self
 
 
 __all__ = [

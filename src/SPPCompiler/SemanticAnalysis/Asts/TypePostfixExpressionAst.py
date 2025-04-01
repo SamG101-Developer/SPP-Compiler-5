@@ -74,15 +74,10 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         raise NotImplementedError()
 
-    def get_convention(self) -> Optional[Asts.ConventionAst]:
-        return Asts.ConventionMovAst(pos=self.pos)
+    def get_conventions(self) -> Seq[Asts.ConventionAst]:
+        return Seq()
 
-    def with_convention(self, convention: Asts.ConventionAst) -> Asts.TypeAst:
-        if convention is None: return self
-        return Asts.TypeUnaryExpressionAst(
-            pos=self.pos, op=Asts.TypeUnaryOperatorBorrowAst(pos=self.pos, convention=convention), rhs=self)
-
-    def without_convention(self) -> Asts.TypeAst:
+    def without_conventions(self) -> Asts.TypeAst:
         return self
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
