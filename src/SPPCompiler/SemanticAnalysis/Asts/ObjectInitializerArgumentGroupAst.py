@@ -64,7 +64,7 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         # Get the attribute information from the class type.
         all_attributes = Seq([(c, class_symbol.scope) for c in class_symbol.type.body.members])
         for sup_scope in class_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)):
-            all_attributes += [(c, sup_scope) for c in sup_scope._ast.body.members]
+            all_attributes += Seq([(c, sup_scope) for c in sup_scope._ast.body.members])
         all_attribute_names = all_attributes.map(lambda x: x[0].name)
 
         # Check there are no duplicate argument names.
