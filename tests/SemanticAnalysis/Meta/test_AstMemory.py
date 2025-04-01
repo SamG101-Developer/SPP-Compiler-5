@@ -375,73 +375,40 @@ class TestAstMemory(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_coroutine_yielded_borrowed_value_use(self):
+    def test_invalid_borrow_invalidated_by_next_borrow_1(self):
+        # When yielding a second borrow, the first one should be invalidated.
         """
-        cls MyType[T] { }
-        sup [T] MyType[T] {
-            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut T, std::boolean::Bool] { }
+        cls MyType { }
+        sup MyType {
+            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut std::string::Str, std::boolean::Bool] { }
         }
 
         fun test() -> std::void::Void {
-            let mut g = MyType[std::number::BigInt]()
-            let iter = g.custom_iter_mut()
-            let x = iter.resume(false)
-            let y = iter.resume(false)
-            let z = x + y
+            let object = MyType()
+            let generator = object.custom_iter_mut()
+            let borrow1 = generator.resume(false)
+            let borrow2 = generator.resume(false)
+            let value = borrow1
         }
         """
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_coroutine_yielded_borrowed_value_use_2(self):
+    def test_invalid_borrow_invalidated_by_next_borrow_2(self):
+        # When yielding a second borrow, the first one should be invalidated.
         """
-        cls MyType[T] { }
-        sup [T] MyType[T] {
-            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut T, std::boolean::Bool] { }
+        cls MyType { }
+        sup MyType {
+            cor custom_iter_ref(&self) -> std::generator::Gen[&std::string::Str, std::boolean::Bool] { }
+            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut std::string::Str, std::boolean::Bool] { }
         }
 
         fun test() -> std::void::Void {
-            let mut g = MyType[std::number::BigInt]()
-            let x = g.custom_iter_mut().resume(false)
-            let y = g.custom_iter_mut().resume(false)
-            let a = x
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_mut_borrow_usage_invalidated(self):
-        """
-        cls MyType {
-            x: std::number::BigInt
-        }
-
-        sup MyType {
-            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut std::number::BigInt, std::boolean::Bool] { }
-        }
-
-        fun f() -> std::void::Void {
-            let mut my_type = MyType(x=123)
-            let generator1 = my_type.custom_iter_mut()
-            let generator2 = my_type.custom_iter_mut()
-            let a = generator1.resume(false)
-        }
-        """
-
-    @should_pass_compilation()
-    def test_valid_mut_borrow_usage_invalidated(self):
-        """
-        cls MyType {
-            x: std::number::BigInt
-        }
-
-        sup MyType {
-            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut std::number::BigInt, std::boolean::Bool] { }
-        }
-
-        fun f() -> std::void::Void {
-            let mut my_type = MyType(x=123)
-            let generator1 = my_type.custom_iter_mut()
-            let generator2 = my_type.custom_iter_mut()
-            let a = generator2.resume(false)
+            let mut object = MyType()
+            let generator_mut = object.custom_iter_mut()
+            let borrow1 = generator_mut.resume(false)
+            let generator_ref = object.custom_iter_ref()
+            let borrow2 = generator_ref.resume(false)
+            let value = borrow1
         }
         """
 

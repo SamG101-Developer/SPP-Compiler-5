@@ -7,7 +7,7 @@ class TestPostfixExpressionResKeywordAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_postfix_expression_res_borrow_invalidation_1(self):
         """
-        cor x() -> std::generator::Gen[Yield=std::number::BigInt, Send=std::number::BigInt] {
+        cor x() -> std::generator::Gen[Yield=&std::number::BigInt, Send=std::number::BigInt] {
             let (a, b) = (1, 2)
             gen &a
             gen &b
@@ -24,7 +24,7 @@ class TestPostfixExpressionResKeywordAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_postfix_expression_res_borrow_invalidation_2(self):
         """
-        cor x() -> std::generator::Gen[Yield=std::number::BigInt, Send=std::number::BigInt] {
+        cor x() -> std::generator::Gen[Yield=&std::number::BigInt, Send=std::number::BigInt] {
             let (a, b) = (1, 2)
             gen &a
             gen &b

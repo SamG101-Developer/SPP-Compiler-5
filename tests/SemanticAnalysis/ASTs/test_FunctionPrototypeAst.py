@@ -94,6 +94,28 @@ class TestFunctionPrototypeAst(CustomTestCase):
         fun f() -> &std::void::Void { }
         """
 
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_function_prototype_convention_mut_from_generic_substitution(self):
+        """
+        @no_impl
+        fun f[T]() -> T { }
+
+        fun g() -> std::void::Void {
+            let x = f[&mut std::string::Str]()
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_function_prototype_convention_ref_from_generic_substitution(self):
+        """
+        @no_impl
+        fun f[T]() -> T { }
+
+        fun g() -> std::void::Void {
+            let x = f[&std::string::Str]()
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_function_prototype_overload_parameter_count(self):
         """

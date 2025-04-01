@@ -159,13 +159,49 @@ class TestAssignmentStatementAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.MutabilityInvalidMutationError)
-    def test_invalid_assignment_ref_borrow_attribute(self):
+    def test_invalid_assignment_ref_borrow_attribute_1(self):
         """
         cls A {
             b: std::boolean::Bool
         }
 
         fun f(a: &A) -> std::void::Void {
+            a.b = true
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MutabilityInvalidMutationError)
+    def test_invalid_assignment_ref_borrow_attribute_2(self):
+        """
+        cls A {
+            b: std::boolean::Bool
+        }
+
+        fun f(a: &mut &A) -> std::void::Void {
+            a.b = true
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MutabilityInvalidMutationError)
+    def test_invalid_assignment_ref_borrow_attribute_3(self):
+        """
+        cls A {
+            b: std::boolean::Bool
+        }
+
+        fun f(a: &&mut A) -> std::void::Void {
+            a.b = true
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MutabilityInvalidMutationError)
+    def test_invalid_assignment_ref_borrow_attribute_4(self):
+        """
+        cls A {
+            b: std::boolean::Bool
+        }
+
+        fun f(a: &&A) -> std::void::Void {
             a.b = true
         }
         """

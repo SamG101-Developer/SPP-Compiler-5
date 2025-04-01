@@ -65,6 +65,30 @@ class TestClassAttributeAst(CustomTestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_class_attribute_convention_mut_from_generic_substitution(self):
+        """
+        cls A[T] {
+            a: T
+        }
+
+        fun f() -> std::void::Void {
+            let a = A[&mut std::string::Str]()
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_class_attribute_convention_ref_from_generic_substitution(self):
+        """
+        cls A[T] {
+            a: T
+        }
+
+        fun f() -> std::void::Void {
+            let a = A[&std::string::Str]()
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_class_attribute(self):
         """
