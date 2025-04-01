@@ -457,13 +457,14 @@ class AstFunctionUtils:
             # Check every generic argument on the infer target (function parameters or attributes; these are the generic
             # arguments that are known to be inferrable).
             for infer_target_name, infer_target_type in infer_target.items():
+                inferred_generic_argument = None
 
                 # Check for direct match (a: T vs a: BigInt).
-                if infer_target_type == generic_parameter_name:
+                if infer_target_type == generic_parameter_name and infer_target_name in infer_source:
                     inferred_generic_argument = infer_source[infer_target_name]
 
                 # Check for inner match (a: Vec[T] vs a: Vec[BigInt]).
-                else:
+                elif infer_target_name in infer_source:
                     corresponding_generic_parameter = infer_target_type.get_generic_parameter_for_argument(generic_parameter_name)
                     inferred_generic_argument = infer_source[infer_target_name].get_generic(corresponding_generic_parameter)
 
