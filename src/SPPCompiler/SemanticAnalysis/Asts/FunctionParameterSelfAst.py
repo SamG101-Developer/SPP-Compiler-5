@@ -14,14 +14,13 @@ from SPPCompiler.Utils.Sequence import Seq
 @dataclass
 class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.VariableLikeAst):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
-    convention: Asts.ConventionAst = field(default=None)
+    convention: Optional[Asts.ConventionAst] = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
     type: Asts.TypeAst = field(default=None)
     _arbitrary: bool = field(default=False)
     _true_self_type: Optional[Asts.TypeAst] = field(default=None)
 
     def __post_init__(self) -> None:
-        self.convention = self.convention or Asts.ConventionMovAst(pos=self.pos)
         self._arbitrary = self.type is not None
         self.type = self.type or CommonTypes.Self(self.pos)
         self._variant = "Self"
@@ -36,7 +35,7 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
         # Print the AST with auto-formatting.
         string = [
             self.tok_mut.print(printer) + " " if self.tok_mut else "",
-            self.convention.print(printer),
+            self.convention.print(printer) if self.convention else "",
             self.name.print(printer),
             f": {self.type}" if self._arbitrary else ""]
         return "".join(string)
@@ -61,7 +60,7 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
         if self._arbitrary:
 
             # The convention is taken from the arbitrary type.
-            self.convention = self.type.get_convention()
+            self.convention = self.type.get_conventions()[0] if self.type.get_conventions() else None
 
             deref_type = CommonTypes.DerefRef(self.pos, self._true_self_type)
             deref_type.analyse_semantics(sm, **kwargs)
@@ -81,7 +80,7 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
         # Mark the symbol as initialized.
         symbol = sm.current_scope.get_symbol(self.name)
         symbol.is_mutable = self.tok_mut is not None or isinstance(self.convention, Asts.ConventionMutAst)
-        symbol.memory_info.ast_borrowed = self.convention if type(self.convention) is not Asts.ConventionMovAst else None
+        symbol.memory_info.ast_borrowed = self.convention
         symbol.memory_info.is_borrow_mut = isinstance(self.convention, Asts.ConventionMutAst)
         symbol.memory_info.is_borrow_ref = isinstance(self.convention, Asts.ConventionRefAst)
         symbol.memory_info.initialized_by(self)

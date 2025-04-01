@@ -138,9 +138,9 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Ensure the function return type does not have a convention.
-        if type(c := self.return_type.get_convention()) is not Asts.ConventionMovAst:
+        if (cs := self.return_type.get_conventions()).not_empty():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                c, self.return_type, "function return type").scopes(sm.current_scope)
+                cs[0], self.return_type, "function return type").scopes(sm.current_scope)
 
         # Generate the generic parameters and attributes of the function.
         for p in self.generic_parameter_group.parameters:
@@ -181,9 +181,16 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         # Analyse the semantics of everything except the body (subclasses handle this).
         for a in self.annotations:
             a.analyse_semantics(sm, **kwargs)
+
         self.generic_parameter_group.analyse_semantics(sm, **kwargs)
         self.function_parameter_group.analyse_semantics(sm, **kwargs)
+
+        # Repeat the check here for generic substitution return types.
         self.return_type.analyse_semantics(sm, **kwargs)
+        if (cs := self.return_type.get_conventions()).not_empty():
+            raise SemanticErrors.InvalidConventionLocationError().add(
+                cs[0], self.return_type, "function return type").scopes(sm.current_scope)
+
         self.where_block.analyse_semantics(sm, **kwargs)
 
         # Subclasses will finish analysis and exit the scope.

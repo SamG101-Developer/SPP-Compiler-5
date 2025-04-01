@@ -61,10 +61,10 @@ class FunctionParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         ast.analyse_semantics(sm, **kwargs)
 
         # Mark the symbol as initialized.
-        convention = self.type.get_convention()
+        convention = self.type.get_conventions()[0] if self.type.get_conventions() else None
         for name in self.variable.extract_names:
             symbol = sm.current_scope.get_symbol(name)
-            symbol.memory_info.ast_borrowed = convention if type(convention) is not Asts.ConventionMovAst else None
+            symbol.memory_info.ast_borrowed = convention
             symbol.memory_info.is_borrow_mut = isinstance(convention, Asts.ConventionMutAst)
             symbol.memory_info.is_borrow_ref = isinstance(convention, Asts.ConventionRefAst)
             symbol.memory_info.initialized_by(self)

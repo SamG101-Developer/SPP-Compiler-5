@@ -57,9 +57,9 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         super().generate_top_level_scopes(sm)
 
         # Ensure the superimposition type does not have a convention.
-        if type(c := self.name.get_convention()) is not Asts.ConventionMovAst:
+        if (cs := self.name.get_conventions()).not_empty():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                c, self.name, "superimposition type").scopes(sm.current_scope)
+                cs[0], self.name, "superimposition type").scopes(sm.current_scope)
 
         # Generate the symbols for the generic parameter group, and the self type.
         for p in self.generic_parameter_group.parameters:

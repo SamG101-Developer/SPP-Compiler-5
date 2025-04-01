@@ -77,12 +77,14 @@ class UseStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.Ty
             a.generate_top_level_scopes(sm)
 
         # Ensure the old type does not have a convention.
-        if type(c := self.old_type.get_convention()) is not Asts.ConventionMovAst:
-            raise SemanticErrors.InvalidConventionLocationError().add(c, self.old_type, "use statement old type").scopes(sm.current_scope)
+        if (cs := self.old_type.get_conventions()).not_empty():
+            raise SemanticErrors.InvalidConventionLocationError().add(
+                cs[0], self.old_type, "use statement old type").scopes(sm.current_scope)
 
         # Ensure the new type does not have a convention.
-        if type(c := self.new_type.get_convention()) is not Asts.ConventionMovAst:
-            raise SemanticErrors.InvalidConventionLocationError().add(c, self.new_type, "use statement new type").scopes(sm.current_scope)
+        if (cs := self.new_type.get_conventions()).not_empty():
+            raise SemanticErrors.InvalidConventionLocationError().add(
+                cs[0], self.new_type, "use statement new type").scopes(sm.current_scope)
 
         # Create a class ast for the aliased type, and generate it.
         cls_ast = CodeInjection.inject_code(

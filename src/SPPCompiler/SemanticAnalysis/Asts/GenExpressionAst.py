@@ -11,13 +11,14 @@ from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
 class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_gen: Asts.TokenAst = field(default=None)
     kw_with: Optional[Asts.TokenAst] = field(default=None)
-    convention: Asts.ConventionAst = field(default=None)
+    convention: Optional[Asts.ConventionAst] = field(default=None)
     expression: Optional[Asts.ExpressionAst] = field(default=None)
 
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
@@ -54,7 +55,7 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expression:
             self.expression.analyse_semantics(sm, **kwargs)
-            expression_type = self.expression.infer_type(sm, **kwargs).with_convention(self.convention)
+            expression_type = self.expression.infer_type(sm, **kwargs).with_conventions(Seq([self.convention]) if self.convention else Seq())
         else:
             void_type = CommonTypes.Void(self.pos)
             expression_type = void_type
@@ -74,8 +75,8 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Apply the function argument law of exclusivity checks to the expression.
         if self.expression:
             ast = CodeInjection.inject_code(
-                f"({self.convention} {self.expression})", SppParser.parse_function_call_arguments,
-                pos_adjust=self.convention.pos)
+                f"({self.convention if self.convention else ""} {self.expression})", SppParser.parse_function_call_arguments,
+                pos_adjust=(self.convention or self.expression).pos)
             ast.analyse_semantics(sm, **kwargs)
 
 

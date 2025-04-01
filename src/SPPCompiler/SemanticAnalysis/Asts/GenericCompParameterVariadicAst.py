@@ -49,9 +49,9 @@ class GenericCompParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Ensure the type does not have a convention.
-        if type(c := self.type.get_convention()) is not Asts.ConventionMovAst:
+        if (cs := self.type.get_conventions()).not_empty():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                c, self.type, "comp generic parameter type").scopes(sm.current_scope)
+                cs[0], self.type, "comp generic parameter type").scopes(sm.current_scope)
 
         # Create a variable symbol for this constant in the current scope (class / function).
         symbol = VariableSymbol(

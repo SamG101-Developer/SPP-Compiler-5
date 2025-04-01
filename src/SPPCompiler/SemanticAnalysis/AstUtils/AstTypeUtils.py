@@ -100,9 +100,12 @@ class AstTypeUtils:
             sm: ScopeManager, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol, is_tuple: bool) -> Scope:
 
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         # Create a new scope & symbol for the generic substituted type.
-        new_scope = Scope(type_part, base_symbol.scope.parent, ast=copy.deepcopy(base_symbol.scope._ast))
+        new_cls_prototype = copy.deepcopy(base_symbol.scope._ast)
+        new_cls_prototype.generic_parameter_group.parameters = Seq()
+        new_scope = Scope(type_part, base_symbol.scope.parent, ast=new_cls_prototype)
         new_symbol = builtins.type(base_symbol)(
             name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
             visibility=base_symbol.visibility)
@@ -125,6 +128,11 @@ class AstTypeUtils:
         for generic_argument in type_part.generic_argument_group.arguments:
             generic_symbol = AstTypeUtils.create_generic_symbol(sm, generic_argument)
             new_scope.add_symbol(generic_symbol)
+
+        tm = ScopeManager(sm.global_scope, new_scope)
+        for attribute in new_scope._ast.body.members:
+            attribute.type = attribute.type.sub_generics(type_part.generic_argument_group.arguments)
+            attribute.analyse_semantics(tm)
 
         # Return the new scope.
         return new_scope

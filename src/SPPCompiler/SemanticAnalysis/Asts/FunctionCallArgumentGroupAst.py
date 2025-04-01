@@ -95,7 +95,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
         # Mark if pins are required, and the ast to mark as errored if required.
         pins_required = is_async or isinstance(target_proto, Asts.CoroutinePrototypeAst)
-        pin_error_ast = is_async or target_proto
 
         # Define the borrow sets to maintain the law of exclusivity.
         borrows_ref = Seq()
@@ -112,7 +111,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
             if not symbol:
                 continue
 
-            if isinstance(argument.convention, Asts.ConventionMovAst):
+            if argument.convention is None:
                 # Don't recheck the moves or partial moves, but ensure the pins are maintained here.
                 AstMemoryUtils.enforce_memory_integrity(
                     argument.value, argument, sm,
@@ -123,10 +122,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                     raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value).scopes(sm.current_scope)
 
             elif isinstance(argument.convention, Asts.ConventionMutAst):
-                # Check the argument being mutably borrowed isn't an immutable borrow.
-                if symbol.memory_info.is_borrow_ref:
-                    raise SemanticErrors.MutabilityInvalidMutationError().add(argument.value, argument.convention, symbol.memory_info.ast_borrowed).scopes(sm.current_scope)
-
                 # Check the argument's value is mutable.
                 if not symbol.is_mutable:
                     raise SemanticErrors.MutabilityInvalidMutationError().add(argument.value, argument.convention, symbol.memory_info.ast_initialization).scopes(sm.current_scope)
@@ -139,11 +134,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 if pins_required and not (overlap := symbol.memory_info.ast_pinned.find(lambda p: AstMemoryUtils.left_overlap(p, argument.value))):
                     symbol.memory_info.ast_pinned.append(argument.value)
 
-                # No error with pinning -> mark the pin target.
-                elif pins_required and "assignment" in kwargs and (target := kwargs["assignment"]):
-                    for old_pin_link in symbol.memory_info.pin_links: sm.current_scope.get_symbol(old_pin_link).memory_info.moved_by(self)
-                    symbol.memory_info.pin_links = target
-
                 # Add the mutable borrow to the mutable borrow set.
                 borrows_mut.append(argument.value)
 
@@ -155,11 +145,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 # If the target requires pinning, pin it automatically.
                 if pins_required and not (overlap := symbol.memory_info.ast_pinned.find(lambda p: AstMemoryUtils.left_overlap(p, argument.value))):
                     symbol.memory_info.ast_pinned.append(argument.value)
-
-                # No error with pinning -> mark the pin target.
-                elif pins_required and "assignment" in kwargs and (target := kwargs["assignment"]):
-                    for old_pin_link in symbol.memory_info.pin_links: sm.current_scope.get_symbol(old_pin_link).memory_info.moved_by(self)
-                    symbol.memory_info.pin_links = target
 
                 # Add the immutable borrow to the immutable borrow set.
                 borrows_ref.append(argument.value)

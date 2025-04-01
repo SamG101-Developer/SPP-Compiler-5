@@ -36,8 +36,6 @@ class MemoryInfo:
         is_inconsistently_moved: If the memory is inconsistently moved from branches => (branch, is_moved).
         is_inconsistently_partially_moved: If the memory is inconsistently partially moved from branches => (branch, is_partially_moved).
         is_inconsistently_pinned: If the memory is inconsistently pinned from branches => (branch, is_pinned).
-
-        pin_links: The symbol that this memory is pinned for (async/coroutine call etc)
     """
 
     ast_initialization: Optional[Asts.Ast] = field(default=None)
@@ -74,15 +72,6 @@ class MemoryInfo:
         if ast in self.ast_partially_moved:
             self.ast_partially_moved.remove(ast)
             self.ast_partially_moved.is_empty() and self.initialized_by(ast)
-
-    @property
-    def convention(self) -> Optional[Asts.ConventionAst]:
-        # Return the convention of the symbol.
-        if self.is_borrow_mut:
-            return Asts.ConventionMutAst()
-        elif self.is_borrow_ref:
-            return Asts.ConventionRefAst()
-        return Asts.ConventionMovAst()
 
     def consistency_attrs(self) -> Tuple[Asts.Ast, Asts.Ast, Seq[Asts.Ast], Seq[Asts.Ast], int]:
         return self.ast_initialization, self.ast_moved, self.ast_partially_moved.copy(), self.ast_pinned.copy(), self.initialization_counter

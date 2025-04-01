@@ -7,6 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
@@ -17,7 +18,6 @@ class FunctionCallArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mi
     _type_from_self: Asts.TypeAst = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self.convention = self.convention or Asts.ConventionMovAst(pos=self.pos)
         self._variant = "Unnamed"
         assert self.value is not None
 
@@ -29,7 +29,7 @@ class FunctionCallArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mi
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.convention.print(printer),
+            self.convention.print(printer) if self.convention else "",
             self.tok_unpack.print(printer) if self.tok_unpack is not None else "",
             self.value.print(printer)]
         return "".join(string)
@@ -41,11 +41,12 @@ class FunctionCallArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mi
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         if self._type_from_self:
             return self._type_from_self
-        inferred_type = self.value.infer_type(sm, **kwargs)
 
-        # The convention is either from the convention attribute or the symbol information.
-        true_convention = inferred_type.get_convention() if isinstance(self.convention, Asts.ConventionMovAst) else self.convention
-        return inferred_type.with_convention(true_convention)
+        # Attach the convention to the inferred type.
+        inferred_type = self.value.infer_type(sm, **kwargs)
+        if self.convention is not None:
+            inferred_type = inferred_type.with_conventions(Seq([self.convention]))
+        return inferred_type
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
