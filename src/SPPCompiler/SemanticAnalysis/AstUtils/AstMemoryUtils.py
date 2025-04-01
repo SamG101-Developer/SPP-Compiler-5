@@ -54,7 +54,14 @@ class MemoryInfo:
     is_inconsistently_partially_moved: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
     is_inconsistently_pinned: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
 
-    pin_links: Seq[Asts.Ast] = field(default_factory=Seq)
+    refer_to_asts: Seq[tuple[Asts.Ast, bool]] = field(default_factory=Seq)
+
+    def invalidate_referred_borrow(self, sm: ScopeManager, ast: Asts.Ast, mover: Asts.Ast) -> None:
+        # Invalidate the referred borrow AST recursively.
+        sym = sm.current_scope.get_symbol(ast)
+        for r in sym.memory_info.refer_to_asts:
+            self.invalidate_referred_borrow(sm, r[0], mover)
+        sym.memory_info.moved_by(mover)
 
     def moved_by(self, ast: Asts.Ast) -> None:
         # If a symbol's contents is moved, mark the symbol as moved and non-initialized.
