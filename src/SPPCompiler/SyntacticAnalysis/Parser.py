@@ -278,7 +278,7 @@ class SppParser:
 
     def parse_function_call_argument_unnamed(self) -> Asts.FunctionCallArgumentUnnamedAst:
         c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_convention)
+        p1 = self.parse_optional(self.parse_convention)
         p2 = self.parse_optional(self.parse_token_double_dot)
         p3 = self.parse_once(self.parse_expression)
         return Asts.FunctionCallArgumentUnnamedAst(c1, p1, p2, p3)
@@ -287,7 +287,7 @@ class SppParser:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_identifier)
         p2 = self.parse_once(self.parse_token_assign)
-        p3 = self.parse_once(self.parse_convention)
+        p3 = self.parse_optional(self.parse_convention)
         p4 = self.parse_once(self.parse_expression)
         return Asts.FunctionCallArgumentNamedAst(c1, p1, p2, p3, p4)
 
@@ -310,18 +310,17 @@ class SppParser:
     def parse_function_parameter_self(self) -> Asts.FunctionParameterSelfAst:
         c1 = self.current_pos()
         p1 = self.parse_optional(self.parse_keyword_mut)
-        p2 = self.parse_once(self.parse_convention)
+        p2 = self.parse_optional(self.parse_convention)
         p3 = self.parse_once(self.parse_self_keyword)
         return Asts.FunctionParameterSelfAst(c1, p1, p2, p3)
 
     def parse_function_parameter_self_with_arbitrary_type(self) -> Asts.FunctionParameterSelfAst:
         c1 = self.current_pos()
         p1 = self.parse_optional(self.parse_keyword_mut)
-        p2 = self.parse_once(self.parse_convention_mov)
-        p3 = self.parse_once(self.parse_self_keyword)
-        p4 = self.parse_once(self.parse_token_colon)
-        p5 = self.parse_once(self.parse_type)
-        return Asts.FunctionParameterSelfAst(c1, p1, p2, p3, p5)
+        p2 = self.parse_once(self.parse_self_keyword)
+        p3 = self.parse_once(self.parse_token_colon)
+        p4 = self.parse_once(self.parse_type)
+        return Asts.FunctionParameterSelfAst(c1, p1, None, p2, p4)
 
     def parse_function_parameter_required(self) -> Asts.FunctionParameterRequiredAst:
         c1 = self.current_pos()
@@ -635,12 +634,12 @@ class SppParser:
     def parse_gen_expression_normal_no_expression(self) -> Asts.GenExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_keyword_gen)
-        return Asts.GenExpressionAst(c1, p1, None, Asts.ConventionMovAst(p1.pos), None)
+        return Asts.GenExpressionAst(c1, p1, None, None, None)
 
     def parse_gen_expression_normal_with_expression(self) -> Asts.GenExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_keyword_gen)
-        p2 = self.parse_once(self.parse_convention)
+        p2 = self.parse_optional(self.parse_convention)
         p3 = self.parse_once(self.parse_expression)
         return Asts.GenExpressionAst(c1, p1, None, p2, p3)
 
@@ -649,7 +648,7 @@ class SppParser:
         p1 = self.parse_once(self.parse_keyword_gen)
         p2 = self.parse_once(self.parse_keyword_with)
         p3 = self.parse_once(self.parse_expression)
-        return Asts.GenExpressionAst(c1, p1, p2, Asts.ConventionMovAst(p3.pos), p3)
+        return Asts.GenExpressionAst(c1, p1, p2, None, p3)
 
     # ===== STATEMENTS =====
 
@@ -1131,13 +1130,8 @@ class SppParser:
     def parse_convention(self) -> Asts.ConventionAst:
         p1 = self.parse_alternate(
             self.parse_convention_mut,
-            self.parse_convention_ref,
-            self.parse_convention_mov)
+            self.parse_convention_ref)
         return p1
-
-    def parse_convention_mov(self) -> Asts.ConventionMovAst:
-        c1 = self.current_pos()
-        return Asts.ConventionMovAst(c1)
 
     def parse_convention_ref(self) -> Asts.ConventionRefAst:
         c1 = self.current_pos()
@@ -1825,9 +1819,6 @@ class SppParser:
 
     def parse_keyword_not(self) -> Asts.TokenAst:
         return self.parse_keyword_raw(RawKeywordType.Not, SppTokenType.KwNot, requires_following_space=False)
-
-    def parse_keyword_res(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Res, SppTokenType.KwRes, requires_following_space=False)
 
     def parse_keyword_true(self) -> Asts.TokenAst:
         return self.parse_keyword_raw(RawKeywordType.True_, SppTokenType.KwTrue, requires_following_space=False)

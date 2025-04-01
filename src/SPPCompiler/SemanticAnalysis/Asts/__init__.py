@@ -21,7 +21,6 @@ from SPPCompiler.SemanticAnalysis.Asts.ClassImplementationAst import *
 from SPPCompiler.SemanticAnalysis.Asts.ClassMemberAst import *
 from SPPCompiler.SemanticAnalysis.Asts.ClassPrototypeAst import *
 
-from SPPCompiler.SemanticAnalysis.Asts.ConventionMovAst import *
 from SPPCompiler.SemanticAnalysis.Asts.ConventionMutAst import *
 from SPPCompiler.SemanticAnalysis.Asts.ConventionRefAst import *
 from SPPCompiler.SemanticAnalysis.Asts.ConventionAst import *

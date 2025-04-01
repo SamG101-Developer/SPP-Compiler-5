@@ -5,7 +5,6 @@ from typing import Union
 from SPPCompiler.SemanticAnalysis import Asts
 
 ConventionAst = Union[
-    Asts.ConventionMovAst,
     Asts.ConventionMutAst,
     Asts.ConventionRefAst]
 
