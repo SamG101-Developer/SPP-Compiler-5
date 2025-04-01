@@ -93,10 +93,10 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
                     lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
-            # Attribute assignment (ie "x.y = z"), for a borrowed symbol, requires an outermost mutable borrow.
-            elif isinstance(lhs_expr, Asts.PostfixExpressionAst) and (lhs_sym.memory_info.ast_borrowed and lhs_sym.memory_info.is_borrow_ref):
+            # Attribute assignment (ie "x.y = z"), for a borrowed symbol, cannot contain an immutable borrow.
+            elif isinstance(lhs_expr, Asts.PostfixExpressionAst) and (immutable := lhs_sym.name.infer_type(sm, **kwargs).get_conventions().find(lambda c: type(c) is Asts.ConventionRefAst)):
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
-                    lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(sm.current_scope)
+                    lhs_sym.name, self.op, immutable).scopes(sm.current_scope)
 
             # Ensure the lhs and rhs have the same type and convention (cannot do "Str = &Str" for example).
             lhs_type = lhs_expr.infer_type(sm, **kwargs)
