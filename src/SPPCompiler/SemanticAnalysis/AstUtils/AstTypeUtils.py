@@ -108,7 +108,7 @@ class AstTypeUtils:
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=new_cls_prototype)
         new_symbol = builtins.type(base_symbol)(
             name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
-            visibility=base_symbol.visibility)
+            visibility=base_symbol.visibility, scope_defined_in=sm.current_scope)
 
         if isinstance(base_symbol, AliasSymbol):
             new_symbol.old_type = base_symbol.old_type
@@ -117,9 +117,6 @@ class AstTypeUtils:
         new_scope.parent.add_symbol(new_symbol)
         new_scope._children = base_symbol.scope._children
         new_scope._symbol_table = copy.deepcopy(base_symbol.scope._symbol_table)
-        new_scope._direct_sup_scopes = AstTypeUtils.create_generic_sup_scopes(sm, base_symbol.scope, type_part.generic_argument_group)
-        new_scope._direct_sub_scopes = base_symbol.scope._direct_sub_scopes
-        new_scope._non_generic_scope = base_symbol.scope
 
         # No more checks for the tuple type (avoid recursion, is textual because it is to do with generics).
         if is_tuple: return new_scope
@@ -128,6 +125,10 @@ class AstTypeUtils:
         for generic_argument in type_part.generic_argument_group.arguments:
             generic_symbol = AstTypeUtils.create_generic_symbol(sm, generic_argument)
             new_scope.add_symbol(generic_symbol)
+
+        new_scope._direct_sup_scopes = AstTypeUtils.create_generic_sup_scopes(sm, base_symbol.scope, new_scope, type_part.generic_argument_group)
+        new_scope._direct_sub_scopes = base_symbol.scope._direct_sub_scopes
+        new_scope._non_generic_scope = base_symbol.scope
 
         tm = ScopeManager(sm.global_scope, new_scope)
         for attribute in new_scope._ast.body.members:
@@ -139,10 +140,9 @@ class AstTypeUtils:
 
     @staticmethod
     def create_generic_sup_scopes(
-            sm: ScopeManager, base_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
+            sm: ScopeManager, base_scope: Scope, true_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
 
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-        from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         old_scopes = base_scope._direct_sup_scopes
         new_scopes = Seq()
@@ -156,13 +156,12 @@ class AstTypeUtils:
 
             # Create the scope for the new super class type. This will handle recursive sup-scope creation.
             elif isinstance(scope._ast, Asts.SupPrototypeExtensionAst):
-                temp_manager = ScopeManager(sm.global_scope, base_scope.parent)
                 new_fq_super_type = copy.deepcopy(scope._ast.super_class)
                 new_fq_super_type = new_fq_super_type.sub_generics(generic_arguments.arguments)
-                new_fq_super_type.analyse_semantics(temp_manager)
+                new_fq_super_type.analyse_semantics(sm)
 
                 # Get the class scope generated for the super class and add it to the new scopes too.
-                modified_class_scope = temp_manager.current_scope.get_symbol(new_fq_super_type).scope
+                modified_class_scope = true_scope.get_symbol(new_fq_super_type).scope
                 if modified_class_scope not in new_scopes:
                     new_scopes.append(modified_class_scope)
 

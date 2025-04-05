@@ -86,7 +86,7 @@ class Scope:
             new_fq_name = symbol.fq_name.sub_generics(generics)
             new_symbol = self._non_generic_scope.get_symbol(new_fq_name)
 
-        return new_symbol
+        return new_symbol or symbol
 
     def add_symbol(self, symbol: Symbol) -> None:
         if isinstance(symbol, TypeSymbol):
@@ -100,6 +100,7 @@ class Scope:
         self._symbol_table.rem(symbol_name)
 
     def all_symbols(self, exclusive: bool = False) -> Seq[Symbol]:
+
         # Get all the symbols in the scope.
         symbols = self._symbol_table.all()
         if not exclusive and self._parent:
