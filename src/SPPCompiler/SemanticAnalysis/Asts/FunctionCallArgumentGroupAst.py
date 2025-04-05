@@ -122,6 +122,10 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                     raise SemanticErrors.MemoryOverlapUsageError().add(overlap, argument.value).scopes(sm.current_scope)
 
             elif isinstance(argument.convention, Asts.ConventionMutAst):
+                # Check the argument isn't already an immutable borrow.
+                if symbol.memory_info.is_borrow_ref:
+                    raise SemanticErrors.MutabilityInvalidMutationError().add(argument.value, argument.convention, symbol.memory_info.ast_initialization).scopes(sm.current_scope)
+
                 # Check the argument's value is mutable.
                 if not symbol.is_mutable:
                     raise SemanticErrors.MutabilityInvalidMutationError().add(argument.value, argument.convention, symbol.memory_info.ast_initialization).scopes(sm.current_scope)
