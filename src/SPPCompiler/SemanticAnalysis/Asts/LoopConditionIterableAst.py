@@ -11,6 +11,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.Utils.Sequence import Seq
 
 
 # Todo:
@@ -60,11 +61,17 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Check the iterable is a generator type.
         iterable_type = self.iterable.infer_type(sm, **kwargs)
-        superimposed_types = sm.current_scope.get_symbol(iterable_type).scope.sup_types.map(lambda t: t.without_generics())
-        superimposed_types.append(sm.current_scope.get_symbol(iterable_type).fq_name.without_generics())
-        if not superimposed_types.any(lambda t: t.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope)):
+        sup_types = sm.current_scope.get_symbol(iterable_type).scope.sup_types
+        sup_types.append(sm.current_scope.get_symbol(iterable_type).fq_name)
+        if not sup_types.any(lambda t: t.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope)):
             raise SemanticErrors.ExpressionNotGeneratorError().add(
                 self.iterable, iterable_type, "loop").scopes(sm.current_scope)
+
+        # Set the iterable type to the superimposed generator type.
+        for sup_type in sup_types + Seq([iterable_type]):
+            if sup_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope):
+                iterable_type = sup_type
+                break
 
         # Create a "let" statement to introduce the loop variable into the scope.
         gen_type = iterable_type.type_parts()[0].generic_argument_group["Yield"].value
@@ -75,10 +82,11 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Set the memory information of the symbol based on the type of iteration.
         symbols = self.variable.extract_names.map(lambda n: sm.current_scope.get_symbol(n))
+        yield_type = iterable_type.type_parts()[0].generic_argument_group["Yield"].value
         for symbol in symbols:
-            symbol.memory_info.ast_borrowed = self if iterable_type.type_parts()[0].value in ["GenMut", "GenRef"] else None
-            symbol.memory_info.is_borrow_mut = iterable_type.type_parts()[0].value == "GenMut"
-            symbol.memory_info.is_borrow_ref = iterable_type.type_parts()[0].value == "GenRef"
+            symbol.memory_info.ast_borrowed = self if yield_type.get_conventions().map(type).contains_any(Seq([Asts.ConventionMutAst, Asts.ConventionRefAst])) else None
+            symbol.memory_info.is_borrow_mut = yield_type.get_conventions().find(lambda c: isinstance(c, Asts.ConventionMutAst)) is not None
+            symbol.memory_info.is_borrow_ref = yield_type.get_conventions().find(lambda c: isinstance(c, Asts.ConventionRefAst)) is not None
             symbol.memory_info.initialized_by(self)
 
 

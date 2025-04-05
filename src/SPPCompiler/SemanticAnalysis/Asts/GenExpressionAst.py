@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
@@ -30,9 +30,9 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.kw_gen.print(printer),
-            self.kw_with.print(printer) if self.kw_with else "",
-            self.convention.print(printer),
+            self.kw_gen.print(printer) + " ",
+            (self.kw_with.print(printer) + " ") if self.kw_with else "",
+            self.convention.print(printer) if self.convention else "",
             self.expression.print(printer) if self.expression else ""]
         return "".join(string)
 
@@ -62,6 +62,11 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Determine the yield type of the enclosing function.
         generator_type = kwargs["function_ret_type"]
+        sup_types = sm.current_scope.get_symbol(generator_type).scope.sup_types + Seq([generator_type])
+        for sup_type in sup_types:
+            if sup_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope):
+                generator_type = sup_type
+                break
         yield_type = generator_type.type_parts()[0].generic_argument_group["Yield"].value
 
         # Check the expression type matches the expected type.
@@ -69,8 +74,8 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.TypeMismatchError().add(yield_type, yield_type, expression_type, expression_type).scopes(sm.current_scope)
 
         # If the "with" keyword is being used, the expression type must be a Gen type that matches the function_ret_type.
-        if self.kw_with and not generator_type.symbolic_eq(expression_type, sm.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(generator_type, generator_type, expression_type, self.expression).scopes(sm.current_scope)
+        if self.kw_with and not kwargs["function_ret_type"].symbolic_eq(expression_type, sm.current_scope):
+            raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"], kwargs["function_ret_type"], self.expression, expression_type).scopes(sm.current_scope)
 
         # Apply the function argument law of exclusivity checks to the expression.
         if self.expression:
