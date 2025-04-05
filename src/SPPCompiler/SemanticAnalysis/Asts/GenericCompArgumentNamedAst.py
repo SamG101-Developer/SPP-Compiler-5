@@ -19,6 +19,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def __post_init__(self) -> None:
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
         self._variant = "Named"
+        self.value = self.value or self.name
         assert self.name is not None
 
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
@@ -31,12 +32,12 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         string = [
             self.name.print(printer),
             self.tok_assign.print(printer),
-            self.value.print(printer) if self.value else "?"]
+            self.value.print(printer)]  # todo ?
         return " ".join(string)
 
     @property
     def pos_end(self) -> int:
-        return (self.value or self.tok_assign).pos_end
+        return self.value.pos
 
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:

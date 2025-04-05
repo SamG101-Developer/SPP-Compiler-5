@@ -18,6 +18,7 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def __post_init__(self) -> None:
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
         self._variant = "Named"
+        self.value = self.value or self.name
         assert self.name is not None
 
     def __eq__(self, other: GenericTypeArgumentNamedAst) -> bool:
@@ -30,12 +31,12 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         string = [
             self.name.print(printer),
             self.tok_assign.print(printer),
-            self.value.print(printer) if self.value else "?"]
+            self.value.print(printer)]  # todo ?
         return "".join(string)
 
     @property
     def pos_end(self) -> int:
-        return (self.value or self.name).pos_end
+        return self.value.pos
 
     @staticmethod
     def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:
@@ -44,9 +45,9 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the name and value of the generic type argument.
-        convention = self.value.get_conventions()
+        conventions = self.value.get_conventions()
         self.value.analyse_semantics(sm, **kwargs)
-        self.value = sm.current_scope.get_symbol(self.value).fq_name.with_conventions(convention)
+        self.value = sm.current_scope.get_symbol(self.value).fq_name.with_conventions(conventions)
 
 
 __all__ = [
