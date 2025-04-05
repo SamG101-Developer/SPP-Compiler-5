@@ -114,6 +114,8 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
         # Ensure the validity of the superclass, along with its generics.
         self.super_class.analyse_semantics(sm)
+        self.super_class = sm.current_scope.get_symbol(self.super_class).fq_name
+
         sup_symbol = sm.current_scope.get_symbol(self.super_class.without_generics())
 
         if sup_symbol.is_generic:
