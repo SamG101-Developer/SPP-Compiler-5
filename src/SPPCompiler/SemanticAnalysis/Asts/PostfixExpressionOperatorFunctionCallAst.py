@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -46,7 +46,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     def determine_overload(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
         # function's name and its owner type/namespace.
-        from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+        # from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         # Todo: Change this to detecting FunMov/Mut/Ref superimpositions over the type
         function_owner_type, function_owner_scope, function_name = AstFunctionUtils.get_function_owner_type_and_function_name(sm, lhs)
@@ -222,34 +222,35 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         self.determine_overload(sm, lhs, **kwargs)  # Also adds the "self" argument if needed.
         self.function_argument_group.analyse_semantics(sm, target_proto=self._overload[1], is_async=self._is_async, **kwargs)
 
-        print("-" * 100)
-        print(f"Check: {lhs}{self}")
-        print(f"Is coroutine?: {self._overload[1].tok_fun.token_type == SppTokenType.KwCor}")
-
         # Link references created by the function call to the overload.
         if self._overload[1].tok_fun.token_type == SppTokenType.KwCor:
             coro_return_type = self.infer_type(sm, lhs, **kwargs)
-            print(f"Coro return type: {coro_return_type}")
+
+            # Find the generator type superimposed over the return type.
+            for super_type in sm.current_scope.get_symbol(coro_return_type).scope.sup_types + Seq([coro_return_type]):
+                if super_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope):
+                    coro_return_type = super_type
+                    break
 
             # Immutable reference invalidates all mutable references.
             if Asts.ConventionRefAst in coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_conventions().map(type):
-                print("Immutable reference returned")
+                # print("Immutable reference returned")
                 outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
                 for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
                     if is_mutable:
                         outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
 
-                print(f"Adding new referents: {kwargs.get("assignment", Seq())}")
+                # print(f"Adding new referents to {outermost}: {kwargs.get("assignment", Seq())}")
                 outermost.memory_info.refer_to_asts = Seq([(ast, False) for ast in kwargs.get("assignment", Seq())])
 
             # Mutable reference invalidates all mutable and immutable references.
             elif Asts.ConventionMutAst in coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_conventions().map(type):
-                print("Mutable reference returned")
+                # print("Mutable reference returned")
                 outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
                 for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
                     outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
 
-                print(f"Adding new referents: {kwargs.get("assignment", Seq())}")
+                # print(f"Adding new referents to {outermost}: {kwargs.get("assignment", Seq())}")
                 outermost.memory_info.refer_to_asts = Seq([(ast, True) for ast in kwargs.get("assignment", Seq())])
 
 
