@@ -340,7 +340,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_pass_compilation()
     def test_valid_memory_copy_custom(self):
-        # Perform a "double move" when the use supseimposes Copy over the type.
+        # Perform a "double move" when the use superimposes Copy over the type.
         """
         cls Point {
             x: std::number::BigInt
@@ -358,7 +358,7 @@ class TestAstMemory(CustomTestCase):
 
     @should_pass_compilation()
     def test_valid_memory_copy_custom_generic(self):
-        # Perform a "double move" when the use supseimposes Copy over the generic type.
+        # Perform a "double move" when the use superimposes Copy over the generic type.
         """
         cls Point[T] {
             x: T
@@ -384,7 +384,7 @@ class TestAstMemory(CustomTestCase):
         }
 
         fun test() -> std::void::Void {
-            let object = MyType()
+            let mut object = MyType()
             let generator = object.custom_iter_mut()
             let borrow1 = generator.resume(false)
             let borrow2 = generator.resume(false)
