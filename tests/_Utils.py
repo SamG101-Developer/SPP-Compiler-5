@@ -14,7 +14,7 @@ class CustomTestCase(TestCase):
 def _build_temp_project_v3(code):
     cwd = os.getcwd()
     fp = f"test_outputs"
-    with open(f"{cwd}/{fp}/src/main.spp", "w") as f:
+    with open(os.path.join(cwd, fp, "src", "main.spp"), "w") as f:
         f.write(code)
     os.chdir(fp)
     handle_build(Namespace(mode="rel"), skip_vcs=True)
