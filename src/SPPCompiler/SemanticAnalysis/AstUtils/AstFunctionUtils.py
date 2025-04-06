@@ -69,12 +69,18 @@ class AstFunctionUtils:
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
 
         # Static access into a type: "Type::method()"
-        elif isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_static_access():
+        elif isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.lhs, Asts.TypeAst.__args__) and lhs.op.is_static_access():
             function_owner_type = lhs.lhs
             function_name = lhs.op.field
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
 
-        # Direct access into a function: "function()"
+        # Direct access into a namespaced free function: "std::console::print("hello")"
+        elif isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.lhs.op.field, Asts.IdentifierAst) and lhs.op.is_static_access():
+            function_owner_scope = sm.current_scope.get_namespace_symbol(lhs.lhs).scope
+            function_name = lhs.op.field
+            function_owner_type = function_owner_scope.get_symbol(function_name).type
+
+        # Direct access into a non-namespaced function: "function()"
         elif isinstance(lhs, Asts.IdentifierAst):
             function_owner_type = None
             function_name = lhs

@@ -119,18 +119,17 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         
         # Accessing a namespaced constant, such as "std::pi".
         elif isinstance(self.field, Asts.IdentifierAst) and self.is_static_access():
-            lhs_val_symbol = sm.current_scope.get_symbol(lhs)
+            lhs_symbol = sm.current_scope.get_symbol(lhs)
+            lhs_ns_symbol = sm.current_scope.get_namespace_symbol(lhs)
 
             # Check the lhs is a namespace and not a variable.
-            if isinstance(lhs_val_symbol, VariableSymbol):
+            if isinstance(lhs_symbol, VariableSymbol):
                 raise SemanticErrors.MemberAccessRuntimeOperatorExpectedError().add(
                     lhs, self.tok_access).scopes(sm.current_scope)
         
             # Check the variable exists on the lhs.
-            lhs_type = lhs.infer_type(sm)
-            lhs_type_symbol = sm.current_scope.get_symbol(lhs_type)
-            if not lhs_type_symbol.scope.has_symbol(self.field):
-                alternatives = lhs_type_symbol.scope.all_symbols().map_attr("name")
+            if not lhs_ns_symbol.scope.has_symbol(self.field):
+                alternatives = lhs_ns_symbol.scope.all_symbols().map_attr("name")
                 closest_match = difflib.get_close_matches(self.field.value, alternatives.map_attr("value"), n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "namespace member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
