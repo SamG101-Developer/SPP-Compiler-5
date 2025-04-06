@@ -71,11 +71,15 @@ class Scope:
     def __str__(self) -> str:
         return str(self._name)
 
-    def _translate_symbol(self, symbol: Symbol) -> Symbol:
-        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
-        generics = self._symbol_table.all()
+    @property
+    def generics(self) -> Seq[Asts.GenericArgumentAst]:
+        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst, AliasSymbol: Asts.GenericTypeArgumentNamedAst}
+        generics = self._symbol_table.all().filter(lambda s: s.is_generic)
         generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
+        return generics
 
+    def _translate_symbol(self, symbol: Symbol, ignore_alias: bool = False) -> Symbol:
+        generics = self.generics
         new_symbol = symbol
 
         if isinstance(symbol, VariableSymbol):
@@ -122,7 +126,7 @@ class Scope:
 
         # Handle generic translation.
         if self != self._non_generic_scope:
-            return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias))
+            return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias), ignore_alias)
 
         # Namespace adjust, and get the symbol from the symbol table if it exists.
         scope = self
@@ -208,7 +212,7 @@ class Scope:
         return self._children
 
     @property
-    def type_symbol(self) -> Optional[TypeSymbol]:
+    def type_symbol(self) -> Optional[TypeSymbol | AliasSymbol]:
         # Get the optionally linked type symbol (if this is a type scope).
         return self._type_symbol
 
