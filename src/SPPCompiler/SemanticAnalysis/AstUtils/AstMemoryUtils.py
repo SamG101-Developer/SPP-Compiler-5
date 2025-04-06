@@ -85,6 +85,12 @@ class MemoryInfo:
 
 
 class AstMemoryUtils:
+    """!
+    The AstMemoryUtils class contains static methods for memory-related checks and analysis. The key function is to
+    enforce memory integrity. There are also some convenience functions for checking if memory regions overlap by
+    symbol.
+    """
+
     @staticmethod
     def overlaps(ast_1: Asts.Ast, ast_2: Asts.Ast) -> bool:
         c1 = str(ast_1).startswith(str(ast_2))

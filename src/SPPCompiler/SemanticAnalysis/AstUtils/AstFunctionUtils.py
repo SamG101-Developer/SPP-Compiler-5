@@ -20,6 +20,11 @@ if TYPE_CHECKING:
 
 
 class FunctionConflictCheckType(Enum):
+    """!
+    When checking for if two functions conflict, there is two ways to do this. The override check checks for exact
+    signature matches (with type-symbolic equality), where-as overload conflicts check for required parameter types.
+    """
+
     InvalidOverload = 0
     InvalidOverride = 1
 

@@ -19,6 +19,12 @@ if TYPE_CHECKING:
 
 
 class AstTypeUtils:
+    """!
+    Type utility methods that mostly revolve around generic types, creating new scopes and synbols for them, and#
+    organising the super-scopes for generic substitutions. This is one of the most complex set of helper functions in
+    the compiler, and uses detailed scoping and symbol checks.
+    """
+
     @staticmethod
     def get_generics_in_scope(scope: Scope) -> Asts.GenericArgumentGroupAst:
         generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
@@ -184,8 +190,7 @@ class AstTypeUtils:
         return new_scopes
 
     @staticmethod
-    def create_generic_symbol(sm: ScopeManager, generic_argument: Asts.GenericArgumentAst)\
-            -> TypeSymbol | VariableSymbol:
+    def create_generic_symbol(sm: ScopeManager, generic_argument: Asts.GenericArgumentAst) -> TypeSymbol | VariableSymbol:
 
         true_value_symbol = sm.current_scope.get_symbol(generic_argument.value)
 
