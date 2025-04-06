@@ -313,9 +313,10 @@ class SemanticErrors:
         """
 
         def add(self, target: Asts.Ast, what_target: str, source: Asts.Ast, what_source: str) -> SemanticError:
-            self.add_info(
-                ast=target,
-                tag=f"{what_target.capitalize()} '{target}' defined here")
+            if target:
+                self.add_info(
+                    ast=target,
+                    tag=f"{what_target.capitalize()} '{target}' defined here")
 
             self.add_error(
                 ast=source,

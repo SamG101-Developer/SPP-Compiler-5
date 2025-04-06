@@ -353,7 +353,7 @@ class AstFunctionUtils:
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := argument_names.set_subtract(parameter_names):
             raise SemanticErrors.ArgumentNameInvalidError().add(
-                parameters[0], "parameter", invalid_argument_names[0], "argument").scopes(sm.current_scope)
+                parameters.at(0), "generic parameter", invalid_argument_names[0], "generic argument").scopes(sm.current_scope)
         parameter_names = parameter_names.set_subtract(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
