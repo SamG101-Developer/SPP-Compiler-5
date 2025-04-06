@@ -145,11 +145,19 @@ class Scope:
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
 
-    def get_namespace_symbol(self, name: Asts.IdentifierAst, exclusive: bool = False) -> Optional[Symbol]:
-        # An optimized version of get_symbol for namespace symbols.
-        for symbol in self.all_symbols(exclusive=exclusive):
-            if isinstance(symbol, NamespaceSymbol) and symbol.name == name:
-                return symbol
+    def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
+        # Todo: this needs tidying up (should run the same code for both types, just not the loop for identifier)
+        if isinstance(name, Asts.IdentifierAst):
+            for symbol in self.all_symbols(exclusive=exclusive):
+                if isinstance(symbol, NamespaceSymbol) and symbol.name == name:
+                    return symbol
+            return None
+
+        scope = self.get_namespace_symbol(name.lhs, exclusive=exclusive).scope
+        while isinstance(name, Asts.PostfixExpressionAst) and isinstance(name.op, Asts.PostfixExpressionOperatorMemberAccessAst):
+            symbol = scope.get_namespace_symbol(name := name.op.field, exclusive=exclusive)
+            scope = symbol.scope
+        return symbol
 
     def get_multiple_symbols(self, name: Asts.IdentifierAst, original_scope: Scope = None) -> Seq[Tuple[Symbol, Scope, int]]:
         # Get all the symbols with the given name (ambiguity checks, function overloads etc), and their "depth".
