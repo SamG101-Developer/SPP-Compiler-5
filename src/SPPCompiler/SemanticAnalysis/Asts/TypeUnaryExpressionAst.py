@@ -27,6 +27,9 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
         yield from self.rhs
 
+    def __json__(self) -> str:
+        return str(self.op) + self.rhs.__json__()
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return f"{self.op}{self.rhs}"
