@@ -145,7 +145,8 @@ class AstTypeUtils:
 
     @staticmethod
     def create_generic_sup_scopes(
-            sm: ScopeManager, base_scope: Scope, true_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
+            sm: ScopeManager, base_scope: Scope, true_scope: Scope,
+            generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
 
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
