@@ -28,7 +28,7 @@ class NamespaceSymbol:
 
     def __json__(self) -> Dict:
         # Dump the NamespaceSymbol as a JSON object.
-        return {"what": "ns", "name": self.name}
+        return {"what": "ns", "name": self.name, "scope": self.scope.name if self.scope else None}
 
     def __str__(self) -> str:
         # Dump the NamespaceSymbol as a JSON string.
