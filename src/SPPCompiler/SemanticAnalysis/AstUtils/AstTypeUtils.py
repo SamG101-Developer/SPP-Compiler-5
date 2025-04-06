@@ -110,7 +110,6 @@ class AstTypeUtils:
 
         # Create a new scope & symbol for the generic substituted type.
         new_cls_prototype = copy.deepcopy(base_symbol.scope._ast)
-        new_cls_prototype.generic_parameter_group.parameters = Seq()
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=new_cls_prototype)
         new_symbol = builtins.type(base_symbol)(
             name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,

@@ -133,7 +133,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
         type_scope = type_scope or sm.current_scope
-        # owner_generics = AstTypeManagement.get_generics_in_scope(type_scope).arguments.filter(lambda g: g.value is not None)
+        original_type_scope = type_scope
 
         # Determine the type scope and type symbol.
         type_symbol = AstTypeUtils.get_type_part_symbol_with_error(type_scope, sm, self.name.without_generics(), ignore_alias=True)
@@ -168,8 +168,8 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
             # Handle type aliasing (providing generics to the original type).
             if isinstance(new_scope.type_symbol, AliasSymbol):
-                new_scope.type_symbol.old_type = copy.deepcopy(new_scope.type_symbol.old_type)
-                new_scope.type_symbol.old_type = new_scope.type_symbol.old_type.sub_generics(self.name.generic_argument_group.arguments)
+                generics = original_type_scope.generics + self.name.generic_argument_group.arguments
+                new_scope.type_symbol.old_type = copy.deepcopy(new_scope.type_symbol.old_type).sub_generics(generics)
                 new_scope.type_symbol.old_type.analyse_semantics(sm, **kwargs)
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
