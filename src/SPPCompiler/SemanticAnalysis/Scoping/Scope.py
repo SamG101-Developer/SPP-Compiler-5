@@ -88,7 +88,7 @@ class Scope:
 
         elif isinstance(symbol, TypeSymbol):
             new_fq_name = symbol.fq_name.sub_generics(generics)
-            new_symbol = self._non_generic_scope.get_symbol(new_fq_name)
+            new_symbol = self._non_generic_scope.get_symbol(new_fq_name, ignore_alias=ignore_alias)
 
         return new_symbol or symbol
 
