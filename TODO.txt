@@ -1,8 +1,5 @@
 Generators.
-* Add the `BorrowRef[T]` and `BorrowMut[T]` types & code generation?
-
-Iterative loops.
-* Work with the new generator types.
+* Some sort of `GenOnce` or one-hit coroutines for indexing.
 
 Encapsulation annotations.
 * Add support for method encapsulation (methods map to attributes with $Type right now).
@@ -25,4 +22,3 @@ Smart pointers.
 Types.
 * Callables: should be able to call variables that are a function type.
 * Postfix types cannot be used as parameters, return types or attributes.
-* Aliases with generics fail (uses newtype args with oldtype params).
