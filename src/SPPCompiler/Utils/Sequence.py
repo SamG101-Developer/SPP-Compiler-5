@@ -223,6 +223,9 @@ class Seq[T]:
 
     # Operations
 
+    def at(self, index: int, default: Optional[T] = None) -> Optional[T]:
+        return self._value[index] if index < len(self._value) else default
+
     def __iter__(self) -> Iterator[T]:
         return iter(self._value)
 
