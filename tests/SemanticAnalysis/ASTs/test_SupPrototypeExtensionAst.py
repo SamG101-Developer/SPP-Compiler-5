@@ -1,5 +1,8 @@
 from tests._Utils import *
 
+# todo:
+#  make sure that "use" statements in "ext" blocks are on the base class
+
 
 class TestSupPrototypeExtensionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)

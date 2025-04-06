@@ -180,6 +180,6 @@ class TestTypeAst(CustomTestCase):
 
         fun f() -> std::void::Void {
             let x: TypeC[std::number::BigInt]::InnerC[std::string::Str]::InnerB[std::boolean::Bool]::InnerA[std::number::U64]
-            x = (10_u64, false, "hello", 10)
+            x = (10, "hello", false, 10_u64)
         }
         """
