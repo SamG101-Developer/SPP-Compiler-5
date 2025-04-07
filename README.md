@@ -1,7 +1,7 @@
 # S++ Compiler
 
 Folders
-- `Writerside`: S++ specification documentation.
+- `docs-specification`: S++ specification documentation.
 - `docs-compiler-sphinx`: S++ compiler documentation.
 - `src`: S++ compiler implementation.
 - `tests`: S++ compiler unit tests.

@@ -3,7 +3,7 @@
         SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
 
 <instance-profile id="main"
-                 name="docs-language"
+                 name="docs-specification"
                  start-page="Introduction.md">
 
     <toc-element topic="Introduction.md">
