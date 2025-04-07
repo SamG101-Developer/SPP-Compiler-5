@@ -17,6 +17,37 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
+    """!
+    The CaseExpressionAst represents a conditional jumping structure in S++. Case expressions are highly flexible, and
+    can be used as regular if-else expressions, or pattern matching by using the "of" keyword. A list of branches is
+    maintained, and the main analysis focus of the entire case expression is ensuring consistency memory status across
+    these branches, ie are all symbols equally initialized at the end of the branches.
+
+    Example (regular):
+    ```
+        case my_value == 100 {
+            ...
+        }
+        else case some_other_condition {
+            ...
+        }
+        else {
+            ...
+        }
+    ```
+
+    Example (pattern):
+    ```
+        case my_object of
+            is MyObject(a=1, b=[0, ..], ..) { ... }
+            is MyObject(a=1, b=[1, ..], ..) { ... }
+            is MyObject(c=(.., 1, _, 0), ..) { ... }
+        else {
+            ...
+        }
+    ```
+    """
+
     kw_case: Asts.TokenAst = field(default=None)
     cond: Asts.ExpressionAst = field(default=None)
     kw_of: Optional[Asts.TokenAst] = field(default=None)
@@ -28,10 +59,62 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         assert self.cond is not None
 
     @staticmethod
-    def from_simple(c1: int, p1: Asts.TokenAst, p2: Asts.ExpressionAst, p3: Asts.InnerScopeAst, p4: Seq[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
+    def from_simple(
+            c1: int, p1: Asts.TokenAst, p2: Asts.ExpressionAst, p3: Asts.InnerScopeAst,
+            p4: Seq[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
+
+        """!
+        The "from_simple" static method acts as a pseudo-constructor to create a case expression from the singular
+        expression in the condition. It is converted into a partial fragment pattern match, to provide consistent
+        analysis with other case patterns (pattern matching).
+
+        The expression:
+        ```
+            case some_condition { ... }
+        ```
+
+        Becomes:
+        ```
+            case some_condition of
+                == true { ... }
+        ```
+
+        The method works recursively with "p4", as this sequence is a list of other converted branches, called from the
+        parser. This means that "branches" is effectively a list of case expressions, that will nest into "else" blocks
+        after each conversion:
+
+        The expressions:
+        ```
+            case some_condition { ... }
+            else case other_condition { ... }
+            else { ... }
+        ```
+
+        Become:
+        ```
+            case some_condition of
+                == true { ... }
+                else {
+                    case some_other_condition of
+                        == true { ... }
+                        else {
+                            ...
+                        }
+        ```
+
+        @param c1 The position of the AST.
+        @param p1 The "case" keyword.
+        @param p2 The case expression/condition.
+        @param p3 The inner scope body.
+        @param p4 Subsequent branches.
+        @return The restructured case expression.
+
+        @todo: this structure is probably why there is the memory bug for shared symbols in simple-case conditions
+        """
+
         # Convert condition into an "== true" comparison.
         first_pattern = Asts.PatternVariantExpressionAst(c1, expr=Asts.BooleanLiteralAst.from_python_literal(c1, True))
-        first_branch = Asts.CaseExpressionBranchAst(c1, patterns=Seq([first_pattern]), body=p3)
+        first_branch = Asts.CaseExpressionBranchAst(c1, patterns=Seq([first_pattern]), body=p3)  # todo: "op" need setting?
         branches = Seq([first_branch]) + p4
 
         # Return the case expression.

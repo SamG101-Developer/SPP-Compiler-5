@@ -1,0 +1,1459 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="SPPCompiler.SemanticAnalysis package" href="SPPCompiler.SemanticAnalysis.html" /><link rel="prev" title="SPPCompiler.LexicalAnalysis.Lexer module" href="SPPCompiler.LexicalAnalysis.Lexer.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>SPPCompiler.LexicalAnalysis.TokenType module - spp-compiler documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">spp-compiler  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">spp-compiler  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">SPPCompiler</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of SPPCompiler</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="SPPCompiler.html">SPPCompiler package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of SPPCompiler package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="SPPCompiler.CodeGen.html">SPPCompiler.CodeGen package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of SPPCompiler.CodeGen package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.CodeGen.BuildTypes.html">SPPCompiler.CodeGen.BuildTypes module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.CodeGen.LlvmSymbolInfo.html">SPPCompiler.CodeGen.LlvmSymbolInfo module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="SPPCompiler.Compiler.html">SPPCompiler.Compiler package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of SPPCompiler.Compiler package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Compiler.Compiler.html">SPPCompiler.Compiler.Compiler module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Compiler.ModuleTree.html">SPPCompiler.Compiler.ModuleTree module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Compiler.Program.html">SPPCompiler.Compiler.Program module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current has-children"><a class="reference internal" href="SPPCompiler.LexicalAnalysis.html">SPPCompiler.LexicalAnalysis package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of SPPCompiler.LexicalAnalysis package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.LexicalAnalysis.Lexer.html">SPPCompiler.LexicalAnalysis.Lexer module</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">SPPCompiler.LexicalAnalysis.TokenType module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.html">SPPCompiler.SemanticAnalysis package</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.html">SPPCompiler.SemanticAnalysis.AstUtils package</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis.AstUtils package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.AstBinUtils.html">SPPCompiler.SemanticAnalysis.AstUtils.AstBinUtils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils.html">SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.html">SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils.html">SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils.html">SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.html">SPPCompiler.SemanticAnalysis.Asts package</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis.Asts package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5 has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.html">SPPCompiler.SemanticAnalysis.Asts.Mixins package</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis.Asts.Mixins package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.AbstractPatternVariantAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.AbstractPatternVariantAst module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.AbstractTypeAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.AbstractTypeAst module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.OrderableAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.OrderableAst module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.TypeInferrableAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.TypeInferrableAst module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.VariableLikeAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.VariableLikeAst module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst module</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.AnnotationAst.html">SPPCompiler.SemanticAnalysis.Asts.AnnotationAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ArrayLiteral0ElementAst.html">SPPCompiler.SemanticAnalysis.Asts.ArrayLiteral0ElementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralNElementAst.html">SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralNElementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.AssignmentStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.AssignmentStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html">SPPCompiler.SemanticAnalysis.Asts.Ast module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.BinaryExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.BinaryExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.BooleanLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.BooleanLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.CaseExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.html">SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ClassAttributeAst.html">SPPCompiler.SemanticAnalysis.Asts.ClassAttributeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ClassImplementationAst.html">SPPCompiler.SemanticAnalysis.Asts.ClassImplementationAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ClassMemberAst.html">SPPCompiler.SemanticAnalysis.Asts.ClassMemberAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ClassPrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.ClassPrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ConventionAst.html">SPPCompiler.SemanticAnalysis.Asts.ConventionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ConventionMutAst.html">SPPCompiler.SemanticAnalysis.Asts.ConventionMutAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ConventionRefAst.html">SPPCompiler.SemanticAnalysis.Asts.ConventionRefAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CoroutinePrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.CoroutinePrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.ExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FloatLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.FloatLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentGroupAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentNamedAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentNamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentUnnamedAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentUnnamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionImplementationAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionImplementationAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionMemberAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionMemberAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterGroupAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterOptionalAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterOptionalAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterRequiredAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterRequiredAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterSelfAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterSelfAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterVariadicAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterVariadicAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionPrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionPrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.GenExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericArgumentAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericArgumentAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericArgumentGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericArgumentGroupAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentNamedAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentNamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentUnnamedAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentUnnamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterOptionalAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterOptionalAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterRequiredAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterRequiredAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterVariadicAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterVariadicAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericIdentifierAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericIdentifierAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericParameterAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericParameterAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericParameterGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericParameterGroupAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentNamedAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentNamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentUnnamedAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentUnnamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterInlineConstraintsAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterInlineConstraintsAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterOptionalAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterOptionalAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterRequiredAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterRequiredAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterVariadicAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterVariadicAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GlobalConstantAst.html">SPPCompiler.SemanticAnalysis.Asts.GlobalConstantAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.IdentifierAst.html">SPPCompiler.SemanticAnalysis.Asts.IdentifierAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.InnerScopeAst.html">SPPCompiler.SemanticAnalysis.Asts.InnerScopeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.IntegerLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.IntegerLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.IsExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.IsExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LetStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.LetStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LetStatementInitializedAst.html">SPPCompiler.SemanticAnalysis.Asts.LetStatementInitializedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LetStatementUninitializedAst.html">SPPCompiler.SemanticAnalysis.Asts.LetStatementUninitializedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.LiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableAttributeBindingAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableAttributeBindingAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureArrayAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureArrayAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureObjectAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureObjectAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureSkip1ArgumentAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureSkip1ArgumentAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureSkipNArgumentsAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureSkipNArgumentsAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureTupleAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureTupleAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableSingleIdentifierAliasAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableSingleIdentifierAliasAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableSingleIdentifierAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableSingleIdentifierAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopConditionAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopConditionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopConditionBooleanAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopConditionBooleanAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopConditionIterableAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopConditionIterableAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopControlFlowStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopControlFlowStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopElseStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopElseStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ModuleImplementationAst.html">SPPCompiler.SemanticAnalysis.Asts.ModuleImplementationAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ModuleMemberAst.html">SPPCompiler.SemanticAnalysis.Asts.ModuleMemberAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ModulePrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.ModulePrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentAst.html">SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentGroupAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentNamedAst.html">SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentNamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentUnnamedAst.html">SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentUnnamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerAst.html">SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ParenthesizedExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.ParenthesizedExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternGuardAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternGuardAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantAttributeBindingAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantAttributeBindingAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureArrayAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureArrayAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureObjectAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureObjectAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureSkip1ArgumentAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureSkip1ArgumentAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureSkipNArgumentsAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureSkipNArgumentsAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureTupleAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureTupleAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantElseAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantElseAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantElseCaseAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantElseCaseAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantSingleIdentifierAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantSingleIdentifierAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorEarlyReturnAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorEarlyReturnAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PrimaryExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.PrimaryExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.RetStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.RetStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.StatementAst.html">SPPCompiler.SemanticAnalysis.Asts.StatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.StringLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.StringLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SubroutinePrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.SubroutinePrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupImplementationAst.html">SPPCompiler.SemanticAnalysis.Asts.SupImplementationAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupMemberAst.html">SPPCompiler.SemanticAnalysis.Asts.SupMemberAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupPrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.SupPrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupPrototypeExtensionAst.html">SPPCompiler.SemanticAnalysis.Asts.SupPrototypeExtensionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupPrototypeFunctionsAst.html">SPPCompiler.SemanticAnalysis.Asts.SupPrototypeFunctionsAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupUseStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.SupUseStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TokenAst.html">SPPCompiler.SemanticAnalysis.Asts.TokenAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TupleLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.TupleLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeArrayAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeArrayAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeBinaryExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeBinaryExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeParenthesizedAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeParenthesizedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypePostfixExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.TypePostfixExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorAst.html">SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorNestedTypeAst.html">SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorNestedTypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorOptionalTypeAst.html">SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorOptionalTypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeSingleAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeSingleAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeTupleAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeTupleAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeUnaryExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeUnaryExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorBorrowAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorBorrowAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorNamespaceAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorNamespaceAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAst.html">SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAsyncAst.html">SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAsyncAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.UseStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.UseStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.WhereBlockAst.html">SPPCompiler.SemanticAnalysis.Asts.WhereBlockAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsAst.html">SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsGroupAst module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Scoping.html">SPPCompiler.SemanticAnalysis.Scoping package</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis.Scoping package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Scoping.Scope.html">SPPCompiler.SemanticAnalysis.Scoping.Scope module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Scoping.ScopeManager.html">SPPCompiler.SemanticAnalysis.Scoping.ScopeManager module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Scoping.SymbolTable.html">SPPCompiler.SemanticAnalysis.Scoping.SymbolTable module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Scoping.Symbols.html">SPPCompiler.SemanticAnalysis.Scoping.Symbols module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.html">SPPCompiler.SemanticAnalysis.Utils package</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis.Utils package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.AstPrinter.html">SPPCompiler.SemanticAnalysis.Utils.AstPrinter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.CodeInjection.html">SPPCompiler.SemanticAnalysis.Utils.CodeInjection module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.CommonTypes.html">SPPCompiler.SemanticAnalysis.Utils.CommonTypes module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.CompilerStages.html">SPPCompiler.SemanticAnalysis.Utils.CompilerStages module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.SemanticError.html">SPPCompiler.SemanticAnalysis.Utils.SemanticError module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="SPPCompiler.SyntacticAnalysis.html">SPPCompiler.SyntacticAnalysis package</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of SPPCompiler.SyntacticAnalysis package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.SyntacticAnalysis.ErrorFormatter.html">SPPCompiler.SyntacticAnalysis.ErrorFormatter module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.SyntacticAnalysis.Parser.html">SPPCompiler.SyntacticAnalysis.Parser module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.SyntacticAnalysis.ParserErrors.html">SPPCompiler.SyntacticAnalysis.ParserErrors module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="SPPCompiler.Utils.html">SPPCompiler.Utils package</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of SPPCompiler.Utils package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Utils.Functools.html">SPPCompiler.Utils.Functools module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Utils.ProgressBar.html">SPPCompiler.Utils.ProgressBar module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Utils.Sequence.html">SPPCompiler.Utils.Sequence module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/api/SPPCompiler.LexicalAnalysis.TokenType.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-SPPCompiler.LexicalAnalysis.TokenType">
+<span id="sppcompiler-lexicalanalysis-tokentype-module"></span><h1>SPPCompiler.LexicalAnalysis.TokenType module<a class="headerlink" href="#module-SPPCompiler.LexicalAnalysis.TokenType" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SPPCompiler.LexicalAnalysis.TokenType.</span></span><span class="sig-name descname"><span class="pre">RawTokenType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TokenType</span></code></p>
+<p>!
+The RawTokenType class is a set of tokens that the lexer can recognize. These tokens are single-length, and will be
+combined in the parser to make more advanced tokens.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkCharacter">
+<span class="sig-name descname"><span class="pre">TkCharacter</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkCharacter:</span> <span class="pre">0&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkCharacter" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkDigit">
+<span class="sig-name descname"><span class="pre">TkDigit</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkDigit:</span> <span class="pre">1&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkDigit" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkEqualsSign">
+<span class="sig-name descname"><span class="pre">TkEqualsSign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkEqualsSign:</span> <span class="pre">2&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkEqualsSign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkPlusSign">
+<span class="sig-name descname"><span class="pre">TkPlusSign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkPlusSign:</span> <span class="pre">3&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkPlusSign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkMinusSign">
+<span class="sig-name descname"><span class="pre">TkMinusSign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkMinusSign:</span> <span class="pre">4&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkMinusSign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkAsterisk">
+<span class="sig-name descname"><span class="pre">TkAsterisk</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkAsterisk:</span> <span class="pre">5&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkAsterisk" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkForwardSlash">
+<span class="sig-name descname"><span class="pre">TkForwardSlash</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkForwardSlash:</span> <span class="pre">6&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkForwardSlash" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkPercentSign">
+<span class="sig-name descname"><span class="pre">TkPercentSign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkPercentSign:</span> <span class="pre">7&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkPercentSign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkCaret">
+<span class="sig-name descname"><span class="pre">TkCaret</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkCaret:</span> <span class="pre">8&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkCaret" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLessThanSign">
+<span class="sig-name descname"><span class="pre">TkLessThanSign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkLessThanSign:</span> <span class="pre">9&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLessThanSign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkGreaterThanSign">
+<span class="sig-name descname"><span class="pre">TkGreaterThanSign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkGreaterThanSign:</span> <span class="pre">10&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkGreaterThanSign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLeftParenthesis">
+<span class="sig-name descname"><span class="pre">TkLeftParenthesis</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkLeftParenthesis:</span> <span class="pre">11&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLeftParenthesis" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkRightParenthesis">
+<span class="sig-name descname"><span class="pre">TkRightParenthesis</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkRightParenthesis:</span> <span class="pre">12&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkRightParenthesis" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLeftSquareBracket">
+<span class="sig-name descname"><span class="pre">TkLeftSquareBracket</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkLeftSquareBracket:</span> <span class="pre">13&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLeftSquareBracket" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkRightSquareBracket">
+<span class="sig-name descname"><span class="pre">TkRightSquareBracket</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkRightSquareBracket:</span> <span class="pre">14&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkRightSquareBracket" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLeftCurlyBrace">
+<span class="sig-name descname"><span class="pre">TkLeftCurlyBrace</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkLeftCurlyBrace:</span> <span class="pre">15&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLeftCurlyBrace" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkRightCurlyBrace">
+<span class="sig-name descname"><span class="pre">TkRightCurlyBrace</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkRightCurlyBrace:</span> <span class="pre">16&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkRightCurlyBrace" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkQuestionMark">
+<span class="sig-name descname"><span class="pre">TkQuestionMark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkQuestionMark:</span> <span class="pre">17&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkQuestionMark" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkColon">
+<span class="sig-name descname"><span class="pre">TkColon</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkColon:</span> <span class="pre">18&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkColon" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkAmpersand">
+<span class="sig-name descname"><span class="pre">TkAmpersand</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkAmpersand:</span> <span class="pre">19&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkAmpersand" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkDot">
+<span class="sig-name descname"><span class="pre">TkDot</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkDot:</span> <span class="pre">21&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkDot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkComma">
+<span class="sig-name descname"><span class="pre">TkComma</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkComma:</span> <span class="pre">22&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkComma" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkAt">
+<span class="sig-name descname"><span class="pre">TkAt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkAt:</span> <span class="pre">23&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkAt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkUnderscore">
+<span class="sig-name descname"><span class="pre">TkUnderscore</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkUnderscore:</span> <span class="pre">24&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkUnderscore" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkSpeechMark">
+<span class="sig-name descname"><span class="pre">TkSpeechMark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkSpeechMark:</span> <span class="pre">25&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkSpeechMark" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkWhitespace">
+<span class="sig-name descname"><span class="pre">TkWhitespace</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkWhitespace:</span> <span class="pre">26&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkWhitespace" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkNewLine">
+<span class="sig-name descname"><span class="pre">TkNewLine</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkNewLine:</span> <span class="pre">27&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkNewLine" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkDollar">
+<span class="sig-name descname"><span class="pre">TkDollar</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkDollar:</span> <span class="pre">28&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkDollar" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkUnknown">
+<span class="sig-name descname"><span class="pre">TkUnknown</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkUnknown:</span> <span class="pre">29&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkUnknown" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.NoToken">
+<span class="sig-name descname"><span class="pre">NoToken</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.NoToken:</span> <span class="pre">30&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.NoToken" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.Keyword">
+<span class="sig-name descname"><span class="pre">Keyword</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.Keyword:</span> <span class="pre">31&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.Keyword" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.EndOfFile">
+<span class="sig-name descname"><span class="pre">EndOfFile</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.EndOfFile:</span> <span class="pre">32&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.EndOfFile" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkExclamationMark">
+<span class="sig-name descname"><span class="pre">TkExclamationMark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawTokenType.TkExclamationMark:</span> <span class="pre">33&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkExclamationMark" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.newline_token">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">newline_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.newline_token" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenType</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.whitespace_token">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">whitespace_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.whitespace_token" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenType</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SPPCompiler.LexicalAnalysis.TokenType.</span></span><span class="sig-name descname"><span class="pre">RawKeywordType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TokenType</span></code></p>
+<p>!
+The RawKeywordType class is a set of keywords that are used for the parser to know, for a specific keyword, which
+characters to parse. The final TokenAst will not contain a RawKeywordType, but the matching SppTokenType.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Cls">
+<span class="sig-name descname"><span class="pre">Cls</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Cls:</span> <span class="pre">'cls'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Cls" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Fun">
+<span class="sig-name descname"><span class="pre">Fun</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Fun:</span> <span class="pre">'fun'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Fun" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Cor">
+<span class="sig-name descname"><span class="pre">Cor</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Cor:</span> <span class="pre">'cor'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Cor" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Sup">
+<span class="sig-name descname"><span class="pre">Sup</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Sup:</span> <span class="pre">'sup'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Sup" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Ext">
+<span class="sig-name descname"><span class="pre">Ext</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Ext:</span> <span class="pre">'ext'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Ext" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Mut">
+<span class="sig-name descname"><span class="pre">Mut</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Mut:</span> <span class="pre">'mut'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Mut" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Use">
+<span class="sig-name descname"><span class="pre">Use</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Use:</span> <span class="pre">'use'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Use" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Cmp">
+<span class="sig-name descname"><span class="pre">Cmp</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Cmp:</span> <span class="pre">'cmp'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Cmp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Let">
+<span class="sig-name descname"><span class="pre">Let</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Let:</span> <span class="pre">'let'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Let" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Where">
+<span class="sig-name descname"><span class="pre">Where</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Where:</span> <span class="pre">'where'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Where" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.SelfVal">
+<span class="sig-name descname"><span class="pre">SelfVal</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.SelfVal:</span> <span class="pre">'self'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.SelfVal" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.SelfType">
+<span class="sig-name descname"><span class="pre">SelfType</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.SelfType:</span> <span class="pre">'Self'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.SelfType" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Case">
+<span class="sig-name descname"><span class="pre">Case</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Case:</span> <span class="pre">'case'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Case" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Of">
+<span class="sig-name descname"><span class="pre">Of</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Of:</span> <span class="pre">'of'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Of" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Loop">
+<span class="sig-name descname"><span class="pre">Loop</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Loop:</span> <span class="pre">'loop'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Loop" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.In">
+<span class="sig-name descname"><span class="pre">In</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.In:</span> <span class="pre">'in'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.In" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Else">
+<span class="sig-name descname"><span class="pre">Else</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Else:</span> <span class="pre">'else'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Else" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Gen">
+<span class="sig-name descname"><span class="pre">Gen</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Gen:</span> <span class="pre">'gen'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Gen" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.With">
+<span class="sig-name descname"><span class="pre">With</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.With:</span> <span class="pre">'with'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.With" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Ret">
+<span class="sig-name descname"><span class="pre">Ret</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Ret:</span> <span class="pre">'ret'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Ret" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Exit">
+<span class="sig-name descname"><span class="pre">Exit</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Exit:</span> <span class="pre">'exit'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Exit" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Skip">
+<span class="sig-name descname"><span class="pre">Skip</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Skip:</span> <span class="pre">'skip'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Skip" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Is">
+<span class="sig-name descname"><span class="pre">Is</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Is:</span> <span class="pre">'is'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Is" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.As">
+<span class="sig-name descname"><span class="pre">As</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.As:</span> <span class="pre">'as'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.As" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Or">
+<span class="sig-name descname"><span class="pre">Or</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Or:</span> <span class="pre">'or'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Or" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.And">
+<span class="sig-name descname"><span class="pre">And</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.And:</span> <span class="pre">'and'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.And" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Not">
+<span class="sig-name descname"><span class="pre">Not</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Not:</span> <span class="pre">'not'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Not" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Async">
+<span class="sig-name descname"><span class="pre">Async</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.Async:</span> <span class="pre">'async'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Async" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.True_">
+<span class="sig-name descname"><span class="pre">True_</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.True_:</span> <span class="pre">'true'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.True_" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.False_">
+<span class="sig-name descname"><span class="pre">False_</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;RawKeywordType.False_:</span> <span class="pre">'false'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.False_" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawToken">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SPPCompiler.LexicalAnalysis.TokenType.</span></span><span class="sig-name descname"><span class="pre">RawToken</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawToken" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>!
+A RawToken allows for pairing metadata will a RawTokenType. For example, when “a” is lexed, the RawToken will
+contain a RawTokenType.TkCharacter with the data “a”.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawToken.token_type">
+<span class="sig-name descname"><span class="pre">token_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType" title="SPPCompiler.LexicalAnalysis.TokenType.RawTokenType"><code class="xref py py-class docutils literal notranslate"><span class="pre">RawTokenType</span></code></a></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawToken.token_type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.RawToken.token_data">
+<span class="sig-name descname"><span class="pre">token_data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.RawToken.token_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SPPCompiler.LexicalAnalysis.TokenType.</span></span><span class="sig-name descname"><span class="pre">SppTokenType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TokenType</span></code></p>
+<p>!
+The SppTokenType class contains all the keyword and tokens that are created by the parser, and stored inside
+TokenAsts.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.LxNumber">
+<span class="sig-name descname"><span class="pre">LxNumber</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.LxNumber:</span> <span class="pre">'&lt;char&gt;'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.LxNumber" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.LxString">
+<span class="sig-name descname"><span class="pre">LxString</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.LxString:</span> <span class="pre">'&lt;num&gt;'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.LxString" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCls">
+<span class="sig-name descname"><span class="pre">KwCls</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwCls:</span> <span class="pre">'cls'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCls" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSup">
+<span class="sig-name descname"><span class="pre">KwSup</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwSup:</span> <span class="pre">'sup'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSup" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwFun">
+<span class="sig-name descname"><span class="pre">KwFun</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwFun:</span> <span class="pre">'fun'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwFun" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCor">
+<span class="sig-name descname"><span class="pre">KwCor</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwCor:</span> <span class="pre">'cor'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCor" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwUse">
+<span class="sig-name descname"><span class="pre">KwUse</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwUse:</span> <span class="pre">'use'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwUse" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwExt">
+<span class="sig-name descname"><span class="pre">KwExt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwExt:</span> <span class="pre">'ext'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwExt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCmp">
+<span class="sig-name descname"><span class="pre">KwCmp</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwCmp:</span> <span class="pre">'cmp'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCmp" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwLet">
+<span class="sig-name descname"><span class="pre">KwLet</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwLet:</span> <span class="pre">'let'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwLet" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwMut">
+<span class="sig-name descname"><span class="pre">KwMut</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwMut:</span> <span class="pre">'mut'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwMut" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCase">
+<span class="sig-name descname"><span class="pre">KwCase</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwCase:</span> <span class="pre">'case'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCase" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwElse">
+<span class="sig-name descname"><span class="pre">KwElse</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwElse:</span> <span class="pre">'else'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwElse" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwLoop">
+<span class="sig-name descname"><span class="pre">KwLoop</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwLoop:</span> <span class="pre">'loop'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwLoop" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwWith">
+<span class="sig-name descname"><span class="pre">KwWith</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwWith:</span> <span class="pre">'with'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwWith" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSkip">
+<span class="sig-name descname"><span class="pre">KwSkip</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwSkip:</span> <span class="pre">'skip'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSkip" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwExit">
+<span class="sig-name descname"><span class="pre">KwExit</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwExit:</span> <span class="pre">'exit'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwExit" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwRet">
+<span class="sig-name descname"><span class="pre">KwRet</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwRet:</span> <span class="pre">'ret'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwRet" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwGen">
+<span class="sig-name descname"><span class="pre">KwGen</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwGen:</span> <span class="pre">'gen'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwGen" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwWhere">
+<span class="sig-name descname"><span class="pre">KwWhere</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwWhere:</span> <span class="pre">'where'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwWhere" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwAs">
+<span class="sig-name descname"><span class="pre">KwAs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwAs:</span> <span class="pre">'as'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwAs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwIsNot">
+<span class="sig-name descname"><span class="pre">KwIsNot</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwIsNot:</span> <span class="pre">'is</span> <span class="pre">not'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwIsNot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwIs">
+<span class="sig-name descname"><span class="pre">KwIs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwIs:</span> <span class="pre">'is'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwIs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwTrue">
+<span class="sig-name descname"><span class="pre">KwTrue</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwTrue:</span> <span class="pre">'true'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwTrue" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwFalse">
+<span class="sig-name descname"><span class="pre">KwFalse</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwFalse:</span> <span class="pre">'false'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwFalse" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSelfVal">
+<span class="sig-name descname"><span class="pre">KwSelfVal</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwSelfVal:</span> <span class="pre">'self'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSelfVal" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSelfType">
+<span class="sig-name descname"><span class="pre">KwSelfType</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwSelfType:</span> <span class="pre">'Self'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSelfType" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwAnd">
+<span class="sig-name descname"><span class="pre">KwAnd</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwAnd:</span> <span class="pre">'and'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwAnd" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwOr">
+<span class="sig-name descname"><span class="pre">KwOr</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwOr:</span> <span class="pre">'or'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwOr" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwNot">
+<span class="sig-name descname"><span class="pre">KwNot</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwNot:</span> <span class="pre">'not'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwNot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwOf">
+<span class="sig-name descname"><span class="pre">KwOf</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwOf:</span> <span class="pre">'of'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwOf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwIn">
+<span class="sig-name descname"><span class="pre">KwIn</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwIn:</span> <span class="pre">'in'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwIn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwAsync">
+<span class="sig-name descname"><span class="pre">KwAsync</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.KwAsync:</span> <span class="pre">'async'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwAsync" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkEq">
+<span class="sig-name descname"><span class="pre">TkEq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkEq:</span> <span class="pre">'=='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkEq" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkNe">
+<span class="sig-name descname"><span class="pre">TkNe</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkNe:</span> <span class="pre">'!='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkNe" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLe">
+<span class="sig-name descname"><span class="pre">TkLe</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkLe:</span> <span class="pre">'&lt;='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLe" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkGe">
+<span class="sig-name descname"><span class="pre">TkGe</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkGe:</span> <span class="pre">'&gt;='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkGe" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLt">
+<span class="sig-name descname"><span class="pre">TkLt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkLt:</span> <span class="pre">'&lt;'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkGt">
+<span class="sig-name descname"><span class="pre">TkGt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkGt:</span> <span class="pre">'&gt;'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkGt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkPlus">
+<span class="sig-name descname"><span class="pre">TkPlus</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkPlus:</span> <span class="pre">'+'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkPlus" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMinus">
+<span class="sig-name descname"><span class="pre">TkMinus</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkMinus:</span> <span class="pre">'-'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMinus" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMultiply">
+<span class="sig-name descname"><span class="pre">TkMultiply</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkMultiply:</span> <span class="pre">'*'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMultiply" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDivide">
+<span class="sig-name descname"><span class="pre">TkDivide</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkDivide:</span> <span class="pre">'/'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDivide" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRemainder">
+<span class="sig-name descname"><span class="pre">TkRemainder</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkRemainder:</span> <span class="pre">'%'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRemainder" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkModulo">
+<span class="sig-name descname"><span class="pre">TkModulo</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkModulo:</span> <span class="pre">'%%'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkModulo" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkExponent">
+<span class="sig-name descname"><span class="pre">TkExponent</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkExponent:</span> <span class="pre">'**'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkExponent" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkPlusAssign">
+<span class="sig-name descname"><span class="pre">TkPlusAssign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkPlusAssign:</span> <span class="pre">'+='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkPlusAssign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMinusAssign">
+<span class="sig-name descname"><span class="pre">TkMinusAssign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkMinusAssign:</span> <span class="pre">'-='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMinusAssign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMultiplyAssign">
+<span class="sig-name descname"><span class="pre">TkMultiplyAssign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkMultiplyAssign:</span> <span class="pre">'*='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMultiplyAssign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDivideAssign">
+<span class="sig-name descname"><span class="pre">TkDivideAssign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkDivideAssign:</span> <span class="pre">'/='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDivideAssign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRemainderAssign">
+<span class="sig-name descname"><span class="pre">TkRemainderAssign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkRemainderAssign:</span> <span class="pre">'%='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRemainderAssign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkModuloAssign">
+<span class="sig-name descname"><span class="pre">TkModuloAssign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkModuloAssign:</span> <span class="pre">'%%='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkModuloAssign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkExponentAssign">
+<span class="sig-name descname"><span class="pre">TkExponentAssign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkExponentAssign:</span> <span class="pre">'**='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkExponentAssign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLeftParenthesis">
+<span class="sig-name descname"><span class="pre">TkLeftParenthesis</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkLeftParenthesis:</span> <span class="pre">'('&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLeftParenthesis" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRightParenthesis">
+<span class="sig-name descname"><span class="pre">TkRightParenthesis</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkRightParenthesis:</span> <span class="pre">')'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRightParenthesis" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLeftSquareBracket">
+<span class="sig-name descname"><span class="pre">TkLeftSquareBracket</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkLeftSquareBracket:</span> <span class="pre">'['&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLeftSquareBracket" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRightSquareBracket">
+<span class="sig-name descname"><span class="pre">TkRightSquareBracket</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkRightSquareBracket:</span> <span class="pre">']'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRightSquareBracket" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLeftCurlyBrace">
+<span class="sig-name descname"><span class="pre">TkLeftCurlyBrace</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkLeftCurlyBrace:</span> <span class="pre">'{'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLeftCurlyBrace" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRightCurlyBrace">
+<span class="sig-name descname"><span class="pre">TkRightCurlyBrace</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkRightCurlyBrace:</span> <span class="pre">'}'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRightCurlyBrace" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkQuestionMark">
+<span class="sig-name descname"><span class="pre">TkQuestionMark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkQuestionMark:</span> <span class="pre">'?'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkQuestionMark" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDoubleDot">
+<span class="sig-name descname"><span class="pre">TkDoubleDot</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkDoubleDot:</span> <span class="pre">'..'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDoubleDot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkColon">
+<span class="sig-name descname"><span class="pre">TkColon</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkColon:</span> <span class="pre">':'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkColon" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkAmpersand">
+<span class="sig-name descname"><span class="pre">TkAmpersand</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkAmpersand:</span> <span class="pre">'&amp;'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkAmpersand" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDot">
+<span class="sig-name descname"><span class="pre">TkDot</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkDot:</span> <span class="pre">'.'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDoubleColon">
+<span class="sig-name descname"><span class="pre">TkDoubleColon</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkDoubleColon:</span> <span class="pre">'::'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDoubleColon" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkComma">
+<span class="sig-name descname"><span class="pre">TkComma</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkComma:</span> <span class="pre">','&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkComma" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkAssign">
+<span class="sig-name descname"><span class="pre">TkAssign</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkAssign:</span> <span class="pre">'='&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkAssign" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkArrowR">
+<span class="sig-name descname"><span class="pre">TkArrowR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkArrowR:</span> <span class="pre">'-&gt;'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkArrowR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkAt">
+<span class="sig-name descname"><span class="pre">TkAt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkAt:</span> <span class="pre">'&#64;'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkAt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkSpeechMark">
+<span class="sig-name descname"><span class="pre">TkSpeechMark</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkSpeechMark:</span> <span class="pre">'&quot;'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkSpeechMark" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkUnderscore">
+<span class="sig-name descname"><span class="pre">TkUnderscore</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkUnderscore:</span> <span class="pre">'_'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkUnderscore" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkWhitespace">
+<span class="sig-name descname"><span class="pre">TkWhitespace</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkWhitespace:</span> <span class="pre">'</span> <span class="pre">'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkWhitespace" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkNewLine">
+<span class="sig-name descname"><span class="pre">TkNewLine</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkNewLine:</span> <span class="pre">'\n'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkNewLine" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDollar">
+<span class="sig-name descname"><span class="pre">TkDollar</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.TkDollar:</span> <span class="pre">'$'&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDollar" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.NoToken">
+<span class="sig-name descname"><span class="pre">NoToken</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;SppTokenType.NoToken:</span> <span class="pre">''&gt;</span></em><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.NoToken" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.newline_token">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">newline_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.newline_token" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType" title="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType"><code class="xref py py-class docutils literal notranslate"><span class="pre">SppTokenType</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.whitespace_token">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">whitespace_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.whitespace_token" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType" title="SPPCompiler.LexicalAnalysis.TokenType.SppTokenType"><code class="xref py py-class docutils literal notranslate"><span class="pre">SppTokenType</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="SPPCompiler.SemanticAnalysis.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">SPPCompiler.SemanticAnalysis package</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="SPPCompiler.LexicalAnalysis.Lexer.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">SPPCompiler.LexicalAnalysis.Lexer module</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, Sam Gardner
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">SPPCompiler.LexicalAnalysis.TokenType module</a><ul>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType"><code class="docutils literal notranslate"><span class="pre">RawTokenType</span></code></a><ul>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkCharacter"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkCharacter</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkDigit"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkDigit</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkEqualsSign"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkEqualsSign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkPlusSign"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkPlusSign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkMinusSign"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkMinusSign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkAsterisk"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkAsterisk</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkForwardSlash"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkForwardSlash</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkPercentSign"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkPercentSign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkCaret"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkCaret</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLessThanSign"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkLessThanSign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkGreaterThanSign"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkGreaterThanSign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLeftParenthesis"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkLeftParenthesis</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkRightParenthesis"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkRightParenthesis</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLeftSquareBracket"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkLeftSquareBracket</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkRightSquareBracket"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkRightSquareBracket</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkLeftCurlyBrace"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkLeftCurlyBrace</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkRightCurlyBrace"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkRightCurlyBrace</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkQuestionMark"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkQuestionMark</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkColon"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkColon</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkAmpersand"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkAmpersand</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkDot"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkDot</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkComma"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkComma</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkAt"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkAt</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkUnderscore"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkUnderscore</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkSpeechMark"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkSpeechMark</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkWhitespace"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkWhitespace</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkNewLine"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkNewLine</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkDollar"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkDollar</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkUnknown"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkUnknown</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.NoToken"><code class="docutils literal notranslate"><span class="pre">RawTokenType.NoToken</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.Keyword"><code class="docutils literal notranslate"><span class="pre">RawTokenType.Keyword</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.EndOfFile"><code class="docutils literal notranslate"><span class="pre">RawTokenType.EndOfFile</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.TkExclamationMark"><code class="docutils literal notranslate"><span class="pre">RawTokenType.TkExclamationMark</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.newline_token"><code class="docutils literal notranslate"><span class="pre">RawTokenType.newline_token()</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawTokenType.whitespace_token"><code class="docutils literal notranslate"><span class="pre">RawTokenType.whitespace_token()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType"><code class="docutils literal notranslate"><span class="pre">RawKeywordType</span></code></a><ul>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Cls"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Cls</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Fun"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Fun</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Cor"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Cor</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Sup"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Sup</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Ext"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Ext</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Mut"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Mut</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Use"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Use</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Cmp"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Cmp</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Let"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Let</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Where"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Where</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.SelfVal"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.SelfVal</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.SelfType"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.SelfType</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Case"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Case</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Of"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Of</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Loop"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Loop</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.In"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.In</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Else"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Else</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Gen"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Gen</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.With"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.With</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Ret"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Ret</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Exit"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Exit</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Skip"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Skip</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Is"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Is</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.As"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.As</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Or"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Or</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.And"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.And</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Not"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Not</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.Async"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.Async</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.True_"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.True_</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawKeywordType.False_"><code class="docutils literal notranslate"><span class="pre">RawKeywordType.False_</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawToken"><code class="docutils literal notranslate"><span class="pre">RawToken</span></code></a><ul>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawToken.token_type"><code class="docutils literal notranslate"><span class="pre">RawToken.token_type</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.RawToken.token_data"><code class="docutils literal notranslate"><span class="pre">RawToken.token_data</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType"><code class="docutils literal notranslate"><span class="pre">SppTokenType</span></code></a><ul>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.LxNumber"><code class="docutils literal notranslate"><span class="pre">SppTokenType.LxNumber</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.LxString"><code class="docutils literal notranslate"><span class="pre">SppTokenType.LxString</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCls"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwCls</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSup"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwSup</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwFun"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwFun</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCor"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwCor</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwUse"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwUse</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwExt"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwExt</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCmp"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwCmp</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwLet"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwLet</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwMut"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwMut</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwCase"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwCase</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwElse"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwElse</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwLoop"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwLoop</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwWith"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwWith</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSkip"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwSkip</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwExit"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwExit</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwRet"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwRet</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwGen"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwGen</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwWhere"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwWhere</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwAs"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwAs</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwIsNot"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwIsNot</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwIs"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwIs</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwTrue"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwTrue</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwFalse"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwFalse</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSelfVal"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwSelfVal</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwSelfType"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwSelfType</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwAnd"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwAnd</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwOr"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwOr</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwNot"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwNot</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwOf"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwOf</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwIn"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwIn</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.KwAsync"><code class="docutils literal notranslate"><span class="pre">SppTokenType.KwAsync</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkEq"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkEq</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkNe"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkNe</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLe"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkLe</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkGe"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkGe</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLt"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkLt</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkGt"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkGt</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkPlus"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkPlus</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMinus"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkMinus</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMultiply"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkMultiply</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDivide"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkDivide</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRemainder"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkRemainder</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkModulo"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkModulo</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkExponent"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkExponent</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkPlusAssign"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkPlusAssign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMinusAssign"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkMinusAssign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkMultiplyAssign"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkMultiplyAssign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDivideAssign"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkDivideAssign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRemainderAssign"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkRemainderAssign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkModuloAssign"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkModuloAssign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkExponentAssign"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkExponentAssign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLeftParenthesis"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkLeftParenthesis</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRightParenthesis"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkRightParenthesis</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLeftSquareBracket"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkLeftSquareBracket</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRightSquareBracket"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkRightSquareBracket</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkLeftCurlyBrace"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkLeftCurlyBrace</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkRightCurlyBrace"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkRightCurlyBrace</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkQuestionMark"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkQuestionMark</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDoubleDot"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkDoubleDot</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkColon"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkColon</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkAmpersand"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkAmpersand</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDot"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkDot</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDoubleColon"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkDoubleColon</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkComma"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkComma</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkAssign"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkAssign</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkArrowR"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkArrowR</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkAt"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkAt</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkSpeechMark"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkSpeechMark</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkUnderscore"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkUnderscore</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkWhitespace"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkWhitespace</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkNewLine"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkNewLine</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.TkDollar"><code class="docutils literal notranslate"><span class="pre">SppTokenType.TkDollar</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.NoToken"><code class="docutils literal notranslate"><span class="pre">SppTokenType.NoToken</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.newline_token"><code class="docutils literal notranslate"><span class="pre">SppTokenType.newline_token()</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.LexicalAnalysis.TokenType.SppTokenType.whitespace_token"><code class="docutils literal notranslate"><span class="pre">SppTokenType.whitespace_token()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

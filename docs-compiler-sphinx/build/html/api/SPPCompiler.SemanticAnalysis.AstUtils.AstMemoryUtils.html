@@ -1,0 +1,771 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils module" href="SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils.html" /><link rel="prev" title="SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils module" href="SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils module - spp-compiler documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">spp-compiler  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">spp-compiler  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Api Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">SPPCompiler</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of SPPCompiler</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="SPPCompiler.html">SPPCompiler package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of SPPCompiler package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="SPPCompiler.CodeGen.html">SPPCompiler.CodeGen package</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of SPPCompiler.CodeGen package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.CodeGen.BuildTypes.html">SPPCompiler.CodeGen.BuildTypes module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.CodeGen.LlvmSymbolInfo.html">SPPCompiler.CodeGen.LlvmSymbolInfo module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="SPPCompiler.Compiler.html">SPPCompiler.Compiler package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of SPPCompiler.Compiler package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Compiler.Compiler.html">SPPCompiler.Compiler.Compiler module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Compiler.ModuleTree.html">SPPCompiler.Compiler.ModuleTree module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Compiler.Program.html">SPPCompiler.Compiler.Program module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="SPPCompiler.LexicalAnalysis.html">SPPCompiler.LexicalAnalysis package</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of SPPCompiler.LexicalAnalysis package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.LexicalAnalysis.Lexer.html">SPPCompiler.LexicalAnalysis.Lexer module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.LexicalAnalysis.TokenType.html">SPPCompiler.LexicalAnalysis.TokenType module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.html">SPPCompiler.SemanticAnalysis package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4 current has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.html">SPPCompiler.SemanticAnalysis.AstUtils package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis.AstUtils package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.AstBinUtils.html">SPPCompiler.SemanticAnalysis.AstUtils.AstBinUtils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils.html">SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils module</a></li>
+<li class="toctree-l5 current current-page"><a class="current reference internal" href="#">SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils.html">SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils.html">SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.html">SPPCompiler.SemanticAnalysis.Asts package</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis.Asts package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5 has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.html">SPPCompiler.SemanticAnalysis.Asts.Mixins package</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis.Asts.Mixins package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.AbstractPatternVariantAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.AbstractPatternVariantAst module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.AbstractTypeAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.AbstractTypeAst module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.OrderableAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.OrderableAst module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.TypeInferrableAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.TypeInferrableAst module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.VariableLikeAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.VariableLikeAst module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst.html">SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst module</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.AnnotationAst.html">SPPCompiler.SemanticAnalysis.Asts.AnnotationAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ArrayLiteral0ElementAst.html">SPPCompiler.SemanticAnalysis.Asts.ArrayLiteral0ElementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralNElementAst.html">SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralNElementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.AssignmentStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.AssignmentStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html">SPPCompiler.SemanticAnalysis.Asts.Ast module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.BinaryExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.BinaryExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.BooleanLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.BooleanLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.CaseExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.html">SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ClassAttributeAst.html">SPPCompiler.SemanticAnalysis.Asts.ClassAttributeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ClassImplementationAst.html">SPPCompiler.SemanticAnalysis.Asts.ClassImplementationAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ClassMemberAst.html">SPPCompiler.SemanticAnalysis.Asts.ClassMemberAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ClassPrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.ClassPrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ConventionAst.html">SPPCompiler.SemanticAnalysis.Asts.ConventionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ConventionMutAst.html">SPPCompiler.SemanticAnalysis.Asts.ConventionMutAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ConventionRefAst.html">SPPCompiler.SemanticAnalysis.Asts.ConventionRefAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CoroutinePrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.CoroutinePrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.ExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FloatLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.FloatLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentGroupAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentNamedAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentNamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentUnnamedAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentUnnamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionImplementationAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionImplementationAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionMemberAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionMemberAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterGroupAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterOptionalAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterOptionalAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterRequiredAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterRequiredAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterSelfAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterSelfAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionParameterVariadicAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionParameterVariadicAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.FunctionPrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.FunctionPrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.GenExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericArgumentAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericArgumentAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericArgumentGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericArgumentGroupAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentNamedAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentNamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentUnnamedAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentUnnamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterOptionalAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterOptionalAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterRequiredAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterRequiredAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterVariadicAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterVariadicAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericIdentifierAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericIdentifierAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericParameterAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericParameterAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericParameterGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericParameterGroupAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentNamedAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentNamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentUnnamedAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentUnnamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterInlineConstraintsAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterInlineConstraintsAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterOptionalAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterOptionalAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterRequiredAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterRequiredAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterVariadicAst.html">SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterVariadicAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.GlobalConstantAst.html">SPPCompiler.SemanticAnalysis.Asts.GlobalConstantAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.IdentifierAst.html">SPPCompiler.SemanticAnalysis.Asts.IdentifierAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.InnerScopeAst.html">SPPCompiler.SemanticAnalysis.Asts.InnerScopeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.IntegerLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.IntegerLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.IsExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.IsExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LetStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.LetStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LetStatementInitializedAst.html">SPPCompiler.SemanticAnalysis.Asts.LetStatementInitializedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LetStatementUninitializedAst.html">SPPCompiler.SemanticAnalysis.Asts.LetStatementUninitializedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.LiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableAttributeBindingAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableAttributeBindingAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureArrayAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureArrayAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureObjectAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureObjectAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureSkip1ArgumentAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureSkip1ArgumentAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureSkipNArgumentsAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureSkipNArgumentsAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureTupleAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureTupleAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableSingleIdentifierAliasAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableSingleIdentifierAliasAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LocalVariableSingleIdentifierAst.html">SPPCompiler.SemanticAnalysis.Asts.LocalVariableSingleIdentifierAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopConditionAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopConditionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopConditionBooleanAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopConditionBooleanAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopConditionIterableAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopConditionIterableAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopControlFlowStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopControlFlowStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopElseStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopElseStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.LoopExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.LoopExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ModuleImplementationAst.html">SPPCompiler.SemanticAnalysis.Asts.ModuleImplementationAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ModuleMemberAst.html">SPPCompiler.SemanticAnalysis.Asts.ModuleMemberAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ModulePrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.ModulePrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentAst.html">SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentGroupAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentNamedAst.html">SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentNamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentUnnamedAst.html">SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentUnnamedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerAst.html">SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.ParenthesizedExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.ParenthesizedExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternGuardAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternGuardAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantAttributeBindingAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantAttributeBindingAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureArrayAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureArrayAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureObjectAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureObjectAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureSkip1ArgumentAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureSkip1ArgumentAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureSkipNArgumentsAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureSkipNArgumentsAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureTupleAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureTupleAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantElseAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantElseAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantElseCaseAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantElseCaseAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PatternVariantSingleIdentifierAst.html">SPPCompiler.SemanticAnalysis.Asts.PatternVariantSingleIdentifierAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorEarlyReturnAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorEarlyReturnAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst.html">SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.PrimaryExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.PrimaryExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.RetStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.RetStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.StatementAst.html">SPPCompiler.SemanticAnalysis.Asts.StatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.StringLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.StringLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SubroutinePrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.SubroutinePrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupImplementationAst.html">SPPCompiler.SemanticAnalysis.Asts.SupImplementationAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupMemberAst.html">SPPCompiler.SemanticAnalysis.Asts.SupMemberAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupPrototypeAst.html">SPPCompiler.SemanticAnalysis.Asts.SupPrototypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupPrototypeExtensionAst.html">SPPCompiler.SemanticAnalysis.Asts.SupPrototypeExtensionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupPrototypeFunctionsAst.html">SPPCompiler.SemanticAnalysis.Asts.SupPrototypeFunctionsAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.SupUseStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.SupUseStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TokenAst.html">SPPCompiler.SemanticAnalysis.Asts.TokenAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TupleLiteralAst.html">SPPCompiler.SemanticAnalysis.Asts.TupleLiteralAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeArrayAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeArrayAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeBinaryExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeBinaryExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeParenthesizedAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeParenthesizedAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypePostfixExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.TypePostfixExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorAst.html">SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorNestedTypeAst.html">SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorNestedTypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorOptionalTypeAst.html">SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorOptionalTypeAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeSingleAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeSingleAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeTupleAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeTupleAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeUnaryExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeUnaryExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorBorrowAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorBorrowAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorNamespaceAst.html">SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorNamespaceAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionAst.html">SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAst.html">SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAsyncAst.html">SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAsyncAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.UseStatementAst.html">SPPCompiler.SemanticAnalysis.Asts.UseStatementAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.WhereBlockAst.html">SPPCompiler.SemanticAnalysis.Asts.WhereBlockAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsAst.html">SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsAst module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsGroupAst.html">SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsGroupAst module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Scoping.html">SPPCompiler.SemanticAnalysis.Scoping package</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis.Scoping package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Scoping.Scope.html">SPPCompiler.SemanticAnalysis.Scoping.Scope module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Scoping.ScopeManager.html">SPPCompiler.SemanticAnalysis.Scoping.ScopeManager module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Scoping.SymbolTable.html">SPPCompiler.SemanticAnalysis.Scoping.SymbolTable module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Scoping.Symbols.html">SPPCompiler.SemanticAnalysis.Scoping.Symbols module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.html">SPPCompiler.SemanticAnalysis.Utils package</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of SPPCompiler.SemanticAnalysis.Utils package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.AstPrinter.html">SPPCompiler.SemanticAnalysis.Utils.AstPrinter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.CodeInjection.html">SPPCompiler.SemanticAnalysis.Utils.CodeInjection module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.CommonTypes.html">SPPCompiler.SemanticAnalysis.Utils.CommonTypes module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.CompilerStages.html">SPPCompiler.SemanticAnalysis.Utils.CompilerStages module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Utils.SemanticError.html">SPPCompiler.SemanticAnalysis.Utils.SemanticError module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="SPPCompiler.SyntacticAnalysis.html">SPPCompiler.SyntacticAnalysis package</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of SPPCompiler.SyntacticAnalysis package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.SyntacticAnalysis.ErrorFormatter.html">SPPCompiler.SyntacticAnalysis.ErrorFormatter module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.SyntacticAnalysis.Parser.html">SPPCompiler.SyntacticAnalysis.Parser module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.SyntacticAnalysis.ParserErrors.html">SPPCompiler.SyntacticAnalysis.ParserErrors module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="SPPCompiler.Utils.html">SPPCompiler.Utils package</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of SPPCompiler.Utils package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Utils.Functools.html">SPPCompiler.Utils.Functools module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Utils.ProgressBar.html">SPPCompiler.Utils.ProgressBar module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SPPCompiler.Utils.Sequence.html">SPPCompiler.Utils.Sequence module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/api/SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils">
+<span id="sppcompiler-semanticanalysis-astutils-astmemoryutils-module"></span><h1>SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils module<a class="headerlink" href="#module-SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.</span></span><span class="sig-name descname"><span class="pre">MemoryInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast_initialization=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast_moved=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast_borrowed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast_partially_moved=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast_pinned=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast_comptime_const=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_borrow_mut=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_borrow_ref=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_inconsistently_initialized=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_inconsistently_moved=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_inconsistently_partially_moved=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_inconsistently_pinned=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refer_to_asts=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The MemoryInfo class is used to store information about the memory state of a symbol. It is used to identify
+potential memory conflicts in S++ code, and generates errors when memory conflicts are detected. There are a number
+of ASTs stored within these class instances, both for checks and reporting errors.</p>
+<p>The “ast_initialization” is only None when the “ast_moved” is not None, and vice versa. This is because a symbol can
+not be both existing and not existing simultaneously. If there are partial moves, then the “ast_initialization” is
+still not None, and the “ast_moved” will be None.</p>
+<dl>
+<dt>Attributes:</dt><dd><p>ast_initialization: The AST where the memory is initialized (variable, parameter, etc).
+ast_moved: The AST where the memory is consumed (function argument, binary expression, etc).
+ast_borrowed: The AST where the memory is marked as borrowed (from parameter convention).
+ast_partially_moved: A list of partial moves (attributes).
+ast_pinned: A list of pinned attributes (or the entire object).</p>
+<p>is_borrow_ref: If the memory is borrowed as an immutable reference.
+is_borrow_mut: If the memory is borrowed as a mutable reference.
+ast_comptime_const: If the memory is a compile-time constant (global constant or generic constant).
+is_inconsistently_initialized: If the memory is inconsistently initialized from branches =&gt; (branch, is_initialized).
+is_inconsistently_moved: If the memory is inconsistently moved from branches =&gt; (branch, is_moved).
+is_inconsistently_partially_moved: If the memory is inconsistently partially moved from branches =&gt; (branch, is_partially_moved).
+is_inconsistently_pinned: If the memory is inconsistently pinned from branches =&gt; (branch, is_pinned).</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_initialization">
+<span class="sig-name descname"><span class="pre">ast_initialization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_initialization" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_moved">
+<span class="sig-name descname"><span class="pre">ast_moved</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_moved" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_borrowed">
+<span class="sig-name descname"><span class="pre">ast_borrowed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_borrowed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_partially_moved">
+<span class="sig-name descname"><span class="pre">ast_partially_moved</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="SPPCompiler.Utils.Sequence.html#SPPCompiler.Utils.Sequence.Seq" title="SPPCompiler.Utils.Sequence.Seq"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq</span></code></a><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_partially_moved" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_pinned">
+<span class="sig-name descname"><span class="pre">ast_pinned</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="SPPCompiler.Utils.Sequence.html#SPPCompiler.Utils.Sequence.Seq" title="SPPCompiler.Utils.Sequence.Seq"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq</span></code></a><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_pinned" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_comptime_const">
+<span class="sig-name descname"><span class="pre">ast_comptime_const</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_comptime_const" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.initialization_counter">
+<span class="sig-name descname"><span class="pre">initialization_counter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.initialization_counter" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_borrow_mut">
+<span class="sig-name descname"><span class="pre">is_borrow_mut</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_borrow_mut" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_borrow_ref">
+<span class="sig-name descname"><span class="pre">is_borrow_ref</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_borrow_ref" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_initialized">
+<span class="sig-name descname"><span class="pre">is_inconsistently_initialized</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.html#SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst" title="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst"><code class="xref py py-class docutils literal notranslate"><span class="pre">CaseExpressionBranchAst</span></code></a><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code><span class="pre">],</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.html#SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst" title="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst"><code class="xref py py-class docutils literal notranslate"><span class="pre">CaseExpressionBranchAst</span></code></a><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_initialized" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_moved">
+<span class="sig-name descname"><span class="pre">is_inconsistently_moved</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.html#SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst" title="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst"><code class="xref py py-class docutils literal notranslate"><span class="pre">CaseExpressionBranchAst</span></code></a><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code><span class="pre">],</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.html#SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst" title="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst"><code class="xref py py-class docutils literal notranslate"><span class="pre">CaseExpressionBranchAst</span></code></a><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_moved" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_partially_moved">
+<span class="sig-name descname"><span class="pre">is_inconsistently_partially_moved</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.html#SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst" title="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst"><code class="xref py py-class docutils literal notranslate"><span class="pre">CaseExpressionBranchAst</span></code></a><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code><span class="pre">],</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.html#SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst" title="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst"><code class="xref py py-class docutils literal notranslate"><span class="pre">CaseExpressionBranchAst</span></code></a><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_partially_moved" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_pinned">
+<span class="sig-name descname"><span class="pre">is_inconsistently_pinned</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.html#SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst" title="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst"><code class="xref py py-class docutils literal notranslate"><span class="pre">CaseExpressionBranchAst</span></code></a><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code><span class="pre">],</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.html#SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst" title="SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst.CaseExpressionBranchAst"><code class="xref py py-class docutils literal notranslate"><span class="pre">CaseExpressionBranchAst</span></code></a><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_pinned" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.refer_to_asts">
+<span class="sig-name descname"><span class="pre">refer_to_asts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="SPPCompiler.Utils.Sequence.html#SPPCompiler.Utils.Sequence.Seq" title="SPPCompiler.Utils.Sequence.Seq"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq</span></code></a><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code><span class="pre">[</span><a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code><span class="pre">]]</span></em><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.refer_to_asts" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.invalidate_referred_borrow">
+<span class="sig-name descname"><span class="pre">invalidate_referred_borrow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mover</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.invalidate_referred_borrow" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.moved_by">
+<span class="sig-name descname"><span class="pre">moved_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.moved_by" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.initialized_by">
+<span class="sig-name descname"><span class="pre">initialized_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.initialized_by" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.remove_partial_move">
+<span class="sig-name descname"><span class="pre">remove_partial_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.remove_partial_move" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.consistency_attrs">
+<span class="sig-name descname"><span class="pre">consistency_attrs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.consistency_attrs" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a>, <a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a>, <a class="reference internal" href="SPPCompiler.Utils.Sequence.html#SPPCompiler.Utils.Sequence.Seq" title="SPPCompiler.Utils.Sequence.Seq"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq</span></code></a>[<a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a>], <a class="reference internal" href="SPPCompiler.Utils.Sequence.html#SPPCompiler.Utils.Sequence.Seq" title="SPPCompiler.Utils.Sequence.Seq"><code class="xref py py-class docutils literal notranslate"><span class="pre">Seq</span></code></a>[<a class="reference internal" href="SPPCompiler.SemanticAnalysis.Asts.Ast.html#SPPCompiler.SemanticAnalysis.Asts.Ast.Ast" title="SPPCompiler.SemanticAnalysis.Asts.Ast.Ast"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ast</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.</span></span><span class="sig-name descname"><span class="pre">AstMemoryUtils</span></span><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>!
+The AstMemoryUtils class contains static methods for memory-related checks and analysis. The key function is to
+enforce memory integrity. There are also some convenience functions for checking if memory regions overlap by
+symbol.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils.overlaps">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">overlaps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast_2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils.overlaps" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils.left_overlap">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">left_overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ast_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ast_2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils.left_overlap" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils.enforce_memory_integrity">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enforce_memory_integrity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_ast</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_ast</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_move</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_partial_move</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_move_from_borrowed_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_pins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_memory_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils.enforce_memory_integrity" title="Link to this definition">¶</a></dt>
+<dd><p>Runs a number of checks to ensure the memory integrity of an AST is maintained. This function is responsible for
+all memory safety enforcement operations, except for the law of exclusivity, which is maintained by the
+FunctionCallArgumentGroupAst checker, as this maintains that status of mut/ref borrows.</p>
+<p>The consistency checks are only performed if a value is actually used after the branching; if a value isn’t
+used, then it can be inconsistent across branches, as the symbol will never be analysed in this method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<dl>
+<dt>Args:</dt><dd><p>value_ast: The AST being analysed for memory integrity.
+move_ast: The AST that is performing the move operation (“=” for example).
+sm: The scope manager that is managing the current scope.
+check_move: If a full move is being checked for validity.
+check_partial_move: If a partial move is being checked for validity.
+check_move_from_borrowed_context: If moving an attribute out of a borrowed context is being checked.
+check_pins: If moving pinned objects is being checked.
+update_memory_info: Whether to update the memory information in the symbol table.</p>
+</dd>
+<dt>Returns:</dt><dd><p>None</p>
+</dd>
+<dt>Raises:</dt><dd><p>SemanticErrors.MemoryNotInitializedUsageError: If a symbol is used before being initialized.
+SemanticErrors.MemoryPartiallyInitializedUsageError: If a symbol is used before being fully initialized.
+SemanticErrors.MemoryMovedFromBorrowedContextError: If a symbol gets moved from a borrowed context.
+SemanticErrors.MemoryMovedWhilstPinnedError: If a symbol gets moved whilst pinned.
+SemanticErrors.MemoryInconsistentlyInitializedError: If a symbol gets inconsistently initialized in</p>
+<blockquote>
+<div><p>branches.</p>
+</div></blockquote>
+<p>SemanticErrors.MemoryInconsistentlyMovedError: If a symbol gets inconsistently moved in branches.
+SemanticErrors.MemoryInconsistentlyPinnedError: If a symbol gets inconsistently pinned in branches.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils module</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils module</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, Sam Gardner
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils module</a><ul>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo"><code class="docutils literal notranslate"><span class="pre">MemoryInfo</span></code></a><ul>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_initialization"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.ast_initialization</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_moved"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.ast_moved</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_borrowed"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.ast_borrowed</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_partially_moved"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.ast_partially_moved</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_pinned"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.ast_pinned</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.ast_comptime_const"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.ast_comptime_const</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.initialization_counter"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.initialization_counter</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_borrow_mut"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.is_borrow_mut</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_borrow_ref"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.is_borrow_ref</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_initialized"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.is_inconsistently_initialized</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_moved"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.is_inconsistently_moved</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_partially_moved"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.is_inconsistently_partially_moved</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.is_inconsistently_pinned"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.is_inconsistently_pinned</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.refer_to_asts"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.refer_to_asts</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.invalidate_referred_borrow"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.invalidate_referred_borrow()</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.moved_by"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.moved_by()</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.initialized_by"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.initialized_by()</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.remove_partial_move"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.remove_partial_move()</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.MemoryInfo.consistency_attrs"><code class="docutils literal notranslate"><span class="pre">MemoryInfo.consistency_attrs()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils"><code class="docutils literal notranslate"><span class="pre">AstMemoryUtils</span></code></a><ul>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils.overlaps"><code class="docutils literal notranslate"><span class="pre">AstMemoryUtils.overlaps()</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils.left_overlap"><code class="docutils literal notranslate"><span class="pre">AstMemoryUtils.left_overlap()</span></code></a></li>
+<li><a class="reference internal" href="#SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils.AstMemoryUtils.enforce_memory_integrity"><code class="docutils literal notranslate"><span class="pre">AstMemoryUtils.enforce_memory_integrity()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

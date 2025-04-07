@@ -22,7 +22,7 @@ Todo - ideas:
 
 
 class _Annotations(Enum):
-    """!
+    """
     The _Annotations class is used to define the possible annotations that can be applied to ASTs. As Custom annotations
     are not yet supported, the annotations are defined as an Enum.
     """
@@ -40,14 +40,17 @@ class _Annotations(Enum):
 
 @dataclass
 class AnnotationAst(Asts.Ast):
-    """!
+    """
     The AnnotationAst class is used to represent annotations applied to ASTs. Annotations alter the behaviour of an AST,
-    but do not generate code. For example marking a method as "virtual_method" will trigger specific compiler behaviour,
+    but do not generate code. For example marking a method as `virtual_method` will trigger specific compiler behaviour,
     but will not generate any code.
     """
 
     tok_at: Asts.TokenAst = field(default=None)
+    """The `@` character that marks the annotation."""
+
     name: Asts.IdentifierAst = field(default=None)
+    """The name of the annotation."""
 
     def __post_init__(self) -> None:
         self.tok_at = self.tok_at or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAt)
@@ -70,9 +73,11 @@ class AnnotationAst(Asts.Ast):
         return self.name.pos_end
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
-        """!
+        """
         Mark the context AST with the correct attributes and values depending on the annotation.
-        @param context The context AST to apply the annotation to.
+
+        :param ctx: The context AST to apply the annotation to.
+        :return: None.
         """
 
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
@@ -111,13 +116,15 @@ class AnnotationAst(Asts.Ast):
             ctx._hot = self
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
-        """!
-        The following checks have to be in tis method, because they need access to the "scope" for potential errors. All
-        context checks, annotation conflict checks, and unknown annotation checks are handled here.
-        @param sm The scope manager.
-        @throw SemanticErrors.AnnotationInvalidApplicationError If the annotation is applied to an invalid context.
-        @throw SemanticErrors.AnnotationConflictError If the annotation conflicts with another annotation.
-        @throw SemanticErrors.AnnotationInvalidError If the annotation is unknown.
+        """
+        The following checks have to be in this method, because they need access to the "scope" for potential errors.
+        All context checks, annotation conflict checks, and unknown annotation checks are handled here.
+
+        :param sm: The scope manager.
+        :return: None.
+        :raise SemanticErrors.AnnotationInvalidApplicationError: If the annotation is applied to an invalid context.
+        :raise SemanticErrors.AnnotationConflictError: If the annotation conflicts with another annotation.
+        :raise SemanticErrors.AnnotationInvalidError: If the annotation is unknown.
         """
 
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
