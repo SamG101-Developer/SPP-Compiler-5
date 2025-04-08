@@ -33,19 +33,22 @@ class Ast(ABC, CompilerStages):
     def print(self, printer: AstPrinter) -> str:
         """
         Print an AST with indentation for inner scopes. The decorator and AstPrinter object "printer" work together to
-        auto-format the output.
+        auto-format the output. This function will result in almost identical code to the source code being parsed and
+        generated; the only difference will be the preprocessing applications, which mainly focus on function
+        generation. Some ASTs will be re-ordered, with no effect on code execution.
 
-        :param printer: The auto-formatting AstPrinter object.
-        :return: The output string to be printed.
+        :param printer: The auto-formatting AstPrinter object. It can be created inline, and the top-most AST it is
+            created in will be the most un-tabbed AST.
+        :return: The output string to be printed, fully formatted and pre-processed.
         """
 
     @property
     @abstractmethod
     def pos_end(self) -> int:
         """
-        The `pos_end` property gets the final index spanned to by this AST. Implementations recursively choose the final
-        AST from their attributes and get that AST's end position. This will end up with either an identifier of token's
-        end position, and for either AST this is its start position + length of identifier/token.
+        The ``pos_end`` property gets the final index spanned to by this AST. Implementations recursively choose the
+        final AST from their attributes and get that AST's end position. This will end up with either an identifier of
+        token's end position, and for either AST this is its start position + length of identifier/token.
 
         :return: The final index spanned by this AST.
         """

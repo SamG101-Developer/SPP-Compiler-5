@@ -18,13 +18,16 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
-    """!
+    """
     The BinaryExpressionAst class is an AST node that represents a binary expression. This AST can be used to represent
     any binary operation, such as addition, subtraction, multiplication, division, etc. The binary expression is
     represented as "lhs op rhs", where "lhs" and "rhs" are the left and right hand side expressions, and "op" is the
     operator.
 
     Example:
+
+    .. code-block:: S++
+
         x + 10
 
     The above example would be represented as a BinaryExpressionAst with the "+" operator, and the left hand side being
@@ -33,10 +36,16 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
 
     lhs: Asts.ExpressionAst = field(default=None)
+    """The lhs operands of the binary expression."""
+
     op: Asts.TokenAst = field(default=None)
+    """The operator of the binary expression."""
+
     rhs: Asts.ExpressionAst = field(default=None)
+    """The rhs operands of the binary expression."""
 
     _as_func: Optional[Asts.PostfixExpressionAst] = field(default=None, init=False, repr=False)
+    """The function representation of the binary expression."""
 
     def __post_init__(self) -> None:
         self.op = self.op or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.NoToken)
@@ -56,12 +65,15 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self.rhs.pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
-        """!
-        The inferred type is always the return type of the converted function equivalent. As this is not fixed
-        (operations have generic return types), the function equivalent is analysed to determine the return type.
-        @param sm The scope manager.
-        @param kwargs Additional keyword arguments.
-        @return The inferred type of the binary expression.
+        """
+        The inferred type of a binary expression is the return type of the equivalent method call. This is not a fixed
+        type, as operation classes have a generic "Ret" type. The expression ``1 + 2`` becomes ``1.add(2)``, which is
+        inferred as ``BigInt::add(1, 2)``, and the return type is ``BigInt``. This also handles multiple overloads, as
+        the entire postfix function call is analysed for its respective return type.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        :return: The type of the result of executing the binary expression.
         """
 
         # Comparisons using the "is" keyword are always boolean.
@@ -74,15 +86,20 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self._as_func.infer_type(sm, **kwargs)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        """!
-        Most of the analysis for binary expressions is offloaded into the function equivalent of the binary expression
-        (memory checks, type checks, etc). Some memory checks are done beforehand to short-circuit the analysis. Other
-        checks include the assignment operations (+=, -= etc) requiring the LHS to be symbolic, and binary folding.
-        @param sm The scope manager.
-        @param kwargs Additional keyword arguments.
-        @throw ExpressionTypeInvalidError If the LHS or RHS is an invalid expression.
-        @throw AssignmentInvalidCompoundLhsError If the LHS is not symbolic for a compound assignment.
-        @throw MemberAccessNonIndexableError If the LHS or RHS is not indexable for a fold operation.
+        """
+        Most of the analysis of a binary expression is offloaded into the postfix function call, including type checks,
+        memory checks etc. Some memory checks are done beforehand, to short-circuit execution.
+
+        The checks unique to the binary expression include the compound assignment operations requiring a symbolic LHS,
+        and binary folding operations.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        :return: None.
+        :raise SemanticErrors.AssignmentInvalidCompoundLhsError: This exception is raised when the left-hand side of a
+            compound assignment is non-symbolic. For example "1 += 2" is invalid.
+        :raise SemanticErrors.MemberAccessNonIndexableError: This exception is raised when trying to binary-fold a
+            non-indexable type.
         """
 
         # The TypeAst cannot be used as an expression for a binary operation.
@@ -105,6 +122,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.AssignmentInvalidCompoundLhsError().add(self.lhs).scopes(sm.current_scope)
 
         # Todo: Check on the tuple size to be > 1 ?
+        # Todo: Instead of tuple checks, do the "indexable" check - allow folding arrays too.
         # Handle lhs-folding
         if isinstance(self.lhs, Asts.TokenAst):
             # Check the rhs is a tuple.

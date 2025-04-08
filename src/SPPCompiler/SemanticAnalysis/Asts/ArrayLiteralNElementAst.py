@@ -13,12 +13,15 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
-    """!
+    """
     The ArrayLiteralNElementAst class is an AST node that represents an array literal with n elements. The type of the
     element is never given, because every expression in S++ is type-inferrable on declaration. This means that the type
     of the array is inferred from the first element in the array.
 
     Example:
+
+    .. code-block:: S++
+
         let x = [1, 2, 3, 4]
 
     This will create a std::array::Arr[std::number::U8, 4] type. Arrays in S++ are low-level constructs, and map
@@ -27,8 +30,13 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
 
     tok_l: Asts.TokenAst = field(default=None)
+    """The opening ``[`` token marking an array literal."""
+
     elems: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
+    """The expressions representing the elements in the array literal."""
+
     tok_r: Asts.TokenAst = field(default=None)
+    """The closing ``]`` token marking the end of an array literal."""
 
     def __post_init__(self) -> None:
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftSquareBracket)
@@ -53,12 +61,13 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self.tok_r.pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
-        """!
+        """
         The inferred type will always be std::Arr, with its generic arguments determined by the inferred element type,
         and the number of elements. The type will be "std::Arr[Element=<self.element_type>, n=<self.size>]".
-        @param sm The scope manager.
-        @param kwargs Additional keyword arguments.
-        @return The inferred array type.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        :return: The inferred array type.
         """
 
         # Create the standard "std::array::Arr[T, n: BigNum]" type, with generic items.
@@ -69,15 +78,20 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return array_type
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        """!
-        Because the actual elements are given to this array literal, the type will be inferred from them. This means
-        that the elements must be the same type. Also, to adhere to 2nd class borrowing rules, none of the elements can
-        be borrowed.
-        @param sm The scope manager.
-        @param kwargs Additional keyword arguments.
-        @throw ExpressionTypeInvalidError If an element is an invalid expression.
-        @throw ArrayElementsDifferentTypesError If the elements have different types.
-        @throw ArrayElementBorrowedError If an element is borrowed.
+        """
+        As this literal takes values inside the brackets, the type of element is inferred from them. All the elements
+        must be the same type. To enforce memory rules, none of these elements can be borrows, in the same way class
+        attributes cannot be borrows.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        :return: None.
+        :raise SemanticErrors.ExpressionTypeInvalidError: This exception is raised if an expression for a value is
+            syntactically valid but makes no sense in this context (".." or a type).
+        :raise SemanticErrors.ArrayElementsDifferentTypesError(): This exception is raised if an array element
+            has a different type that the first element. It is a specialized type mismatch error.
+        :raise SemanticErrors.ArrayElementBorrowedError(): This exception is raised if an array element is in the
+            borrowed state, invalidating it from being stored in an array.
         """
 
         zeroth_elem = self.elems[0]

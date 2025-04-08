@@ -17,14 +17,16 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass
 class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
-    """!
+    """
     The CaseExpressionAst represents a conditional jumping structure in S++. Case expressions are highly flexible, and
     can be used as regular if-else expressions, or pattern matching by using the "of" keyword. A list of branches is
     maintained, and the main analysis focus of the entire case expression is ensuring consistency memory status across
     these branches, ie are all symbols equally initialized at the end of the branches.
 
     Example (regular):
-    ```
+
+    .. code-block:: S++
+
         case my_value == 100 {
             ...
         }
@@ -34,10 +36,11 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         else {
             ...
         }
-    ```
 
     Example (pattern):
-    ```
+
+    .. code-block:: S++
+
         case my_object of
             is MyObject(a=1, b=[0, ..], ..) { ... }
             is MyObject(a=1, b=[1, ..], ..) { ... }
@@ -45,13 +48,19 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         else {
             ...
         }
-    ```
     """
 
     kw_case: Asts.TokenAst = field(default=None)
+    """The ``case`` keyword representing the case expression."""
+
     cond: Asts.ExpressionAst = field(default=None)
+    """The condition of the case expression."""
+
     kw_of: Optional[Asts.TokenAst] = field(default=None)
+    """The optional ``of`` keyword indicating a subsequent list of patterns."""
+
     branches: Seq[Asts.CaseExpressionBranchAst] = field(default_factory=Seq)
+    """The branches that the condition can be matched against."""
 
     def __post_init__(self) -> None:
         self.kw_case = self.kw_case or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwCase)
@@ -63,35 +72,40 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             c1: int, p1: Asts.TokenAst, p2: Asts.ExpressionAst, p3: Asts.InnerScopeAst,
             p4: Seq[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
 
-        """!
+        """
         The "from_simple" static method acts as a pseudo-constructor to create a case expression from the singular
         expression in the condition. It is converted into a partial fragment pattern match, to provide consistent
         analysis with other case patterns (pattern matching).
 
         The expression:
-        ```
+
+        .. code-block:: S++
+
             case some_condition { ... }
-        ```
 
         Becomes:
-        ```
+
+        .. code-block:: S++
+
             case some_condition of
                 == true { ... }
-        ```
 
         The method works recursively with "p4", as this sequence is a list of other converted branches, called from the
         parser. This means that "branches" is effectively a list of case expressions, that will nest into "else" blocks
         after each conversion:
 
         The expressions:
-        ```
+
+        .. code-block:: S++
+
             case some_condition { ... }
             else case other_condition { ... }
             else { ... }
-        ```
 
         Become:
-        ```
+
+        .. code-block:: S++
+
             case some_condition of
                 == true { ... }
                 else {
@@ -100,16 +114,16 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                         else {
                             ...
                         }
-        ```
 
-        @param c1 The position of the AST.
-        @param p1 The "case" keyword.
-        @param p2 The case expression/condition.
-        @param p3 The inner scope body.
-        @param p4 Subsequent branches.
-        @return The restructured case expression.
+        .. todo::
+            this structure is probably why there is the memory bug for shared symbols in simple-case conditions
 
-        @todo: this structure is probably why there is the memory bug for shared symbols in simple-case conditions
+        :param c1: The position of the AST.
+        :param p1: The "case" keyword.
+        :param p2: The case expression/condition.
+        :param p3: The inner scope body.
+        :param p4: Subsequent branches.
+        :return: The restructured case expression.
         """
 
         # Convert condition into an "== true" comparison.
@@ -136,21 +150,24 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self.branches[-1].pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
-        """!
+        """
         The type of the 0th branch is used. To ensure type-safety, all branches must return the same value, but this
         check is only required if the "case" expression is being assigned to a variable (ie the return type is
         required). Also, an "else" branch is required in-case the other branches don't execute. If there are no
         branches, the return type is Void (which will be an error in the caller function).
 
-        @param sm The scope manager.
-        @param kwargs Additional keyword arguments.
-        @return The type of the case expression.
+        .. todo::
+            don't require "else" for exhaustive variant destructure.
+            checking for an "else" branch will error for 0-branch case expressions.
 
-        @throw CaseBranchesConflictingTypesError If the branches return different types.
-        @throw CaseBranchesMissingElseBranchError If there is no "else" branch.
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        :return: The type of the case expression.
 
-        @todo: don't require "else" for exhaustive variant destructure.
-        @todo: checking for an "else" branch will error for 0-branch case expressions.
+        :raise SemanticErrors.CaseBranchesConflictingTypesError: This exception is thrown if a branch's return type
+            doesn't match the first branch's return type.
+        :raise SemanticErrors.CaseBranchesMissingElseBranchError: This exception is thrown if the case expression
+            doesn't have an "else" block.
         """
 
         # The checks here only apply when assigning from this expression.
@@ -173,19 +190,23 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        """!
+        """
         The case expression requires complex semantic analysis, to ensure that all control paths are consistent over a
         number of memory-related symbolic attributes. For each control path, if a symbol has a different final
         initialization, move, partial move or pinning status, then it is marked with a special value. Then, if that
         symbol is used after the case block, an error is thrown for inconsistent memory status. This is to ensure that
         the memory status of a symbol is consistent across all control paths.
 
-        @param sm The scope manager.
-        @param kwargs Additional keyword arguments.
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        :return: None.
 
-        @throw ExpressionTypeInvalidError If the condition is an invalid expression.
-        @throw CaseBranchMultipleDestructurePatternsError If a branch has multiple patterns for destructuring.
-        @throw CaseBranchesElseBranchNotLastError If the "else" branch is not the last branch.
+        :raise SemanticErrors.ExpressionTypeInvalidError: This exception is raised if an expression for a value is
+            syntactically valid but makes no sense in this context (".." or a type).
+        :raise SemanticErrors.CaseBranchMultipleDestructurePatternsError: This exception is raised if a destructure
+            branch has a multi-pattern match on it (only expression comparison can use multi-pattern match).
+        :raise SemanticErrors.CaseBranchesElseBranchNotLastError: This exception is raised if an "else" branch is found
+            but isn't the last branch.
         """
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the condition.

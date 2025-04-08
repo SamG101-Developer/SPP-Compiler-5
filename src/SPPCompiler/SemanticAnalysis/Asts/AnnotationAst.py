@@ -42,12 +42,25 @@ class _Annotations(Enum):
 class AnnotationAst(Asts.Ast):
     """
     The AnnotationAst class is used to represent annotations applied to ASTs. Annotations alter the behaviour of an AST,
-    but do not generate code. For example marking a method as `virtual_method` will trigger specific compiler behaviour,
-    but will not generate any code.
+    but do not generate code. For example marking a method as ``virtual_method`` will trigger specific compiler
+    behaviour, but will not generate any code.
+
+    There are a small number of annotations that have specific placements, such as ``virtual_method`` or
+    ``abstract_method`` only being applicable to methods, or ``hot`` only being applicable to functions.
+
+    Example:
+
+    .. code-block:: S++
+
+        @hot
+        fun function() -> Void { ... }
+
+    Custom annotations will be supported in the future, either once the compiler is self-hosting (easier token injection
+    and modification), or compile time functions are supported.
     """
 
     tok_at: Asts.TokenAst = field(default=None)
-    """The `@` character that marks the annotation."""
+    """The ``@`` character that marks the annotation. This must be present for each individual annotation."""
 
     name: Asts.IdentifierAst = field(default=None)
     """The name of the annotation."""
@@ -74,7 +87,12 @@ class AnnotationAst(Asts.Ast):
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         """
-        Mark the context AST with the correct attributes and values depending on the annotation.
+        Mark the context AST with the correct attributes and values depending on the annotation. This allows all future
+        compiler stages to utilize the additional behaviour based on the annotations.
+
+        The majority of the values set are setting this AST node itself as a flag (ie
+        ``Asts.FunctionPrototypeAst._virtual = self``), but the visibility annotations also include the mapped
+        Visibility, so the mapping doesn't have to be recomputed per attribute access.
 
         :param ctx: The context AST to apply the annotation to.
         :return: None.
@@ -117,14 +135,24 @@ class AnnotationAst(Asts.Ast):
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         """
-        The following checks have to be in this method, because they need access to the "scope" for potential errors.
-        All context checks, annotation conflict checks, and unknown annotation checks are handled here.
+        All annotation context checks, conflict checks, and validity checks are performed at this stage. They require
+        ScopeManager access for error messages, so can't be performed at the ``pre_process`` stage. Although this stage
+        of the compiler is typically used for generating a top level scope for a function or class, it is just utilized
+        as an annotation analysis method that happens with scope access.
+
+        It cannot be done in the analyse_semantics stage, because certain checks must happen before the behaviour based
+        of annotations is utilized. For example, if both ``virtual_method`` and ``abstract_method`` were applied, their
+        behaviour may both be applied in an inheritance analysis before these annotations were checked and found to be
+        invalid.
 
         :param sm: The scope manager.
         :return: None.
-        :raise SemanticErrors.AnnotationInvalidApplicationError: If the annotation is applied to an invalid context.
-        :raise SemanticErrors.AnnotationConflictError: If the annotation conflicts with another annotation.
-        :raise SemanticErrors.AnnotationInvalidError: If the annotation is unknown.
+        :raise SemanticErrors.AnnotationInvalidApplicationError: This exception is thrown if an annotation is applied to
+            an invalid context. For example, applying ``virtual_method`` to a free function, or ``hot`` to a class.
+        :raise SemanticErrors.AnnotationConflictError: This exception is raised if the annotation conflicts with another
+            annotation; an example would be both ``hot`` and ``cold`` being applied to a function.
+        :raise SemanticErrors.AnnotationInvalidError: This exception is thrown if the annotation is unknown. In future
+            versions of the compiler, custom annotations will be supported.
         """
 
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
