@@ -13,4 +13,4 @@ spp-compiler documentation
    :maxdepth: 2
    :caption: Api Documentation
 
-   api/modules
+   compiler-api/modules
