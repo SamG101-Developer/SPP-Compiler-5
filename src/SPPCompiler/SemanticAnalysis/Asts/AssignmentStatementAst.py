@@ -53,25 +53,32 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self.rhs[-1].pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
-        """!
-        All statements are inferred as "Void".
-        @param sm The scope manager.
-        @param kwargs Additional keyword arguments.
-        @return The "Void" type.
+        """
+        The assignment statement returns a ``Void`` type, because no value can be returned out of an assignment. For
+        example, with ``x = y``, ``y`` is moved into ``x``, and allowing access to ``x`` outside of the assignment means
+        either ``x`` is being moved again (invalidating it), or it is being borrowed implicitly, breaking memory rules.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        :return: The `std::void::Void` type.
         """
 
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        """!
+        """
         An AssignmentStatementAst must have a symbolic left-hand-side. This ensures that the left-hand-side is
         non-temporary, and has a valid location in memory for assignment. The types must match between the left and
         right hand side, and the memory status of the right hand side must be valid.
-        @param sm The scope manager.
-        @param kwargs Additional keyword arguments.
-        @throw AssignmentInvalidLhsError If the left-hand-side is not symbolic.
-        @throw MutabilityInvalidMutationError If the left-hand-side is not mutable.
-        @throw TypeMismatchError If the left and right hand side types do not match.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        :return: None.
+
+        :raise SemanticErrors.MutabilityInvalidMutationError: This exception is raised if an immutable symbol is
+            assigned to, or a partial assignment into an immutable borrow is attempted.
+        :raise SemanticErrors.TypeMismatchError: This exception is raised if the right-hand side value's type does not
+            match the corresponding left-hand side symbol's type.
         """
 
         # Ensure the LHS and RHS are semantically valid.
