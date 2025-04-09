@@ -1,10 +1,5 @@
 # Basic Types
 
-<primary-label ref="header-label"/>
-
-<secondary-label ref="doc-complete"/>
-
-
 S++ has a number of basic types, which are the building blocks of all S++ programs. This section will detail the basic
 types in S++. The basic types in S++ are:
 - Number types
@@ -12,10 +7,6 @@ types in S++. The basic types in S++ are:
 - Void type
 
 ## Number Types
-
-<secondary-label ref="doc-sect-complete"/>
-
-<secondary-label ref="feature-impl"/>
 
 Number types are mostly inspired by Rust, using the short type names rather than `char, short, int, long, long long`etc.
 However, the amount of number types has been extended, to make the language more versatile. The number types in S++ are:
@@ -73,18 +64,10 @@ types. All numbers have the `Copy` class superimposed over them.
 
 ## Boolean Type
 
-<secondary-label ref="doc-sect-complete"/>
-
-<secondary-label ref="feature-impl"/>
-
 The boolean type is S++ is `std::Bool`. This is a compiler known type that maps to the llvm `bool` type. Literals `true`
 and `false` are used to create boolean value types. The `Copy` class is superimposed over the `std::Bool` type.
 
 ## Void Type
-
-<secondary-label ref="doc-sect-complete"/>
-
-<secondary-label ref="feature-impl"/>
 
 The void type in S++ is `Void`. This is a compiler known type that maps to the llvm `void` type. The `Void` type is used
 to represent the absence of a value, and is used as the return type for functions that do not return a value. Variables

@@ -59,3 +59,7 @@ This allows the selection of the iterator's convention based on the iteration me
 
 Note that iteration syntax using `loop-in` requires the `Gen` type to use `Send=Void`, so that the `resume` method
 doesn't require an argument.
+
+## Flow Control
+
+See the section on [loop flow control statements](../statements/Loop-Control-Statements.md) for more information.
