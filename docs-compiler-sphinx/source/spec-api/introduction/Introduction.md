@@ -1,9 +1,5 @@
 # Introduction
 
-<primary-label ref="header-label"/>
-
-<secondary-label ref="doc-complete"/>
-
 S++ is a modern, general-purpose systems programming language, inheriting the syntax of a Rust-Python fusion. It is
 strongly and statically typed, and has a specific focus on memory safety, runtime performance, and ease of use. There
 are a number of features in S++ that make it a powerful language for systems programming, such as: full type inference,
@@ -59,5 +55,3 @@ second-class borrows, the law of exclusivity, and ownership tracking.
     variables to be returned out of loops.
 4**Operator Overloading**: S++ supports operator overloading, allowing for operators to be defined for custom types.
     This is limited to the binary operators and the `not` operator, as S++ doesn't have unary operators.
-
-{columns="2"}

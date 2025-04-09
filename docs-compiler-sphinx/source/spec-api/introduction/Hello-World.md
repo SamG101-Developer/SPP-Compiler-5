@@ -1,9 +1,5 @@
 # Hello World
 
-<primary-label ref="header-label"/>
-
-<secondary-label ref="doc-complete"/>
-
 ## Project Setup
 
 Create a folder called `HelloWorld`, and inside the folder, run the following command to create a new S++ project.

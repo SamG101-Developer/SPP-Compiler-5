@@ -1,14 +1,6 @@
 # Tooling
 
-<primary-label ref="header-label"/>
-
-<secondary-label ref="doc-complete"/>
-
 ## Commands
-
-<secondary-label ref="doc-sect-subj-update"/>
-
-<secondary-label ref="feature-wip"/>
 
 The `spp` tool allows several commands to be run, to create, manage and run S++ projects. The commands are:
 - [`init`](#project-initialization): Create a new S++ project in the current folder. The project structure is created
@@ -30,10 +22,6 @@ The `spp` tool allows several commands to be run, to create, manage and run S++ 
 
 ## Project Initialization
 
-<secondary-label ref="doc-sect-complete"/>
-
-<secondary-label ref="feature-impl"/>
-
 The `spp init` command creates the folders and files in the current directory to create a new S++ project. This will
 enable the project to be built and run without structural errors. See the project structure section for more information
 on the folders and files created.
@@ -46,10 +34,6 @@ No arguments can be passed to the `init` command. The `spp.toml` project configu
 metadata that can be updated.
 
 ## Project Building
-
-<secondary-label ref="doc-sect-complete"/>
-
-<secondary-label ref="feature-wip"/>
 
 The `spp build` command is used to compile the current project. It will recursively search the `src` folder for all
 `.spp` code files. The `vcs` and `ext` folders are then searched for code files too, and added to the module tree.
@@ -80,10 +64,6 @@ The default command is `spp build --debug --executable --no-vcs-update`.
 
 ## Project Running
 
-<secondary-label ref="doc-sect-complete"/>
-
-<secondary-label ref="feature-not-impl-yet"/>
-
 The `spp run` command can only be used if the `--executable` flag was used in the `build` step. It runs the built binary
 from the `bin` folder. The binary is recompiled if there are any changes to the code, and is run immediately after
 compilation. The build mode flag is required, to rebuild/run the correct binary.
@@ -98,10 +78,6 @@ The default command is `spp run --debug`.
 
 ## Project Cleaning
 
-<secondary-label ref="doc-sect-complete"/>
-
-<secondary-label ref="feature-not-impl-yet"/>
-
 The `spp clean` command is used to delete the build mode folder if a flag is passed, or all build mode folders if no
 flag is passed. This will force the entire project to be re-built, as the binary is deleted. The `bin` folder is not
 deleted, as it is part of the project structure; only emptied.
@@ -112,10 +88,6 @@ deleted, as it is part of the project structure; only emptied.
 | `--release` | Cleans the release build |
 
 ## Project VCS Updating
-
-<secondary-label ref="doc-sect-complete"/>
-
-<secondary-label ref="feature-wip"/>
 
 The `spp vcs` command is used to manage the vcs dependencies of the project. The compiler will check the `vcs` folder
 for all the dependencies. If the dependencies are not present, they will be cloned from the repository. If the
@@ -130,10 +102,6 @@ date, and that the project is built with the latest code.
 
 ## Compiler Version
 
-<secondary-label ref="doc-sect-complete"/>
-
-<secondary-label ref="feature-not-impl-yet"/>
-
 The `spp version` command is used to display the version of the S++ compiler that is currently installed. This will
 output the version number, and nothing else. The `--libraries` flag can be used to list the versions of the `vcs` and
 `ext` libraries. This information is pulled from their respective `spp.toml` files, but is included as a convenience
@@ -144,9 +112,5 @@ tool.
 | `--libraries` | Lists the versions of the `vcs` and `ext` libraries. |
 
 ## Compiler Help
-
-<secondary-label ref="doc-sect-complete"/>
-
-<secondary-label ref="feature-not-impl-yet"/>
 
 The `spp help` command is used to display a list of all commands and flags that can be passed to the commands.

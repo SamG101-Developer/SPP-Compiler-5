@@ -2,7 +2,7 @@ import os
 import sys
 
 from pygments.lexer import RegexLexer
-from pygments.token import Keyword, Name, String, Number, Operator, Punctuation, Text
+from pygments.token import Keyword, Name, String, Number, Operator, Punctuation, Text, Comment
 from sphinx.application import Sphinx
 
 sys.path.insert(0, os.path.abspath("../../src"))
@@ -19,7 +19,13 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.todo",
     "sphinx_autodoc_typehints",
+    "myst_parser"
 ]
+
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
+}
 
 autosummary_generate = True
 autodoc_member_order = "bysource"
@@ -56,7 +62,9 @@ class SppSphinxLexer(RegexLexer):
             (r"[\(\)\{\}\[\]:,@\.]", Punctuation),
             (r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", Name),
             (r"\s+", Text),
-        ]
+            (r"#.*$", Comment.Singleline),
+            (r"(##).*?(##)", Comment.Multiline),
+        ],
     }
 
 

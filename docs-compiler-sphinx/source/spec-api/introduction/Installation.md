@@ -1,13 +1,6 @@
 # Installation
 
-<primary-label ref="header-label"/>
-
-<secondary-label ref="doc-complete"/>
-
 ## Installation Process
-
-<secondary-label ref="doc-sect-complete"/>
-<secondary-label ref="feature-not-impl-yet"/>
 
 The Git repository of the compiler contains the source code of the compiler. Under the "releases" tab, you can find the
 latest release of the compiler. The release contains the compiler binary, with releases for Windows, Linux and macOS,
@@ -25,16 +18,10 @@ included separately per project, similar to a module being installed in a Python
 
 ## Updating the Compiler
 
-<secondary-label ref="doc-sect-complete"/>
-<secondary-label ref="feature-not-impl-yet"/>
-
 The compiler can be updated from the command line to any version that has been released. Note that the standard library
 is separate from the compiler, and is treated as any other installable 3rd party library, so is updated separately.
 
 ## Uninstalling the Compiler
-
-<secondary-label ref="doc-sect-complete"/>
-<secondary-label ref="feature-not-impl-yet"/>
 
 To uninstall the compiler, run the uninstaller binary that is located in the same directory as the compiler binary. This
 will remove the compiler from the system path, and delete the compiler folder and binary from the system. The compiler

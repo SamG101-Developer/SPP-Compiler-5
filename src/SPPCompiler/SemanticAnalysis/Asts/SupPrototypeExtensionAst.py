@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 # Todo
 #  - Prevent double inheritance (same type superimposed anywhere in the tree)
 #  - Prevent cyclic inheritance
+#  - Only allow 1 Gen[T] superimposition
 
 
 @dataclass

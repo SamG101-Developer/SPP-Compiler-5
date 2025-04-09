@@ -1,5 +1,5 @@
 from pygments.style import Style
-from pygments.token import Keyword, Name, String, Number, Operator, Punctuation
+from pygments.token import Keyword, Name, String, Number, Operator, Punctuation, Comment
 
 
 class SppSphinxStyle(Style):
@@ -13,6 +13,8 @@ class SppSphinxStyle(Style):
         Operator: "#ffff00",
         Punctuation: "#ffff00",
         Name: "#c0c0c0",
+        Comment.Singleline: "#9f40ff",
+        Comment.Multiline: "#00ff00",
     }
 
 

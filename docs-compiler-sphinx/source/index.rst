@@ -14,3 +14,4 @@ spp-compiler documentation
    :caption: Api Documentation
 
    compiler-api/modules
+   spec-api/modules

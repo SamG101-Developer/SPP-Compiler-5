@@ -1,11 +1,5 @@
 # Keywords &amp; Identifiers
 
-<primary-label ref="header-label"/>
-
-<secondary-label ref="doc-complete"/>
-
-<secondary-label ref="doc-subj-update"/>
-
 ## Keywords
 
 S++ uses a small set of keywords, to maintain simplicity. The keywords are not context dependant, and can therefore not
@@ -19,10 +13,6 @@ Annotations are the same as Rust's annotations, or C++ attributes. They are used
 but don't introduce ASTs.
 
 ### Keywords List
-
-<secondary-label ref="doc-sect-subj-update"/>
-
-<secondary-label ref="feature-impl"/>
 
 - `cls`: define a class (state only)
 - `sup`: define a superimposition
@@ -54,23 +44,20 @@ but don't introduce ASTs.
 - `or`: logical or binary operator
 - `not`: logical not postfix operator
 
-{columns="4"}
-
 ### Annotations List
 
-<secondary-label ref="doc-sect-subj-update"/>
-
-<secondary-label ref="feature-wip"/>
-
-- `@inline`: inline a function
-- `@cold`: mark a function as cold
-- `@hot`: mark a function as hot
+- `@virtual_method`: mark a method as virtual
+- `@abstract_method`: mark a method as abstract
 - `@public`: mark a symbol as public
 - `@protected`: mark a symbol as protected
 - `@private`: mark a symbol as private
-- `@friend`: define a friend for the symbol
-- `@deprecated`: mark a block as deprecated
-- `@abstract_method`: mark a method as abstract
-- `@virtual_method`: mark a method as virtual
+- `@cold`: mark a function as cold
+- `@hot`: mark a function as hot
 
-{columns="4"}
+####  Future
+- `@inline`: inline a function
+- `@noinline`: don't inline ever
+- `@friend`: define a friend for the symbol
+- `@deprecated/@obselete`: mark deprecation/obsolete
+- `@likely/@unlikely/@fallthrough`: conditionals
+- `@unroll/@allow_infinite`: loops
