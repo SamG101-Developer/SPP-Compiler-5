@@ -36,6 +36,8 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # Todo: allow returning from a coroutine if there is no expression attached to it (early return).
+
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token_type != SppTokenType.KwFun:
             raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(

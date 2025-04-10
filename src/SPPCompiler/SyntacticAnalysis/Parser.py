@@ -1278,6 +1278,7 @@ class SppParser:
         return reduce(lambda acc, x: Asts.TypePostfixExpressionAst(c1, acc, x), p2.list(), p1).convert()
 
     def parse_type_unary_expression(self) -> Asts.TypeAst:
+        # Todo: this doesn't allow for &[T, n], has to be &std::Arr[T, n] atm.
         c1 = self.current_pos()
         p1 = self.parse_zero_or_more(self.parse_type_unary_op, self.parse_nothing)
         p2 = self.parse_once(self.parse_type_single)
@@ -1330,7 +1331,7 @@ class SppParser:
         return Asts.TypeUnaryOperatorNamespaceAst(c1, p1, p2)
 
     def parse_type_unary_op_borrow(self) -> Asts.TypeUnaryOperatorBorrowAst:
-        c1 = self.current_pos()
+        c1 = self.current_pos()  # todo: make is parse_convention
         p1 = self.parse_alternate(
             self.parse_convention_mut,
             self.parse_convention_ref)
@@ -1345,7 +1346,7 @@ class SppParser:
     def parse_type_postfix_op_nested_type(self) -> Asts.TypePostfixOperatorNestedTypeAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_double_colon)
-        p2 = self.parse_once(self.parse_type_simple)
+        p2 = self.parse_once(self.parse_type_single)
         return Asts.TypePostfixOperatorNestedTypeAst(c1, p1, p2)
 
     def parse_type_postfix_op_optional_type(self) -> Asts.TypePostfixOperatorOptionalTypeAst:
@@ -1528,7 +1529,7 @@ class SppParser:
     def parse_literal_array_0_items(self) -> Asts.ArrayLiteral0ElementAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_left_square_bracket)
-        p2 = self.parse_once(self.parse_type)  # todo: convention allowed here?
+        p2 = self.parse_once(self.parse_type)
         p3 = self.parse_once(self.parse_token_comma)
         p4 = self.parse_once(self.parse_lexeme_dec_integer)
         p5 = self.parse_once(self.parse_token_right_square_bracket)

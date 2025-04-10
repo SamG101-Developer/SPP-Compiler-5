@@ -11,6 +11,8 @@ from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingConte
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
+# Todo: allow in sup blocks to for cmp generic parameter binding (same as "use" for types)
+
 
 @dataclass
 class GlobalConstantAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
@@ -89,6 +91,8 @@ class GlobalConstantAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         if not expected_type.symbolic_eq(given_type, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(self.type, expected_type, self.value, given_type).scopes(sm.current_scope)
+
+        # Todo: for an identifier, check the identifier itself is a constant value (and copyable)
 
 
 __all__ = ["GlobalConstantAst"]
