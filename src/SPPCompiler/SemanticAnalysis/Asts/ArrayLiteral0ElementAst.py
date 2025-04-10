@@ -7,6 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
 @dataclass
@@ -92,6 +93,11 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the type of the element.
         self.elem_type.analyse_semantics(sm, **kwargs)
+
+        # Ensure there is no convention on the array literal.
+        if (cs := self.elem_type.get_conventions()).not_empty():
+            raise SemanticErrors.InvalidConventionLocationError().add(
+                cs[0], self.elem_type, "array element type").scopes(sm.current_scope)
 
         # Analyse the inferred array type to generate the generic implementation.
         self.infer_type(sm).analyse_semantics(sm, **kwargs)
