@@ -36,9 +36,13 @@ single identifier; destructuring is supported. The following destructuring techn
 - Object destructuring
 - Any combination of nesting the above together.
 
-It is not syntactically valid to provide type annotations to initialized variables, because the type can always be
-inferred from the value, and the type is never required before the value is analysed (this is unlike global constants,
-which require a type annotation as their type may be required knowledge before the value is analysed).
+A type annotation can be provided to the `let` statement, but most of the time this isn't required; the value's type can
+always be inferred. The only time a type annotation is useful is for variant types; it allows for a composite type to be
+placed into a variable whose type is variant:
+
+```S++
+let x: Str or BigInt = "hello world".
+```
 
 ### Single Variable Name
 
