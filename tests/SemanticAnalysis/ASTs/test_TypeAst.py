@@ -38,6 +38,30 @@ class TestTypeAst(CustomTestCase):
         fun f[T]() -> T::Type { }
         """
 
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_variant_type_1(self):
+        """
+        use MyType = &std::string::Str or std::boolean::Bool
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_variant_type_2(self):
+        """
+        use MyType = std::string::Str or &std::boolean::Bool
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_variant_type_3(self):
+        """
+        use MyType = &mut std::string::Str or std::boolean::Bool
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_invalid_variant_type_4(self):
+        """
+        use MyType = std::string::Str or &mut std::boolean::Bool
+        """
+
     @should_pass_compilation()
     def test_valid_type(self):
         """

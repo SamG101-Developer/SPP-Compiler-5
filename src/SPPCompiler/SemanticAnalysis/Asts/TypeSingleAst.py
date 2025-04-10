@@ -11,6 +11,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -171,6 +172,14 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
                 generics = original_type_scope.generics + self.name.generic_argument_group.arguments
                 new_scope.type_symbol.old_type = copy.deepcopy(new_scope.type_symbol.old_type).sub_generics(generics)
                 new_scope.type_symbol.old_type.analyse_semantics(sm, **kwargs)
+
+        # Check for the std::variant type, there are no generic types.
+        type_symbol = original_type_scope.get_symbol(self.name)
+        if type_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, original_type_scope):
+            for generic_argument in type_symbol.fq_name.type_parts()[-1].generic_argument_group["Variants"].value.type_parts()[-1].generic_argument_group.arguments:
+                if (cs := generic_argument.value.get_conventions()).not_empty():
+                    raise SemanticErrors.InvalidConventionLocationError().add(
+                        cs[0], generic_argument.value, "variant composite type").scopes(sm.current_scope)
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         return scope, self
