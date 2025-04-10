@@ -1,10 +1,10 @@
-# Array Types
+# Array Type
 
 ## Overview
 
 The low level array type in S++ is the `std::array::Arr[T, n]` type. It represents `n` contiguous `size(T)` elements in
 memory. It is a first-class type, with safe accessor methods, and is treated in the same way as any other type. The
-safety of this type is ensured by using bounds checking and `std::optional::Opt[T]` return types.
+safety of this type is ensured by using bounds checking and `std::option::Opt[T]` return types.
 
 Arrays should be used when a known-length collection is required, even if the elements aren't all ready at the time the
 array is created. For collections with dynamic sizing, see the [vector]() type.
@@ -27,7 +27,14 @@ let x = [std::string::Str, 3]
 ```
 
 Incidentally, this matches the type exactly: `[std::string::Str, 3]` is the shorthand type for
-`std::array::Arr[std::string::Str, 3]`.
+`std::array::Arr[std::string::Str, 3]`. It should be noted that whilst this creates an empty array, the actual array
+object itself is initialized. This is different to:
+
+```S++
+let x: [std::string::Str, 3]
+```
+
+as in this case, the actual variable is uninitialized, and needs a value set to it before usage.
 
 ## Type Rules
 
@@ -41,4 +48,7 @@ be created with values in; the empty-array literal's generic argument is barred 
 ## Indexing
 
 As with tuples, indexing is done with the `.0` operator, where the index can be any number between 0 and the length of
-the array. This is compile-time enforced, to prevent any runtime bounds errors for element access.
+the array. This is compile-time enforced, to prevent any runtime bounds errors for element access. Because elements
+aren't guaranteed to exist in the array, the indexing return type is `std::option::Opt[T]`.
+
+Typically, the `.get` method is used, as runtime values can be passed into the method.

@@ -16,7 +16,7 @@ sup std::Str ext std::ops::Add[Rhs=std::Str, Out=std::Str] {
 
 The only special binary operator that doesn't have an associated `std::ops::XXX` class is the `is` operator. The
 right-hand-side isn't an expression, but a local variable declaration pattern. For example,
-`case optional_type is std::optional::Some(value) { ... }`.
+`case optional_type is std::option::Some(value) { ... }`.
 
 ## Operator Precedence
 
