@@ -1,9 +1,5 @@
 # Smart Pointers
 
-<primary-label ref="header-label"/>
-
-<secondary-label ref="doc-wip"/>
-
 ## Smart Pointers
 
 S++ doesn't use raw pointers in code anywhere. However, there must be a way to store information on the heap, especially
@@ -21,12 +17,12 @@ for hierarchical casting. There are a few different smart pointers that allow fo
 
 ### `Single[T]`
 
-The `Single[T]` type is similar to Rust's `Box[T]` and C++'s `std::unique_ptr<T>`. It is used for single ownership of
+The `Single[T]` type is similar to Rust's `Box<T>` and C++'s `std::unique_ptr<T>`. It is used for single ownership of
 heap-allocated data. The `Single[T]` type is a smart pointer that owns the data it points to, and will deallocate the
 data when it goes out of scope. There are cast function overloads for the `Single[T]` type, because the value it points
 to in memory may have additional information for the subtype.
 
-```
+```S++
 let x = Single(data=5)
 ```
 
@@ -42,7 +38,7 @@ reference count is incremented when the `Shared[T]` type is cloned, and decremen
 reference count is incremented when a `Shadow[T]` type is created from the `Shared[T]` type, and decremented when the
 `Shadow[T]` value gets dropped.
 
-```
+```S++
 let x = Shared(data=5)
 ```
 
@@ -53,13 +49,13 @@ type.
 Like Rust's `Rc<T>` type, the internal data is immutable, to follow the strict memory safety rules of S++. This means
 that for mutation to take place, one of the slot types must be used. For example:
 
-```
+```S++
 let x = Shared::new(data=RefSlot::new(5))
 let b = x.borrow_mut()
 let c = x.borrow_mut()  # Error (already mutably borrowed)
 ```
 
-```
+```S++
 let x = Shared::new(data=RefCellSlot::new(5))
 {
   let b = x.borrow_mut()
@@ -67,7 +63,7 @@ let x = Shared::new(data=RefCellSlot::new(5))
 let c = x.borrow_mut()  # No error
 ```
 
-```
+```S++
 let x = Shared::new(data=MutexSlot::new(5))
 let b = x.borrow_mut()
 ```
@@ -79,7 +75,7 @@ reference-counted pointers. The `Shadow[T]` type is created from a `Shared[T]` t
 reference count of the `Shared[T]` type. The `Shadow[T]` type can be upgraded to a `Shared[T]` type, which will
 increment the strong reference count of the `Shared[T]` type.
 
-```
+```S++
 let x = Shared(data=5)
 let y = x.shadow()
 ```

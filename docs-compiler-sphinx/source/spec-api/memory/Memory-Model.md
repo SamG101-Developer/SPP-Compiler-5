@@ -1,9 +1,5 @@
 # Memory Model
 
-<primary-label ref="header-label"/>
-
-<secondary-label ref="doc-wip"/>
-
 ## Model
 
 S++ uses a "partially automatic memory management" model. This means that the programmer never manually allocates or
@@ -16,6 +12,7 @@ or `&mut` tokens. This tells the compiler whether an immutable or mutable borrow
 Rust, and different to C++'s references that are automatically created.
 
 Three key techniques are used to ensure memory errors are always mitigated:
+
 1. [Ownership Tracking](#ownership-tracking): this tracks the ownership of objects, and at any line of the program, the
    compiler knows if a variable is holding an initialized object, or contains no object. In the case no object is
    contained, the symbol is unusable except for assignment (re-allocation).
@@ -39,49 +36,35 @@ of a fully or partially initialized object, but they cannot be individually set 
 
 The initialization state of a variable is tracked at the symbol level, and during semantic analysis, any violations of
 the ownership tracking rules will result in a compile time error. [Move semantics](#moving-vs-copying) are used by
-default, meaning that a value is moved when assigned to a variable, passed as a function argument, or returned from a
+default, meaning a value is moved when assigned to a variable, passed as a function argument, or returned from a
 function.
 
-**Example**
-
-:
 In the following example, the variable `x` is declared as initialized with the value `"hello"`. The value inside `x`is
 then moved into the variable `y` on declaration. The variable `x` is now non-initialized, and cannot be used until it is
-re-assigned a value (requiring it to be declared as `mut`).
+re-assigned a value (requiring it to be declared as `mut`):
 
-:
-```
+```S++
 let x = "hello"
 let y = x
 ```
 
 ### Partial Moves
 
-<secondary-label ref="doc-sect-complete"/>
-<secondary-label ref="feature-impl"/>
-
 Partially-initialized variables are created when an attribute is moved off an object. This leaves the variable in a
 restricted state; it cannot be moved of borrowed from, until all partial moved have been resolved.
 
-A borrow can never be a partial move. This is because it is not possible to borrow a partially-initialized object, and
-is not possible to move an attribute off an object that is borrowed from. Together, these rules ensure that borrows are
+A borrow can never be a partial move. This is because it is impossible to borrow a partially-initialized object, and is
+impossible to move an attribute off an object that is borrowed from. Together, these rules ensure that borrows are
 always completely valid, mitigating any unexpected behaviour.
 
-**Example**
+In the following example, a partial move is created, when moving the `x` attribute off of the `point`:
 
-:
-In the following example, a partial move is created, when moving the `x` attribute off of the `point`.
-
-:
-```
+```S++
 let p = Point(x=0, y=0, z=0)
 let x = p.x
 ```
 
 ### Moving vs Copying
-
-<secondary-label ref="doc-sect-complete"/>
-<secondary-label ref="feature-impl"/>
 
 By default, all values in S++ are moved when assigned to a variable, passed as a function argument, or returned from a
 function. This means that the value is moved from the source to the destination, and the source is left in a
@@ -100,27 +83,21 @@ _cloning_ behaviour, by overriding the `Clone::clone` method. The `Clone` and `C
 and don't require each other. Sometimes, `Clone` is superimposed for a more refined choice as to when a value should be
 copied.
 
-**Example**
+In the following example, the type `Point` is defined with the `Copy` type:
 
-:
-In the following example, the type `Point` is defined with the `Copy` type.
-
-:
-```
-@inherits(Copy)
+```S++
 cls Point {
     x: U32
     y: U32
     z: U32
 }
+
+sup Point ext std::copy::Copy { }
 ```
 
 ### Rules
 
-<secondary-label ref="doc-sect-complete"/>
-<secondary-label ref="doc-sect-subj-update"/>
-
-1. A value is moved out of a variable when it's type doesn't superimpose `Copy`, and is used as an assignment value,
+1. A value is moved out of a variable when its type doesn't superimpose `Copy`, and is used as an assignment value,
    move-convention function argument, object initialization argument, move-convention yield, or return value.
 2. For an attribute to be movable off an object, the attribute must be fully-initialized. This means that the owner
    object must be either fully-initialized too, or partially-initialized with that attribute present.
@@ -167,9 +144,9 @@ and `iter_mut` method both yield borrows with the `GenRef[T]` and `GenMut[T]` ty
 ### Lifetime Analysis
 
 The use of second-class borrows means that lifetime analysis becomes trivial. All function call site borrows move into
-an inner frame, meaning that they can never outlive their owned object. Yielding borrows can never outlive their owned
+an inner frame, meaning they can never outlive their owned object. Yielding borrows can never outlive their owned
 objects, because control cannot be returned to the coroutine (where the owned object exists), until the coroutine is
-resumed and the borrow is therefore released.
+resumed, and the borrow is therefore released.
 
 ### Stacking Borrows
 
@@ -177,6 +154,11 @@ Borrows can be stacked, by using the `&` operator on a variable that is already 
 to 1-layer borrows. This means that a borrow of a borrow can be taken, increasing the number of active borrows, but both
 are direct borrows of the corresponding owned object. That is, both borrows are `&T` types, not `&T` and `&&T` types.
 This differs from `C++`, where stacking pointers for example can create `T**` types.
+
+Taking a mutable borrow of an immutable borrow is not allowed, ie `&T` can never become `&mut T`. Mutable borrows are
+allowed to "decay" into immutable borrows, allowing the borrow to either be moved or borrowed into a method (if the `&`
+operator had to be applied to convert a mutable borrow into an immutable borrow, then there would be no way to move a
+mutable borrow into a method expecting an immutable borrow, it would always be re-borrowed in).
 
 ### Mutable Borrows vs Mutable Variables
 
@@ -233,13 +215,14 @@ locations and do not contain each other. As such, `x.a` and `x.b` can be borrowe
 
 Design Decisions
 :
+
 1. Borrows could be taken automatically, without the requirement that the `&` tokens appear at call sites. This was not
    implemented, because manual borrows makes it easier for the programmer to reason about
    the [law of exclusivity](#the-law-of-exclusivity) as they can see where borrows are made without having to look at
    the function signature. The same logic was applied to the `gen` expression.
 2. **Second class borrows** are used instead of first class borrows like in Rust, because it allows lifetime analysis to
-   be completely eliminated; the borrow is guaranteed to be in a inner frame, and therefore automatically have a shorter
-   lifetime than the owned object its borrowing from.
+   be eliminated; the borrow is guaranteed to be in a inner frame, and therefore automatically have a shorter lifetime
+   than the owned object its borrowing from.
 3. The **default semantic is to move values**, as this is the most efficient way to handle memory. This feature was
    inspired by Rust.
 4. **Copying a type is enabled by superimposing the `Copy` type** on the type. This was also inspired by Rust, as are

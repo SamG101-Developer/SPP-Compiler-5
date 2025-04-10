@@ -1,3 +1,1 @@
 # Volatile
-
-Start typing here...

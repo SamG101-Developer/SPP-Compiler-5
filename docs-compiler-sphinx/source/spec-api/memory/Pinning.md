@@ -1,3 +1,1 @@
 # Pinning
-
-Start typing here...

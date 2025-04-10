@@ -1,9 +1,5 @@
 # Compiled Memory Safety
 
-<primary-label ref="header-label"/>
-
-<secondary-label ref="doc-wip"/>
-
 ## Compiler features
 
 As-well as compile-time checks, the S++ compiler also has a number of features to ensure memory safety at runtime. These

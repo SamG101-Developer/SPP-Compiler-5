@@ -1,9 +1,5 @@
 # Initialization &amp; Destruction
 
-<primary-label ref="header-label"/>
-
-<secondary-label ref="doc-wip"/>
-
 ## Storing on the Stack
 
 ### Stack Initialization
