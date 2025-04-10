@@ -62,6 +62,15 @@ class TestAssignmentStatementAst(CustomTestCase):
         }
         """
 
+    @should_pass_compilation()
+    def test_valid_assignment_convention_mismatch_coerce(self):
+        """
+        fun f(b: &mut std::boolean::Bool) -> std::void::Void {
+            let mut x: &std::boolean::Bool
+            x = b
+        }
+        """
+
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_assignment_convention_mismatch_1(self):
         """
@@ -92,8 +101,8 @@ class TestAssignmentStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_assignment_convention_mismatch_4(self):
         """
-        fun f(b: &mut std::boolean::Bool) -> std::void::Void {
-            let mut x: &std::boolean::Bool
+        fun f(b: &std::boolean::Bool) -> std::void::Void {
+            let mut x: &mut std::boolean::Bool
             x = b
         }
         """
@@ -103,15 +112,6 @@ class TestAssignmentStatementAst(CustomTestCase):
         """
         fun f(b: &std::boolean::Bool) -> std::void::Void {
             let mut x: std::boolean::Bool
-            x = b
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_assignment_convention_mismatch_6(self):
-        """
-        fun f(b: &std::boolean::Bool) -> std::void::Void {
-            let mut x: &mut std::boolean::Bool
             x = b
         }
         """

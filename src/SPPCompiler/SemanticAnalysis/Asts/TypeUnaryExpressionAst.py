@@ -72,12 +72,19 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return self.rhs.contains_generic(generic_name)
 
     def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, debug: bool = False) -> bool:
-        if type(self.get_convention()) is not type(that.get_convention()):
+        # Convention mismatch (except for allowing "&mut" to coerce into "&")
+        if type(self.get_convention()) is not type(that.get_convention()) and not (isinstance(self.get_convention(), Asts.ConventionRefAst) and isinstance(that.get_convention(), Asts.ConventionMutAst)):
             return False
+
+        # Conventions are compatible, remove them and move in a layer.
         elif isinstance(that, Asts.TypeUnaryExpressionAst) and isinstance(that.op, Asts.TypeUnaryOperatorBorrowAst):
             that = that.rhs
+
+        # Adjust the scope of this type.
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             self_scope = self_scope.get_namespace_symbol(self.op.name).scope
+
+        # Test the inner layer of types against each other.
         return self.rhs.symbolic_eq(that, self_scope, that_scope, check_variant, debug)
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:

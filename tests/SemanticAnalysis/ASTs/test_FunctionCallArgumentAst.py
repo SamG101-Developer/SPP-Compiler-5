@@ -45,7 +45,7 @@ class TestFunctionCallArgumentAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
-    def test_invalid_function_call_argument_convention_mismatch_1(self):
+    def test_invalid_function_call_argument_convention_mismatch_1a(self):
         # mov parameter & mut borrow argument
         """
         fun f(a: std::boolean::Bool) -> std::void::Void { }
@@ -56,7 +56,29 @@ class TestFunctionCallArgumentAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
-    def test_invalid_function_call_argument_convention_mismatch_2(self):
+    def test_invalid_function_call_argument_convention_mismatch_1b(self):
+        # mov parameter & mut borrow argument
+        """
+        fun f(a: std::boolean::Bool) -> std::void::Void { }
+
+        fun g(a: &mut std::boolean::Bool) -> std::void::Void {
+            f(a)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_function_call_argument_convention_mismatch_1c(self):
+        # mov parameter & mut borrow argument
+        """
+        fun f(a: std::boolean::Bool) -> std::void::Void { }
+
+        fun g(a: &mut std::boolean::Bool) -> std::void::Void {
+            f(&mut a)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_function_call_argument_convention_mismatch_2a(self):
         # mov parameter & ref borrow argument
         """
         fun f(a: std::boolean::Bool) -> std::void::Void { }
@@ -67,7 +89,29 @@ class TestFunctionCallArgumentAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
-    def test_invalid_function_call_argument_convention_mismatch_3(self):
+    def test_invalid_function_call_argument_convention_mismatch_2b(self):
+        # mov parameter & ref borrow argument
+        """
+        fun f(a: std::boolean::Bool) -> std::void::Void { }
+
+        fun g(a: &std::boolean::Bool) -> std::void::Void {
+            f(a)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_function_call_argument_convention_mismatch_2c(self):
+        # mov parameter & ref borrow argument
+        """
+        fun f(a: std::boolean::Bool) -> std::void::Void { }
+
+        fun g(a: &std::boolean::Bool) -> std::void::Void {
+            f(&a)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_function_call_argument_convention_mismatch_3a(self):
         # mut borrow parameter & mov argument
         """
         fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
@@ -78,7 +122,7 @@ class TestFunctionCallArgumentAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
-    def test_invalid_function_call_argument_convention_mismatch_4(self):
+    def test_invalid_function_call_argument_convention_mismatch_4a(self):
         # mut borrow parameter & ref borrow argument
         """
         fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
@@ -89,7 +133,29 @@ class TestFunctionCallArgumentAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
-    def test_invalid_function_call_argument_convention_mismatch_5(self):
+    def test_invalid_function_call_argument_convention_mismatch_4b(self):
+        # mut borrow parameter & ref borrow argument
+        """
+        fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
+
+        fun g(a: &std::boolean::Bool) -> std::void::Void {
+            f(a)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_function_call_argument_convention_mismatch_4c(self):
+        # mut borrow parameter & ref borrow argument
+        """
+        fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
+
+        fun g(a: &std::boolean::Bool) -> std::void::Void {
+            f(&a)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_function_call_argument_convention_mismatch_5a(self):
         # ref borrow parameter & mov argument
         """
         fun f(a: &std::boolean::Bool) -> std::void::Void { }
@@ -99,13 +165,35 @@ class TestFunctionCallArgumentAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
-    def test_invalid_function_call_argument_convention_mismatch_6(self):
+    @should_pass_compilation()
+    def test_valid_function_call_argument_convention_mismatch_coerce_1a(self):
         # ref borrow parameter & mut borrow argument
         """
         fun f(a: &std::boolean::Bool) -> std::void::Void { }
 
         fun g(mut a: std::boolean::Bool) -> std::void::Void {
+            f(&mut a)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_function_call_argument_convention_mismatch_coerce_1b(self):
+        # ref borrow parameter & mut borrow argument
+        """
+        fun f(a: &std::boolean::Bool) -> std::void::Void { }
+
+        fun g(a: &mut std::boolean::Bool) -> std::void::Void {
+            f(a)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_function_call_argument_convention_mismatch_coerce_1c(self):
+        # ref borrow parameter & mut borrow argument
+        """
+        fun f(a: &std::boolean::Bool) -> std::void::Void { }
+
+        fun g(mut a: &mut std::boolean::Bool) -> std::void::Void {
             f(&mut a)
         }
         """
@@ -192,6 +280,17 @@ class TestFunctionCallArgumentAst(CustomTestCase):
         fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
 
         fun g(mut a: std::boolean::Bool) -> std::void::Void {
+            f(&mut a)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_function_call_argument_convention_match_3c(self):
+        # mut borrow parameter & mut borrow argument
+        """
+        fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
+
+        fun g(mut a: &mut std::boolean::Bool) -> std::void::Void {
             f(&mut a)
         }
         """
