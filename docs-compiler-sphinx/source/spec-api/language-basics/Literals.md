@@ -6,7 +6,7 @@ S++ only has one type of string, the `std::Str` type. It is a sequence of charac
 following escape sequences are supported: `\\`, `\"`, `\n`, `\r`, `\t`. There is no "internal" or "raw" string type,
 like Rust's `&str` or C++'s `const char*`.
 
-```
+```S++
 let x = "Hello, world!";
 let y = "This is a string with a newline\ncharacter.";
 let z = "This is a string with a tab\tcharacter.";

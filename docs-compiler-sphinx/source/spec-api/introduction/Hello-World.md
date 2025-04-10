@@ -13,7 +13,7 @@ spp init
 This will create the project structure, and import standard library. Open the `main.spp` file, and write the following
 code:
 
-```
+```S++
 fun main() -> Void {
     std::print("Hello, World!");
 }

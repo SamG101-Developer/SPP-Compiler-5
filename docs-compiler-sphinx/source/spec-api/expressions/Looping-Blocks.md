@@ -17,7 +17,7 @@ loop some_boolean_condition() {
 The optional `else` block is added to the end of the `loop` block. The code inside the `loop` and `else` blocks will
 never both be executed; they are mutually exclusive.
 
-```
+```S++
 loop some_boolean_condition() {
     ...
 }
@@ -31,7 +31,7 @@ else {
 An iteration loop is syntactic sugar for easier use of generators. The following shows the transformation from an
 iteration based loop to a boolean loop:
 
-```
+```S++
 loop i in some_generator() {
     ...
 }
