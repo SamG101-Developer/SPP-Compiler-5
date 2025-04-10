@@ -6,12 +6,13 @@ from typing import Optional
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
 @dataclass
 class ObjectInitializerArgumentUnnamedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     is_default: Optional[Asts.TokenAst] = field(default=None)
-    name: Asts.IdentifierAst = field(default=None)
+    name: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:
         assert self.name is not None
@@ -30,6 +31,10 @@ class ObjectInitializerArgumentUnnamedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self.name.infer_type(sm, **kwargs)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the argument is an identifier (not done in parser so error occurs here)
+        if not isinstance(self.name, Asts.IdentifierAst):
+            raise SemanticErrors.InvalidObjectInitializerArgumentError().add(self.name).scopes(sm.current_scope)
+
         # Analyse the name of the argument.
         self.name.analyse_semantics(sm, **kwargs)
 

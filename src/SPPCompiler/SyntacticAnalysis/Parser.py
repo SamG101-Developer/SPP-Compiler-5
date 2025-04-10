@@ -733,9 +733,15 @@ class SppParser:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_keyword_let)
         p2 = self.parse_once(self.parse_local_variable)
-        p3 = self.parse_once(self.parse_token_assign)
-        p4 = self.parse_once(self.parse_expression)
-        return Asts.LetStatementInitializedAst(c1, p1, p2, p3, p4)
+        p3 = self.parse_optional(self.parse_let_statement_initialized_type)
+        p4 = self.parse_once(self.parse_token_assign)
+        p5 = self.parse_once(self.parse_expression)
+        return Asts.LetStatementInitializedAst(c1, p1, p2, p3, p4, p5)
+
+    def parse_let_statement_initialized_type(self) -> Asts.TypeAst:
+        p1 = self.parse_once(self.parse_token_colon)
+        p2 = self.parse_once(self.parse_type)
+        return p2
 
     def parse_let_statement_uninitialized(self) -> Asts.LetStatementUninitializedAst:
         c1 = self.current_pos()
@@ -1168,7 +1174,7 @@ class SppParser:
     def parse_object_initializer_argument_unnamed(self) -> Asts.ObjectInitializerArgumentUnnamedAst:
         c1 = self.current_pos()
         p1 = self.parse_optional(self.parse_token_double_dot)
-        p2 = self.parse_once(self.parse_identifier)
+        p2 = self.parse_once(self.parse_expression)
         return Asts.ObjectInitializerArgumentUnnamedAst(c1, p1, p2)
 
     def parse_object_initializer_argument_named(self) -> Asts.ObjectInitializerArgumentNamedAst:

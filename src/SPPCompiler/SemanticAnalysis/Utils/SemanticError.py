@@ -1392,6 +1392,22 @@ class SemanticErrors:
 
             return self
 
+    class InvalidObjectInitializerArgumentError(SemanticError):
+        """
+        The InvalidObjectInitializerArgumentError is raised if an object initializer argument is unnamed and not an
+        identifier. Without this error, the parser assumes a function call, which leads to weird errors if the lhs type
+        is generic.
+        """
+
+        def add(self, argument: Asts.ExpressionAst) -> SemanticError:
+            self.add_error(
+                ast=argument,
+                tag="Invalid object initializer argument unnamed here",
+                msg="Unnamed argument must be identifiers",
+                tip="Name the argument with an attribute identifier")
+
+            return self
+
     class RecursiveTypeDefinitionError(SemanticError):
         """
         The RecursiveTypeDefinitionError is raised if a type definition is recursive. This is when a type definition
@@ -1443,5 +1459,25 @@ class SemanticErrors:
                 tag=f"Type inferred as '{type}'",
                 msg="The type does not superimpose 'Deref[Self]'.",
                 tip="Change the type to superimpose 'Deref[Self]'.")
+
+            return self
+
+    class InvalidTypeAnnotationError(SemanticError):
+        """
+        The InvalidTypeAnnotationError is raised if a type annotation is given to a "let" statement when the LHS isn't a
+        single identifier. This is because in a destructuring context, giving a type isn't allowed as multiple types
+        will be created from the symbols introduced.
+        """
+
+        def add(self, type: Asts.TypeAst, local_variable: Asts.LocalVariableAst) -> SemanticError:
+            self.add_info(
+                ast=local_variable,
+                tag="Non-identifier local variable declared here")
+
+            self.add_error(
+                ast=type,
+                tag="Type declared here",
+                msg="A type cannot be given to a non-identifier 'let' statement",
+                tip="Remove the type annotation")
 
             return self
