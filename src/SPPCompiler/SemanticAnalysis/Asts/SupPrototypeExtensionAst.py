@@ -77,7 +77,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 c, self.name, "superimposition type").scopes(sm.current_scope)
 
         # Ensure the superimposition supertype does not have a convention.
-        if cs := self.super_class.get_convention():
+        if c := self.super_class.get_convention():
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.super_class, "superimposition supertype").scopes(sm.current_scope)
 
