@@ -131,9 +131,9 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     new_overload.return_type.analyse_semantics(tm, **kwargs)
 
                     # Todo: I don't want this here
-                    if (cs := new_overload.return_type.get_conventions()).not_empty():
+                    if c := new_overload.return_type.get_convention():
                         raise SemanticErrors.InvalidConventionLocationError().add(
-                            cs[0], new_overload.return_type, "function return type").scopes(sm.current_scope)
+                            c, new_overload.return_type, "function return type").scopes(sm.current_scope)
 
                     # new_overload.generate_top_level_scopes(tm)
                     # tm.reset(new_overload._scope)
@@ -233,7 +233,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     break
 
             # Immutable reference invalidates all mutable references.
-            if Asts.ConventionRefAst in coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_conventions().map(type):
+            if type(coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_convention()) is Asts.ConventionRefAst:
                 # print("Immutable reference returned")
                 outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
                 for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
@@ -244,7 +244,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                 outermost.memory_info.refer_to_asts = Seq([(ast, False) for ast in kwargs.get("assignment", Seq())])
 
             # Mutable reference invalidates all mutable and immutable references.
-            elif Asts.ConventionMutAst in coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_conventions().map(type):
+            elif type(coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_convention()) is Asts.ConventionMutAst:
                 # print("Mutable reference returned")
                 outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
                 for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:

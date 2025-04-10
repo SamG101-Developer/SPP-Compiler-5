@@ -95,9 +95,9 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.elem_type.analyse_semantics(sm, **kwargs)
 
         # Ensure there is no convention on the array literal.
-        if (cs := self.elem_type.get_conventions()).not_empty():
+        if c := self.elem_type.get_convention():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                cs[0], self.elem_type, "array element type").scopes(sm.current_scope)
+                c, self.elem_type, "array element type").scopes(sm.current_scope)
 
         # Analyse the inferred array type to generate the generic implementation.
         self.infer_type(sm).analyse_semantics(sm, **kwargs)

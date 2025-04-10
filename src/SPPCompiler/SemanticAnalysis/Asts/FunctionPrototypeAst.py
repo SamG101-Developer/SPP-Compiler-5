@@ -138,9 +138,9 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Ensure the function return type does not have a convention.
-        if (cs := self.return_type.get_conventions()).not_empty():
+        if c := self.return_type.get_convention():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                cs[0], self.return_type, "function return type").scopes(sm.current_scope)
+                c, self.return_type, "function return type").scopes(sm.current_scope)
 
         # Generate the generic parameters and attributes of the function.
         for p in self.generic_parameter_group.parameters:
@@ -188,9 +188,9 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Repeat the check here for generic substitution return types.
         self.return_type.analyse_semantics(sm, **kwargs)
-        if (cs := self.return_type.get_conventions()).not_empty():
+        if c := self.return_type.get_convention():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                cs[0], self.return_type, "function return type").scopes(sm.current_scope)
+                c, self.return_type, "function return type").scopes(sm.current_scope)
 
         self.where_block.analyse_semantics(sm, **kwargs)
 

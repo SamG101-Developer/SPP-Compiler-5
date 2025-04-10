@@ -109,7 +109,7 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                     lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
             # Attribute assignment (ie "x.y = z"), for a borrowed symbol, cannot contain an immutable borrow.
-            elif isinstance(lhs_expr, Asts.PostfixExpressionAst) and (immutable := lhs_sym.name.infer_type(sm, **kwargs).get_conventions().find(lambda c: type(c) is Asts.ConventionRefAst)):
+            elif isinstance(lhs_expr, Asts.PostfixExpressionAst) and type(immutable := lhs_sym.name.infer_type(sm, **kwargs).get_convention()) is Asts.ConventionRefAst:
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
                     lhs_sym.name, self.op, immutable).scopes(sm.current_scope)
 

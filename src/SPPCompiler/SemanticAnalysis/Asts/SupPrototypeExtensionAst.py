@@ -72,14 +72,14 @@ class SupPrototypeExtensionAst(Asts.Ast):
         super().generate_top_level_scopes(sm)
 
         # Ensure the superimposition type does not have a convention.
-        if (cs := self.name.get_conventions()).not_empty():
+        if c := self.name.get_convention():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                cs[0], self.name, "superimposition type").scopes(sm.current_scope)
+                c, self.name, "superimposition type").scopes(sm.current_scope)
 
         # Ensure the superimposition supertype does not have a convention.
-        if (cs := self.super_class.get_conventions()).not_empty():
+        if cs := self.super_class.get_convention():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                cs[0], self.super_class, "superimposition supertype").scopes(sm.current_scope)
+                c, self.super_class, "superimposition supertype").scopes(sm.current_scope)
 
         # Generate the symbols for the generic parameter group, and the self type.
         for p in self.generic_parameter_group.parameters:

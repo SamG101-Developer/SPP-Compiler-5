@@ -74,8 +74,8 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         raise NotImplementedError()
 
-    def get_conventions(self) -> Seq[Asts.ConventionAst]:
-        return Seq()
+    def get_convention(self) -> Optional[Asts.ConventionAst]:
+        return None
 
     def without_conventions(self) -> Asts.TypeAst:
         return self

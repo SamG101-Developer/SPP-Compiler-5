@@ -1286,9 +1286,11 @@ class SppParser:
     def parse_type_unary_expression(self) -> Asts.TypeAst:
         # Todo: this doesn't allow for &[T, n], has to be &std::Arr[T, n] atm.
         c1 = self.current_pos()
-        p1 = self.parse_zero_or_more(self.parse_type_unary_op, self.parse_nothing)
-        p2 = self.parse_once(self.parse_type_single)
-        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(c1, x, acc), p1.reverse().list(), p2).convert()
+        p1 = self.parse_optional(self.parse_type_unary_op_borrow)
+        p2 = self.parse_zero_or_more(self.parse_type_unary_op_namespace, self.parse_nothing)
+        p3 = self.parse_once(self.parse_type_single)
+        p2.insert(0, p1) if p1 else None
+        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(c1, x, acc), p2.reverse().list(), p3).convert()
 
     def parse_type_parenthesized(self) -> Asts.TypeSingleAst:
         c1 = self.current_pos()

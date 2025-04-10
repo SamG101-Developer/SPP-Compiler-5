@@ -127,13 +127,13 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @abstractmethod
-    def get_conventions(self) -> Seq[Asts.ConventionAst]:
+    def get_convention(self) -> Optional[Asts.ConventionAst]:
         """!
         Get the convention attached to a type.
         @return The convention attached to the type, or None if no convention is attached.
         """
 
-    def with_conventions(self, conventions: Seq[Asts.ConventionAst]) -> Asts.TypeAst:
+    def with_convention(self, convention: Optional[Asts.ConventionAst]) -> Asts.TypeAst:
         """!
         Create a new instance of a type (that contains this original type), which acts as a unary type wrapper, with the
         given convention. This is used to attach conventions to types, for example, "&T".
@@ -141,14 +141,15 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         @return The new type ast with the attached convention.
         """
 
-        if conventions.is_empty():
+        if convention is None:
             return self
 
-        main_type = self
-        for c in conventions.reverse():
-            main_type = Asts.TypeUnaryExpressionAst(
-                pos=main_type.pos, op=Asts.TypeUnaryOperatorBorrowAst(pos=main_type.pos, convention=c), rhs=main_type)
-        return main_type
+        if isinstance(self, Asts.TypeUnaryExpressionAst) and isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst):
+            self.op.convention = convention
+            return self
+
+        else:
+            return Asts.TypeUnaryExpressionAst(pos=self.pos, op=Asts.TypeUnaryOperatorBorrowAst(pos=self.pos, convention=convention), rhs=self)
 
     @abstractmethod
     def without_conventions(self) -> Asts.TypeAst:

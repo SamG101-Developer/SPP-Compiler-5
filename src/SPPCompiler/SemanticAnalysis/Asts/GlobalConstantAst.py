@@ -58,9 +58,9 @@ class GlobalConstantAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Ensure the old type does not have a convention.
-        if (cs := self.type.get_conventions()).not_empty():
+        if c := self.type.get_convention():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                cs[0], self.type, "global constant type").scopes(sm.current_scope)
+                c, self.type, "global constant type").scopes(sm.current_scope)
 
         # Create a type symbol for this type in the current scope (class / function).
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])

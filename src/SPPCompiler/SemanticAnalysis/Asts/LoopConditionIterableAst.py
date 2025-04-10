@@ -84,9 +84,9 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         symbols = self.variable.extract_names.map(lambda n: sm.current_scope.get_symbol(n))
         yield_type = iterable_type.type_parts()[0].generic_argument_group["Yield"].value
         for symbol in symbols:
-            symbol.memory_info.ast_borrowed = self if yield_type.get_conventions().map(type).contains_any(Seq([Asts.ConventionMutAst, Asts.ConventionRefAst])) else None
-            symbol.memory_info.is_borrow_mut = yield_type.get_conventions().find(lambda c: isinstance(c, Asts.ConventionMutAst)) is not None
-            symbol.memory_info.is_borrow_ref = yield_type.get_conventions().find(lambda c: isinstance(c, Asts.ConventionRefAst)) is not None
+            symbol.memory_info.ast_borrowed = self if type(yield_type.get_convention()) in [Asts.ConventionMutAst, Asts.ConventionRefAst] else None
+            symbol.memory_info.is_borrow_mut = type(yield_type.get_convention()) is Asts.ConventionMutAst is not None
+            symbol.memory_info.is_borrow_ref = type(yield_type.get_convention()) is Asts.ConventionRefAst is not None
             symbol.memory_info.initialized_by(self)
 
 

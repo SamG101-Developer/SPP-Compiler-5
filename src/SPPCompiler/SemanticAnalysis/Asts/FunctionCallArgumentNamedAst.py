@@ -8,7 +8,6 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
@@ -47,10 +46,7 @@ class FunctionCallArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
             return self._type_from_self
 
         # Attach the convention to the inferred type.
-        inferred_type = self.value.infer_type(sm, **kwargs)
-        if self.convention is not None:
-            inferred_type = inferred_type.with_conventions(Seq([self.convention]))
-        return inferred_type
+        return self.value.infer_type(sm, **kwargs).with_convention(self.convention)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
 

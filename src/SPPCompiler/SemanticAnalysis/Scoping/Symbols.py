@@ -11,7 +11,6 @@ from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import MemoryInfo
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
-from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -80,7 +79,7 @@ class TypeSymbol:
     is_copyable: bool = field(default=False)
     visibility: Visibility = field(default=Visibility.Private)
     llvm_info: LlvmSymbolInfo = field(default_factory=LlvmSymbolInfo)
-    conventions: Seq[Asts.ConventionAst] = field(default_factory=Seq)
+    convention: Optional[Asts.ConventionAst] = field(default=None)
 
     scope_defined_in: Optional[Scope] = field(default=None)
 
@@ -105,7 +104,7 @@ class TypeSymbol:
         # Copy all the attributes of the TypeSymbol, but link the scope.
         return TypeSymbol(
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, conventions=self.conventions.copy(),
+            is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
             scope_defined_in=self.scope_defined_in)
 
     @property
@@ -126,7 +125,7 @@ class TypeSymbol:
                 raise NotImplementedError("Nested types are not supported yet.")
             scope = scope.parent
 
-        return fq_name.with_conventions(self.conventions)
+        return fq_name.with_convention(self.convention)
 
 
 @dataclass(kw_only=True)

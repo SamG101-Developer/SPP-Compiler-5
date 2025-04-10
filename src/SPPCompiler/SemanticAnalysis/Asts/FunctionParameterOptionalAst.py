@@ -76,7 +76,7 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         ast.analyse_semantics(sm, **kwargs)
 
         # Mark the symbol as initialized.
-        convention = self.type.get_conventions() if self.type.get_conventions() else None
+        convention = self.type.get_convention()
         for name in self.variable.extract_names:
             symbol = sm.current_scope.get_symbol(name)
             symbol.memory_info.ast_borrowed = convention

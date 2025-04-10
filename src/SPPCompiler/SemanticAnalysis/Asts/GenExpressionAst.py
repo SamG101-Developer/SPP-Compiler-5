@@ -55,7 +55,7 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expression:
             self.expression.analyse_semantics(sm, **kwargs)
-            expression_type = self.expression.infer_type(sm, **kwargs).with_conventions(Seq([self.convention]) if self.convention else Seq())
+            expression_type = self.expression.infer_type(sm, **kwargs).with_convention(self.convention)
         else:
             void_type = CommonTypes.Void(self.pos)
             expression_type = void_type

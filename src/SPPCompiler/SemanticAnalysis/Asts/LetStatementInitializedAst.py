@@ -69,6 +69,7 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         AstMemoryUtils.enforce_memory_integrity(self.value, self.tok_assign, sm, update_memory_info=False)
 
         # Ensure each destructuring part is valid.
+        kwargs.pop("explicit_type", None)
         self.assign_to.analyse_semantics(sm, value=self.value, explicit_type=self.explicit_type, **kwargs)
 
     def generate_llvm_definitions(

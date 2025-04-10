@@ -177,15 +177,15 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         type_symbol = original_type_scope.get_symbol(self.name)
         if type_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, original_type_scope):
             for generic_argument in type_symbol.fq_name.type_parts()[-1].generic_argument_group["Variants"].value.type_parts()[-1].generic_argument_group.arguments:
-                if (cs := generic_argument.value.get_conventions()).not_empty():
+                if c := generic_argument.value.get_convention():
                     raise SemanticErrors.InvalidConventionLocationError().add(
-                        cs[0], generic_argument.value, "variant composite type").scopes(sm.current_scope)
+                        c, generic_argument.value, "variant composite type").scopes(sm.current_scope)
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         return scope, self
 
-    def get_conventions(self) -> Seq[Asts.ConventionAst]:
-        return Seq()
+    def get_convention(self) -> Optional[Asts.ConventionAst]:
+        return None
 
     def without_conventions(self) -> Asts.TypeAst:
         return self

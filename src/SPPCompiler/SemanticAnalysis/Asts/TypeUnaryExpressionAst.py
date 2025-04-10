@@ -72,7 +72,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return self.rhs.contains_generic(generic_name)
 
     def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, debug: bool = False) -> bool:
-        if self.get_conventions().map(type) != that.get_conventions().map(type):
+        if type(self.get_convention()) is not type(that.get_convention()):
             return False
         elif isinstance(that, Asts.TypeUnaryExpressionAst) and isinstance(that.op, Asts.TypeUnaryOperatorBorrowAst):
             that = that.rhs
@@ -85,10 +85,8 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
             scope = scope.get_namespace_symbol(self.op.name).scope
         return self.rhs.split_to_scope_and_type(scope)
 
-    def get_conventions(self) -> Seq[Asts.ConventionAst]:
-        if isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst):
-            return Seq([self.op.convention]) + self.rhs.get_conventions()
-        return Seq()
+    def get_convention(self) -> Optional[Asts.ConventionAst]:
+        return self.op.convention if isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst) else None
 
     def without_conventions(self) -> Asts.TypeAst:
         # If the type is a unary type expression with a borrow operator, then return the rhs of the expression.
@@ -101,7 +99,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def infer_type(self, sm: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or sm.current_scope
         type_symbol = type_scope.get_symbol(self)
-        return type_symbol.fq_name.with_conventions(self.get_conventions())
+        return type_symbol.fq_name.with_convention(self.get_convention())
 
 
 __all__ = ["TypeUnaryExpressionAst"]

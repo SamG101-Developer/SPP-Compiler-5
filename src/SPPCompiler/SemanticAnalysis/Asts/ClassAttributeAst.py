@@ -59,9 +59,9 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Ensure the attribute type does not have a convention.
-        if (cs := self.type.get_conventions()).not_empty():
+        if c := self.type.get_convention():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                cs[0], self.type, "attribute type").scopes(sm.current_scope)
+                c, self.type, "attribute type").scopes(sm.current_scope)
 
         # Create a variable symbol for this attribute in the current scope (class).
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
@@ -84,9 +84,9 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.analyse_semantics(sm, **kwargs)
 
         # Repeat the check here for generic substitution attribute types.
-        if (cs := self.type.get_conventions()).not_empty():
+        if c := self.type.get_convention():
             raise SemanticErrors.InvalidConventionLocationError().add(
-                cs[0], self.type, "attribute type").scopes(sm.current_scope)
+                c, self.type, "attribute type").scopes(sm.current_scope)
             
         # If a default value is present, analyse it and check its type.
         if self.default:
