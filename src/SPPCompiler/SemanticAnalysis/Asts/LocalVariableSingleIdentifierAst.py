@@ -43,10 +43,12 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         return self.name
 
     def analyse_semantics(self, sm: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
+        inferred_type = value.infer_type(sm, **kwargs)
+
         # Create a variable symbol for this identifier and value.
         symbol = VariableSymbol(
             name=self.alias.name if self.alias else self.name,
-            type=value.infer_type(sm, **kwargs),
+            type=kwargs.get("explicit_type", inferred_type) or inferred_type,
             is_mutable=self.tok_mut is not None,
             visibility=Visibility.Public)
 

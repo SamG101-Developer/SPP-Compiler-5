@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 from llvmlite import ir as llvm
 
@@ -18,6 +18,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_let: Asts.TokenAst = field(default=None)
     assign_to: Asts.LocalVariableAst = field(default=None)
+    explicit_type: Optional[Asts.TypeAst] = field(default=None)
     tok_assign: Asts.TokenAst = field(default=None)
     value: Asts.ExpressionAst = field(default=None)
 
@@ -50,10 +51,25 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.ExpressionTypeInvalidError().add(
                 self.value).scopes(sm.current_scope)
 
-        # Analyse the assign_to and value of the let statement.
+        # An explicit type can only be applied if the LHS is a single identifier.
+        if self.explicit_type is not None and not isinstance(self.assign_to, Asts.LocalVariableSingleIdentifierAst):
+            raise SemanticErrors.InvalidTypeAnnotationError().add(
+                self.explicit_type, self.assign_to).scopes(sm.current_scope)
+
+        # Ensure the value matches the type if given, and check the memory status.
         self.value.analyse_semantics(sm, **(kwargs | {"assignment": self.assign_to.extract_names}))
+
+        if self.explicit_type is not None:
+            self.explicit_type.analyse_semantics(sm, **kwargs)
+
+            if not self.explicit_type.symbolic_eq(val_type := self.value.infer_type(sm, **kwargs), sm.current_scope):
+                raise SemanticErrors.TypeMismatchError().add(
+                    self.explicit_type, self.explicit_type, self.value, val_type).scopes(sm.current_scope)
+
         AstMemoryUtils.enforce_memory_integrity(self.value, self.tok_assign, sm, update_memory_info=False)
-        self.assign_to.analyse_semantics(sm, value=self.value, **kwargs)
+
+        # Ensure each destructuring part is valid.
+        self.assign_to.analyse_semantics(sm, value=self.value, explicit_type=self.explicit_type, **kwargs)
 
     def generate_llvm_definitions(
             self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None,
