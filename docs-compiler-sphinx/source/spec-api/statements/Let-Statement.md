@@ -171,3 +171,81 @@ fun function(mut a: std::string::String, Point(mut x, ..): Point) -> std::void::
     ...
 }
 ```
+
+### Attributes
+
+The mutability of an attribute is always the same as the mutability of the outermost object that owns it. For example,
+`a.b.c.d` is mutable if and only if `a` is mutable. An attribute alone cannot be specifically defined as constant.
+
+### Value vs Borrow
+
+The mutability of a value doesn't always match the mutability of a borrow. For example, a variable might be a mutable
+borrow, but the mutable borrow itself could be immutable, ie whilst the internals of the object can be mutated, the
+variable itself cannot be re-assigned to. For more information and detail on the distinction between the two, see the
+section on [borrow mutability](../memory/Memory-Model.md#mutable-borrows-vs-mutable-variables)
+
+## Variable Semantics
+
+### Variable Scope
+
+S++ uses strict block-scoping to contain variables and prevent any scope-leak. This means that variables declared inside
+a block are only accessible from inside that block, and nowhere else outside it. This is unlike Python, which can access
+scope-leaked variables and throws errors if the variable happens to not exist in some context. Using strict scoping
+rules provides a clear and predictable scope for variable, and prevents accidental variable shadowing.
+
+Variables from outer blocks can be access from inner blocks, and can assign values to them (given they are mutable). See
+the section on [variable shadowing](#variable-shadowing) for details on re-declaring variables in a nested scope.
+
+### Variable Lifetime
+
+The lifetime of a variable is tied to its scope (and therefore its block). The only way to extend the lifetime of a
+variable is:
+
+1. Either return it as a value into the outer frame or attach it to the object being returned to the outer frame. This
+   places the object in the outer frame, which has a larger lifetime than the current frame.
+
+
+2. Attach the variable to a mutable reference that has been passed into the function as a parameter. This allows the
+   value to be received in the outer frame as part of an object passed into the current frame.
+
+### Variable Redeclaration
+
+Variables can be re-declared in the same scope, with a different type or mutability. This allows for a variable name to
+be re-used for a different purpose, or for a transformation to take place that produces a different value type.
+
+```S++
+let x = 123  # x is an immutable number
+let mut x = std::string::Str::from(x)  # x is a mutable string
+```
+
+### Variable Shadowing
+
+Variables can be shadowed in an inner scope. This creates a new symbol in the inner scope, which is used, but when
+control returns to the outer scope, the original symbol is used again, the value the same as it was before the inner
+scope was entered. To modify the outer symbol, assignment without re-declaration must be used:
+
+```S++
+fun main() -> std::void::Void {
+    let x = 1
+    {
+        let x = 2
+        std::console::print(x)  # prints "2"
+    }
+    std::console::print(x)  # prints "1"
+}
+```
+
+```S++
+fun main() -> std::void::Void {
+    let mut x = 1
+    {
+        x = 2
+        std::console::print(x)  # prints "2"
+    }
+    std::console::print(x)  # prints "2"
+}
+```
+
+## Global Constants
+
+See the section on [global constants](./Cmp-Statement) for more.

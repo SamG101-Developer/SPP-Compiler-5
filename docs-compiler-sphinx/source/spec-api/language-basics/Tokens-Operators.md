@@ -17,7 +17,7 @@ tokens used in S++:
 | `TkSub`       | `-`   | Binary subtraction               | Negative number prefix                     |
 | `TkMul`       | `*`   | Binary multiplication            |                                            |
 | `TkDiv`       | `/`   | Binary division                  |                                            |
-| `TkMod`       | `%`   | Binary remainder                 |                                            |
+| `TkRem`       | `%`   | Binary remainder                 |                                            |
 | `TkPow`       | `**`  | Binary exponentiation            |                                            |
 | `TkMod`       | `%%`  | Binary modulo                    |                                            |
 | `TkAddAssign` | `+=`  | Binary addition assignment       |                                            |
@@ -50,32 +50,31 @@ tokens used in S++:
 A number of the above tokens are used as operators, and are overridable using operator classes, like in Rust. The
 following table shows the operator classes, and their operator method that can be overloaded.
 
-| Operator Token | Operator Class        | Operator Method |
-|----------------|-----------------------|-----------------|
-| `==`           | `std::ops::Eq`        | `eq`            |
-| `!=`           | `std::ops::Ne`        | `ne`            |
-| `>`            | `std::ops::Gt`        | `gt`            |
-| `<`            | `std::ops::Lt`        | `lt`            |
-| `>=`           | `std::ops::Ge`        | `ge`            |
-| `<=`           | `std::ops::Le`        | `le`            |
-| `<=>`          | `std::ops::Cmp`       | `cmp`           |
-| `+`            | `std::ops::Add`       | `add`           |
-| `-`            | `std::ops::Sub`       | `sub`           |
-| `*`            | `std::ops::Mul`       | `mul`           |
-| `/`            | `std::ops::Div`       | `div`           |
-| `%`            | `std::ops::Rem`       | `rem`           |
-| `**`           | `std::ops::Pow`       | `pow`           |
-| `%%`           | `std::ops::Mod`       | `mod`           |
-| `+=`           | `std::ops::AddAssign` | `add_assign`    |
-| `-=`           | `std::ops::SubAssign` | `sub_assign`    |
-| `*=`           | `std::ops::MulAssign` | `mul_assign`    |
-| `/=`           | `std::ops::DivAssign` | `div_assign`    |
-| `%=`           | `std::ops::RemAssign` | `rem_assign`    |
-| `**=`          | `std::ops::PowAssign` | `pow_assign`    |
-| `%%=`          | `std::ops::ModAssign` | `mod_assign`    |
-| `or`           | `std::ops::Ior`       | `ior`           |
-| `and`          | `std::ops::And`       | `and`           |
-| `not`          | `std::ops::Not`       | `not`           |
+| Operator Token | Operator Class                    | Operator Method |
+|----------------|-----------------------------------|-----------------|
+| `==`           | `std::ops::eq::Eq`                | `eq`            |
+| `!=`           | `std::ops::ne::Ne`                | `ne`            |
+| `>`            | `std::ops::gt::Gt`                | `gt`            |
+| `<`            | `std::ops::lt::Lt`                | `lt`            |
+| `>=`           | `std::ops::ge::Ge`                | `ge`            |
+| `<=`           | `std::ops::le::Le`                | `le`            |
+| `+`            | `std::ops::add::Add`              | `add`           |
+| `-`            | `std::ops::sub::Sub`              | `sub`           |
+| `*`            | `std::ops::mul::Mul`              | `mul`           |
+| `/`            | `std::ops::div::Div`              | `div`           |
+| `%`            | `std::ops::rem::Rem`              | `rem`           |
+| `**`           | `std::ops::pow::Pow`              | `pow`           |
+| `%%`           | `std::ops::mod::Mod`              | `mod`           |
+| `+=`           | `std::ops::add_assign::AddAssign` | `add_assign`    |
+| `-=`           | `std::ops::sub_assign::SubAssign` | `sub_assign`    |
+| `*=`           | `std::ops::mul_assign::MulAssign` | `mul_assign`    |
+| `/=`           | `std::ops::div_assign::DivAssign` | `div_assign`    |
+| `%=`           | `std::ops::rem_assign::RemAssign` | `rem_assign`    |
+| `**=`          | `std::ops::pow_assign::PowAssign` | `pow_assign`    |
+| `%%=`          | `std::ops::mod_assign::ModAssign` | `mod_assign`    |
+| `or`           | `std::ops::ior::Ior`              | `ior`           |
+| `and`          | `std::ops::and::And`              | `and`           |
+| `not`          | `std::ops::not::Not`              | `not`           |
 
 ### Non-Token Operators
 

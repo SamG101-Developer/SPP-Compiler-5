@@ -5,4 +5,4 @@ Type System
    :maxdepth: 1
 
    Basic-Types
-   First-Class-Types
+   Array-Types
