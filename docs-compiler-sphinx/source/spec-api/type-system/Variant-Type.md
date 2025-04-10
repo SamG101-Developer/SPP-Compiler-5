@@ -11,7 +11,7 @@ composite types.
 To declare a variant type, the `or` keyword is used between the composite types:
 
 ```S++
-use VarType = Str | BigInt | Bool
+use VarType = Str or BigInt or Bool
 ```
 
 ## Type Rules

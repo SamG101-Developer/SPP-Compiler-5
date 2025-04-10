@@ -5,4 +5,7 @@ Type System
    :maxdepth: 1
 
    Basic-Types
-   Array-Types
+   Array-Type
+   Tuple-Type
+   Function-Types
+   Variant-Type
