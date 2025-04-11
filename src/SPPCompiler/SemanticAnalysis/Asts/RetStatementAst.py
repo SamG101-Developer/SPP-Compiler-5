@@ -7,6 +7,7 @@ from llvmlite import ir as llvm
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -47,6 +48,7 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expr:
             self.expr.analyse_semantics(sm, **kwargs)
+            AstMemoryUtils.enforce_memory_integrity(self.expr, self.tok_ret, sm)
             expression_type = self.expr.infer_type(sm, **kwargs)
         else:
             expression_type = CommonTypes.Void(self.pos)
