@@ -254,6 +254,10 @@ class Scope:
             all_sub_scopes.extend(sub_scope.sub_scopes)
         return all_sub_scopes
 
+    @property
+    def symbol_table(self) -> SymbolTable:
+        return self._symbol_table
+
 
 def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[Scope, Asts.GenericIdentifierAst]:
     # For TypeAsts, move through each namespace/type part accessing the namespace scope.

@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import Dict, Optional, TYPE_CHECKING
+
+from collections import defaultdict
+from typing import Dict, Optional, TYPE_CHECKING, Callable, List
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -10,13 +12,21 @@ if TYPE_CHECKING:
 
 class SymbolTable:
     _table: Dict[Asts.IdentifierAst | Asts.GenericIdentifierAst, Symbol]
+    _deferment_queue: defaultdict[Asts.IdentifierAst | Asts.GenericIdentifierAst, List[Callable]]
 
     def __init__(self, table: Optional[Dict[Asts.IdentifierAst | Asts.GenericIdentifierAst, Symbol]] = None):
         self._table = table or {}
+        self._deferment_queue = defaultdict(list)
 
     def add(self, symbol: Symbol) -> None:
         # Add a symbol to the table.
         self._table[symbol.name] = symbol
+
+        # Apply any post-symbol creation steps to the symbol.
+        if symbol.name in self._deferment_queue:
+            for callback in self._deferment_queue[symbol.name]:
+                callback(symbol)
+            del self._deferment_queue[symbol.name]
 
     def rem(self, symbol_name: Asts.IdentifierAst) -> None:
         # Remove a symbol from the table by symbol name.
@@ -37,6 +47,10 @@ class SymbolTable:
     def all(self) -> Seq[Symbol]:
         # Get all symbols in the table.
         return Seq([*self._table.values()])
+
+    def add_deferred_callback(self, symbol_name: Asts.IdentifierAst | Asts.GenericIdentifierAst, callback: Callable) -> None:
+        # Add a deferred callback.
+        self._deferment_queue[symbol_name].append(callback)
 
     def __json__(self) -> Dict:
         # Dump the SymbolTable as a JSON object.
