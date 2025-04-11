@@ -17,7 +17,7 @@ class UnaryExpressionOperatorAsyncAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
-        return self.tok_async.print(printer)
+        return f"{self.tok_async.print(printer)} "
 
     @property
     def pos_end(self) -> int:
@@ -38,8 +38,6 @@ class UnaryExpressionOperatorAsyncAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Mark the function call as async.
         rhs.op._is_async = self
-
-        self.infer_type(sm, rhs, **kwargs).analyse_semantics(sm, **kwargs)
 
 
 __all__ = [

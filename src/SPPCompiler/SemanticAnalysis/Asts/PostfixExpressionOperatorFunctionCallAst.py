@@ -202,12 +202,6 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         return
 
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
-        # Todo: Hacky workaround - see why having a function call as a "self" argument doesn't use its "analyse
-        #  semantics" as the same object. it calls the analyse_semantics method, but on another instance of the AST -
-        #  being copied somewhere, maybe in a code injection.
-        if not self._overload:
-            self.analyse_semantics(sm, lhs, **kwargs)
-
         # Return the function's return type.
         return_type = self._overload[1].return_type
         return return_type
