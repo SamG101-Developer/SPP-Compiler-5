@@ -11,7 +11,7 @@ class TestCoroutinePrototypeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_coroutine_invalidated_previous_borrow(self):
         """
-        cor c() -> std::generator::Gen[&std::number::BigInt, std::boolean::Bool] { }
+        cor c() -> std::generator::Gen[&mut std::number::BigInt, std::boolean::Bool] { }
         fun f() -> std::void::Void {
             let g = c()
             let a = g.resume(false)

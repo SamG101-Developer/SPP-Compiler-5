@@ -40,7 +40,7 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     @staticmethod
     def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:
-        value = symbol.scope.type_symbol.fq_name if symbol.scope else symbol.scope
+        value = symbol.scope.type_symbol.fq_name.with_convention(symbol.convention) if symbol.scope else symbol.scope
         return GenericTypeArgumentNamedAst(name=Asts.TypeSingleAst.from_generic_identifier(symbol.name), value=value)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:

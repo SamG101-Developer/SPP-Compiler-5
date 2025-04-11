@@ -195,10 +195,15 @@ class AstTypeUtils:
         true_value_symbol = sm.current_scope.get_symbol(generic_argument.value)
 
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
-            return TypeSymbol(name=generic_argument.name.type_parts()[0], type=true_value_symbol.type if true_value_symbol else None, scope=true_value_symbol.scope if true_value_symbol else None, is_generic=True)
+            return TypeSymbol(
+                name=generic_argument.name.type_parts()[0], type=true_value_symbol.type if true_value_symbol else None,
+                scope=true_value_symbol.scope if true_value_symbol else None, is_generic=True,
+                convention=generic_argument.value.get_convention())
 
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
-            return VariableSymbol(name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(sm), is_generic=True)
+            return VariableSymbol(
+                name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(sm),
+                is_generic=True)
 
         raise Exception(f"Unknown generic argument type: {type(generic_argument).__name__}")
 

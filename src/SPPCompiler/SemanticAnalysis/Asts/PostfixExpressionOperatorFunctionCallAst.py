@@ -234,23 +234,19 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
             # Immutable reference invalidates all mutable references.
             if type(coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_convention()) is Asts.ConventionRefAst:
-                # print("Immutable reference returned")
                 outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
                 for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
                     if is_mutable:
                         outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
 
-                # print(f"Adding new referents to {outermost}: {kwargs.get("assignment", Seq())}")
                 outermost.memory_info.refer_to_asts = Seq([(ast, False) for ast in kwargs.get("assignment", Seq())])
 
             # Mutable reference invalidates all mutable and immutable references.
             elif type(coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_convention()) is Asts.ConventionMutAst:
-                # print("Mutable reference returned")
                 outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
                 for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
                     outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
 
-                # print(f"Adding new referents to {outermost}: {kwargs.get("assignment", Seq())}")
                 outermost.memory_info.refer_to_asts = Seq([(ast, True) for ast in kwargs.get("assignment", Seq())])
 
 
