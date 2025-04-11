@@ -1,0 +1,13 @@
+[project]
+name = "SPPCompiler"
+version = "5.0.0"
+dynamic = ["dependencies"]
+
+[tools.setuptools.dynamic]
+dependencies = { file = "requirements.txt" }
+
+[tools.bandit]
+skip = ["B101"]
+
+[options]
+packages = ["SPPCompiler"]
