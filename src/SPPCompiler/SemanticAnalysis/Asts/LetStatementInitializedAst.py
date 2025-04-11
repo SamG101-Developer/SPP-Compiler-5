@@ -56,12 +56,14 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.InvalidTypeAnnotationError().add(
                 self.explicit_type, self.assign_to).scopes(sm.current_scope)
 
-        # Ensure the value matches the type if given, and check the memory status.
+        # Analyse the value to ensure its valid before any destructuring takes place.
         self.value.analyse_semantics(sm, **(kwargs | {"assignment": self.assign_to.extract_names}))
 
+        # If an explicit type has been given, analyse it and then check it against the value type.
         if self.explicit_type is not None:
             self.explicit_type.analyse_semantics(sm, **kwargs)
 
+            # This allows a variant type as the annotation with a composite-type value.
             if not self.explicit_type.symbolic_eq(val_type := self.value.infer_type(sm, **kwargs), sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     self.explicit_type, self.explicit_type, self.value, val_type).scopes(sm.current_scope)
