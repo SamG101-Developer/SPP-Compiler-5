@@ -1,9 +1,31 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
 class TestObjectInitializerArgumentAst(CustomTestCase):
+    @should_fail_compilation(SemanticErrors.InvalidObjectInitializerArgumentError)
+    def test_invalid_object_initializer_unnamed_argument_1(self):
+        """
+        cls Foo {
+            a: std::number::BigInt
+        }
+
+        fun f() -> std::void::Void {
+            let foo = Foo(123)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidObjectInitializerArgumentError)
+    def test_invalid_object_initializer_unnamed_argument_2(self):
+        """
+        cls Foo[T] {
+            a: T
+        }
+
+        fun f() -> std::void::Void {
+            let foo = Foo(123)
+        }
+        """
+
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_object_initializer_named_argument_expression_type(self):
         """

@@ -18,15 +18,36 @@ class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_async_invalidated_by_moving_borrow(self):
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    def test_invalid_async_moving_pinned_borrow(self):
         """
-        fun f() -> std::string::Str { ret "hello" }
+        fun f(a: &std::string::Str) -> std::string::Str { ret "hello" }
         fun g() -> std::void::Void {
-            let x = 123
-            let future = async c(&x)
+            let x = "hello"
+            let future = async f(&x)
             let y = x
-            let h = future
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    def test_invalid_async_moving_future_with_pins_mov(self):
+        """
+        fun f(a: &std::string::Str) -> std::string::Str { ret "hello" }
+        fun g() -> std::void::Void {
+            let x = "hello"
+            let future = async f(&x)
+            let f = future
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    def test_invalid_async_moving_future_with_pins_ret(self):
+        """
+        fun f(a: &std::string::Str) -> std::string::Str { ret "hello" }
+        fun g() -> std::future::Fut[std::string::Str] {
+            let x = "hello"
+            let future = async f(&x)
+            ret future
         }
         """
 
@@ -45,7 +66,7 @@ class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
         """
         fun f(a: &std::string::Str) -> std::void::Void { }
         fun g() -> std::void::Void {
-            let mut x = async f("hello")
+            let mut x = async f(&"hello")
             x = std::future::Fut[std::void::Void]()
         }
         """

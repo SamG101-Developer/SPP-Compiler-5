@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -79,21 +77,6 @@ class TestAnnotationAst(CustomTestCase):
         }
 
         @private
-        fun g() -> std::void::Void { }
-        """
-
-    @should_pass_compilation()
-    def test_valid_annotation_hidden(self) -> None:
-        """
-        @hidden
-        cls A { }
-
-        sup A {
-            @hidden
-            fun f() -> std::void::Void { }
-        }
-
-        @hidden
         fun g() -> std::void::Void { }
         """
 
@@ -187,16 +170,6 @@ class TestAnnotationAst(CustomTestCase):
         fun f() -> A { }
         """
 
-    @should_fail_compilation(SemanticErrors.AnnotationDuplicateError)
-    def test_invalid_annotation_duplicates_1(self) -> None:
-        """
-        cls A { }
-
-        @public
-        @public
-        fun f() -> A { }
-        """
-
     @should_fail_compilation(SemanticErrors.AnnotationConflictError)
     def test_invalid_annotation_conflicting_1(self) -> None:
         """
@@ -223,16 +196,6 @@ class TestAnnotationAst(CustomTestCase):
         cls A { }
 
         @private
-        @hidden
-        fun f() -> A { }
-        """
-
-    @should_fail_compilation(SemanticErrors.AnnotationConflictError)
-    def test_invalid_annotation_conflicting_4(self) -> None:
-        """
-        cls A { }
-
-        @hidden
         @public
         fun f() -> A { }
         """

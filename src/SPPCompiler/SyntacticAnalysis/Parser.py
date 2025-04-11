@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, List, Optional, Tuple, Union
 
-import SPPCompiler.SemanticAnalysis as Asts
+from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType, RawToken, RawTokenType, RawKeywordType
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
@@ -278,7 +278,7 @@ class SppParser:
 
     def parse_function_call_argument_unnamed(self) -> Asts.FunctionCallArgumentUnnamedAst:
         c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_convention)
+        p1 = self.parse_optional(self.parse_convention)
         p2 = self.parse_optional(self.parse_token_double_dot)
         p3 = self.parse_once(self.parse_expression)
         return Asts.FunctionCallArgumentUnnamedAst(c1, p1, p2, p3)
@@ -287,7 +287,7 @@ class SppParser:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_identifier)
         p2 = self.parse_once(self.parse_token_assign)
-        p3 = self.parse_once(self.parse_convention)
+        p3 = self.parse_optional(self.parse_convention)
         p4 = self.parse_once(self.parse_expression)
         return Asts.FunctionCallArgumentNamedAst(c1, p1, p2, p3, p4)
 
@@ -310,18 +310,17 @@ class SppParser:
     def parse_function_parameter_self(self) -> Asts.FunctionParameterSelfAst:
         c1 = self.current_pos()
         p1 = self.parse_optional(self.parse_keyword_mut)
-        p2 = self.parse_once(self.parse_convention)
+        p2 = self.parse_optional(self.parse_convention)
         p3 = self.parse_once(self.parse_self_keyword)
         return Asts.FunctionParameterSelfAst(c1, p1, p2, p3)
 
     def parse_function_parameter_self_with_arbitrary_type(self) -> Asts.FunctionParameterSelfAst:
         c1 = self.current_pos()
         p1 = self.parse_optional(self.parse_keyword_mut)
-        p2 = self.parse_once(self.parse_convention_mov)
-        p3 = self.parse_once(self.parse_self_keyword)
-        p4 = self.parse_once(self.parse_token_colon)
-        p5 = self.parse_once(self.parse_type)
-        return Asts.FunctionParameterSelfAst(c1, p1, p2, p3, p5)
+        p2 = self.parse_once(self.parse_self_keyword)
+        p3 = self.parse_once(self.parse_token_colon)
+        p4 = self.parse_once(self.parse_type)
+        return Asts.FunctionParameterSelfAst(c1, p1, None, p2, p4)
 
     def parse_function_parameter_required(self) -> Asts.FunctionParameterRequiredAst:
         c1 = self.current_pos()
@@ -500,11 +499,12 @@ class SppParser:
         p2 = self.parse_once(rhs)
         return p1, p2
 
-    def parse_binary_expression_precedence_level_n(self, lhs, op, rhs) -> Asts.BinaryExpressionAst:
+    def parse_binary_expression_precedence_level_n(self, lhs, op, rhs, is_: bool = False) -> Asts.BinaryExpressionAst | Asts.IsExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_once(lhs)
         p2 = self.parse_optional(lambda: self.parse_binary_expression_precedence_level_n_rhs(op, rhs))
-        return Asts.BinaryExpressionAst(c1, p1, p2[0], p2[1]) if p2 else p1
+        Constructor = Asts.BinaryExpressionAst if not is_ else Asts.IsExpressionAst
+        return Constructor(c1, p1, p2[0], p2[1]) if p2 else p1
 
     def parse_binary_expression_precedence_level_1(self) -> Asts.ExpressionAst:
         return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_2, self.parse_binary_op_precedence_level_1, self.parse_binary_expression_precedence_level_1)
@@ -513,7 +513,7 @@ class SppParser:
         return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_3, self.parse_binary_op_precedence_level_2, self.parse_binary_expression_precedence_level_2)
 
     def parse_binary_expression_precedence_level_3(self) -> Asts.ExpressionAst:
-        return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_4, self.parse_binary_op_precedence_level_3, self.parse_pattern_group_destructure)
+        return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_4, self.parse_binary_op_precedence_level_3, self.parse_pattern_group_destructure, is_=True)
 
     def parse_binary_expression_precedence_level_4(self) -> Asts.ExpressionAst:
         return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_5, self.parse_binary_op_precedence_level_4, self.parse_binary_expression_precedence_level_4)
@@ -634,12 +634,12 @@ class SppParser:
     def parse_gen_expression_normal_no_expression(self) -> Asts.GenExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_keyword_gen)
-        return Asts.GenExpressionAst(c1, p1, None, Asts.ConventionMovAst(p1.pos), None)
+        return Asts.GenExpressionAst(c1, p1, None, None, None)
 
     def parse_gen_expression_normal_with_expression(self) -> Asts.GenExpressionAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_keyword_gen)
-        p2 = self.parse_once(self.parse_convention)
+        p2 = self.parse_optional(self.parse_convention)
         p3 = self.parse_once(self.parse_expression)
         return Asts.GenExpressionAst(c1, p1, None, p2, p3)
 
@@ -648,7 +648,7 @@ class SppParser:
         p1 = self.parse_once(self.parse_keyword_gen)
         p2 = self.parse_once(self.parse_keyword_with)
         p3 = self.parse_once(self.parse_expression)
-        return Asts.GenExpressionAst(c1, p1, p2, Asts.ConventionMovAst(p3.pos), p3)
+        return Asts.GenExpressionAst(c1, p1, p2, None, p3)
 
     # ===== STATEMENTS =====
 
@@ -733,9 +733,15 @@ class SppParser:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_keyword_let)
         p2 = self.parse_once(self.parse_local_variable)
-        p3 = self.parse_once(self.parse_token_assign)
-        p4 = self.parse_once(self.parse_expression)
-        return Asts.LetStatementInitializedAst(c1, p1, p2, p3, p4)
+        p3 = self.parse_optional(self.parse_let_statement_initialized_type)
+        p4 = self.parse_once(self.parse_token_assign)
+        p5 = self.parse_once(self.parse_expression)
+        return Asts.LetStatementInitializedAst(c1, p1, p2, p3, p4, p5)
+
+    def parse_let_statement_initialized_type(self) -> Asts.TypeAst:
+        p1 = self.parse_once(self.parse_token_colon)
+        p2 = self.parse_once(self.parse_type)
+        return p2
 
     def parse_let_statement_uninitialized(self) -> Asts.LetStatementUninitializedAst:
         c1 = self.current_pos()
@@ -1083,7 +1089,6 @@ class SppParser:
         p1 = self.parse_alternate(
             self.parse_postfix_op_function_call,
             self.parse_postfix_op_not_keyword,
-            self.parse_postfix_op_res_keyword,
             self.parse_postfix_op_member_access,
             self.parse_postfix_op_early_return)
         return p1
@@ -1126,24 +1131,13 @@ class SppParser:
         p2 = self.parse_once(self.parse_keyword_not)
         return Asts.PostfixExpressionOperatorNotKeywordAst(c1, p1, p2)
 
-    def parse_postfix_op_res_keyword(self) -> Asts.PostfixExpressionOperatorResKeywordAst:
-        c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_token_dot)
-        p2 = self.parse_once(self.parse_keyword_res)
-        return Asts.PostfixExpressionOperatorResKeywordAst(c1, p1, p2)
-
     # ===== CONVENTIONS =====
 
     def parse_convention(self) -> Asts.ConventionAst:
         p1 = self.parse_alternate(
             self.parse_convention_mut,
-            self.parse_convention_ref,
-            self.parse_convention_mov)
+            self.parse_convention_ref)
         return p1
-
-    def parse_convention_mov(self) -> Asts.ConventionMovAst:
-        c1 = self.current_pos()
-        return Asts.ConventionMovAst(c1)
 
     def parse_convention_ref(self) -> Asts.ConventionRefAst:
         c1 = self.current_pos()
@@ -1180,7 +1174,7 @@ class SppParser:
     def parse_object_initializer_argument_unnamed(self) -> Asts.ObjectInitializerArgumentUnnamedAst:
         c1 = self.current_pos()
         p1 = self.parse_optional(self.parse_token_double_dot)
-        p2 = self.parse_once(self.parse_identifier)
+        p2 = self.parse_once(self.parse_expression)
         return Asts.ObjectInitializerArgumentUnnamedAst(c1, p1, p2)
 
     def parse_object_initializer_argument_named(self) -> Asts.ObjectInitializerArgumentNamedAst:
@@ -1290,10 +1284,13 @@ class SppParser:
         return reduce(lambda acc, x: Asts.TypePostfixExpressionAst(c1, acc, x), p2.list(), p1).convert()
 
     def parse_type_unary_expression(self) -> Asts.TypeAst:
+        # Todo: this doesn't allow for &[T, n], has to be &std::Arr[T, n] atm.
         c1 = self.current_pos()
-        p1 = self.parse_zero_or_more(self.parse_type_unary_op, self.parse_nothing)
-        p2 = self.parse_once(self.parse_type_single)
-        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(c1, x, acc), p1.reverse().list(), p2).convert()
+        p1 = self.parse_optional(self.parse_type_unary_op_borrow)
+        p2 = self.parse_zero_or_more(self.parse_type_unary_op_namespace, self.parse_nothing)
+        p3 = self.parse_once(self.parse_type_single)
+        p2.insert(0, p1) if p1 else None
+        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(c1, x, acc), p2.reverse().list(), p3).convert()
 
     def parse_type_parenthesized(self) -> Asts.TypeSingleAst:
         c1 = self.current_pos()
@@ -1342,7 +1339,7 @@ class SppParser:
         return Asts.TypeUnaryOperatorNamespaceAst(c1, p1, p2)
 
     def parse_type_unary_op_borrow(self) -> Asts.TypeUnaryOperatorBorrowAst:
-        c1 = self.current_pos()
+        c1 = self.current_pos()  # todo: make is parse_convention
         p1 = self.parse_alternate(
             self.parse_convention_mut,
             self.parse_convention_ref)
@@ -1351,21 +1348,14 @@ class SppParser:
     def parse_type_postfix_op(self) -> Asts.TypePostfixOperatorAst:
         p1 = self.parse_alternate(
             self.parse_type_postfix_op_nested_type,
-            self.parse_type_postfix_op_indexed_type,
             self.parse_type_postfix_op_optional_type)
         return p1
 
     def parse_type_postfix_op_nested_type(self) -> Asts.TypePostfixOperatorNestedTypeAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_double_colon)
-        p2 = self.parse_once(self.parse_type_simple)
+        p2 = self.parse_once(self.parse_type_single)
         return Asts.TypePostfixOperatorNestedTypeAst(c1, p1, p2)
-
-    def parse_type_postfix_op_indexed_type(self) -> Asts.TypePostfixOperatorIndexedTypeAst:
-        c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_token_double_colon)
-        p2 = self.parse_once(self.parse_lexeme_dec_integer)
-        return Asts.TypePostfixOperatorIndexedTypeAst(c1, p1, p2)
 
     def parse_type_postfix_op_optional_type(self) -> Asts.TypePostfixOperatorOptionalTypeAst:
         c1 = self.current_pos()
@@ -1547,7 +1537,7 @@ class SppParser:
     def parse_literal_array_0_items(self) -> Asts.ArrayLiteral0ElementAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_left_square_bracket)
-        p2 = self.parse_once(self.parse_type)  # todo: convention allowed here?
+        p2 = self.parse_once(self.parse_type)
         p3 = self.parse_once(self.parse_token_comma)
         p4 = self.parse_once(self.parse_lexeme_dec_integer)
         p5 = self.parse_once(self.parse_token_right_square_bracket)
@@ -1838,9 +1828,6 @@ class SppParser:
 
     def parse_keyword_not(self) -> Asts.TokenAst:
         return self.parse_keyword_raw(RawKeywordType.Not, SppTokenType.KwNot, requires_following_space=False)
-
-    def parse_keyword_res(self) -> Asts.TokenAst:
-        return self.parse_keyword_raw(RawKeywordType.Res, SppTokenType.KwRes, requires_following_space=False)
 
     def parse_keyword_true(self) -> Asts.TokenAst:
         return self.parse_keyword_raw(RawKeywordType.True_, SppTokenType.KwTrue, requires_following_space=False)

@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import copy
-from typing import Any, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Optional, Tuple
 
-import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.Compiler.ModuleTree import Module
+from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, Symbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, \
+    Symbol
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Meta.Ast import Ast
 
 
 class Scope:
@@ -28,7 +26,11 @@ class Scope:
 
     _error_formatter: ErrorFormatter
 
-    def __init__(self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Ast] = None, error_formatter: Optional[ErrorFormatter] = None) -> None:
+    def __init__(
+            self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Asts.Ast] = None,
+            error_formatter: Optional[ErrorFormatter] = None)\
+            -> None:
+
         # Initialize the scope with the given name, parent, and AST.
         self._name = name
         self._parent = parent
@@ -69,11 +71,15 @@ class Scope:
     def __str__(self) -> str:
         return str(self._name)
 
-    def _translate_symbol(self, symbol: Symbol) -> Symbol:
-        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
-        generics = self._symbol_table.all()
+    @property
+    def generics(self) -> Seq[Asts.GenericArgumentAst]:
+        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst, AliasSymbol: Asts.GenericTypeArgumentNamedAst}
+        generics = self._symbol_table.all().filter(lambda s: s.is_generic)
         generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
+        return generics
 
+    def _translate_symbol(self, symbol: Symbol, ignore_alias: bool = False) -> Symbol:
+        generics = self.generics
         new_symbol = symbol
 
         if isinstance(symbol, VariableSymbol):
@@ -82,9 +88,9 @@ class Scope:
 
         elif isinstance(symbol, TypeSymbol):
             new_fq_name = symbol.fq_name.sub_generics(generics)
-            new_symbol = self._non_generic_scope.get_symbol(new_fq_name)
+            new_symbol = self._non_generic_scope.get_symbol(new_fq_name, ignore_alias=ignore_alias)
 
-        return new_symbol
+        return new_symbol or symbol
 
     def add_symbol(self, symbol: Symbol) -> None:
         if isinstance(symbol, TypeSymbol):
@@ -98,6 +104,7 @@ class Scope:
         self._symbol_table.rem(symbol_name)
 
     def all_symbols(self, exclusive: bool = False) -> Seq[Symbol]:
+
         # Get all the symbols in the scope.
         symbols = self._symbol_table.all()
         if not exclusive and self._parent:
@@ -119,7 +126,7 @@ class Scope:
 
         # Handle generic translation.
         if self != self._non_generic_scope:
-            return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias))
+            return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias), ignore_alias)
 
         # Namespace adjust, and get the symbol from the symbol table if it exists.
         scope = self
@@ -138,11 +145,19 @@ class Scope:
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
 
-    def get_namespace_symbol(self, name: Asts.IdentifierAst, exclusive: bool = False) -> Optional[Symbol]:
-        # An optimized version of get_symbol for namespace symbols.
-        for symbol in self.all_symbols(exclusive=exclusive):
-            if isinstance(symbol, NamespaceSymbol) and symbol.name == name:
-                return symbol
+    def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
+        # Todo: this needs tidying up (should run the same code for both types, just not the loop for identifier)
+        if isinstance(name, Asts.IdentifierAst):
+            for symbol in self.all_symbols(exclusive=exclusive):
+                if isinstance(symbol, NamespaceSymbol) and symbol.name == name:
+                    return symbol
+            return None
+
+        scope = self.get_namespace_symbol(name.lhs, exclusive=exclusive).scope
+        while isinstance(name, Asts.PostfixExpressionAst) and isinstance(name.op, Asts.PostfixExpressionOperatorMemberAccessAst):
+            symbol = scope.get_namespace_symbol(name := name.op.field, exclusive=exclusive)
+            scope = symbol.scope
+        return symbol
 
     def get_multiple_symbols(self, name: Asts.IdentifierAst, original_scope: Scope = None) -> Seq[Tuple[Symbol, Scope, int]]:
         # Get all the symbols with the given name (ambiguity checks, function overloads etc), and their "depth".
@@ -205,7 +220,7 @@ class Scope:
         return self._children
 
     @property
-    def type_symbol(self) -> Optional[TypeSymbol]:
+    def type_symbol(self) -> Optional[TypeSymbol | AliasSymbol]:
         # Get the optionally linked type symbol (if this is a type scope).
         return self._type_symbol
 
@@ -238,6 +253,10 @@ class Scope:
             all_sub_scopes.append(sub_scope)
             all_sub_scopes.extend(sub_scope.sub_scopes)
         return all_sub_scopes
+
+    @property
+    def symbol_table(self) -> SymbolTable:
+        return self._symbol_table
 
 
 def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[Scope, Asts.GenericIdentifierAst]:
@@ -276,3 +295,7 @@ def confirm_type_with_alias(scope: Scope, symbol: Symbol, ignore_alias: bool) ->
         case AliasSymbol() if symbol.old_type and not ignore_alias:
             symbol = scope.get_symbol(symbol.old_type)
     return symbol
+
+
+__all__ = [
+    "Scope"]

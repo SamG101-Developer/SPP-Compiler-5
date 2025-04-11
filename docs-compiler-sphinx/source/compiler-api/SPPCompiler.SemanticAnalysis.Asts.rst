@@ -1,0 +1,161 @@
+SPPCompiler.SemanticAnalysis.Asts package
+=========================================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 1
+
+   SPPCompiler.SemanticAnalysis.Asts.Mixins
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   SPPCompiler.SemanticAnalysis.Asts.AnnotationAst
+   SPPCompiler.SemanticAnalysis.Asts.ArrayLiteral0ElementAst
+   SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralAst
+   SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralNElementAst
+   SPPCompiler.SemanticAnalysis.Asts.AssignmentStatementAst
+   SPPCompiler.SemanticAnalysis.Asts.Ast
+   SPPCompiler.SemanticAnalysis.Asts.BinaryExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.BooleanLiteralAst
+   SPPCompiler.SemanticAnalysis.Asts.CaseExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.CaseExpressionBranchAst
+   SPPCompiler.SemanticAnalysis.Asts.ClassAttributeAst
+   SPPCompiler.SemanticAnalysis.Asts.ClassImplementationAst
+   SPPCompiler.SemanticAnalysis.Asts.ClassMemberAst
+   SPPCompiler.SemanticAnalysis.Asts.ClassPrototypeAst
+   SPPCompiler.SemanticAnalysis.Asts.ConventionAst
+   SPPCompiler.SemanticAnalysis.Asts.ConventionMutAst
+   SPPCompiler.SemanticAnalysis.Asts.ConventionRefAst
+   SPPCompiler.SemanticAnalysis.Asts.CoroutinePrototypeAst
+   SPPCompiler.SemanticAnalysis.Asts.ExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.FloatLiteralAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentGroupAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentNamedAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionCallArgumentUnnamedAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionImplementationAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionMemberAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionParameterAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionParameterGroupAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionParameterOptionalAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionParameterRequiredAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionParameterSelfAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionParameterVariadicAst
+   SPPCompiler.SemanticAnalysis.Asts.FunctionPrototypeAst
+   SPPCompiler.SemanticAnalysis.Asts.GenExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericArgumentAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericArgumentGroupAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentNamedAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentUnnamedAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterOptionalAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterRequiredAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterVariadicAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericIdentifierAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericParameterAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericParameterGroupAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentNamedAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentUnnamedAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterInlineConstraintsAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterOptionalAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterRequiredAst
+   SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterVariadicAst
+   SPPCompiler.SemanticAnalysis.Asts.GlobalConstantAst
+   SPPCompiler.SemanticAnalysis.Asts.IdentifierAst
+   SPPCompiler.SemanticAnalysis.Asts.InnerScopeAst
+   SPPCompiler.SemanticAnalysis.Asts.IntegerLiteralAst
+   SPPCompiler.SemanticAnalysis.Asts.IsExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.LetStatementAst
+   SPPCompiler.SemanticAnalysis.Asts.LetStatementInitializedAst
+   SPPCompiler.SemanticAnalysis.Asts.LetStatementUninitializedAst
+   SPPCompiler.SemanticAnalysis.Asts.LiteralAst
+   SPPCompiler.SemanticAnalysis.Asts.LocalVariableAst
+   SPPCompiler.SemanticAnalysis.Asts.LocalVariableAttributeBindingAst
+   SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureArrayAst
+   SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureObjectAst
+   SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureSkip1ArgumentAst
+   SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureSkipNArgumentsAst
+   SPPCompiler.SemanticAnalysis.Asts.LocalVariableDestructureTupleAst
+   SPPCompiler.SemanticAnalysis.Asts.LocalVariableSingleIdentifierAliasAst
+   SPPCompiler.SemanticAnalysis.Asts.LocalVariableSingleIdentifierAst
+   SPPCompiler.SemanticAnalysis.Asts.LoopConditionAst
+   SPPCompiler.SemanticAnalysis.Asts.LoopConditionBooleanAst
+   SPPCompiler.SemanticAnalysis.Asts.LoopConditionIterableAst
+   SPPCompiler.SemanticAnalysis.Asts.LoopControlFlowStatementAst
+   SPPCompiler.SemanticAnalysis.Asts.LoopElseStatementAst
+   SPPCompiler.SemanticAnalysis.Asts.LoopExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.ModuleImplementationAst
+   SPPCompiler.SemanticAnalysis.Asts.ModuleMemberAst
+   SPPCompiler.SemanticAnalysis.Asts.ModulePrototypeAst
+   SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentAst
+   SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentGroupAst
+   SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentNamedAst
+   SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerArgumentUnnamedAst
+   SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerAst
+   SPPCompiler.SemanticAnalysis.Asts.ParenthesizedExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternGuardAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantAttributeBindingAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureArrayAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureObjectAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureSkip1ArgumentAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureSkipNArgumentsAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureTupleAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantElseAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantElseCaseAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantLiteralAst
+   SPPCompiler.SemanticAnalysis.Asts.PatternVariantSingleIdentifierAst
+   SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst
+   SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorEarlyReturnAst
+   SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst
+   SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst
+   SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst
+   SPPCompiler.SemanticAnalysis.Asts.PrimaryExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.RetStatementAst
+   SPPCompiler.SemanticAnalysis.Asts.StatementAst
+   SPPCompiler.SemanticAnalysis.Asts.StringLiteralAst
+   SPPCompiler.SemanticAnalysis.Asts.SubroutinePrototypeAst
+   SPPCompiler.SemanticAnalysis.Asts.SupImplementationAst
+   SPPCompiler.SemanticAnalysis.Asts.SupMemberAst
+   SPPCompiler.SemanticAnalysis.Asts.SupPrototypeAst
+   SPPCompiler.SemanticAnalysis.Asts.SupPrototypeExtensionAst
+   SPPCompiler.SemanticAnalysis.Asts.SupPrototypeFunctionsAst
+   SPPCompiler.SemanticAnalysis.Asts.SupUseStatementAst
+   SPPCompiler.SemanticAnalysis.Asts.TokenAst
+   SPPCompiler.SemanticAnalysis.Asts.TupleLiteralAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeArrayAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeBinaryExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeParenthesizedAst
+   SPPCompiler.SemanticAnalysis.Asts.TypePostfixExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorAst
+   SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorNestedTypeAst
+   SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorOptionalTypeAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeSingleAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeTupleAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeUnaryExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorBorrowAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorNamespaceAst
+   SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAst
+   SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAsyncAst
+   SPPCompiler.SemanticAnalysis.Asts.UseStatementAst
+   SPPCompiler.SemanticAnalysis.Asts.WhereBlockAst
+   SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsAst
+   SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsGroupAst
+
+Module contents
+---------------
+
+.. automodule:: SPPCompiler.SemanticAnalysis.Asts
+   :members:
+   :show-inheritance:
+   :undoc-members:

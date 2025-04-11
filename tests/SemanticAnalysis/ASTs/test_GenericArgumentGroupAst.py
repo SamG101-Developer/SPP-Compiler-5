@@ -43,9 +43,12 @@ class TestGenericArgumentGroupAst(CustomTestCase):
     def test_valid_generic_argument_group_different_names_from_sup_2(self):
         """
         cls A[T] { a: T }
+        sup [T] A[T] ext std::clone::Clone[A[T]] {
+            fun clone(&self) -> A[T] { ret A[T]() }
+        }
 
         sup [T] A[T] {
-            fun f(&self) -> T { ret self.a }
+            fun f(&self) -> T { ret self.clone().a }
         }
 
         fun g() -> std::void::Void {

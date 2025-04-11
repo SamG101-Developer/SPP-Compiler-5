@@ -14,7 +14,7 @@ class TestGenExpressionAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_gen_expression_convention_mismatch_mov(self):
+    def test_invalid_gen_expression_convention_mismatch_1a(self):
         """
         cor foo() -> std::generator::Gen[std::number::BigInt] {
             gen &1
@@ -22,7 +22,7 @@ class TestGenExpressionAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_gen_expression_convention_mismatch_mov_2(self):
+    def test_invalid_gen_expression_convention_mismatch_1b(self):
         """
         cor foo() -> std::generator::Gen[std::number::BigInt] {
             gen &mut 1
@@ -30,15 +30,7 @@ class TestGenExpressionAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_gen_expression_convention_mismatch_ref(self):
-        """
-        cor foo() -> std::generator::Gen[&std::number::BigInt] {
-            gen &mut 1
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_gen_expression_convention_mismatch_ref_2(self):
+    def test_invalid_gen_expression_convention_mismatch_2a(self):
         """
         cor foo() -> std::generator::Gen[&std::number::BigInt] {
             gen 1
@@ -46,7 +38,7 @@ class TestGenExpressionAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_gen_expression_convention_mismatch_mut(self):
+    def test_invalid_gen_expression_convention_mismatch_3a(self):
         """
         cor foo() -> std::generator::Gen[&mut std::number::BigInt] {
             gen 1
@@ -54,7 +46,7 @@ class TestGenExpressionAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_gen_expression_convention_mismatch_mut_2(self):
+    def test_invalid_gen_expression_convention_mismatch_3b(self):
         """
         cor foo() -> std::generator::Gen[&mut std::number::BigInt] {
             gen &1
@@ -82,6 +74,14 @@ class TestGenExpressionAst(CustomTestCase):
             gen &mut 0
             gen with foo()
             gen &mut 4
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_gen_expression_convention_mismatch_ref_coerce(self):
+        """
+        cor foo() -> std::generator::Gen[&std::number::BigInt] {
+            gen &mut 1
         }
         """
 

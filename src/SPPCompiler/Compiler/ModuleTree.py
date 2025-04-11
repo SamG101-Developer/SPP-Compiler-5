@@ -5,14 +5,22 @@ from dataclasses import dataclass, field
 from glob import glob
 from typing import Iterable, List, Optional
 
-import SPPCompiler.SemanticAnalysis as Asts
 from SPPCompiler.LexicalAnalysis.TokenType import RawToken
+from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
 class Module:
+    """!
+    A Module represents a file of code, and associated information for convenience, such as the token stream, which is
+    the lexed output for this module.
+
+    Another key attribute is the error_formatter, which is used to format errors for this module, by using the local
+    token stream. This allows cross module context for errors.
+    """
+
     path: str
     code: str = field(default="")
     token_stream: List[RawToken] = field(default_factory=Seq)
@@ -21,7 +29,13 @@ class Module:
 
 
 class ModuleTree:
+    """!
+    The ModuleTree holds a list of modules from the local "src" and "vcs" directories. This tree is then used by the
+    compiler to iterate through and process each module.
+    """
+
     _src_path: str
+    _vcs_path: str
     _modules: Seq[Module]
 
     def __init__(self, path: str) -> None:
@@ -39,11 +53,23 @@ class ModuleTree:
             setattr(m, "path", m.path.replace(os.getcwd(), "", 1))
 
     def __iter__(self) -> Iterable[Module]:
+        """!
+        Iterate through the module tree by iterating through the list of modules.
+
+        @return An iterator over the modules.
+        """
+
         # Iterate over the modules.
-        return iter(self._modules)
+        return iter(self._modules.copy())
 
     @property
     def modules(self) -> Seq[Module]:
+        """!
+        Get the list of modules in the module tree.
+
+        @return The list of modules.
+        """
+
         # Return the source and version control system modules.
         return self._modules
 

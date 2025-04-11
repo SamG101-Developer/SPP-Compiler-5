@@ -223,6 +223,9 @@ class Seq[T]:
 
     # Operations
 
+    def at(self, index: int, default: Optional[T] = None) -> Optional[T]:
+        return self._value[index] if index < len(self._value) else default
+
     def __iter__(self) -> Iterator[T]:
         return iter(self._value)
 
@@ -238,7 +241,7 @@ class Seq[T]:
         return self.set_subtract(other)
 
     def __add__(self, other):
-        return self.set_union(other)
+        return Seq(self._value + other._value)
 
     def __eq__(self, other) -> bool:
         return self._value == other._value

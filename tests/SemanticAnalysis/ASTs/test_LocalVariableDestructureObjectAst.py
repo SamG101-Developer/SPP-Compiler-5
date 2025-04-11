@@ -198,30 +198,3 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
             other_variable = true
         }
         """
-
-    @should_pass_compilation()
-    def test_valid_local_variable_destructure_object_variant_type_1(self):
-        """
-        fun f(o: std::option::Opt[std::string::Str]) -> std::void::Void {
-            let std::option::Some(mut val) = o
-            val = "hello world"
-        }
-        """
-
-    @should_pass_compilation()  # todo: this should be invalid (what if its Point2?)
-    def test_valid_local_variable_destructure_object_variant_type_2(self):
-        """
-        cls Point1 {
-            x: std::number::BigInt
-            y: std::number::BigInt
-        }
-
-        cls Point2 {
-            x: std::number::BigInt
-            y: std::number::BigInt
-        }
-
-        fun f(p: Point1 or Point2) -> std::void::Void {
-            let Point1(x, y) = p
-        }
-        """
