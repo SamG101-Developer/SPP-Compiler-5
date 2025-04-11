@@ -8,7 +8,7 @@ __status__ = "Development"
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 import os, tomllib, sys
-import distutils.ccompiler
+from setuptools._distutils.ccompiler import new_compiler
 
 print(__file__)
 sys.path.append(str(Path(__file__).parent / "src"))
@@ -171,7 +171,7 @@ def validate_project_structure() -> bool:
     # If there is an FFI folder, check each subfolder is structured properly.
     ffi_folder = cwd / "ffi"
     if ffi_folder.exists():
-        ext = distutils.ccompiler.new_compiler().shared_lib_extension[1:]
+        ext = new_compiler().shared_lib_extension[1:]
 
         for lib_folder in ffi_folder.iterdir():
             if not lib_folder.is_dir():
