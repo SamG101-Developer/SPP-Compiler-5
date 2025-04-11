@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticError, SemanticErrors
 from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
-from spp_cli import handle_build, handle_init
+from spp_cli import handle_build, handle_init, handle_vcs
 
 
 class CustomTestCase(TestCase):
@@ -19,6 +19,7 @@ def _build_temp_project_v3(code):
         os.makedirs(os.path.join(cwd, fp))
         os.chdir(fp)
         handle_init()
+        handle_vcs()
         os.chdir(cwd)
 
     with open(os.path.join(cwd, fp, "src", "main.spp"), "w") as f:
