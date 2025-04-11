@@ -235,9 +235,8 @@ class AstMemoryUtils:
         # objects must not move location, because they might be being borrowed into a coroutine or asynchronous function
         # call.
         if check_pins and symbol.memory_info.ast_pinned:  # and not isinstance(value_ast, Asts.IdentifierAst):
-            if overlaps := symbol.memory_info.ast_pinned.filter(lambda p: AstMemoryUtils.overlaps(p, value_ast)):
-                raise SemanticErrors.MemoryMovedWhilstPinnedError().add(
-                    value_ast, overlaps[0]).scopes(sm.current_scope)
+            raise SemanticErrors.MemoryMovedWhilstPinnedError().add(
+                value_ast, symbol.memory_info.ast_pinned[0]).scopes(sm.current_scope)
 
         # Mark the symbol as either moved or partially moved (for non-copy types). Entire objects are marked as moved,
         # and attribute accesses are marked as partial moves on the symbol representing the entire object. If the object
