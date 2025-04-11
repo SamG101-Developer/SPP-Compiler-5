@@ -39,7 +39,6 @@ jobs:
           path: './docs-compiler-sphinx/build/html'
 
   test:
-    needs: build-docs
     runs-on: ubuntu-latest
 
     steps:
