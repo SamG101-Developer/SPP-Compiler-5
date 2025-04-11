@@ -13,7 +13,6 @@ permissions:
 
 jobs:
   build-docs:
-    if: ${{ contains(github.event.head_commit.message, '.md') || contains(github.event.head_commit.message, '.py') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -40,7 +39,6 @@ jobs:
           path: './docs-compiler-sphinx/build/html'
 
   test:
-    if: ${{ contains(github.event.head_commit.message, '.py') }}
     needs: build-docs
     runs-on: ubuntu-latest
 
