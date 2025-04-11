@@ -1,7 +1,8 @@
 # S++ Compiler
 
-![GitHub Pages](https://img.shields.io/website?url=https://samg101-developer.github.io/SPP-Compiler-5/)
-[![cov](https://samg101-developer.github.io/SPP-Compiler-5/badges/coverage.svg)](https://github.com/samg101-developer/SPP-Compiler-5/actions)
+[![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-blue?logo=github)](https://samg101-developer.github.io/SPP-Compiler-5/)
+[![Coverage Status](./coverage-badge.svg)]()
+
 
 Folders
 
