@@ -21,9 +21,6 @@ if PROFILE:
     import graphviz
 
 
-# Cause tests to be re-run
-
-
 def main() -> None:
     project_dir = "project"
     os.chdir(project_dir)
