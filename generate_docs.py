@@ -1,21 +1,28 @@
-import glob
 import os
 import shutil
+import subprocess
+from pathlib import Path
 
-# Remove all API generated files.
-shutil.rmtree(".\\docs-compiler-sphinx\\source\\compiler-api", ignore_errors=True)
+root = Path(__file__).parent.resolve()
+docs_dir = root / "docs-compiler-sphinx"
+source_dir = docs_dir / "source"
+build_dir = docs_dir / "build"
+api_dir = source_dir / "compiler-api"
+src_dir = root / "src" / "SPPCompiler"
 
-# Auto generate a rst module per compiler file, and make the specs folder.
-os.system("sphinx-apidoc -o .\\docs-compiler-sphinx\\source\\compiler-api .\\src\\SPPCompiler --separate")
+# Clear old build files.
+shutil.rmtree(api_dir, ignore_errors=True)
+shutil.rmtree(build_dir, ignore_errors=True)
 
-api_directory = ".\\docs-compiler-sphinx\\source\\compiler-api"
-for file in glob.glob(os.path.join(api_directory, "*.rst")):
-    with open(file, "r") as f:
-        contents = f.read()
+# Generate the new module files for "compiler-api".
+subprocess.run(["sphinx-apidoc", "-o", str(api_dir), str(src_dir), "--separate"], check=True)
+
+# Adjust the max depth of displayed information.
+for rst_file in api_dir.glob("*.rst"):
+    contents = rst_file.read_text()
     contents = contents.replace(":maxdepth: 4", ":maxdepth: 1")
-    with open(file, "w") as f:
-        f.write(contents)
+    rst_file.write_text(contents)
 
-os.chdir(".\\docs-compiler-sphinx")
-os.system("make html")
-os.chdir("..")
+# Build the HTML documentation.
+os.chdir(docs_dir)
+subprocess.run(["make", "html"], check=True)
