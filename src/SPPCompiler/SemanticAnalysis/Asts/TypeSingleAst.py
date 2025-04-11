@@ -161,7 +161,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             sm=sm, owner=self)
 
         # Analyse the semantics of the generic arguments.
-        self.name.generic_argument_group.analyse_semantics(sm)
+        self.name.generic_argument_group.analyse_semantics(sm, **kwargs)
 
         # If the generically filled type doesn't exist (Vec[Str]), but the base does (Vec[T]), create it.
         if not type_scope.parent.has_symbol(self.name):

@@ -90,7 +90,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             
         # If a default value is present, analyse it and check its type.
         if self.default:
-            self.default.analyse_semantics(sm)
+            self.default.analyse_semantics(sm, **kwargs)
             default_type = self.default.infer_type(sm)
 
             if not self.type.symbolic_eq(default_type, sm.current_scope):

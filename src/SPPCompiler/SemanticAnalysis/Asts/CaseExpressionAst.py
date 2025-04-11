@@ -214,7 +214,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.cond).scopes(sm.current_scope)
 
         # Analyse the condition and enforce memory integrity (outside the new scope).
-        self.cond.analyse_semantics(sm)
+        self.cond.analyse_semantics(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(self.cond, self.cond, sm, update_memory_info=False)
 
         # Create the scope for the case expression.

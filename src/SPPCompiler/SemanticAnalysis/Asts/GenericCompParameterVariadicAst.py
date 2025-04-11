@@ -64,7 +64,7 @@ class GenericCompParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the type of the default expression.
-        self.type.analyse_semantics(sm)
+        self.type.analyse_semantics(sm, **kwargs)
 
         # Create the variable for the const parameter.
         ast = CodeInjection.inject_code(

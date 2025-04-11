@@ -71,8 +71,8 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
                 self.default).scopes(sm.current_scope)
 
         # Analyse the type of the default expression.
-        self.type.analyse_semantics(sm)
-        self.default.analyse_semantics(sm)
+        self.type.analyse_semantics(sm, **kwargs)
+        self.default.analyse_semantics(sm, **kwargs)
 
         # Make sure the default expression is of the correct type.
         default_type = self.default.infer_type(sm)
