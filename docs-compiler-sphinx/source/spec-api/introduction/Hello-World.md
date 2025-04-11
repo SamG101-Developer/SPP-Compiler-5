@@ -15,7 +15,7 @@ code:
 
 ```S++
 fun main() -> Void {
-    std::print("Hello, World!");
+    std::console::print("Hello, World!")
 }
 ```
 

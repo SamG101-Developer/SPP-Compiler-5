@@ -10,16 +10,16 @@ most programming languages.
 
 ```S++
 case some_condition {
-    std::print("hello world")
+    std::console::print("hello world")
 }
 else case some_other_condition_1 {
-    std::print("hello galaxy")
+    std::console::print("hello galaxy")
 }
 else case some_other_condition_2 {
-    std::print("hello universe")
+    std::console::print("hello universe")
 }
 else {
-    std::print("hello multiverse")
+    std::console::print("hello multiverse")
 }
 ```
 
@@ -110,8 +110,8 @@ destructuring generic types was introduced to allow for pattern matching on gene
 ```S++
 fun func[T](a: T) -> Void {
     case a of
-        is Str() { std::print("Str") }
-        is U32() { std::print("U32") }
+        is Str() { std::console::print("Str") }
+        is U32() { std::console::print("U32") }
 }
 ```
 
