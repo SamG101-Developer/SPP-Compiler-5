@@ -4,14 +4,7 @@ on:
   push:
     branches:
       - master
-    paths:
-      - '**/*.py'
-      - '**/*.md'
-
   pull_request:
-    paths:
-      - '**/*.py'
-      - '**/*.md'
 
 permissions:
   contents: read
