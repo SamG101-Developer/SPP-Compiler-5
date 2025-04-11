@@ -14,6 +14,10 @@ class CustomTestCase(TestCase):
 def _build_temp_project_v3(code):
     cwd = os.getcwd()
     fp = f"test_outputs"
+
+    if not os.path.exists(os.path.join(cwd, fp)):
+        os.makedirs(os.path.join(cwd, fp))
+
     with open(os.path.join(cwd, fp, "src", "main.spp"), "w") as f:
         f.write(code)
     os.chdir(fp)
