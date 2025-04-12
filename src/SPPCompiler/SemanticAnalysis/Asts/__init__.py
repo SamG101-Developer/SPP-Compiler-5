@@ -65,7 +65,7 @@ from SPPCompiler.SemanticAnalysis.Asts.TupleLiteralAst import *
 from SPPCompiler.SemanticAnalysis.Asts.LiteralAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.GenExpressionAst import *
-from SPPCompiler.SemanticAnalysis.Asts.GlobalConstantAst import *
+from SPPCompiler.SemanticAnalysis.Asts.CmpStatementAst import *
 from SPPCompiler.SemanticAnalysis.Asts.InnerScopeAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.LetStatementInitializedAst import *
@@ -125,6 +125,7 @@ from SPPCompiler.SemanticAnalysis.Asts.SupImplementationAst import *
 from SPPCompiler.SemanticAnalysis.Asts.SupPrototypeExtensionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.SupPrototypeFunctionsAst import *
 from SPPCompiler.SemanticAnalysis.Asts.SupPrototypeAst import *
+from SPPCompiler.SemanticAnalysis.Asts.SupCmpStatementAst import *
 from SPPCompiler.SemanticAnalysis.Asts.SupUseStatementAst import *
 from SPPCompiler.SemanticAnalysis.Asts.SupMemberAst import *
 

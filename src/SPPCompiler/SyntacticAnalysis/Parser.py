@@ -132,7 +132,7 @@ class SppParser:
             self.parse_sup_prototype_extension,
             self.parse_sup_prototype_functions,
             self.parse_global_use_statement,
-            self.parse_global_constant)
+            self.parse_global_cmp_statement)
         return p1
 
     # ===== CLASSES =====
@@ -205,7 +205,8 @@ class SppParser:
     def parse_sup_member(self) -> Asts.SupMemberAst:
         p1 = self.parse_alternate(
             self.parse_sup_method_prototype,
-            self.parse_sup_use_statement)
+            self.parse_sup_use_statement,
+            self.parse_sup_cmp_statement)
         return p1
 
     def parse_sup_method_prototype(self) -> Asts.FunctionPrototypeAst:
@@ -215,6 +216,12 @@ class SppParser:
     def parse_sup_use_statement(self) -> Asts.SupUseStatementAst:
         p1 = self.parse_zero_or_more(self.parse_annotation, self.parse_newline)
         p2 = self.parse_once(self.parse_use_statement)
+        p2.annotations = p1
+        return p2
+
+    def parse_sup_cmp_statement(self) -> Asts.SupCmpStatementAst:
+        p1 = self.parse_zero_or_more(self.parse_annotation, self.parse_newline)
+        p2 = self.parse_once(self.parse_cmp_statement)
         p2.annotations = p1
         return p2
 
@@ -379,12 +386,12 @@ class SppParser:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_identifier)
         p2 = self.parse_once(self.parse_token_assign)
-        p3 = self.parse_once(self.parse_global_constant_value)
+        p3 = self.parse_once(self.parse_cmp_value)
         return Asts.GenericCompArgumentNamedAst(c1, Asts.TypeSingleAst.from_identifier(p1), p2, p3)
 
     def parse_generic_comp_argument_unnamed(self) -> Asts.GenericCompArgumentUnnamedAst:
         c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_global_constant_value)
+        p1 = self.parse_once(self.parse_cmp_value)
         return Asts.GenericCompArgumentUnnamedAst(c1, p1)
 
     def parse_generic_parameters(self) -> Asts.GenericParameterGroupAst:
@@ -440,7 +447,7 @@ class SppParser:
         p3 = self.parse_once(self.parse_token_colon)
         p4 = self.parse_once(self.parse_type)
         p5 = self.parse_once(self.parse_token_assign)
-        p6 = self.parse_once(self.parse_global_constant_value)
+        p6 = self.parse_once(self.parse_cmp_value)
         return Asts.GenericCompParameterOptionalAst(c1, p1, Asts.TypeSingleAst.from_identifier(p2), p3, p4, p5, p6)
 
     def parse_generic_comp_parameter_variadic(self) -> Asts.GenericCompParameterVariadicAst:
@@ -710,18 +717,25 @@ class SppParser:
         p5 = self.parse_once(self.parse_type)
         return Asts.UseStatementAst(c1, Seq(), p1, Asts.TypeSingleAst.from_identifier(p2), p3, p4, p5)
 
-    # ===== LET-DECLARATIONS =====
+    # ===== CMP-DECLARATIONS =====
 
-    def parse_global_constant(self) -> Asts.GlobalConstantAst:
-        c1 = self.current_pos()
+    def parse_global_cmp_statement(self) -> Asts.CmpStatementAst:
         p1 = self.parse_zero_or_more(self.parse_annotation, self.parse_newline)
-        p2 = self.parse_once(self.parse_keyword_cmp)
-        p3 = self.parse_once(self.parse_identifier)
-        p4 = self.parse_once(self.parse_token_colon)
-        p5 = self.parse_once(self.parse_type)
-        p6 = self.parse_once(self.parse_token_assign)
-        p7 = self.parse_once(self.parse_global_constant_value)
-        return Asts.GlobalConstantAst(c1, p1, p2, p3, p4, p5, p6, p7)
+        p2 = self.parse_cmp_statement()
+        p2.annotations = p1
+        return p2
+
+    def parse_cmp_statement(self) -> Asts.CmpStatementAst:
+        c1 = self.current_pos()
+        p1 = self.parse_once(self.parse_keyword_cmp)
+        p2 = self.parse_once(self.parse_identifier)
+        p3 = self.parse_once(self.parse_token_colon)
+        p4 = self.parse_once(self.parse_type)
+        p5 = self.parse_once(self.parse_token_assign)
+        p6 = self.parse_once(self.parse_cmp_value)
+        return Asts.CmpStatementAst(c1, Seq(), p1, p2, p3, p4, p5, p6)
+
+    # ===== LET-DECLARATIONS =====
 
     def parse_let_statement(self) -> Asts.LetStatementAst:
         p1 = self.parse_alternate(
@@ -1295,7 +1309,7 @@ class SppParser:
     def parse_type_parenthesized(self) -> Asts.TypeSingleAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_left_parenthesis)
-        p2 = self.parse_once(self.parse_type)  # todo: convention allowed here?
+        p2 = self.parse_once(self.parse_type)
         p3 = self.parse_once(self.parse_token_right_parenthesis)
         return Asts.TypeParenthesizedAst(c1, p1, p2, p3).convert()
 
@@ -1308,7 +1322,7 @@ class SppParser:
     def parse_type_array(self) -> Asts.TypeSingleAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_left_square_bracket)
-        p2 = self.parse_once(self.parse_type)  # todo: convention allowed here?
+        p2 = self.parse_once(self.parse_type)
         p3 = self.parse_once(self.parse_token_comma)
         p4 = self.parse_once(self.parse_lexeme_dec_integer)
         p5 = self.parse_once(self.parse_token_right_square_bracket)
@@ -1339,10 +1353,8 @@ class SppParser:
         return Asts.TypeUnaryOperatorNamespaceAst(c1, p1, p2)
 
     def parse_type_unary_op_borrow(self) -> Asts.TypeUnaryOperatorBorrowAst:
-        c1 = self.current_pos()  # todo: make is parse_convention
-        p1 = self.parse_alternate(
-            self.parse_convention_mut,
-            self.parse_convention_ref)
+        c1 = self.current_pos()
+        p1 = self.parse_once(self.parse_convention)
         return Asts.TypeUnaryOperatorBorrowAst(c1, p1)
 
     def parse_type_postfix_op(self) -> Asts.TypePostfixOperatorAst:
@@ -1365,7 +1377,7 @@ class SppParser:
     def parse_type_tuple_1_items(self) -> Asts.TypeSingleAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_left_parenthesis)
-        p2 = self.parse_once(self.parse_type)  # todo: convention allowed here?
+        p2 = self.parse_once(self.parse_type)
         p3 = self.parse_once(self.parse_token_comma)
         p4 = self.parse_once(self.parse_token_right_parenthesis)
         return Asts.TypeTupleAst(c1, p1, Seq([p2]), p4).convert()
@@ -1552,36 +1564,36 @@ class SppParser:
 
     # ===== GLOBAL CONSTANTS =====
 
-    def parse_global_constant_value(self) -> Asts.ExpressionAst:
+    def parse_cmp_value(self) -> Asts.ExpressionAst:
         p1 = self.parse_alternate(
             self.parse_literal_float,
             self.parse_literal_integer,
             self.parse_literal_string,
-            lambda: self.parse_literal_tuple(self.parse_global_constant_value),
-            lambda: self.parse_literal_array(self.parse_global_constant_value),
+            lambda: self.parse_literal_tuple(self.parse_cmp_value),
+            lambda: self.parse_literal_array(self.parse_cmp_value),
             self.parse_literal_boolean,
-            self.parse_global_object_initializer,
+            self.parse_cmp_object_initializer,
             self.parse_identifier)
         return p1
 
-    def parse_global_object_initializer(self) -> Asts.ObjectInitializerAst:
+    def parse_cmp_object_initializer(self) -> Asts.ObjectInitializerAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_type_simple)
-        p2 = self.parse_once(self.parse_global_object_initializer_arguments)
+        p2 = self.parse_once(self.parse_cmp_object_initializer_arguments)
         return Asts.ObjectInitializerAst(c1, p1, p2)
 
-    def parse_global_object_initializer_arguments(self) -> Asts.ObjectInitializerArgumentGroupAst:
+    def parse_cmp_object_initializer_arguments(self) -> Asts.ObjectInitializerArgumentGroupAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_left_parenthesis)
-        p2 = self.parse_zero_or_more(self.parse_global_object_initializer_argument_named, self.parse_token_comma)
+        p2 = self.parse_zero_or_more(self.parse_cmp_object_initializer_argument_named, self.parse_token_comma)
         p3 = self.parse_once(self.parse_token_right_parenthesis)
         return Asts.ObjectInitializerArgumentGroupAst(c1, p1, Seq(p2), p3)
 
-    def parse_global_object_initializer_argument_named(self) -> Asts.ObjectInitializerArgumentNamedAst:
+    def parse_cmp_object_initializer_argument_named(self) -> Asts.ObjectInitializerArgumentNamedAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_identifier)
         p2 = self.parse_once(self.parse_token_assign)
-        p3 = self.parse_once(self.parse_global_constant_value)
+        p3 = self.parse_once(self.parse_cmp_value)
         return Asts.ObjectInitializerArgumentNamedAst(c1, p1, p2, p3)
 
     # ===== TOKENS =====
