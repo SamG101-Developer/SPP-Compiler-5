@@ -172,10 +172,25 @@ class Scope:
             isinstance(p.op, Asts.PostfixExpressionOperatorMemberAccessAst) and \
             p.op.is_runtime_access()
 
+        is_semi_valid_postfix = lambda p: \
+            isinstance(p, Asts.PostfixExpressionAst) and \
+            isinstance(p.op, Asts.PostfixExpressionOperatorMemberAccessAst)
+
         # Shift to the leftmost identifier and get the symbol from the symbol table.
+        prev_name = name
         if is_valid_postfix(name):
-            while is_valid_postfix(name): name = name.lhs
+            while is_valid_postfix(name):
+                prev_name = name
+                name = name.lhs
+
+            # Todo: not sure if this is needed here
+            if is_semi_valid_postfix(prev_name) and not is_valid_postfix(prev_name):
+                return self.get_symbol(name).scope.get_symbol(prev_name.op.field)
+
             return self.get_symbol(name)
+
+        elif is_semi_valid_postfix(prev_name):
+            return self.get_symbol(name.lhs).scope.get_symbol(prev_name.op.field)
 
         # Identifiers or non-symbolic expressions can use the symbol table directly.
         else:
