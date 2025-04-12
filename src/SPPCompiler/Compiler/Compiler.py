@@ -132,7 +132,7 @@ class Compiler:
         # Will need run steps from load_super_scopes and onwards again though.
         with open("out/file_hashes.json", "w") as file:
             file.write(json.dumps({
-                module.path: hashlib.md5(module.code.encode()).hexdigest()
+                module.path: hashlib.sha256(module.code.encode()).hexdigest()
                 for module in self._module_tree.modules}, indent=4))
 
         # Save the AST to the output file (if in debug mode).

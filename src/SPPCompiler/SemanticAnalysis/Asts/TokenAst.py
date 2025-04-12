@@ -22,7 +22,7 @@ class TokenAst(Asts.Ast):
 
     def __hash__(self) -> int:
         # Hash the token type's name into a fixed string and convert it into an integer.
-        return int.from_bytes(hashlib.md5(self.token_type.name.encode()).digest())
+        return int.from_bytes(hashlib.sha256(self.token_type.name.encode()).digest())
 
     @staticmethod
     def raw(*, pos: int = 0, token_type: SppTokenType = SppTokenType.NoToken, token_metadata: str = "") -> TokenAst:

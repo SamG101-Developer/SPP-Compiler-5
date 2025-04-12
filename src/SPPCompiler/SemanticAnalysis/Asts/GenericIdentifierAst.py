@@ -25,7 +25,7 @@ class GenericIdentifierAst(Asts.Ast):
 
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
-        return int.from_bytes(hashlib.md5(self.value.encode()).digest())
+        return int.from_bytes(hashlib.sha256(self.value.encode()).digest())
 
     def __json__(self) -> str:
         return self.print(AstPrinter())
