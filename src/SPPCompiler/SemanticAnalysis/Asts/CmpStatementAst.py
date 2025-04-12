@@ -11,11 +11,13 @@ from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingConte
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
-# Todo: allow in sup blocks to for cmp generic parameter binding (same as "use" for types)
-
 
 @dataclass
-class GlobalConstantAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
+class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
+    """
+    Unlike the UseStatementAst, this AST can not be used in local scopes; only at the module or superimposition level.
+    """
+
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     kw_cmp: Asts.TokenAst = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
@@ -95,4 +97,4 @@ class GlobalConstantAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         # Todo: for an identifier, check the identifier itself is a constant value (and copyable)
 
 
-__all__ = ["GlobalConstantAst"]
+__all__ = ["CmpStatementAst"]

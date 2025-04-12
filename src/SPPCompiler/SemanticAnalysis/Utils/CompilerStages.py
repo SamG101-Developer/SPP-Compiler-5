@@ -11,7 +11,7 @@ type PreProcessingContext = Union[
     Asts.ClassPrototypeAst,
     Asts.ClassAttributeAst,
     Asts.FunctionPrototypeAst,
-    Asts.GlobalConstantAst,
+    Asts.CmpStatementAst,
     Asts.ModulePrototypeAst,
     Asts.SupPrototypeFunctionsAst,
     Asts.SupPrototypeExtensionAst,

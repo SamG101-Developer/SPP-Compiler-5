@@ -114,7 +114,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
                 SppParser.parse_class_prototype, pos_adjust=self.pos)
             mock_constant_ast = CodeInjection.inject_code(
                 f"cmp {self.name}: {mock_class_name} = {mock_class_name}()",
-                SppParser.parse_global_constant, pos_adjust=self.pos)
+                SppParser.parse_cmp_statement, pos_adjust=self.pos)
             ctx.body.members.append(mock_class_ast)
             ctx.body.members.append(mock_constant_ast)
 

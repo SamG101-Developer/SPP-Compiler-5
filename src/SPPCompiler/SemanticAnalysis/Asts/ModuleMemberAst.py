@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 ModuleMemberAst = Union[
     Asts.ClassPrototypeAst,
     Asts.FunctionPrototypeAst,
-    Asts.GlobalConstantAst,
+    Asts.CmpStatementAst,
     Asts.SupPrototypeFunctionsAst,
     Asts.SupPrototypeExtensionAst,
     Asts.UseStatementAst]
