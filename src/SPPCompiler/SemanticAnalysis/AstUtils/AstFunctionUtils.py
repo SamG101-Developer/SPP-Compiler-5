@@ -223,7 +223,8 @@ class AstFunctionUtils:
             * Check if a method is overriding a base class method (ie there is a signature conflict).
 
         Typically, conflicting overloads are checked for in the same type or module when checking if an overload of an
-        existing function has been defined. `f(std::string::Str)` conflicts with `f(std::string::Str)` if they are in the same type.
+        existing function has been defined. `f(std::string::Str)` conflicts with `f(std::string::Str)` if they are in
+        the same type.
 
         @param this_scope The scope of the new function being checked.
         @param target_scope The scope to check for conflicts in (for example a class).

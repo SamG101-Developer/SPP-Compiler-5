@@ -85,7 +85,7 @@ class MemoryInfo:
 
 
 class AstMemoryUtils:
-    """!
+    """
     The AstMemoryUtils class contains static methods for memory-related checks and analysis. The key function is to
     enforce memory integrity. There are also some convenience functions for checking if memory regions overlap by
     symbol.
@@ -116,31 +116,28 @@ class AstMemoryUtils:
         The consistency checks are only performed if a value is actually used after the branching; if a value isn't
         used, then it can be inconsistent across branches, as the symbol will never be analysed in this method.
 
-        Args:
-            value_ast: The AST being analysed for memory integrity.
-            move_ast: The AST that is performing the move operation ("=" for example).
-            sm: The scope manager that is managing the current scope.
-            check_move: If a full move is being checked for validity.
-            check_partial_move: If a partial move is being checked for validity.
-            check_move_from_borrowed_context: If moving an attribute out of a borrowed context is being checked.
-            check_pins: If moving pinned objects is being checked.
-            update_memory_info: Whether to update the memory information in the symbol table.
+        :param value_ast: The AST being analysed for memory integrity.
+        :param move_ast: The AST that is performing the move operation ("=" for example).
+        :param sm: The scope manager that is managing the current scope.
+        :param check_move: If a full move is being checked for validity.
+        :param check_partial_move: If a partial move is being checked for validity.
+        :param check_move_from_borrowed_context: If moving an attribute out of a borrowed context is being checked.
+        :param check_pins: If moving pinned objects is being checked.
+        :param update_memory_info: Whether to update the memory information in the symbol table.
+        :return: None
 
-        Returns:
-            None
-
-        Raises:
-            SemanticErrors.MemoryNotInitializedUsageError: If a symbol is used before being initialized.
-            SemanticErrors.MemoryPartiallyInitializedUsageError: If a symbol is used before being fully initialized.
-            SemanticErrors.MemoryMovedFromBorrowedContextError: If a symbol gets moved from a borrowed context.
-            SemanticErrors.MemoryMovedWhilstPinnedError: If a symbol gets moved whilst pinned.
-            SemanticErrors.MemoryInconsistentlyInitializedError: If a symbol gets inconsistently initialized in
-                branches.
-            SemanticErrors.MemoryInconsistentlyMovedError: If a symbol gets inconsistently moved in branches.
-            SemanticErrors.MemoryInconsistentlyPinnedError: If a symbol gets inconsistently pinned in branches.
+        :raise SemanticErrors.MemoryNotInitializedUsageError: If a symbol is used before being initialized.
+        :raise SemanticErrors.MemoryPartiallyInitializedUsageError: If a symbol is used before being fully initialized.
+        :raise SemanticErrors.MemoryMovedFromBorrowedContextError: If a symbol gets moved from a borrowed context.
+        :raise SemanticErrors.MemoryMovedWhilstPinnedError: If a symbol gets moved whilst pinned.
+        :raise SemanticErrors.MemoryInconsistentlyInitializedError: If a symbol gets inconsistently initialized in
+            branches.
+        :raise SemanticErrors.MemoryInconsistentlyMovedError: If a symbol gets inconsistently moved in branches.
+        :raise SemanticErrors.MemoryInconsistentlyPinnedError: If a symbol gets inconsistently pinned in branches.
         """
 
         # Todo: coroutine returns can be borrows - check moving logic here, as the outermost part may not be symbolic.
+        # Todo: copyable attribute aren't checked I don't think (always get marked as moved)
 
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
@@ -234,7 +231,7 @@ class AstMemoryUtils:
         # Check the symbol being moved is not pinned. This prevents pinned objects from moving memory location. Pinned
         # objects must not move location, because they might be being borrowed into a coroutine or asynchronous function
         # call.
-        if check_pins and symbol.memory_info.ast_pinned:  # and not isinstance(value_ast, Asts.IdentifierAst):
+        if check_pins and symbol.memory_info.ast_pinned and not copies:
             raise SemanticErrors.MemoryMovedWhilstPinnedError().add(
                 value_ast, symbol.memory_info.ast_pinned[0]).scopes(sm.current_scope)
 
