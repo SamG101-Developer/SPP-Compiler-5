@@ -1,10 +1,19 @@
 # S++ Compiler
 
 [![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-blue?logo=github)](https://samg101-developer.github.io/SPP-Compiler-5/)
-[![Coverage Status](https://img.shields.io/badge/Test%20Coverage-93%25-lime?logo=pytest&logoColor=ffffff)]()
-[![Coverage Status](https://img.shields.io/badge/Tests-535-green?logo=pytest&logoColor=ffffff)]()
+[![Coverage Status](https://img.shields.io/badge/Test%20Coverage-96.38%25-lime?logo=pytest&logoColor=ffffff)]()
+[![Coverage Status](https://img.shields.io/badge/Tests-552-green?logo=pytest&logoColor=ffffff)]()
 [![security: bandit](https://img.shields.io/badge/Security-Bandit-yellow)](https://github.com/PyCQA/bandit)
-
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=ncloc)](https://sonarcloud.io/dashboard?id=SamG101-Developer_SPP-Compiler-5)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=alert_status)](https://sonarcloud.io/dashboard?id=SamG101-Developer_SPP-Compiler-5)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=SamG101-Developer_SPP-Compiler-5)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=SamG101-Developer_SPP-Compiler-5)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=security_rating)](https://sonarcloud.io/dashboard?id=SamG101-Developer_SPP-Compiler-5)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=bugs)](https://sonarcloud.io/dashboard?id=SamG101-Developer_SPP-Compiler-5)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=SamG101-Developer_SPP-Compiler-5)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=code_smells)](https://sonarcloud.io/dashboard?id=SamG101-Developer_SPP-Compiler-5)
+[![Duplicated Lines](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=SamG101-Developer_SPP-Compiler-5)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=coverage)](https://sonarcloud.io/dashboard?id=SamG101-Developer_SPP-Compiler-5)
 
 Folders
 
