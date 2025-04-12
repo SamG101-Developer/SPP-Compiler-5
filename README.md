@@ -19,8 +19,6 @@
 
 Folders
 
-- `docs-specification`: S++ specification documentation.
-- `docs-compiler-sphinx`: S++ compiler documentation.
 - `src`: S++ compiler implementation.
 - `tests`: S++ compiler unit tests.
 
