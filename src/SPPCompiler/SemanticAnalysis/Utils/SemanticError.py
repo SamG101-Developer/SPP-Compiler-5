@@ -950,21 +950,6 @@ class SemanticErrors:
 
             return self
 
-    class MemberAccessAmbiguousError(SemanticError):
-        """
-        The MemberAccessAmbiguousError is raised if a member access is ambiguous. This occurs when there are multiple
-        possible member accesses for the same expression.
-        """
-
-        def add(self, member: Asts.IdentifierAst, scopes: Seq[Asts.IdentifierAst]) -> SemanticError:
-            self.add_error(
-                ast=member,
-                tag=f"Ambiguous member access: {scopes.join(", ")}",
-                msg="The member access is ambiguous.",
-                tip="Use 'std::upcast[T](...)' to select the base class.")
-
-            return self
-
     class MemberAccessNonIndexableError(SemanticError):
         """
         The MemberAccessNonIndexableError is raised if a member access is performed on a non-indexable type. For
@@ -1040,10 +1025,10 @@ class SemanticErrors:
 
             return self
 
-    class SuperimpositionInheritanceMethodInvalidError(SemanticError):
+    class SuperimpositionExtensionMethodInvalidError(SemanticError):
         """
-        The SuperimpositionInheritanceMethodInvalidError is raised if a subclass method does not exist on the
-        superclass. The signature of the superclass method and subclass method must match exactly.
+        The SuperimpositionExtensionMethodInvalidError is raised if a subclass method does not exist on the superclass.
+        The signature of the superclass method and subclass method must match exactly.
         """
 
         def add(self, new_method: Asts.IdentifierAst, super_class: Asts.TypeAst) -> SemanticError:
@@ -1059,9 +1044,47 @@ class SemanticErrors:
 
             return self
 
-    class SuperimpositionInheritanceNonVirtualMethodOverriddenError(SemanticError):
+    class SuperimpositionExtensionUseStatementInvalidError(SemanticError):
         """
-        The SuperimpositionInheritanceNonVirtualMethodOverriddenError is raised if a non-virtual method on the base
+        The SuperimpositionExtensionUseStatementInvalidError is raised if a subclass "use" statement does not exist on
+        the superclass. Any associated type on an extension must belong to the superclass as-well.
+        """
+
+        def add(self, new_use_statement: Asts.UseStatementAst, super_class: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=super_class,
+                tag=f"Super class '{super_class}' extended here")
+
+            self.add_error(
+                ast=new_use_statement,
+                tag="Invalid use statement.",
+                msg=f"The associated type '{new_use_statement.new_type}' does not exist on the superclass.",
+                tip="Move the associated type to an isolated 'sup' block.")
+
+            return self
+
+    class SuperimpositionExtensionCmpStatementInvalidError(SemanticError):
+        """
+        The SuperimpositionExtensionCmpStatementInvalidError is raised if a subclass "cmp" statement does not exist on
+        the superclass. Any associated type on an extension must belong to the superclass as-well.
+        """
+
+        def add(self, new_cmp_statement: Asts.CmpStatementAst, super_class: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=super_class,
+                tag=f"Super class '{super_class}' extended here")
+
+            self.add_error(
+                ast=new_cmp_statement,
+                tag="Invalid use statement.",
+                msg=f"The associated constant '{new_cmp_statement.name}' does not exist on the superclass.",
+                tip="Move the associated type to an isolated 'sup' block.")
+
+            return self
+
+    class SuperimpositionExtensionNonVirtualMethodOverriddenError(SemanticError):
+        """
+        The SuperimpositionExtensionNonVirtualMethodOverriddenError is raised if a non-virtual method on the base
         class is overridden in the subclass. Non-virtual methods cannot be overridden.
         """
 
@@ -1078,38 +1101,38 @@ class SemanticErrors:
 
             return self
 
-    class SuperimpositionInheritanceDuplicateSuperclassError(SemanticError):
+    class SuperimpositionExtensionDuplicateSuperclassError(SemanticError):
         """
-        The SuperimpositionInheritanceDuplicateSuperclassError is raised if a type is superimposed twice over another
+        The SuperimpositionExtensionDuplicateSuperclassError is raised if a type is superimposed twice over another
         type. The 2 matched types are symbolically equal, ie alias-aware, generically matched types.
         """
 
-        def add(self, first_inheritance: Asts.TypeAst, second_inheritance: Asts.TypeAst) -> SemanticError:
+        def add(self, first_extension: Asts.TypeAst, second_extension: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                ast=first_inheritance,
-                tag=f"Type '{first_inheritance}' inherited here")
+                ast=first_extension,
+                tag=f"Type '{first_extension}' extended here")
 
             self.add_error(
-                ast=second_inheritance,
+                ast=second_extension,
                 tag=f"Duplicate superimposition here",
                 msg="Cannot superimpose the same type twice",
                 tip="Remove the second superimposition definition")
 
             return self
 
-    class SuperimpositionInheritanceCyclicInheritanceError(SemanticError):
+    class SuperimpositionExtensionCyclicExtensionError(SemanticError):
         """
-        The SuperimpositionInheritanceCyclicSuperclassError is raised two types inherit each other. Inheritance trees,
+        The SuperimpositionExtensionCyclicSuperclassError is raised two types extend each other. Extension trees,
         whilst supporting multi-parents, must be loop free.
         """
 
-        def add(self, first_inheritance: Asts.TypeAst, second_inheritance: Asts.TypeAst) -> SemanticError:
+        def add(self, first_extension: Asts.TypeAst, second_extension: Asts.TypeAst) -> SemanticError:
             self.add_info(
-                ast=first_inheritance,
-                tag=f"Valid inheritance defined here")
+                ast=first_extension,
+                tag=f"Valid extension defined here")
 
             self.add_error(
-                ast=second_inheritance,
+                ast=second_extension,
                 tag=f"Cyclic superimposition here",
                 msg="Two types cannot superimpose each other",
                 tip="Remove the second superimposition definition")

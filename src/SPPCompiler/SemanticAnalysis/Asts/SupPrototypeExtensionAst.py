@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 #  - Prevent double inheritance (same type superimposed anywhere in the tree)
 #  - Prevent cyclic inheritance
 #  - Only allow 1 Gen[T] superimposition
+#  - Error if the type doesn't exist
 
 
 @dataclass
@@ -131,21 +132,15 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
                 lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)):
             if cls_symbol.name.value[0] != "$":
-                raise SemanticErrors.SuperimpositionInheritanceDuplicateSuperclassError().add(
+                raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
                     existing_sup_scope._ast.super_class, self.super_class).scopes(sm.current_scope)
 
         # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
         if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(
                 lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
                 lambda s: s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)):
-            raise SemanticErrors.SuperimpositionInheritanceCyclicInheritanceError().add(
+            raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
                 existing_sup_scope._ast.super_class, self.name).scopes(sm.current_scope)
-
-        # Register sup and sub scopes.
-        cls_symbol.scope._direct_sup_scopes.append(sm.current_scope)
-        cls_symbol.scope._direct_sup_scopes.append(sup_symbol.scope)
-        sup_symbol.scope._direct_sub_scopes.append(cls_symbol.scope)
-        sup_symbol.scope._direct_sub_scopes.append(sm.current_scope)
 
         # Mark the class as copyable if the Copy type is the super class.
         if self.super_class.symbolic_eq(CommonTypes.Copy(0), sm.current_scope):
@@ -156,7 +151,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         self.body.load_super_scopes(sm, **kwargs)
 
         # Prevent duplicate attributes by checking if the attributes appear in any super class.
-        super_class_attribute_names = sup_symbol.scope.sup_scopes.filter(
+        super_class_attribute_names = (sup_symbol.scope.sup_scopes + Seq([sup_symbol.scope])).filter(
             lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(
             lambda s: s._ast.body.members).flat().map_attr("name")
 
@@ -168,6 +163,32 @@ class SupPrototypeExtensionAst(Asts.Ast):
             raise SemanticErrors.IdentifierDuplicationError().add(
                 duplicates[0][0], duplicates[0][1], "attribute").scopes(sm.current_scope)
 
+        # Register sup and sub scopes.
+        cls_symbol.scope._direct_sup_scopes.append(sup_symbol.scope)
+        sup_symbol.scope._direct_sub_scopes.append(cls_symbol.scope)
+        sup_symbol.scope._direct_sub_scopes.append(sm.current_scope)
+
+        # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
+        existing_type_names = cls_symbol.scope.sup_scopes.filter(
+            lambda s: isinstance(s._ast, Asts.SupPrototypeAst)).map(
+            lambda s: s._ast.body.members.filter_to_type(Asts.UseStatementAst)).flat().map_attr("new_type")
+
+        if duplicates := existing_type_names.non_unique():
+            raise SemanticErrors.IdentifierDuplicationError().add(
+                duplicates[0][0], duplicates[0][1], "associated type").scopes(sm.current_scope)
+
+        # Prevent duplicate cmp declarations by checking if the cmp statements appear in any super class. Use the "$"
+        # check to skip checking functions, which can be overridden.
+        existing_cmp_names = cls_symbol.scope.sup_scopes.filter(
+            lambda s: isinstance(s._ast, Asts.SupPrototypeAst)).map(
+            lambda s: s._ast.body.members.filter_to_type(Asts.CmpStatementAst).filter(
+                lambda c: c.type.type_parts()[-1].value[0] != "$")).flat().map_attr("name")
+
+        if duplicates := existing_cmp_names.non_unique():
+            raise SemanticErrors.IdentifierDuplicationError().add(
+                duplicates[0][0], duplicates[0][1], "associated const").scopes(sm.current_scope)
+
+        cls_symbol.scope._direct_sup_scopes.append(sm.current_scope)
         sm.move_out_of_current_scope()
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
@@ -187,20 +208,43 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 optional[0]).scopes(sm.current_scope)
 
         # Check every member on the superimposition exists on the super class (all sup scopes must be loaded here).
-        for member in self.body.members.filter_to_type(SupPrototypeExtensionAst):
-            this_method = member.body.members[-1]
-            base_method = AstFunctionUtils.check_for_conflicting_override(
-                sm.current_scope, sup_symbol.scope, this_method)
+        for member in self.body.members:
+            match member:
+                case SupPrototypeExtensionAst():
+                    # Get the method and identify the base method it is overriding.
+                    this_method = member.body.members[-1]
+                    base_method = AstFunctionUtils.check_for_conflicting_override(
+                        sm.current_scope, sup_symbol.scope, this_method)
 
-            # Check the base method exists.
-            if not base_method:
-                raise SemanticErrors.SuperimpositionInheritanceMethodInvalidError().add(
-                    this_method.name, self.super_class).scopes(sm.current_scope)
+                    # Check the base method exists.
+                    if not base_method:
+                        raise SemanticErrors.SuperimpositionExtensionMethodInvalidError().add(
+                            this_method.name, self.super_class).scopes(sm.current_scope)
 
-            # Check the base method is virtual or abstract.
-            if not (base_method._virtual or base_method._abstract):
-                raise SemanticErrors.SuperimpositionInheritanceNonVirtualMethodOverriddenError().add(
-                    base_method.name, self.super_class).scopes(sm.current_scope)
+                    # Check the base method is virtual or abstract.
+                    if not (base_method._virtual or base_method._abstract):
+                        raise SemanticErrors.SuperimpositionExtensionNonVirtualMethodOverriddenError().add(
+                            base_method.name, self.super_class).scopes(sm.current_scope)
+
+                case Asts.UseStatementAst():
+                    # Get the associated type from the superclass directly.
+                    this_type = member.new_type
+                    base_type = sup_symbol.scope.get_symbol(this_type, exclusive=True)
+
+                    # Check to see if the base type exists.
+                    if not base_type:
+                        raise SemanticErrors.SuperimpositionExtensionUseStatementInvalidError().add(
+                            member, self.super_class).scopes(sm.current_scope)
+
+                case Asts.CmpStatementAst():
+                    # Get the associated constant from the superclass directly.
+                    this_const = member.name
+                    base_const = sup_symbol.scope.get_symbol(this_const, exclusive=True)
+
+                    # Check to see if the base type exists.
+                    if not base_const:
+                        raise SemanticErrors.SuperimpositionExtensionCmpStatementInvalidError().add(
+                            member, self.super_class).scopes(sm.current_scope)
 
         # Pre-analyse all the members.
         self.body.pre_analyse_semantics(sm, **kwargs)
