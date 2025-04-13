@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import copy
 import operator
 from collections import defaultdict
-from typing import Dict, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type
 
 from fastenum import Enum
 
@@ -144,22 +145,20 @@ class AstFunctionUtils:
 
     @staticmethod
     def get_all_function_scopes(
-            function_name: Asts.IdentifierAst, function_owner_scope: Scope, exclusive: bool = False)\
+            function_name: Asts.IdentifierAst, function_owner_scope: Scope)\
             -> Seq[Tuple[Scope, Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]]:
 
-        """!
+        """
         Get all the function scopes, and their generic argument groups for a function name in a scope. This is used to
         get all possible overloads for a function, by iterating the valid scopes a function might be found in, and
         matching by name. The generic arguments from the outer scope (ie superimposition) are saved,so they can be
         inherited into the function signature for generic substitution.
 
-        @param function_name The name of the function to get the overloads for.
-        @param function_owner_scope The scope of the class or module that the function belongs to.
-        @param exclusive Whether to only get the direct superimpositions, or all superimpositions.
-
-        @return A list of 3-tuples, containing for each overload, the scope o the function the overload is represented
-        by, the function prototype of the overload, and associated generic arguments in the owning context that must be
-        inherited into the function signature.
+        :param function_name: The name of the function to get the overloads for.
+        :param function_owner_scope: The scope of the class or module that the function belongs to.
+        :return: A list of 3-tuples, containing for each overload, the scope o the function the overload is represented
+            by, the function prototype of the overload, and associated generic arguments in the owning context that must
+            be inherited into the function signature.
         """
 
         # Get the function-type name from teh function: "$Func" from "func()".
@@ -185,7 +184,7 @@ class AstFunctionUtils:
         # Otherwise, the superimposition's scope is used directly.
         else:
             if isinstance(function_owner_scope._ast, Asts.ClassPrototypeAst):
-                sup_scopes = function_owner_scope._direct_sup_scopes if exclusive else function_owner_scope.sup_scopes
+                sup_scopes = function_owner_scope.sup_scopes
             else:
                 sup_scopes = Seq([function_owner_scope])
 
@@ -203,7 +202,7 @@ class AstFunctionUtils:
             for scope_1, function_1, _ in overload_scopes_and_info.copy():
                 for scope_2, function_2, _ in overload_scopes_and_info.copy():
                     if function_1 is not function_2 and function_owner_scope.depth_difference(scope_1) < function_owner_scope.depth_difference(scope_2):
-                        conflict = AstFunctionUtils.check_for_conflicting_method(scope_1, scope_2, function_1, FunctionConflictCheckType.InvalidOverride)
+                        conflict = AstFunctionUtils.check_for_conflicting_override(scope_1, scope_2, function_1)
                         if conflict:
                             overload_scopes_and_info.remove_if(lambda info: info[1] is conflict)
 
@@ -211,65 +210,75 @@ class AstFunctionUtils:
         return overload_scopes_and_info
 
     @staticmethod
-    def check_for_conflicting_method(
-            this_scope: Scope, target_scope: Scope, new_function: Asts.FunctionPrototypeAst,
-            conflict_type: FunctionConflictCheckType)\
-            -> Optional[Asts.FunctionPrototypeAst]:
+    def check_for_conflicting_overload(
+            this_scope: Scope, target_scope: Scope,
+            new_func: Asts.FunctionPrototypeAst) -> Optional[Asts.FunctionPrototypeAst]:
 
-        """!
-        Check for conflicting methods between the new function, and functions in the type scope. This function has two
-        uses:
-            * Check if an overload conflicts with an existing overload in the same type.
-            * Check if a method is overriding a base class method (ie there is a signature conflict).
-
-        Typically, conflicting overloads are checked for in the same type or module when checking if an overload of an
-        existing function has been defined. `f(std::string::Str)` conflicts with `f(std::string::Str)` if they are in
-        the same type.
-
-        @param this_scope The scope of the new function being checked.
-        @param target_scope The scope to check for conflicts in (for example a class).
-        @param new_function The new function AST (its scope is @p this_scope).
-        @param conflict_type The type of conflict to check for: overload or override.
-
-        @return A conflicting function if one is found, or None if no conflict is found.
-        """
-
-        # Get the existing superimpositions and data, and split them into scopes, functions and generics.
-        # Todo: This will probably fail for a conflicting overload on a base type (exclusivity is determined by the type
-        #  of conflict). Fix this by never using exclusivity checks, but have a flag for bypassing direct overrides on
-        #  base classes.
-        existing = AstFunctionUtils.get_all_function_scopes(new_function._orig, target_scope, conflict_type == FunctionConflictCheckType.InvalidOverload)
+        # Get the existing functions callable on this type (belong to this type or any supertype).
+        existing = AstFunctionUtils.get_all_function_scopes(new_func._orig, target_scope)
         existing_scopes = existing.map(operator.itemgetter(0))
-        existing_functions = existing.map(operator.itemgetter(1))
+        existing_funcs = existing.map(operator.itemgetter(1))
 
-        # For overloads, the required parameters must have different types or conventions.
-        if conflict_type == FunctionConflictCheckType.InvalidOverload:
-            parameter_filter = lambda f: f.function_parameter_group.get_required_params()
-            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2)
-            extra_check      = lambda f1, f2, s1, s2: f1.tok_fun == f2.tok_fun
+        # Check for an overload conflict with all function of the same name.
+        for old_scope, old_func in existing_scopes.zip(existing_funcs):
+            # Ignore if the method is an identical match on a base class (override) or is the same object.
+            if old_func is new_func:
+                continue
+            if old_func is AstFunctionUtils.check_for_conflicting_override(this_scope, old_scope, new_func, exclude=old_scope):
+                continue
 
-        # For overrides, all parameters must be direct matches (type and convention).
-        # Todo: does this work when one method has a "self" parameter and the other doesn't? Test both ways.
-        else:
-            parameter_filter = lambda f: f.function_parameter_group.get_non_self_params()
-            parameter_comp   = lambda p1, p2, s1, s2: p1.type.symbolic_eq(p2.type, s1, s2) and p1.variable.extract_names == p2.variable.extract_names and type(p1) is type(p2)
-            extra_check      = lambda f1, f2, s1, s2: f1.return_type.symbolic_eq(f2.return_type, s1, s2) and f1.tok_fun == f2.tok_fun and (type(f1.function_parameter_group.get_self_param().convention) is type(f2.function_parameter_group.get_self_param().convention) if f1.function_parameter_group.get_self_param() else True)
+            # Get the two parameter lists and create copies to remove duplicate parameters from.
+            params_new = copy.copy(new_func.function_parameter_group)
+            params_old = copy.copy(old_func.function_parameter_group)
 
-        # Check each parameter set for each overload: 1 match is a conflict.
-        for existing_scope, existing_function in existing_scopes.zip(existing_functions):
+            # Remove all required parameters on the first parameter list off the other parameter list.
+            for p, q in new_func.function_parameter_group.params.zip(old_func.function_parameter_group.params):
+                if p.type.symbolic_eq(q.type, this_scope, old_scope):
+                    params_new.params.remove_if(lambda x: x.extract_names == p.extract_names)
+                    params_old.params.remove_if(lambda x: x.extract_names == q.extract_names)
 
-            # Filter the parameters and substitute the generics.
-            parameter_set_1 = parameter_filter(existing_function).deepcopy()
-            parameter_set_2 = parameter_filter(new_function).deepcopy()
+            # If neither parameter list contains a required parameter, throw an error.
+            if not (params_new.params + params_old.params).map(type).contains(Asts.FunctionParameterRequiredAst):
+                return old_func
 
-            # Pre-checks: parameter lengths are the sane, and the extra check passes.
-            if parameter_set_1.length != parameter_set_2.length: continue
-            if not extra_check(existing_function, new_function, existing_scope, this_scope): continue
-            if existing_function is new_function: continue
+    @staticmethod
+    def check_for_conflicting_override(
+            this_scope: Scope, target_scope: Scope, new_func: Asts.FunctionPrototypeAst, *,
+            exclude: Optional[Scope] = None) -> Optional[Asts.FunctionPrototypeAst]:
 
-            # Type check the parameters (0-parameter functions auto-match).
-            if parameter_set_1.length + parameter_set_2.length == 0: return existing_function
-            if parameter_set_1.zip(parameter_set_2).all(lambda p1p2: parameter_comp(*p1p2, existing_scope, this_scope)): return existing_function
+        exclude = exclude or Seq()
+
+        # Helper function to get the type of the convention AST applied to the "self" parameter.
+        def sc(f: Asts.FunctionPrototypeAst) -> Type[Asts.ConventionAst]:
+            return type(f.function_parameter_group.get_self_param().convention) if hs(f) else None
+
+        # Helper function to check if a function has a "self" parameter or not.
+        def hs(f: Asts.FunctionPrototypeAst) -> bool:
+            return f.function_parameter_group.get_self_param() is not None
+
+        # Get the existing functions callable on this type (belong to this type or any supertype).
+        existing = AstFunctionUtils.get_all_function_scopes(new_func._orig, target_scope)
+        existing_scopes = existing.map(operator.itemgetter(0))
+        existing_funcs = existing.map(operator.itemgetter(1))
+
+        # Check for an overload conflict with all function of the same name.
+        for old_scope, old_func in existing_scopes.zip(existing_funcs):
+
+            # Ignore if the method is the same object.
+            if old_func is new_func: continue
+            if old_scope is exclude: continue
+
+            # Get the two parameter lists and create copies.
+            params_new = copy.copy(new_func.function_parameter_group)
+            params_old = copy.copy(old_func.function_parameter_group)
+
+            # Check a list of conditions to check for conflicting functions.
+            if params_new.params.length == params_old.params.length:
+                if all(p.extract_names == q.extract_names and p.type.symbolic_eq(q.type, this_scope, old_scope, check_variant=False) for p, q in zip(params_new.get_non_self_params(), params_old.get_non_self_params())):
+                    if new_func.tok_fun == old_func.tok_fun:
+                        if new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
+                            if hs(new_func) == hs(old_func) and sc(new_func) is sc(old_func):
+                                return old_func
 
     @staticmethod
     def name_function_arguments(

@@ -10,6 +10,13 @@ class TestFunctionPrototypeAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
+    def test_invalid_function_prototype_conflict_optional_parameters_no_param(self):
+        """
+        fun f() -> std::void::Void { }
+        fun f(a: std::boolean::Bool = false) -> std::void::Void { }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
     def test_invalid_function_prototype_conflict_optional_parameters(self):
         """
         fun f(a: std::boolean::Bool) -> std::void::Void { }

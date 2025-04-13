@@ -162,16 +162,16 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             case Asts.ModulePrototypeAst(): type_scope = sm.current_scope.parent_module
             case _: type_scope = self._ctx._scope_cls
 
-        # Check for function conflicts.
-        if conflict := AstFunctionUtils.check_for_conflicting_method(sm.current_scope, type_scope, self, FunctionConflictCheckType.InvalidOverload):
-            raise SemanticErrors.FunctionPrototypeConflictError().add(
-                self._orig, conflict._orig).scopes(sm.current_scope)
-
         # Type analysis (loads generic types for later)
         for p in self.function_parameter_group.params:
             p.type.analyse_semantics(sm)
         self.return_type.analyse_semantics(sm)
         self.return_type = sm.current_scope.get_symbol(self.return_type).fq_name
+
+        # Check for function conflicts.
+        if conflict := AstFunctionUtils.check_for_conflicting_overload(sm.current_scope, type_scope, self):
+            raise SemanticErrors.FunctionPrototypeConflictError().add(
+                self._orig, conflict._orig).scopes(sm.current_scope)
 
         sm.move_out_of_current_scope()
 

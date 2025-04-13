@@ -201,8 +201,8 @@ class SupPrototypeExtensionAst(Asts.Ast):
         # Check every member on the superimposition exists on the super class.
         for member in self.body.members.filter_to_type(SupPrototypeExtensionAst):
             this_method = member.body.members[-1]
-            base_method = AstFunctionUtils.check_for_conflicting_method(
-                sm.current_scope, sup_symbol.scope, this_method, FunctionConflictCheckType.InvalidOverride)
+            base_method = AstFunctionUtils.check_for_conflicting_override(
+                sm.current_scope, sup_symbol.scope, this_method)
 
             # Check the base method exists.
             if not base_method:
