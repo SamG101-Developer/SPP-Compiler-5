@@ -279,6 +279,16 @@ class AstFunctionUtils:
                         if new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
                             if hs(new_func) == hs(old_func) and sc(new_func) is sc(old_func):
                                 return old_func
+                            else:
+                                print("self mismatch")
+                        else:
+                            print("return type mismatch")
+                    else:
+                        print("function tok mismatch")
+                else:
+                    print("param mismatch", params_new.params, params_old.params, this_scope, old_scope)
+            else:
+                print("param len mismatch", params_new.params.length, params_old.params.length)
 
     @staticmethod
     def name_function_arguments(

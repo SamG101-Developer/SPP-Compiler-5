@@ -130,6 +130,9 @@ class UseStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.Ty
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         _skip_all_use_statement_scopes(sm, **kwargs)
 
+    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        _skip_all_use_statement_scopes(sm, **kwargs)
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the annotations.
         for a in self.annotations:

@@ -54,6 +54,10 @@ class ClassImplementationAst(Asts.Ast):
         # Load the super scopes for the members.
         for m in self.members: m.load_super_scopes(sm, **kwargs)
 
+    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # Pre analyse the members
+        for m in self.members: m.pre_analyse_semantics(sm, **kwargs)
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the semantics of the members.
         for m in self.members:

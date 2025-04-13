@@ -100,13 +100,8 @@ class SupPrototypeFunctionsAst(Asts.Ast):
 
         sm.move_out_of_current_scope()
 
-    def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-
-        # Move to the next scope.
+    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
-
-        # Analyse the generic parameter group.
-        self.generic_parameter_group.analyse_semantics(sm, **kwargs)
 
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
@@ -118,7 +113,17 @@ class SupPrototypeFunctionsAst(Asts.Ast):
             raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(
                 optional[0]).scopes(sm.current_scope)
 
-        # Analyse the name, where block, and body.
+        # Pre-analyse all the members.
+        self.body.pre_analyse_semantics(sm, **kwargs)
+
+        sm.move_out_of_current_scope()
+
+    def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+
+        # Move to the next scope.
+        sm.move_to_next_scope()
+
+        # Analyse the generic parameter group, name, where block, and body.
         self.name.analyse_semantics(sm, **kwargs)
         self.where_block.analyse_semantics(sm, **kwargs)
         self.body.analyse_semantics(sm, **kwargs)

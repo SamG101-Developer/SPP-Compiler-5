@@ -48,6 +48,10 @@ class ModulePrototypeAst(Asts.Ast):
         # Load the super scopes.
         self.body.load_super_scopes(sm, **kwargs)
 
+    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # Pre-analyse the module implementation.
+        self.body.pre_analyse_semantics(sm, **kwargs)
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the module implementation.
         self.body.analyse_semantics(sm, **kwargs)

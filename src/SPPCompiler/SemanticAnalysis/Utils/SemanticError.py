@@ -300,7 +300,7 @@ class SemanticErrors:
             self.add_error(
                 ast=second_prototype,
                 tag="Duplicate prototype.",
-                msg="The function prototype is a duplicate of another prototype.",
+                msg="The function prototype conflicts with another prototype.",
                 tip="Remove the duplicate prototype.")
 
             return self

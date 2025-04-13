@@ -157,16 +157,21 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
 
-        # Get the owner scope for function conflict checking.
-        match self._ctx:
-            case Asts.ModulePrototypeAst(): type_scope = sm.current_scope.parent_module
-            case _: type_scope = self._ctx._scope_cls
-
         # Type analysis (loads generic types for later)
         for p in self.function_parameter_group.params:
             p.type.analyse_semantics(sm)
         self.return_type.analyse_semantics(sm)
         self.return_type = sm.current_scope.get_symbol(self.return_type).fq_name
+
+        sm.move_out_of_current_scope()
+
+    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        sm.move_to_next_scope()
+
+        # Get the owner scope for function conflict checking.
+        match self._ctx:
+            case Asts.ModulePrototypeAst(): type_scope = sm.current_scope.parent_module
+            case _: type_scope = self._ctx._scope_cls
 
         # Check for function conflicts.
         if conflict := AstFunctionUtils.check_for_conflicting_overload(sm.current_scope, type_scope, self):

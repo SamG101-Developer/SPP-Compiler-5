@@ -115,6 +115,12 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         self.body.load_super_scopes(sm)
         sm.move_out_of_current_scope()
 
+    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # Skip the class scope (no sup-scope work to do).
+        sm.move_to_next_scope()
+        self.body.pre_analyse_semantics(sm, **kwargs)
+        sm.move_out_of_current_scope()
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Move into the class scope.
         if "no_scope" not in kwargs:

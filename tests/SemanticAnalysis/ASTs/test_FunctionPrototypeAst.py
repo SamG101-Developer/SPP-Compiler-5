@@ -10,6 +10,31 @@ class TestFunctionPrototypeAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
+    def test_invalid_function_prototype_conflict_sup_dif_blocks(self):
+        """
+        cls MyType { }
+
+        sup MyType {
+            fun f(a: std::boolean::Bool) -> std::void::Void { }
+        }
+
+        sup MyType {
+            fun f(a: std::boolean::Bool) -> std::void::Void { }
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
+    def test_invalid_function_prototype_conflict_sup_same_block(self):
+        """
+        cls MyType { }
+
+        sup MyType {
+            fun f(a: std::boolean::Bool) -> std::void::Void { }
+            fun f(a: std::boolean::Bool) -> std::void::Void { }
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
     def test_invalid_function_prototype_conflict_optional_parameters_no_param(self):
         """
         fun f() -> std::void::Void { }

@@ -50,6 +50,9 @@ class SupImplementationAst(Asts.Ast):
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         for member in self.members: member.load_super_scopes(sm, **kwargs)
 
+    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        for member in self.members: member.pre_analyse_semantics(sm, **kwargs)
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         for member in self.members: member.analyse_semantics(sm, **kwargs)
 

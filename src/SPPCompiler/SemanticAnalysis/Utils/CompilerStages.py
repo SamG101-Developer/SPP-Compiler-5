@@ -55,6 +55,9 @@ class CompilerStages:
         @param kwargs Additional keyword arguments.
         """
 
+    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        ...
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         """!
         The semantic analysis stage is the most complex, and final analysis, stage of the semantic pipeline. This stage

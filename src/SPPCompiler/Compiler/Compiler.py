@@ -26,6 +26,7 @@ COMPILER_STAGE_NAMES = [
     "  Top-level scopes",
     " Top-level aliases",
     "      Super scopes",
+    "      Pre-Analysis",
     "Semantics analysis"]
 
 
@@ -101,6 +102,7 @@ class Compiler:
             self._ast.generate_top_level_scopes(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.generate_top_level_aliases(self._scope_manager, next(progress_bar))
             self._ast.load_super_scopes(self._scope_manager, next(progress_bar))
+            self._ast.pre_analyse_semantics(self._scope_manager, next(progress_bar))
             self._ast.analyse_semantics(self._scope_manager, next(progress_bar))
 
         except SemanticError as error:

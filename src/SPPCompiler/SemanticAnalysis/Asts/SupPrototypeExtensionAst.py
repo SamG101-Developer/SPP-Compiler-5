@@ -153,7 +153,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
         # Run the inject steps for the body.
         self._scope_cls = cls_symbol.scope
-        self.body.load_super_scopes(sm)
+        self.body.load_super_scopes(sm, **kwargs)
 
         # Prevent duplicate attributes by checking if the attributes appear in any super class.
         super_class_attribute_names = sup_symbol.scope.sup_scopes.filter(
@@ -170,16 +170,10 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
         sm.move_out_of_current_scope()
 
-    def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Move to the next scope.
         sm.move_to_next_scope()
-
-        # Get the class and super class symbols.
-        cls_symbol = sm.current_scope.get_symbol(self.name.without_generics())
         sup_symbol = sm.current_scope.get_symbol(self.super_class)
-
-        # Analyse the generic parameter group.
-        self.generic_parameter_group.analyse_semantics(sm, **kwargs)
 
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
@@ -192,13 +186,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
             raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(
                 optional[0]).scopes(sm.current_scope)
 
-        # Analyse the name, where block, and body.
-        self.name.analyse_semantics(sm, **kwargs)
-        self.super_class.analyse_semantics(sm, **kwargs)
-        self.where_block.analyse_semantics(sm, **kwargs)
-        self.body.analyse_semantics(sm, **kwargs)
-
-        # Check every member on the superimposition exists on the super class.
+        # Check every member on the superimposition exists on the super class (all sup scopes must be loaded here).
         for member in self.body.members.filter_to_type(SupPrototypeExtensionAst):
             this_method = member.body.members[-1]
             base_method = AstFunctionUtils.check_for_conflicting_override(
@@ -213,6 +201,22 @@ class SupPrototypeExtensionAst(Asts.Ast):
             if not (base_method._virtual or base_method._abstract):
                 raise SemanticErrors.SuperimpositionInheritanceNonVirtualMethodOverriddenError().add(
                     base_method.name, self.super_class).scopes(sm.current_scope)
+
+        # Pre-analyse all the members.
+        self.body.pre_analyse_semantics(sm, **kwargs)
+
+        # Move out of the current scope.
+        sm.move_out_of_current_scope()
+
+    def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # Move to the next scope.
+        sm.move_to_next_scope()
+
+        # Analyse the generic parameter group, name, where block, and body.
+        self.name.analyse_semantics(sm, **kwargs)
+        self.super_class.analyse_semantics(sm, **kwargs)
+        self.where_block.analyse_semantics(sm, **kwargs)
+        self.body.analyse_semantics(sm, **kwargs)
 
         # Move out of the current scope.
         sm.move_out_of_current_scope()

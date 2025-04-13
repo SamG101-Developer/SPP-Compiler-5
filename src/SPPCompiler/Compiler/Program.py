@@ -82,6 +82,14 @@ class Program(CompilerStages):
         sm.reset()
         sm.relink_generics()
 
+    def pre_analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None) -> None:
+        # Pre analyse all the top level constructs.
+        for module in self.modules:
+            progress_bar.next(module.name.value)
+            module.pre_analyse_semantics(sm)
+        progress_bar.finish()
+        sm.reset()
+
     def analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, **kwargs) -> None:
         # Analyse the semantics for all the modules.
         for module in self.modules:
