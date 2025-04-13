@@ -8,6 +8,7 @@ SupMemberAst = Union[
     Asts.FunctionPrototypeAst,
     Asts.SupPrototypeExtensionAst,
     Asts.SupUseStatementAst,
+    Asts.SupCmpStatementAst
 ]
 
 __all__ = [
