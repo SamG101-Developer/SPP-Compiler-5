@@ -5,8 +5,6 @@ import operator
 from collections import defaultdict
 from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type
 
-from fastenum import Enum
-
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -18,16 +16,6 @@ from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-
-
-class FunctionConflictCheckType(Enum):
-    """!
-    When checking for if two functions conflict, there is two ways to do this. The override check checks for exact
-    signature matches (with type-symbolic equality), where-as overload conflicts check for required parameter types.
-    """
-
-    InvalidOverload = 0
-    InvalidOverride = 1
 
 
 class AstFunctionUtils:
