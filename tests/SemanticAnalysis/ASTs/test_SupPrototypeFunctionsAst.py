@@ -44,17 +44,96 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
-    def test_invalid_superimposition_extension_type_convention_mut(self):
+    def test_invalid_superimposition_functions_type_convention_mut(self):
         """
         cls A { }
         sup &mut A { }
         """
 
     @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
-    def test_invalid_superimposition_extension_type_convention_ref(self):
+    def test_invalid_superimposition_functions_type_convention_ref(self):
         """
         cls A { }
         sup &A { }
+        """
+
+    @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
+    def test_invalid_superimposition_functions_use_statement_conflict(self):
+        """
+        cls Base1 { }
+        sup Base1 {
+            use X = std::string::Str
+        }
+
+        cls Base2 { }
+        sup Base2 {
+            use X = std::number::BigInt
+        }
+
+        cls A { }
+        sup A ext Base1 { }
+        sup A ext Base2 { }
+        """
+
+    @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
+    def test_invalid_superimposition_functions_use_statement_conflict_direct_extension(self):
+        """
+        cls Base1 { }
+        sup Base1 {
+            use X = std::string::Str
+        }
+
+        cls Base2 { }
+        sup Base2 {
+            use X = std::number::BigInt
+        }
+
+        sup Base2 ext Base1 { }
+        """
+
+    @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
+    def test_invalid_superimposition_functions_cmp_statement_conflict(self):
+        """
+        cls Base1 { }
+        sup Base1 {
+            cmp x: std::string::Str = "hello world"
+        }
+
+        cls Base2 { }
+        sup Base2 {
+            cmp x: std::number::BigInt = 123
+        }
+
+        cls A { }
+        sup A ext Base1 { }
+        sup A ext Base2 { }
+        """
+
+    @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
+    def test_invalid_superimposition_functions_cmp_statement_conflict_direct_extension(self):
+        """
+        cls Base1 { }
+        sup Base1 {
+            cmp x: std::string::Str = "hello world"
+        }
+
+        cls Base2 { }
+        sup Base2 {
+            cmp x: std::number::BigInt = 123
+        }
+
+        sup Base2 ext Base1 { }
+        """
+
+    @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
+    def test_invalid_superimposition_functions_attribute_conflict(self):
+        """
+        cls Base1 { a: std::string::Str }
+        cls Base2 { a: std::number::BigInt }
+
+        cls A { }
+        sup A ext Base1 { }
+        sup A ext Base2 { }
         """
 
     @should_pass_compilation()
@@ -77,7 +156,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
         }
 
         fun f() -> std::void::Void {
-            let x = BaseClass[std::boolean::Bool] ()
+            let x = BaseClass[std::boolean::Bool]()
             let mut y = x.f()
             y = false
         }
@@ -97,5 +176,69 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
             let x = BaseClass(a=false)
             let mut y = x.f()
             y = false
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_superimposition_functions_use_statement_different_type_names(self):
+        """
+        cls Base1 { }
+        sup Base1 {
+            use X = std::string::Str
+        }
+
+        cls Base2 { }
+        sup Base2 {
+            use Y = std::number::BigInt
+        }
+
+        cls A { }
+        sup A ext Base1 { }
+        sup A ext Base2 { }
+        """
+
+    @should_pass_compilation()
+    def test_valid_superimposition_functions_use_statement_override(self):
+        """
+        cls Base1 { }
+        sup Base1 {
+            use X = std::string::Str
+        }
+
+        cls Base2 { }
+        sup Base2 ext Base1 {
+            use X = std::number::BigInt
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_superimposition_functions_cmp_statement_different_type_names(self):
+        """
+        cls Base1 { }
+        sup Base1 {
+            cmp x: std::string::Str = "hello world"
+        }
+
+        cls Base2 { }
+        sup Base2 {
+            cmp y: std::number::BigInt = 123
+        }
+
+        cls A { }
+        sup A ext Base1 { }
+        sup A ext Base2 { }
+        """
+
+    @should_pass_compilation()
+    def test_valid_superimposition_functions_cmp_statement_override(self):
+        """
+        cls Base1 { }
+        sup Base1 {
+            cmp x: std::string::Str = "hello world"
+        }
+
+        cls Base2 { }
+        sup Base2 ext Base1 {
+            cmp x: std::number::BigInt = 123
         }
         """

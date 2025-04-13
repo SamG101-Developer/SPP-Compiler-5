@@ -1,9 +1,5 @@
 from tests._Utils import *
 
-# todo:
-#  make sure that "use" statements in "ext" blocks are on the base class
-#  make sure that "cmp" statements in "ext" blocks are on the base class
-
 
 class TestSupPrototypeExtensionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
@@ -18,21 +14,21 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         sup [T] std::number::BigInt ext T { }
         """
 
-    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceDuplicateSuperclassError)
+    @should_fail_compilation(SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError)
     def test_invalid_superimposition_extension_duplication_superclass(self):
         """
         sup std::number::BigInt ext std::string::Str { }
         sup std::number::BigInt ext std::string::Str { }
         """
 
-    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceCyclicInheritanceError)
+    @should_fail_compilation(SemanticErrors.SuperimpositionExtensionCyclicExtensionError)
     def test_invalid_superimposition_extension_cyclic_extension(self):
         """
         sup std::number::BigInt ext std::string::Str { }
         sup std::string::Str ext std::number::BigInt { }
         """
 
-    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceMethodInvalidError)
+    @should_fail_compilation(SemanticErrors.SuperimpositionExtensionMethodInvalidError)
     def test_invalid_superimposition_extension_invalid_override_method_1(self):
         """
         cls A { }
@@ -46,7 +42,7 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceMethodInvalidError)
+    @should_fail_compilation(SemanticErrors.SuperimpositionExtensionMethodInvalidError)
     def test_invalid_superimposition_extension_invalid_override_method_2(self):
         """
         cls A { }
@@ -60,7 +56,7 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceMethodInvalidError)
+    @should_fail_compilation(SemanticErrors.SuperimpositionExtensionMethodInvalidError)
     def test_invalid_superimposition_extension_invalid_override_method_3(self):
         """
         cls A { }
@@ -74,7 +70,7 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceMethodInvalidError)
+    @should_fail_compilation(SemanticErrors.SuperimpositionExtensionMethodInvalidError)
     def test_invalid_superimposition_extension_invalid_override_method_4(self):
         """
         cls A { }
@@ -88,7 +84,7 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.SuperimpositionInheritanceNonVirtualMethodOverriddenError)
+    @should_fail_compilation(SemanticErrors.SuperimpositionExtensionNonVirtualMethodOverriddenError)
     def test_invalid_superimposition_extension_non_virtual_method_override(self):
         """
         cls A { }
@@ -99,6 +95,28 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         cls B { }
         sup B ext A {
             fun f(&self) -> std::void::Void { }
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.SuperimpositionExtensionUseStatementInvalidError)
+    def test_invalid_superimposition_extension_invalid_use_statement(self):
+        """
+        cls A { }
+
+        cls B { }
+        sup B ext A {
+            use X = std::string::Str
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.SuperimpositionExtensionCmpStatementInvalidError)
+    def test_invalid_superimposition_extension_invalid_use_statement(self):
+        """
+        cls A { }
+
+        cls B { }
+        sup B ext A {
+            cmp x: std::string::Str = "hello world"
         }
         """
 
@@ -183,5 +201,33 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
 
         fun f() -> std::void::Void {
             let b = B(b=100)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_superimposition_extension_valid_use_statement(self):
+        """
+        cls A { }
+        sup A {
+            use X = std::number::BigInt
+        }
+
+        cls B { }
+        sup B ext A {
+            use X = std::string::Str
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_superimposition_extension_valid_cmp_statement(self):
+        """
+        cls A { }
+        sup A {
+            cmp x: std::number::BigInt = 123
+        }
+
+        cls B { }
+        sup B ext A {
+            cmp x: std::string::Str = "hello world"
         }
         """
