@@ -10,11 +10,16 @@ from pathlib import Path
 import os, tomllib, sys
 from setuptools._distutils.ccompiler import new_compiler
 
-print(__file__)
 sys.path.append(str(Path(__file__).parent / "src"))
 from SPPCompiler.Compiler.Compiler import Compiler
 
 NULL_STDOUT = " > /dev/null 2>&1" if os.name == "posix" else " > NUL 2>&1"
+OUT_FOLDER = "out"
+SRC_FOLDER = "src"
+FFI_FOLDER = "ffi"
+VCS_FOLDER = "vcs"
+MAIN_FILE = "main.spp"
+TOML_FILE = "spp.toml"
 
 
 def cli() -> ArgumentParser:
@@ -25,10 +30,10 @@ def cli() -> ArgumentParser:
     # Register the subcommands and their arguments.
     subcommands.add_parser("init", help="Initialize a new project")
     subcommands.add_parser("vcs", help="Manage the version control system")
-    subcommands.add_parser("build", help="Build the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", metavar="<MODE>", help="Choose the build mode")
-    subcommands.add_parser("run", help="Run the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", metavar="<MODE>", help="Choose the run mode")
-    subcommands.add_parser("clean", help="Clean the S++ project").add_argument("--mode", "-m", choices=["dev", "rel", "all"], default="all", metavar="<MODE>", help="Choose the clean mode")
-    subcommands.add_parser("test", help="Test the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", metavar="<MODE>", help="Choose the test mode")
+    subcommands.add_parser("build", help="Build the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", help="Choose the build mode")
+    subcommands.add_parser("run", help="Run the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", help="Choose the run mode")
+    subcommands.add_parser("clean", help="Clean the S++ project").add_argument("--mode", "-m", choices=["dev", "rel", "all"], default="all", help="Choose the clean mode")
+    subcommands.add_parser("test", help="Test the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", help="Choose the test mode")
     subcommands.add_parser("version", help="Show the version")
     subcommands.add_parser("help", help="Show help")
 
@@ -44,12 +49,12 @@ def handle_init() -> None:
         return
 
     # Determine teh directory structure (src and bin folders).
-    bin_directory = cwd / "out"
-    src_directory = cwd / "src"
-    ffi_directory = cwd / "ffi"
+    bin_directory = cwd / OUT_FOLDER
+    src_directory = cwd / SRC_FOLDER
+    ffi_directory = cwd / FFI_FOLDER
     src_folder = src_directory / cwd.name
-    main_file = src_folder / "main.spp"
-    toml_file = cwd / "spp.toml"
+    main_file = src_folder / MAIN_FILE
+    toml_file = cwd / TOML_FILE
 
     # Create the directory structure.
     bin_directory.mkdir()
@@ -67,7 +72,7 @@ def handle_init() -> None:
 def handle_vcs() -> None:
     # Check if the spp.toml file exists.
     cwd = Path.cwd()
-    toml_file = cwd / "spp.toml"
+    toml_file = cwd / TOML_FILE
     if not toml_file.exists():
         print("spp.toml file does not exist")
         return
@@ -79,7 +84,7 @@ def handle_vcs() -> None:
     if not vcs: return
 
     # Check if the "vcs" folder exists, create it if it doesn't.
-    vcs_folder = cwd / "vcs"
+    vcs_folder = cwd / VCS_FOLDER
     if not vcs_folder.exists(): vcs_folder.mkdir()
     os.chdir(vcs_folder)
 
@@ -147,21 +152,24 @@ def handle_help() -> None:
 def validate_project_structure() -> bool:
     # Check there is a spp.toml, src, and src/main.spp file.
     cwd = Path.cwd()
-    toml_file = cwd / "spp.toml"
-    src_directory = cwd / "src"
-    main_file = src_directory / "main.spp"
+    toml_file = cwd / TOML_FILE
+    src_directory = cwd / SRC_FOLDER
+    main_file = src_directory / MAIN_FILE
+
     if not toml_file.exists():
         print("spp.toml file does not exist")
         return False
+
     if not src_directory.exists():
         print("src directory does not exist")
         return False
+
     if not main_file.exists():
         print("main.spp file does not exist")
         return False
 
     # If there is a VCS folder, run the validation steps inside each repository.
-    vcs_folder = cwd / "vcs"
+    vcs_folder = cwd / VCS_FOLDER
     if vcs_folder.exists():
         for repo in vcs_folder.iterdir():
             os.chdir(repo)
@@ -169,7 +177,7 @@ def validate_project_structure() -> bool:
             os.chdir(cwd)
 
     # If there is an FFI folder, check each subfolder is structured properly.
-    ffi_folder = cwd / "ffi"
+    ffi_folder = cwd / FFI_FOLDER
     if ffi_folder.exists():
         ext = new_compiler().shared_lib_extension[1:]
 
