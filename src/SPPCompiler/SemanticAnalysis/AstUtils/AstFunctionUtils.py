@@ -58,7 +58,7 @@ class AstFunctionUtils:
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
 
         # Static access into a type: "Type::method()"
-        elif isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.lhs, Asts.TypeAst.__args__) and lhs.op.is_static_access():
+        elif isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.lhs, Asts.TypeAst) and lhs.op.is_static_access():
             function_owner_type = lhs.lhs
             function_name = lhs.op.field
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
@@ -267,16 +267,6 @@ class AstFunctionUtils:
                         if new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
                             if hs(new_func) == hs(old_func) and sc(new_func) is sc(old_func):
                                 return old_func
-                            else:
-                                print("self mismatch")
-                        else:
-                            print("return type mismatch")
-                    else:
-                        print("function tok mismatch")
-                else:
-                    print("param mismatch", params_new.params, params_old.params, this_scope, old_scope)
-            else:
-                print("param len mismatch", params_new.params.length, params_old.params.length)
 
     @staticmethod
     def name_function_arguments(
