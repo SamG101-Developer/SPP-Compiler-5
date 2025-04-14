@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pprint
 from typing import List, TYPE_CHECKING
 
 from colorama import Fore, Style
@@ -57,30 +58,32 @@ class ErrorFormatter:
         end_pos = ast.pos_end
 
         # Get the tokens at the start and end of the line containing the error. Skip the leading newline.
-        err_line_start_pos = ([i for i, x in enumerate(self._tokens[:start_pos]) if x.token_type == RawTokenType.newline_token()] or [1])[-1] + 1
-        err_line_end_pos = ([i for i, x in enumerate(self._tokens[start_pos:]) if x.token_type == RawTokenType.newline_token()] or [len(self._tokens) - 1])[0] + start_pos
-        err_line_tokens = self._tokens[err_line_start_pos:err_line_end_pos]
-        err_line_as_string = "".join([token.token_data for token in err_line_tokens])
+        err_line_l_pos = ([i for i, x in enumerate(self._tokens[:start_pos]) if x.token_type == RawTokenType.newline_token()] or [1])[-1] + 1
+        err_line_r_pos = ([i for i, x in enumerate(self._tokens[start_pos:]) if x.token_type == RawTokenType.newline_token()] or [len(self._tokens) - 1])[0] + start_pos
+        err_line_tokens = self._tokens[err_line_l_pos:err_line_r_pos]
+        err_line_as_string = "".join([token.token_data for token in err_line_tokens]).lstrip(" ")
 
         # Get the line number of the error
-        error_line_number = len([x for x in self._tokens[:start_pos] if x.token_type == RawTokenType.newline_token()])
+        err_line_number = len([x for x in self._tokens[:start_pos] if x.token_type == RawTokenType.newline_token()])
 
         # The number of "^" is the length of the token data where the error is.
         carets = "^" * (end_pos - start_pos)
-        carets = " " * (start_pos - err_line_start_pos) + carets
+        carets = " " * (start_pos - err_line_l_pos) + carets
 
-        # Print the preceding spaces before the error line
-        l1 = len(err_line_as_string)
-        err_line_as_string = err_line_as_string.replace("  ", "")
-        carets = carets[l1 - len(err_line_as_string):] + f"{Fore.LIGHTWHITE_EX}{Style.BRIGHT} <- {tag_message}"
+        # Print the preceding spaces before the error line.
+        try:
+            remove_spaces = max(0, next(i for i, c in enumerate(err_line_tokens) if c.token_type != RawTokenType.whitespace_token()))
+        except StopIteration:
+            remove_spaces = 0
+        carets = carets[remove_spaces:] + f"{Fore.LIGHTWHITE_EX}{Style.BRIGHT} <- {tag_message}"
 
-        left_padding = " " * len(str(error_line_number))
+        left_padding = " " * len(str(err_line_number))
         bar_character = "|"
         final_error_message = "\n".join([
             f"{Fore.LIGHTWHITE_EX}{Style.BRIGHT}",
-            f"Error in file '{self._file_path}', on line {error_line_number}:" if not minimal else f"Context from file '{self._file_path}', on line {error_line_number}:",
+            f"Error in file '{self._file_path}', on line {err_line_number}:" if not minimal else f"Context from file '{self._file_path}', on line {err_line_number}:",
             f"{Fore.LIGHTWHITE_EX}{left_padding} {bar_character}",
-            f"{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{error_line_number} {bar_character} {err_line_as_string}",
+            f"{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{err_line_number} {bar_character} {err_line_as_string}",
             f"{Fore.LIGHTWHITE_EX}{left_padding} {bar_character} {Style.NORMAL}{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{carets}\n",
             f"{Style.RESET_ALL}{Fore.LIGHTRED_EX}{message}" * (not minimal)])
 
