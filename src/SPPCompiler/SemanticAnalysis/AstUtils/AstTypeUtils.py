@@ -53,14 +53,20 @@ class AstTypeUtils:
         raise NotImplementedError("Only tuple and array types are indexable.")
 
     @staticmethod
-    def get_nth_type_of_indexable_type(index: int, type: Asts.TypeAst, scope: Scope) -> Asts.TypeAst:
+    def get_nth_type_of_indexable_type(sm: ScopeManager, index: int, type: Asts.TypeAst) -> Asts.TypeAst:
         # Tuple type: get the nth generic argument.
-        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope):
+        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope):
             return type.type_parts()[0].generic_argument_group.arguments[index].value
 
-        # Array type: get the first generic argument.
-        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, scope):
+        # Array type: get the first generic argument as an "Opt[T]" type (safety check).
+        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope):
             return type.type_parts()[0].generic_argument_group.arguments[0].value
+
+        # Array type: get the first generic argument as an "Opt[T]" type (safety check).
+        # if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope):
+        #     safe_type = CommonTypes.Opt(type.pos, type.type_parts()[0].generic_argument_group.arguments[0].value)
+        #     safe_type.analyse_semantics(sm)
+        #     return safe_type
 
         raise NotImplementedError("Only tuple and array types are indexable.")
 
