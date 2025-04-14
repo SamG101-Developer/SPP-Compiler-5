@@ -46,9 +46,10 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         lhs_type = lhs.infer_type(sm)
         lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
+        # Todo: wrap with Opt[T] for array access.
         # Numerical access -> get the nth generic argument of the tuple.
         if isinstance(self.field, Asts.TokenAst):
-            element_type = AstTypeUtils.get_nth_type_of_indexable_type(int(self.field.token_data), lhs_type, sm.current_scope)
+            element_type = AstTypeUtils.get_nth_type_of_indexable_type(sm, int(self.field.token_data), lhs_type)
             return element_type
 
         # Accessing a member from the scope by the identifier.
@@ -59,6 +60,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         raise NotImplementedError("Unknown member access type.")
 
     def analyse_semantics(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
+
         # Accessing static methods off of a type, such as "Str::new()".
         if isinstance(lhs, Asts.TypeAst):
             lhs_symbol = sm.current_scope.get_symbol(lhs)
@@ -69,7 +71,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     lhs, self.tok_access).scopes(sm.current_scope)
         
             # Check the target field exists on the type.
-            if not lhs_symbol.scope.has_symbol(self.field):
+            if not lhs_symbol.scope.has_symbol(self.field, exclusive=True):
                 alternatives = sm.current_scope.get_symbol(lhs).scope.all_symbols().map_attr("name")
                 closest_match = difflib.get_close_matches(self.field.value, alternatives.map_attr("value"), n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
