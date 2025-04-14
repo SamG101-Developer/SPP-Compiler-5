@@ -207,3 +207,16 @@ class TestTypeAst(CustomTestCase):
             x = (10, "hello", false, 10_u64)
         }
         """
+
+    @should_pass_compilation()
+    def test_valid_nested_type_at_top_level(self):
+        """
+        cls TypeA { }
+        sup TypeA {
+            use X = std::string::Str
+        }
+
+        fun f(a: TypeA::X) -> TypeA::X {
+            ret "hello world"
+        }
+        """

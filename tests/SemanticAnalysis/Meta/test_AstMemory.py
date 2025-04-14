@@ -4,7 +4,7 @@ from tests._Utils import *
 class TestAstMemory(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryInconsistentlyInitializedError)
     def test_invalid_memory_inconsistently_initialized_moved(self):
-        # Move an initialized  value in one branch and not in the other.
+        # Move an initialized value in one branch and not in the other.
         """
         cls Point {
             x: std::number::BigInt

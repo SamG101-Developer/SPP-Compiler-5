@@ -1,10 +1,8 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
 class TestLocalVariableDestructureArrayAst(CustomTestCase):
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    @should_fail_compilation(SemanticErrors.VariableArrayDestructureArrayTypeMismatchError)
     def test_invalid_local_variable_destructure_array_non_array(self):
         """
         fun f() -> std::void::Void {

@@ -74,7 +74,33 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
     def test_invalid_postfix_member_access_index_out_of_bounds_tuple(self):
         """
         fun f(p: (std::number::BigInt, std::number::BigInt)) -> std::void::Void {
-            p.3
+            p.2
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_postfix_member_access_invalid_type_check(self):
+        """
+        fun f(p: (std::number::BigInt, std::string::Str)) -> std::void::Void {
+            let mut x = p.0
+            x = false
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemberAccessIndexOutOfBoundsError)
+    def test_invalid_postfix_member_access_index_out_of_bounds_array(self):
+        """
+        fun f(p: [std::boolean::Bool, 2]) -> std::void::Void {
+            p.2
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_postfix_member_access_valid(self):
+        """
+        fun f(p: [std::string::Str, 2]) -> std::void::Void {
+            let mut x = p.0
+            x = "hello world"
         }
         """
 
@@ -86,19 +112,29 @@ class TestPostfixExpressionMemberAccessAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemberAccessIndexOutOfBoundsError)
-    def test_invalid_postfix_member_access_index_out_of_bounds_array(self):
+    @should_pass_compilation()
+    def test_valid_postfix_member_access_tuple_type_check(self):
         """
-        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
-            p.3
+        fun f(p: (std::number::BigInt, std::string::Str)) -> std::void::Void {
+            let mut x = p.0
+            x = 123
         }
         """
 
     @should_pass_compilation()
     def test_valid_postfix_member_access_array(self):
         """
-        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
+        fun f(p: [std::string::Str, 2]) -> std::void::Void {
             p.0
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_postfix_member_access_array_type_check(self):
+        """
+        fun f(p: [std::string::Str, 2]) -> std::void::Void {
+            let mut x = p.0
+            x = "hello world"
         }
         """
 

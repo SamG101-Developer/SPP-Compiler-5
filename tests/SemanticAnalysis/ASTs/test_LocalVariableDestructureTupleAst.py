@@ -1,10 +1,8 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
 class TestLocalVariableDestructureTupleAst(CustomTestCase):
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    @should_fail_compilation(SemanticErrors.VariableTupleDestructureTupleTypeMismatchError)
     def test_invalid_local_variable_destructure_tuple_non_tuple(self):
         """
         fun f() -> std::void::Void {
