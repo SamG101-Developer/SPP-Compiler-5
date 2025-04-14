@@ -1356,6 +1356,28 @@ class SemanticErrors:
 
             return self
 
+    class VariableTupleDestructureTupleTypeMismatchError(SemanticError):
+        """
+        The VariableTupleDestructureTupleTypeMismatchError is raised if a tuple-destructure on a non-tuple type is
+        attempted. It is a more specialized TypeMismatchError.
+        """
+
+        def add(
+                self, destructure: Asts.LocalVariableDestructureTupleAst, rhs: Asts.ExpressionAst,
+                rhs_type: Asts.TypeAst) -> SemanticError:
+
+            self.add_info(
+                ast=destructure,
+                tag=f"Tuple destructure taking place here")
+
+            self.add_error(
+                ast=rhs,
+                tag=f"Type inferred as '{rhs_type}' here",
+                msg="The right hand side of a tuple destructure must be a tuple type.",
+                tip="Change the right hand side expression")
+
+            return self
+
     class VariableArrayDestructureArraySizeMismatchError(SemanticError):
         """
         The VariableArrayDestructureArraySizeMismatchError is raised if a variable array-destructure has a different
@@ -1374,6 +1396,28 @@ class SemanticErrors:
                 tag=f"Type inferred as a {rhs_count}-array here",
                 msg="The array destructure has a different number of elements than the array being destructure.",
                 tip="Change the array destructure to have the same number of elements as the array.")
+
+            return self
+
+    class VariableArrayDestructureArrayTypeMismatchError(SemanticError):
+        """
+        The VariableTupleDestructureArrayTypeMismatchError is raised if an array-destructure on a non-array type is
+        attempted. It is a more specialized TypeMismatchError.
+        """
+
+        def add(
+                self, destructure: Asts.LocalVariableDestructureArrayAst, rhs: Asts.ExpressionAst,
+                rhs_type: Asts.TypeAst) -> SemanticError:
+
+            self.add_info(
+                ast=destructure,
+                tag=f"Array destructure taking place here")
+
+            self.add_error(
+                ast=rhs,
+                tag=f"Type of '{rhs}' inferred as '{rhs_type}' here",
+                msg="The right hand side of an array destructure must be an array type.",
+                tip="Change the right hand side expression")
 
             return self
 

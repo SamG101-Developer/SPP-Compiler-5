@@ -52,16 +52,15 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(
                 multi_arg_skips[0], multi_arg_skips[1]).scopes(sm.current_scope)
 
-        # Ensure the rhs value is a array.
-        value_type = value.infer_type(sm, **kwargs).without_generics()
-        array_type = CommonTypesPrecompiled.EMPTY_ARRAY
-        if not value_type.symbolic_eq(array_type, sm.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(
-                self, array_type, value, value_type).scopes(sm.current_scope)
+        # Ensure the rhs value is an array.
+        value_type = value.infer_type(sm, **kwargs)
+        if not CommonTypesPrecompiled.EMPTY_ARRAY.symbolic_eq(value_type.without_generics(), sm.current_scope):
+            raise SemanticErrors.VariableArrayDestructureArrayTypeMismatchError().add(
+                self, value, value_type).scopes(sm.current_scope)
 
         # Determine the number of elements in the lhs and rhs arrays.
         num_lhs_array_elements = self.elems.length
-        num_rhs_array_elements = int(value.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[1].value.value.token_data)
+        num_rhs_array_elements = int(value_type.type_parts()[0].generic_argument_group.arguments[1].value.value.token_data)
 
         # Ensure the lhs and rhs arrays have the same number of elements unless a multi-skip is present.
         if (num_lhs_array_elements < num_rhs_array_elements and not multi_arg_skips) or num_lhs_array_elements > num_rhs_array_elements:

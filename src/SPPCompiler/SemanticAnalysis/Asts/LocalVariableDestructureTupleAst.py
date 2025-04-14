@@ -52,12 +52,11 @@ class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(
                 multi_arg_skips[0], multi_arg_skips[1]).scopes(sm.current_scope)
 
-        # Ensure the rhs value is a tuple.
-        value_type = value.infer_type(sm, **kwargs).without_generics()
-        tuple_type = CommonTypesPrecompiled.EMPTY_TUPLE
-        if not value_type.symbolic_eq(tuple_type, sm.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(
-                self, tuple_type, value, value_type).scopes(sm.current_scope)
+        # Ensure the rhs value is an array.
+        value_type = value.infer_type(sm, **kwargs)
+        if not CommonTypesPrecompiled.EMPTY_TUPLE.symbolic_eq(value_type.without_generics(), sm.current_scope):
+            raise SemanticErrors.VariableTupleDestructureTupleTypeMismatchError().add(
+                self, value, value_type).scopes(sm.current_scope)
 
         # Determine the number of elements in the lhs and rhs tuples.
         num_lhs_tuple_elements = self.elements.length
