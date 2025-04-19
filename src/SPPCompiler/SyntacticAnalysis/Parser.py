@@ -215,7 +215,7 @@ class SppParser:
 
     def parse_sup_use_statement(self) -> Asts.SupUseStatementAst:
         p1 = self.parse_zero_or_more(self.parse_annotation, self.parse_newline)
-        p2 = self.parse_once(self.parse_use_statement)
+        p2 = self.parse_once(self.parse_use_alias_statement)
         p2.annotations = p1
         return p2
 
@@ -709,13 +709,25 @@ class SppParser:
         return p2
 
     def parse_use_statement(self) -> Asts.UseStatementAst:
+        p1 = self.parse_alternate(
+            self.parse_use_alias_statement,
+            self.parse_use_redux_statement)
+        return p1
+
+    def parse_use_alias_statement(self) -> Asts.UseStatementAliasAst:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_keyword_use)
         p2 = self.parse_once(self.parse_upper_identifier)
         p3 = self.parse_optional(self.parse_generic_parameters) or Asts.GenericParameterGroupAst(pos=c1)
         p4 = self.parse_once(self.parse_token_assign)
         p5 = self.parse_once(self.parse_type)
-        return Asts.UseStatementAst(c1, Seq(), p1, Asts.TypeSingleAst.from_identifier(p2), p3, p4, p5)
+        return Asts.UseStatementAliasAst(c1, Seq(), p1, Asts.TypeSingleAst.from_identifier(p2), p3, p4, p5)
+
+    def parse_use_redux_statement(self) -> Asts.UseStatementReduxAst:
+        c1 = self.current_pos()
+        p1 = self.parse_once(self.parse_keyword_use)
+        p2 = self.parse_once(self.parse_type_simple)
+        return Asts.UseStatementReduxAst(c1, Seq(), p1, p2)
 
     # ===== CMP-DECLARATIONS =====
 
