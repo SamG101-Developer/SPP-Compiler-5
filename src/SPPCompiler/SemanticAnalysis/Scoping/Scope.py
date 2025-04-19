@@ -145,11 +145,19 @@ class Scope:
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
 
-    def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
-        # Todo: this needs tidying up (should run the same code for both types, just not the loop for identifier)
+    def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
+        # Todo: why isn't get_symbol being used here? translation issues?
+
         if isinstance(name, Asts.IdentifierAst):
             for symbol in self.all_symbols(exclusive=exclusive):
                 if isinstance(symbol, NamespaceSymbol) and symbol.name == name:
+                    return symbol
+            return None
+
+        # Get the type symbol from the symbol table.
+        elif isinstance(name, Asts.GenericIdentifierAst):
+            for symbol in self.all_symbols(exclusive=exclusive):
+                if isinstance(symbol, TypeSymbol) and symbol.name == name:
                     return symbol
             return None
 
