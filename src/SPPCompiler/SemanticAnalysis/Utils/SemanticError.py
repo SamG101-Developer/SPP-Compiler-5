@@ -571,11 +571,11 @@ class SemanticErrors:
         def add(self, generic_parameter: Asts.GenericParameterAst, caller_context: Asts.ExpressionAst) -> SemanticError:
             self.add_info(
                 ast=caller_context,
-                tag="Type created here")
+                tag=f"Type '{caller_context}' created here")
 
             self.add_error(
                 ast=generic_parameter,
-                tag="Non-inferred generic parameter.",
+                tag=f"Non-inferred generic parameter '{generic_parameter}'.",
                 msg="Non-inferred generic parameters must be passed explicitly.",
                 tip="Pass the missing generic argument into the call.")
 
@@ -1050,7 +1050,7 @@ class SemanticErrors:
         the superclass. Any associated type on an extension must belong to the superclass as-well.
         """
 
-        def add(self, new_use_statement: Asts.UseStatementAst, super_class: Asts.TypeAst) -> SemanticError:
+        def add(self, new_use_statement: Asts.UseStatementAliasAst, super_class: Asts.TypeAst) -> SemanticError:
             self.add_info(
                 ast=super_class,
                 tag=f"Super class '{super_class}' extended here")
@@ -1546,5 +1546,24 @@ class SemanticErrors:
                 tag="Type declared here",
                 msg="A type cannot be given to a non-identifier 'let' statement",
                 tip="Remove the type annotation")
+
+            return self
+
+    class UseStatementInvalidGenericArgumentsError(SemanticError):
+        """
+        Then UseStatementInvalidGenericArgumentsError is raised is a "use" statement look lise "use std::vector[T]".
+        Instead, it should just be "use std::vector" or "use vector[T] = std::vector[T]".
+        """
+
+        def add(self, use_statement: Asts.UseStatementReduxAst, generic_argument: Asts.GenericArgumentAst) -> SemanticError:
+            self.add_info(
+                ast=use_statement,
+                tag="Use statement defined here")
+
+            self.add_error(
+                ast=generic_argument,
+                tag="Invalid generic argument in use statement.",
+                msg="Generic arguments are not allowed in simple-alias use statements.",
+                tip="Remove the generic argument from the use statement, or use the extended form.")
 
             return self
