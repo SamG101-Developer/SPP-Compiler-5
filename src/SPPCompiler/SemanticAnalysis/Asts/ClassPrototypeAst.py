@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from llvmlite import ir as llvm
 
@@ -28,6 +28,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     body: Asts.ClassImplementationAst = field(default=None)
 
     _is_alias: bool = field(default=False, init=False, repr=False)
+    _cls_sym: Optional[TypeSymbol] = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.tok_cls = self.tok_cls or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwCls)
@@ -70,9 +71,11 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         symbol_1 = SymbolType(name=symbol_name, type=self, scope=sm.current_scope, visibility=self._visibility[0])
         sm.current_scope.parent.add_symbol(symbol_1)
         sm.current_scope._type_symbol = symbol_1
+        self._cls_sym = symbol_1
 
         if self.generic_parameter_group.parameters:
             symbol_2 = SymbolType(name=self.name.type_parts()[0], type=self, scope=sm.current_scope, visibility=self._visibility[0])
+            symbol_2.generic_impl = symbol_1
             sm.current_scope.parent.add_symbol(symbol_2)
             return symbol_2
 
@@ -96,7 +99,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Create a new symbol for the class.
-        type_sym = self._generate_symbols(sm)
+        sym = self._generate_symbols(sm)
 
         # Generate the generic parameters and attributes of the class.
         for p in self.generic_parameter_group.parameters:
@@ -105,7 +108,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Move out of the type scope.
         sm.move_out_of_current_scope()
-        return type_sym
+        return sym
 
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
@@ -115,6 +118,19 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         # Qualify the types in the class implementation.
         sm.move_to_next_scope()
+
+        for g in self._cls_sym.type.generic_parameter_group.get_optional_params():
+            x = sm.current_scope.get_symbol(g.default.without_generics())
+            if x.is_generic: continue
+            g.default.analyse_semantics(sm, type_scope=x.scope.parent_module)
+            g.default = x.scope.get_symbol(g.default).fq_name
+
+        for g in self._cls_sym.name.generic_argument_group.get_type_args():
+            x = sm.current_scope.get_symbol(g.value.without_generics())
+            if x.is_generic: continue
+            g.value.analyse_semantics(sm, type_scope=x.scope.parent_module)
+            g.value = x.scope.get_symbol(g.value).fq_name
+
         self.body.qualify_types(sm)
         sm.move_out_of_current_scope()
 
