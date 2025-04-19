@@ -32,14 +32,14 @@ COMPILER_STAGE_NAMES = [
 
 
 class Compiler:
-    """!
+    """
     The Compiler class is the entry point into compiling the entire S++ project. It creates a module tree for the whole
     project, holds instances of the lexer and parser, and calls the analyser functions. This class is also responsible
     for dumping symbols and other compiler metadata to files, if built in "dev" mode.
     """
 
     class Mode(Enum):
-        """!
+        """
         The Mode enum is used to determine the mode in which the compiler is running. This is used to determine whether
         to dump the ASTs and other metadata to files. The "dev" mode is used for development, and the "rel" mode is used
         for release.
@@ -106,12 +106,11 @@ class Compiler:
             self._ast.load_super_scopes(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.pre_analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
+            self.try_dump()
 
         except SemanticError as error:
-            error.throw()
-
-        finally:
             self.try_dump()
+            error.throw()
 
     def try_dump(self) -> None:
         """!
