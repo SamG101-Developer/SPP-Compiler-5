@@ -119,6 +119,8 @@ from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst im
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.RetStatementAst import *
+from SPPCompiler.SemanticAnalysis.Asts.UseStatementAliasAst import *
+from SPPCompiler.SemanticAnalysis.Asts.UseStatementReduxAst import *
 from SPPCompiler.SemanticAnalysis.Asts.UseStatementAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.SupImplementationAst import *
