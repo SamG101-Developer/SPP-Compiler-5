@@ -99,7 +99,7 @@ class Scope:
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
 
-    def rem_symbol(self, symbol_name: Asts.IdentifierAst) -> None:
+    def rem_symbol(self, symbol_name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst) -> None:
         # Remove a symbol from the scope.
         self._symbol_table.rem(symbol_name)
 
@@ -117,7 +117,7 @@ class Scope:
         return symbols
 
     def has_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False) -> bool:
-        return self.get_symbol(name, exclusive) is not None
+        return self.get_symbol(name, exclusive, ignore_alias=True) is not None
 
     def get_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
         # Ensure the name is a valid type.
@@ -239,6 +239,10 @@ class Scope:
         # Get the optionally linked type symbol (if this is a type scope).
         return self._type_symbol
 
+    @type_symbol.setter
+    def type_symbol(self, symbol: TypeSymbol | AliasSymbol) -> None:
+        self._type_symbol = symbol
+
     @property
     def sup_scopes(self) -> Seq[Scope]:
         # Get all the super scopes recursively.
@@ -307,8 +311,8 @@ def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: Asts
 def confirm_type_with_alias(scope: Scope, symbol: Symbol, ignore_alias: bool) -> Optional[Symbol]:
     # Get the alias symbol's old type if aliases are being ignored.
     match symbol:
-        case AliasSymbol() if symbol.old_type and not ignore_alias:
-            symbol = scope.get_symbol(symbol.old_type)
+        case AliasSymbol() if symbol.old_sym and not ignore_alias:
+            symbol = symbol.old_sym
     return symbol
 
 
