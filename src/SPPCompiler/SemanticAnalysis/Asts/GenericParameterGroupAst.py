@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -23,6 +24,9 @@ class GenericParameterGroupAst(Asts.Ast):
 
     def __copy__(self) -> GenericParameterGroupAst:
         return GenericParameterGroupAst(parameters=self.parameters.copy())
+
+    def __deepcopy__(self, memodict=None):
+        return GenericParameterGroupAst(parameters=copy.deepcopy(self.parameters))
 
     def __eq__(self, other: GenericParameterGroupAst) -> bool:
         # Check both ASTs are the same type and have the same parameters.
