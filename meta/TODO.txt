@@ -29,3 +29,6 @@ Arrays
 Function types.
 * Mostly requires closures
 * Superimpose function types.
+
+Superimpositions.
+* Don't allow method access modifiers inside sup-ext (only sup)
