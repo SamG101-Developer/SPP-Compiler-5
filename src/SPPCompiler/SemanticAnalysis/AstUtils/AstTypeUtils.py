@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import builtins
 import copy
 import difflib
 from typing import Generator, Optional, Tuple, TYPE_CHECKING
@@ -240,3 +239,5 @@ class AstTypeUtils:
         for attribute_cls_prototype, attribute_ast in get_attribute_types(type, sm.current_scope):
             if attribute_cls_prototype is type:
                 return attribute_ast
+            return None
+        return None
