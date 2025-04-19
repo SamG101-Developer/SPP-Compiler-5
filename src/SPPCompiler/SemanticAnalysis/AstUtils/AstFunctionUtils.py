@@ -326,7 +326,7 @@ class AstFunctionUtils:
             arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], sm: ScopeManager,
             is_tuple_owner: bool = False) -> None:
 
-        """!
+        """
         Name all generic arguments being passed to a function call or a type declaration, by removing used names from
         the parameter list, and then applying the leftover parameter names for the resulting arguments. Special care is
         taken for the case of a variadic parameter, which requires a tuple of the remaining arguments.
@@ -335,15 +335,14 @@ class AstFunctionUtils:
         the more expressive application of generic arguments; they are not only constrained to function calls, but any
         place a type is defined. As such, further checks are needed to ensure the generic arguments are correctly named.
 
-        @param arguments The list of generic arguments being passed to the function.
-        @param parameters The list of generic parameters the function accepts.
-        @param sm The scope manager to access the current scope.
-        @param is_tuple_owner If the owner type is a tuple (early return).
+        :param arguments: The list of generic arguments being passed to the function.
+        :param parameters: The list of generic parameters the function accepts.
+        :param sm: The scope manager to access the current scope.
+        :param is_tuple_owner: If the owner type is a tuple (early return).
+        :return: None (the generic arguments are modified in-place).
 
-        @return None (the generic arguments are modified in-place).
-
-        @throw SemanticErrors.ArgumentNameInvalidError If an argument name is invalid (doesn't match a parameter name).
-        @throw SemanticErrors.GenericArgumentTooManyError If too many generic arguments are passed.
+        :raise SemanticErrors.ArgumentNameInvalidError: If an argument name is invalid (doesn't match a parameter name).
+        :raise SemanticErrors.GenericArgumentTooManyError: If too many generic arguments are passed.
         """
 
         # Special case for tuples to prevent infinite-recursion.
@@ -383,10 +382,14 @@ class AstFunctionUtils:
                     named_argument = CodeInjection.inject_code(named_argument, SppParser.parse_generic_argument, pos_adjust=unnamed_argument.pos)
                     arguments.replace(unnamed_argument, named_argument, 1)
 
+                # If too many generic arguments have been given, raise an error.
                 except IndexError:
-                    # Too many generic arguments passed.
                     raise SemanticErrors.GenericArgumentTooManyError().add(
                         parameters, unnamed_argument).scopes(sm.current_scope)
+
+        # For any default generic values, override the default "T=T" with "T=Str" etc.
+        # for parameter in parameters.filter_to_type(Asts.GenericParameterOptionalAst):
+        #     arguments.find(lambda a: a.name == parameter.name).value = parameter.default
 
     @staticmethod
     def infer_generic_arguments(
@@ -505,7 +508,7 @@ class AstFunctionUtils:
         for generic_parameter_name in generic_parameters.map_attr("name"):
             if generic_parameter_name not in inferred_generic_arguments:
                 raise SemanticErrors.GenericParameterNotInferredError().add(
-                    generic_parameter_name, owner).scopes(sm.current_scope)
+                    generic_parameter_name, owner).scopes(sm.current_scope, sm.current_scope.get_symbol(owner).scope.parent_module)
 
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
         # GenericXXXArgumentASTs. Todo: pos_adjust?
