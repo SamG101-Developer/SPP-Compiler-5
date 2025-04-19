@@ -80,6 +80,7 @@ class TypeSymbol:
     visibility: Visibility = field(default=Visibility.Private)
     llvm_info: LlvmSymbolInfo = field(default_factory=LlvmSymbolInfo)
     convention: Optional[Asts.ConventionAst] = field(default=None)
+    generic_impl: TypeSymbol = field(default=None, repr=False)
 
     scope_defined_in: Optional[Scope] = field(default=None)
 
@@ -92,9 +93,12 @@ class TypeSymbol:
         if self.scope and not self.is_generic and not self.name.value == "Self":
             self.scope._type_symbol = self
 
+        self.generic_impl = self
+
     def __json__(self) -> Dict:
         # Dump the TypeSymbol as a JSON object.
-        return {"what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else ""}
+        return {
+            "what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else ""}
 
     def __str__(self) -> str:
         # Dump the TypeSymbol as a JSON string.
@@ -105,7 +109,7 @@ class TypeSymbol:
         return TypeSymbol(
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
             is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
-            scope_defined_in=self.scope_defined_in)
+            generic_impl=self.generic_impl, scope_defined_in=self.scope_defined_in)
 
     @property
     def fq_name(self) -> Asts.TypeAst:
@@ -123,6 +127,10 @@ class TypeSymbol:
 
         if self.name.value[0] == "$":
             return fq_name
+
+        # for i, generic in enumerate(self.name.generic_argument_group.arguments.copy()):
+        #     if isinstance(generic, Asts.GenericTypeArgumentAst):
+        #         self.name.generic_argument_group.arguments[i].value = self.scope.get_symbol(generic.value).fq_name if self.scope.has_symbol(generic.value) else generic.value
 
         scope = self.scope.parent_module
         while scope.parent:
