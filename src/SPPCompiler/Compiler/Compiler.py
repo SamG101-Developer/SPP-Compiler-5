@@ -25,6 +25,7 @@ COMPILER_STAGE_NAMES = [
     "    Pre-processing",
     "  Top-level scopes",
     " Top-level aliases",
+    "  Qualifying types",
     "      Super scopes",
     "      Pre-Analysis",
     "Semantics analysis"]
@@ -100,10 +101,11 @@ class Compiler:
         try:
             self._ast.pre_process(None, next(progress_bar), self._module_tree)
             self._ast.generate_top_level_scopes(self._scope_manager, next(progress_bar), self._module_tree)
-            self._ast.generate_top_level_aliases(self._scope_manager, next(progress_bar))
-            self._ast.load_super_scopes(self._scope_manager, next(progress_bar))
-            self._ast.pre_analyse_semantics(self._scope_manager, next(progress_bar))
-            self._ast.analyse_semantics(self._scope_manager, next(progress_bar))
+            self._ast.generate_top_level_aliases(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.qualify_types(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.load_super_scopes(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.pre_analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
 
         except SemanticError as error:
             error.throw()
