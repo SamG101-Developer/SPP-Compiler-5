@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import json
 from dataclasses import dataclass, field
-from typing import Dict, Optional, TYPE_CHECKING
+from typing import Dict, Optional, TYPE_CHECKING, Callable
 
 import json_fix
 
@@ -110,10 +110,17 @@ class TypeSymbol:
     @property
     def fq_name(self) -> Asts.TypeAst:
         fq_name = Asts.TypeSingleAst.from_generic_identifier(self.name)
+        if self.type:
+            fq_name = fq_name.sub_generics(
+                Asts.GenericArgumentGroupAst.from_parameter_group(
+                    self.type.generic_parameter_group.parameters, use_default=True).arguments)
+
         if self.is_generic:
             return fq_name
+
         if isinstance(self, AliasSymbol):
             return fq_name
+
         if self.name.value[0] == "$":
             return fq_name
 
@@ -130,17 +137,17 @@ class TypeSymbol:
 
 @dataclass(kw_only=True)
 class AliasSymbol(TypeSymbol):
-    old_type: Asts.TypeAst = field(default=None)
+    old_sym: TypeSymbol = field(default=None)
 
     def __json__(self) -> Dict:
         # Dump the AliasSymbol as a JSON object.
-        return super().__json__() | {"old_type": self.old_type}
+        return super().__json__() | {"old_sym": self.old_sym}
 
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the AliasSymbol, but link the old scope.
         return AliasSymbol(
             name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, old_type=copy.deepcopy(self.old_type))
+            is_copyable=self.is_copyable, visibility=self.visibility, old_sym=copy.deepcopy(self.old_sym))
 
 
 type Symbol = AliasSymbol | NamespaceSymbol | VariableSymbol | TypeSymbol
