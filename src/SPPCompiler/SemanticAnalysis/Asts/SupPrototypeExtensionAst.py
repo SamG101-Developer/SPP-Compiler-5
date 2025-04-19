@@ -19,8 +19,8 @@ if TYPE_CHECKING:
 
 
 # Todo
-#  - Prevent double inheritance (same type superimposed anywhere in the tree)
-#  - Prevent cyclic inheritance
+#  - Add tests for double inheritance
+#  - Add tests for cyclic inheritance
 #  - Only allow 1 Gen[T] superimposition
 #  - Error if the type doesn't exist
 
@@ -95,6 +95,19 @@ class SupPrototypeExtensionAst(Asts.Ast):
         self.body.generate_top_level_aliases(sm)
         sm.move_out_of_current_scope()
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        sm.move_to_next_scope()
+
+        for g in self.generic_parameter_group.parameters:
+            g.qualify_types(sm, **kwargs)
+
+        self.name.analyse_semantics(sm, **kwargs)
+        self.name = sm.current_scope.get_symbol(self.name).fq_name
+
+        self.body.qualify_types(sm, **kwargs)
+
+        sm.move_out_of_current_scope()
+
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
 
@@ -114,12 +127,10 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(
                     generic_arg, self).scopes(sm.current_scope)
 
-        # Ensure the validity of the superclass, along with its generics.
-        self.super_class.analyse_semantics(sm)
+        self.super_class.analyse_semantics(sm, **kwargs)
         self.super_class = sm.current_scope.get_symbol(self.super_class).fq_name
 
         sup_symbol = sm.current_scope.get_symbol(self.super_class.without_generics())
-
         if sup_symbol.is_generic:
             raise SemanticErrors.GenericTypeInvalidUsageError().add(
                 self.super_class, self.super_class, "superimposition supertype").scopes(sm.current_scope)
@@ -171,7 +182,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
         existing_type_names = cls_symbol.scope.sup_scopes.filter(
             lambda s: isinstance(s._ast, Asts.SupPrototypeAst)).map(
-            lambda s: s._ast.body.members.filter_to_type(Asts.UseStatementAst)).flat().map_attr("new_type")
+            lambda s: s._ast.body.members.filter_to_type(Asts.SupUseStatementAst)).flat().map_attr("new_type")
 
         if duplicates := existing_type_names.non_unique():
             raise SemanticErrors.IdentifierDuplicationError().add(
@@ -226,7 +237,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
                         raise SemanticErrors.SuperimpositionExtensionNonVirtualMethodOverriddenError().add(
                             base_method.name, self.super_class).scopes(sm.current_scope)
 
-                case Asts.UseStatementAst():
+                case Asts.SupUseStatementAst():
                     # Get the associated type from the superclass directly.
                     this_type = member.new_type
                     base_type = sup_symbol.scope.get_symbol(this_type, exclusive=True)

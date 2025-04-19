@@ -74,6 +74,19 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         self.body.generate_top_level_aliases(sm)
         sm.move_out_of_current_scope()
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        sm.move_to_next_scope()
+
+        self.name.analyse_semantics(sm, **kwargs)
+        self.name = sm.current_scope.get_symbol(self.name).fq_name
+
+        for g in self.generic_parameter_group.parameters:
+            g.qualify_types(sm, **kwargs)
+
+        self.body.qualify_types(sm, **kwargs)
+
+        sm.move_out_of_current_scope()
+
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
 

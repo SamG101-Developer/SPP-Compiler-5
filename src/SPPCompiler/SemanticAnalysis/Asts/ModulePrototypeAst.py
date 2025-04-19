@@ -44,6 +44,10 @@ class ModulePrototypeAst(Asts.Ast):
         # Alias the types in the module implementation.
         self.body.generate_top_level_aliases(sm, **kwargs)
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        # Qualify the types in the module implementation.
+        self.body.qualify_types(sm, **kwargs)
+
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         # Load the super scopes.
         self.body.load_super_scopes(sm, **kwargs)

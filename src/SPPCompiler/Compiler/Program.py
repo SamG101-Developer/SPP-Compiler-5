@@ -73,7 +73,15 @@ class Program(CompilerStages):
             module.generate_top_level_aliases(sm)
             sm.reset()
         progress_bar.finish()
-        sm.reset()
+
+    def qualify_types(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+        # Alias types for all the modules.
+        for module in self.modules:
+            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
+            progress_bar.next(module.name.value)
+            module.qualify_types(sm)
+            sm.reset()
+        progress_bar.finish()
 
     def load_super_scopes(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
         # Load the super scopes for all the modules.

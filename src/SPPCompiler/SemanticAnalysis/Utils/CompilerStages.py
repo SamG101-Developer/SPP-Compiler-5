@@ -47,6 +47,14 @@ class CompilerStages:
         @param kwargs Additional keyword arguments.
         """
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        ...
+        :param sm:
+        :param kwargs:
+        :return:
+        """
+
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         """!
         The load super scopes stage links all super scopes to classes. This allows a type to know what attributes and

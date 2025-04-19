@@ -61,11 +61,11 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def pos_end(self) -> int:
         return self.body.pos_end
 
-    def _generate_symbols(self, sm: ScopeManager) -> None:
+    def _generate_symbols(self, sm: ScopeManager) -> TypeSymbol:
         SymbolType = TypeSymbol if not self._is_alias else AliasSymbol
 
         symbol_name = copy.deepcopy(self.name.type_parts()[0])
-        symbol_name.generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)
+        symbol_name.generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters, use_default=True)
 
         symbol_1 = SymbolType(name=symbol_name, type=self, scope=sm.current_scope, visibility=self._visibility[0])
         sm.current_scope.parent.add_symbol(symbol_1)
@@ -74,6 +74,9 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         if self.generic_parameter_group.parameters:
             symbol_2 = SymbolType(name=self.name.type_parts()[0], type=self, scope=sm.current_scope, visibility=self._visibility[0])
             sm.current_scope.parent.add_symbol(symbol_2)
+            return symbol_2
+
+        return symbol_1
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         super().pre_process(ctx)
@@ -83,7 +86,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.pre_process(self)
         self.body.pre_process(self)
 
-    def generate_top_level_scopes(self, sm: ScopeManager) -> None:
+    def generate_top_level_scopes(self, sm: ScopeManager) -> TypeSymbol | AliasSymbol:
         # Create a new scope for the class.
         sm.create_and_move_into_new_scope(self.name, self)
         super().generate_top_level_scopes(sm)
@@ -93,7 +96,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Create a new symbol for the class.
-        self._generate_symbols(sm)
+        type_sym = self._generate_symbols(sm)
 
         # Generate the generic parameters and attributes of the class.
         for p in self.generic_parameter_group.parameters:
@@ -102,11 +105,17 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Move out of the type scope.
         sm.move_out_of_current_scope()
+        return type_sym
 
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         sm.move_to_next_scope()
-        self.body.generate_top_level_aliases(sm, **kwargs)
+        sm.move_out_of_current_scope()
+
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        # Qualify the types in the class implementation.
+        sm.move_to_next_scope()
+        self.body.qualify_types(sm)
         sm.move_out_of_current_scope()
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:

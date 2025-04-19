@@ -67,10 +67,12 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         sm.current_scope.add_symbol(symbol)
 
-    def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
-        # Type checks must be done before semantic analysis, as other ASTs may use this attribute prior to its analysis.
-        self.type.analyse_semantics(sm)
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        # Qualify the types on the attributes.
+        self.type.analyse_semantics(sm, **kwargs)
+        self.type = sm.current_scope.get_symbol(self.type).fq_name
 
+    def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         # Ensure the attribute type is not void.
         void_type = CommonTypes.Void(self.pos)
         if self.type.symbolic_eq(void_type, sm.current_scope):
@@ -78,7 +80,6 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
                 self.type).scopes(sm.current_scope)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-
         # Analyse the semantics of the annotations and the type of the attribute.
         for a in self.annotations:
             a.analyse_semantics(sm, **kwargs)

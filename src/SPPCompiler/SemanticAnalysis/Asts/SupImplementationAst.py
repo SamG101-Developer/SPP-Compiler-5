@@ -47,6 +47,9 @@ class SupImplementationAst(Asts.Ast):
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
         for member in self.members: member.generate_top_level_aliases(sm, **kwargs)
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        for member in self.members: member.qualify_types(sm, **kwargs)
+
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         for member in self.members: member.load_super_scopes(sm, **kwargs)
 

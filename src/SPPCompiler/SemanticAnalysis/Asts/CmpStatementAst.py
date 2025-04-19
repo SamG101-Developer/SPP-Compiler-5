@@ -71,8 +71,9 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         symbol.memory_info.initialized_by(self)
         sm.current_scope.add_symbol(symbol)
 
-    def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         self.type.analyse_semantics(sm)
+        self.type = sm.current_scope.get_symbol(self.type).fq_name
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the annotations.

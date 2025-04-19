@@ -45,10 +45,14 @@ class GenericTypeParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         symbol = TypeSymbol(name=self.name.type_parts()[0], type=None, is_generic=True)
         sm.current_scope.add_symbol(symbol)
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        # Qualify the default value type.
+        self.default.analyse_semantics(sm, **kwargs)
+        self.default = sm.current_scope.get_symbol(self.default).fq_name
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         self.name.analyse_semantics(sm, **kwargs)
         self.constraints.analyse_semantics(sm, **kwargs)
-        self.default.analyse_semantics(sm, **kwargs)
 
 
 __all__ = [
