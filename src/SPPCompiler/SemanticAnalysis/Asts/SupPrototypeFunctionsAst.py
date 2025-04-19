@@ -76,15 +76,7 @@ class SupPrototypeFunctionsAst(Asts.Ast):
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
-
-        self.name.analyse_semantics(sm, **kwargs)
-        self.name = sm.current_scope.get_symbol(self.name).fq_name
-
-        for g in self.generic_parameter_group.parameters:
-            g.qualify_types(sm, **kwargs)
-
         self.body.qualify_types(sm, **kwargs)
-
         sm.move_out_of_current_scope()
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
@@ -97,14 +89,15 @@ class SupPrototypeFunctionsAst(Asts.Ast):
                 self.name, self.name, "superimposition type").scopes(sm.current_scope)
 
         # Ensure all the generic arguments are unnamed and match the class's generic parameters.
+        other_cls_symbol = sm.current_scope.get_symbol(self.name.without_generics(), ignore_alias=True)
         for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
             if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__args__):
                 raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(
                     generic_arg).scopes(sm.current_scope)
 
-            if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
+            if not other_cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
                 raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(
-                    generic_arg, self).scopes(sm.current_scope)
+                    generic_arg, self.tok_sup).scopes(sm.current_scope)
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         cls_symbol.scope._direct_sup_scopes.append(sm.current_scope)

@@ -97,15 +97,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
-
-        for g in self.generic_parameter_group.parameters:
-            g.qualify_types(sm, **kwargs)
-
-        self.name.analyse_semantics(sm, **kwargs)
-        self.name = sm.current_scope.get_symbol(self.name).fq_name
-
         self.body.qualify_types(sm, **kwargs)
-
         sm.move_out_of_current_scope()
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
@@ -125,7 +117,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
             if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
                 raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(
-                    generic_arg, self).scopes(sm.current_scope)
+                    generic_arg, self.tok_sup).scopes(sm.current_scope)
 
         self.super_class.analyse_semantics(sm, **kwargs)
         self.super_class = sm.current_scope.get_symbol(self.super_class).fq_name
