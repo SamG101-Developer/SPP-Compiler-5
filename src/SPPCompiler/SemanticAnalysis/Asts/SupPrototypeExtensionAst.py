@@ -131,19 +131,19 @@ class SupPrototypeExtensionAst(Asts.Ast):
         sup_symbol = sm.current_scope.get_symbol(self.super_class)
 
         # Prevent double inheritance by checking if the sup scope is already in the list.
-        if existing_sup_scope := cls_symbol.scope.sup_scopes.filter(
-                lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
-                lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)):
-            if cls_symbol.name.value[0] != "$":
-                raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
-                    existing_sup_scope._ast.super_class, self.super_class).scopes(sm.current_scope)
-
-        # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
-        if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(
-                lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
-                lambda s: s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)):
-            raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
-                existing_sup_scope._ast.super_class, self.name).scopes(sm.current_scope)
+        # if existing_sup_scope := cls_symbol.scope.sup_scopes.filter(
+        #         lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
+        #         lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)):
+        #     if cls_symbol.name.value[0] != "$":
+        #         raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
+        #             existing_sup_scope._ast.super_class, self.super_class).scopes(sm.current_scope)
+        #
+        # # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
+        # if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(
+        #         lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
+        #         lambda s: s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)):
+        #     raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
+        #         existing_sup_scope._ast.super_class, self.name).scopes(sm.current_scope)
 
         # Mark the class as copyable if the Copy type is the super class.
         if self.super_class.symbolic_eq(CommonTypes.Copy(0), sm.current_scope):
