@@ -67,12 +67,9 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
         sm.current_scope.add_symbol(symbol)
 
-    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
-        # Qualify the types on the attributes.
-        self.type.analyse_semantics(sm, **kwargs)
-        self.type = sm.current_scope.get_symbol(self.type).fq_name
-
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
+        self.type.analyse_semantics(sm, **kwargs)
+
         # Ensure the attribute type is not void.
         void_type = CommonTypes.Void(self.pos)
         if self.type.symbolic_eq(void_type, sm.current_scope):
