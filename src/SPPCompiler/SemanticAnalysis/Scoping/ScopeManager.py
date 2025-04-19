@@ -58,18 +58,8 @@ class ScopeManager:
         return self._current_scope
 
     def move_to_next_scope(self) -> Scope:
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
-
         # Move to the next scope in the iterator and return it.
-        is_old_scope_namespace_scope = isinstance(self._current_scope.type_symbol, NamespaceSymbol)
         self._current_scope = next(self._iterator)
-        is_new_scope_namespace_scope = isinstance(self._current_scope.type_symbol, NamespaceSymbol)
-
-        # If the old and new scopes are namespace scopes, then move to the next scope (inside new namespace).
-        if is_old_scope_namespace_scope and is_new_scope_namespace_scope:
-            self._current_scope = self.move_to_next_scope()
-
-        # Return the new scope.
         return self._current_scope
 
     def get_namespaced_scope(self, namespace: Seq[Asts.IdentifierAst]) -> Optional[Scope]:
@@ -86,6 +76,7 @@ class ScopeManager:
                 scope = namespace_symbol.scope
 
             return scope
+        return None
 
     def relink_generics(self) -> None:
         # Check every scope in the symbol table.
