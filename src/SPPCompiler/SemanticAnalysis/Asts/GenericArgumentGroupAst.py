@@ -31,17 +31,21 @@ class GenericArgumentGroupAst(Asts.Ast):
         return self.arguments == other.arguments
 
     def __getitem__(self, item: str) -> Optional[Asts.GenericArgumentAst]:
-        assert isinstance(item, str)
+        assert isinstance(item, str), type(item)
         return self.arguments.find(lambda a: Asts.IdentifierAst.from_type(a.name).value == item)
 
     @staticmethod
-    def from_parameter_group(parameters: Seq[Asts.GenericParameterAst]) -> GenericArgumentGroupAst:
+    def from_parameter_group(parameters: Seq[Asts.GenericParameterAst], use_default: bool = False) -> GenericArgumentGroupAst:
 
         GenericArgumentCTor = {
             **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__args__},
             **{g: Asts.GenericTypeArgumentNamedAst for g in Asts.GenericTypeParameterAst.__args__}}
 
-        arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)](name=copy.deepcopy(p.name), value=p.name))
+        if not use_default:
+            arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)](name=copy.deepcopy(p.name), value=p.name))
+        else:
+            arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)](name=copy.deepcopy(p.name), value=p.default if isinstance(p, Asts.GenericParameterOptionalAst) else p.name))
+
         return GenericArgumentGroupAst(arguments=arguments)
 
     @ast_printer_method
