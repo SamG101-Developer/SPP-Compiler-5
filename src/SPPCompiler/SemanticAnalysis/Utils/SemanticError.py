@@ -1010,16 +1010,15 @@ class SemanticErrors:
         superimposition. For the "cls Point[T, U]" type, the superimposition must look like "sup [T, U] Point[T, U]".
         """
 
-        def add(
-                self, generic_argument: Asts.GenericArgumentAst,
-                superimposition: Asts.SupPrototypeAst) -> SemanticError:
+        def add(self, generic_argument: Asts.GenericArgumentAst, superimposition: Asts.TokenAst) -> SemanticError:
+
             self.add_info(
                 ast=superimposition,
                 tag="Superimposition defined here")
 
             self.add_error(
                 ast=generic_argument,
-                tag="Generic argument mismatch.",
+                tag=f"Generic argument mismatch with argument '{generic_argument}'.",
                 msg="The superimposition generic argument does not match the class generic argument.",
                 tip="Change the superimposition generic argument to match the class generic argument. This will be relaxed in future versions.")
 
