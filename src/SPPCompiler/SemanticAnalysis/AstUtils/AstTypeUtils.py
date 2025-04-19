@@ -93,7 +93,7 @@ class AstTypeUtils:
     @staticmethod
     def get_type_part_symbol_with_error(
             scope: Scope, sm: ScopeManager, type_part: Asts.GenericIdentifierAst, ignore_alias: bool = False, **kwargs)\
-            -> TypeSymbol:
+            -> TypeSymbol | AliasSymbol:
 
         # Get the type part's symbol, and raise an error if it does not exist.
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
@@ -117,12 +117,9 @@ class AstTypeUtils:
         # Create a new scope & symbol for the generic substituted type.
         new_cls_prototype = copy.deepcopy(base_symbol.scope._ast)
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=new_cls_prototype)
-        new_symbol = builtins.type(base_symbol)(
+        new_symbol = TypeSymbol(
             name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
             visibility=base_symbol.visibility, scope_defined_in=sm.current_scope)
-
-        if isinstance(base_symbol, AliasSymbol):
-            new_symbol.old_type = base_symbol.old_type
 
         # Configure the new scope based on the base scope, register non-generic scope as the base scope.
         new_scope.parent.add_symbol(new_symbol)

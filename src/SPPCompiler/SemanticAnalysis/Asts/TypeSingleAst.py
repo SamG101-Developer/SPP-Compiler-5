@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
+from functools import partial
 from typing import Optional, Self, Dict, Tuple, Iterator, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
@@ -11,7 +12,6 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -106,6 +106,8 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         for g in custom_iterate(self):
             if g.value == argument:
                 return g.name if isinstance(g, Asts.GenericArgumentNamedAst) else g.value
+            return None
+        return None
 
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
         return any(g == Asts.GenericIdentifierAst.from_type(generic_name) for g in self)
@@ -120,8 +122,8 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
         if debug:
             print("-" * 100)
-            print(self, self_scope, self_symbol)
-            print(that, that_scope, that_symbol)
+            print("SELF", self, self_scope, self_symbol)
+            print("THAT", that, that_scope, that_symbol)
 
         # Variant type: one of the generic arguments must match the type.
         if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(0), self_scope, that_scope, check_variant=False):
@@ -133,11 +135,12 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         return self_symbol.type is that_symbol.type
 
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
+
         type_scope = type_scope or sm.current_scope
         original_type_scope = type_scope
 
         # Determine the type scope and type symbol.
-        type_symbol = AstTypeUtils.get_type_part_symbol_with_error(type_scope, sm, self.name.without_generics(), ignore_alias=True)
+        type_symbol = AstTypeUtils.get_type_part_symbol_with_error(original_type_scope, sm, self.name.without_generics(), ignore_alias=True)
         type_scope = type_symbol.scope
         if type_symbol.is_generic: return
 
@@ -168,18 +171,39 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             new_scope = AstTypeUtils.create_generic_scope(sm, self.name, type_symbol, is_tuple=is_tuple)
 
             # Handle type aliasing (providing generics to the original type).
-            if isinstance(new_scope.type_symbol, AliasSymbol):
+            if isinstance(type_symbol, AliasSymbol):
+                # Substitute the old type: "Opt[Str]" => "Var[Some[Str], None]"
                 generics = original_type_scope.generics + self.name.generic_argument_group.arguments
-                new_scope.type_symbol.old_type = copy.deepcopy(new_scope.type_symbol.old_type).sub_generics(generics)
-                new_scope.type_symbol.old_type.analyse_semantics(sm, **kwargs)
+                print(type_symbol)
+                old_type = type_symbol.old_sym.fq_name.sub_generics(generics)
+                print("Created old type:", old_type)
+                old_type.analyse_semantics(sm, type_scope=type_scope.parent, **kwargs)
+                new_scope.type_symbol.old_sym = sm.current_scope.get_symbol(old_type)
 
-        # Check for the std::variant type, there are no generic types.
-        type_symbol = original_type_scope.get_symbol(self.name)
-        if type_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, original_type_scope):
-            for generic_argument in type_symbol.fq_name.type_parts()[-1].generic_argument_group["Variants"].value.type_parts()[-1].generic_argument_group.arguments:
-                if c := generic_argument.value.get_convention():
-                    raise SemanticErrors.InvalidConventionLocationError().add(
-                        c, generic_argument.value, "variant composite type").scopes(sm.current_scope)
+                # Create a new aliasing symbol for the substituted new type.
+                new_alias_symbol = AliasSymbol(
+                    name=new_scope.type_symbol.name, type=new_scope.type_symbol.type, scope=new_scope,
+                    scope_defined_in=new_scope.type_symbol.scope_defined_in,
+                    is_generic=new_scope.type_symbol.is_generic, is_copyable=new_scope.type_symbol.is_copyable,
+                    old_sym=sm.current_scope.get_symbol(old_type))
+
+                new_scope.parent.rem_symbol(new_scope.type_symbol.name)
+                new_scope.parent.add_symbol(new_alias_symbol)
+                new_scope.type_symbol = new_alias_symbol
+
+            type_symbol = new_scope.type_symbol
+
+        else:
+            type_symbol = type_scope.parent.get_symbol(self.name)
+
+        # Check for the std::variant type, there are no types with conventions.
+        # type_symbol = AstTypeUtils.get_type_part_symbol_with_error(type_scope.parent, sm, self.name)
+        # print("Scopes:", type_scope, original_type_scope)
+        # if type_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, original_type_scope, debug=True):
+        #     for generic_argument in type_symbol.fq_name.type_parts()[-1].generic_argument_group["Variants"].value.type_parts()[-1].generic_argument_group.arguments:
+        #         if c := generic_argument.value.get_convention():
+        #             raise SemanticErrors.InvalidConventionLocationError().add(
+        #                 c, generic_argument.value, "variant composite type").scopes(sm.current_scope)
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
         return scope, self
