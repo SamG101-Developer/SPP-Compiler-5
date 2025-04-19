@@ -156,25 +156,17 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
-
-        # Qualify the parameter types.
-        for p in self.function_parameter_group.params:
-            print("P-TYPE", p.type)
-            p.type.analyse_semantics(sm)
-            p.type = sm.current_scope.get_symbol(p.type).fq_name
-
-        # Qualify the generic parameter default value's types (if there are any).
-        for g in self.generic_parameter_group.parameters:
-            g.qualify_types(sm, **kwargs)
-
-        # Qualify the return type.
-        self.return_type.analyse_semantics(sm)
-        self.return_type = sm.current_scope.get_symbol(self.return_type).fq_name
-
         sm.move_out_of_current_scope()
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
+
+        for p in self.function_parameter_group.params:
+            p.type.analyse_semantics(sm, **kwargs)
+        for g in self.generic_parameter_group.get_optional_params():
+            g.default.analyse_semantics(sm, **kwargs)
+        self.return_type.analyse_semantics(sm, **kwargs)
+
         sm.move_out_of_current_scope()
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
