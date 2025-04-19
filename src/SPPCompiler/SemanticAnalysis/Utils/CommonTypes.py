@@ -8,117 +8,104 @@ from SPPCompiler.Utils.Sequence import Seq
 
 class CommonTypes:
     @staticmethod
-    def type_variant_to_convention(type: Asts.TypeAst) -> Asts.ConventionAst:
-
-        match type.type_parts()[0].value[-3:].lower():
-            case "mov":
-                return Asts.ConventionMovAst(pos=type.pos)
-            case "mut":
-                return Asts.ConventionMutAst(pos=type.pos)
-            case "ref":
-                return Asts.ConventionRefAst(pos=type.pos)
-            case _:
-                raise ValueError(f"Invalid type variant: {type.type_parts()[0].value}")
-
-    @staticmethod
     def U8(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U8", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u8::U8", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def U16(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U16", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u16::U16", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def U32(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U32", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u32::U32", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def U64(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U64", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u64::U64", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def U128(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U128", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u128::U128", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def U256(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U256", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u256::U256", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I8(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I8", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i8::I8", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I16(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I16", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i16::I16", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I32(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I32", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i32::I32", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I64(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I64", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i64::I64", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I128(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I128", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i128::I128", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I256(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I256", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i256::I256", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F8(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F8", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f8::F8", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F16(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F16", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f16::F16", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F32(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F32", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f32::F32", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F64(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F64", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f64::F64", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F128(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F128", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f128::F128", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F256(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F256", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f256::F256", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def BigInt(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::BigInt", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::bigint::BigInt", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def BigDec(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::BigDec", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::bigdec::BigDec", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def Void(pos: int):
@@ -184,6 +171,11 @@ class CommonTypes:
     def Gen(pos: int, yield_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
         return CodeInjection.inject_code(
             f"std::generator::Gen[{yield_type}, {send_type}]", SppParser.parse_type, pos_adjust=pos)
+
+    @staticmethod
+    def GenOnce(pos: int, yield_type: Asts.TypeAst = None):
+        return CodeInjection.inject_code(
+            f"std::generator::Gen[{yield_type}]", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def DerefRef(pos: int, inner_type: Asts.TypeAst = None):
