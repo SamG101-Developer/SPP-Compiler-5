@@ -31,7 +31,7 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         string = [
             self.name.print(printer),
             self.tok_assign.print(printer),
-            self.value.print(printer)]  # todo ?
+            self.value.print(printer)]
         return "".join(string)
 
     @property

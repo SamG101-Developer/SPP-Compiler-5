@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from functools import partial
 from typing import Optional, Self, Dict, Tuple, Iterator, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
@@ -174,9 +173,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             if isinstance(type_symbol, AliasSymbol):
                 # Substitute the old type: "Opt[Str]" => "Var[Some[Str], None]"
                 generics = original_type_scope.generics + self.name.generic_argument_group.arguments
-                print(type_symbol)
                 old_type = type_symbol.old_sym.fq_name.sub_generics(generics)
-                print("Created old type:", old_type)
                 old_type.analyse_semantics(sm, type_scope=type_scope.parent, **kwargs)
                 new_scope.type_symbol.old_sym = sm.current_scope.get_symbol(old_type)
 

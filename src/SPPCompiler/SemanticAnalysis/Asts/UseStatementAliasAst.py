@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import itertools
 from dataclasses import dataclass, field
-from functools import partial
 from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -114,7 +113,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         # Mark this AST as generated, so it is not generated in the analysis phase.
         self._generated = True
 
-    def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
+    def generate_top_level_aliases(self, sm: ScopeManager, old_sym: Optional[TypeSymbol] = None, **kwargs) -> None:
         # Skip the class scope and move into the type-alias scope (generic access)
         sm.move_to_next_scope()
         sm.move_to_next_scope()
@@ -126,7 +125,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
 
         # Register the old type against the new alias symbol.
         self.old_type.analyse_semantics(sm)
-        self._alias_symbol.old_sym = sm.current_scope.get_symbol(self.old_type, ignore_alias=True)
+        self._alias_symbol.old_sym = old_sym or sm.current_scope.get_symbol(self.old_type, ignore_alias=False)
 
         # Create a sup ast to allow the attribute and method access.
         sup_ast = CodeInjection.inject_code(

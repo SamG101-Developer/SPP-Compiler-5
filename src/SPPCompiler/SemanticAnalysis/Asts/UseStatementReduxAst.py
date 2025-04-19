@@ -68,10 +68,12 @@ class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
         old_type_symbol = sm.current_scope.get_symbol(self.old_type, ignore_alias=True)
         generic_params = old_type_symbol.type.generic_parameter_group
-        self._conversion.generic_parameter_group = copy.deepcopy(generic_params)
-        self._conversion._cls_ast.generic_parameter_group = copy.deepcopy(generic_params)
+        self._conversion.generic_parameter_group = copy.copy(generic_params)
+        self._conversion._cls_ast.generic_parameter_group = copy.copy(generic_params)
         self._conversion.old_type.type_parts()[-1].generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(generic_params.parameters, use_default=False)
-        self._conversion.generate_top_level_aliases(sm, **kwargs)
+
+        plain_old_sym = sm.current_scope.get_symbol(self.old_type.without_generics()).generic_impl
+        self._conversion.generate_top_level_aliases(sm, old_sym=plain_old_sym, **kwargs)
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         self._conversion.qualify_types(sm, **kwargs)
