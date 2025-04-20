@@ -83,11 +83,14 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             for g in name.generic_argument_group.get_type_args():  # comp args?
                 g.value = g.value.sub_generics(generic_arguments)
 
+            for g in name.generic_argument_group.get_comp_args().filter(lambda gg: isinstance(gg.value, Asts.TypeAst)):
+                g.value = g.value.sub_generics(generic_arguments)
+
         return TypeSingleAst(self.pos, name)
 
     def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
         def custom_iterate(t: Asts.TypeAst) -> Iterator[Asts.GenericArgumentAst]:
-            for g in t.type_parts()[0].generic_argument_group.get_type_args():
+            for g in t.type_parts()[0].generic_argument_group.get_type_args():  # comp args?
                 yield g
                 yield from custom_iterate(g.value)
 
@@ -98,7 +101,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
     def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
         def custom_iterate(t: Asts.TypeAst) -> Iterator[Asts.GenericArgumentAst]:
-            for g in t.type_parts()[0].generic_argument_group.get_type_args():
+            for g in t.type_parts()[0].generic_argument_group.get_type_args():  # comp args?
                 yield g
                 yield from custom_iterate(g.value)
 
