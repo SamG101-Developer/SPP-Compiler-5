@@ -88,7 +88,11 @@ class ScopeManager:
                 # Check the type is a generic implementation (ie Vec[Str]), and remove the symbol.
                 if symbol.scope._non_generic_scope is not symbol.scope:
                     self.reset(symbol.scope_defined_in)
+
+                    # Get the base symbol (Vec), to pull the super scopes from.
                     base_symbol = scope.get_symbol(symbol.name.without_generics(), ignore_alias=True)
+
+                    # Add the substituted super scopes to the substituted symbol.
                     symbol.scope._direct_sup_scopes = AstTypeUtils.create_generic_sup_scopes(self, base_symbol.scope, symbol.scope, symbol.name.generic_argument_group)
 
         self.reset()
