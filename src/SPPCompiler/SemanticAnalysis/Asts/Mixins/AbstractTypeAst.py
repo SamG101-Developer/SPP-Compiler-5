@@ -68,7 +68,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @abstractmethod
-    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Self:
+    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         """!
         Substitute the generic arguments in a type. This allows "Vec[T]" to become "Vec[Str]" when it is known that "T"
         is a "Str". This is used in the type inference process.

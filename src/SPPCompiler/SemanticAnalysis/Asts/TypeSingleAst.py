@@ -74,7 +74,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     def without_generics(self) -> Self:
         return TypeSingleAst(self.pos, self.name.without_generics())
 
-    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Self:
+    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         name = copy.deepcopy(self.name)
         for generic_name, generic_type in generic_arguments.map(lambda a: (a.name, a.value)):
             if self == generic_name:
