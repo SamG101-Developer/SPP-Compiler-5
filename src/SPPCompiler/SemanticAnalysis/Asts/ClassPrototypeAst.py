@@ -66,7 +66,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         SymbolType = TypeSymbol if not self._is_alias else AliasSymbol
 
         symbol_name = copy.deepcopy(self.name.type_parts()[0])
-        symbol_name.generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters, use_default=True)
+        symbol_name.generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)
 
         symbol_1 = SymbolType(name=symbol_name, type=self, scope=sm.current_scope, visibility=self._visibility[0])
         sm.current_scope.parent.add_symbol(symbol_1)
@@ -124,12 +124,6 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             if x.is_generic: continue
             g.default.analyse_semantics(sm, type_scope=x.scope.parent_module)
             g.default = x.scope.get_symbol(g.default).fq_name
-
-        for g in self._cls_sym.name.generic_argument_group.get_type_args():
-            x = sm.current_scope.get_symbol(g.value.without_generics())
-            if x.is_generic: continue
-            g.value.analyse_semantics(sm, type_scope=x.scope.parent_module)
-            g.value = x.scope.get_symbol(g.value).fq_name
 
         self.body.qualify_types(sm)
         sm.move_out_of_current_scope()

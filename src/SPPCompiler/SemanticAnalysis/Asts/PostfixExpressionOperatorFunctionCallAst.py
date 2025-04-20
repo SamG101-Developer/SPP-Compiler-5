@@ -111,7 +111,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                 # Infer generic arguments and inherit from the function owner block.
                 generic_arguments = AstFunctionUtils.infer_generic_arguments(
-                    generic_parameters=function_overload.generic_parameter_group.get_required_params(),
+                    generic_parameters=function_overload.generic_parameter_group.parameters,
+                    optional_generic_parameters=function_overload.generic_parameter_group.get_optional_params(),
                     explicit_generic_arguments=generic_arguments + owner_scope_generic_arguments,
                     infer_source=arguments.map(lambda a: (a.name, a.infer_type(sm, **kwargs))).dict(),
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),

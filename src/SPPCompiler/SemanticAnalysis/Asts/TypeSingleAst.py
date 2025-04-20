@@ -159,11 +159,12 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
         # Infer generic arguments from information given from object initialization.
         self.name.generic_argument_group.arguments = AstFunctionUtils.infer_generic_arguments(
-            generic_parameters=type_symbol.type.generic_parameter_group.get_required_params(),
+            generic_parameters=type_symbol.type.generic_parameter_group.parameters,
+            optional_generic_parameters=type_symbol.type.generic_parameter_group.get_optional_params(),
             explicit_generic_arguments=self.name.generic_argument_group.arguments,
             infer_source=generic_infer_source or {},
             infer_target=generic_infer_target or {},
-            sm=sm, owner=self)
+            sm=sm, owner=type_symbol.fq_name)
 
         # Analyse the semantics of the generic arguments.
         self.name.generic_argument_group.analyse_semantics(sm, **kwargs)

@@ -229,6 +229,8 @@ class AstFunctionUtils:
             if not (params_new.params + params_old.params).map(type).contains(Asts.FunctionParameterRequiredAst):
                 return old_func
 
+        return None
+
     @staticmethod
     def check_for_conflicting_override(
             this_scope: Scope, target_scope: Scope, new_func: Asts.FunctionPrototypeAst, *,
@@ -267,6 +269,7 @@ class AstFunctionUtils:
                         if new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
                             if hs(new_func) == hs(old_func) and sc(new_func) is sc(old_func):
                                 return old_func
+            return None
 
     @staticmethod
     def name_function_arguments(
@@ -394,6 +397,7 @@ class AstFunctionUtils:
     @staticmethod
     def infer_generic_arguments(
             generic_parameters: Seq[Asts.GenericParameterAst],
+            optional_generic_parameters: Seq[Asts.GenericParameterAst],
             explicit_generic_arguments: Seq[Asts.GenericArgumentAst],
             infer_source: Dict[Asts.IdentifierAst, Asts.TypeAst],
             infer_target: Dict[Asts.IdentifierAst, Asts.TypeAst],
@@ -402,29 +406,13 @@ class AstFunctionUtils:
             variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None)\
             -> Seq[Asts.GenericArgumentAst]:
 
-        """!
+        """
         This function infers the generic parameters' values based not only on explicit generic arguments, but on other
         values' true types, that were originally declared as generic. For example a generic type T can be inferred from
         an argument's type, whose corresponding parameter is the generic T type. The same goes for object initializer
         arguments and class attributes.
 
-        @param generic_parameters The generic parameters that need the values assigned via inference.
-        @param explicit_generic_arguments Any explicit generic arguments that have been given with [] syntax.
-        @param infer_source Function or object initializer arguments.
-        @param infer_target Function parameters or attributes (that have generic type annotations).
-        @param sm The scope manager to access the current scope.
-        @param owner An optional "owner" type (exclusive to types rather than function calls).
-        @param variadic_parameter_identifier An optional parameter name that is known to be variadic.
-
-        @return A list of generic arguments with inferred values.
-
-        @throw SemanticErrors.GenericParameterInferredConflictInferredError If the inferred generic arguments conflict.
-        @throw SemanticErrors.GenericParameterInferredConflictExplicitError If the inferred generic arguments conflict
-            with explicit generic arguments.
-        @throw SemanticErrors.GenericParameterNotInferredError If a generic parameter has not been inferred.
-
-        @example
-            cls Point[T, U, V, W] {
+        cls Point[T, U, V, W] {
                 x: T
                 y: U
                 z: V
@@ -432,20 +420,37 @@ class AstFunctionUtils:
 
             let p = Point[W=Bool](x=1, y="hello", z=False)
 
-            * generic_parameter: [T, U, V, W]
-            * explicit_generic_arguments: [W=Bool]
-            * infer_source: {x: BigInt, y: Str, z: Bool}
-            * infer_target: {x: T, y: U, z: V}
+        * generic_parameter: [T, U, V, W]
+        * explicit_generic_arguments: [W=Bool]
+        * infer_source: {x: BigInt, y: Str, z: Bool}
+        * infer_target: {x: T, y: U, z: V}
+
+        :param generic_parameters: The generic parameters that need the values assigned via inference.
+        :param optional_generic_parameters: The defaults to fill missing generic arguments with.
+        :param explicit_generic_arguments: Any explicit generic arguments that have been given with [] syntax.
+        :param infer_source: Function or object initializer arguments.
+        :param infer_target: Function parameters or attributes (that have generic type annotations).
+        :param sm: The scope manager to access the current scope.
+        :param owner: An optional "owner" type (exclusive to types rather than function calls).
+        :param variadic_parameter_identifier: An optional parameter name that is known to be variadic.
+        :return: A list of generic arguments with inferred values.
+
+        :raise SemanticErrors.GenericParameterInferredConflictInferredError: If the inferred generic arguments conflict.
+        :raise SemanticErrors.GenericParameterInferredConflictExplicitError: If the inferred generic arguments conflict
+            with explicit generic arguments.
+        :raise SemanticErrors.GenericParameterNotInferredError: If a generic parameter has not been inferred.
         """
 
         # print("-" * 100)
         # print("generic_parameters", generic_parameters)
+        # print("optional_generic_parameters", optional_generic_parameters)
         # print("explicit_generic_arguments", explicit_generic_arguments)
         # print("infer_source", Seq([f"{k}={v}" for k, v in infer_source.items()]))
         # print("infer_target", Seq([f"{k}={v}" for k, v in infer_target.items()]))
+        # print("owner", owner, sm.current_scope)
 
         # Special case for tuples to prevent infinite-recursion.
-        if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
+        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and owner.symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope):
             return explicit_generic_arguments
 
         # If there are no generic parameters then skip any inference checks.
@@ -488,6 +493,12 @@ class AstFunctionUtils:
                 if variadic_parameter_identifier and infer_target_name == variadic_parameter_identifier:
                     inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].type_parts()[0].generic_argument_group.arguments[0].value
 
+        # Add any default generic arguments in that were missing.
+        for optional_generic_parameter in optional_generic_parameters:
+            if optional_generic_parameter.name not in inferred_generic_arguments:
+                default = sm.current_scope.get_symbol(owner).scope.get_symbol(optional_generic_parameter.default).fq_name
+                inferred_generic_arguments[optional_generic_parameter.name].append(default)
+
         # Check each generic argument name only has one unique inferred type. This is to prevent conflicts for a generic
         # type. For example, "T" can't be inferred as a "Str" and then a "BigInt". All instances must match the first
         # inference, in this case "Str".
@@ -510,14 +521,25 @@ class AstFunctionUtils:
                 raise SemanticErrors.GenericParameterNotInferredError().add(
                     generic_parameter_name, owner).scopes(sm.current_scope, sm.current_scope.get_symbol(owner).scope.parent_module)
 
+        # At this point, each inferred generic argument has been checked for conflicts, so it is safe to assume the
+        # first type mapping per argument can be used. Extract these types into a new dictionary.
+        formatted_generic_arguments = {}
+        for generic_parameter_name, [generic_parameter_value, *_] in inferred_generic_arguments.copy().items():
+            formatted_generic_arguments[generic_parameter_name] = generic_parameter_value
+
+        # Cross apply all generics. This allows generics from previous arguments to be used in future arguments. For
+        # example, Cls[T, Vec[T]] when T.
+        for generic_parameter_name, generic_parameter_value in formatted_generic_arguments.copy().items():
+            if isinstance(generic_parameter_value, Asts.TypeAst):
+                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.sub_generics(Asts.GenericArgumentGroupAst.from_dict(formatted_generic_arguments).arguments)
+
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
         # GenericXXXArgumentASTs. Todo: pos_adjust?
         pos_adjust = owner.pos if owner else 0
-        inferred_generic_arguments = {k: v[0] for k, v in inferred_generic_arguments.items()}
-        inferred_generic_arguments = [
+        formatted_generic_arguments = [
             CodeInjection.inject_code(f"{k}={v}", SppParser.parse_generic_argument, pos_adjust=pos_adjust)
-            for k, v in inferred_generic_arguments.items()]
+            for k, v in formatted_generic_arguments.items()]
 
-        # print("inferred_generic_arguments", Seq(inferred_generic_arguments))
+        # print("inferred_generic_arguments", Seq(formatted_generic_arguments))
 
-        return Seq(inferred_generic_arguments)
+        return Seq(formatted_generic_arguments)

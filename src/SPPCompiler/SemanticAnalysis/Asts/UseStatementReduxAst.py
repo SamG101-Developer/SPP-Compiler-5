@@ -70,7 +70,7 @@ class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         generic_params = old_type_symbol.type.generic_parameter_group
         self._conversion.generic_parameter_group = copy.copy(generic_params)
         self._conversion._cls_ast.generic_parameter_group = copy.copy(generic_params)
-        self._conversion.old_type.type_parts()[-1].generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(generic_params.parameters, use_default=False)
+        self._conversion.old_type.type_parts()[-1].generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(generic_params.parameters)
 
         plain_old_sym = sm.current_scope.get_symbol(self.old_type.without_generics()).generic_impl
         self._conversion.generate_top_level_aliases(sm, old_sym=plain_old_sym, **kwargs)

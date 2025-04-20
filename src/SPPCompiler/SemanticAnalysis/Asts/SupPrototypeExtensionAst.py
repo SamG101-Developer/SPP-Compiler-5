@@ -97,6 +97,13 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
+
+        # Check every generic parameter is constrained by the type.
+        if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
+            if self.name.type_parts()[0].value[0] != "$":
+                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
+                    unconstrained[0], self.name).scopes(sm.current_scope)
+
         self.body.qualify_types(sm, **kwargs)
         sm.move_out_of_current_scope()
 
@@ -198,12 +205,6 @@ class SupPrototypeExtensionAst(Asts.Ast):
         # Move to the next scope.
         sm.move_to_next_scope()
         sup_symbol = sm.current_scope.get_symbol(self.super_class)
-
-        # Check every generic parameter is constrained by the type.
-        if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
-            if self.name.type_parts()[0].value[0] != "$":
-                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
-                    unconstrained[0], self.name).scopes(sm.current_scope)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_optional_params():

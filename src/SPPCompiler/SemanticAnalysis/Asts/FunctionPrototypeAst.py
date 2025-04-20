@@ -163,8 +163,6 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         for p in self.function_parameter_group.params:
             p.type.analyse_semantics(sm, **kwargs)
-        for g in self.generic_parameter_group.get_optional_params():
-            g.default.analyse_semantics(sm, **kwargs)
         self.return_type.analyse_semantics(sm, **kwargs)
 
         sm.move_out_of_current_scope()

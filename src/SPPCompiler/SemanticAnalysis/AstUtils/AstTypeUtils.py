@@ -207,7 +207,7 @@ class AstTypeUtils:
                 name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(sm),
                 is_generic=True)
 
-        raise Exception(f"Unknown generic argument type: {type(generic_argument).__name__}")
+        raise Exception(f"Unknown generic argument type '{type(generic_argument).__name__}': {generic_argument}")
 
     @staticmethod
     def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst, pos: int) -> str:

@@ -115,9 +115,7 @@ class TypeSymbol:
     def fq_name(self) -> Asts.TypeAst:
         fq_name = Asts.TypeSingleAst.from_generic_identifier(self.name)
         if self.type:
-            fq_name = fq_name.sub_generics(
-                Asts.GenericArgumentGroupAst.from_parameter_group(
-                    self.type.generic_parameter_group.parameters, use_default=True).arguments)
+            fq_name = fq_name.sub_generics(Asts.GenericArgumentGroupAst.from_parameter_group(self.type.generic_parameter_group.parameters).arguments)
 
         if self.is_generic:
             return fq_name
