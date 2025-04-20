@@ -64,7 +64,8 @@ class SemanticError(BaseException):
     def throw(self) -> NoReturn:
         # Format the error messages and raise the error.
         error_message = ""
-        for error, error_formatter in self.error_info.zip(Seq([next(self.error_formatters.cycle()) for i in range(self.error_info.length)])):
+        cycle = self.error_formatters.cycle()
+        for error, error_formatter in self.error_info.zip(Seq([next(cycle) for i in range(self.error_info.length)])):
             formatted_message, is_minimal = self._format_message(error)
             error_message += error_formatter.error_ast(error.ast, formatted_message, error.tag, is_minimal)
         print(error_message)
