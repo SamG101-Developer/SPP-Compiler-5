@@ -8,6 +8,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
@@ -205,6 +206,14 @@ class SupPrototypeExtensionAst(Asts.Ast):
         # Move to the next scope.
         sm.move_to_next_scope()
         sup_symbol = sm.current_scope.get_symbol(self.super_class)
+
+        # Add the "Self" symbol into the scope.
+        if self.name.type_parts()[0].value[0] != "$":
+            cls_symbol = sm.current_scope.get_symbol(self.name.without_generics())
+            self_symbol = TypeSymbol(
+                name=Asts.GenericIdentifierAst.from_type(CommonTypes.Self(self.name.pos)), type=cls_symbol.type,
+                scope=cls_symbol.scope)
+            sm.current_scope.add_symbol(self_symbol)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_optional_params():

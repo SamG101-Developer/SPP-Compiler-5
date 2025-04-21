@@ -6,7 +6,9 @@ from typing import Optional, TYPE_CHECKING
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
@@ -108,6 +110,15 @@ class SupPrototypeFunctionsAst(Asts.Ast):
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
+
+        # Add the "Self" symbol into the scope.
+        if self.name.type_parts()[0].value[0] != "$":
+            cls_symbol = sm.current_scope.get_symbol(self.name.without_generics())
+            self_symbol = TypeSymbol(
+                name=Asts.GenericIdentifierAst.from_type(CommonTypes.Self(self.name.pos)), type=cls_symbol.type,
+                scope=cls_symbol.scope)
+            sm.current_scope.add_symbol(self_symbol)
+            # print(f"Added {self_symbol} to scope '{sm.current_scope.name}'.")
 
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
