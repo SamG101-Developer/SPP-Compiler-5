@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import itertools
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -82,24 +81,4 @@ class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         self._conversion.load_super_scopes(sm, **kwargs)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # Analyse the annotations.
-        for a in self.annotations:
-            a.analyse_semantics(sm, **kwargs)
-
-        # If the symbol has already been generated there is no work to do.
-        if self._generated:
-            return
-
-        # Otherwise, run all the generation and analysis stages, resetting the scope each time.
-        else:
-            current_scope = sm.current_scope
-            sm._iterator, new_iterator = itertools.tee(sm._iterator)
-            self.generate_top_level_scopes(sm)
-
-            sm.reset(current_scope, new_iterator)
-            sm._iterator, new_iterator = itertools.tee(sm._iterator)
-            self.generate_top_level_aliases(sm, **kwargs)
-
-            sm.reset(current_scope, new_iterator)
-            sm._iterator, new_iterator = itertools.tee(sm._iterator)
-            self.load_super_scopes(sm, **kwargs)
+        self._conversion.analyse_semantics(sm, **kwargs)

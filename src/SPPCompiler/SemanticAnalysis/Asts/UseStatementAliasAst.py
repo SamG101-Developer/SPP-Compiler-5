@@ -158,7 +158,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         else:
             current_scope = sm.current_scope
             sm._iterator, new_iterator = itertools.tee(sm._iterator)
-            self.generate_top_level_scopes(sm, **kwargs)
+            self.generate_top_level_scopes(sm)
 
             sm.reset(current_scope, new_iterator)
             sm._iterator, new_iterator = itertools.tee(sm._iterator)
