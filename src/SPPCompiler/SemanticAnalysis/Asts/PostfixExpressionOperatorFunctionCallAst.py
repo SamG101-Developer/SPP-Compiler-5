@@ -205,6 +205,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # Return the function's return type.
         return_type = self._overload[1].return_type
+        return_type = self._overload[0].get_symbol(return_type).fq_name
         return return_type
 
     def analyse_semantics(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
