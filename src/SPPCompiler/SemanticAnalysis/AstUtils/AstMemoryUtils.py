@@ -155,6 +155,7 @@ class AstMemoryUtils:
         if not symbol:
             return
         copies = sm.current_scope.get_symbol(symbol.type).is_copyable
+        partial_copies = sm.current_scope.get_symbol(value_ast.infer_type(sm)).is_copyable
 
         # An identifier that is a namespace cannot be used as an expression. As all expressions are analysed in this
         # function, the check is performed here.
@@ -223,8 +224,8 @@ class AstMemoryUtils:
         # Check the symbol is not being moved from a borrowed context. This prevents partial moves off of borrowed
         # object, because the current context doesn't have ownership of the object. This guarantees that when control is
         # returned to the original context, the object is still in the same (fully-initialized) memory state as before
-        # the borrow took place.
-        if check_move_from_borrowed_context and symbol.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst):
+        # the borrow took place. todo: add "partial_copies" to tests
+        if check_move_from_borrowed_context and symbol.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
             raise SemanticErrors.MemoryMovedFromBorrowedContextError().add(
                 value_ast, symbol.memory_info.ast_borrowed).scopes(sm.current_scope)
 
