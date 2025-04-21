@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Type
 
 from llvmlite import ir as llvm
 
@@ -63,7 +63,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         return self.body.pos_end
 
     def _generate_symbols(self, sm: ScopeManager) -> TypeSymbol:
-        SymbolType = TypeSymbol if not self._is_alias else AliasSymbol
+        SymbolType: Type[TypeSymbol] = TypeSymbol if not self._is_alias else AliasSymbol
 
         symbol_name = copy.deepcopy(self.name.type_parts()[0])
         symbol_name.generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)

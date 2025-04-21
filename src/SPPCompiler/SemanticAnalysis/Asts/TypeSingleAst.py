@@ -122,6 +122,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
                 # Check for target generic.
                 if str(t.value) == str(generic_name):
                     return s.value
+
             except StopIteration:
                 break
 
@@ -196,7 +197,6 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
                 generics = original_type_scope.generics + self.name.generic_argument_group.arguments
                 old_type = type_symbol.old_sym.fq_name.sub_generics(generics)
                 old_type.analyse_semantics(sm, type_scope=type_scope.parent, **kwargs)
-                new_scope.type_symbol.old_sym = sm.current_scope.get_symbol(old_type)
 
                 # Create a new aliasing symbol for the substituted new type.
                 new_alias_symbol = AliasSymbol(
