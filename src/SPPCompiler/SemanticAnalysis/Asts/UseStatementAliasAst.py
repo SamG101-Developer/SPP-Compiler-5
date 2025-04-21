@@ -126,6 +126,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         # Register the old type against the new alias symbol.
         self.old_type.analyse_semantics(sm)
         self._alias_symbol.old_sym = old_sym or sm.current_scope.get_symbol(self.old_type, ignore_alias=False)
+        self._alias_symbol.generic_impl.old_sym = self._alias_symbol.old_sym
 
         # Create a sup ast to allow the attribute and method access.
         sup_ast = CodeInjection.inject_code(
@@ -136,8 +137,17 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         # Move out of the type-alias scope.
         sm.move_out_of_current_scope()
 
-    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
-        self._skip_all_use_statement_scopes(sm, **kwargs)
+    def qualify_types(self, sm: ScopeManager, old_sym: Optional[TypeSymbol] = None, **kwargs) -> None:
+        sm.move_to_next_scope()
+        sm.move_to_next_scope()
+
+        if old_sym:
+            self._alias_symbol.old_sym = old_sym
+            self._alias_symbol.generic_impl.old_sym = self._alias_symbol.old_sym
+
+        sm.move_to_next_scope()
+        sm.move_out_of_current_scope()
+        sm.move_out_of_current_scope()
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         self._skip_all_use_statement_scopes(sm, **kwargs)

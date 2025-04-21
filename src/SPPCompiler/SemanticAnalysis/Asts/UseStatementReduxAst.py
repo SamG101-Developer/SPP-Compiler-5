@@ -75,7 +75,8 @@ class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         self._conversion.generate_top_level_aliases(sm, old_sym=plain_old_sym, **kwargs)
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
-        self._conversion.qualify_types(sm, **kwargs)
+        plain_old_sym = sm.current_scope.get_symbol(self.old_type.without_generics()).generic_impl
+        self._conversion.qualify_types(sm, old_sym=plain_old_sym, **kwargs)
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         self._conversion.load_super_scopes(sm, **kwargs)
