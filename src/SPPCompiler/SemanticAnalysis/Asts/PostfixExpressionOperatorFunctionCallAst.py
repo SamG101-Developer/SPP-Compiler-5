@@ -23,8 +23,13 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     function_argument_group: Asts.FunctionCallArgumentGroupAst = field(default=None)
     fold_token: Optional[Asts.TokenAst] = field(default=None)
 
-    _overload: Optional[Tuple[Scope, Asts.FunctionPrototypeAst]] = field(default=None, init=False, repr=False)
-    _is_async: Optional[Asts.Ast] = field(default=None, init=False, repr=False)
+    _overload: Optional[Tuple[Scope, Asts.FunctionPrototypeAst]] = field(default=None, repr=False)
+    _is_async: Optional[Asts.Ast] = field(default=None, repr=False)
+
+    def __copy__(self, memodict=None) -> PostfixExpressionOperatorFunctionCallAst:
+        return PostfixExpressionOperatorFunctionCallAst(
+            self.pos, copy.copy(self.generic_argument_group), copy.copy(self.function_argument_group),
+            fold_token=self.fold_token, _is_async=self._is_async, _overload=self._overload, _ctx=self._ctx)
 
     def __post_init__(self) -> None:
         self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=self.pos)
@@ -55,7 +60,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
-            transformed_lhs, transformed_function_call = AstFunctionUtils.convert_method_to_function_form(sm, function_owner_type, function_name, lhs, self)
+            transformed_lhs, transformed_function_call = AstFunctionUtils.convert_method_to_function_form(
+                sm, function_owner_type, function_name, lhs, self)
             transformed_function_call.determine_overload(sm, transformed_lhs, **kwargs)
             self._overload = transformed_function_call._overload
             self.function_argument_group = transformed_function_call.function_argument_group
@@ -125,9 +131,12 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     tm = ScopeManager(sm.global_scope, function_scope)
 
                     new_overload.generic_parameter_group.parameters = Seq()
-                    for p in new_overload.function_parameter_group.params:
+                    for p in new_overload.function_parameter_group.params.copy():
                         p.type = p.type.sub_generics(generic_arguments)
                         p.type.analyse_semantics(tm, **kwargs)
+
+                        # Remove the "Void" parameters from the signatures.
+
                     new_overload.return_type = new_overload.return_type.sub_generics(generic_arguments)
                     new_overload.return_type.analyse_semantics(tm, **kwargs)
 
