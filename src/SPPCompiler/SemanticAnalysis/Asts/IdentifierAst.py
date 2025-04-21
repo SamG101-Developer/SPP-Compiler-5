@@ -17,6 +17,9 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     value: str = field(default="")
 
+    def __deepcopy__(self, memodict=None):
+        return IdentifierAst(pos=self.pos, value=self.value)
+
     def __eq__(self, other: IdentifierAst | str) -> bool:
         # Check both ASTs are the same type and have the same value.
         if isinstance(other, str):
