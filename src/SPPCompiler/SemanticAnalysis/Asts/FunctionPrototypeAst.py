@@ -240,10 +240,9 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         return type(self)(
             self.pos, self.annotations, self.tok_fun,
             copy.deepcopy(self.name), copy.deepcopy(self.generic_parameter_group),
-            copy.deepcopy(self.function_parameter_group), self.tok_arrow,
-            copy.deepcopy(self.return_type), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
-            _ctx=self._ctx, _orig=self._orig, _scope=None, _abstract=self._abstract, _virtual=self._virtual,
-            _non_implemented=self._non_implemented)
+            copy.deepcopy(self.function_parameter_group), self.tok_arrow, copy.deepcopy(self.return_type),
+            copy.deepcopy(self.where_block), self.body, _ctx=self._ctx, _orig=self._orig, _scope=None,
+            _abstract=self._abstract, _virtual=self._virtual, _non_implemented=self._non_implemented)
 
 
 __all__ = [
