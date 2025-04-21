@@ -64,11 +64,8 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
             return x
         return TypeUnaryExpressionAst(self.pos, self.op, x)
 
-    def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
-        return self.rhs.get_generic(generic_name)
-
-    def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
-        return self.rhs.get_generic_parameter_for_argument(argument)
+    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
+        return self.rhs.get_corresponding_generic(that, generic_name)
 
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
         return self.rhs.contains_generic(generic_name)

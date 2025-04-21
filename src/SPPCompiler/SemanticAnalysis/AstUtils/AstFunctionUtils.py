@@ -482,8 +482,7 @@ class AstFunctionUtils:
 
                 # Check for inner match (a: Vec[T] vs a: Vec[BigInt]).
                 elif infer_target_name in infer_source:
-                    corresponding_generic_parameter = infer_target_type.get_generic_parameter_for_argument(generic_parameter_name)
-                    inferred_generic_argument = infer_source[infer_target_name].get_generic(corresponding_generic_parameter)
+                    inferred_generic_argument = infer_source[infer_target_name].get_corresponding_generic(infer_target_type, generic_parameter_name)
 
                 # Handle the match if it exists.
                 if inferred_generic_argument:
@@ -519,7 +518,7 @@ class AstFunctionUtils:
         for generic_parameter_name in generic_parameters.map_attr("name"):
             if generic_parameter_name not in inferred_generic_arguments:
                 raise SemanticErrors.GenericParameterNotInferredError().add(
-                    generic_parameter_name, owner).scopes(sm.current_scope, sm.current_scope.get_symbol(owner).scope.parent_module)
+                    generic_parameter_name, owner).scopes(sm.current_scope)  # , sm.current_scope.get_symbol(owner).scope.parent_module)
 
         # At this point, each inferred generic argument has been checked for conflicts, so it is safe to assume the
         # first type mapping per argument can be used. Extract these types into a new dictionary.

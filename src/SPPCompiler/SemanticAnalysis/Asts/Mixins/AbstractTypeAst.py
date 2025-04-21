@@ -77,20 +77,14 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @abstractmethod
-    def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
-        """!
-        Get the generic argument for a given generic parameter name. This is defined as a method because unary type
-        expressions needs to more through their namespace parts first (can't always access the actual type directly).
-        @param generic_name The name of the generic parameter to get.
-        @return The type ast of the generic argument, or None if the generic parameter is not found.
+    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
         """
-
-    @abstractmethod
-    def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
-        """!
-        Given a generic argument, get the first parameter whose name matches the argument. This is used for nested
-        generic inference, todo.
+        Given this type is Vec[Opt[T]], getting the T type from Vec[Opt[Str]] will get T=Str.
+        :param that:
+        :param generic_name:
+        :return:
         """
+        ...
 
     @abstractmethod
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:

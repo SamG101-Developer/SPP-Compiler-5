@@ -88,30 +88,47 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
         return TypeSingleAst(self.pos, name)
 
-    def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
-        def custom_iterate(t: Asts.TypeAst) -> Iterator[Asts.GenericArgumentAst]:
-            for g in t.type_parts()[0].generic_argument_group.get_type_args():  # comp args?
-                yield g
-                yield from custom_iterate(g.value)
+    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
+        """
+        GenericAttrClass[AA=testing::nested_generic_attr::GenericAttrClass[P=BB, AA=std::array::Arr[T=CC, n = 3, A=std::allocator::GlobalAlloc[E=CC]]]]
+        GenericAttrClass[AA=testing::nested_generic_attr::GenericAttrClass[P=std::vector::Vec[T=std::string::Str], AA=std::array::Arr[T=std::number::bigint::BigInt, n = 3, A=std::allocator::GlobalAlloc[E=std::number::bigint::BigInt]]]]
 
-        for g in custom_iterate(self):
-            if g.name == generic_name:
-                return g.value
-        return None
+        Given these two types, find a way to iterate through them to match CC against std::number::bigint::BigInt.
+        Note that it is not guaranteed that the generic arguments are in the same order per type.
 
-    def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
-        def custom_iterate(t: Asts.TypeAst) -> Iterator[Asts.GenericArgumentAst]:
-            for g in t.type_parts()[0].generic_argument_group.get_type_args():  # comp args?
-                yield g
-                yield from custom_iterate(g.value)
+        :param that: The other type to compare against.
+        :param generic_name: The target generic name to find.
+        :return: The corresponding generic value on the other type, or None if not found.
+        """
 
-        for g in custom_iterate(self):
-            if g.value == argument:
-                return g.name if isinstance(g, Asts.GenericArgumentNamedAst) else g.value
-            return None
+        def custom_iterate(t: Asts.TypeAst, depth: int) -> Iterator[Tuple[Asts.GenericArgumentAst, int]]:
+            for g in t.type_parts()[-1].generic_argument_group.get_type_args():
+                yield g, depth
+                yield from custom_iterate(g.value, depth + 1)
+
+        self_parts = custom_iterate(self, 0)
+        that_parts = custom_iterate(that, 0)
+
+        while True:
+            try:
+                # Get the next parts in the types.
+                s, sd = next(self_parts)
+                t, td = next(that_parts)
+
+                # Align in the type-tree (nested generics).
+                while td != sd:
+                    t, td = next(that_parts)
+
+                # Check for target generic.
+                if str(t.value) == str(generic_name):
+                    return s.value
+            except StopIteration:
+                break
+
         return None
 
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
+        # todo: change this to use a custom iterator as-well.
         return any(g == Asts.GenericIdentifierAst.from_type(generic_name) for g in self)
 
     def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, debug: bool = False) -> bool:
