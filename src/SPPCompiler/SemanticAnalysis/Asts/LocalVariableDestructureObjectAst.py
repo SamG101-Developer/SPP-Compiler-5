@@ -50,7 +50,8 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # Analyse the class and determine the attributes of the class.
         self.class_type.analyse_semantics(sm, skip_generic_check=True, **kwargs)
-        if not self.class_type.symbolic_eq(value_type := value.infer_type(sm, **kwargs), sm.current_scope, check_variant=self._from_pattern):
+        value_type = value.infer_type(sm, **kwargs)
+        if not value_type.symbolic_eq(self.class_type, sm.current_scope, check_variant=self._from_pattern):
             raise SemanticErrors.TypeMismatchError().add(value, value_type, self.class_type, self.class_type).scopes(sm.current_scope)
         attributes = sm.current_scope.get_symbol(self.class_type).type.body.members
 
