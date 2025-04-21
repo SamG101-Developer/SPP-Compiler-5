@@ -1519,7 +1519,8 @@ class SppParser:
             lambda: self.parse_characters("u32"),
             lambda: self.parse_characters("u64"),
             lambda: self.parse_characters("u128"),
-            lambda: self.parse_characters("u256"))
+            lambda: self.parse_characters("u256"),
+            lambda: self.parse_characters("uz"))
         return Asts.TypeSingleAst.from_token(p2)
 
     def parse_float_postfix_type(self) -> Asts.TypeAst:

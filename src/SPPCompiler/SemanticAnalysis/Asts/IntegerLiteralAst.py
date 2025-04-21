@@ -19,6 +19,7 @@ def _signed_integer_limits(n: int) -> Tuple[int, int]:
     return -pow(2, n - 1), pow(2, n - 1) - 1
 
 
+# todo: add usize to tests
 SIZE_MAPPING = {
     "i8": _signed_integer_limits(8),
     "u8": _unsigned_integer_limits(8),
@@ -31,7 +32,8 @@ SIZE_MAPPING = {
     "i128": _signed_integer_limits(128),
     "u128": _unsigned_integer_limits(128),
     "i256": _signed_integer_limits(256),
-    "u256": _unsigned_integer_limits(256)}
+    "u256": _unsigned_integer_limits(256),
+    "uz": _unsigned_integer_limits(64)}
 
 
 @dataclass
@@ -100,6 +102,8 @@ class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 return CommonTypes.I256(self.pos)
             case type if type.type_parts()[0].value == "u256":
                 return CommonTypes.U256(self.pos)
+            case type if type.type_parts()[0].value == "uz":
+                return CommonTypes.USize(self.pos)
             case _:
                 raise
 

@@ -38,6 +38,11 @@ class CommonTypes:
             f"std::number::u256::U256", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
+    def USize(pos: int):
+        return CodeInjection.inject_code(
+            f"std::number::usize::USize", SppParser.parse_type, pos_adjust=pos)
+
+    @staticmethod
     def I8(pos: int):
         return CodeInjection.inject_code(
             f"std::number::i8::I8", SppParser.parse_type, pos_adjust=pos)
