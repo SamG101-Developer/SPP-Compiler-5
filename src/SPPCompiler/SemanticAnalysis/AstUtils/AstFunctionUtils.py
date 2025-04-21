@@ -90,21 +90,20 @@ class AstFunctionUtils:
             lhs: Asts.ExpressionAst, fn: Asts.PostfixExpressionOperatorFunctionCallAst)\
             -> Tuple[Asts.PostfixExpressionAst, Asts.PostfixExpressionOperatorFunctionCallAst]:
 
-        """!
+        """
         This conversion function is used to normalize all different function calls, such as converting runtime function
         access into static access functions with self arguments. For example, "t.method(1)" becomes "T::method(t, 1)".
         Note that this will only be called for function calls of the form "t.method()", so the function owner type is
         always valid.
 
-        @param sm The scope manager to access function scopes.
-        @param function_owner_type The owning type of the function.
-        @param function_name The name of the method on the type.
-        @param lhs The AST representing the left-hand side of the function call (entire expression before "fn").
-        @param fn The AST representing the function call (parenthesis and arguments).
-
-        @return A 2-tuple containing the new function access, and the new function call. The function access is the
-        static accessor, such as "T::method", and the function call is the actual function call, such as "(t, 1)" (can
-        be applied to the function access).
+        :param sm: The scope manager to access function scopes.
+        :param function_owner_type: The owning type of the function.
+        :param function_name: The name of the method on the type.
+        :param lhs: The AST representing the left-hand side of the function call (entire expression before "fn").
+        :param fn: The AST representing the function call (parenthesis and arguments).
+        :return: A 2-tuple containing the new function access, and the new function call. The function access is the
+            static accessor, such as "T::method", and the function call is the actual function call, such as "(t, 1)"
+            (can be applied to the function access).
         """
 
         # Create an argument for self, which is the object being called (convention tested later).
@@ -120,11 +119,10 @@ class AstFunctionUtils:
             SppParser.parse_postfix_expression, pos_adjust=lhs.pos)
 
         # Create the function call with the object as the first argument (represents "self").
-        new_function_call = CodeInjection.inject_code(
-            f"{fn.generic_argument_group}({function_arguments.join(", ")}){fn.fold_token or ""}",
-            SppParser.parse_postfix_op_function_call, pos_adjust=fn.pos)
+        new_function_call = copy.copy(fn)
 
         # Tell the "self" argument what type it is (keyword "self" inference requires outer AST knowledge).
+        new_function_call.function_argument_group.arguments = function_arguments
         new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(sm)
         new_function_call.function_argument_group.arguments[0].value.pos = lhs.lhs.pos
 
@@ -269,7 +267,8 @@ class AstFunctionUtils:
                         if new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
                             if hs(new_func) == hs(old_func) and sc(new_func) is sc(old_func):
                                 return old_func
-            return None
+
+        return None
 
     @staticmethod
     def name_function_arguments(
@@ -318,10 +317,11 @@ class AstFunctionUtils:
             # signature. Copy specially assigned "self" types if present.
             else:
                 parameter_name = parameter_names.pop(0)
-                named_argument = f"${parameter_name}={unnamed_argument}"
-                named_argument = CodeInjection.inject_code(named_argument, SppParser.parse_function_call_argument_named, pos_adjust=unnamed_argument.pos)
-                named_argument.name = parameter_name
-                named_argument._type_from_self = unnamed_argument._type_from_self
+                named_argument = Asts.FunctionCallArgumentNamedAst(
+                    name=parameter_name,
+                    convention=unnamed_argument.convention,
+                    value=unnamed_argument.value,
+                    _type_from_self=unnamed_argument._type_from_self)
                 arguments.replace(unnamed_argument, named_argument, 1)
 
     @staticmethod
