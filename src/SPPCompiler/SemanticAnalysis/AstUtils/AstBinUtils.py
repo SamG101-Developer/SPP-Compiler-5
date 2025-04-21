@@ -4,6 +4,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.Utils.Sequence import Seq
 
 BINARY_METHODS = {
     SppTokenType.TkPlus: "add", SppTokenType.TkMinus: "sub", SppTokenType.TkMultiply: "mul", SppTokenType.TkDivide: "div",
@@ -102,7 +103,8 @@ class AstBinUtils:
     def _convert_binary_expression_to_function_call(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst:
         method_name = BINARY_METHODS.get(ast.op.token_type, None)
         function_call_ast = CodeInjection.inject_code(
-            f"{ast.lhs}.{method_name}({ast.rhs})", SppParser.parse_postfix_expression, pos_adjust=ast.pos)
+            f"{ast.lhs}.{method_name}()", SppParser.parse_postfix_expression, pos_adjust=ast.pos)
+        function_call_ast.op.function_argument_group.arguments = Seq([Asts.FunctionCallArgumentUnnamedAst(value=ast.rhs)])
         return function_call_ast
 
     @staticmethod
