@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class SymbolTable:
     _table: Dict[Asts.IdentifierAst | Asts.GenericIdentifierAst, Symbol]
-    _deferment_queue: defaultdict[Asts.IdentifierAst | Asts.GenericIdentifierAst, List[Callable]]
+    _deferment_queue: defaultdict[str, List[Callable]]
 
     def __init__(self, table: Optional[Dict[Asts.IdentifierAst | Asts.GenericIdentifierAst, Symbol]] = None):
         self._table = table or {}
@@ -23,10 +23,10 @@ class SymbolTable:
         self._table[symbol.name] = symbol
 
         # Apply any post-symbol creation steps to the symbol.
-        if symbol.name in self._deferment_queue:
-            for callback in self._deferment_queue[symbol.name]:
+        if symbol.name.value in self._deferment_queue:
+            for callback in self._deferment_queue[symbol.name.value]:
                 callback(symbol)
-            del self._deferment_queue[symbol.name]
+            del self._deferment_queue[symbol.name.value]
 
     def rem(self, symbol_name: Asts.IdentifierAst) -> None:
         # Remove a symbol from the table by symbol name.
@@ -50,7 +50,7 @@ class SymbolTable:
 
     def add_deferred_callback(self, symbol_name: Asts.IdentifierAst | Asts.GenericIdentifierAst, callback: Callable) -> None:
         # Add a deferred callback.
-        self._deferment_queue[symbol_name].append(callback)
+        self._deferment_queue[symbol_name.value].append(callback)
 
     def __json__(self) -> Dict:
         # Dump the SymbolTable as a JSON object.
