@@ -98,7 +98,8 @@ class TypeSymbol:
     def __json__(self) -> Dict:
         # Dump the TypeSymbol as a JSON object.
         return {
-            "what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else ""}
+            "what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
+            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "id": id(self)}
 
     def __str__(self) -> str:
         # Dump the TypeSymbol as a JSON string.
@@ -114,8 +115,8 @@ class TypeSymbol:
     @property
     def fq_name(self) -> Asts.TypeAst:
         fq_name = Asts.TypeSingleAst.from_generic_identifier(self.name)
-        if self.type:
-            fq_name = fq_name.sub_generics(Asts.GenericArgumentGroupAst.from_parameter_group(self.type.generic_parameter_group.parameters).arguments)
+        # if self.type:
+        #     fq_name = fq_name.sub_generics(Asts.GenericArgumentGroupAst.from_parameter_group(self.type.generic_parameter_group.parameters).arguments)
 
         if self.is_generic:
             return fq_name
