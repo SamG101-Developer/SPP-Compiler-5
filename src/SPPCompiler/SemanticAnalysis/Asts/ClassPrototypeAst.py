@@ -102,8 +102,8 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         sym = self._generate_symbols(sm)
 
         # Generate the generic parameters and attributes of the class.
-        for p in self.generic_parameter_group.parameters:
-            p.generate_top_level_scopes(sm)
+        for g in self.generic_parameter_group.parameters:
+            g.generate_top_level_scopes(sm)
         self.body.generate_top_level_scopes(sm)
 
         # Move out of the type scope.
