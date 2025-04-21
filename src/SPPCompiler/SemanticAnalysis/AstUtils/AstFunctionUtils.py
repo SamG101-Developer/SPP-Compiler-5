@@ -495,7 +495,9 @@ class AstFunctionUtils:
         # Add any default generic arguments in that were missing.
         for optional_generic_parameter in optional_generic_parameters:
             if optional_generic_parameter.name not in inferred_generic_arguments:
-                default = sm.current_scope.get_symbol(owner).scope.get_symbol(optional_generic_parameter.default).fq_name
+                default = optional_generic_parameter.default
+                if isinstance(owner, Asts.TypeAst):
+                    default = sm.current_scope.get_symbol(owner).scope.get_symbol(default).fq_name
                 inferred_generic_arguments[optional_generic_parameter.name].append(default)
 
         # Check each generic argument name only has one unique inferred type. This is to prevent conflicts for a generic

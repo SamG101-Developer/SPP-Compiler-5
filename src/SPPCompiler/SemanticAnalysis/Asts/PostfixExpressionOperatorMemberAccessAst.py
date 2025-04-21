@@ -46,15 +46,20 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         lhs_type = lhs.infer_type(sm)
         lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
-        # Todo: wrap with Opt[T] for array access.
+        # Todo: wrap with Opt[T] for array access => Index operator to this is only for tuples anyways?
         # Numerical access -> get the nth generic argument of the tuple.
         if isinstance(self.field, Asts.TokenAst):
             element_type = AstTypeUtils.get_nth_type_of_indexable_type(sm, int(self.field.token_data), lhs_type)
             return element_type
 
         # Accessing a member from the scope by the identifier.
-        elif isinstance(self.field, Asts.IdentifierAst):
-            attribute_type = lhs_symbol.scope.get_symbol(self.field).type
+        field_symbol = lhs_symbol.scope.get_symbol(self.field)
+        if isinstance(self.field, Asts.IdentifierAst) and isinstance(field_symbol, VariableSymbol):
+            attribute_type = field_symbol.type
+            return attribute_type
+
+        elif isinstance(self.field, Asts.IdentifierAst) and isinstance(field_symbol, NamespaceSymbol):
+            attribute_type = field_symbol.name
             return attribute_type
 
         raise NotImplementedError("Unknown member access type.")

@@ -116,7 +116,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     explicit_generic_arguments=generic_arguments + owner_scope_generic_arguments,
                     infer_source=arguments.map(lambda a: (a.name, a.infer_type(sm, **kwargs))).dict(),
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
-                    sm=sm, owner=lhs,
+                    sm=sm, owner=lhs.infer_type(sm, **kwargs),
                     variadic_parameter_identifier=function_overload.function_parameter_group.get_variadic_param().extract_name if is_variadic else None)
 
                 # Create a new overload with the generic arguments applied.
