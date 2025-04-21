@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import json
 from dataclasses import dataclass, field
-from typing import Dict, Optional, TYPE_CHECKING, Callable
+from typing import Dict, Optional, TYPE_CHECKING
 
 import json_fix
 
@@ -125,6 +125,9 @@ class TypeSymbol:
 
         if self.name.value[0] == "$":
             return fq_name
+
+        if self.name.value == "Self":
+            return self.scope.type_symbol.fq_name
 
         # for i, generic in enumerate(self.name.generic_argument_group.arguments.copy()):
         #     if isinstance(generic, Asts.GenericTypeArgumentAst):
