@@ -24,6 +24,18 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
     def __eq__(self, other: PostfixExpressionOperatorMemberAccessAst) -> bool:
         return self.tok_access == other.tok_access and self.field == other.field
 
+    @staticmethod
+    def new_runtime(pos: int, new_field: Asts.IdentifierAst | Asts.TokenAst) -> PostfixExpressionOperatorMemberAccessAst:
+        return PostfixExpressionOperatorMemberAccessAst(
+            tok_access=Asts.TokenAst.raw(pos=pos, token_type=SppTokenType.TkDot),
+            field=new_field)
+
+    @staticmethod
+    def new_static(pos: int, new_field: Asts.IdentifierAst) -> PostfixExpressionOperatorMemberAccessAst:
+        return PostfixExpressionOperatorMemberAccessAst(
+            tok_access=Asts.TokenAst.raw(pos=pos, token_type=SppTokenType.TkDoubleColon),
+            field=new_field)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -44,7 +56,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
 
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         lhs_type = lhs.infer_type(sm)
-        lhs_symbol = sm.current_scope.get_symbol(lhs_type)
+        lhs_symbol = sm.current_scope.get_symbol(lhs_type) if not isinstance(lhs_type, NamespaceSymbol) else lhs_type
 
         # Todo: wrap with Opt[T] for array access => Index operator to this is only for tuples anyways?
         # Numerical access -> get the nth generic argument of the tuple.
@@ -52,17 +64,19 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
             element_type = AstTypeUtils.get_nth_type_of_indexable_type(sm, int(self.field.token_data), lhs_type)
             return element_type
 
+        # Get the field symbol
+        field_symbol = lhs_symbol.scope.get_symbol(self.field, exclusive=True)
+
         # Accessing a member from the scope by the identifier.
-        field_symbol = lhs_symbol.scope.get_symbol(self.field)
         if isinstance(self.field, Asts.IdentifierAst) and isinstance(field_symbol, VariableSymbol):
             attribute_type = field_symbol.type
             return attribute_type
 
         elif isinstance(self.field, Asts.IdentifierAst) and isinstance(field_symbol, NamespaceSymbol):
-            attribute_type = field_symbol.name
+            attribute_type = field_symbol
             return attribute_type
 
-        raise NotImplementedError("Unknown member access type.")
+        raise NotImplementedError(f"Unknown member access type: {self.field} {type(self.field)}")
 
     def analyse_semantics(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
 
