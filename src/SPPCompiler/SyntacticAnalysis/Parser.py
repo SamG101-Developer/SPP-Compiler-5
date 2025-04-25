@@ -18,11 +18,11 @@ class SppParser:
     _error_formatter: ErrorFormatter
     _injection_adjust_pos: int
 
-    _identifier_characters: List[SppTokenType]
-    _upper_identifier_characters: List[SppTokenType]
-    _skip_all_characters: List[SppTokenType]
-    _skip_newline_character: SppTokenType
-    _skip_whitespace_character: SppTokenType
+    _identifier_characters: List[RawTokenType]
+    _upper_identifier_characters: List[RawTokenType]
+    _skip_all_characters: List[RawTokenType]
+    _skip_newline_character: RawTokenType
+    _skip_whitespace_character: RawTokenType
 
     def __init__(self, tokens: List[RawToken], file_name: str = "", error_formatter: Optional[ErrorFormatter] = None, injection_adjust_pos: int = 0) -> None:
         self._pos = 0
@@ -78,14 +78,14 @@ class SppParser:
                 self._pos = temp_pos
                 return result
 
-    def parse_one_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Seq[T]:
+    def parse_one_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Optional[Seq[T]]:
         result = self.parse_zero_or_more(method, separator)
         if result.length < 1:
             self.store_error(self._pos, "Expected at least one element")
             return None
         return result
 
-    def parse_two_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Seq[T]:
+    def parse_two_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Optional[Seq[T]]:
         result = self.parse_zero_or_more(method, separator)
         if result.length < 2:
             self.store_error(self._pos, "Expected at least two elements")
@@ -107,30 +107,30 @@ class SppParser:
             self._error.throw(self._error_formatter)
         return root
 
-    def parse_root(self) -> Asts.ModulePrototypeAst:
+    def parse_root(self) -> Optional[Asts.ModulePrototypeAst]:
         p1 = self.parse_once(self.parse_module_prototype)
         if p1 is None: return None
         p2 = self.parse_eof()
         if p2 is None: return None
         return p1
 
-    def parse_eof(self) -> Asts.TokenAst:
+    def parse_eof(self) -> Optional[Asts.TokenAst]:
         return self.parse_token_raw(RawTokenType.EndOfFile, SppTokenType.NoToken)
 
     # ===== MODULES =====
 
-    def parse_module_prototype(self) -> Asts.ModulePrototypeAst:
+    def parse_module_prototype(self) -> Optional[Asts.ModulePrototypeAst]:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_module_implementation)
         if p1 is None: return None
         return Asts.ModulePrototypeAst(c1, p1)
 
-    def parse_module_implementation(self) -> Asts.ModuleImplementationAst:
+    def parse_module_implementation(self) -> Optional[Asts.ModuleImplementationAst]:
         c1 = self.current_pos()
         p1 = self.parse_zero_or_more(self.parse_module_member, self.parse_newline)
         return Asts.ModuleImplementationAst(c1, p1)
 
-    def parse_module_member(self) -> Asts.ModuleMemberAst:
+    def parse_module_member(self) -> Optional[Asts.ModuleMemberAst]:
         p1 = self.parse_alternate(
             self.parse_function_prototype,
             self.parse_class_prototype,
@@ -1345,6 +1345,7 @@ class SppParser:
     def parse_postfix_op(self) -> Asts.PostfixExpressionOperatorAst:
         p1 = self.parse_alternate(
             self.parse_postfix_op_function_call,
+            self.parse_postfix_op_index,
             self.parse_postfix_op_not_keyword,
             self.parse_postfix_op_member_access,
             self.parse_postfix_op_early_return)
@@ -1352,11 +1353,22 @@ class SppParser:
 
     def parse_postfix_op_function_call(self) -> Asts.PostfixExpressionOperatorFunctionCallAst:
         c1 = self.current_pos()
-        p1 = self.parse_optional(self.parse_generic_arguments) or Asts.GenericArgumentGroupAst(pos=c1)
+        p1 = self.parse_optional(self.parse_generic_arguments)
         p2 = self.parse_once(self.parse_function_call_arguments)
         if p2 is None: return None
         p3 = self.parse_optional(self.parse_token_double_dot)
         return Asts.PostfixExpressionOperatorFunctionCallAst(c1, p1, p2, p3)
+
+    def parse_postfix_op_index(self) -> Asts.PostfixExpressionOperatorIndexAst:
+        c1 = self.current_pos()
+        p1 = self.parse_once(self.parse_token_left_square_bracket)
+        if p1 is None: return None
+        p2 = self.parse_once(self.parse_keyword_mut)
+        p3 = self.parse_once(self.parse_expression)
+        if not p3: return None
+        p4 = self.parse_once(self.parse_token_right_square_bracket)
+        if p4 is None: return None
+        return Asts.PostfixExpressionOperatorIndexAst(c1, p1, p2, p3, p4)
 
     def parse_postfix_op_member_access(self) -> Asts.PostfixExpressionOperatorMemberAccessAst:
         p1 = self.parse_alternate(
