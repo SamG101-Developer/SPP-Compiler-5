@@ -203,18 +203,18 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Subclasses will finish analysis and exit the scope.
 
-    def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
-        sm.move_to_next_scope()
-
-        # Generate the LLVM definition for the function prototype.
-        llvm_parameter_types = self.function_parameter_group.generate_llvm_definitions(sm, llvm_module)
-        llvm_return_type = self.return_type.generate_llvm_definitions(sm, llvm_module)
-        llvm_function_type = llvm.FunctionType(llvm_return_type, llvm_parameter_types)
-        llvm_function = llvm.Function(llvm_module, llvm_function_type, self.print_signature(AstPrinter()))
-
-        # Use the FunctionImplementationAst to generate the LLVM declaration.
-        self.body.generate_llvm_definitions(sm, llvm_module, llvm_function=llvm_function)
-        sm.move_out_of_current_scope()
+    # def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+    #     sm.move_to_next_scope()
+    #
+    #     # Generate the LLVM definition for the function prototype.
+    #     llvm_parameter_types = self.function_parameter_group.generate_llvm_definitions(sm, llvm_module)
+    #     llvm_return_type = self.return_type.generate_llvm_definitions(sm, llvm_module)
+    #     llvm_function_type = llvm.FunctionType(llvm_return_type, llvm_parameter_types)
+    #     llvm_function = llvm.Function(llvm_module, llvm_function_type, self.print_signature(AstPrinter()))
+    #
+    #     # Use the FunctionImplementationAst to generate the LLVM declaration.
+    #     self.body.generate_llvm_definitions(sm, llvm_module, llvm_function=llvm_function)
+    #     sm.move_out_of_current_scope()
 
     def _deduce_mock_class_type(self) -> Asts.TypeAst:
         # Module-level functions are always FunRef.

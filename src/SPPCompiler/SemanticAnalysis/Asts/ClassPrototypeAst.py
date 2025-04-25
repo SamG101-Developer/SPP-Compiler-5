@@ -2,11 +2,8 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Type
+from typing import Dict, Optional, Type
 
-from llvmlite import ir as llvm
-
-from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
@@ -163,39 +160,39 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         if "no_scope" not in kwargs:
             sm.move_out_of_current_scope()
 
-    def generate_llvm_declarations(self, sm: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
-        # Move into the class scope.
-        sm.move_to_next_scope()
-        cls_symbol = sm.current_scope.type_symbol
-
-        # Create the class type in the LLVM module (no implementation).
-        llvm_type_name = str(cls_symbol.fq_name)
-        llvm_type = llvm_module.context.get_identified_type(llvm_type_name)
-        cls_symbol.llvm_info = LlvmSymbolInfo(llvm_type=llvm_type, llvm_module=llvm_module)
-
-        # Move out of the class scope.
-        sm.move_out_of_current_scope()
-
-    def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
-        # Move into the class scope.
-        sm.move_to_next_scope()
-        cls_symbol = sm.current_scope.type_symbol
-
-        # Create the super class types for the class's memory layout.
-        super_class_types = []
-        for super_class in cls_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s._ast, ClassPrototypeAst)):
-            super_class_types.append(super_class.type_symbol)
-
-        # Create the attribute types for the class's memory layout.
-        attribute_types = []
-        for attribute in cls_symbol.scope.all_symbols(True).filter_to_type():
-            attribute_types.append(attribute.type.llvm_info.llvm_type)
-
-        # Set the body of the LLVM type.
-        cls_symbol.llvm_info.llvm_type.set_body(*super_class_types, *attribute_types)
-
-        # Move out of the class scope.
-        sm.move_out_of_current_scope()
+    # def generate_llvm_declarations(self, sm: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
+    #     # Move into the class scope.
+    #     sm.move_to_next_scope()
+    #     cls_symbol = sm.current_scope.type_symbol
+    #
+    #     # Create the class type in the LLVM module (no implementation).
+    #     llvm_type_name = str(cls_symbol.fq_name)
+    #     llvm_type = llvm_module.context.get_identified_type(llvm_type_name)
+    #     cls_symbol.llvm_info = LlvmSymbolInfo(llvm_type=llvm_type, llvm_module=llvm_module)
+    #
+    #     # Move out of the class scope.
+    #     sm.move_out_of_current_scope()
+    #
+    # def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+    #     # Move into the class scope.
+    #     sm.move_to_next_scope()
+    #     cls_symbol = sm.current_scope.type_symbol
+    #
+    #     # Create the super class types for the class's memory layout.
+    #     super_class_types = []
+    #     for super_class in cls_symbol.scope._direct_sup_scopes.filter(lambda s: isinstance(s._ast, ClassPrototypeAst)):
+    #         super_class_types.append(super_class.type_symbol)
+    #
+    #     # Create the attribute types for the class's memory layout.
+    #     attribute_types = []
+    #     for attribute in cls_symbol.scope.all_symbols(True).filter_to_type():
+    #         attribute_types.append(attribute.type.llvm_info.llvm_type)
+    #
+    #     # Set the body of the LLVM type.
+    #     cls_symbol.llvm_info.llvm_type.set_body(*super_class_types, *attribute_types)
+    #
+    #     # Move out of the class scope.
+    #     sm.move_out_of_current_scope()
 
 
 __all__ = [

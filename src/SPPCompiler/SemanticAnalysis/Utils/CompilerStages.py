@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Union
 
-from llvmlite import ir as llvm
+# from llvmlite import ir as llvm
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -21,11 +21,11 @@ type PreProcessingContext = Union[
 
 class CompilerStages:
     def pre_process(self, ctx: PreProcessingContext) -> None:
-        """!
+        """
         The preprocessor stage performs mutations on ASTs, introduces new ASTs, and removes some ASTs. This allows for
         single-method processing of multiple ASTs, such as functions vs types with function classes superimposed over
         them. This stage directly affects what symbols are generated.
-        @param context The pre-processing context that owns the AST being pre-processed.
+        :param ctx: The pre-processing context that owns the AST being pre-processed.
         """
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
@@ -75,22 +75,22 @@ class CompilerStages:
         @param kwargs Additional keyword arguments.
         """
 
-    def generate_llvm_declarations(self, sm: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
-        """!
-        The LLVM declaration generation stage is the penultimate stage of the compiler. This stage generates the LLVM IR
-        declarations for the module, with no implementations. This is to load all the symbols into the LLVM context.
-        @todo This stage is not yet implemented.
-        """
-
-    def generate_llvm_definitions(
-            self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None,
-            block: llvm.Block = None, **kwargs) -> Any:
-        """!
-        The LLVM definition generation stage is the final stage of the compiler. This stage generates the LLVM IR
-        definitions for the module, with implementations. This is to generate the actual code for the module. All the
-        definitions will have associated declarations from the previous stage.
-        @todo This stage is not yet implemented.
-        """
+    # def generate_llvm_declarations(self, sm: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
+    #     """!
+    #     The LLVM declaration generation stage is the penultimate stage of the compiler. This stage generates the LLVM IR
+    #     declarations for the module, with no implementations. This is to load all the symbols into the LLVM context.
+    #     @todo This stage is not yet implemented.
+    #     """
+    #
+    # def generate_llvm_definitions(
+    #         self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None,
+    #         block: llvm.Block = None, **kwargs) -> Any:
+    #     """!
+    #     The LLVM definition generation stage is the final stage of the compiler. This stage generates the LLVM IR
+    #     definitions for the module, with implementations. This is to generate the actual code for the module. All the
+    #     definitions will have associated declarations from the previous stage.
+    #     @todo This stage is not yet implemented.
+    #     """
 
 
 __all__ = [

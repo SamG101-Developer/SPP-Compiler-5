@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
-
-from llvmlite import ir as llvm
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
@@ -11,6 +8,9 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
+
+
+# from llvmlite import ir as llvm
 
 
 @dataclass(slots=True)
@@ -51,17 +51,17 @@ class FunctionImplementationAst(Asts.Ast):
         for m in self.members:
             m.analyse_semantics(sm, **kwargs)
 
-    def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
-        # Create an entry block to start the function.
-        entry_block = llvm_function.append_basic_block(name="entry")
-        builder = llvm.IRBuilder(entry_block)
-
-        # Generate the LLVM definitions for each member of the class implementation.
-        for member in self.members:
-            member.generate_llvm_definitions(sm, llvm_module, builder, entry_block, **kwargs)
-
-        # Return the entry block to start the function.
-        return entry_block
+    # def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+    #     # Create an entry block to start the function.
+    #     entry_block = llvm_function.append_basic_block(name="entry")
+    #     builder = llvm.IRBuilder(entry_block)
+    #
+    #     # Generate the LLVM definitions for each member of the class implementation.
+    #     for member in self.members:
+    #         member.generate_llvm_definitions(sm, llvm_module, builder, entry_block, **kwargs)
+    #
+    #     # Return the entry block to start the function.
+    #     return entry_block
 
 
 __all__ = [

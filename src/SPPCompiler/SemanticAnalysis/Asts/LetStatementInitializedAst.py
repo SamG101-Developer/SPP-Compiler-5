@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
-
-from llvmlite import ir as llvm
+from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
@@ -12,6 +10,9 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+
+
+# from llvmlite import ir as llvm
 
 
 @dataclass(slots=True)
@@ -74,20 +75,20 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         kwargs.pop("explicit_type", None)
         self.assign_to.analyse_semantics(sm, value=self.value, explicit_type=self.explicit_type, **kwargs)
 
-    def generate_llvm_definitions(
-            self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None,
-            block: llvm.Block = None, **kwargs) -> Any:
-
-        for var, val in self.assign_to._new_asts:
-            # Get the type of the variable and allocate memory for it.
-            var_type = sm.current_scope.get_symbol(var.name).type
-            llvm_type = sm.current_scope.get_symbol(var_type).llvm_info.llvm_type
-            llvm_alloc = builder.alloca(llvm_type, name=str(var.name))
-
-            # Convert the value to an LLVM constant and store it in the allocated memory.
-            llvm_value = val.generate_llvm_definitions(sm, llvm_module, None, None, **kwargs)
-            llvm_var = llvm.Constant(llvm_type, llvm_value)
-            builder.store(llvm_var, llvm_alloc)
+    # def generate_llvm_definitions(
+    #         self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None,
+    #         block: llvm.Block = None, **kwargs) -> Any:
+    #
+    #     for var, val in self.assign_to._new_asts:
+    #         # Get the type of the variable and allocate memory for it.
+    #         var_type = sm.current_scope.get_symbol(var.name).type
+    #         llvm_type = sm.current_scope.get_symbol(var_type).llvm_info.llvm_type
+    #         llvm_alloc = builder.alloca(llvm_type, name=str(var.name))
+    #
+    #         # Convert the value to an LLVM constant and store it in the allocated memory.
+    #         llvm_value = val.generate_llvm_definitions(sm, llvm_module, None, None, **kwargs)
+    #         llvm_var = llvm.Constant(llvm_type, llvm_value)
+    #         builder.store(llvm_var, llvm_alloc)
 
 
 __all__ = [
