@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import NoReturn, Optional, Tuple, TYPE_CHECKING
 
 from colorama import Fore, Style
-from fastenum import Enum
+from enum import Enum
 
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
