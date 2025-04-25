@@ -21,6 +21,13 @@ class GenericTypeParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
         # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericTypeParameterRequiredAst) and self.name == other.name
 
+    def __str__(self) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            str(self.name),
+            str(self.constraints)]
+        return "".join(string)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

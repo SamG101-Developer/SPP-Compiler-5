@@ -33,13 +33,13 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
             tok_assign=self.tok_assign,
             value=fast_deepcopy(self.value))
 
+    def __str__(self) -> str:
+        string = [str(self.name), str(self.tok_assign), str(self.value)]
+        return "".join(string)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        # Print the AST with auto-formatting.
-        string = [
-            self.name.print(printer),
-            self.tok_assign.print(printer),
-            self.value.print(printer)]
+        string = [self.name.print(printer), self.tok_assign.print(printer), self.value.print(printer)]
         return "".join(string)
 
     @property

@@ -21,7 +21,6 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
         self._variant = "Named"
         self.value = self.value or self.name
-        assert self.name is not None
 
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -37,6 +36,15 @@ class GenericArgumentGroupAst(Asts.Ast):
         assert isinstance(item, str), type(item)
         return self.arguments.find(lambda a: Asts.IdentifierAst.from_type(a.name).value == item)
 
+    def __str__(self) -> str:
+        if self.arguments:
+            string = [
+                str(self.tok_l),
+                ", ".join(self.arguments.map(str)),
+                str(self.tok_r)]
+            return "".join(string)
+        return ""
+
     @staticmethod
     def from_parameter_group(parameters: Seq[Asts.GenericParameterAst]) -> GenericArgumentGroupAst:
 
@@ -44,7 +52,7 @@ class GenericArgumentGroupAst(Asts.Ast):
             **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__args__},
             **{g: Asts.GenericTypeArgumentNamedAst for g in Asts.GenericTypeParameterAst.__args__}}
 
-        arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)](name=copy.deepcopy(p.name), value=p.name))
+        arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)](name=p.name, value=p.name))
         return GenericArgumentGroupAst(arguments=arguments)
 
     @staticmethod
@@ -65,9 +73,8 @@ class GenericArgumentGroupAst(Asts.Ast):
                 self.tok_l.print(printer),
                 self.arguments.print(printer, ", "),
                 self.tok_r.print(printer)]
-        else:
-            string = []
-        return "".join(string)
+            return "".join(string)
+        return ""
 
     @property
     def pos_end(self) -> int:

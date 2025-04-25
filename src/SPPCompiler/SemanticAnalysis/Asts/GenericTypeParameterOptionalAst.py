@@ -25,12 +25,19 @@ class GenericTypeParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericTypeParameterOptionalAst) and self.name == other.name
 
+    def __str__(self) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            str(self.name),
+            str(self.tok_assign),
+            str(self.default)]
+        return "".join(string)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
             self.name.print(printer),
-            # self.constraints.print(printer) + " " * (self.constraints is not None),
             self.tok_assign.print(printer),
             self.default.print(printer)]
         return "".join(string)

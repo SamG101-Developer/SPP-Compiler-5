@@ -16,6 +16,9 @@ class TypeUnaryOperatorBorrowAst(Asts.Ast):
     def __hash__(self) -> int:
         return hash(str(self.convention))
 
+    def __str__(self) -> str:
+        return str(self.convention)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return self.convention.print(printer)

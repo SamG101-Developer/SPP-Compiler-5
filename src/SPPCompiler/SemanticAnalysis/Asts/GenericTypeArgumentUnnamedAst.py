@@ -23,9 +23,11 @@ class GenericTypeArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         # Create a deep copy of the AST.
         return GenericTypeArgumentUnnamedAst(pos=self.pos, value=fast_deepcopy(self.value))
 
+    def __str__(self) -> str:
+        return str(self.value)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        # Print the AST with auto-formatting.
         return self.value.print(printer)
 
     @property
