@@ -6,8 +6,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 
 
 @dataclass(slots=True)
@@ -37,14 +36,11 @@ class LetStatementUninitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
-        return CommonTypes.Void(self.pos)
+        return CommonTypesPrecompiled.VOID
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the variable's type.
         self.type.analyse_semantics(sm, **kwargs)
-
-        # Check the type isn't the void type.
-        void_type = CommonTypes.Void(self.pos)
 
         # Recursively analyse the variable.
         self.assign_to.analyse_semantics(sm, value=self.type, **kwargs)

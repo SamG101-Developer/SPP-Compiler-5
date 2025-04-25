@@ -219,19 +219,19 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def _deduce_mock_class_type(self) -> Asts.TypeAst:
         # Module-level functions are always FunRef.
         if isinstance(self._ctx, Asts.ModulePrototypeAst) or not self.function_parameter_group.get_self_param():
-            return CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
+            return CommonTypes.FunRef2(self.pos, CommonTypes.Tup2(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
 
         # Class methods with "self" are the FunMov type.
         if self.function_parameter_group.get_self_param().convention is None:
-            return CommonTypes.FunMov(self.pos, CommonTypes.Tup(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
+            return CommonTypes.FunMov2(self.pos, CommonTypes.Tup2(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
 
         # Class methods with "&mut self" are the FunMut type.
         if isinstance(self.function_parameter_group.get_self_param().convention, Asts.ConventionMutAst):
-            return CommonTypes.FunMut(self.pos, CommonTypes.Tup(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
+            return CommonTypes.FunMut2(self.pos, CommonTypes.Tup2(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
 
         # Class methods with "&self" are the FunRef type.
         if isinstance(self.function_parameter_group.get_self_param().convention, Asts.ConventionRefAst):
-            return CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
+            return CommonTypes.FunRef2(self.pos, CommonTypes.Tup2(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
 
         raise NotImplementedError(f"Unknown convention for function {self.name}")
 
