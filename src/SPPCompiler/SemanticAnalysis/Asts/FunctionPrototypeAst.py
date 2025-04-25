@@ -130,6 +130,11 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         sm.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
         Asts.Ast.generate_top_level_scopes(self, sm)
 
+        # If there is a self parameter in a free function, throw an error.
+        if self.function_parameter_group.get_self_param() and isinstance(self._ctx, Asts.ModulePrototypeAst):
+            raise SemanticErrors.ParameterSelfOutsideSuperimpositionError().add(
+                self.function_parameter_group.get_self_param(), self).scopes(sm.current_scope)
+
         # Run top level scope logic for the annotations.
         for a in self.annotations:
             a.generate_top_level_scopes(sm)
