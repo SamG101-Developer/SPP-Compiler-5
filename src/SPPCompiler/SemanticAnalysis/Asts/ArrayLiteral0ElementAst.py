@@ -76,7 +76,7 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Create the standard "std::array::Arr" type, with generic arguments.
         size = Asts.IntegerLiteralAst.from_token(self.size, self.size.pos)
-        array_type = CommonTypes.Arr(self.pos, self.elem_type, size)
+        array_type = CommonTypes.Arr2(self.pos, self.elem_type, size)
         array_type.analyse_semantics(sm, **kwargs)
         return array_type
 
