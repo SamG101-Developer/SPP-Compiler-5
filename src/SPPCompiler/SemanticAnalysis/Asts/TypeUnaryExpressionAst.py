@@ -66,10 +66,6 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def without_generics(self) -> Self:
         return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics())
 
-    def substitute_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
-        self.rhs.substitute_generics(generic_arguments)
-        return self
-
     def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         x = self.rhs.substituted_generics(generic_arguments)
         if isinstance(x, Asts.TypeUnaryExpressionAst) and isinstance(x.op, Asts.TypeUnaryOperatorBorrowAst):
@@ -79,8 +75,8 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
         return self.rhs.get_corresponding_generic(that, generic_name)
 
-    def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
-        return self.rhs.contains_generic(generic_name)
+    def contains_generic(self, generic_type: Asts.TypeSingleAst) -> bool:
+        return self.rhs.contains_generic(generic_type)
 
     def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, debug: bool = False) -> bool:
         # Convention mismatch (except for allowing "&mut" to coerce into "&")

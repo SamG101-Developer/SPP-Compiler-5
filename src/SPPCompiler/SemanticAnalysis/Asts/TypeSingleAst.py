@@ -84,8 +84,8 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     def without_generics(self) -> Self:
         return TypeSingleAst(self.pos, self.name.without_generics())
 
-    def substitute_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
-        name = self.name
+    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        name = fast_deepcopy(self.name)
         for generic_name, generic_type in generic_arguments.map(lambda a: (a.name, a.value)):
             if self == generic_name:
                 return generic_type
@@ -96,10 +96,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             for g in name.generic_argument_group.get_comp_args().filter(lambda gg: isinstance(gg.value, Asts.TypeAst)):
                 g.value = g.value.substituted_generics(generic_arguments)
 
-        return self
-
-    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
-        return fast_deepcopy(self).substitute_generics(generic_arguments)
+        return TypeSingleAst(pos=self.pos, name=name)
 
     def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
         """
@@ -141,9 +138,9 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
         return None
 
-    def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
+    def contains_generic(self, generic_type: Asts.TypeSingleAst) -> bool:
         # todo: change this to use a custom iterator as-well.
-        return any(g == Asts.GenericIdentifierAst.from_type(generic_name) for g in self)
+        return any(g == Asts.GenericIdentifierAst.from_type(generic_type) for g in self)
 
     def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, debug: bool = False) -> bool:
         that_scope = that_scope or self_scope
