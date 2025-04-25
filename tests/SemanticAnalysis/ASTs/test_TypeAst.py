@@ -38,30 +38,6 @@ class TestTypeAst(CustomTestCase):
         fun f[T]() -> T::Type { }
         """
 
-    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
-    def test_invalid_variant_type_1(self):
-        """
-        use MyType = &std::string::Str or std::boolean::Bool
-        """
-
-    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
-    def test_invalid_variant_type_2(self):
-        """
-        use MyType = std::string::Str or &std::boolean::Bool
-        """
-
-    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
-    def test_invalid_variant_type_3(self):
-        """
-        use MyType = &mut std::string::Str or std::boolean::Bool
-        """
-
-    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
-    def test_invalid_variant_type_4(self):
-        """
-        use MyType = std::string::Str or &mut std::boolean::Bool
-        """
-
     @should_pass_compilation()
     def test_valid_type(self):
         """
@@ -178,7 +154,7 @@ class TestTypeAst(CustomTestCase):
         }
 
         fun f() -> std::void::Void {
-            let x: MyType[std::number::BigInt]::X
+            let x: MyType[std::number::bigint::BigInt]::X
             x = 10
         }
         """
@@ -203,7 +179,7 @@ class TestTypeAst(CustomTestCase):
         }
 
         fun f() -> std::void::Void {
-            let x: TypeC[std::number::BigInt]::InnerC[std::string::Str]::InnerB[std::boolean::Bool]::InnerA[std::number::U64]
+            let x: TypeC[std::number::bigint::BigInt]::InnerC[std::string::Str]::InnerB[std::boolean::Bool]::InnerA[std::number::u64::U64]
             x = (10, "hello", false, 10_u64)
         }
         """

@@ -11,7 +11,7 @@ class TestOverloads(CustomTestCase):
         sup A {
             @virtual_method fun f(&self) -> std::void::Void { }
             @virtual_method fun f(&self, a: A) -> std::void::Void { }
-            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::void::Void { }
+            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::bigint::BigInt) -> std::void::Void { }
         }
 
         sup B ext A {
@@ -36,7 +36,7 @@ class TestOverloads(CustomTestCase):
             @virtual_method fun f(&self) -> std::void::Void { }
             @virtual_method
             @no_impl fun f(&self, a: T) -> T { }
-            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::void::Void { }
+            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::bigint::BigInt) -> std::void::Void { }
         }
 
         sup [T] B[T] ext A[T] {
@@ -44,7 +44,7 @@ class TestOverloads(CustomTestCase):
         }
 
         fun test() -> std::void::Void {
-            let b = B[std::number::BigInt]()
+            let b = B[std::number::bigint::BigInt]()
             b.f()
             let mut x = b.f(1)
             x = 123
@@ -62,7 +62,7 @@ class TestOverloads(CustomTestCase):
             @virtual_method fun f(&self) -> std::void::Void { }
             @virtual_method
             @no_impl fun f(&self, a: T) -> std::vector::Vec[T] { }
-            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::void::Void { }
+            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::bigint::BigInt) -> std::void::Void { }
         }
 
         sup [T] B[T] ext A[T] {
@@ -70,10 +70,10 @@ class TestOverloads(CustomTestCase):
         }
 
         fun test() -> std::void::Void {
-            let b = B[std::number::BigInt]()
+            let b = B[std::number::bigint::BigInt]()
             b.f()
             let mut x = b.f(1)
-            x = std::vector::Vec[std::number::BigInt]()
+            x = std::vector::Vec[std::number::bigint::BigInt]()
             b.f(true, 1)
         }
         """
@@ -87,7 +87,7 @@ class TestOverloads(CustomTestCase):
         sup [T] A[T] {
             @virtual_method cor c(&self) -> std::generator::Gen[&T, std::boolean::Bool] { }
             @virtual_method cor c(&self, a: T) -> std::generator::Gen[&T, std::boolean::Bool] { }
-            @virtual_method cor c(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::generator::Gen[&T, std::boolean::Bool] { }
+            @virtual_method cor c(&self, a: std::boolean::Bool, b: std::number::bigint::BigInt) -> std::generator::Gen[&T, std::boolean::Bool] { }
         }
 
         sup [T] B[T] ext A[T] {
@@ -95,7 +95,7 @@ class TestOverloads(CustomTestCase):
         }
 
         fun test() -> std::void::Void {
-            let b = B[std::number::BigInt]()
+            let b = B[std::number::bigint::BigInt]()
             let coroutine = b.c(123)
             coroutine.resume(false)
         }
@@ -110,7 +110,7 @@ class TestOverloads(CustomTestCase):
         sup A {
             @virtual_method fun f(&self) -> std::void::Void { }
             @virtual_method fun f(&self, a: A) -> std::void::Void { }
-            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::BigInt) -> std::void::Void { }
+            @virtual_method fun f(&self, a: std::boolean::Bool, b: std::number::bigint::BigInt) -> std::void::Void { }
         }
 
         sup B ext A {

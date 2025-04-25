@@ -37,7 +37,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
     def test_invalid_postfix_func_call_arg_name(self):
         """
-        fun f(a: std::number::BigInt) -> std::void::Void {
+        fun f(a: std::number::bigint::BigInt) -> std::void::Void {
             f(a=1, b=2)
         }
         """
@@ -45,7 +45,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
     def test_invalid_postfix_func_call_name_missing(self):
         """
-        fun f(a: std::number::BigInt, b: std::number::BigInt) -> std::void::Void {
+        fun f(a: std::number::bigint::BigInt, b: std::number::bigint::BigInt) -> std::void::Void {
             f(1)
         }
         """
@@ -53,7 +53,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
     def test_invalid_postfix_func_call_arg_type_mismatch(self):
         """
-        fun f(a: std::number::BigInt) -> std::void::Void {
+        fun f(a: std::number::bigint::BigInt) -> std::void::Void {
             f("a")
         }
         """
@@ -61,7 +61,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
     def test_invalid_postfix_func_call_missing_explicit_generic(self):
         """
-        fun f[T](a: std::number::BigInt) -> std::void::Void {
+        fun f[T](a: std::number::bigint::BigInt) -> std::void::Void {
             f(1)
         }
         """
@@ -78,7 +78,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     def test_invalid_postfix_func_call_unnecessary_explicit_generic(self):
         """
         fun f[T](a: T) -> std::void::Void {
-            f[std::number::BigInt](1)
+            f[std::number::bigint::BigInt](1)
         }
         """
 
@@ -109,7 +109,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCallAmbiguousSignaturesError)
     def test_invalid_postfix_func_call_ambiguous_1(self):
         """
-        fun f(a: std::number::BigInt) -> std::void::Void { }
+        fun f(a: std::number::bigint::BigInt) -> std::void::Void { }
         fun f[T](a: T) -> std::void::Void { }
 
         fun g() -> std::void::Void {
@@ -120,8 +120,8 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCallAmbiguousSignaturesError)
     def test_invalid_postfix_func_call_ambiguous_2(self):
         """
-        fun f[T](a: T, b: std::number::BigInt) -> std::void::Void { }
-        fun f[T](a: std::number::BigInt, b: T) -> std::void::Void { }
+        fun f[T](a: T, b: std::number::bigint::BigInt) -> std::void::Void { }
+        fun f[T](a: std::number::bigint::BigInt, b: T) -> std::void::Void { }
 
         fun g() -> std::void::Void {
             f(1, 2)
@@ -139,7 +139,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_func_call_single_param(self):
         """
-        fun f(a: std::number::BigInt) -> std::void::Void {
+        fun f(a: std::number::bigint::BigInt) -> std::void::Void {
             f(1)
         }
         """
@@ -147,7 +147,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_func_call_multiple_params(self):
         """
-        fun f(a: std::number::BigInt, b: std::number::BigInt) -> std::void::Void {
+        fun f(a: std::number::bigint::BigInt, b: std::number::bigint::BigInt) -> std::void::Void {
             f(1, 2)
         }
         """
@@ -180,7 +180,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     def test_valid_postfix_func_call_generic_explicit(self):
         """
         fun f[T, U]() -> std::void::Void {
-            f[std::number::BigInt, std::string::Str]()
+            f[std::number::bigint::BigInt, std::string::Str]()
         }
         """
 
@@ -195,7 +195,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_func_call_coroutine_correct_pins(self):
         """
-        cor c(a: &std::number::BigInt) -> std::generator::Gen[std::number::BigInt] { }
+        cor c(a: &std::number::bigint::BigInt) -> std::generator::Gen[std::number::bigint::BigInt] { }
 
         fun f() -> std::void::Void {
             let x = 123
@@ -206,7 +206,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_func_call_async_correct_pins(self):
         """
-        fun a(b: &std::number::BigInt) -> std::void::Void { }
+        fun a(b: &std::number::bigint::BigInt) -> std::void::Void { }
 
         fun f() -> std::void::Void {
             let x = 123
@@ -292,7 +292,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_function_folding_1(self):
         """
-        fun f(a: std::number::BigInt) -> std::string::Str { }
+        fun f(a: std::number::bigint::BigInt) -> std::string::Str { }
         fun g() -> std::void::Void {
             let x = (1, 2, 3, 4)
             let mut y = f(x)..
@@ -303,7 +303,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_function_folding_2(self):
         """
-        fun f(a: std::number::BigInt, b: std::number::BigInt) -> std::void::Void { }
+        fun f(a: std::number::bigint::BigInt, b: std::number::bigint::BigInt) -> std::void::Void { }
         fun g() -> std::void::Void {
             let x = (1, 2, 3, 4)
             let y = (1, 2, 3, 4)
@@ -330,7 +330,7 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.VariableTupleDestructureTupleSizeMismatchError)
     def test_invalid_postfix_function_folding_1(self):
         """
-        fun f(a: std::number::BigInt, b: std::number::BigInt) -> std::void::Void { }
+        fun f(a: std::number::bigint::BigInt, b: std::number::bigint::BigInt) -> std::void::Void { }
         fun g() -> std::void::Void {
             let x = (1, 2, 3, 4)
             let y = (1, 2)

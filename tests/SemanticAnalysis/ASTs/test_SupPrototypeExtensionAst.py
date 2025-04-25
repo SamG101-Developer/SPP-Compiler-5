@@ -5,27 +5,27 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
     def test_invalid_superimposition_extension_generic_name(self):
         """
-        sup [T] T ext std::number::BigInt { }
+        sup [T] T ext std::number::bigint::BigInt { }
         """
 
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
     def test_invalid_superimposition_extension_generic_superclass(self):
         """
-        sup [T] std::number::BigInt ext T { }
+        sup [T] std::number::bigint::BigInt ext T { }
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError)
     def test_invalid_superimposition_extension_duplication_superclass(self):
         """
-        sup std::number::BigInt ext std::string::Str { }
-        sup std::number::BigInt ext std::string::Str { }
+        sup std::boolean::Bool ext std::string::Str { }
+        sup std::boolean::Bool ext std::string::Str { }
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionExtensionCyclicExtensionError)
     def test_invalid_superimposition_extension_cyclic_extension(self):
         """
-        sup std::number::BigInt ext std::string::Str { }
-        sup std::string::Str ext std::number::BigInt { }
+        sup std::boolean::Bool ext std::string::Str { }
+        sup std::string::Str ext std::boolean::Bool { }
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionExtensionMethodInvalidError)
@@ -124,28 +124,28 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
     def test_invalid_superimposition_extension_type_convention_mut(self):
         """
         cls A { }
-        sup &mut A ext std::number::BigInt { }
+        sup &mut A ext std::number::bigint::BigInt { }
         """
 
     @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
     def test_invalid_superimposition_extension_type_convention_ref(self):
         """
         cls A { }
-        sup &A ext std::number::BigInt { }
+        sup &A ext std::number::bigint::BigInt { }
         """
 
     @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
     def test_invalid_superimposition_extension_supertype_convention_mut(self):
         """
         cls A { }
-        sup A ext &mut std::number::BigInt { }
+        sup A ext &mut std::number::bigint::BigInt { }
         """
 
     @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
     def test_invalid_superimposition_extension_supertype_convention_ref(self):
         """
         cls A { }
-        sup A ext &std::number::BigInt { }
+        sup A ext &std::number::bigint::BigInt { }
         """
 
     @should_pass_compilation()
@@ -154,15 +154,15 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         cls BaseClass[T] { }
 
         cls A { }
-        sup A ext BaseClass[std::number::BigInt] { }
+        sup A ext BaseClass[std::number::bigint::BigInt] { }
         sup A ext BaseClass[std::boolean::Bool] { }
         """
 
     @should_pass_compilation()
     def test_valid_superimposition_extension_stateful(self):
         """
-        cls A { a: std::number::BigInt }
-        cls B { b: std::number::BigInt }
+        cls A { a: std::number::bigint::BigInt }
+        cls B { b: std::number::bigint::BigInt }
 
         sup A {
             @virtual_method
@@ -209,7 +209,7 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         """
         cls A { }
         sup A {
-            use X = std::number::BigInt
+            use X = std::number::bigint::BigInt
         }
 
         cls B { }
@@ -223,7 +223,7 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         """
         cls A { }
         sup A {
-            cmp x: std::number::BigInt = 123
+            cmp x: std::number::bigint::BigInt = 123
         }
 
         cls B { }

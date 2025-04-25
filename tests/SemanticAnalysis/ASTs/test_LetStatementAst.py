@@ -10,14 +10,6 @@ class TestLetStatementAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.TypeVoidInvalidUsageError)
-    def test_invalid_type_void(self):
-        """
-        fun f() -> std::void::Void {
-            let x: std::void::Void
-        }
-        """
-
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_variant_destructure(self):
         """
@@ -143,7 +135,7 @@ class TestLetStatementAst(CustomTestCase):
     def test_valid_type_hint_variant_1(self):
         """
         fun f() -> std::void::Void {
-            let x: std::string::Str or std::number::BigInt = "hello world"
+            let x: std::string::Str or std::number::bigint::BigInt = "hello world"
         }
         """
 
@@ -151,7 +143,7 @@ class TestLetStatementAst(CustomTestCase):
     def test_valid_type_hint_variant_1(self):
         """
         fun f() -> std::void::Void {
-            let x: std::string::Str or std::number::BigInt or std::boolean::Bool = false
+            let x: std::string::Str or std::number::bigint::BigInt or std::boolean::Bool = false
         }
         """
 

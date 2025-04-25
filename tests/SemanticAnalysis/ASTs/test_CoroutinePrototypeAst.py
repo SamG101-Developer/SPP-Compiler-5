@@ -11,7 +11,7 @@ class TestCoroutinePrototypeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_coroutine_invalidated_previous_borrow(self):
         """
-        cor c() -> std::generator::Gen[&mut std::number::BigInt, std::boolean::Bool] { }
+        cor c() -> std::generator::Gen[&mut std::number::bigint::BigInt, std::boolean::Bool] { }
         fun f() -> std::void::Void {
             let g = c()
             let a = g.resume(false)
@@ -23,7 +23,7 @@ class TestCoroutinePrototypeAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_coroutine_valid_return_type_mov(self):
         """
-        cor c() -> std::generator::Gen[std::number::BigInt] {
+        cor c() -> std::generator::Gen[std::number::bigint::BigInt] {
             gen 1
         }
         """
@@ -31,7 +31,7 @@ class TestCoroutinePrototypeAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_coroutine_valid_return_type_mut(self):
         """
-        cor c() -> std::generator::Gen[&mut std::number::BigInt] {
+        cor c() -> std::generator::Gen[&mut std::number::bigint::BigInt] {
             gen &mut 1
         }
         """
@@ -39,7 +39,7 @@ class TestCoroutinePrototypeAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_coroutine_valid_return_type_ref(self):
         """
-        cor c() -> std::generator::Gen[&std::number::BigInt] {
+        cor c() -> std::generator::Gen[&std::number::bigint::BigInt] {
             gen &1
         }
         """
@@ -47,7 +47,7 @@ class TestCoroutinePrototypeAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_coroutine_pinned_borrows(self):
         """
-        cor c(a: &mut std::boolean::Bool, b: &std::number::BigInt) -> std::generator::Gen[std::number::BigInt] { }
+        cor c(a: &mut std::boolean::Bool, b: &std::number::bigint::BigInt) -> std::generator::Gen[std::number::bigint::BigInt] { }
         fun f() -> std::void::Void {
             let (mut x, y) = (false, 123)
             c(&mut x, &y)

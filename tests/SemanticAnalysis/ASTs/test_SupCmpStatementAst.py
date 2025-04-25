@@ -7,7 +7,7 @@ class TestSupCmpStatementAst(CustomTestCase):
         """
         cls MyType { }
         sup MyType {
-            cmp n: std::number::BigInt = 123
+            cmp n: std::number::usize::USize = 123
         }
 
         fun f() -> std::void::Void {
@@ -39,7 +39,7 @@ class TestSupCmpStatementAst(CustomTestCase):
         }
 
         fun f() -> std::void::Void {
-            let mut x = MyType[std::number::BigInt, 123]::n
+            let mut x = MyType[std::number::usize::USize, 123_uz]::n
             x = "hello world"
         }
         """
@@ -49,12 +49,12 @@ class TestSupCmpStatementAst(CustomTestCase):
         """
         cls MyType { }
         sup MyType {
-            cmp n: std::number::BigInt = 123
+            cmp n: std::number::usize::USize = 123_uz
         }
 
         fun f() -> std::void::Void {
             let mut local_n = MyType::n
-            local_n = 456
+            local_n = 456_uz
         }
         """
 
@@ -67,7 +67,7 @@ class TestSupCmpStatementAst(CustomTestCase):
         }
 
         fun f() -> std::void::Void {
-            let mut x = MyType[std::number::BigInt, 123]::n
-            x = 456
+            let mut x = MyType[std::number::usize::USize, 123]::n
+            x = 456_uz
         }
         """

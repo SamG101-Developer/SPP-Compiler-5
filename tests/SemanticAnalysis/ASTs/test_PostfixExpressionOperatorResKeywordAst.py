@@ -7,7 +7,7 @@ class TestPostfixExpressionResKeywordAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_postfix_expression_res_borrow_invalidation_1(self):
         """
-        cor x() -> std::generator::Gen[Yield=&mut std::number::BigInt, Send=std::number::BigInt] {
+        cor x() -> std::generator::Gen[Yield=&mut std::number::bigint::BigInt, Send=std::number::bigint::BigInt] {
             let (a, b) = (1, 2)
             gen &mut a
             gen &mut b
@@ -24,7 +24,7 @@ class TestPostfixExpressionResKeywordAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_expression_res_keyword(self):
         """
-        cor x() -> std::generator::Gen[Yield=std::number::BigInt, Send=std::string::Str] {
+        cor x() -> std::generator::Gen[Yield=std::number::bigint::BigInt, Send=std::string::Str] {
             gen 1
         }
 
@@ -37,7 +37,7 @@ class TestPostfixExpressionResKeywordAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_expression_res_keyword_send_void(self):
         """
-        cor x() -> std::generator::Gen[Yield=std::number::BigInt, Send=std::boolean::Bool] {
+        cor x() -> std::generator::Gen[Yield=std::number::bigint::BigInt, Send=std::boolean::Bool] {
             gen 1
         }
 

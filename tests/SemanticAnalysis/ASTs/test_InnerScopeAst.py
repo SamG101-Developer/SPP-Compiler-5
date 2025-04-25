@@ -5,7 +5,7 @@ class TestInnerScopeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.UnreachableCodeError)
     def test_invalid_unreachable_code_in_function(self):
         """
-        fun f() -> std::number::BigInt {
+        fun f() -> std::number::bigint::BigInt {
             ret 100
             f()
         }
@@ -14,7 +14,7 @@ class TestInnerScopeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.UnreachableCodeError)
     def test_invalid_unreachable_code_in_inner_scope(self):
         """
-        fun f() -> std::number::BigInt {
+        fun f() -> std::number::bigint::BigInt {
             {
                 ret 100
                 f()
@@ -25,7 +25,7 @@ class TestInnerScopeAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_inner_scope(self):
         """
-        fun f() -> std::number::BigInt {
+        fun f() -> std::number::bigint::BigInt {
             {
                 ret 100
             }

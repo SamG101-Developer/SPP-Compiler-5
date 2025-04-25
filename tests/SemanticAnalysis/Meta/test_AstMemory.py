@@ -7,8 +7,8 @@ class TestAstMemory(CustomTestCase):
         # Move an initialized value in one branch and not in the other.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -27,8 +27,8 @@ class TestAstMemory(CustomTestCase):
         # Initialize a non-initialized value in one branch and not in the other.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -46,8 +46,8 @@ class TestAstMemory(CustomTestCase):
         # Partially move an initialized value in one branch and not in the other.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -65,8 +65,8 @@ class TestAstMemory(CustomTestCase):
         # Partially move different parts of an initialized value in both branches.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -84,8 +84,8 @@ class TestAstMemory(CustomTestCase):
         # Partially initialize different parts of a partially initialized value in one branch and not the other.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -105,8 +105,8 @@ class TestAstMemory(CustomTestCase):
         # Partially initialize different parts of a partially initialized value in both branches.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -127,8 +127,8 @@ class TestAstMemory(CustomTestCase):
         # Cause a value to be pinned in one branch and not in the other.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         cor c(p: &Point) -> std::generator::Gen[std::boolean::Bool] { }
@@ -148,11 +148,11 @@ class TestAstMemory(CustomTestCase):
         # Cause part of a value to be pinned in one branch and not in the other.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
-        cor c(x: &std::number::BigInt) -> std::generator::Gen[std::boolean::Bool] { }
+        cor c(x: &std::number::bigint::BigInt) -> std::generator::Gen[std::boolean::Bool] { }
 
         fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
@@ -169,11 +169,11 @@ class TestAstMemory(CustomTestCase):
         # Cause different parts of a value to be pinned in both branches.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
-        cor c(x: &std::number::BigInt) -> std::generator::Gen[std::boolean::Bool] { }
+        cor c(x: &std::number::bigint::BigInt) -> std::generator::Gen[std::boolean::Bool] { }
 
         fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
@@ -190,8 +190,8 @@ class TestAstMemory(CustomTestCase):
         # Use a non-initialized value (never given a value / use-after-free).
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -205,8 +205,8 @@ class TestAstMemory(CustomTestCase):
         # Use a non-initialized value (value has been moved already / double-free).
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -221,8 +221,8 @@ class TestAstMemory(CustomTestCase):
         # Use part of a non-initialized value (never given a value / use-after-free).
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -236,8 +236,8 @@ class TestAstMemory(CustomTestCase):
         # Use part of a non-initialized value (value has been moved already / double-free).
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -252,8 +252,8 @@ class TestAstMemory(CustomTestCase):
         # Use part of a partially-initialized value (value has been moved already / double-free).
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -268,8 +268,8 @@ class TestAstMemory(CustomTestCase):
         # Use a value that has been partially moved.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -316,8 +316,8 @@ class TestAstMemory(CustomTestCase):
         # Move different parts of a value over multiple expressions.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -332,7 +332,7 @@ class TestAstMemory(CustomTestCase):
         # Perform a "double move" when the compiler superimposes Copy over the type.
         """
         fun f() -> std::void::Void {
-            let x = 123
+            let x = 123_uz
             let a = x
             let b = x
         }
@@ -343,8 +343,8 @@ class TestAstMemory(CustomTestCase):
         # Perform a "double move" when the use superimposes Copy over the type.
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         sup Point ext std::copy::Copy { }
@@ -416,11 +416,11 @@ class TestAstMemory(CustomTestCase):
     def test_valid_ref_borrow_usage_invalidated(self):
         """
         cls MyType {
-            x: std::number::BigInt
+            x: std::number::bigint::BigInt
         }
 
         sup MyType {
-            cor custom_iter_ref(&self) -> std::generator::Gen[&std::number::BigInt, std::boolean::Bool] { }
+            cor custom_iter_ref(&self) -> std::generator::Gen[&std::number::bigint::BigInt, std::boolean::Bool] { }
         }
 
         fun f() -> std::void::Void {
