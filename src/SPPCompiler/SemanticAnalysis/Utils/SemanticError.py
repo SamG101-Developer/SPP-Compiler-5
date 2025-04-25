@@ -192,6 +192,25 @@ class SemanticErrors:
 
             return self
 
+    class ParameterSelfOutsideSuperimpositionError(SemanticError):
+        """
+        The ParameterSelfOutsideSuperimpositionError is raised if a "self" parameter is used outside of a
+        superimposition, ie in a module-level free function.
+        """
+
+        def add(self, self_parameter: Asts.FunctionParameterAst, function: Asts.FunctionPrototypeAst) -> SemanticError:
+            self.add_info(
+                ast=function,
+                tag="Function defined here")
+
+            self.add_error(
+                ast=self_parameter,
+                tag="Self parameter outside superimposition.",
+                msg="The 'self' parameter can only be used in superimpositions.",
+                tip="Remove the 'self' parameter.")
+
+            return self
+
     class ParameterMultipleVariadicError(SemanticError):
         """
         The ParameterMultipleVariadicError is raised if there are multiple variadic parameters in a function definition.
@@ -384,11 +403,11 @@ class SemanticErrors:
         """
 
         def add(
-                self, generic_parameters: Seq[Asts.GenericParameterAst],
+                self, generic_parameters: Seq[Asts.GenericParameterAst], owner: Asts.Ast,
                 extra_generic_argument: Asts.GenericArgumentAst) -> SemanticError:
             self.add_info(
-                ast=generic_parameters[0],
-                tag="Generic parameters defined here")
+                ast=generic_parameters[0] if generic_parameters else owner,
+                tag=f"Generic parameters defined here for '{owner}'")
 
             self.add_error(
                 ast=extra_generic_argument,
