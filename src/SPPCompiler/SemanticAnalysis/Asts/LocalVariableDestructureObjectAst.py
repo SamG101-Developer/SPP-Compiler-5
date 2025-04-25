@@ -70,18 +70,16 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
                 continue
 
             elif isinstance(element, Asts.LocalVariableSingleIdentifierAst):
-                new_ast = CodeInjection.inject_code(
-                    f"let {element} = {value}.{element.name}", SppParser.parse_let_statement_initialized,
-                    pos_adjust=element.pos)
+                postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(element.name.pos, element.name))
+                new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
 
             elif isinstance(element, Asts.LocalVariableAttributeBindingAst) and isinstance(element.value, Asts.LocalVariableSingleIdentifierAst):
                 continue
 
             elif isinstance(element, Asts.LocalVariableAttributeBindingAst):
-                new_ast = CodeInjection.inject_code(
-                    f"let {element.value} = {value}.{element.name}", SppParser.parse_let_statement_initialized,
-                    pos_adjust=element.pos)
+                postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(element.name.pos, element.name))
+                new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element.value, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
 
         # Check for any missing attributes in the destructure, unless a multi-skip is present.

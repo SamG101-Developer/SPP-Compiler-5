@@ -4,9 +4,8 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 
 
 @dataclass(slots=True)
@@ -27,7 +26,7 @@ class StringLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def infer_type(self, opeManager, **kwargs) -> Asts.TypeAst:
         # Create the standard "std::string::Str" type.
-        return CommonTypes.Str(self.pos)
+        return CommonTypesPrecompiled.STR
 
 
 __all__ = [

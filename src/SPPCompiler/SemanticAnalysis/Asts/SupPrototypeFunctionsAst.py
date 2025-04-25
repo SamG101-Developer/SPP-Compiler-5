@@ -50,13 +50,13 @@ class SupPrototypeFunctionsAst(Asts.Ast):
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         # Pre-process the members of this superimposition.
-        super().pre_process(ctx)
+        Asts.Ast.pre_process(self, ctx)
         self.body.pre_process(self)
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Create a new scope for the superimposition.
         sm.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
-        super().generate_top_level_scopes(sm)
+        Asts.Ast.generate_top_level_scopes(self, sm)
 
         # Ensure the superimposition type does not have a convention.
         if c := self.name.get_convention():

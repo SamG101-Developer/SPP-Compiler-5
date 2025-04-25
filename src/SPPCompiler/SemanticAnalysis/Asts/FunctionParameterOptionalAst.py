@@ -6,9 +6,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -70,9 +68,7 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
                 self.extract_name, self.type, self.default, default_type).scopes(sm.current_scope)
 
         # Create the variable for the parameter.
-        ast = CodeInjection.inject_code(
-            f"let {self.variable}: {self.type}", SppParser.parse_let_statement_uninitialized,
-            pos_adjust=self.variable.pos)
+        ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=self.type)
         ast.analyse_semantics(sm, **kwargs)
 
         # Mark the symbol as initialized.

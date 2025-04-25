@@ -31,7 +31,7 @@ class TypeArrayAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
         return self.tok_r.pos_end
 
     def convert(self) -> Asts.TypeAst:
-        return CommonTypes.Arr(self.pos, self.elem_type, self.size)
+        return CommonTypes.Arr2(self.pos, self.elem_type, Asts.IntegerLiteralAst(value=self.size))
 
 
 __all__ = [

@@ -11,11 +11,9 @@ from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibi
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -77,9 +75,9 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         # Pre-process the annotations.
+        Asts.Ast.pre_process(self, ctx)
         for a in self.annotations:
             a.pre_process(self)
-        super().pre_process(ctx)
 
     def generate_top_level_scopes(self, sm: ScopeManager, visibility: Optional[Visibility] = None) -> None:
         # Run top level scope logic for the annotations.
@@ -97,9 +95,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
                 c, self.new_type, "use statement new type").scopes(sm.current_scope)
 
         # Create a class ast for the aliased type, and generate it.
-        cls_ast = CodeInjection.inject_code(
-            f"cls {self.new_type} {{}}",
-            SppParser.parse_class_prototype, pos_adjust=self.pos)
+        cls_ast = Asts.ClassPrototypeAst(pos=self.pos, name=self.new_type)
         cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
         cls_ast._is_alias = True
         cls_ast._visibility = (visibility, None)
@@ -129,9 +125,12 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         self._alias_symbol.generic_impl.old_sym = self._alias_symbol.old_sym
 
         # Create a sup ast to allow the attribute and method access.
-        sup_ast = CodeInjection.inject_code(
-            f"sup {self.generic_parameter_group} {self.new_type} ext {self.old_type} {{}}",
-            SppParser.parse_sup_prototype_extension, pos_adjust=self.pos)
+        sup_ast = Asts.SupPrototypeExtensionAst(
+            pos=self.pos,
+            generic_parameter_group=self.generic_parameter_group,
+            name=self.new_type,
+            super_class=self.old_type)
+
         sup_ast.generate_top_level_scopes(sm)
 
         # Move out of the type-alias scope.
