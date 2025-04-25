@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUt
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
@@ -65,13 +65,13 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         if self.name.type_parts()[0].value[0] == "$": return
-        super().pre_process(ctx)
+        Asts.Ast.pre_process(self, ctx)
         self.body.pre_process(self)
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Create a new scope for the superimposition.
         sm.create_and_move_into_new_scope(f"<sup:{self.name} ext {self.super_class}:{self.pos}>", self)
-        super().generate_top_level_scopes(sm)
+        Asts.Ast.generate_top_level_scopes(self, sm)
 
         # Ensure the superimposition type does not have a convention.
         if c := self.name.get_convention():
@@ -135,26 +135,25 @@ class SupPrototypeExtensionAst(Asts.Ast):
             raise SemanticErrors.GenericTypeInvalidUsageError().add(
                 self.super_class, self.super_class, "superimposition supertype").scopes(sm.current_scope)
 
-        # Register the superimposition as a "sup scope" and run the load steps for the body.
-        sup_symbol = sm.current_scope.get_symbol(self.super_class)
-
         # Prevent double inheritance by checking if the sup scope is already in the list.
-        # if existing_sup_scope := cls_symbol.scope.sup_scopes.filter(
-        #         lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
-        #         lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)):
-        #     if cls_symbol.name.value[0] != "$":
-        #         raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
-        #             existing_sup_scope._ast.super_class, self.super_class).scopes(sm.current_scope)
-        #
-        # # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
-        # if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(
-        #         lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
-        #         lambda s: s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)):
-        #     raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
-        #         existing_sup_scope._ast.super_class, self.name).scopes(sm.current_scope)
+        if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(
+                lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
+                lambda s: s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)):
+            raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
+                existing_sup_scope._ast.super_class, self.name).scopes(sm.current_scope)
+
+        # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
+        if existing_sup_scope := cls_symbol.scope.sup_scopes.filter(
+                lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
+                lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)):
+            if cls_symbol.name.value[0] != "$":
+                raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
+                    existing_sup_scope._ast.super_class, self.super_class).scopes(sm.current_scope)
+
+        sup_symbol = sup_symbol.scope.get_symbol(self.super_class)
 
         # Mark the class as copyable if the Copy type is the super class.
-        if self.super_class.symbolic_eq(CommonTypes.Copy(0), sm.current_scope):
+        if self.super_class.symbolic_eq(CommonTypesPrecompiled.COPY, sm.current_scope):
             cls_symbol.is_copyable = True
 
         # Run the inject steps for the body.
