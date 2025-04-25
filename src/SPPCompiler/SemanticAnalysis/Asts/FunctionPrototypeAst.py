@@ -102,24 +102,21 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.pre_process(self)
 
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
-        mock_class_name = CodeInjection.inject_code(
-            self.name.to_function_identifier().value, SppParser.parse_type, pos_adjust=self.pos)
+        mock_class_name = Asts.TypeSingleAst.from_identifier(self.name.to_function_identifier())
         function_type = self._deduce_mock_class_type()
         function_call = Asts.IdentifierAst(self.name.pos, "call")
 
         # If this is the first overload being converted, then the class needs to be made for the type.
         if ctx.body.members.filter_to_type(Asts.ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
-            mock_class_ast = CodeInjection.inject_code(
-                f"cls {mock_class_name} {{}}",
-                SppParser.parse_class_prototype, pos_adjust=self.pos)
-            mock_constant_ast = CodeInjection.inject_code(
-                f"cmp {self.name}: {mock_class_name} = {mock_class_name}()",
-                SppParser.parse_cmp_statement, pos_adjust=self.pos)
+            mock_class_ast = Asts.ClassPrototypeAst(
+                name=mock_class_name)
+            mock_constant_ast = Asts.CmpStatementAst(
+                name=self.name, type=mock_class_name, value=Asts.ObjectInitializerAst(class_type=mock_class_name))
             ctx.body.members.append(mock_class_ast)
             ctx.body.members.append(mock_constant_ast)
 
         # Superimpose the function type over the mock class. Todo: switch to parser?
-        function_ast = copy.deepcopy(self)
+        function_ast = self
         function_ast._orig = self.name
         mock_superimposition_body = Asts.SupImplementationAst(members=Seq([function_ast]))
         mock_superimposition = Asts.SupPrototypeExtensionAst(
@@ -131,7 +128,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Create a new scope for the function.
         sm.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
-        super().generate_top_level_scopes(sm)
+        Asts.Ast.generate_top_level_scopes(self, sm)
 
         # Run top level scope logic for the annotations.
         for a in self.annotations:
