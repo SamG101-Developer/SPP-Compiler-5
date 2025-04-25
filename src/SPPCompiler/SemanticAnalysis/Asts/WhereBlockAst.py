@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class WhereBlockAst(Asts.Ast):
     kw_where: Asts.TokenAst = field(default=None)
     constraint_group: Asts.WhereConstraintsGroupAst = field(default=None)

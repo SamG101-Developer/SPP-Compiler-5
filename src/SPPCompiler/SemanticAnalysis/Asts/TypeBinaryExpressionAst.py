@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class TypeBinaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
     lhs: Asts.TypeAst = field(default=None)
     op: Asts.TokenAst = field(default=None)

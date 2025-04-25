@@ -6,7 +6,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class TypeUnaryOperatorBorrowAst(Asts.Ast):
     convention: Asts.ConventionAst = field(default=None)
 

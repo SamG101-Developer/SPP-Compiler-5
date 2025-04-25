@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass
+@dataclass(slots=True)
 class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     name: Asts.GenericIdentifierAst = field(default_factory=lambda: Asts.GenericIdentifierAst())
 

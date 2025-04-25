@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingConte
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.TypeInferrable):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     kw_use: Asts.TokenAst = field(default=None)
@@ -44,9 +44,9 @@ class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         # Pre-process the annotations.
+        Asts.Ast.pre_process(self, ctx)
         for a in self.annotations:
             a.pre_process(self)
-        super().pre_process(ctx)
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Run top level scope logic for the annotations.

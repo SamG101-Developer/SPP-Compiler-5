@@ -19,7 +19,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.TypeInferrable):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     kw_use: Asts.TokenAst = field(default=None)

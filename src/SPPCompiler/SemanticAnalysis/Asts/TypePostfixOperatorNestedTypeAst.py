@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class TypePostfixOperatorNestedTypeAst(Asts.Ast):
     tok_sep: Asts.TokenAst = field(default=None)
     name: Asts.TypeSingleAst = field(default=None)

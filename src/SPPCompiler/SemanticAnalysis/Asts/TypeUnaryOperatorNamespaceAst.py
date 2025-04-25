@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class TypeUnaryOperatorNamespaceAst(Asts.Ast):
     name: Asts.IdentifierAst = field(default=None)
     tok_dbl_colon: Asts.TokenAst = field(default=None)
