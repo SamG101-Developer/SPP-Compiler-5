@@ -6,8 +6,6 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -20,7 +18,7 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
     def __post_init__(self) -> None:
         self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
         self._variant = "Required"
-        assert self.variable is not None and self.type is not None
+        # assert self.variable is not None and self.type is not None
 
     def __eq__(self, other: FunctionParameterRequiredAst) -> bool:
         # Check both ASTs are the same type and have the same variable.
@@ -52,9 +50,7 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.type.analyse_semantics(sm, **kwargs)
 
         # Create the variable for the parameter.
-        ast = CodeInjection.inject_code(
-            f"let {self.variable}: {self.type}", SppParser.parse_let_statement_uninitialized,
-            pos_adjust=self.pos)
+        ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=self.type)
         ast.analyse_semantics(sm, **kwargs)
 
         # Mark the symbol as initialized.
