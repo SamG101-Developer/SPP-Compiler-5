@@ -1,17 +1,13 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
-
-from llvmlite import ir as llvm
+from typing import Dict, Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -85,17 +81,17 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         return self.body.pos_end
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
-        super().pre_process(ctx)
+        Asts.Ast.pre_process(self, ctx)
 
         # Substitute the "Self" parameter's type with the name of the method.
         generic_substitution = Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(pos=0), value=ctx.name)
         generic_substitution = Seq([generic_substitution])
         if not isinstance(ctx, Asts.ModulePrototypeAst) and self.function_parameter_group.get_self_param():
             self.function_parameter_group.get_self_param()._true_self_type = ctx.name
-            self.function_parameter_group.get_self_param().type = self.function_parameter_group.get_self_param().type.sub_generics(generic_substitution)
+            self.function_parameter_group.get_self_param().type = self.function_parameter_group.get_self_param().type.substituted_generics(generic_substitution)
         for p in self.function_parameter_group.params:
-            p.type = p.type.sub_generics(generic_substitution)
-        self.return_type = self.return_type.sub_generics(generic_substitution)
+            p.type = p.type.substituted_generics(generic_substitution)
+        self.return_type = self.return_type.substituted_generics(generic_substitution)
 
         # Pre-process the annotations.
         for a in self.annotations:
