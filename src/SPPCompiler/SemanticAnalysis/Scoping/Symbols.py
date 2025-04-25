@@ -39,7 +39,7 @@ class NamespaceSymbol:
         return NamespaceSymbol(name=fast_deepcopy(self.name), scope=self.scope)
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class VariableSymbol:
     name: Asts.IdentifierAst
     type: Asts.TypeAst
@@ -71,7 +71,7 @@ class VariableSymbol:
             memory_info=copy.copy(self.memory_info), visibility=self.visibility)
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class TypeSymbol:
     name: Asts.GenericIdentifierAst
     type: Optional[Asts.ClassPrototypeAst]
@@ -100,7 +100,7 @@ class TypeSymbol:
         # Dump the TypeSymbol as a JSON object.
         return {
             "what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
-            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "id": id(self)}
+            "parent": self.scope.parent.name if self.scope and self.scope.parent else ""}
 
     def __str__(self) -> str:
         # Dump the TypeSymbol as a JSON string.
@@ -146,13 +146,15 @@ class TypeSymbol:
         return fq_name.with_convention(self.convention)
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class AliasSymbol(TypeSymbol):
     old_sym: TypeSymbol = field(default=None)
 
     def __json__(self) -> Dict:
         # Dump the AliasSymbol as a JSON object.
-        return super().__json__() | {"old_sym": self.old_sym}
+        return {
+            "what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
+            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym}
 
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the AliasSymbol, but link the old scope.

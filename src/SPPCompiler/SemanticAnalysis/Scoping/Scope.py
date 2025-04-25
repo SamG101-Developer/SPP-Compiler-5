@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from typing import Any, Optional, Tuple
 
 from SPPCompiler.Compiler.ModuleTree import Module
@@ -84,11 +83,11 @@ class Scope:
         new_symbol = symbol
 
         if isinstance(symbol, VariableSymbol):
-            new_symbol.type = symbol.type.sub_generics(generics)
             new_symbol = fast_deepcopy(symbol)
+            new_symbol.type = symbol.type.substituted_generics(generics)
 
         elif isinstance(symbol, TypeSymbol):
-            new_fq_name = symbol.fq_name.sub_generics(generics)
+            new_fq_name = symbol.fq_name.substituted_generics(generics)
             new_symbol = self._non_generic_scope.get_symbol(new_fq_name, ignore_alias=ignore_alias)
 
         return new_symbol or symbol
@@ -104,10 +103,10 @@ class Scope:
         # Remove a symbol from the scope.
         self._symbol_table.rem(symbol_name)
 
-    def all_symbols(self, exclusive: bool = False) -> Seq[Symbol]:
+    def all_symbols(self, exclusive: bool = False, match_type: type = None) -> Seq[Symbol]:
 
         # Get all the symbols in the scope.
-        symbols = self._symbol_table.all()
+        symbols = self._symbol_table.all(match_type=match_type)
         if not exclusive and self._parent:
             symbols.extend(self._parent.all_symbols())
 
@@ -148,16 +147,17 @@ class Scope:
 
     def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
         # Todo: why isn't get_symbol being used here? translation issues?
+        # Todo: major optimization here: all_symbols() translates (sub_generics) symbols that will never match
 
         if isinstance(name, Asts.IdentifierAst):
-            for symbol in self.all_symbols(exclusive=exclusive):
+            for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.IdentifierAst):
                 if isinstance(symbol, NamespaceSymbol) and symbol.name == name:
                     return symbol
             return None
 
         # Get the type symbol from the symbol table.
         elif isinstance(name, Asts.GenericIdentifierAst):
-            for symbol in self.all_symbols(exclusive=exclusive):
+            for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.GenericIdentifierAst):
                 if isinstance(symbol, TypeSymbol) and symbol.name == name:
                     return symbol
             return None
