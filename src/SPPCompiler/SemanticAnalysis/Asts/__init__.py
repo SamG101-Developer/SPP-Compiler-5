@@ -114,6 +114,7 @@ from SPPCompiler.SemanticAnalysis.Asts.PatternVariantAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorEarlyReturnAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst import *
+from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorIndexAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst import *
