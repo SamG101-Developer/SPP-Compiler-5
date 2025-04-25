@@ -6,7 +6,7 @@
 ## Coroutine Update
 - Allow early `ret` inside a coroutine (cannot have an expression).
 - Introduce the `GenOnce` type -> acts as `Gen` but with an auto call to `resume()`
-- The `GenOnce::resume` must be a consuming method.
+- The `GenOnce::resume` must be a consuming method?
 
 ## Arrays Update
 ### Indexing
