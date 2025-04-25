@@ -7,7 +7,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
@@ -65,19 +65,19 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Match the type against the allowed type postfixes (no postfix is BigDec).
         match self.type:
             case None:
-                return CommonTypes.BigDec(self.pos)
+                return CommonTypesPrecompiled.BIGDEC
             case type if type.type_parts()[0].value == "f8":
-                return CommonTypes.F8(self.pos)
+                return CommonTypesPrecompiled.F8
             case type if type.type_parts()[0].value == "f16":
-                return CommonTypes.F16(self.pos)
+                return CommonTypesPrecompiled.F16
             case type if type.type_parts()[0].value == "f32":
-                return CommonTypes.F32(self.pos)
+                return CommonTypesPrecompiled.F32
             case type if type.type_parts()[0].value == "f64":
-                return CommonTypes.F64(self.pos)
+                return CommonTypesPrecompiled.F64
             case type if type.type_parts()[0].value == "f128":
-                return CommonTypes.F128(self.pos)
+                return CommonTypesPrecompiled.F128
             case type if type.type_parts()[0].value == "f256":
-                return CommonTypes.F256(self.pos)
+                return CommonTypesPrecompiled.F256
             case _:
                 raise
 

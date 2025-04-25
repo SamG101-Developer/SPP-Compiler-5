@@ -16,7 +16,6 @@ class GenericTypeParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def __post_init__(self) -> None:
         self.constraints = self.constraints or Asts.GenericTypeParameterInlineConstraintsAst()
         self._variant = "Required"
-        assert self.name is not None
 
     def __eq__(self, other: GenericTypeParameterRequiredAst) -> bool:
         # Check both ASTs are the same type and have the same name.

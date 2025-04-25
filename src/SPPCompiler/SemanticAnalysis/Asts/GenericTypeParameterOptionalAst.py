@@ -19,7 +19,6 @@ class GenericTypeParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def __post_init__(self) -> None:
         self.constraints = self.constraints or Asts.GenericTypeParameterInlineConstraintsAst()
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
-        assert self.name is not None and self.default is not None
         self._variant = "Optional"
 
     def __eq__(self, other: GenericTypeParameterOptionalAst) -> bool:

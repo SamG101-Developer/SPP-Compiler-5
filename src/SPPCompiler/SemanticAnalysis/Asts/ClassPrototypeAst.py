@@ -15,6 +15,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -42,8 +43,8 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def __deepcopy__(self, memodict: Dict = None) -> ClassPrototypeAst:
         return ClassPrototypeAst(
-            self.pos, copy.copy(self.annotations), self.tok_cls, copy.deepcopy(self.name),
-            copy.deepcopy(self.generic_parameter_group), copy.deepcopy(self.where_block), copy.deepcopy(self.body),
+            self.pos, copy.copy(self.annotations), self.tok_cls, self.name,
+            fast_deepcopy(self.generic_parameter_group), self.where_block, fast_deepcopy(self.body),
             _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
 
     @ast_printer_method
@@ -65,7 +66,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def _generate_symbols(self, sm: ScopeManager) -> TypeSymbol:
         SymbolType: Type[TypeSymbol] = TypeSymbol if not self._is_alias else AliasSymbol
 
-        symbol_name = copy.deepcopy(self.name.type_parts()[0])
+        symbol_name = fast_deepcopy(self.name.type_parts()[0])
         symbol_name.generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)
 
         symbol_1 = SymbolType(name=symbol_name, type=self, scope=sm.current_scope, visibility=self._visibility[0])

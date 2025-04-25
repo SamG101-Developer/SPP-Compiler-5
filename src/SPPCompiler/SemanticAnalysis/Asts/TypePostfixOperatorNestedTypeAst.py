@@ -15,7 +15,6 @@ class TypePostfixOperatorNestedTypeAst(Asts.Ast):
 
     def __post_init__(self) -> None:
         self.tok_sep = self.tok_sep or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDoubleColon)
-        assert self.name is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

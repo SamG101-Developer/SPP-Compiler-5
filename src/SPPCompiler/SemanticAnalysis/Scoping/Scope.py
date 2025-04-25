@@ -9,6 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, \
     Symbol
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -83,8 +84,8 @@ class Scope:
         new_symbol = symbol
 
         if isinstance(symbol, VariableSymbol):
-            new_symbol = copy.deepcopy(symbol)
             new_symbol.type = symbol.type.sub_generics(generics)
+            new_symbol = fast_deepcopy(symbol)
 
         elif isinstance(symbol, TypeSymbol):
             new_fq_name = symbol.fq_name.sub_generics(generics)

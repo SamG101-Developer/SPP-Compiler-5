@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -239,9 +239,9 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         # Copy all attributes except for "_protected" attributes, which are re-linked by reference.
         return type(self)(
             self.pos, self.annotations, self.tok_fun,
-            copy.deepcopy(self.name), copy.deepcopy(self.generic_parameter_group),
-            copy.deepcopy(self.function_parameter_group), self.tok_arrow, copy.deepcopy(self.return_type),
-            copy.deepcopy(self.where_block), self.body, _ctx=self._ctx, _orig=self._orig, _scope=None,
+            fast_deepcopy(self.name), fast_deepcopy(self.generic_parameter_group),
+            fast_deepcopy(self.function_parameter_group), self.tok_arrow, fast_deepcopy(self.return_type),
+            fast_deepcopy(self.where_block), self.body, _ctx=self._ctx, _orig=self._orig, _scope=None,
             _abstract=self._abstract, _virtual=self._virtual, _non_implemented=self._non_implemented)
 
 

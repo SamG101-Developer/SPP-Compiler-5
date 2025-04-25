@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -9,6 +8,7 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUt
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -25,8 +25,8 @@ class GenericParameterGroupAst(Asts.Ast):
     def __copy__(self) -> GenericParameterGroupAst:
         return GenericParameterGroupAst(parameters=self.parameters.copy())
 
-    def __deepcopy__(self, memodict=None):
-        return GenericParameterGroupAst(parameters=copy.deepcopy(self.parameters))
+    def __deepcopy__(self, memodict=None) -> GenericParameterGroupAst:
+        return GenericParameterGroupAst(parameters=fast_deepcopy(self.parameters))
 
     def __eq__(self, other: GenericParameterGroupAst) -> bool:
         # Check both ASTs are the same type and have the same parameters.

@@ -7,6 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -26,6 +27,10 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
 
     def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
         yield from self.rhs
+
+    def __deepcopy__(self, memodict=None) -> TypeUnaryExpressionAst:
+        # Create a deep copy of the AST.
+        return TypeUnaryExpressionAst(pos=self.pos, op=self.op, rhs=fast_deepcopy(self.rhs))
 
     def __json__(self) -> str:
         return str(self.op) + self.rhs.__json__()

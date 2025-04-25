@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Optional, Self, Dict, Tuple, Iterator, TYPE_CHECKING
 
@@ -10,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -38,6 +37,9 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
                 yield Asts.GenericIdentifierAst.from_identifier(g.value)
             else:
                 yield from g.value
+
+    def __deepcopy__(self, memodict=None) -> TypeSingleAst:
+        return TypeSingleAst(pos=self.pos, name=fast_deepcopy(self.name))
 
     def __json__(self) -> str:
         return self.name.value

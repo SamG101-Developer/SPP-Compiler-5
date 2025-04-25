@@ -7,6 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 
 @dataclass(slots=True)
@@ -19,11 +20,18 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
         self._variant = "Named"
         self.value = self.value or self.name
-        assert self.name is not None
 
     def __eq__(self, other: GenericTypeArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.
         return isinstance(other, GenericTypeArgumentNamedAst) and self.name == other.name and self.value == other.value
+
+    def __deepcopy__(self, memodict=None) -> GenericTypeArgumentNamedAst:
+        # Create a deep copy of the AST.
+        return GenericTypeArgumentNamedAst(
+            pos=self.pos,
+            name=self.name,
+            tok_assign=self.tok_assign,
+            value=fast_deepcopy(self.value))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

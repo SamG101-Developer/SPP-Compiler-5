@@ -11,6 +11,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -127,7 +128,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
-                    new_overload = copy.deepcopy(function_overload)
+                    new_overload = fast_deepcopy(function_overload)
                     tm = ScopeManager(sm.global_scope, function_scope)
 
                     new_overload.generic_parameter_group.parameters = Seq()

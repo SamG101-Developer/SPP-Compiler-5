@@ -8,6 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 
 @dataclass(slots=True)
@@ -25,6 +26,17 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.
         return isinstance(other, GenericCompArgumentNamedAst) and self.name == other.name and self.value == other.value
+
+    def __deepcopy__(self, memodict=None) -> GenericCompArgumentNamedAst:
+        # Create a deep copy of the AST.
+        return GenericCompArgumentNamedAst(pos=self.pos, name=self.name, tok_assign=self.tok_assign, value=fast_deepcopy(self.value))
+
+    def __str__(self) -> str:
+        string = [
+            str(self.name),
+            str(self.tok_assign),
+            str(self.value)]
+        return " ".join(string)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

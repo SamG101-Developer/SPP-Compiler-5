@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import List, Callable, Iterator, Optional, Iterable, Dict, Type, Union
 from ordered_set import OrderedSet
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 import copy
 
 
@@ -219,7 +220,7 @@ class Seq[T]:
         return Seq(copy.copy(self._value))
 
     def deepcopy(self) -> Seq[T]:
-        return Seq(copy.deepcopy(self._value))
+        return Seq(fast_deepcopy(self._value))
 
     # Operations
 

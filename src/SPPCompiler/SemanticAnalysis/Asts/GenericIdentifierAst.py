@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 
 @dataclass(slots=True)
@@ -26,6 +27,10 @@ class GenericIdentifierAst(Asts.Ast):
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
         return int.from_bytes(hashlib.sha256(self.value.encode()).digest())
+    def __deepcopy__(self, memodict=None) -> GenericIdentifierAst:
+        # Create a deep copy of the AST.
+        return GenericIdentifierAst(
+            pos=self.pos, value=self.value, generic_argument_group=fast_deepcopy(self.generic_argument_group))
 
     def __json__(self) -> str:
         return self.print(AstPrinter())

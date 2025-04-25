@@ -11,6 +11,7 @@ from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import MemoryInfo
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -35,7 +36,7 @@ class NamespaceSymbol:
 
     def __deepcopy__(self, memodict=None):
         # Copy the name into a new AST, but link the scope.
-        return NamespaceSymbol(name=copy.deepcopy(self.name), scope=self.scope)
+        return NamespaceSymbol(name=fast_deepcopy(self.name), scope=self.scope)
 
 
 @dataclass(kw_only=True)
@@ -66,7 +67,7 @@ class VariableSymbol:
     def __deepcopy__(self, memodict=None):
         # Copy the all the attributes of the VariableSymbol.
         return VariableSymbol(
-            name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), is_mutable=self.is_mutable,
+            name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), is_mutable=self.is_mutable,
             memory_info=copy.copy(self.memory_info), visibility=self.visibility)
 
 
@@ -108,7 +109,7 @@ class TypeSymbol:
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the TypeSymbol, but link the scope.
         return TypeSymbol(
-            name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
+            name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
             is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
             generic_impl=self.generic_impl, scope_defined_in=self.scope_defined_in)
 
@@ -156,8 +157,8 @@ class AliasSymbol(TypeSymbol):
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the AliasSymbol, but link the old scope.
         return AliasSymbol(
-            name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, old_sym=copy.deepcopy(self.old_sym))
+            name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
+            is_copyable=self.is_copyable, visibility=self.visibility, old_sym=fast_deepcopy(self.old_sym))
 
 
 type Symbol = AliasSymbol | NamespaceSymbol | VariableSymbol | TypeSymbol

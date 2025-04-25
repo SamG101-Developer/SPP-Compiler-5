@@ -12,6 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -29,8 +30,8 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def __deepcopy__(self, memodict: Dict = None) -> ClassAttributeAst:
         return ClassAttributeAst(
-            self.pos, self.annotations, copy.deepcopy(self.name), self.tok_colon,
-            copy.deepcopy(self.type), _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
+            self.pos, self.annotations, fast_deepcopy(self.name), self.tok_colon,
+            fast_deepcopy(self.type), _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -71,8 +72,8 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         self.type.analyse_semantics(sm, **kwargs)
 
         # Ensure the attribute type is not void.
-        void_type = CommonTypes.Void(self.pos)
-        if self.type.symbolic_eq(void_type, sm.current_scope):
+        # Todo: Check the order of comparison (variants).
+        if self.type.symbolic_eq(CommonTypesPrecompiled.VOID, sm.current_scope):
             raise SemanticErrors.TypeVoidInvalidUsageError().add(
                 self.type).scopes(sm.current_scope)
 

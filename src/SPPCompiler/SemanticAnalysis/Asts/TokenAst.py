@@ -13,9 +13,6 @@ class TokenAst(Asts.Ast):
     token_type: SppTokenType = field(default=None)
     token_data: str = field(default="")
 
-    def __post_init__(self) -> None:
-        assert self.token_type
-
     def __eq__(self, other: TokenAst) -> bool:
         # Check both ASTs are the same type and have the same token.
         return isinstance(other, TokenAst) and self.token_type == other.token_type

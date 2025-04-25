@@ -6,10 +6,9 @@ from typing import Generator, Optional, Tuple, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -114,7 +113,7 @@ class AstTypeUtils:
         from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         # Create a new scope & symbol for the generic substituted type.
-        new_cls_prototype = copy.deepcopy(base_symbol.scope._ast)
+        new_cls_prototype = fast_deepcopy(base_symbol.scope._ast)
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=new_cls_prototype)
         new_symbol = TypeSymbol(
             name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
@@ -123,7 +122,7 @@ class AstTypeUtils:
         # Configure the new scope based on the base scope, register non-generic scope as the base scope.
         new_scope.parent.add_symbol(new_symbol)
         new_scope._children = base_symbol.scope._children
-        new_scope._symbol_table = copy.deepcopy(base_symbol.scope._symbol_table)
+        new_scope._symbol_table = fast_deepcopy(base_symbol.scope._symbol_table)
 
         # No more checks for the tuple type (avoid recursion, is textual because it is to do with generics).
         if is_tuple: return new_scope
@@ -164,8 +163,8 @@ class AstTypeUtils:
 
             # Create the scope for the new super class type. This will handle recursive sup-scope creation.
             elif isinstance(scope._ast, Asts.SupPrototypeExtensionAst):
-                new_fq_super_type = copy.deepcopy(scope._ast.super_class)
-                new_fq_super_type = new_fq_super_type.sub_generics(generic_arguments.arguments)
+                new_fq_super_type = fast_deepcopy(scope._ast.super_class)
+                new_fq_super_type = new_fq_super_type.substituted_generics(generic_arguments.arguments)
                 new_fq_super_type.analyse_semantics(sm)
 
                 # Get the class scope generated for the super class and add it to the new scopes too.

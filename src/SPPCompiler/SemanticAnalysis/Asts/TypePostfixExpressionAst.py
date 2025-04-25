@@ -4,10 +4,9 @@ from dataclasses import dataclass, field
 from typing import Optional, Dict, TYPE_CHECKING, Self, Tuple
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -18,6 +17,10 @@ if TYPE_CHECKING:
 class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     lhs: Asts.TypeAst = field(default=None)
     op: Asts.TypePostfixOperatorAst = field(default=None)
+
+    def __deepcopy__(self, memodict=None) -> TypePostfixExpressionAst:
+        # Create a deep copy of the AST.
+        return TypePostfixExpressionAst(pos=self.pos, lhs=fast_deepcopy(self.lhs), op=fast_deepcopy(self.op))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

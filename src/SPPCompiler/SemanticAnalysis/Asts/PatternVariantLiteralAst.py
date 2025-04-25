@@ -11,9 +11,6 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 class PatternVariantLiteralAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     literal: Asts.LiteralAst = field(default=None)
 
-    def __post_init__(self) -> None:
-        assert self.literal is not None
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

@@ -26,6 +26,9 @@ class GenericArgumentGroupAst(Asts.Ast):
     def __copy__(self) -> GenericArgumentGroupAst:
         return GenericArgumentGroupAst(arguments=self.arguments.copy())
 
+    def __deepcopy__(self, memodict=None) -> GenericArgumentGroupAst:
+        return GenericArgumentGroupAst(tok_l=self.tok_l, arguments=self.arguments.deepcopy(), tok_r=self.tok_r)
+
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
         return self.arguments == other.arguments

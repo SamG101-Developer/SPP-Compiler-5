@@ -19,7 +19,6 @@ class GenericTypeParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self.tok_variadic = self.tok_variadic or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDoubleDot)
         self.constraints = self.constraints or Asts.GenericTypeParameterInlineConstraintsAst(pos=self.pos)
         self._variant = "Variadic"
-        assert self.name is not None
 
     def __eq__(self, other: GenericTypeParameterVariadicAst) -> bool:
         # Check both ASTs are the same type and have the same name.

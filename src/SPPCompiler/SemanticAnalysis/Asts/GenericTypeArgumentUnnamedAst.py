@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 
 @dataclass(slots=True)
@@ -17,6 +18,10 @@ class GenericTypeArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def __eq__(self, other: GenericTypeArgumentUnnamedAst) -> bool:
         # Check both ASTs are the same type and have the same value.
         return isinstance(other, GenericTypeArgumentUnnamedAst) and self.value == other.value
+
+    def __deepcopy__(self, memodict=None) -> GenericTypeArgumentUnnamedAst:
+        # Create a deep copy of the AST.
+        return GenericTypeArgumentUnnamedAst(pos=self.pos, value=fast_deepcopy(self.value))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

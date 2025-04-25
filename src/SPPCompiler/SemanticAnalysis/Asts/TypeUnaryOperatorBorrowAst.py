@@ -10,9 +10,6 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 class TypeUnaryOperatorBorrowAst(Asts.Ast):
     convention: Asts.ConventionAst = field(default=None)
 
-    def __post_init__(self) -> None:
-        assert self.convention is not None
-
     def __eq__(self, other: TypeUnaryOperatorBorrowAst) -> bool:
         return type(self.convention) is type(other.convention)
 
