@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import hashlib
+import xxhash
 from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -19,7 +19,7 @@ class TokenAst(Asts.Ast):
 
     def __hash__(self) -> int:
         # Hash the token type's name into a fixed string and convert it into an integer.
-        return int.from_bytes(hashlib.sha256(self.token_type.name.encode()).digest())
+        return int.from_bytes(xxhash.xxh3_64(self.token_type.name).digest())
 
     @staticmethod
     def raw(*, pos: int = 0, token_type: SppTokenType = SppTokenType.NoToken, token_metadata: str = "") -> TokenAst:
