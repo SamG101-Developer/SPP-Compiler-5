@@ -5,7 +5,9 @@ __maintainer__ = "Sam Gardner"
 __email__ = "samuelgardner101@gmail.com"
 __status__ = "Development"
 
-import os
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+
 import tomllib
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
