@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq

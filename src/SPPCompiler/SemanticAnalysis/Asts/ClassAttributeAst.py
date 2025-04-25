@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
@@ -9,7 +8,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy

@@ -35,9 +35,12 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def __json__(self) -> str:
         return str(self.op) + self.rhs.__json__()
 
+    def __str__(self) -> str:
+        return f"{self.op}{self.rhs}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        return f"{self.op}{self.rhs}"
+        return f"{self.op.print(printer)}{self.rhs.print(printer)}"
 
     @property
     def pos_end(self) -> int:
@@ -63,8 +66,12 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def without_generics(self) -> Self:
         return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics())
 
-    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
-        x = self.rhs.sub_generics(generic_arguments)
+    def substitute_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        self.rhs.substitute_generics(generic_arguments)
+        return self
+
+    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        x = self.rhs.substituted_generics(generic_arguments)
         if isinstance(x, Asts.TypeUnaryExpressionAst) and isinstance(x.op, Asts.TypeUnaryOperatorBorrowAst):
             return x
         return TypeUnaryExpressionAst(self.pos, self.op, x)

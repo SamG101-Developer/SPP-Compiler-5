@@ -138,7 +138,7 @@ class AstTypeUtils:
 
         tm = ScopeManager(sm.global_scope, new_scope)
         for attribute in new_scope._ast.body.members:
-            attribute.type = attribute.type.sub_generics(type_part.generic_argument_group.arguments)
+            attribute.type = attribute.type.substituted_generics(type_part.generic_argument_group.arguments)
             attribute.analyse_semantics(tm)
 
         # Return the new scope.
@@ -213,19 +213,17 @@ class AstTypeUtils:
         parts = name.split(":")
 
         if " ext " not in parts:
-            t = CodeInjection.inject_code(parts[1], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
+            t = Asts.TypeSingleAst.from_string(parts[1]).substituted_generics(generics.arguments)
             return f"{parts[0]}:{t}:{parts[2]}"
 
         else:
-            t = CodeInjection.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
-            u = CodeInjection.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
+            t = Asts.TypeSingleAst.from_string(parts[1].split(" ext ")[0]).substituted_generics(generics.arguments)
+            u = Asts.TypeSingleAst.from_string(parts[1].split(" ext ")[1]).substituted_generics(generics.arguments)
             return f"{parts[0]}:#{t} ext {u}:{parts[2]}"
 
     @staticmethod
     def is_type_recursive(type: Asts.ClassPrototypeAst, sm: ScopeManager) -> Optional[Asts.TypeAst]:
-
         def get_attribute_types(class_prototype: Asts.ClassPrototypeAst, class_scope: Scope) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
-
             for attribute in class_prototype.body.members:
                 raw_attribute_type = attribute.type
                 symbol = class_scope.get_symbol(raw_attribute_type)
@@ -238,5 +236,4 @@ class AstTypeUtils:
         for attribute_cls_prototype, attribute_ast in get_attribute_types(type, sm.current_scope):
             if attribute_cls_prototype is type:
                 return attribute_ast
-            return None
         return None

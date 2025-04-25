@@ -68,12 +68,23 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @abstractmethod
-    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
-        """!
+    def substitute_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        """
         Substitute the generic arguments in a type. This allows "Vec[T]" to become "Vec[Str]" when it is known that "T"
-        is a "Str". This is used in the type inference process.
-        @param generic_arguments The generic arguments to substitute into the type.
-        @return The type ast with the generic arguments substituted.
+        is a "Str". This is used in the type inference process. This substitutes the generics in-place, and returns the
+        same type ast.
+        :param generic_arguments: The generic arguments to substitute into the type.
+        :return: The original type ast with the generics substituted.
+        """
+
+    @abstractmethod
+    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        """
+        Substitute the generic arguments in a type. This allows "Vec[T]" to become "Vec[Str]" when it is known that "T"
+        is a "Str". This is used in the type inference process. This creates a new type ast with the generics
+        substituted, and returns the new type ast.
+        :param generic_arguments: The generic arguments to substitute into the type.
+        :return: The new type ast with the generic arguments substituted.
         """
 
     @abstractmethod

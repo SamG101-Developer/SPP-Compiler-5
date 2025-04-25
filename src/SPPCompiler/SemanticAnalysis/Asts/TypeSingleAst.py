@@ -9,6 +9,7 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -44,6 +45,9 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     def __json__(self) -> str:
         return self.name.value
 
+    def __str__(self) -> str:
+        return f"{self.name}"
+
     @staticmethod
     def from_identifier(ast: Asts.IdentifierAst) -> TypeSingleAst:
         return TypeSingleAst(pos=ast.pos, name=Asts.GenericIdentifierAst.from_identifier(ast))
@@ -54,11 +58,15 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
     @staticmethod
     def from_token(ast: Asts.TokenAst) -> TypeSingleAst:
-        return TypeSingleAst.from_identifier(ast=Asts.IdentifierAst(pos=ast.pos, value=ast.token_data))
+        return TypeSingleAst.from_generic_identifier(ast=Asts.GenericIdentifierAst(pos=ast.pos, value=ast.token_data))
+
+    @staticmethod
+    def from_string(ast: str) -> TypeSingleAst:
+        return TypeSingleAst.from_generic_identifier(ast=Asts.GenericIdentifierAst(pos=0, value=ast))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        return f"{self.name}"
+        return f"{self.name.print(printer)}"
 
     @property
     def pos_end(self) -> int:
@@ -76,19 +84,22 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     def without_generics(self) -> Self:
         return TypeSingleAst(self.pos, self.name.without_generics())
 
-    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
-        name = copy.deepcopy(self.name)
+    def substitute_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        name = self.name
         for generic_name, generic_type in generic_arguments.map(lambda a: (a.name, a.value)):
             if self == generic_name:
                 return generic_type
 
             for g in name.generic_argument_group.get_type_args():  # comp args?
-                g.value = g.value.sub_generics(generic_arguments)
+                g.value = g.value.substituted_generics(generic_arguments)
 
             for g in name.generic_argument_group.get_comp_args().filter(lambda gg: isinstance(gg.value, Asts.TypeAst)):
-                g.value = g.value.sub_generics(generic_arguments)
+                g.value = g.value.substituted_generics(generic_arguments)
 
-        return TypeSingleAst(self.pos, name)
+        return self
+
+    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        return fast_deepcopy(self).substitute_generics(generic_arguments)
 
     def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
         """
@@ -148,7 +159,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             print("THAT", that, that_scope, that_symbol)
 
         # Variant type: one of the generic arguments must match the type.
-        if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypes.Var(0), self_scope, that_scope, check_variant=False):
+        if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, self_scope, that_scope, check_variant=False):
             composite_types = self_symbol.name.generic_argument_group.arguments[0].value.type_parts()[0].generic_argument_group.arguments
             if composite_types.any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope, debug=debug)):
                 return True
@@ -171,7 +182,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         AstFunctionUtils.name_generic_arguments(
             self.name.generic_argument_group.arguments,
             type_symbol.type.generic_parameter_group.parameters,
-            sm, is_tuple_owner=is_tuple)
+            sm, self, is_tuple_owner=is_tuple)
 
         # If there is a directive to skip generic checks, then return.
         if "skip_generic_check" in kwargs:
@@ -197,7 +208,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             if isinstance(type_symbol, AliasSymbol):
                 # Substitute the old type: "Opt[Str]" => "Var[Some[Str], None]"
                 generics = original_type_scope.generics + self.name.generic_argument_group.arguments
-                old_type = type_symbol.old_sym.fq_name.sub_generics(generics)
+                old_type = type_symbol.old_sym.fq_name.substituted_generics(generics)
                 old_type.analyse_semantics(sm, type_scope=type_scope.parent, **kwargs)
 
                 # Create a new aliasing symbol for the substituted new type.

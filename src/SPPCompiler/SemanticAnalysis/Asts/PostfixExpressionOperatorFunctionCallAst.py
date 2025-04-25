@@ -133,12 +133,12 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                     new_overload.generic_parameter_group.parameters = Seq()
                     for p in new_overload.function_parameter_group.params.copy():
-                        p.type = p.type.sub_generics(generic_arguments)
+                        p.type = p.type.substituted_generics(generic_arguments)
                         p.type.analyse_semantics(tm, **kwargs)
 
                         # Remove the "Void" parameters from the signatures.
 
-                    new_overload.return_type = new_overload.return_type.sub_generics(generic_arguments)
+                    new_overload.return_type = new_overload.return_type.substituted_generics(generic_arguments)
                     new_overload.return_type.analyse_semantics(tm, **kwargs)
 
                     # Todo: I don't want this here
@@ -163,7 +163,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     argument_type = argument.infer_type(sm, **kwargs)
 
                     if isinstance(parameter, Asts.FunctionParameterVariadicAst):
-                        parameter_type = CommonTypes.Tup(parameter.pos, Seq([parameter_type] * argument_type.type_parts()[0].generic_argument_group.arguments.length))
+                        parameter_type = CommonTypes.Tup2(parameter.pos, Seq([parameter_type] * argument_type.type_parts()[0].generic_argument_group.arguments.length))
                         parameter_type.analyse_semantics(sm, **kwargs)
 
                     if isinstance(parameter, Asts.FunctionParameterSelfAst):
