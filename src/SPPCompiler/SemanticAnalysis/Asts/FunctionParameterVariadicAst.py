@@ -11,7 +11,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class FunctionParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.VariableLikeAst):
     tok_variadic: Asts.TokenAst = field(default=None)
     variable: Asts.LocalVariableAst = field(default=None)

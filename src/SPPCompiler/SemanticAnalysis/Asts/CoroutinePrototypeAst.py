@@ -8,11 +8,12 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompile
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class CoroutinePrototypeAst(Asts.FunctionPrototypeAst):
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Perform default function prototype semantic analysis.
-        super().analyse_semantics(sm, **kwargs)
+        Asts.FunctionPrototypeAst.analyse_semantics(self, sm, **kwargs)
+
         return_type_symbol = sm.current_scope.get_symbol(self.return_type)
         kwargs["function_type"] = self.tok_fun
         kwargs["function_ret_type"] = return_type_symbol.fq_name

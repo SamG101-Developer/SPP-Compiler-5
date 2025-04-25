@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class MemoryInfo:
     """
     The MemoryInfo class is used to store information about the memory state of a symbol. It is used to identify

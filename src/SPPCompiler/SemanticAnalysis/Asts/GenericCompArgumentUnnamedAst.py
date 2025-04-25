@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericCompArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     value: Asts.ExpressionAst = field(default=None)
 

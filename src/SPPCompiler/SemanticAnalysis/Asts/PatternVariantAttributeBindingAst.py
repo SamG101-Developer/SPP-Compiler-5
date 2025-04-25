@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class PatternVariantAttributeBindingAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     name: Asts.IdentifierAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default=None)

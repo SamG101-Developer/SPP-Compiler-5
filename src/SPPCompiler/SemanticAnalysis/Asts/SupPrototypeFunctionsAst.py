@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass
+@dataclass(slots=True)
 class SupPrototypeFunctionsAst(Asts.Ast):
     tok_sup: Asts.TokenAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default=None)

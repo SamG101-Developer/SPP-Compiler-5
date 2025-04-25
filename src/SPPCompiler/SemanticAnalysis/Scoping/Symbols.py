@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class NamespaceSymbol:
     name: Asts.IdentifierAst
     scope: Optional[Scope] = field(default=None)

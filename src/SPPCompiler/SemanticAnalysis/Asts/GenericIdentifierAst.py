@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericIdentifierAst(Asts.Ast):
     value: str = field(default="")
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default=None)

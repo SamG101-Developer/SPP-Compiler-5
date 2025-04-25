@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass
+@dataclass(slots=True)
 class Program(CompilerStages):
     modules: Seq[Asts.ModulePrototypeAst] = field(default_factory=Seq, init=False, repr=False)
 

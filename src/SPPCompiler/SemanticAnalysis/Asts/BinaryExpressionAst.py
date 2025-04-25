@@ -16,7 +16,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The BinaryExpressionAst class is an AST node that represents a binary expression. This AST can be used to represent

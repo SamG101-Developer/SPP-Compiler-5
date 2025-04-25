@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingConte
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class ModuleImplementationAst(Asts.Ast):
     members: Seq[Asts.ModuleMemberAst] = field(default_factory=Seq)
 

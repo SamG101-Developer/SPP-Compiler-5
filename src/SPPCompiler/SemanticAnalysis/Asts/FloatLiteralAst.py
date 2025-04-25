@@ -24,7 +24,7 @@ SIZE_MAPPING = {
     "f256": _signed_integer_limits(e=18, m=237)}
 
 
-@dataclass
+@dataclass(slots=True)
 class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
     integer_value: Asts.TokenAst = field(default=None)

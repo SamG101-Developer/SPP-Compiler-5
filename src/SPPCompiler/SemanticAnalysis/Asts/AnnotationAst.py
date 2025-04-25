@@ -38,7 +38,7 @@ class _Annotations(Enum):
     CompilerBuiltin = "compiler_builtin"
 
 
-@dataclass
+@dataclass(slots=True)
 class AnnotationAst(Asts.Ast):
     """
     The AnnotationAst class is used to represent annotations applied to ASTs. Annotations alter the behaviour of an AST,
@@ -90,16 +90,15 @@ class AnnotationAst(Asts.Ast):
         Mark the context AST with the correct attributes and values depending on the annotation. This allows all future
         compiler stages to utilize the additional behaviour based on the annotations.
 
-        The majority of the values set are setting this AST node itself as a flag (ie
-        ``Asts.FunctionPrototypeAst._virtual = self``), but the visibility annotations also include the mapped
-        Visibility, so the mapping doesn't have to be recomputed per attribute access.
+        Most of the values set are setting this AST node itself as a flag (ie
+        `Asts.FunctionPrototypeAst._virtual = self`), but the visibility annotations also include the mapped Visibility,
+        so the mapping doesn't have to be recomputed per attribute access.
 
         :param ctx: The context AST to apply the annotation to.
-        :return: None.
         """
 
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
-        super().pre_process(ctx)
+        Asts.Ast.pre_process(self, ctx)
 
         # Mark a method context as virtual.
         if self.name.value == _Annotations.VirtualMethod.value:
@@ -156,7 +155,7 @@ class AnnotationAst(Asts.Ast):
         """
 
         # Import the necessary classes for type-comparisons to ensure annotation compatibility.
-        super().generate_top_level_scopes(sm)
+        Asts.Ast.generate_top_level_scopes(self, sm)
 
         if self.name.value == _Annotations.VirtualMethod.value:
             # The "virtual_method" annotation can only be applied to function asts.

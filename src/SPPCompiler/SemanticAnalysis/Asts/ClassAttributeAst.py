@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     name: Asts.IdentifierAst = field(default=None)
@@ -47,7 +47,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         return self.type.pos_end
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
-        super().pre_process(ctx)
+        Asts.Ast.pre_process(self, ctx)
 
         # Pre-process the annotations of this attribute.
         for a in self.annotations:

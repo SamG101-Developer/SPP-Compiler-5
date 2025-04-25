@@ -19,7 +19,7 @@ from SPPCompiler.Utils.Sequence import Seq
 #  - [3] Maintain the borrow from the iterator - x in y.iter_mut() => cant borrow from y inside the loop
 
 
-@dataclass
+@dataclass(slots=True)
 class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     variable: Asts.LocalVariableAst = field(default=None)
     in_keyword: Asts.TokenAst = field(default=None)

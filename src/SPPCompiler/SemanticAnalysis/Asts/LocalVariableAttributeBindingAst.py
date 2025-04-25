@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class LocalVariableAttributeBindingAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     name: Asts.IdentifierAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default=None)

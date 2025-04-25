@@ -14,7 +14,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_gen: Asts.TokenAst = field(default=None)
     kw_with: Optional[Asts.TokenAst] = field(default=None)

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from SPPCompiler.SemanticAnalysis import Asts
 
 
-@dataclass
+@dataclass(slots=True)
 class AbstractPatternVariantAst(ABC):
     """!
     The AbstractPatternVariantAst class is a mixin that provides the ability to convert an instance of a pattern variant

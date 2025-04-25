@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The ArrayLiteral0ElementAst class is an AST node that represents an array literal with no elements. Because types

@@ -13,7 +13,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_l: Asts.TokenAst = field(default=None)
     elements: Seq[Asts.LocalVariableNestedForDestructureTupleAst] = field(default_factory=Seq)

@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The AssignmentStatementAst class is an AST node that represents an assignment statement. This AST can be used to

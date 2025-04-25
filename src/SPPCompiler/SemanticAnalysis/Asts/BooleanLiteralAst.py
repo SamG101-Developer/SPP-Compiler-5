@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 
 
-@dataclass
+@dataclass(slots=True)
 class BooleanLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The BooleanLiteralAst class is an AST node that represents a boolean literal. This AST can be used to represent the

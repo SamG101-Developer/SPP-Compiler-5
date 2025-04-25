@@ -11,14 +11,14 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_loop: Asts.TokenAst = field(default=None)
     cond: Asts.LoopConditionAst = field(default=None)
     body: Asts.InnerScopeAst = field(default=None)
     else_block: Optional[Asts.LoopElseStatementAst] = field(default=None)
 
-    _loop_type_info: dict = field(default_factory=dict, init=False, repr=False)
+    _loop_type_info: dict[int, Asts.TypeAst] = field(default_factory=dict, init=False, repr=False)
     _loop_level: int = field(default=0, init=False, repr=False)
 
     def __post_init__(self) -> None:

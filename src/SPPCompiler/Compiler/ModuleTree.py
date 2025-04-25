@@ -11,7 +11,7 @@ from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class Module:
     """!
     A Module represents a file of code, and associated information for convenience, such as the token stream, which is

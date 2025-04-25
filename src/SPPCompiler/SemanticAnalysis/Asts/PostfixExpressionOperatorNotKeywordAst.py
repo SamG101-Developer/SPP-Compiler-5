@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class PostfixExpressionOperatorNotKeywordAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_dot: Asts.TokenAst = field(default=None)
     tok_not: Asts.TokenAst = field(default=None)

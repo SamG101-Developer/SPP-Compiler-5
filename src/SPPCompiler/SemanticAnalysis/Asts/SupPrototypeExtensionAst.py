@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 #  - Error if the type doesn't exist
 
 
-@dataclass
+@dataclass(slots=True)
 class SupPrototypeExtensionAst(Asts.Ast):
     tok_sup: Asts.TokenAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default=None)

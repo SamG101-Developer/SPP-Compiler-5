@@ -6,14 +6,12 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_l: Asts.TokenAst = field(default=None)
     elems: Seq[Asts.LocalVariableNestedForDestructureArrayAst] = field(default_factory=Seq)
@@ -71,9 +69,9 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         if multi_arg_skips and multi_arg_skips[0].binding:
             m = self.elems.index(multi_arg_skips[0])
             indexes = [*range(m, m + num_rhs_array_elements - num_lhs_array_elements + 1)]
-            new_ast = CodeInjection.inject_code(
-                f"[{", ".join([f"{value}.{i}" for i in indexes])}]",
-                lambda parser: parser.parse_literal_array(parser.parse_expression), pos_adjust=value.pos)
+            new_ast = Asts.ArrayLiteralNElementAst(
+                pos=value.pos,
+                elems=Seq([Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(value.pos, Asts.TokenAst(0, SppTokenType.LxNumber, str(i)))) for i in indexes]))
             bound_multi_skip = new_ast
 
         # Create new indexes like [0, 1, 2, 6, 7] if elements 3->5 are skipped (and possibly bound).
@@ -83,9 +81,7 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         # Create expanded "let" statements for each part of the destructure.
         for i, element in indexes.zip(self.elems):
             if isinstance(element, Asts.LocalVariableDestructureSkipNArgumentsAst) and multi_arg_skips[0].binding:
-                new_ast = CodeInjection.inject_code(
-                    f"let {element.binding} = {bound_multi_skip}", SppParser.parse_let_statement_initialized,
-                    pos_adjust=element.pos)
+                new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element.binding, value=bound_multi_skip)
                 new_ast.analyse_semantics(sm, **kwargs)
 
             elif isinstance(element, Asts.LocalVariableDestructureSkip1ArgumentAst):
@@ -95,9 +91,9 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
                 continue
 
             else:
-                new_ast = CodeInjection.inject_code(
-                    f"let {element} = {value}.{i}", SppParser.parse_let_statement_initialized,
-                    pos_adjust=element.pos)
+                i = Asts.TokenAst(0, SppTokenType.LxNumber, str(i))
+                postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(value.pos, i))
+                new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
 
 

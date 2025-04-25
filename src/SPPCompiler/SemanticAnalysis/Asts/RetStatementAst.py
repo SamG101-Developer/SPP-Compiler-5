@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass
+@dataclass(slots=True)
 class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_ret: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwRet))
     expr: Optional[Asts.ExpressionAst] = field(default=None)

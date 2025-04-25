@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingConte
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class SupImplementationAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     members: Seq[Asts.SupMemberAst] = field(default_factory=Seq)

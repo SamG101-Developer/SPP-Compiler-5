@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, Variab
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     value: str = field(default="")
 

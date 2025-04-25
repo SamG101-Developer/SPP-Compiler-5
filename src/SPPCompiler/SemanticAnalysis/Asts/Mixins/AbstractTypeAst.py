@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass
+@dataclass(slots=True)
 class AbstractTypeTemporaryAst(ABC):
     """!
     The AbstractTypeTemporaryAst is a temporary type ast that is used or instant-conversion purposes. The ast that it is
@@ -27,7 +27,7 @@ class AbstractTypeTemporaryAst(ABC):
         """
 
 
-@dataclass
+@dataclass(slots=True)
 class AbstractTypeAst(AbstractTypeTemporaryAst):
     """!
     The AbstractTypeAst contains a number of methods required to be implemented by all the different TypeAst classes.

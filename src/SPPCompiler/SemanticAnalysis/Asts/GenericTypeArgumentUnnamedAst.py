@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericTypeArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     value: Asts.TypeAst = field(default=None)
 

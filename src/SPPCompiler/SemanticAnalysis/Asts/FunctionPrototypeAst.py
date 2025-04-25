@@ -19,7 +19,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     tok_fun: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwFun))

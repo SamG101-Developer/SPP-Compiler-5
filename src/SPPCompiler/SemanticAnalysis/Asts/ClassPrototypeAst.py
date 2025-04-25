@@ -18,7 +18,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     tok_cls: Asts.TokenAst = field(default=None)
@@ -82,7 +82,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         return symbol_1
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
-        super().pre_process(ctx)
+        Asts.Ast.pre_process(self, ctx)
 
         # Pre-process the annotations and implementation of this class.
         for a in self.annotations:
@@ -92,7 +92,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def generate_top_level_scopes(self, sm: ScopeManager) -> TypeSymbol | AliasSymbol:
         # Create a new scope for the class.
         sm.create_and_move_into_new_scope(self.name, self)
-        super().generate_top_level_scopes(sm)
+        Asts.Ast.generate_top_level_scopes(self, sm)
 
         # Run top level scope logic for the annotations.
         for a in self.annotations:

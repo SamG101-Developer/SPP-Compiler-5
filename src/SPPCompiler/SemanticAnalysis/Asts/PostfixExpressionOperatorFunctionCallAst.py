@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass
+@dataclass(slots=True)
 class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default=None)
     function_argument_group: Asts.FunctionCallArgumentGroupAst = field(default=None)
