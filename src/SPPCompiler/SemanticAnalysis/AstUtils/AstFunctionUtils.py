@@ -5,13 +5,12 @@ import operator
 from collections import defaultdict
 from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -107,16 +106,16 @@ class AstFunctionUtils:
         """
 
         # Create an argument for self, which is the object being called (convention tested later).
-        self_argument = CodeInjection.inject_code(
-            f"{lhs.lhs}",
-            SppParser.parse_function_call_argument_unnamed, pos_adjust=lhs.lhs.pos)
+        self_argument = Asts.FunctionCallArgumentUnnamedAst(
+            pos=lhs.lhs.pos, value=lhs.lhs)
         function_arguments = fn.function_argument_group.arguments.copy()
         function_arguments.insert(0, self_argument)
 
-        # Create the static method access (without the unction call and arguments).
-        new_function_access = CodeInjection.inject_code(
-            f"{function_owner_type}::{function_name}",
-            SppParser.parse_postfix_expression, pos_adjust=lhs.pos)
+        # Create the static method access (without the function call and arguments).
+        new_function_access = Asts.PostfixExpressionAst(
+            pos=lhs.pos, lhs=function_owner_type,
+            op=Asts.PostfixExpressionOperatorMemberAccessAst(
+                pos=lhs.pos, tok_access=Asts.TokenAst.raw(token_type=SppTokenType.TkDoubleColon), field=function_name))
 
         # Create the function call with the object as the first argument (represents "self").
         new_function_call = copy.copy(fn)
@@ -307,8 +306,7 @@ class AstFunctionUtils:
             # The variadic parameter requires a tuple of the remaining arguments. All future arguments are moved into a
             # tuple, and named by the variadic parameter.
             if parameter_names.length == 1 and is_variadic:
-                named_argument = f"{parameter_names.pop(0)}=({arguments[i:].join(", ")})"
-                named_argument = CodeInjection.inject_code(named_argument, SppParser.parse_function_call_argument_named, pos_adjust=unnamed_argument.pos)
+                named_argument = Asts.FunctionCallArgumentNamedAst(pos=unnamed_argument.pos, name=parameter_names.pop(0), value=Asts.TupleLiteralAst(elems=arguments[i:].map_attr("value"), pos=unnamed_argument.pos))
                 arguments.replace(unnamed_argument, named_argument, 1)
                 arguments.pop_n(-1, arguments.length - i - 1)
                 break
@@ -327,7 +325,7 @@ class AstFunctionUtils:
     @staticmethod
     def name_generic_arguments(
             arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], sm: ScopeManager,
-            is_tuple_owner: bool = False) -> None:
+            owner: Asts.TypeAst | Asts.IdentifierAst, is_tuple_owner: bool = False) -> None:
 
         """
         Name all generic arguments being passed to a function call or a type declaration, by removing used names from
@@ -341,12 +339,22 @@ class AstFunctionUtils:
         :param arguments: The list of generic arguments being passed to the function.
         :param parameters: The list of generic parameters the function accepts.
         :param sm: The scope manager to access the current scope.
+        :param owner: The type that owns the generic arguments (the type being instantiated).
         :param is_tuple_owner: If the owner type is a tuple (early return).
         :return: None (the generic arguments are modified in-place).
 
         :raise SemanticErrors.ArgumentNameInvalidError: If an argument name is invalid (doesn't match a parameter name).
         :raise SemanticErrors.GenericArgumentTooManyError: If too many generic arguments are passed.
         """
+
+        GEN_MAPPING = {
+            Asts.GenericTypeParameterRequiredAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericTypeParameterOptionalAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericTypeParameterVariadicAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericCompParameterRequiredAst: Asts.GenericCompArgumentNamedAst,
+            Asts.GenericCompParameterOptionalAst: Asts.GenericCompArgumentNamedAst,
+            Asts.GenericCompParameterVariadicAst: Asts.GenericCompArgumentNamedAst,
+        }
 
         # Special case for tuples to prevent infinite-recursion.
         if is_tuple_owner: return
@@ -369,8 +377,9 @@ class AstFunctionUtils:
             # The variadic parameter requires a tuple of the remaining arguments. All future arguments are moved into a
             # tuple, and named by the variadic parameter.
             if parameter_names.length == 1 and is_variadic:
-                named_argument = f"{parameter_names.pop(0)}=({arguments[i:].join(", ")})"
-                named_argument = CodeInjection.inject_code(named_argument, SppParser.parse_generic_argument, pos_adjust=unnamed_argument.pos)
+                parameter_name = parameter_names.pop(0)
+                ctor: type = GEN_MAPPING[type(parameters.find(lambda g: g.name.name == parameter_name))]
+                named_argument = ctor(pos=unnamed_argument.pos, name=Asts.TypeSingleAst.from_generic_identifier(parameter_name), value=CommonTypes.Tup2(pos=unnamed_argument.pos, inner_types=arguments[i:].map_attr("value")))
                 arguments.replace(unnamed_argument, named_argument, 1)
                 arguments.pop_n(-1, arguments.length - i - 1)
                 break
@@ -381,14 +390,15 @@ class AstFunctionUtils:
             # handled in the single caller of that function; analysing function call ASTs.
             else:
                 try:
-                    named_argument = f"{parameter_names.pop(0)}={unnamed_argument}"
-                    named_argument = CodeInjection.inject_code(named_argument, SppParser.parse_generic_argument, pos_adjust=unnamed_argument.pos)
+                    parameter_name = parameter_names.pop_with_error(0)
+                    ctor: type = GEN_MAPPING[type(parameters.find(lambda g: g.name.name == parameter_name))]
+                    named_argument = ctor(pos=unnamed_argument.pos, name=Asts.TypeSingleAst.from_generic_identifier(parameter_name), value=unnamed_argument.value)
                     arguments.replace(unnamed_argument, named_argument, 1)
 
                 # If too many generic arguments have been given, raise an error.
                 except IndexError:
                     raise SemanticErrors.GenericArgumentTooManyError().add(
-                        parameters, unnamed_argument).scopes(sm.current_scope)
+                        parameters, owner, unnamed_argument).scopes(sm.current_scope)
 
         # For any default generic values, override the default "T=T" with "T=Str" etc.
         # for parameter in parameters.filter_to_type(Asts.GenericParameterOptionalAst):
@@ -440,6 +450,15 @@ class AstFunctionUtils:
             with explicit generic arguments.
         :raise SemanticErrors.GenericParameterNotInferredError: If a generic parameter has not been inferred.
         """
+
+        GEN_MAPPING = {
+            Asts.GenericTypeParameterRequiredAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericTypeParameterOptionalAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericTypeParameterVariadicAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericCompParameterRequiredAst: Asts.GenericCompArgumentNamedAst,
+            Asts.GenericCompParameterOptionalAst: Asts.GenericCompArgumentNamedAst,
+            Asts.GenericCompParameterVariadicAst: Asts.GenericCompArgumentNamedAst,
+        }
 
         # print("-" * 100)
         # print("generic_parameters", generic_parameters)
@@ -532,15 +551,15 @@ class AstFunctionUtils:
         # example, Cls[T, Vec[T]] when T.
         for generic_parameter_name, generic_parameter_value in formatted_generic_arguments.copy().items():
             if isinstance(generic_parameter_value, Asts.TypeAst):
-                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.sub_generics(Asts.GenericArgumentGroupAst.from_dict(formatted_generic_arguments).arguments)
+                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(Asts.GenericArgumentGroupAst.from_dict(formatted_generic_arguments).arguments)
 
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
         # GenericXXXArgumentASTs. Todo: pos_adjust?
         pos_adjust = owner.pos if owner else 0
-        formatted_generic_arguments = [
-            CodeInjection.inject_code(f"{k}={v}", SppParser.parse_generic_argument, pos_adjust=pos_adjust)
-            for k, v in formatted_generic_arguments.items()]
+        final_args = []
+        for k, v in formatted_generic_arguments.items():
+            ctor: type = GEN_MAPPING[type(generic_parameters.find(lambda g: g.name == k))]
+            value = Asts.IdentifierAst.from_type(v) if isinstance(v, Asts.TypeAst) and ctor is Asts.GenericCompArgumentNamedAst else v
+            final_args.append(ctor(pos=pos_adjust, name=k, value=value))
 
-        # print("inferred_generic_arguments", Seq(formatted_generic_arguments))
-
-        return Seq(formatted_generic_arguments)
+        return Seq(final_args)
