@@ -4,7 +4,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
 
-from fastenum import Enum
+from enum import Enum
 
 from SPPCompiler.SemanticAnalysis import Asts
 

@@ -1,5 +1,5 @@
 none_type = type(None)
-from fastenum import Enum
+from enum import Enum
 
 
 def fast_deepcopy[T](value: T) -> T:

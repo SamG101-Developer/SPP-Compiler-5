@@ -5,7 +5,7 @@ import os
 from typing import Optional, TYPE_CHECKING
 
 import xxhash
-from fastenum import Enum
+from enum import Enum
 
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
