@@ -1,21 +1,24 @@
 from __future__ import annotations
 
 import difflib
-import hashlib
 from dataclasses import dataclass, field
 
+import xxhash
 from convert_case import pascal_case
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     value: str = field(default="")
+
+    def __deepcopy__(self, memodict=None) -> IdentifierAst:
+        return IdentifierAst(pos=self.pos, value=self.value)
 
     def __eq__(self, other: IdentifierAst | str) -> bool:
         # Check both ASTs are the same type and have the same value.
@@ -28,7 +31,7 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
-        return int.from_bytes(hashlib.sha256(self.value.encode()).digest())
+        return int.from_bytes(xxhash.xxh3_64(self.value).digest())
 
     def __add__(self, other: IdentifierAst | str) -> IdentifierAst:
         if isinstance(other, str):
@@ -40,12 +43,13 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self
 
     def __json__(self) -> str:
-        # Return the internal string as the JSON formatted IdentifierAst.
+        return self.value
+
+    def __str__(self) -> str:
         return self.value
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        # Print the internal string.
         return self.value
 
     @property

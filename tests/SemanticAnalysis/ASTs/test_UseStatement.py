@@ -84,7 +84,16 @@ class TestUseStatementAst(CustomTestCase):
         """
         fun f[T](a: std::option::Opt[T]) -> std::void::Void { }
         fun g() -> std::void::Void {
-            let x = std::option::Some(123)
+            let x = std::option::Some(val=123)
             f(x)
         }
+        """
+
+    @should_pass_compilation()
+    def test_valid_use_statement_reduction(self):
+        """
+        use std::number::bigint::BigInt
+        use std::string::Str
+        use std::vector::Vec
+        use std::option::Opt
         """

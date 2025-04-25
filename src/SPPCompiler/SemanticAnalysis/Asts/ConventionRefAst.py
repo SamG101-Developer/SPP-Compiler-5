@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class ConventionRefAst(Asts.Ast):
     tok_borrow: Asts.TokenAst = field(default=None)
 

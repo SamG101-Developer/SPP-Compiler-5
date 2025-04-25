@@ -5,7 +5,7 @@ class TestRetStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCoroutineContainsReturnStatementError)
     def test_invalid_ret_statement_in_coroutine(self):
         """
-        cor f() -> std::generator::Gen[std::number::BigInt] {
+        cor f() -> std::generator::Gen[std::number::bigint::BigInt] {
             ret
         }
         """
@@ -13,7 +13,7 @@ class TestRetStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_ret_statement_type_mismatch(self):
         """
-        fun f() -> std::number::BigInt {
+        fun f() -> std::number::bigint::BigInt {
             ret "hello world"
         }
         """
@@ -29,7 +29,7 @@ class TestRetStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_ret_statement_2(self):
         """
-        fun f() -> std::number::BigInt {
+        fun f() -> std::number::bigint::BigInt {
             ret 1
         }
         """

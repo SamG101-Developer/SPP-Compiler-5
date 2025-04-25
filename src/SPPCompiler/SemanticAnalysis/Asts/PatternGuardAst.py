@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class PatternGuardAst(Asts.Ast):
     tok_guard: Asts.TokenAst = field(default=None)
     expression: Asts.ExpressionAst = field(default=None)

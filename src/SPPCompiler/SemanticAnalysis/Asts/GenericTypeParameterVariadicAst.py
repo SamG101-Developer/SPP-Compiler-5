@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericTypeParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
     tok_variadic: Asts.TokenAst = field(default=None)
     name: Asts.TypeAst = field(default=None)
@@ -19,11 +19,17 @@ class GenericTypeParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self.tok_variadic = self.tok_variadic or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDoubleDot)
         self.constraints = self.constraints or Asts.GenericTypeParameterInlineConstraintsAst(pos=self.pos)
         self._variant = "Variadic"
-        assert self.name is not None
 
     def __eq__(self, other: GenericTypeParameterVariadicAst) -> bool:
         # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericTypeParameterVariadicAst) and self.name == other.name
+
+    def __str__(self) -> str:
+        string = [
+            str(self.tok_variadic),
+            str(self.name),
+            str(self.constraints)]
+        return "".join(string)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

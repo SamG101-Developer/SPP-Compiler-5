@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class LoopConditionBooleanAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     condition: Asts.ExpressionAst = field(default=None)
 

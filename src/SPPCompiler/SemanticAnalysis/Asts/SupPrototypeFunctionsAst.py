@@ -6,7 +6,9 @@ from typing import Optional, TYPE_CHECKING
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass
+@dataclass(slots=True)
 class SupPrototypeFunctionsAst(Asts.Ast):
     tok_sup: Asts.TokenAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default=None)
@@ -48,13 +50,13 @@ class SupPrototypeFunctionsAst(Asts.Ast):
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         # Pre-process the members of this superimposition.
-        super().pre_process(ctx)
+        Asts.Ast.pre_process(self, ctx)
         self.body.pre_process(self)
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Create a new scope for the superimposition.
         sm.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
-        super().generate_top_level_scopes(sm)
+        Asts.Ast.generate_top_level_scopes(self, sm)
 
         # Ensure the superimposition type does not have a convention.
         if c := self.name.get_convention():
@@ -74,6 +76,11 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         self.body.generate_top_level_aliases(sm)
         sm.move_out_of_current_scope()
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        sm.move_to_next_scope()
+        self.body.qualify_types(sm, **kwargs)
+        sm.move_out_of_current_scope()
+
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
 
@@ -84,14 +91,15 @@ class SupPrototypeFunctionsAst(Asts.Ast):
                 self.name, self.name, "superimposition type").scopes(sm.current_scope)
 
         # Ensure all the generic arguments are unnamed and match the class's generic parameters.
+        other_cls_symbol = sm.current_scope.get_symbol(self.name.without_generics(), ignore_alias=True)
         for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
             if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__args__):
                 raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(
                     generic_arg).scopes(sm.current_scope)
 
-            if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
+            if not other_cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
                 raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(
-                    generic_arg, self).scopes(sm.current_scope)
+                    generic_arg, self.tok_sup).scopes(sm.current_scope)
 
         # Register the superimposition as a "sup scope" and run the load steps for the body.
         cls_symbol.scope._direct_sup_scopes.append(sm.current_scope)
@@ -102,6 +110,15 @@ class SupPrototypeFunctionsAst(Asts.Ast):
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
+
+        # Add the "Self" symbol into the scope.
+        if self.name.type_parts()[0].value[0] != "$":
+            cls_symbol = sm.current_scope.get_symbol(self.name.without_generics())
+            self_symbol = TypeSymbol(
+                name=Asts.GenericIdentifierAst.from_type(CommonTypes.Self(self.name.pos)), type=cls_symbol.type,
+                scope=cls_symbol.scope)
+            sm.current_scope.add_symbol(self_symbol)
+            # print(f"Added {self_symbol} to scope '{sm.current_scope.name}'.")
 
         # Check every generic parameter is constrained by the type.
         if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):

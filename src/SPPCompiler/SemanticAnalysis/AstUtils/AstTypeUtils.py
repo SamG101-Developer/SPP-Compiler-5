@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-import builtins
 import copy
 import difflib
 from typing import Generator, Optional, Tuple, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -93,7 +91,7 @@ class AstTypeUtils:
     @staticmethod
     def get_type_part_symbol_with_error(
             scope: Scope, sm: ScopeManager, type_part: Asts.GenericIdentifierAst, ignore_alias: bool = False, **kwargs)\
-            -> TypeSymbol:
+            -> TypeSymbol | AliasSymbol:
 
         # Get the type part's symbol, and raise an error if it does not exist.
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
@@ -115,19 +113,16 @@ class AstTypeUtils:
         from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         # Create a new scope & symbol for the generic substituted type.
-        new_cls_prototype = copy.deepcopy(base_symbol.scope._ast)
+        new_cls_prototype = fast_deepcopy(base_symbol.scope._ast)
         new_scope = Scope(type_part, base_symbol.scope.parent, ast=new_cls_prototype)
-        new_symbol = builtins.type(base_symbol)(
+        new_symbol = TypeSymbol(
             name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
             visibility=base_symbol.visibility, scope_defined_in=sm.current_scope)
-
-        if isinstance(base_symbol, AliasSymbol):
-            new_symbol.old_type = base_symbol.old_type
 
         # Configure the new scope based on the base scope, register non-generic scope as the base scope.
         new_scope.parent.add_symbol(new_symbol)
         new_scope._children = base_symbol.scope._children
-        new_scope._symbol_table = copy.deepcopy(base_symbol.scope._symbol_table)
+        new_scope._symbol_table = fast_deepcopy(base_symbol.scope._symbol_table)
 
         # No more checks for the tuple type (avoid recursion, is textual because it is to do with generics).
         if is_tuple: return new_scope
@@ -143,7 +138,7 @@ class AstTypeUtils:
 
         tm = ScopeManager(sm.global_scope, new_scope)
         for attribute in new_scope._ast.body.members:
-            attribute.type = attribute.type.sub_generics(type_part.generic_argument_group.arguments)
+            attribute.type = attribute.type.substituted_generics(type_part.generic_argument_group.arguments)
             attribute.analyse_semantics(tm)
 
         # Return the new scope.
@@ -168,8 +163,8 @@ class AstTypeUtils:
 
             # Create the scope for the new super class type. This will handle recursive sup-scope creation.
             elif isinstance(scope._ast, Asts.SupPrototypeExtensionAst):
-                new_fq_super_type = copy.deepcopy(scope._ast.super_class)
-                new_fq_super_type = new_fq_super_type.sub_generics(generic_arguments.arguments)
+                new_fq_super_type = fast_deepcopy(scope._ast.super_class)
+                new_fq_super_type = new_fq_super_type.substituted_generics(generic_arguments.arguments)
                 new_fq_super_type.analyse_semantics(sm)
 
                 # Get the class scope generated for the super class and add it to the new scopes too.
@@ -211,26 +206,24 @@ class AstTypeUtils:
                 name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(sm),
                 is_generic=True)
 
-        raise Exception(f"Unknown generic argument type: {type(generic_argument).__name__}")
+        raise Exception(f"Unknown generic argument type '{type(generic_argument).__name__}': {generic_argument}")
 
     @staticmethod
     def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst, pos: int) -> str:
         parts = name.split(":")
 
         if " ext " not in parts:
-            t = CodeInjection.inject_code(parts[1], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
+            t = Asts.TypeSingleAst.from_string(parts[1]).substituted_generics(generics.arguments)
             return f"{parts[0]}:{t}:{parts[2]}"
 
         else:
-            t = CodeInjection.inject_code(parts[1].split(" ext ")[0], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
-            u = CodeInjection.inject_code(parts[1].split(" ext ")[1], SppParser.parse_type, pos_adjust=pos).sub_generics(generics.arguments)
+            t = Asts.TypeSingleAst.from_string(parts[1].split(" ext ")[0]).substituted_generics(generics.arguments)
+            u = Asts.TypeSingleAst.from_string(parts[1].split(" ext ")[1]).substituted_generics(generics.arguments)
             return f"{parts[0]}:#{t} ext {u}:{parts[2]}"
 
     @staticmethod
     def is_type_recursive(type: Asts.ClassPrototypeAst, sm: ScopeManager) -> Optional[Asts.TypeAst]:
-
         def get_attribute_types(class_prototype: Asts.ClassPrototypeAst, class_scope: Scope) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
-
             for attribute in class_prototype.body.members:
                 raw_attribute_type = attribute.type
                 symbol = class_scope.get_symbol(raw_attribute_type)
@@ -243,3 +236,4 @@ class AstTypeUtils:
         for attribute_cls_prototype, attribute_ast in get_attribute_types(type, sm.current_scope):
             if attribute_cls_prototype is type:
                 return attribute_ast
+        return None

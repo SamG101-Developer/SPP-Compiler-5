@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import List, Callable, Iterator, Optional, Iterable, Dict, Type, Union
 from ordered_set import OrderedSet
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 import copy
 
 
@@ -185,6 +186,9 @@ class Seq[T]:
     def pop(self, index: int = -1, default: T = None) -> T:
         return self._value.pop(index) if index < len(self._value) else default
 
+    def pop_with_error(self, index: int = -1) -> T:
+        return self._value.pop(index)
+
     def pop_n(self, index: int = -1, n: int = 1) -> Seq[T]:
         return Seq([self._value.pop(index) for _ in range(n)])
 
@@ -219,7 +223,7 @@ class Seq[T]:
         return Seq(copy.copy(self._value))
 
     def deepcopy(self) -> Seq[T]:
-        return Seq(copy.deepcopy(self._value))
+        return Seq(fast_deepcopy(self._value))
 
     # Operations
 
@@ -230,8 +234,6 @@ class Seq[T]:
         return iter(self._value)
 
     def __getitem__(self, key: int | slice) -> T:
-        if isinstance(key, int) and key > len(self._value) - 1:
-            raise IndexError(f"Index {key} is out of bounds for sequence of length {len(self._value)}")
         return self._value[key] if isinstance(key, int) else Seq(self._value[key])
 
     def __setitem__(self, key: int, value: T) -> None:

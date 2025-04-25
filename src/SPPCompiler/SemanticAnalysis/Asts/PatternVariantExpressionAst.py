@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class PatternVariantExpressionAst(Asts.Ast):
     expr: Asts.ExpressionAst = field(default=None)
 

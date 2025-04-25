@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class ObjectInitializerArgumentGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     arguments: Seq[Asts.ObjectInitializerArgumentAst] = field(default_factory=Seq)

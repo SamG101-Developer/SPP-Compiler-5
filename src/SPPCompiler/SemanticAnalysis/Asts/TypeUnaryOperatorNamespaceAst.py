@@ -8,14 +8,13 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class TypeUnaryOperatorNamespaceAst(Asts.Ast):
     name: Asts.IdentifierAst = field(default=None)
     tok_dbl_colon: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
         self.tok_dbl_colon = self.tok_dbl_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDoubleColon)
-        assert self.name is not None
 
     def __eq__(self, other: TypeUnaryOperatorNamespaceAst) -> bool:
         return self.name == other.name
@@ -23,9 +22,12 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
     def __hash__(self) -> int:
         return hash(self.name)
 
+    def __str__(self) -> str:
+        return f"{self.name}{self.tok_dbl_colon}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        return f"{self.name}{self.tok_dbl_colon}"
+        return f"{self.name.print(printer)}{self.tok_dbl_colon.print(printer)}"
 
     @property
     def pos_end(self) -> int:

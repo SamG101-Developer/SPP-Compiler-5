@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class WhereConstraintsGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     type_constraints_pairs: Seq[Asts.WhereConstraintsAst] = field(default_factory=Seq)

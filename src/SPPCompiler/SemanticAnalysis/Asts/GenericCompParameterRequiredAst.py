@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericCompParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
     kw_cmp: Asts.TokenAst = field(default=None)
     name: Asts.TypeAst = field(default=None)
@@ -24,7 +24,6 @@ class GenericCompParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self.kw_cmp = self.kw_cmp or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwCmp)
         self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
         self._variant = "Required"
-        assert self.name is not None and self.type is not None
 
     def __eq__(self, other: GenericCompParameterRequiredAst) -> bool:
         # Check both ASTs are the same type and have the same name.

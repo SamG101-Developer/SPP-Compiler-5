@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 
-from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     class_type: Asts.TypeAst = field(default=None)
     tok_l: Asts.TokenAst = field(default=None)
@@ -56,7 +56,7 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
             if not condition_symbol.type.symbolic_eq(self.class_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(cond, condition_symbol.type, self.class_type, self.class_type).scopes(sm.current_scope)
 
-            flow_symbol = copy.deepcopy(condition_symbol)
+            flow_symbol = fast_deepcopy(condition_symbol)
             flow_symbol.type = self.class_type
             sm.current_scope.add_symbol(flow_symbol)
 

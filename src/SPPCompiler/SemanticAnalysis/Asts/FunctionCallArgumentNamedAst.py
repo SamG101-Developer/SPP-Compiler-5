@@ -10,13 +10,13 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class FunctionCallArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.TypeInferrable):
     name: Asts.IdentifierAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default=None)
     convention: Optional[Asts.ConventionAst] = field(default=None)
     value: Asts.ExpressionAst = field(default=None)
-    _type_from_self: Asts.TypeAst = field(default=None, init=False, repr=False)
+    _type_from_self: Asts.TypeAst = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)

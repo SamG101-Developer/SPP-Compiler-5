@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class IsExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     lhs: Asts.ExpressionAst = field(default=None)
     op: Asts.TokenAst = field(default=None)

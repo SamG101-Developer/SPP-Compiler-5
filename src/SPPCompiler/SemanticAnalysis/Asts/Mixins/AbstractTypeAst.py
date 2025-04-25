@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass
+@dataclass(slots=True)
 class AbstractTypeTemporaryAst(ABC):
     """!
     The AbstractTypeTemporaryAst is a temporary type ast that is used or instant-conversion purposes. The ast that it is
@@ -27,7 +27,7 @@ class AbstractTypeTemporaryAst(ABC):
         """
 
 
-@dataclass
+@dataclass(slots=True)
 class AbstractTypeAst(AbstractTypeTemporaryAst):
     """!
     The AbstractTypeAst contains a number of methods required to be implemented by all the different TypeAst classes.
@@ -68,29 +68,34 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @abstractmethod
-    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Self:
-        """!
+    def substitute_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        """
         Substitute the generic arguments in a type. This allows "Vec[T]" to become "Vec[Str]" when it is known that "T"
-        is a "Str". This is used in the type inference process.
-        @param generic_arguments The generic arguments to substitute into the type.
-        @return The type ast with the generic arguments substituted.
+        is a "Str". This is used in the type inference process. This substitutes the generics in-place, and returns the
+        same type ast.
+        :param generic_arguments: The generic arguments to substitute into the type.
+        :return: The original type ast with the generics substituted.
         """
 
     @abstractmethod
-    def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
-        """!
-        Get the generic argument for a given generic parameter name. This is defined as a method because unary type
-        expressions needs to more through their namespace parts first (can't always access the actual type directly).
-        @param generic_name The name of the generic parameter to get.
-        @return The type ast of the generic argument, or None if the generic parameter is not found.
+    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        """
+        Substitute the generic arguments in a type. This allows "Vec[T]" to become "Vec[Str]" when it is known that "T"
+        is a "Str". This is used in the type inference process. This creates a new type ast with the generics
+        substituted, and returns the new type ast.
+        :param generic_arguments: The generic arguments to substitute into the type.
+        :return: The new type ast with the generic arguments substituted.
         """
 
     @abstractmethod
-    def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
-        """!
-        Given a generic argument, get the first parameter whose name matches the argument. This is used for nested
-        generic inference, todo.
+    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
         """
+        Given this type is Vec[Opt[T]], getting the T type from Vec[Opt[Str]] will get T=Str.
+        :param that:
+        :param generic_name:
+        :return:
+        """
+        ...
 
     @abstractmethod
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:

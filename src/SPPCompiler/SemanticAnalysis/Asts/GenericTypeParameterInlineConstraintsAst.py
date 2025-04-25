@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericTypeParameterInlineConstraintsAst(Asts.Ast):
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkColon))
     constraints: Seq[Asts.TypeAst] = field(default_factory=Seq)

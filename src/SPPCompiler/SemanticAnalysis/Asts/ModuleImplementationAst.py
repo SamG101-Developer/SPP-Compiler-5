@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingConte
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class ModuleImplementationAst(Asts.Ast):
     members: Seq[Asts.ModuleMemberAst] = field(default_factory=Seq)
 
@@ -33,6 +33,10 @@ class ModuleImplementationAst(Asts.Ast):
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
         # Alias the types in the members.
         for m in self.members: m.generate_top_level_aliases(sm, **kwargs)
+
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        # Qualify the types in the members.
+        for m in self.members: m.qualify_types(sm, **kwargs)
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         # Load the super scopes.

@@ -8,10 +8,11 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUt
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericParameterGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     parameters: Seq[Asts.GenericParameterAst] = field(default_factory=Seq)
@@ -23,6 +24,9 @@ class GenericParameterGroupAst(Asts.Ast):
 
     def __copy__(self) -> GenericParameterGroupAst:
         return GenericParameterGroupAst(parameters=self.parameters.copy())
+
+    def __deepcopy__(self, memodict=None) -> GenericParameterGroupAst:
+        return GenericParameterGroupAst(parameters=fast_deepcopy(self.parameters))
 
     def __eq__(self, other: GenericParameterGroupAst) -> bool:
         # Check both ASTs are the same type and have the same parameters.

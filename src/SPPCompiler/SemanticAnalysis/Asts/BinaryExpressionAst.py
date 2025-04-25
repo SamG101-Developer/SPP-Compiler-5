@@ -16,7 +16,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The BinaryExpressionAst class is an AST node that represents a binary expression. This AST can be used to represent
@@ -108,14 +108,14 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if isinstance(self.rhs, Asts.TypeAst):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs).scopes(sm.current_scope)
 
-        # Analyse the LHS of the binary expression.
+        # Analyse the LHS of the binary expression. The function conversion will do the RHS.
         self.lhs.analyse_semantics(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(self.lhs, self.op, sm, update_memory_info=False, check_move_from_borrowed_context=False)
 
-        # Ensure the memory status of the left and right hand side.
-        self.rhs.analyse_semantics(sm, **kwargs)
-        if not isinstance(self.rhs, Asts.TokenAst) and not isinstance(self.lhs, Asts.TokenAst):
-            AstMemoryUtils.enforce_memory_integrity(self.rhs, self.op, sm)
+        # Analyse the RHS of the binary expression.
+        # self.rhs.analyse_semantics(sm, **kwargs)
+        # AstMemoryUtils.enforce_memory_integrity(self.rhs, self.op, sm)
+        # if not isinstance(self.rhs, Asts.TokenAst) and not isinstance(self.lhs, Asts.TokenAst):
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
         if self.op.token_type.name.endswith("Assign") and not sm.current_scope.get_variable_symbol_outermost_part(self.lhs):

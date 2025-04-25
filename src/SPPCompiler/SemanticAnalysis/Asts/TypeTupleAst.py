@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class TypeTupleAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
     tok_l: Asts.TokenAst = field(default=None)
     type_elems: Seq[Asts.TypeAst] = field(default_factory=Seq)
@@ -28,7 +28,7 @@ class TypeTupleAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
         return self.tok_r.pos_end
 
     def convert(self) -> Asts.TypeAst:
-        return CommonTypes.Tup(self.pos, self.type_elems)
+        return CommonTypes.Tup2(self.pos, self.type_elems)
 
 
 __all__ = [

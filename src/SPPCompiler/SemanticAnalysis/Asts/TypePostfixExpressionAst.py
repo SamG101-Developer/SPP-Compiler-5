@@ -4,20 +4,25 @@ from dataclasses import dataclass, field
 from typing import Optional, Dict, TYPE_CHECKING, Self, Tuple
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass
+@dataclass(slots=True)
 class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     lhs: Asts.TypeAst = field(default=None)
     op: Asts.TypePostfixOperatorAst = field(default=None)
+
+    def __deepcopy__(self, memodict=None) -> TypePostfixExpressionAst:
+        # Create a deep copy of the AST.
+        return TypePostfixExpressionAst(pos=self.pos, lhs=fast_deepcopy(self.lhs), op=fast_deepcopy(self.op))
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -53,14 +58,16 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def without_generics(self) -> Self:
         return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs, op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.without_generics()))
 
-    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Self:
-        return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs.sub_generics(generic_arguments), op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.sub_generics(generic_arguments)))
+    def substitute_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        self.lhs.substitute_generics(generic_arguments)
+        self.op.name.substitute_generics(generic_arguments)
+        return self
 
-    def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
-        return self.op.name.get_generic(generic_name)
+    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs.substituted_generics(generic_arguments), op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.substituted_generics(generic_arguments)))
 
-    def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
-        return self.op.name.get_generic_parameter_for_argument(argument)
+    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
+        return self.op.name.get_corresponding_generic(that, generic_name)
 
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
         return self.op.name.contains_generic(generic_name)

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Any
 
-from llvmlite import ir as llvm
+# from llvmlite import ir as llvm
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class FunctionParameterGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     params: Seq[Asts.FunctionParameterAst] = field(default_factory=Seq)
@@ -92,11 +92,11 @@ class FunctionParameterGroupAst(Asts.Ast):
         for p in self.params:
             p.analyse_semantics(sm, **kwargs)
 
-    def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
-        # Get the parameter's llvm types.
-        parameter_types = self.params.map_attr("type")
-        llvm_parameter_types = parameter_types.map(lambda t: t.generate_llvm_definitions(sm, llvm_module, **kwargs))
-        return llvm_parameter_types
+    # def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+    #     # Get the parameter's llvm types.
+    #     parameter_types = self.params.map_attr("type")
+    #     llvm_parameter_types = parameter_types.map(lambda t: t.generate_llvm_definitions(sm, llvm_module, **kwargs))
+    #     return llvm_parameter_types
 
 
 __all__ = [

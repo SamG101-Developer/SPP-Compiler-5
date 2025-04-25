@@ -11,12 +11,13 @@ from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import MemoryInfo
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class NamespaceSymbol:
     name: Asts.IdentifierAst
     scope: Optional[Scope] = field(default=None)
@@ -35,10 +36,10 @@ class NamespaceSymbol:
 
     def __deepcopy__(self, memodict=None):
         # Copy the name into a new AST, but link the scope.
-        return NamespaceSymbol(name=copy.deepcopy(self.name), scope=self.scope)
+        return NamespaceSymbol(name=fast_deepcopy(self.name), scope=self.scope)
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class VariableSymbol:
     name: Asts.IdentifierAst
     type: Asts.TypeAst
@@ -66,11 +67,11 @@ class VariableSymbol:
     def __deepcopy__(self, memodict=None):
         # Copy the all the attributes of the VariableSymbol.
         return VariableSymbol(
-            name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), is_mutable=self.is_mutable,
+            name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), is_mutable=self.is_mutable,
             memory_info=copy.copy(self.memory_info), visibility=self.visibility)
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class TypeSymbol:
     name: Asts.GenericIdentifierAst
     type: Optional[Asts.ClassPrototypeAst]
@@ -80,6 +81,7 @@ class TypeSymbol:
     visibility: Visibility = field(default=Visibility.Private)
     llvm_info: LlvmSymbolInfo = field(default_factory=LlvmSymbolInfo)
     convention: Optional[Asts.ConventionAst] = field(default=None)
+    generic_impl: TypeSymbol = field(default=None, repr=False)
 
     scope_defined_in: Optional[Scope] = field(default=None)
 
@@ -92,9 +94,13 @@ class TypeSymbol:
         if self.scope and not self.is_generic and not self.name.value == "Self":
             self.scope._type_symbol = self
 
+        self.generic_impl = self
+
     def __json__(self) -> Dict:
         # Dump the TypeSymbol as a JSON object.
-        return {"what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else ""}
+        return {
+            "what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
+            "parent": self.scope.parent.name if self.scope and self.scope.parent else ""}
 
     def __str__(self) -> str:
         # Dump the TypeSymbol as a JSON string.
@@ -103,19 +109,31 @@ class TypeSymbol:
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the TypeSymbol, but link the scope.
         return TypeSymbol(
-            name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
+            name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
             is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
-            scope_defined_in=self.scope_defined_in)
+            generic_impl=self.generic_impl, scope_defined_in=self.scope_defined_in)
 
     @property
     def fq_name(self) -> Asts.TypeAst:
         fq_name = Asts.TypeSingleAst.from_generic_identifier(self.name)
+        # if self.type:
+        #     fq_name = fq_name.sub_generics(Asts.GenericArgumentGroupAst.from_parameter_group(self.type.generic_parameter_group.parameters).arguments)
+
         if self.is_generic:
             return fq_name
+
         if isinstance(self, AliasSymbol):
             return fq_name
+
         if self.name.value[0] == "$":
             return fq_name
+
+        if self.name.value == "Self":
+            return self.scope.type_symbol.fq_name
+
+        # for i, generic in enumerate(self.name.generic_argument_group.arguments.copy()):
+        #     if isinstance(generic, Asts.GenericTypeArgumentAst):
+        #         self.name.generic_argument_group.arguments[i].value = self.scope.get_symbol(generic.value).fq_name if self.scope.has_symbol(generic.value) else generic.value
 
         scope = self.scope.parent_module
         while scope.parent:
@@ -128,19 +146,21 @@ class TypeSymbol:
         return fq_name.with_convention(self.convention)
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class AliasSymbol(TypeSymbol):
-    old_type: Asts.TypeAst = field(default=None)
+    old_sym: TypeSymbol = field(default=None)
 
     def __json__(self) -> Dict:
         # Dump the AliasSymbol as a JSON object.
-        return super().__json__() | {"old_type": self.old_type}
+        return {
+            "what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
+            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym}
 
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the AliasSymbol, but link the old scope.
         return AliasSymbol(
-            name=copy.deepcopy(self.name), type=copy.deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, old_type=copy.deepcopy(self.old_type))
+            name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
+            is_copyable=self.is_copyable, visibility=self.visibility, old_sym=fast_deepcopy(self.old_sym))
 
 
 type Symbol = AliasSymbol | NamespaceSymbol | VariableSymbol | TypeSymbol

@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 #  - Prevent abstract types being initialized (types with an abstract method)
 
 
-@dataclass
+@dataclass(slots=True)
 class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     class_type: Asts.TypeAst = field(default=None)
     object_argument_group: Asts.ObjectInitializerArgumentGroupAst = field(default=None)

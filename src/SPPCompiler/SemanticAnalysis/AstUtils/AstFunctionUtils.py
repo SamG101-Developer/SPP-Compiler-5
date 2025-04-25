@@ -5,13 +5,12 @@ import operator
 from collections import defaultdict
 from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -90,41 +89,39 @@ class AstFunctionUtils:
             lhs: Asts.ExpressionAst, fn: Asts.PostfixExpressionOperatorFunctionCallAst)\
             -> Tuple[Asts.PostfixExpressionAst, Asts.PostfixExpressionOperatorFunctionCallAst]:
 
-        """!
+        """
         This conversion function is used to normalize all different function calls, such as converting runtime function
         access into static access functions with self arguments. For example, "t.method(1)" becomes "T::method(t, 1)".
         Note that this will only be called for function calls of the form "t.method()", so the function owner type is
         always valid.
 
-        @param sm The scope manager to access function scopes.
-        @param function_owner_type The owning type of the function.
-        @param function_name The name of the method on the type.
-        @param lhs The AST representing the left-hand side of the function call (entire expression before "fn").
-        @param fn The AST representing the function call (parenthesis and arguments).
-
-        @return A 2-tuple containing the new function access, and the new function call. The function access is the
-        static accessor, such as "T::method", and the function call is the actual function call, such as "(t, 1)" (can
-        be applied to the function access).
+        :param sm: The scope manager to access function scopes.
+        :param function_owner_type: The owning type of the function.
+        :param function_name: The name of the method on the type.
+        :param lhs: The AST representing the left-hand side of the function call (entire expression before "fn").
+        :param fn: The AST representing the function call (parenthesis and arguments).
+        :return: A 2-tuple containing the new function access, and the new function call. The function access is the
+            static accessor, such as "T::method", and the function call is the actual function call, such as "(t, 1)"
+            (can be applied to the function access).
         """
 
         # Create an argument for self, which is the object being called (convention tested later).
-        self_argument = CodeInjection.inject_code(
-            f"{lhs.lhs}",
-            SppParser.parse_function_call_argument_unnamed, pos_adjust=lhs.lhs.pos)
+        self_argument = Asts.FunctionCallArgumentUnnamedAst(
+            pos=lhs.lhs.pos, value=lhs.lhs)
         function_arguments = fn.function_argument_group.arguments.copy()
         function_arguments.insert(0, self_argument)
 
-        # Create the static method access (without the unction call and arguments).
-        new_function_access = CodeInjection.inject_code(
-            f"{function_owner_type}::{function_name}",
-            SppParser.parse_postfix_expression, pos_adjust=lhs.pos)
+        # Create the static method access (without the function call and arguments).
+        new_function_access = Asts.PostfixExpressionAst(
+            pos=lhs.pos, lhs=function_owner_type,
+            op=Asts.PostfixExpressionOperatorMemberAccessAst(
+                pos=lhs.pos, tok_access=Asts.TokenAst.raw(token_type=SppTokenType.TkDoubleColon), field=function_name))
 
         # Create the function call with the object as the first argument (represents "self").
-        new_function_call = CodeInjection.inject_code(
-            f"{fn.generic_argument_group}({function_arguments.join(", ")}){fn.fold_token or ""}",
-            SppParser.parse_postfix_op_function_call, pos_adjust=fn.pos)
+        new_function_call = copy.copy(fn)
 
         # Tell the "self" argument what type it is (keyword "self" inference requires outer AST knowledge).
+        new_function_call.function_argument_group.arguments = function_arguments
         new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(sm)
         new_function_call.function_argument_group.arguments[0].value.pos = lhs.lhs.pos
 
@@ -229,6 +226,8 @@ class AstFunctionUtils:
             if not (params_new.params + params_old.params).map(type).contains(Asts.FunctionParameterRequiredAst):
                 return old_func
 
+        return None
+
     @staticmethod
     def check_for_conflicting_override(
             this_scope: Scope, target_scope: Scope, new_func: Asts.FunctionPrototypeAst, *,
@@ -268,6 +267,8 @@ class AstFunctionUtils:
                             if hs(new_func) == hs(old_func) and sc(new_func) is sc(old_func):
                                 return old_func
 
+        return None
+
     @staticmethod
     def name_function_arguments(
             arguments: Seq[Asts.FunctionCallArgumentAst], parameters: Seq[Asts.FunctionParameterAst],
@@ -305,8 +306,7 @@ class AstFunctionUtils:
             # The variadic parameter requires a tuple of the remaining arguments. All future arguments are moved into a
             # tuple, and named by the variadic parameter.
             if parameter_names.length == 1 and is_variadic:
-                named_argument = f"{parameter_names.pop(0)}=({arguments[i:].join(", ")})"
-                named_argument = CodeInjection.inject_code(named_argument, SppParser.parse_function_call_argument_named, pos_adjust=unnamed_argument.pos)
+                named_argument = Asts.FunctionCallArgumentNamedAst(pos=unnamed_argument.pos, name=parameter_names.pop(0), value=Asts.TupleLiteralAst(elems=arguments[i:].map_attr("value"), pos=unnamed_argument.pos))
                 arguments.replace(unnamed_argument, named_argument, 1)
                 arguments.pop_n(-1, arguments.length - i - 1)
                 break
@@ -315,18 +315,19 @@ class AstFunctionUtils:
             # signature. Copy specially assigned "self" types if present.
             else:
                 parameter_name = parameter_names.pop(0)
-                named_argument = f"${parameter_name}={unnamed_argument}"
-                named_argument = CodeInjection.inject_code(named_argument, SppParser.parse_function_call_argument_named, pos_adjust=unnamed_argument.pos)
-                named_argument.name = parameter_name
-                named_argument._type_from_self = unnamed_argument._type_from_self
+                named_argument = Asts.FunctionCallArgumentNamedAst(
+                    name=parameter_name,
+                    convention=unnamed_argument.convention,
+                    value=unnamed_argument.value,
+                    _type_from_self=unnamed_argument._type_from_self)
                 arguments.replace(unnamed_argument, named_argument, 1)
 
     @staticmethod
     def name_generic_arguments(
             arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], sm: ScopeManager,
-            is_tuple_owner: bool = False) -> None:
+            owner: Asts.TypeAst | Asts.IdentifierAst, is_tuple_owner: bool = False) -> None:
 
-        """!
+        """
         Name all generic arguments being passed to a function call or a type declaration, by removing used names from
         the parameter list, and then applying the leftover parameter names for the resulting arguments. Special care is
         taken for the case of a variadic parameter, which requires a tuple of the remaining arguments.
@@ -335,16 +336,25 @@ class AstFunctionUtils:
         the more expressive application of generic arguments; they are not only constrained to function calls, but any
         place a type is defined. As such, further checks are needed to ensure the generic arguments are correctly named.
 
-        @param arguments The list of generic arguments being passed to the function.
-        @param parameters The list of generic parameters the function accepts.
-        @param sm The scope manager to access the current scope.
-        @param is_tuple_owner If the owner type is a tuple (early return).
+        :param arguments: The list of generic arguments being passed to the function.
+        :param parameters: The list of generic parameters the function accepts.
+        :param sm: The scope manager to access the current scope.
+        :param owner: The type that owns the generic arguments (the type being instantiated).
+        :param is_tuple_owner: If the owner type is a tuple (early return).
+        :return: None (the generic arguments are modified in-place).
 
-        @return None (the generic arguments are modified in-place).
-
-        @throw SemanticErrors.ArgumentNameInvalidError If an argument name is invalid (doesn't match a parameter name).
-        @throw SemanticErrors.GenericArgumentTooManyError If too many generic arguments are passed.
+        :raise SemanticErrors.ArgumentNameInvalidError: If an argument name is invalid (doesn't match a parameter name).
+        :raise SemanticErrors.GenericArgumentTooManyError: If too many generic arguments are passed.
         """
+
+        GEN_MAPPING = {
+            Asts.GenericTypeParameterRequiredAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericTypeParameterOptionalAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericTypeParameterVariadicAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericCompParameterRequiredAst: Asts.GenericCompArgumentNamedAst,
+            Asts.GenericCompParameterOptionalAst: Asts.GenericCompArgumentNamedAst,
+            Asts.GenericCompParameterVariadicAst: Asts.GenericCompArgumentNamedAst,
+        }
 
         # Special case for tuples to prevent infinite-recursion.
         if is_tuple_owner: return
@@ -367,8 +377,9 @@ class AstFunctionUtils:
             # The variadic parameter requires a tuple of the remaining arguments. All future arguments are moved into a
             # tuple, and named by the variadic parameter.
             if parameter_names.length == 1 and is_variadic:
-                named_argument = f"{parameter_names.pop(0)}=({arguments[i:].join(", ")})"
-                named_argument = CodeInjection.inject_code(named_argument, SppParser.parse_generic_argument, pos_adjust=unnamed_argument.pos)
+                parameter_name = parameter_names.pop(0)
+                ctor: type = GEN_MAPPING[type(parameters.find(lambda g: g.name.name == parameter_name))]
+                named_argument = ctor(pos=unnamed_argument.pos, name=Asts.TypeSingleAst.from_generic_identifier(parameter_name), value=CommonTypes.Tup2(pos=unnamed_argument.pos, inner_types=arguments[i:].map_attr("value")))
                 arguments.replace(unnamed_argument, named_argument, 1)
                 arguments.pop_n(-1, arguments.length - i - 1)
                 break
@@ -379,18 +390,24 @@ class AstFunctionUtils:
             # handled in the single caller of that function; analysing function call ASTs.
             else:
                 try:
-                    named_argument = f"{parameter_names.pop(0)}={unnamed_argument}"
-                    named_argument = CodeInjection.inject_code(named_argument, SppParser.parse_generic_argument, pos_adjust=unnamed_argument.pos)
+                    parameter_name = parameter_names.pop_with_error(0)
+                    ctor: type = GEN_MAPPING[type(parameters.find(lambda g: g.name.name == parameter_name))]
+                    named_argument = ctor(pos=unnamed_argument.pos, name=Asts.TypeSingleAst.from_generic_identifier(parameter_name), value=unnamed_argument.value)
                     arguments.replace(unnamed_argument, named_argument, 1)
 
+                # If too many generic arguments have been given, raise an error.
                 except IndexError:
-                    # Too many generic arguments passed.
                     raise SemanticErrors.GenericArgumentTooManyError().add(
-                        parameters, unnamed_argument).scopes(sm.current_scope)
+                        parameters, owner, unnamed_argument).scopes(sm.current_scope)
+
+        # For any default generic values, override the default "T=T" with "T=Str" etc.
+        # for parameter in parameters.filter_to_type(Asts.GenericParameterOptionalAst):
+        #     arguments.find(lambda a: a.name == parameter.name).value = parameter.default
 
     @staticmethod
     def infer_generic_arguments(
             generic_parameters: Seq[Asts.GenericParameterAst],
+            optional_generic_parameters: Seq[Asts.GenericParameterAst],
             explicit_generic_arguments: Seq[Asts.GenericArgumentAst],
             infer_source: Dict[Asts.IdentifierAst, Asts.TypeAst],
             infer_target: Dict[Asts.IdentifierAst, Asts.TypeAst],
@@ -399,29 +416,13 @@ class AstFunctionUtils:
             variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None)\
             -> Seq[Asts.GenericArgumentAst]:
 
-        """!
+        """
         This function infers the generic parameters' values based not only on explicit generic arguments, but on other
         values' true types, that were originally declared as generic. For example a generic type T can be inferred from
         an argument's type, whose corresponding parameter is the generic T type. The same goes for object initializer
         arguments and class attributes.
 
-        @param generic_parameters The generic parameters that need the values assigned via inference.
-        @param explicit_generic_arguments Any explicit generic arguments that have been given with [] syntax.
-        @param infer_source Function or object initializer arguments.
-        @param infer_target Function parameters or attributes (that have generic type annotations).
-        @param sm The scope manager to access the current scope.
-        @param owner An optional "owner" type (exclusive to types rather than function calls).
-        @param variadic_parameter_identifier An optional parameter name that is known to be variadic.
-
-        @return A list of generic arguments with inferred values.
-
-        @throw SemanticErrors.GenericParameterInferredConflictInferredError If the inferred generic arguments conflict.
-        @throw SemanticErrors.GenericParameterInferredConflictExplicitError If the inferred generic arguments conflict
-            with explicit generic arguments.
-        @throw SemanticErrors.GenericParameterNotInferredError If a generic parameter has not been inferred.
-
-        @example
-            cls Point[T, U, V, W] {
+        cls Point[T, U, V, W] {
                 x: T
                 y: U
                 z: V
@@ -429,20 +430,46 @@ class AstFunctionUtils:
 
             let p = Point[W=Bool](x=1, y="hello", z=False)
 
-            * generic_parameter: [T, U, V, W]
-            * explicit_generic_arguments: [W=Bool]
-            * infer_source: {x: BigInt, y: Str, z: Bool}
-            * infer_target: {x: T, y: U, z: V}
+        * generic_parameter: [T, U, V, W]
+        * explicit_generic_arguments: [W=Bool]
+        * infer_source: {x: BigInt, y: Str, z: Bool}
+        * infer_target: {x: T, y: U, z: V}
+
+        :param generic_parameters: The generic parameters that need the values assigned via inference.
+        :param optional_generic_parameters: The defaults to fill missing generic arguments with.
+        :param explicit_generic_arguments: Any explicit generic arguments that have been given with [] syntax.
+        :param infer_source: Function or object initializer arguments.
+        :param infer_target: Function parameters or attributes (that have generic type annotations).
+        :param sm: The scope manager to access the current scope.
+        :param owner: An optional "owner" type (exclusive to types rather than function calls).
+        :param variadic_parameter_identifier: An optional parameter name that is known to be variadic.
+        :return: A list of generic arguments with inferred values.
+
+        :raise SemanticErrors.GenericParameterInferredConflictInferredError: If the inferred generic arguments conflict.
+        :raise SemanticErrors.GenericParameterInferredConflictExplicitError: If the inferred generic arguments conflict
+            with explicit generic arguments.
+        :raise SemanticErrors.GenericParameterNotInferredError: If a generic parameter has not been inferred.
         """
+
+        GEN_MAPPING = {
+            Asts.GenericTypeParameterRequiredAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericTypeParameterOptionalAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericTypeParameterVariadicAst: Asts.GenericTypeArgumentNamedAst,
+            Asts.GenericCompParameterRequiredAst: Asts.GenericCompArgumentNamedAst,
+            Asts.GenericCompParameterOptionalAst: Asts.GenericCompArgumentNamedAst,
+            Asts.GenericCompParameterVariadicAst: Asts.GenericCompArgumentNamedAst,
+        }
 
         # print("-" * 100)
         # print("generic_parameters", generic_parameters)
+        # print("optional_generic_parameters", optional_generic_parameters)
         # print("explicit_generic_arguments", explicit_generic_arguments)
         # print("infer_source", Seq([f"{k}={v}" for k, v in infer_source.items()]))
         # print("infer_target", Seq([f"{k}={v}" for k, v in infer_target.items()]))
+        # print("owner", owner, sm.current_scope)
 
         # Special case for tuples to prevent infinite-recursion.
-        if isinstance(owner, Asts.TypeAst) and owner.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE:
+        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and owner.symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope):
             return explicit_generic_arguments
 
         # If there are no generic parameters then skip any inference checks.
@@ -474,8 +501,7 @@ class AstFunctionUtils:
 
                 # Check for inner match (a: Vec[T] vs a: Vec[BigInt]).
                 elif infer_target_name in infer_source:
-                    corresponding_generic_parameter = infer_target_type.get_generic_parameter_for_argument(generic_parameter_name)
-                    inferred_generic_argument = infer_source[infer_target_name].get_generic(corresponding_generic_parameter)
+                    inferred_generic_argument = infer_source[infer_target_name].get_corresponding_generic(infer_target_type, generic_parameter_name)
 
                 # Handle the match if it exists.
                 if inferred_generic_argument:
@@ -484,6 +510,14 @@ class AstFunctionUtils:
                 # Handle the variadic parameter if it exists.
                 if variadic_parameter_identifier and infer_target_name == variadic_parameter_identifier:
                     inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].type_parts()[0].generic_argument_group.arguments[0].value
+
+        # Add any default generic arguments in that were missing.
+        for optional_generic_parameter in optional_generic_parameters:
+            if optional_generic_parameter.name not in inferred_generic_arguments:
+                default = optional_generic_parameter.default
+                if isinstance(owner, Asts.TypeAst):
+                    default = sm.current_scope.get_symbol(owner).scope.get_symbol(default).fq_name
+                inferred_generic_arguments[optional_generic_parameter.name].append(default)
 
         # Check each generic argument name only has one unique inferred type. This is to prevent conflicts for a generic
         # type. For example, "T" can't be inferred as a "Str" and then a "BigInt". All instances must match the first
@@ -505,16 +539,27 @@ class AstFunctionUtils:
         for generic_parameter_name in generic_parameters.map_attr("name"):
             if generic_parameter_name not in inferred_generic_arguments:
                 raise SemanticErrors.GenericParameterNotInferredError().add(
-                    generic_parameter_name, owner).scopes(sm.current_scope)
+                    generic_parameter_name, owner).scopes(sm.current_scope)  # , sm.current_scope.get_symbol(owner).scope.parent_module)
+
+        # At this point, each inferred generic argument has been checked for conflicts, so it is safe to assume the
+        # first type mapping per argument can be used. Extract these types into a new dictionary.
+        formatted_generic_arguments = {}
+        for generic_parameter_name, [generic_parameter_value, *_] in inferred_generic_arguments.copy().items():
+            formatted_generic_arguments[generic_parameter_name] = generic_parameter_value
+
+        # Cross apply all generics. This allows generics from previous arguments to be used in future arguments. For
+        # example, Cls[T, Vec[T]] when T.
+        for generic_parameter_name, generic_parameter_value in formatted_generic_arguments.copy().items():
+            if isinstance(generic_parameter_value, Asts.TypeAst):
+                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(Asts.GenericArgumentGroupAst.from_dict(formatted_generic_arguments).arguments)
 
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
         # GenericXXXArgumentASTs. Todo: pos_adjust?
         pos_adjust = owner.pos if owner else 0
-        inferred_generic_arguments = {k: v[0] for k, v in inferred_generic_arguments.items()}
-        inferred_generic_arguments = [
-            CodeInjection.inject_code(f"{k}={v}", SppParser.parse_generic_argument, pos_adjust=pos_adjust)
-            for k, v in inferred_generic_arguments.items()]
+        final_args = []
+        for k, v in formatted_generic_arguments.items():
+            ctor: type = GEN_MAPPING[type(generic_parameters.find(lambda g: g.name == k))]
+            value = Asts.IdentifierAst.from_type(v) if isinstance(v, Asts.TypeAst) and ctor is Asts.GenericCompArgumentNamedAst else v
+            final_args.append(ctor(pos=pos_adjust, name=k, value=value))
 
-        # print("inferred_generic_arguments", Seq(inferred_generic_arguments))
-
-        return Seq(inferred_generic_arguments)
+        return Seq(final_args)

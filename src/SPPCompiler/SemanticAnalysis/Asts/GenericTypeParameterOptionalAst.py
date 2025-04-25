@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericTypeParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
     name: Asts.TypeAst = field(default=None)
     constraints: Asts.GenericTypeParameterInlineConstraintsAst = field(default=None)
@@ -19,20 +19,26 @@ class GenericTypeParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def __post_init__(self) -> None:
         self.constraints = self.constraints or Asts.GenericTypeParameterInlineConstraintsAst()
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
-        assert self.name is not None and self.default is not None
         self._variant = "Optional"
 
     def __eq__(self, other: GenericTypeParameterOptionalAst) -> bool:
         # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericTypeParameterOptionalAst) and self.name == other.name
 
+    def __str__(self) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            str(self.name),
+            str(self.tok_assign),
+            str(self.default)]
+        return "".join(string)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
             self.name.print(printer),
-            self.constraints.print(printer) + " ",
-            self.tok_assign.print(printer) + " ",
+            self.tok_assign.print(printer),
             self.default.print(printer)]
         return "".join(string)
 

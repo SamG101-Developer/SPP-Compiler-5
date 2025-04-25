@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -13,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericArgumentGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     arguments: Seq[Asts.GenericArgumentAst] = field(default_factory=Seq)
@@ -26,13 +25,25 @@ class GenericArgumentGroupAst(Asts.Ast):
     def __copy__(self) -> GenericArgumentGroupAst:
         return GenericArgumentGroupAst(arguments=self.arguments.copy())
 
+    def __deepcopy__(self, memodict=None) -> GenericArgumentGroupAst:
+        return GenericArgumentGroupAst(tok_l=self.tok_l, arguments=self.arguments.deepcopy(), tok_r=self.tok_r)
+
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
         return self.arguments == other.arguments
 
     def __getitem__(self, item: str) -> Optional[Asts.GenericArgumentAst]:
-        assert isinstance(item, str)
+        assert isinstance(item, str), type(item)
         return self.arguments.find(lambda a: Asts.IdentifierAst.from_type(a.name).value == item)
+
+    def __str__(self) -> str:
+        if self.arguments:
+            string = [
+                str(self.tok_l),
+                ", ".join(self.arguments.map(str)),
+                str(self.tok_r)]
+            return "".join(string)
+        return ""
 
     @staticmethod
     def from_parameter_group(parameters: Seq[Asts.GenericParameterAst]) -> GenericArgumentGroupAst:
@@ -41,8 +52,18 @@ class GenericArgumentGroupAst(Asts.Ast):
             **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__args__},
             **{g: Asts.GenericTypeArgumentNamedAst for g in Asts.GenericTypeParameterAst.__args__}}
 
-        arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)](name=copy.deepcopy(p.name), value=p.name))
+        arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)](name=p.name, value=p.name))
         return GenericArgumentGroupAst(arguments=arguments)
+
+    @staticmethod
+    def from_dict(dictionary: dict[Asts.TypeAst, Asts.ExpressionAst | Asts.TypeAst]) -> GenericArgumentGroupAst:
+        args = Seq()
+        for arg_name, arg_val in dictionary.items():
+            if isinstance(arg_val, Asts.TypeAst):
+                args.append(Asts.GenericTypeArgumentNamedAst(name=arg_name, value=arg_val))
+            else:
+                args.append(Asts.GenericCompArgumentNamedAst(name=arg_name, value=arg_val))
+        return GenericArgumentGroupAst(arguments=args)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -52,9 +73,8 @@ class GenericArgumentGroupAst(Asts.Ast):
                 self.tok_l.print(printer),
                 self.arguments.print(printer, ", "),
                 self.tok_r.print(printer)]
-        else:
-            string = []
-        return "".join(string)
+            return "".join(string)
+        return ""
 
     @property
     def pos_end(self) -> int:

@@ -49,7 +49,7 @@ class TestSupUseStatementAst(CustomTestCase):
         }
 
         fun f() -> std::void::Void {
-            let x: MyType[std::number::BigInt]::X
+            let x: MyType[std::number::bigint::BigInt]::X
             x = "hello world"
         }
         """
@@ -101,7 +101,7 @@ class TestSupUseStatementAst(CustomTestCase):
         }
 
         fun f() -> std::void::Void {
-            let x: MyType[std::number::BigInt]::X
+            let x: MyType[std::number::bigint::BigInt]::X
             x = 123
         }
         """

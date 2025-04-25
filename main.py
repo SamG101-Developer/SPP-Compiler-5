@@ -5,12 +5,11 @@ __maintainer__ = "Sam Gardner"
 __email__ = "samuelgardner101@gmail.com"
 __status__ = "Development"
 
-
 import os
+import json_fix
 from argparse import Namespace
 
 from spp_cli import handle_build
-import json_fix
 
 PROFILE = False
 

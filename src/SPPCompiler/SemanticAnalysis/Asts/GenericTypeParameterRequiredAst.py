@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericTypeParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
     name: Asts.TypeAst = field(default=None)
     constraints: Asts.GenericTypeParameterInlineConstraintsAst = field(default=None)
@@ -16,11 +16,17 @@ class GenericTypeParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def __post_init__(self) -> None:
         self.constraints = self.constraints or Asts.GenericTypeParameterInlineConstraintsAst()
         self._variant = "Required"
-        assert self.name is not None
 
     def __eq__(self, other: GenericTypeParameterRequiredAst) -> bool:
         # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericTypeParameterRequiredAst) and self.name == other.name
+
+    def __str__(self) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            str(self.name),
+            str(self.constraints)]
+        return "".join(string)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

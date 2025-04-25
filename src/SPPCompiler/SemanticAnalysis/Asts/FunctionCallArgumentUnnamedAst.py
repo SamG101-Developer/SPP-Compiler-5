@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass
+@dataclass(slots=True)
 class FunctionCallArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.TypeInferrable):
     convention: Asts.ConventionAst = field(default=None)
     tok_unpack: Optional[Asts.TokenAst] = field(default=None)

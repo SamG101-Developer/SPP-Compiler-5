@@ -29,3 +29,13 @@ Arrays
 Function types.
 * Mostly requires closures
 * Superimpose function types.
+
+Superimpositions.
+* Don't allow method access modifiers inside sup-ext (only sup)
+
+Generators.
+* For `GenOnce`, only one `gen` expression is allowed.
+* Auto `resume` on `gen` value being received?
+
+Binary Expressions.
+* Check function overload is being analysed.

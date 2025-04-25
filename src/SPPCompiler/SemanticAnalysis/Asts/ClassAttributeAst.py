@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
@@ -9,13 +8,14 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
     name: Asts.IdentifierAst = field(default=None)
@@ -29,8 +29,8 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def __deepcopy__(self, memodict: Dict = None) -> ClassAttributeAst:
         return ClassAttributeAst(
-            self.pos, self.annotations, copy.deepcopy(self.name), self.tok_colon,
-            copy.deepcopy(self.type), _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
+            self.pos, self.annotations, fast_deepcopy(self.name), self.tok_colon,
+            fast_deepcopy(self.type), _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -47,7 +47,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         return self.type.pos_end
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
-        super().pre_process(ctx)
+        Asts.Ast.pre_process(self, ctx)
 
         # Pre-process the annotations of this attribute.
         for a in self.annotations:
@@ -68,17 +68,15 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         sm.current_scope.add_symbol(symbol)
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
-        # Type checks must be done before semantic analysis, as other ASTs may use this attribute prior to its analysis.
-        self.type.analyse_semantics(sm)
+        self.type.analyse_semantics(sm, **kwargs)
 
         # Ensure the attribute type is not void.
-        void_type = CommonTypes.Void(self.pos)
-        if self.type.symbolic_eq(void_type, sm.current_scope):
+        # Todo: Check the order of comparison (variants).
+        if self.type.symbolic_eq(CommonTypesPrecompiled.VOID, sm.current_scope):
             raise SemanticErrors.TypeVoidInvalidUsageError().add(
                 self.type).scopes(sm.current_scope)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-
         # Analyse the semantics of the annotations and the type of the attribute.
         for a in self.annotations:
             a.analyse_semantics(sm, **kwargs)

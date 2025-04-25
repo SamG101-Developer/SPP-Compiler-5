@@ -6,18 +6,18 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class TypeUnaryOperatorBorrowAst(Asts.Ast):
     convention: Asts.ConventionAst = field(default=None)
-
-    def __post_init__(self) -> None:
-        assert self.convention is not None
 
     def __eq__(self, other: TypeUnaryOperatorBorrowAst) -> bool:
         return type(self.convention) is type(other.convention)
 
     def __hash__(self) -> int:
         return hash(str(self.convention))
+
+    def __str__(self) -> str:
+        return str(self.convention)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

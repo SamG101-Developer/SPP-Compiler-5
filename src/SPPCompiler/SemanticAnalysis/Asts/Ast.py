@@ -12,8 +12,8 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass
-class Ast(ABC, CompilerStages):
+@dataclass(slots=True)
+class Ast(CompilerStages):
     """
     The Ast class is the base class of all ASTs created by the parser. Common methods and properties are defined here.
     The "CompilerStages" class is inherited to allow the AST to be processed by the compiler.

@@ -5,14 +5,14 @@ __maintainer__ = "Sam Gardner"
 __email__ = "samuelgardner101@gmail.com"
 __status__ = "Development"
 
+import os
+import tomllib
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
-import os, tomllib, sys
-from setuptools._distutils.ccompiler import new_compiler
 
-sys.path.append(str(Path(__file__).parent / "src"))
 from SPPCompiler.Compiler.Compiler import Compiler
 
+# Constants
 NULL_STDOUT = " > /dev/null 2>&1" if os.name == "posix" else " > NUL 2>&1"
 OUT_FOLDER = "out"
 SRC_FOLDER = "src"
@@ -179,7 +179,7 @@ def validate_project_structure() -> bool:
     # If there is an FFI folder, check each subfolder is structured properly.
     ffi_folder = cwd / FFI_FOLDER
     if ffi_folder.exists():
-        ext = new_compiler().shared_lib_extension[1:]
+        ext = "dll"  # todo: platform agnostic
 
         for lib_folder in ffi_folder.iterdir():
             if not lib_folder.is_dir():

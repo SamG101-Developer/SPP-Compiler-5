@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The ArrayLiteralNElementAst class is an AST node that represents an array literal with n elements. The type of the
@@ -73,7 +73,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Create the standard "std::array::Arr[T, n: BigNum]" type, with generic items.
         size = Asts.IntegerLiteralAst.from_python_literal(self.elems.length)
         element_type = self.elems[0].infer_type(sm, **kwargs)
-        array_type = CommonTypes.Arr(self.pos, element_type, size)
+        array_type = CommonTypes.Arr2(self.pos, element_type, size)
         array_type.analyse_semantics(sm, **kwargs)
         return array_type
 

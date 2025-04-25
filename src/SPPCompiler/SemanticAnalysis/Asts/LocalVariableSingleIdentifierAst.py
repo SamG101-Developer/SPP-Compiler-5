@@ -12,14 +12,11 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
     alias: Optional[Asts.LocalVariableSingleIdentifierAliasAst] = field(default=None)
-
-    def __post_init__(self) -> None:
-        assert self.name is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

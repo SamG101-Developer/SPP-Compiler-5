@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class PostfixExpressionOperatorEarlyReturnAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_qst: Asts.TokenAst = field(default=None)
 

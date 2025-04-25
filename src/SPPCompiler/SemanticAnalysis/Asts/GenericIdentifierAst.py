@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-import hashlib
 from dataclasses import dataclass, field
 
+import xxhash
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 
-@dataclass
+@dataclass(slots=True)
 class GenericIdentifierAst(Asts.Ast):
     value: str = field(default="")
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default=None)
@@ -25,10 +26,21 @@ class GenericIdentifierAst(Asts.Ast):
 
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
-        return int.from_bytes(hashlib.sha256(self.value.encode()).digest())
+        return int.from_bytes(xxhash.xxh3_64(self.value).digest())
+
+    def __deepcopy__(self, memodict=None) -> GenericIdentifierAst:
+        # Create a deep copy of the AST.
+        return GenericIdentifierAst(
+            pos=self.pos, value=self.value, generic_argument_group=fast_deepcopy(self.generic_argument_group))
 
     def __json__(self) -> str:
         return self.print(AstPrinter())
+
+    def __str__(self) -> str:
+        string = [
+            self.value,
+            str(self.generic_argument_group)]
+        return "".join(string)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

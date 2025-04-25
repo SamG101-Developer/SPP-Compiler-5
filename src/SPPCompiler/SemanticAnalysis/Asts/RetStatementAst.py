@@ -1,20 +1,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, Any
+from typing import Optional
 
-from llvmlite import ir as llvm
-
-from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+# from llvmlite import ir as llvm
+
+
+@dataclass(slots=True)
 class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_ret: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwRet))
     expr: Optional[Asts.ExpressionAst] = field(default=None)
@@ -61,14 +62,14 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.TypeMismatchError().add(
                 expression_type, expected_type, self.expr, expected_type).scopes(sm.current_scope)
 
-    def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
-        # Create a return instruction with the expression if it exists.
-        if self.expr:
-            return_value = self.expr.generate_llvm_definitions(scope_handler, llvm_module, builder, block, **kwargs)
-            builder.ret(return_value)
-        else:
-            builder.ret_void()
-        return None
+    # def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
+    #     # Create a return instruction with the expression if it exists.
+    #     if self.expr:
+    #         return_value = self.expr.generate_llvm_definitions(scope_handler, llvm_module, builder, block, **kwargs)
+    #         builder.ret(return_value)
+    #     else:
+    #         builder.ret_void()
+    #     return None
 
 
 __all__ = [

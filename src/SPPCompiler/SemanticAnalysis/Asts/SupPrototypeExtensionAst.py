@@ -8,8 +8,9 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
@@ -19,13 +20,13 @@ if TYPE_CHECKING:
 
 
 # Todo
-#  - Prevent double inheritance (same type superimposed anywhere in the tree)
-#  - Prevent cyclic inheritance
+#  - Add tests for double inheritance
+#  - Add tests for cyclic inheritance
 #  - Only allow 1 Gen[T] superimposition
 #  - Error if the type doesn't exist
 
 
-@dataclass
+@dataclass(slots=True)
 class SupPrototypeExtensionAst(Asts.Ast):
     tok_sup: Asts.TokenAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default=None)
@@ -64,13 +65,13 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         if self.name.type_parts()[0].value[0] == "$": return
-        super().pre_process(ctx)
+        Asts.Ast.pre_process(self, ctx)
         self.body.pre_process(self)
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Create a new scope for the superimposition.
         sm.create_and_move_into_new_scope(f"<sup:{self.name} ext {self.super_class}:{self.pos}>", self)
-        super().generate_top_level_scopes(sm)
+        Asts.Ast.generate_top_level_scopes(self, sm)
 
         # Ensure the superimposition type does not have a convention.
         if c := self.name.get_convention():
@@ -95,6 +96,18 @@ class SupPrototypeExtensionAst(Asts.Ast):
         self.body.generate_top_level_aliases(sm)
         sm.move_out_of_current_scope()
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        sm.move_to_next_scope()
+
+        # Check every generic parameter is constrained by the type.
+        if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
+            if self.name.type_parts()[0].value[0] != "$":
+                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
+                    unconstrained[0], self.name).scopes(sm.current_scope)
+
+        self.body.qualify_types(sm, **kwargs)
+        sm.move_out_of_current_scope()
+
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
 
@@ -112,22 +125,24 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
             if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
                 raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(
-                    generic_arg, self).scopes(sm.current_scope)
+                    generic_arg, self.tok_sup).scopes(sm.current_scope)
 
-        # Ensure the validity of the superclass, along with its generics.
-        self.super_class.analyse_semantics(sm)
+        self.super_class.analyse_semantics(sm, **kwargs)
         self.super_class = sm.current_scope.get_symbol(self.super_class).fq_name
 
         sup_symbol = sm.current_scope.get_symbol(self.super_class.without_generics())
-
         if sup_symbol.is_generic:
             raise SemanticErrors.GenericTypeInvalidUsageError().add(
                 self.super_class, self.super_class, "superimposition supertype").scopes(sm.current_scope)
 
-        # Register the superimposition as a "sup scope" and run the load steps for the body.
-        sup_symbol = sm.current_scope.get_symbol(self.super_class)
-
         # Prevent double inheritance by checking if the sup scope is already in the list.
+        if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(
+                lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
+                lambda s: s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)):
+            raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
+                existing_sup_scope._ast.super_class, self.name).scopes(sm.current_scope)
+
+        # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
         if existing_sup_scope := cls_symbol.scope.sup_scopes.filter(
                 lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
                 lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)):
@@ -135,15 +150,10 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
                     existing_sup_scope._ast.super_class, self.super_class).scopes(sm.current_scope)
 
-        # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
-        if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(
-                lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
-                lambda s: s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)):
-            raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
-                existing_sup_scope._ast.super_class, self.name).scopes(sm.current_scope)
+        sup_symbol = sup_symbol.scope.get_symbol(self.super_class)
 
         # Mark the class as copyable if the Copy type is the super class.
-        if self.super_class.symbolic_eq(CommonTypes.Copy(0), sm.current_scope):
+        if self.super_class.symbolic_eq(CommonTypesPrecompiled.COPY, sm.current_scope):
             cls_symbol.is_copyable = True
 
         # Run the inject steps for the body.
@@ -171,7 +181,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
         existing_type_names = cls_symbol.scope.sup_scopes.filter(
             lambda s: isinstance(s._ast, Asts.SupPrototypeAst)).map(
-            lambda s: s._ast.body.members.filter_to_type(Asts.UseStatementAst)).flat().map_attr("new_type")
+            lambda s: s._ast.body.members.filter_to_type(Asts.SupUseStatementAst)).flat().map_attr("new_type")
 
         if duplicates := existing_type_names.non_unique():
             raise SemanticErrors.IdentifierDuplicationError().add(
@@ -196,11 +206,13 @@ class SupPrototypeExtensionAst(Asts.Ast):
         sm.move_to_next_scope()
         sup_symbol = sm.current_scope.get_symbol(self.super_class)
 
-        # Check every generic parameter is constrained by the type.
-        if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
-            if self.name.type_parts()[0].value[0] != "$":
-                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
-                    unconstrained[0], self.name).scopes(sm.current_scope)
+        # Add the "Self" symbol into the scope.
+        if self.name.type_parts()[0].value[0] != "$":
+            cls_symbol = sm.current_scope.get_symbol(self.name.without_generics())
+            self_symbol = TypeSymbol(
+                name=Asts.GenericIdentifierAst.from_type(CommonTypes.Self(self.name.pos)), type=cls_symbol.type,
+                scope=cls_symbol.scope)
+            sm.current_scope.add_symbol(self_symbol)
 
         # Check there are no optional generic parameters.
         if optional := self.generic_parameter_group.get_optional_params():
@@ -226,7 +238,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
                         raise SemanticErrors.SuperimpositionExtensionNonVirtualMethodOverriddenError().add(
                             base_method.name, self.super_class).scopes(sm.current_scope)
 
-                case Asts.UseStatementAst():
+                case Asts.SupUseStatementAst():
                     # Get the associated type from the superclass directly.
                     this_type = member.new_type
                     base_type = sup_symbol.scope.get_symbol(this_type, exclusive=True)

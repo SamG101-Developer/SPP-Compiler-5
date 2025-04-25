@@ -122,7 +122,7 @@ class TestFunctionPrototypeAst(CustomTestCase):
         fun f(a: &std::boolean::Bool) -> std::void::Void { }
         """
 
-    @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
+    @should_fail_compilation(SemanticErrors.ParameterSelfOutsideSuperimpositionError)
     def test_invalid_function_prototype_self_outside_superimposition(self):
         """
         fun f(&self) -> std::void::Void { }
@@ -201,14 +201,14 @@ class TestFunctionPrototypeAst(CustomTestCase):
     def test_valid_function_prototype_overload_parameter_types(self):
         """
         fun f(a: std::boolean::Bool) -> std::void::Void { }
-        fun f(a: std::number::BigInt) -> std::void::Void { }
+        fun f(a: std::number::bigint::BigInt) -> std::void::Void { }
         """
 
     @should_pass_compilation()
     def test_valid_generic_function_prototype(self):
         """
         fun f[T](a: T) -> std::void::Void { }
-        fun f(a: std::number::BigInt) -> std::void::Void { }
+        fun f(a: std::number::bigint::BigInt) -> std::void::Void { }
         """
 
     @should_pass_compilation()

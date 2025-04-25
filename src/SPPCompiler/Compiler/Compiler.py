@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 from typing import Optional, TYPE_CHECKING
 
+import xxhash
 from fastenum import Enum
 
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -25,20 +25,21 @@ COMPILER_STAGE_NAMES = [
     "    Pre-processing",
     "  Top-level scopes",
     " Top-level aliases",
+    "  Qualifying types",
     "      Super scopes",
     "      Pre-Analysis",
     "Semantics analysis"]
 
 
 class Compiler:
-    """!
+    """
     The Compiler class is the entry point into compiling the entire S++ project. It creates a module tree for the whole
     project, holds instances of the lexer and parser, and calls the analyser functions. This class is also responsible
     for dumping symbols and other compiler metadata to files, if built in "dev" mode.
     """
 
     class Mode(Enum):
-        """!
+        """
         The Mode enum is used to determine the mode in which the compiler is running. This is used to determine whether
         to dump the ASTs and other metadata to files. The "dev" mode is used for development, and the "rel" mode is used
         for release.
@@ -100,16 +101,16 @@ class Compiler:
         try:
             self._ast.pre_process(None, next(progress_bar), self._module_tree)
             self._ast.generate_top_level_scopes(self._scope_manager, next(progress_bar), self._module_tree)
-            self._ast.generate_top_level_aliases(self._scope_manager, next(progress_bar))
-            self._ast.load_super_scopes(self._scope_manager, next(progress_bar))
-            self._ast.pre_analyse_semantics(self._scope_manager, next(progress_bar))
-            self._ast.analyse_semantics(self._scope_manager, next(progress_bar))
+            self._ast.generate_top_level_aliases(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.qualify_types(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.load_super_scopes(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.pre_analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
+            self.try_dump()
 
         except SemanticError as error:
-            error.throw()
-
-        finally:
             self.try_dump()
+            error.throw()
 
     def try_dump(self) -> None:
         """!
@@ -134,7 +135,7 @@ class Compiler:
         # Will need run steps from load_super_scopes and onwards again though.
         with open("out/file_hashes.json", "w") as file:
             file.write(json.dumps({
-                module.path: hashlib.sha256(module.code.encode()).hexdigest()
+                module.path: xxhash.xxh3_64(module.code).hexdigest()
                 for module in self._module_tree.modules}, indent=4))
 
         # Save the AST to the output file (if in debug mode).

@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.VariableLikeAst):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
     convention: Optional[Asts.ConventionAst] = field(default=None)
@@ -24,7 +24,6 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
         self._arbitrary = self.type is not None
         self.type = self.type or CommonTypes.Self(self.pos)
         self._variant = "Self"
-        assert self.name is not None
 
     def __eq__(self, other: FunctionParameterSelfAst) -> bool:
         # Check both ASTs are the same type.

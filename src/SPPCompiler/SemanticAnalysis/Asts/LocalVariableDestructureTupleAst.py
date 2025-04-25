@@ -2,21 +2,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_l: Asts.TokenAst = field(default=None)
-    elements: Seq[Asts.LocalVariableNestedForDestructureTupleAst] = field(default_factory=Seq)
+    elems: Seq[Asts.LocalVariableNestedForDestructureTupleAst] = field(default_factory=Seq)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -28,7 +26,7 @@ class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         # Print the AST with auto-formatting.
         string = [
             self.tok_l.print(printer),
-            self.elements.print(printer, ", "),
+            self.elems.print(printer, ", "),
             self.tok_r.print(printer)]
         return "".join(string)
 
@@ -38,7 +36,7 @@ class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
     @property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
-        return self.elements.map(lambda e: e.extract_names).flat()
+        return self.elems.map(lambda e: e.extract_names).flat()
 
     @property
     def extract_name(self) -> Asts.IdentifierAst:
@@ -47,7 +45,7 @@ class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     def analyse_semantics(self, sm: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
 
         # Only 1 "multi-skip" allowed in a destructure.
-        multi_arg_skips = self.elements.filter_to_type(Asts.LocalVariableDestructureSkipNArgumentsAst)
+        multi_arg_skips = self.elems.filter_to_type(Asts.LocalVariableDestructureSkipNArgumentsAst)
         if multi_arg_skips.length > 1:
             raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(
                 multi_arg_skips[0], multi_arg_skips[1]).scopes(sm.current_scope)
@@ -59,7 +57,7 @@ class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
                 self, value, value_type).scopes(sm.current_scope)
 
         # Determine the number of elements in the lhs and rhs tuples.
-        num_lhs_tuple_elements = self.elements.length
+        num_lhs_tuple_elements = self.elems.length
         num_rhs_tuple_elements = value.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments.length
 
         # Ensure the lhs and rhs tuples have the same number of elements unless a multi-skip is present.
@@ -69,23 +67,21 @@ class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # For a binding ".." destructure, ie "let (a, b, ..c, d, e, f) = t", create an intermediary rhs tuple.
         if multi_arg_skips and multi_arg_skips[0].binding:
-            m = self.elements.index(multi_arg_skips[0])
+            m = self.elems.index(multi_arg_skips[0])
             indexes = [*range(m, m + num_rhs_tuple_elements - num_lhs_tuple_elements + 1)]
-            new_ast = CodeInjection.inject_code(
-                f"({", ".join([f"{value}.{i}" for i in indexes])})", SppParser.parse_literal_tuple,
-                pos_adjust=value.pos)
+            new_ast = Asts.TupleLiteralAst(
+                pos=value.pos,
+                elems=Seq([Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(value.pos, Asts.TokenAst(0, SppTokenType.LxNumber, str(i)))) for i in indexes]))
             bound_multi_skip = new_ast
 
         # Create new indexes like [0, 1, 2, 6, 7] if elements 3->5 are skipped (and possibly bound).
-        indexes  = Seq([*range(0, (self.elements.index(multi_arg_skips[0]) if multi_arg_skips else self.elements.length - 1) + 1)])
+        indexes  = Seq([*range(0, (self.elems.index(multi_arg_skips[0]) if multi_arg_skips else self.elems.length - 1) + 1)])
         indexes += Seq([*range(num_lhs_tuple_elements, num_rhs_tuple_elements)])
 
         # Create expanded "let" statements for each part of the destructure.
-        for i, element in indexes.zip(self.elements):
+        for i, element in indexes.zip(self.elems):
             if isinstance(element, Asts.LocalVariableDestructureSkipNArgumentsAst) and multi_arg_skips[0].binding:
-                new_ast = CodeInjection.inject_code(
-                    f"let {element.binding} = {bound_multi_skip}", SppParser.parse_let_statement_initialized,
-                    pos_adjust=element.pos)
+                new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element.binding, value=bound_multi_skip)
                 new_ast.analyse_semantics(sm, **kwargs)
 
             elif isinstance(element, Asts.LocalVariableDestructureSkip1ArgumentAst):
@@ -95,9 +91,9 @@ class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
                 continue
 
             else:
-                new_ast = CodeInjection.inject_code(
-                    f"let {element} = {value}.{i}", SppParser.parse_let_statement_initialized,
-                    pos_adjust=element.pos)
+                i = Asts.TokenAst(0, SppTokenType.LxNumber, str(i))
+                postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(value.pos, i))
+                new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
 
 

@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingConte
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class SupImplementationAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     members: Seq[Asts.SupMemberAst] = field(default_factory=Seq)
@@ -46,6 +46,9 @@ class SupImplementationAst(Asts.Ast):
 
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
         for member in self.members: member.generate_top_level_aliases(sm, **kwargs)
+
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        for member in self.members: member.qualify_types(sm, **kwargs)
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         for member in self.members: member.load_super_scopes(sm, **kwargs)

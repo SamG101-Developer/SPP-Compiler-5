@@ -7,14 +7,12 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_gen: Asts.TokenAst = field(default=None)
     kw_with: Optional[Asts.TokenAst] = field(default=None)
@@ -79,9 +77,17 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Apply the function argument law of exclusivity checks to the expression.
         if self.expression:
-            ast = CodeInjection.inject_code(
-                f"({self.convention if self.convention else ""} {self.expression})", SppParser.parse_function_call_arguments,
-                pos_adjust=(self.convention or self.expression).pos)
+            ast = Asts.FunctionCallArgumentGroupAst(
+                pos=(self.convention or self.expression).pos,
+                arguments=Seq([
+                    Asts.FunctionCallArgumentUnnamedAst(
+                        pos=self.expression.pos,
+                        convention=self.convention,
+                        value=self.expression
+                    )
+                ])
+            )
+
             ast.analyse_semantics(sm, **kwargs)
 
 

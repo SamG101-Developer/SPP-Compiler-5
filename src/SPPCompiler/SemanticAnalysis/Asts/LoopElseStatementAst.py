@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class LoopElseStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_else: Asts.TokenAst = field(default=None)
     body: Asts.InnerScopeAst = field(default=None)

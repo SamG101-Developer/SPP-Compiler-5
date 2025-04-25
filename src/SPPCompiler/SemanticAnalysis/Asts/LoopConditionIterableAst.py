@@ -7,10 +7,8 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -19,7 +17,7 @@ from SPPCompiler.Utils.Sequence import Seq
 #  - [3] Maintain the borrow from the iterator - x in y.iter_mut() => cant borrow from y inside the loop
 
 
-@dataclass
+@dataclass(slots=True)
 class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     variable: Asts.LocalVariableAst = field(default=None)
     in_keyword: Asts.TokenAst = field(default=None)
@@ -75,9 +73,7 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Create a "let" statement to introduce the loop variable into the scope.
         gen_type = iterable_type.type_parts()[0].generic_argument_group["Yield"].value
-        let_ast = CodeInjection.inject_code(
-            f"let {self.variable}: {gen_type}", SppParser.parse_let_statement_uninitialized,
-            pos_adjust=self.variable.pos)
+        let_ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=gen_type)
         let_ast.analyse_semantics(sm, **kwargs)
 
         # Set the memory information of the symbol based on the type of iteration.

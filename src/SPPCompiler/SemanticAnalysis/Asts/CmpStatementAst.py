@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     """
     Unlike the UseStatementAst, this AST can not be used in local scopes; only at the module or superimposition level.
@@ -72,7 +72,7 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         sm.current_scope.add_symbol(symbol)
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
-        self.type.analyse_semantics(sm)
+        self.type.analyse_semantics(sm, **kwargs)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the annotations.

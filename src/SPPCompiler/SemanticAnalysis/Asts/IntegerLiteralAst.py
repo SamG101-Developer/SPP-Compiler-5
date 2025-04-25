@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
 
-from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
 def _unsigned_integer_limits(n: int) -> Tuple[int, int]:
@@ -19,6 +19,7 @@ def _signed_integer_limits(n: int) -> Tuple[int, int]:
     return -pow(2, n - 1), pow(2, n - 1) - 1
 
 
+# todo: add usize to tests
 SIZE_MAPPING = {
     "i8": _signed_integer_limits(8),
     "u8": _unsigned_integer_limits(8),
@@ -31,17 +32,15 @@ SIZE_MAPPING = {
     "i128": _signed_integer_limits(128),
     "u128": _unsigned_integer_limits(128),
     "i256": _signed_integer_limits(256),
-    "u256": _unsigned_integer_limits(256)}
+    "u256": _unsigned_integer_limits(256),
+    "uz": _unsigned_integer_limits(64)}
 
 
-@dataclass
+@dataclass(slots=True)
 class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
     value: Asts.TokenAst = field(default=None)
     type: Optional[Asts.TypeAst] = field(default=None)
-
-    def __post_init__(self) -> None:
-        assert self.value is not None
 
     def __eq__(self, other: IntegerLiteralAst) -> bool:
         # Check both ASTs are the same type and have the same sign, value and type.
@@ -75,31 +74,33 @@ class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Match the type against the allowed type postfixes (no postfix is BigInt).
         match self.type:
             case None:
-                return CommonTypes.BigInt(self.pos)
+                return CommonTypesPrecompiled.BIGINT
             case type if type.type_parts()[0].value == "i8":
-                return CommonTypes.I8(self.pos)
+                return CommonTypesPrecompiled.I8
             case type if type.type_parts()[0].value == "u8":
-                return CommonTypes.U8(self.pos)
+                return CommonTypesPrecompiled.U8
             case type if type.type_parts()[0].value == "i16":
-                return CommonTypes.I16(self.pos)
+                return CommonTypesPrecompiled.I16
             case type if type.type_parts()[0].value == "u16":
-                return CommonTypes.U16(self.pos)
+                return CommonTypesPrecompiled.U16
             case type if type.type_parts()[0].value == "i32":
-                return CommonTypes.I32(self.pos)
+                return CommonTypesPrecompiled.I32
             case type if type.type_parts()[0].value == "u32":
-                return CommonTypes.U32(self.pos)
+                return CommonTypesPrecompiled.U32
             case type if type.type_parts()[0].value == "i64":
-                return CommonTypes.I64(self.pos)
+                return CommonTypesPrecompiled.I64
             case type if type.type_parts()[0].value == "u64":
-                return CommonTypes.U64(self.pos)
+                return CommonTypesPrecompiled.U64
             case type if type.type_parts()[0].value == "i128":
-                return CommonTypes.I128(self.pos)
+                return CommonTypesPrecompiled.I128
             case type if type.type_parts()[0].value == "u128":
-                return CommonTypes.U128(self.pos)
+                return CommonTypesPrecompiled.U128
             case type if type.type_parts()[0].value == "i256":
-                return CommonTypes.I256(self.pos)
+                return CommonTypesPrecompiled.I256
             case type if type.type_parts()[0].value == "u256":
-                return CommonTypes.U256(self.pos)
+                return CommonTypesPrecompiled.U256
+            case type if type.type_parts()[0].value == "uz":
+                return CommonTypesPrecompiled.USIZE
             case _:
                 raise
 

@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 
 
-@dataclass
+@dataclass(slots=True)
 class ModulePrototypeAst(Asts.Ast):
     body: Asts.ModuleImplementationAst = field(default_factory=Asts.ModuleImplementationAst)
     _name: str = field(init=False, default="")
@@ -32,17 +32,21 @@ class ModulePrototypeAst(Asts.Ast):
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         # Pre-process the module implementation.
-        super().pre_process(ctx)
+        Asts.Ast.pre_process(self, ctx)
         self.body.pre_process(ctx)
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Generate the module symbol.
-        super().generate_top_level_scopes(sm)
+        Asts.Ast.generate_top_level_scopes(self, sm)
         self.body.generate_top_level_scopes(sm)
 
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
         # Alias the types in the module implementation.
         self.body.generate_top_level_aliases(sm, **kwargs)
+
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        # Qualify the types in the module implementation.
+        self.body.qualify_types(sm, **kwargs)
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         # Load the super scopes.

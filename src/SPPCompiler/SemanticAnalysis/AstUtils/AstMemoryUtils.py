@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass(kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class MemoryInfo:
     """
     The MemoryInfo class is used to store information about the memory state of a symbol. It is used to identify
@@ -155,6 +155,7 @@ class AstMemoryUtils:
         if not symbol:
             return
         copies = sm.current_scope.get_symbol(symbol.type).is_copyable
+        partial_copies = sm.current_scope.get_symbol(value_ast.infer_type(sm)).is_copyable
 
         # An identifier that is a namespace cannot be used as an expression. As all expressions are analysed in this
         # function, the check is performed here.
@@ -223,8 +224,8 @@ class AstMemoryUtils:
         # Check the symbol is not being moved from a borrowed context. This prevents partial moves off of borrowed
         # object, because the current context doesn't have ownership of the object. This guarantees that when control is
         # returned to the original context, the object is still in the same (fully-initialized) memory state as before
-        # the borrow took place.
-        if check_move_from_borrowed_context and symbol.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst):
+        # the borrow took place. todo: add "partial_copies" to tests
+        if check_move_from_borrowed_context and symbol.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
             raise SemanticErrors.MemoryMovedFromBorrowedContextError().add(
                 value_ast, symbol.memory_info.ast_borrowed).scopes(sm.current_scope)
 
@@ -236,9 +237,9 @@ class AstMemoryUtils:
                 value_ast, symbol.memory_info.ast_pinned[0]).scopes(sm.current_scope)
 
         # Mark the symbol as either moved or partially moved (for non-copy types). Entire objects are marked as moved,
-        # and attribute accesses are marked as partial moves on the symbol representing the entire object. If the object
-        # is copyable, then no movements are marked. todo: copyable attributes mustn't be marked as partially moved.
-        if update_memory_info and not copies:
-            match value_ast:
-                case Asts.IdentifierAst(): symbol.memory_info.moved_by(move_ast)
-                case _: symbol.memory_info.ast_partially_moved.append(value_ast)
+        # and attribute accesses are marked as partial moves on the symbol representing the entire object. If the type
+        # is copyable, then no movements are marked.
+        if update_memory_info and isinstance(value_ast, Asts.IdentifierAst) and not copies:
+            symbol.memory_info.moved_by(move_ast)
+        elif update_memory_info and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
+            symbol.memory_info.ast_partially_moved.append(value_ast)

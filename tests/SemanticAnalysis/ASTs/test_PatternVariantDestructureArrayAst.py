@@ -7,7 +7,7 @@ class TestPatternVariantDestructureArrayAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError)
     def test_invalid_pattern_variant_destructure_array_multiple_multi_skip(self):
         """
-        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
+        fun f(p: std::array::Arr[std::number::bigint::BigInt, 2]) -> std::void::Void {
             case p is [.., ..] { }
         }
         """
@@ -15,7 +15,7 @@ class TestPatternVariantDestructureArrayAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.VariableArrayDestructureArraySizeMismatchError)
     def test_invalid_pattern_variant_destructure_array_missing_value(self):
         """
-        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
+        fun f(p: std::array::Arr[std::number::bigint::BigInt, 2]) -> std::void::Void {
             case p is [x] { }
         }
         """
@@ -23,7 +23,7 @@ class TestPatternVariantDestructureArrayAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.VariableArrayDestructureArraySizeMismatchError)
     def test_invalid_pattern_variant_destructure_array_extra_value(self):
         """
-        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
+        fun f(p: std::array::Arr[std::number::bigint::BigInt, 2]) -> std::void::Void {
             case p is [x, y, z] { }
         }
         """
@@ -31,7 +31,7 @@ class TestPatternVariantDestructureArrayAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pattern_variant_destructure_array(self):
         """
-        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
+        fun f(p: std::array::Arr[std::number::bigint::BigInt, 2]) -> std::void::Void {
             case p is [x, y] { }
         }
         """
@@ -39,7 +39,7 @@ class TestPatternVariantDestructureArrayAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pattern_variant_destructure_array_skip_1(self):
         """
-        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
+        fun f(p: std::array::Arr[std::number::bigint::BigInt, 2]) -> std::void::Void {
             case p is [x, _] { }
         }
         """
@@ -47,7 +47,7 @@ class TestPatternVariantDestructureArrayAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pattern_variant_destructure_array_skip_n(self):
         """
-        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
+        fun f(p: std::array::Arr[std::number::bigint::BigInt, 2]) -> std::void::Void {
             case p is [x, ..] { }
         }
         """
@@ -55,7 +55,7 @@ class TestPatternVariantDestructureArrayAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pattern_variant_destructure_array_bound_multi_skip(self):
         """
-        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
+        fun f(p: std::array::Arr[std::number::bigint::BigInt, 2]) -> std::void::Void {
             case p is [..x] { }
         }
         """
@@ -63,7 +63,7 @@ class TestPatternVariantDestructureArrayAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pattern_variant_destructure_array_multiple_patterns(self):
         """
-        fun f(p: std::array::Arr[std::number::BigInt, 2]) -> std::void::Void {
+        fun f(p: std::array::Arr[std::number::bigint::BigInt, 2]) -> std::void::Void {
             case p of
                 is [x, y] { }
                 is [x, ..] { }

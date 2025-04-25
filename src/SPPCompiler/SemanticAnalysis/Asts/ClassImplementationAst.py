@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from typing import Dict
 
@@ -10,10 +9,11 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class ClassImplementationAst(Asts.Ast):
     tok_left_brace: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkLeftCurlyBrace))
     members: Seq[Asts.ClassMemberAst] = field(default_factory=Seq)
@@ -21,7 +21,7 @@ class ClassImplementationAst(Asts.Ast):
 
     def __deepcopy__(self, memodict: Dict = None) -> ClassImplementationAst:
         return ClassImplementationAst(
-            self.pos, self.tok_left_brace, copy.deepcopy(self.members),
+            self.pos, self.tok_left_brace, fast_deepcopy(self.members),
             self.tok_right_brace, _ctx=self._ctx, _scope=self._scope)
 
     @ast_printer_method
@@ -49,6 +49,10 @@ class ClassImplementationAst(Asts.Ast):
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Generate the symbols for the members.
         for m in self.members: m.generate_top_level_scopes(sm)
+
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        # Qualify the types in the members.
+        for m in self.members: m.qualify_types(sm, **kwargs)
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         # Load the super scopes for the members.

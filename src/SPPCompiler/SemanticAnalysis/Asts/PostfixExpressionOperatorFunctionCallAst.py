@@ -11,20 +11,26 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass
+@dataclass(slots=True)
 class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default=None)
     function_argument_group: Asts.FunctionCallArgumentGroupAst = field(default=None)
     fold_token: Optional[Asts.TokenAst] = field(default=None)
 
-    _overload: Optional[Tuple[Scope, Asts.FunctionPrototypeAst]] = field(default=None, init=False, repr=False)
-    _is_async: Optional[Asts.Ast] = field(default=None, init=False, repr=False)
+    _overload: Optional[Tuple[Scope, Asts.FunctionPrototypeAst]] = field(default=None, repr=False)
+    _is_async: Optional[Asts.Ast] = field(default=None, repr=False)
+
+    def __copy__(self, memodict=None) -> PostfixExpressionOperatorFunctionCallAst:
+        return PostfixExpressionOperatorFunctionCallAst(
+            self.pos, copy.copy(self.generic_argument_group), copy.copy(self.function_argument_group),
+            fold_token=self.fold_token, _is_async=self._is_async, _overload=self._overload, _ctx=self._ctx)
 
     def __post_init__(self) -> None:
         self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=self.pos)
@@ -55,7 +61,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
-            transformed_lhs, transformed_function_call = AstFunctionUtils.convert_method_to_function_form(sm, function_owner_type, function_name, lhs, self)
+            transformed_lhs, transformed_function_call = AstFunctionUtils.convert_method_to_function_form(
+                sm, function_owner_type, function_name, lhs, self)
             transformed_function_call.determine_overload(sm, transformed_lhs, **kwargs)
             self._overload = transformed_function_call._overload
             self.function_argument_group = transformed_function_call.function_argument_group
@@ -102,7 +109,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                 # Remove all the used parameters names from the set of parameter names, and name the unnamed arguments.
                 AstFunctionUtils.name_function_arguments(arguments, parameters, sm)
-                AstFunctionUtils.name_generic_arguments(generic_arguments, generic_parameters, sm)
+                AstFunctionUtils.name_generic_arguments(generic_arguments, generic_parameters, sm, function_overload.name)
                 argument_names = arguments.map_attr("name")
 
                 # Check if there are too few arguments for the function (by missing names).
@@ -111,23 +118,27 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                 # Infer generic arguments and inherit from the function owner block.
                 generic_arguments = AstFunctionUtils.infer_generic_arguments(
-                    generic_parameters=function_overload.generic_parameter_group.get_required_params(),
+                    generic_parameters=function_overload.generic_parameter_group.parameters,
+                    optional_generic_parameters=function_overload.generic_parameter_group.get_optional_params(),
                     explicit_generic_arguments=generic_arguments + owner_scope_generic_arguments,
                     infer_source=arguments.map(lambda a: (a.name, a.infer_type(sm, **kwargs))).dict(),
                     infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
-                    sm=sm, owner=lhs,
+                    sm=sm, owner=lhs.infer_type(sm, **kwargs),
                     variadic_parameter_identifier=function_overload.function_parameter_group.get_variadic_param().extract_name if is_variadic else None)
 
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
-                    new_overload = copy.deepcopy(function_overload)
+                    new_overload = fast_deepcopy(function_overload)
                     tm = ScopeManager(sm.global_scope, function_scope)
 
                     new_overload.generic_parameter_group.parameters = Seq()
-                    for p in new_overload.function_parameter_group.params:
-                        p.type = p.type.sub_generics(generic_arguments)
+                    for p in new_overload.function_parameter_group.params.copy():
+                        p.type = p.type.substituted_generics(generic_arguments)
                         p.type.analyse_semantics(tm, **kwargs)
-                    new_overload.return_type = new_overload.return_type.sub_generics(generic_arguments)
+
+                        # Remove the "Void" parameters from the signatures.
+
+                    new_overload.return_type = new_overload.return_type.substituted_generics(generic_arguments)
                     new_overload.return_type.analyse_semantics(tm, **kwargs)
 
                     # Todo: I don't want this here
@@ -152,7 +163,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     argument_type = argument.infer_type(sm, **kwargs)
 
                     if isinstance(parameter, Asts.FunctionParameterVariadicAst):
-                        parameter_type = CommonTypes.Tup(parameter.pos, Seq([parameter_type] * argument_type.type_parts()[0].generic_argument_group.arguments.length))
+                        parameter_type = CommonTypes.Tup2(parameter.pos, Seq([parameter_type] * argument_type.type_parts()[0].generic_argument_group.arguments.length))
                         parameter_type.analyse_semantics(sm, **kwargs)
 
                     if isinstance(parameter, Asts.FunctionParameterSelfAst):
@@ -204,6 +215,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # Return the function's return type.
         return_type = self._overload[1].return_type
+        return_type = self._overload[0].get_symbol(return_type).fq_name
         return return_type
 
     def analyse_semantics(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:

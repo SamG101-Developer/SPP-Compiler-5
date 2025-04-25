@@ -6,13 +6,11 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     class_type: Asts.TypeAst = field(default=None)
     tok_l: Asts.TokenAst = field(default=None)
@@ -50,7 +48,8 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # Analyse the class and determine the attributes of the class.
         self.class_type.analyse_semantics(sm, skip_generic_check=True, **kwargs)
-        if not self.class_type.symbolic_eq(value_type := value.infer_type(sm, **kwargs), sm.current_scope, check_variant=self._from_pattern):
+        value_type = value.infer_type(sm, **kwargs)
+        if not value_type.symbolic_eq(self.class_type, sm.current_scope, check_variant=self._from_pattern):
             raise SemanticErrors.TypeMismatchError().add(value, value_type, self.class_type, self.class_type).scopes(sm.current_scope)
         attributes = sm.current_scope.get_symbol(self.class_type).type.body.members
 
@@ -71,27 +70,26 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
                 continue
 
             elif isinstance(element, Asts.LocalVariableSingleIdentifierAst):
-                new_ast = CodeInjection.inject_code(
-                    f"let {element} = {value}.{element.name}", SppParser.parse_let_statement_initialized,
-                    pos_adjust=element.pos)
+                postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(element.name.pos, element.name))
+                new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
 
             elif isinstance(element, Asts.LocalVariableAttributeBindingAst) and isinstance(element.value, Asts.LocalVariableSingleIdentifierAst):
                 continue
 
             elif isinstance(element, Asts.LocalVariableAttributeBindingAst):
-                new_ast = CodeInjection.inject_code(
-                    f"let {element.value} = {value}.{element.name}", SppParser.parse_let_statement_initialized,
-                    pos_adjust=element.pos)
+                postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(element.name.pos, element.name))
+                new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element.value, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
 
         # Check for any missing attributes in the destructure, unless a multi-skip is present.
+        # Todo: connect correct scope for the class type. sm.current_scope.get_symbol(self.class_type).scope.parent_module?
         if not multi_arg_skips:
             assigned_attributes = self.elems.filter_not_type(Asts.LocalVariableDestructureSkipNArgumentsAst).map(lambda e: e.name)
             missing_attributes = attributes.filter(lambda a: a.name not in assigned_attributes)
             if missing_attributes:
                 raise SemanticErrors.ArgumentRequiredNameMissingError().add(
-                    self, missing_attributes[0], "attribute", "destructure argument").scopes(sm.current_scope)
+                    self, missing_attributes[0], "attribute", "destructure argument").scopes(sm.current_scope.get_symbol(self.class_type).scope, sm.current_scope)
 
 
 __all__ = [

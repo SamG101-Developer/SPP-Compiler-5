@@ -10,8 +10,8 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_invalid_pattern_variant_destructure_object_multiple_multi_skip(self):
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -23,8 +23,8 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_invalid_pattern_variant_destructure_object_bound_multi_skip(self):
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -36,8 +36,8 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_invalid_pattern_variant_destructure_object_missing_attribute(self):
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -49,8 +49,8 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_invalid_pattern_variant_destructure_object_invalid_attribute(self):
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -62,8 +62,8 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_invalid_pattern_variant_destructure_object_aliasing_attributes(self):
         """
         cls Point1 {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f(p: Point1) -> std::void::Void {
@@ -75,8 +75,8 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object(self):
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -88,8 +88,8 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object_skip_1(self):
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -101,13 +101,13 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object_variant_type(self):
         """
         cls Point1 {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         cls Point2 {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f(p: Point1 or Point2) -> std::void::Void {
@@ -121,8 +121,8 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object_aliasing_attributes(self):
         """
         cls Point1 {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         fun f(p: Point1) -> std::void::Void {
@@ -136,8 +136,8 @@ class TestPatternVariantDestructureObjectAst(CustomTestCase):
     def test_valid_pattern_variant_destructure_object_nested_1(self):
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         cls Line {

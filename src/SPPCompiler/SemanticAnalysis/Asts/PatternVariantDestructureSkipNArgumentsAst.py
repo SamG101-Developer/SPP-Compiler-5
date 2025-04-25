@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass
+@dataclass(slots=True)
 class PatternVariantDestructureSkipNArgumentsAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     tok_variadic: Asts.TokenAst = field(default=None)
     binding: Optional[Asts.PatternVariantSingleIdentifierAst] = field(default=None)

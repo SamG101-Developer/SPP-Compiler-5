@@ -8,11 +8,12 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompile
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass
+@dataclass(slots=True)
 class SubroutinePrototypeAst(Asts.FunctionPrototypeAst):
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Perform default function prototype semantic analysis.
-        super().analyse_semantics(sm, **kwargs)
+        Asts.FunctionPrototypeAst.analyse_semantics(self, sm, **kwargs)
+
         kwargs["function_type"] = self.tok_fun
         kwargs["function_ret_type"] = sm.current_scope.get_symbol(self.return_type).fq_name
 
@@ -20,7 +21,7 @@ class SubroutinePrototypeAst(Asts.FunctionPrototypeAst):
         self.body.analyse_semantics(sm, **kwargs)
 
         # Check there is a return statement at the end (for non-void functions).
-        non_void_return_type = not self.return_type.symbolic_eq(CommonTypesPrecompiled.EMPTY_VOID, sm.current_scope)
+        non_void_return_type = not self.return_type.symbolic_eq(CommonTypesPrecompiled.VOID, sm.current_scope)
         if non_void_return_type and not (self._non_implemented or self._abstract) and not (self.body.members and isinstance(self.body.members[-1], Asts.RetStatementAst)):
             final_member = self.body.members[-1] if self.body.members else self.body.tok_r
             raise SemanticErrors.FunctionSubroutineMissingReturnStatementError().add(

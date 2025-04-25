@@ -6,8 +6,8 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
     def test_invalid_sup_prototype_functions_unconstrained_generic_parameter_1(self):
         """
         cls Point {
-            x: std::number::BigInt
-            y: std::number::BigInt
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
         }
 
         sup [T] Point { }
@@ -67,7 +67,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
 
         cls Base2 { }
         sup Base2 {
-            use X = std::number::BigInt
+            use X = std::number::bigint::BigInt
         }
 
         cls A { }
@@ -85,7 +85,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
 
         cls Base2 { }
         sup Base2 {
-            use X = std::number::BigInt
+            use X = std::number::bigint::BigInt
         }
 
         sup Base2 ext Base1 { }
@@ -101,7 +101,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
 
         cls Base2 { }
         sup Base2 {
-            cmp x: std::number::BigInt = 123
+            cmp x: std::number::bigint::BigInt = 123
         }
 
         cls A { }
@@ -119,7 +119,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
 
         cls Base2 { }
         sup Base2 {
-            cmp x: std::number::BigInt = 123
+            cmp x: std::number::bigint::BigInt = 123
         }
 
         sup Base2 ext Base1 { }
@@ -129,7 +129,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
     def test_invalid_superimposition_functions_attribute_conflict(self):
         """
         cls Base1 { a: std::string::Str }
-        cls Base2 { a: std::number::BigInt }
+        cls Base2 { a: std::number::bigint::BigInt }
 
         cls A { }
         sup A ext Base1 { }
@@ -189,7 +189,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
 
         cls Base2 { }
         sup Base2 {
-            use Y = std::number::BigInt
+            use Y = std::number::bigint::BigInt
         }
 
         cls A { }
@@ -207,7 +207,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
 
         cls Base2 { }
         sup Base2 ext Base1 {
-            use X = std::number::BigInt
+            use X = std::number::bigint::BigInt
         }
         """
 
@@ -221,7 +221,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
 
         cls Base2 { }
         sup Base2 {
-            cmp y: std::number::BigInt = 123
+            cmp y: std::number::bigint::BigInt = 123
         }
 
         cls A { }
@@ -239,6 +239,6 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
 
         cls Base2 { }
         sup Base2 ext Base1 {
-            cmp x: std::number::BigInt = 123
+            cmp x: std::number::bigint::BigInt = 123
         }
         """

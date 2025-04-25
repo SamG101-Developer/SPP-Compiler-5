@@ -8,117 +8,109 @@ from SPPCompiler.Utils.Sequence import Seq
 
 class CommonTypes:
     @staticmethod
-    def type_variant_to_convention(type: Asts.TypeAst) -> Asts.ConventionAst:
-
-        match type.type_parts()[0].value[-3:].lower():
-            case "mov":
-                return Asts.ConventionMovAst(pos=type.pos)
-            case "mut":
-                return Asts.ConventionMutAst(pos=type.pos)
-            case "ref":
-                return Asts.ConventionRefAst(pos=type.pos)
-            case _:
-                raise ValueError(f"Invalid type variant: {type.type_parts()[0].value}")
-
-    @staticmethod
     def U8(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U8", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u8::U8", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def U16(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U16", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u16::U16", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def U32(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U32", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u32::U32", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def U64(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U64", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u64::U64", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def U128(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U128", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u128::U128", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def U256(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::U256", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::u256::U256", SppParser.parse_type, pos_adjust=pos)
+
+    @staticmethod
+    def USize(pos: int):
+        return CodeInjection.inject_code(
+            f"std::number::usize::USize", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I8(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I8", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i8::I8", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I16(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I16", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i16::I16", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I32(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I32", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i32::I32", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I64(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I64", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i64::I64", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I128(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I128", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i128::I128", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def I256(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::I256", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::i256::I256", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F8(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F8", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f8::F8", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F16(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F16", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f16::F16", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F32(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F32", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f32::F32", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F64(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F64", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f64::F64", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F128(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F128", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f128::F128", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def F256(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::F256", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::f256::F256", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def BigInt(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::BigInt", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::bigint::BigInt", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def BigDec(pos: int):
         return CodeInjection.inject_code(
-            f"std::number::BigDec", SppParser.parse_type, pos_adjust=pos)
+            f"std::number::bigdec::BigDec", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def Void(pos: int):
@@ -146,9 +138,29 @@ class CommonTypes:
             f"std::future::Fut[{inner_type}]", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
-    def Arr(pos: int, elem_type: Asts.TypeAst, size: Asts.ExpressionAst):
-        return CodeInjection.inject_code(
-            f"std::array::Arr[{elem_type}, {size}]", SppParser.parse_type, pos_adjust=pos)
+    def Arr2(pos: int, elem_type: Asts.TypeAst, size: Asts.IntegerLiteralAst):
+        return Asts.TypeUnaryExpressionAst(
+            pos=pos,
+            op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "std")),
+            rhs=Asts.TypeUnaryExpressionAst(
+                pos=pos,
+                op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "array")),
+                rhs=Asts.TypeSingleAst(
+                    pos=pos,
+                    name=Asts.GenericIdentifierAst(
+                        pos=pos,
+                        value="Arr",
+                        generic_argument_group=Asts.GenericArgumentGroupAst(
+                            pos=pos,
+                            arguments=Seq([
+                                Asts.GenericTypeArgumentUnnamedAst(value=elem_type),
+                                Asts.GenericCompArgumentUnnamedAst(value=size)]
+                            )
+                        )
+                    )
+                )
+            )
+        )
 
     @staticmethod
     def Opt(pos: int, inner_type: Asts.TypeAst):
@@ -156,9 +168,26 @@ class CommonTypes:
             f"std::option::Opt[{inner_type}]", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
-    def Tup(pos: int, inner_types: Seq[Asts.TypeAst] = None):
-        return CodeInjection.inject_code(
-            f"std::tuple::Tup[{', '.join((inner_types or Seq()).map(str))}]", SppParser.parse_type, pos_adjust=pos)
+    def Tup2(pos: int, inner_types: Seq[Asts.TypeAst] = None):
+        return Asts.TypeUnaryExpressionAst(
+            pos=pos,
+            op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "std")),
+            rhs=Asts.TypeUnaryExpressionAst(
+                pos=pos,
+                op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "tuple")),
+                rhs=Asts.TypeSingleAst(
+                    pos=pos,
+                    name=Asts.GenericIdentifierAst(
+                        pos=pos,
+                        value="Tup",
+                        generic_argument_group=Asts.GenericArgumentGroupAst(
+                            pos=pos,
+                            arguments=Seq(inner_types or []).map(lambda v: Asts.GenericTypeArgumentUnnamedAst(value=v))
+                        )
+                    )
+                )
+            )
+        )
 
     @staticmethod
     def Var(pos: int, inner_types: Seq[Asts.TypeAst] = None):
@@ -166,24 +195,89 @@ class CommonTypes:
             f"std::variant::Var[{', '.join((inner_types or Seq()).map(str))}]", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
-    def FunRef(pos: int, param_types: Seq[Asts.TypeAst], return_type: Asts.TypeAst):
-        return CodeInjection.inject_code(
-            f"std::function::FunRef[{param_types}, {return_type}]", SppParser.parse_type, pos_adjust=pos)
+    def FunMov2(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
+        return Asts.TypeUnaryExpressionAst(
+            pos=pos,
+            op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "std")),
+            rhs=Asts.TypeUnaryExpressionAst(
+                pos=pos,
+                op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "function")),
+                rhs=Asts.TypeSingleAst(
+                    pos=pos,
+                    name=Asts.GenericIdentifierAst(
+                        pos=pos,
+                        value="FunMov",
+                        generic_argument_group=Asts.GenericArgumentGroupAst(
+                            pos=pos,
+                            arguments=Seq([
+                                Asts.GenericTypeArgumentUnnamedAst(value=param_types),
+                                Asts.GenericTypeArgumentUnnamedAst(value=return_type)]
+                            )
+                        )
+                    )
+                )
+            )
+        )
 
     @staticmethod
-    def FunMut(pos: int, param_types: Seq[Asts.TypeAst], return_type: Asts.TypeAst):
-        return CodeInjection.inject_code(
-            f"std::function::FunMut[{param_types}, {return_type}]", SppParser.parse_type, pos_adjust=pos)
+    def FunMut2(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
+        return Asts.TypeUnaryExpressionAst(
+            pos=pos,
+            op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "std")),
+            rhs=Asts.TypeUnaryExpressionAst(
+                pos=pos,
+                op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "function")),
+                rhs=Asts.TypeSingleAst(
+                    pos=pos,
+                    name=Asts.GenericIdentifierAst(
+                        pos=pos,
+                        value="FunMut",
+                        generic_argument_group=Asts.GenericArgumentGroupAst(
+                            pos=pos,
+                            arguments=Seq([
+                                Asts.GenericTypeArgumentUnnamedAst(value=param_types),
+                                Asts.GenericTypeArgumentUnnamedAst(value=return_type)]
+                            )
+                        )
+                    )
+                )
+            )
+        )
 
     @staticmethod
-    def FunMov(pos: int, param_types: Seq[Asts.TypeAst], return_type: Asts.TypeAst):
-        return CodeInjection.inject_code(
-            f"std::function::FunMov[{param_types}, {return_type}]", SppParser.parse_type, pos_adjust=pos)
+    def FunRef2(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
+        return Asts.TypeUnaryExpressionAst(
+            pos=pos,
+            op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "std")),
+            rhs=Asts.TypeUnaryExpressionAst(
+                pos=pos,
+                op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "function")),
+                rhs=Asts.TypeSingleAst(
+                    pos=pos,
+                    name=Asts.GenericIdentifierAst(
+                        pos=pos,
+                        value="FunRef",
+                        generic_argument_group=Asts.GenericArgumentGroupAst(
+                            pos=pos,
+                            arguments=Seq([
+                                Asts.GenericTypeArgumentUnnamedAst(value=param_types),
+                                Asts.GenericTypeArgumentUnnamedAst(value=return_type)]
+                            )
+                        )
+                    )
+                )
+            )
+        )
 
     @staticmethod
     def Gen(pos: int, yield_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
         return CodeInjection.inject_code(
             f"std::generator::Gen[{yield_type}, {send_type}]", SppParser.parse_type, pos_adjust=pos)
+
+    @staticmethod
+    def GenOnce(pos: int, yield_type: Asts.TypeAst = None):
+        return CodeInjection.inject_code(
+            f"std::generator::Gen[{yield_type}]", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
     def DerefRef(pos: int, inner_type: Asts.TypeAst = None):
@@ -197,7 +291,13 @@ class CommonTypes:
 
     @staticmethod
     def Self(pos: int):
-        return CodeInjection.inject_code(f"Self", SppParser.parse_type, pos_adjust=pos)
+        return Asts.TypeSingleAst(
+            pos=pos,
+            name=Asts.GenericIdentifierAst(
+                pos=pos,
+                value="Self"
+            )
+        )
 
 
 class CommonTypesPrecompiled:
@@ -205,15 +305,63 @@ class CommonTypesPrecompiled:
     EMPTY_ARRAY: Asts.TypeAst = "Pending..."
     EMPTY_GENERATOR: Asts.TypeAst = "Pending..."
     EMPTY_VARIANT: Asts.TypeAst = "Pending..."
-    EMPTY_VOID: Asts.TypeAst = "Pending..."
+    VOID: Asts.TypeAst = "Pending..."
+    COPY: Asts.TypeAst = "Pending..."
+    BIGINT: Asts.TypeAst = "Pending..."
+    BIGDEC: Asts.TypeAst = "Pending..."
+    F8: Asts.TypeAst = "Pending..."
+    F16: Asts.TypeAst = "Pending..."
+    F32: Asts.TypeAst = "Pending..."
+    F64: Asts.TypeAst = "Pending..."
+    F128: Asts.TypeAst = "Pending..."
+    F256: Asts.TypeAst = "Pending..."
+    U8: Asts.TypeAst = "Pending..."
+    U16: Asts.TypeAst = "Pending..."
+    U32: Asts.TypeAst = "Pending..."
+    U64: Asts.TypeAst = "Pending..."
+    U128: Asts.TypeAst = "Pending..."
+    U256: Asts.TypeAst = "Pending..."
+    I8: Asts.TypeAst = "Pending..."
+    I16: Asts.TypeAst = "Pending..."
+    I32: Asts.TypeAst = "Pending..."
+    I64: Asts.TypeAst = "Pending..."
+    I128: Asts.TypeAst = "Pending..."
+    I256: Asts.TypeAst = "Pending..."
+    USIZE: Asts.TypeAst = "Pending..."
+    BOOL: Asts.TypeAst = "Pending..."
+    STR: Asts.TypeAst = "Pending..."
 
     @staticmethod
     def initialize():
-        CommonTypesPrecompiled.EMPTY_TUPLE = CommonTypes.Tup(pos=0).without_generics()
-        CommonTypesPrecompiled.EMPTY_ARRAY = CommonTypes.Arr(pos=0, elem_type=None, size=None).without_generics()
+        CommonTypesPrecompiled.EMPTY_TUPLE = CommonTypes.Tup2(pos=0).without_generics()
+        CommonTypesPrecompiled.EMPTY_ARRAY = CommonTypes.Arr2(pos=0, elem_type=Asts.Ast(), size=Asts.Ast()).without_generics()
         CommonTypesPrecompiled.EMPTY_GENERATOR = CommonTypes.Gen(pos=0).without_generics()
         CommonTypesPrecompiled.EMPTY_VARIANT = CommonTypes.Var(pos=0).without_generics()
-        CommonTypesPrecompiled.EMPTY_VOID = CommonTypes.Void(pos=0).without_generics()
+        CommonTypesPrecompiled.VOID = CommonTypes.Void(pos=0).without_generics()
+        CommonTypesPrecompiled.COPY = CommonTypes.Copy(pos=0).without_generics()
+        CommonTypesPrecompiled.BIGINT = CommonTypes.BigInt(pos=0).without_generics()
+        CommonTypesPrecompiled.BIGDEC = CommonTypes.BigDec(pos=0).without_generics()
+        CommonTypesPrecompiled.F8 = CommonTypes.F8(pos=0).without_generics()
+        CommonTypesPrecompiled.F16 = CommonTypes.F16(pos=0).without_generics()
+        CommonTypesPrecompiled.F32 = CommonTypes.F32(pos=0).without_generics()
+        CommonTypesPrecompiled.F64 = CommonTypes.F64(pos=0).without_generics()
+        CommonTypesPrecompiled.F128 = CommonTypes.F128(pos=0).without_generics()
+        CommonTypesPrecompiled.F256 = CommonTypes.F256(pos=0).without_generics()
+        CommonTypesPrecompiled.U8 = CommonTypes.U8(pos=0).without_generics()
+        CommonTypesPrecompiled.U16 = CommonTypes.U16(pos=0).without_generics()
+        CommonTypesPrecompiled.U32 = CommonTypes.U32(pos=0).without_generics()
+        CommonTypesPrecompiled.U64 = CommonTypes.U64(pos=0).without_generics()
+        CommonTypesPrecompiled.U128 = CommonTypes.U128(pos=0).without_generics()
+        CommonTypesPrecompiled.U256 = CommonTypes.U256(pos=0).without_generics()
+        CommonTypesPrecompiled.I8 = CommonTypes.I8(pos=0).without_generics()
+        CommonTypesPrecompiled.I16 = CommonTypes.I16(pos=0).without_generics()
+        CommonTypesPrecompiled.I32 = CommonTypes.I32(pos=0).without_generics()
+        CommonTypesPrecompiled.I64 = CommonTypes.I64(pos=0).without_generics()
+        CommonTypesPrecompiled.I128 = CommonTypes.I128(pos=0).without_generics()
+        CommonTypesPrecompiled.I256 = CommonTypes.I256(pos=0).without_generics()
+        CommonTypesPrecompiled.USIZE = CommonTypes.USize(pos=0).without_generics()
+        CommonTypesPrecompiled.BOOL = CommonTypes.Bool(pos=0).without_generics()
+        CommonTypesPrecompiled.STR = CommonTypes.Str(pos=0).without_generics()
 
 
 __all__ = [

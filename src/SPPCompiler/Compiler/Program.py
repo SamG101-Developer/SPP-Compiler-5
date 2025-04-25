@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass
+@dataclass(slots=True)
 class Program(CompilerStages):
     modules: Seq[Asts.ModulePrototypeAst] = field(default_factory=Seq, init=False, repr=False)
 
@@ -65,38 +65,51 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def generate_top_level_aliases(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, **kwargs) -> None:
+    def generate_top_level_aliases(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
         # Alias types for all the modules.
         for module in self.modules:
+            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
             progress_bar.next(module.name.value)
-            module.generate_top_level_aliases(sm, **kwargs)
+            module.generate_top_level_aliases(sm)
+            sm.reset()
         progress_bar.finish()
-        sm.reset()
 
-    def load_super_scopes(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None) -> None:
+    def qualify_types(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+        # Alias types for all the modules.
+        for module in self.modules:
+            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
+            progress_bar.next(module.name.value)
+            module.qualify_types(sm)
+            sm.reset()
+        progress_bar.finish()
+
+    def load_super_scopes(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
         # Load the super scopes for all the modules.
         for module in self.modules:
+            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
             progress_bar.next(module.name.value)
             module.load_super_scopes(sm)
+            sm.reset()
         progress_bar.finish()
-        sm.reset()
         sm.relink_generics()
 
-    def pre_analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None) -> None:
+    def pre_analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
         # Pre analyse all the top level constructs.
         for module in self.modules:
+            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
             progress_bar.next(module.name.value)
             module.pre_analyse_semantics(sm)
+            sm.reset()
         progress_bar.finish()
-        sm.reset()
 
-    def analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, **kwargs) -> None:
+    def analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
         # Analyse the semantics for all the modules.
         for module in self.modules:
+            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
             progress_bar.next(module.name.value)
-            module.analyse_semantics(sm, **kwargs)
+            module.analyse_semantics(sm)
+            sm.reset()
         progress_bar.finish()
-        sm.reset()
 
     def _move_scope_manager_to_namespace(self, sm: ScopeManager, module: Module):
         from SPPCompiler.SemanticAnalysis import Asts
@@ -111,7 +124,7 @@ class Program(CompilerStages):
 
             if Seq(sm.current_scope.children).map(lambda s: s.name).contains(part):
                 scope = Seq(sm.current_scope.children).filter(lambda s: s.name == part).first()
-                if sm.current_scope is not scope: sm.reset(scope)
+                sm.reset(scope)
 
             else:
                 sm.current_scope.add_symbol(namespace_symbol := NamespaceSymbol(name=part))

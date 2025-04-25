@@ -19,7 +19,7 @@ class SemanticError(BaseException):
         MINIMAL = 1
         NONE = 2
 
-    @dataclass
+    @dataclass(slots=True)
     class ErrorInfo:
         ast: Asts.Ast
         tag: str
@@ -64,7 +64,8 @@ class SemanticError(BaseException):
     def throw(self) -> NoReturn:
         # Format the error messages and raise the error.
         error_message = ""
-        for error, error_formatter in self.error_info.zip(Seq([next(self.error_formatters.cycle()) for i in range(self.error_info.length)])):
+        cycle = self.error_formatters.cycle()
+        for error, error_formatter in self.error_info.zip(Seq([next(cycle) for i in range(self.error_info.length)])):
             formatted_message, is_minimal = self._format_message(error)
             error_message += error_formatter.error_ast(error.ast, formatted_message, error.tag, is_minimal)
         print(error_message)
@@ -188,6 +189,25 @@ class SemanticErrors:
                 tag=f"Second 'self' parameter.",
                 msg="Only one 'self' parameter is allowed.",
                 tip="Remove the second 'self' parameter.")
+
+            return self
+
+    class ParameterSelfOutsideSuperimpositionError(SemanticError):
+        """
+        The ParameterSelfOutsideSuperimpositionError is raised if a "self" parameter is used outside of a
+        superimposition, ie in a module-level free function.
+        """
+
+        def add(self, self_parameter: Asts.FunctionParameterAst, function: Asts.FunctionPrototypeAst) -> SemanticError:
+            self.add_info(
+                ast=function,
+                tag="Function defined here")
+
+            self.add_error(
+                ast=self_parameter,
+                tag="Self parameter outside superimposition.",
+                msg="The 'self' parameter can only be used in superimpositions.",
+                tip="Remove the 'self' parameter.")
 
             return self
 
@@ -383,11 +403,11 @@ class SemanticErrors:
         """
 
         def add(
-                self, generic_parameters: Seq[Asts.GenericParameterAst],
+                self, generic_parameters: Seq[Asts.GenericParameterAst], owner: Asts.Ast,
                 extra_generic_argument: Asts.GenericArgumentAst) -> SemanticError:
             self.add_info(
-                ast=generic_parameters[0],
-                tag="Generic parameters defined here")
+                ast=generic_parameters[0] if generic_parameters else owner,
+                tag=f"Generic parameters defined here for '{owner}'")
 
             self.add_error(
                 ast=extra_generic_argument,
@@ -571,11 +591,11 @@ class SemanticErrors:
         def add(self, generic_parameter: Asts.GenericParameterAst, caller_context: Asts.ExpressionAst) -> SemanticError:
             self.add_info(
                 ast=caller_context,
-                tag="Type created here")
+                tag=f"Type '{caller_context}' created here")
 
             self.add_error(
                 ast=generic_parameter,
-                tag="Non-inferred generic parameter.",
+                tag=f"Non-inferred generic parameter '{generic_parameter}'.",
                 msg="Non-inferred generic parameters must be passed explicitly.",
                 tip="Pass the missing generic argument into the call.")
 
@@ -1010,16 +1030,15 @@ class SemanticErrors:
         superimposition. For the "cls Point[T, U]" type, the superimposition must look like "sup [T, U] Point[T, U]".
         """
 
-        def add(
-                self, generic_argument: Asts.GenericArgumentAst,
-                superimposition: Asts.SupPrototypeAst) -> SemanticError:
+        def add(self, generic_argument: Asts.GenericArgumentAst, superimposition: Asts.TokenAst) -> SemanticError:
+
             self.add_info(
                 ast=superimposition,
                 tag="Superimposition defined here")
 
             self.add_error(
                 ast=generic_argument,
-                tag="Generic argument mismatch.",
+                tag=f"Generic argument mismatch with argument '{generic_argument}'.",
                 msg="The superimposition generic argument does not match the class generic argument.",
                 tip="Change the superimposition generic argument to match the class generic argument. This will be relaxed in future versions.")
 
@@ -1050,7 +1069,7 @@ class SemanticErrors:
         the superclass. Any associated type on an extension must belong to the superclass as-well.
         """
 
-        def add(self, new_use_statement: Asts.UseStatementAst, super_class: Asts.TypeAst) -> SemanticError:
+        def add(self, new_use_statement: Asts.UseStatementAliasAst, super_class: Asts.TypeAst) -> SemanticError:
             self.add_info(
                 ast=super_class,
                 tag=f"Super class '{super_class}' extended here")
@@ -1546,5 +1565,24 @@ class SemanticErrors:
                 tag="Type declared here",
                 msg="A type cannot be given to a non-identifier 'let' statement",
                 tip="Remove the type annotation")
+
+            return self
+
+    class UseStatementInvalidGenericArgumentsError(SemanticError):
+        """
+        Then UseStatementInvalidGenericArgumentsError is raised is a "use" statement look lise "use std::vector[T]".
+        Instead, it should just be "use std::vector" or "use vector[T] = std::vector[T]".
+        """
+
+        def add(self, use_statement: Asts.UseStatementReduxAst, generic_argument: Asts.GenericArgumentAst) -> SemanticError:
+            self.add_info(
+                ast=use_statement,
+                tag="Use statement defined here")
+
+            self.add_error(
+                ast=generic_argument,
+                tag="Invalid generic argument in use statement.",
+                msg="Generic arguments are not allowed in simple-alias use statements.",
+                tip="Remove the generic argument from the use statement, or use the extended form.")
 
             return self

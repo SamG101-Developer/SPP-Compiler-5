@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from typing import Any, Optional, Tuple
 
 from SPPCompiler.Compiler.ModuleTree import Module
@@ -9,6 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, \
     Symbol
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -83,11 +83,11 @@ class Scope:
         new_symbol = symbol
 
         if isinstance(symbol, VariableSymbol):
-            new_symbol = copy.deepcopy(symbol)
-            new_symbol.type = symbol.type.sub_generics(generics)
+            new_symbol = fast_deepcopy(symbol)
+            new_symbol.type = symbol.type.substituted_generics(generics)
 
         elif isinstance(symbol, TypeSymbol):
-            new_fq_name = symbol.fq_name.sub_generics(generics)
+            new_fq_name = symbol.fq_name.substituted_generics(generics)
             new_symbol = self._non_generic_scope.get_symbol(new_fq_name, ignore_alias=ignore_alias)
 
         return new_symbol or symbol
@@ -99,14 +99,14 @@ class Scope:
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
 
-    def rem_symbol(self, symbol_name: Asts.IdentifierAst) -> None:
+    def rem_symbol(self, symbol_name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst) -> None:
         # Remove a symbol from the scope.
         self._symbol_table.rem(symbol_name)
 
-    def all_symbols(self, exclusive: bool = False) -> Seq[Symbol]:
+    def all_symbols(self, exclusive: bool = False, match_type: type = None) -> Seq[Symbol]:
 
         # Get all the symbols in the scope.
-        symbols = self._symbol_table.all()
+        symbols = self._symbol_table.all(match_type=match_type)
         if not exclusive and self._parent:
             symbols.extend(self._parent.all_symbols())
 
@@ -117,7 +117,7 @@ class Scope:
         return symbols
 
     def has_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False) -> bool:
-        return self.get_symbol(name, exclusive) is not None
+        return self.get_symbol(name, exclusive, ignore_alias=True) is not None
 
     def get_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
         # Ensure the name is a valid type.
@@ -145,11 +145,20 @@ class Scope:
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
 
-    def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
-        # Todo: this needs tidying up (should run the same code for both types, just not the loop for identifier)
+    def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
+        # Todo: why isn't get_symbol being used here? translation issues?
+        # Todo: major optimization here: all_symbols() translates (sub_generics) symbols that will never match
+
         if isinstance(name, Asts.IdentifierAst):
-            for symbol in self.all_symbols(exclusive=exclusive):
+            for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.IdentifierAst):
                 if isinstance(symbol, NamespaceSymbol) and symbol.name == name:
+                    return symbol
+            return None
+
+        # Get the type symbol from the symbol table.
+        elif isinstance(name, Asts.GenericIdentifierAst):
+            for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.GenericIdentifierAst):
+                if isinstance(symbol, TypeSymbol) and symbol.name == name:
                     return symbol
             return None
 
@@ -239,6 +248,10 @@ class Scope:
         # Get the optionally linked type symbol (if this is a type scope).
         return self._type_symbol
 
+    @type_symbol.setter
+    def type_symbol(self, symbol: TypeSymbol | AliasSymbol) -> None:
+        self._type_symbol = symbol
+
     @property
     def sup_scopes(self) -> Seq[Scope]:
         # Get all the super scopes recursively.
@@ -307,8 +320,8 @@ def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: Asts
 def confirm_type_with_alias(scope: Scope, symbol: Symbol, ignore_alias: bool) -> Optional[Symbol]:
     # Get the alias symbol's old type if aliases are being ignored.
     match symbol:
-        case AliasSymbol() if symbol.old_type and not ignore_alias:
-            symbol = scope.get_symbol(symbol.old_type)
+        case AliasSymbol() if symbol.old_sym and not ignore_alias:
+            symbol = symbol.old_sym
     return symbol
 
 

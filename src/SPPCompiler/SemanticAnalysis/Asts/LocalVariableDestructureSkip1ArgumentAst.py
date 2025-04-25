@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class LocalVariableDestructureSkip1ArgumentAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_underscore: Asts.TokenAst = field(default=None)
 

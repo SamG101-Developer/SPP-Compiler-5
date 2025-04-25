@@ -7,13 +7,14 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass
+@dataclass(slots=True)
 class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     op: Asts.TypeUnaryOperatorAst = field(default=None)
     rhs: Asts.TypeAst = field(default=None)
@@ -27,12 +28,19 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
         yield from self.rhs
 
+    def __deepcopy__(self, memodict=None) -> TypeUnaryExpressionAst:
+        # Create a deep copy of the AST.
+        return TypeUnaryExpressionAst(pos=self.pos, op=self.op, rhs=fast_deepcopy(self.rhs))
+
     def __json__(self) -> str:
         return str(self.op) + self.rhs.__json__()
 
+    def __str__(self) -> str:
+        return f"{self.op}{self.rhs}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        return f"{self.op}{self.rhs}"
+        return f"{self.op.print(printer)}{self.rhs.print(printer)}"
 
     @property
     def pos_end(self) -> int:
@@ -58,14 +66,18 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def without_generics(self) -> Self:
         return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics())
 
-    def sub_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Self:
-        return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.sub_generics(generic_arguments))
+    def substitute_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        self.rhs.substitute_generics(generic_arguments)
+        return self
 
-    def get_generic(self, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
-        return self.rhs.get_generic(generic_name)
+    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        x = self.rhs.substituted_generics(generic_arguments)
+        if isinstance(x, Asts.TypeUnaryExpressionAst) and isinstance(x.op, Asts.TypeUnaryOperatorBorrowAst):
+            return x
+        return TypeUnaryExpressionAst(self.pos, self.op, x)
 
-    def get_generic_parameter_for_argument(self, argument: Asts.TypeAst) -> Optional[Asts.TypeAst]:
-        return self.rhs.get_generic_parameter_for_argument(argument)
+    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
+        return self.rhs.get_corresponding_generic(that, generic_name)
 
     def contains_generic(self, generic_name: Asts.TypeSingleAst) -> bool:
         return self.rhs.contains_generic(generic_name)

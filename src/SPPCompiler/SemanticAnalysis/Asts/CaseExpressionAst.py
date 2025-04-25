@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass
+@dataclass(slots=True)
 class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The CaseExpressionAst represents a conditional jumping structure in S++. Case expressions are highly flexible, and
