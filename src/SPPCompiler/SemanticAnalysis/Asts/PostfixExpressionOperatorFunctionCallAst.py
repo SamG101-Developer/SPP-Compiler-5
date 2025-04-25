@@ -109,7 +109,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                 # Remove all the used parameters names from the set of parameter names, and name the unnamed arguments.
                 AstFunctionUtils.name_function_arguments(arguments, parameters, sm)
-                AstFunctionUtils.name_generic_arguments(generic_arguments, generic_parameters, sm)
+                AstFunctionUtils.name_generic_arguments(generic_arguments, generic_parameters, sm, function_overload.name)
                 argument_names = arguments.map_attr("name")
 
                 # Check if there are too few arguments for the function (by missing names).
