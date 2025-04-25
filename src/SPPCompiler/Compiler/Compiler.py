@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 from typing import Optional, TYPE_CHECKING
 
+import xxhash
 from fastenum import Enum
 
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -135,7 +135,7 @@ class Compiler:
         # Will need run steps from load_super_scopes and onwards again though.
         with open("out/file_hashes.json", "w") as file:
             file.write(json.dumps({
-                module.path: hashlib.sha256(module.code.encode()).hexdigest()
+                module.path: xxhash.xxh3_64(module.code).hexdigest()
                 for module in self._module_tree.modules}, indent=4))
 
         # Save the AST to the output file (if in debug mode).
