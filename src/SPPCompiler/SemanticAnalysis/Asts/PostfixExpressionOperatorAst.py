@@ -7,6 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 PostfixExpressionOperatorAst = Union[
     Asts.PostfixExpressionOperatorEarlyReturnAst,
     Asts.PostfixExpressionOperatorFunctionCallAst,
+    Asts.PostfixExpressionOperatorIndexAst,
     Asts.PostfixExpressionOperatorMemberAccessAst,
     Asts.PostfixExpressionOperatorNotKeywordAst]
 
