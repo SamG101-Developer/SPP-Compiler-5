@@ -6,7 +6,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 
 
 @dataclass(slots=True)
@@ -69,7 +69,7 @@ class BooleanLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Create the standard "std::boolean::Bool" type.
-        return CommonTypes.Bool(self.pos)
+        return CommonTypesPrecompiled.BOOL
 
 
 __all__ = [
