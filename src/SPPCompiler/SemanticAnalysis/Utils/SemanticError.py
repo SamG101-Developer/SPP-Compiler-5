@@ -927,7 +927,7 @@ class SemanticErrors:
             self.add_error(
                 ast=expression,
                 tag=f"{what.capitalize()} expression inferred as '{type}'",
-                msg=f"A {what} expression must be a generator type.",
+                msg=f"A {what} must be a generator type.",
                 tip="Change the expression to be a generator type.")
 
             return self
