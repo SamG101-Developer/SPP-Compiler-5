@@ -222,13 +222,17 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         if self._overload:
             return
 
+        # Check if this function call is from a transformed coroutine resume AST.
+        is_coro_resume = kwargs.pop("is_coro_resume", False)
+
         # Analyse the function and generic arguments, and determine the overload.
         self.function_argument_group.analyse_pre_semantics(sm, **kwargs)
         self.generic_argument_group.analyse_semantics(sm, **kwargs)
         self.determine_overload(sm, lhs, **kwargs)  # Also adds the "self" argument if needed.
-        self.function_argument_group.analyse_semantics(sm, target_proto=self._overload[1], is_async=self._is_async, **kwargs)
+        self.function_argument_group.analyse_semantics(sm, target_proto=self._overload[1], is_async=self._is_async, is_coro_resume=is_coro_resume, **kwargs)
 
         # Link references created by the function call to the overload.
+        # Todo: switch this to use "AstTypeUtils.get_generator_and_yielded_type"
         if self._overload[1].tok_fun.token_type == SppTokenType.KwCor:
             coro_return_type = self.infer_type(sm, lhs, **kwargs)
 
