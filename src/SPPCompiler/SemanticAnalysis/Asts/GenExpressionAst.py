@@ -5,6 +5,7 @@ from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
@@ -59,13 +60,8 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             expression_type = void_type
 
         # Determine the yield type of the enclosing function.
-        generator_type = kwargs["function_ret_type"]
-        sup_types = sm.current_scope.get_symbol(generator_type).scope.sup_types + Seq([generator_type])
-        for sup_type in sup_types:
-            if sup_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope):
-                generator_type = sup_type
-                break
-        yield_type = generator_type.type_parts()[0].generic_argument_group["Yield"].value
+        gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(
+            kwargs["function_ret_type"], sm, kwargs["function_ret_type"], "coroutine")
 
         # Check the expression type matches the expected type.
         if not self.kw_with and not yield_type.symbolic_eq(expression_type, sm.current_scope):

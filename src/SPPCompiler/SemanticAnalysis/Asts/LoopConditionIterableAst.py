@@ -5,11 +5,10 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
 
 
 # Todo:
@@ -46,8 +45,6 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Todo: iteration should be optional values? how this work with conventions?
-        # Todo: using type.type_parts()[0]... => what if the type superimposes the generic type?
-        #  Get the "iterable_type" from the list of superimposed types.
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.iterable, (Asts.TokenAst, Asts.TypeAst)):
@@ -57,28 +54,16 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.iterable.analyse_semantics(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(self.iterable, self.iterable, sm, update_memory_info=False)
 
-        # Check the iterable is a generator type.
+        # Get the generator and yielded type from the iterable.
         iterable_type = self.iterable.infer_type(sm, **kwargs)
-        sup_types = sm.current_scope.get_symbol(iterable_type).scope.sup_types
-        sup_types.append(sm.current_scope.get_symbol(iterable_type).fq_name)
-        if not sup_types.any(lambda t: t.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope)):
-            raise SemanticErrors.ExpressionNotGeneratorError().add(
-                self.iterable, iterable_type, "loop").scopes(sm.current_scope)
-
-        # Set the iterable type to the superimposed generator type.
-        for sup_type in sup_types + Seq([iterable_type]):
-            if sup_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope):
-                iterable_type = sup_type
-                break
+        gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(iterable_type, sm, self.iterable, "loop condition")
 
         # Create a "let" statement to introduce the loop variable into the scope.
-        gen_type = iterable_type.type_parts()[0].generic_argument_group["Yield"].value
-        let_ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=gen_type)
+        let_ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=yield_type)
         let_ast.analyse_semantics(sm, **kwargs)
 
         # Set the memory information of the symbol based on the type of iteration.
         symbols = self.variable.extract_names.map(lambda n: sm.current_scope.get_symbol(n))
-        yield_type = iterable_type.type_parts()[0].generic_argument_group["Yield"].value
         for symbol in symbols:
             symbol.memory_info.ast_borrowed = self if type(yield_type.get_convention()) in [Asts.ConventionMutAst, Asts.ConventionRefAst] else None
             symbol.memory_info.is_borrow_mut = type(yield_type.get_convention()) is Asts.ConventionMutAst is not None

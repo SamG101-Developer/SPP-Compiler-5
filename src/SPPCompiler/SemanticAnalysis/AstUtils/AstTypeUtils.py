@@ -237,3 +237,33 @@ class AstTypeUtils:
             if attribute_cls_prototype is type:
                 return attribute_ast
         return None
+
+    @staticmethod
+    def get_generator_and_yielded_type(
+            type: Asts.TypeAst, sm: ScopeManager, expr: Asts.ExpressionAst,
+            what: str) -> Tuple[Asts.TypeAst, Asts.TypeAst]:
+
+        """
+        Get the generator type, and the yielded type from a type. Search the super types of the input type for a
+        generator type, and return it along with the extracted `Yield` type.
+        """
+
+        # Initialize the generic type to None, and get all the super types.
+        gen_type = None
+        sup_types = sm.current_scope.get_symbol(type).scope.sup_types + Seq([type])
+
+        # Search through the type and supertypes for a generator type.
+        for sup_type in sup_types:
+            if sup_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope):
+                gen_type = sup_type
+                break
+
+        # If no generator type was found associated with the type, raise an error.
+        if gen_type is None:
+            raise SemanticErrors.ExpressionNotGeneratorError().add(
+                expr, type, what).scopes(sm.current_scope)
+
+        # Extract the "Yield" generic argument's value from the generator type.
+        yield_type = gen_type.type_parts()[-1].generic_argument_group["Yield"].value
+        return gen_type, yield_type
+
