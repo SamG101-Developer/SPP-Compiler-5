@@ -7,13 +7,8 @@
 ## Coroutine Update
 
 - Allow early `ret` inside a coroutine (cannot have an expression).
-- Introduce the `GenOnce` type -> acts as `Gen` but with an auto call to `resume()`
+- Introduce the `GenOnce` type -> acts as `Gen` but with an auto call to `.res()`
 - The `GenOnce::resume` must be a consuming method?
-- Need a `res/step/next` keyword for generators.
-    - This will allow the actual `Yield` type to be returned.
-    - The borrow system is capable of invalidating borrows so this is fine.
-- Add a special rule in the function resolution that maps the keyword to `.resume()`
-- Can add a lhs type-analysis check to ensure `Gen` is superimposed.
 
 ## Arrays Update
 
@@ -45,3 +40,4 @@
 - In argument:
   - `f(|a: BigInt| { ... }, other_args)`
 - Allow function types to _defer_ to more constricting, ie allow a `FunMut` for a `FunMov` parameter.
+- Set the function type to the most constrictive capture

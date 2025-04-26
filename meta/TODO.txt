@@ -34,8 +34,9 @@ Superimpositions.
 * Don't allow method access modifiers inside sup-ext (only sup)
 
 Generators.
-* For `GenOnce`, only one `gen` expression is allowed.
-* Auto `resume` on `gen` value being received?
+* For `GenOnce`, only one `gen` expression should be allowed.
+* Auto `.res()` on `gen` value being received for `GenOnce`?
+* Currently no forced return at the end like for subroutines.
 
 Binary Expressions.
 * Check function overload is being analysed.
