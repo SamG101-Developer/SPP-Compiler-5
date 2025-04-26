@@ -134,7 +134,7 @@ class TestGenExpressionAst(CustomTestCase):
 
         fun foo(y: std::number::bigint::BigInt) -> std::void::Void {
             let g = foo()
-            let mut x = g.resume(false)
+            let mut x = g.res(false)
             x = y
         }
         """
@@ -148,7 +148,7 @@ class TestGenExpressionAst(CustomTestCase):
 
         fun foo(y: &mut std::number::bigint::BigInt) -> std::void::Void {
             let g = foo()
-            let mut x = g.resume(false)
+            let mut x = g.res(false)
             x = y
         }
         """

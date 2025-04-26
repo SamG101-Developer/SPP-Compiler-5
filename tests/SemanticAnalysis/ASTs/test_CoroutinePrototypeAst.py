@@ -14,8 +14,8 @@ class TestCoroutinePrototypeAst(CustomTestCase):
         cor c() -> std::generator::Gen[&mut std::number::bigint::BigInt, std::boolean::Bool] { }
         fun f() -> std::void::Void {
             let g = c()
-            let a = g.resume(false)
-            let b = g.resume(false)
+            let a = g.res(false)
+            let b = g.res(false)
             let c = a
         }
         """

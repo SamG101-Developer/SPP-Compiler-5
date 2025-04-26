@@ -386,8 +386,8 @@ class TestAstMemory(CustomTestCase):
         fun test() -> std::void::Void {
             let mut object = MyType()
             let generator = object.custom_iter_mut()
-            let borrow1 = generator.resume(false)
-            let borrow2 = generator.resume(false)
+            let borrow1 = generator.res(false)
+            let borrow2 = generator.res(false)
             let value = borrow1
         }
         """
@@ -405,9 +405,9 @@ class TestAstMemory(CustomTestCase):
         fun test() -> std::void::Void {
             let mut object = MyType()
             let generator_mut = object.custom_iter_mut()
-            let borrow1 = generator_mut.resume(false)
+            let borrow1 = generator_mut.res(false)
             let generator_ref = object.custom_iter_ref()
-            let borrow2 = generator_ref.resume(false)
+            let borrow2 = generator_ref.res(false)
             let value = borrow1
         }
         """
@@ -427,7 +427,7 @@ class TestAstMemory(CustomTestCase):
             let my_type = MyType(x=123)
             let generator1 = my_type.custom_iter_ref()
             let generator2 = my_type.custom_iter_ref()
-            let a = generator2.resume(false)
+            let a = generator2.res(false)
         }
         """
 
