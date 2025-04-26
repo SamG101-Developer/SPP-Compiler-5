@@ -249,21 +249,21 @@ class SemanticErrors:
 
     class FunctionCoroutineContainsReturnStatementError(SemanticError):
         """
-        The FunctionCoroutineContainsRetError is raised if a coroutine contains a return statement. Coroutines cannot
-        contain "ret" statements, only "gen" expressions, which yield a value. The actual generator is implicitly
-        returned as soon as the function is called.
+        The FunctionCoroutineContainsRetError is raised if a coroutine contains a return statement with an expression.
+        Coroutines cannot contain "ret" statements with expressions, only empty "ret" statements or "gen" expressions,
+        which yield a value. The actual generator is implicitly returned as soon as the function is called.
         """
 
-        def add(self, coroutine_definition: Asts.TokenAst, return_statement: Asts.TokenAst) -> SemanticError:
+        def add(self, coroutine_definition: Asts.TokenAst, expression: Asts.ExpressionAst) -> SemanticError:
             self.add_info(
                 ast=coroutine_definition,
                 tag="Coroutine defined here")
 
             self.add_error(
-                ast=return_statement,
-                tag="Return statement in coroutine.",
-                msg="Coroutines cannot contain return statements.",
-                tip="Remove the return statement.")
+                ast=expression,
+                tag="Return statement with expression in coroutine.",
+                msg="Coroutines cannot return values.",
+                tip="Remove the attached expression.")
 
             return self
 

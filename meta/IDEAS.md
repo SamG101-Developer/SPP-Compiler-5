@@ -6,7 +6,6 @@
 
 ## Coroutine Update
 
-- Allow early `ret` inside a coroutine (cannot have an expression).
 - Introduce the `GenOnce` type -> acts as `Gen` but with an auto call to `.res()`
 - The `GenOnce::resume` must be a consuming method?
 
@@ -24,7 +23,7 @@
 
 - Upgrade to infer from variant parts as-well
 - For example, `case x is std::option::Some(val)` should infer `T` from `x`, and not require
-  `std::option::Some[std::string::Str]` as it currently does.
+  `std::option::Some[std::string::Str](val)` as it currently does.
 
 ## Lambdas / Closures
 

@@ -3,10 +3,10 @@ from tests._Utils import *
 
 class TestRetStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionCoroutineContainsReturnStatementError)
-    def test_invalid_ret_statement_in_coroutine(self):
+    def test_invalid_ret_statement_in_coroutine_with_expr(self):
         """
         cor f() -> std::generator::Gen[std::number::bigint::BigInt] {
-            ret
+            ret 123
         }
         """
 
@@ -19,7 +19,15 @@ class TestRetStatementAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_ret_statement_1(self):
+    def test_valid_ret_statement_in_coroutine_no_expr(self):
+        """
+        cor f() -> std::generator::Gen[std::number::bigint::BigInt] {
+            ret
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_ret_statement_in_subroutine_no_expr(self):
         """
         fun f() -> std::void::Void {
             ret
@@ -27,7 +35,7 @@ class TestRetStatementAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_ret_statement_2(self):
+    def test_valid_ret_statement_in_subroutine_with_expr(self):
         """
         fun f() -> std::number::bigint::BigInt {
             ret 1

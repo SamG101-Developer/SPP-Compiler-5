@@ -41,9 +41,9 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Todo: allow returning from a coroutine if there is no expression attached to it (early return).
 
         # Check the enclosing function is a subroutine and not a coroutine.
-        if kwargs["function_type"].token_type != SppTokenType.KwFun:
+        if kwargs["function_type"].token_type != SppTokenType.KwFun and self.expr:
             raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(
-                kwargs["function_type"], self.tok_ret).scopes(sm.current_scope)
+                kwargs["function_type"], self.expr).scopes(sm.current_scope)
         self._func_ret_type = kwargs["function_ret_type"]
 
         # Analyse the expression if it exists, and determine the type of the expression.
@@ -57,10 +57,11 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Determine the return type of the enclosing function.
         expected_type = kwargs["function_ret_type"]
 
-        # Check the expression type matches the expected type.
-        if not expected_type.symbolic_eq(expression_type, sm.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(
-                expression_type, expected_type, self.expr, expected_type).scopes(sm.current_scope)
+        # Check the expression type matches the expected type (for subroutines).
+        if kwargs["function_type"].token_type == SppTokenType.KwFun:
+            if not expected_type.symbolic_eq(expression_type, sm.current_scope):
+                raise SemanticErrors.TypeMismatchError().add(
+                    expression_type, expected_type, self.expr, expected_type).scopes(sm.current_scope)
 
     # def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
     #     # Create a return instruction with the expression if it exists.
