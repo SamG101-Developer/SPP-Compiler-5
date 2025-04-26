@@ -90,11 +90,11 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         for a in self.arguments:
             a.analyse_semantics(sm, **kwargs)
 
-    def analyse_semantics(self, sm: ScopeManager, target_proto: Asts.FunctionPrototypeAst = None, is_async: Optional[Asts.TokenAst] = None, **kwargs) -> None:
+    def analyse_semantics(self, sm: ScopeManager, target_proto: Asts.FunctionPrototypeAst = None, is_async: Optional[Asts.TokenAst] = None, is_coro_resume: bool = False, **kwargs) -> None:
         # Code that is run after the overload is selected.
 
         # Mark if pins are required, and the ast to mark as errored if required.
-        pins_required = is_async or (target_proto if isinstance(target_proto, Asts.CoroutinePrototypeAst) else None)
+        pins_required = is_async or (target_proto if isinstance(target_proto, Asts.CoroutinePrototypeAst) and not is_coro_resume else None)
 
         # Define the borrow sets to maintain the law of exclusivity.
         borrows_ref = Seq()
