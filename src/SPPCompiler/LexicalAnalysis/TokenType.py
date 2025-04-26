@@ -110,6 +110,7 @@ class RawKeywordType(TokenType):
     Async = "async"
     True_ = "true"
     False_ = "false"
+    Res = "res"
 
 
 class SppTokenType(TokenType):
@@ -152,6 +153,7 @@ class SppTokenType(TokenType):
     KwOf = "of"
     KwIn = "in"
     KwAsync = "async"
+    KwRes = "res"
 
     TkEq = "=="
     TkNe = "!="
