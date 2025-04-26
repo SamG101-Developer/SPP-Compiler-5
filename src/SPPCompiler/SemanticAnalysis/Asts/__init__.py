@@ -117,6 +117,7 @@ from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst 
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorIndexAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst import *
+from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorResumeCoroutineAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.RetStatementAst import *
