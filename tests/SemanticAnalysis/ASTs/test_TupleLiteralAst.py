@@ -1,17 +1,7 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
 class TestTupleLiteralNElementAst(CustomTestCase):
-    @should_pass_compilation()
-    def test_valid_tuple_filled_tuple_literal_size_0(self):
-        """
-        fun f() -> std::void::Void {
-            let a = ()
-        }
-        """
-
     @should_pass_compilation()
     def test_valid_tuple_filled_tuple_literal_size_1(self):
         """

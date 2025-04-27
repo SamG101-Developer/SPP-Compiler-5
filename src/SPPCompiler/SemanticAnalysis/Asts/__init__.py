@@ -97,6 +97,11 @@ from SPPCompiler.SemanticAnalysis.Asts.ObjectInitializerAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.ParenthesizedExpressionAst import *
 
+from SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionAst import *
+from SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionCaptureItemAst import *
+from SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionParameterAst import *
+from SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionParameterAndCaptureGroupAst import *
+
 from SPPCompiler.SemanticAnalysis.Asts.PatternGuardAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PatternVariantAttributeBindingAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PatternVariantDestructureArrayAst import *
