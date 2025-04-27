@@ -228,6 +228,11 @@ class Scope:
         # Get the parent scope.
         return self._parent
 
+    @parent.setter
+    def parent(self, parent: Scope) -> None:
+        # Set the parent scope.
+        self._parent = parent
+
     @property
     def ancestors(self) -> Seq[Scope]:
         # Get all the ancestors, including this scope and the global scope.
