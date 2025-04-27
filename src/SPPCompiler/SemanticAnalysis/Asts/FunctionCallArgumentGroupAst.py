@@ -54,7 +54,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         # Get all the unnamed function call arguments.
         return self.arguments.filter_to_type(Asts.FunctionCallArgumentUnnamedAst)
 
-    def analyse_pre_semantics(self, sm: ScopeManager, **kwargs) -> None:
+    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Code that is run before the overload is selected.
 
         # Check there are no duplicate argument names.
@@ -112,6 +112,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 check_move_from_borrowed_context=False, check_pins=False, update_memory_info=False)
 
             if argument.convention is None:
+
                 # Don't recheck the moves or partial moves, but ensure the pins are maintained here.
                 AstMemoryUtils.enforce_memory_integrity(
                     argument.value, argument, sm,
