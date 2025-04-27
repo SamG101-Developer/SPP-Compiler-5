@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import CompilerStages, PreProcessingContext
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-from SPPCompiler.Utils.ProgressBar import ProgressBar
+from SPPCompiler.Utils.Progress import Progress
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ class Program(CompilerStages):
     def print(self, printer: AstPrinter) -> str:
         return ""
 
-    def lex(self, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+    def lex(self, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Lexing stage.
         for module in module_tree:
             with open(os.path.join(os.getcwd(), module.path.lstrip(os.path.sep))) as fo:
@@ -35,7 +35,7 @@ class Program(CompilerStages):
             progress_bar.next(module.path)
             module.error_formatter = ErrorFormatter(module.token_stream, module.path)
 
-    def parse(self, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+    def parse(self, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Parsing stage.
         for module in module_tree:
             module.module_ast = SppParser(module.token_stream, module.path, module.error_formatter).parse()
@@ -47,7 +47,7 @@ class Program(CompilerStages):
             if module.path.startswith(os.path.sep + "vcs") and not module_namespace:
                 module_tree.modules.remove(module)
 
-    def pre_process(self, context: PreProcessingContext, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+    def pre_process(self, context: PreProcessingContext, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Pre-process all the modules.
         for module in self.modules:
             module_in_tree = module_tree.modules.find(lambda m: m.module_ast is module)
@@ -56,7 +56,7 @@ class Program(CompilerStages):
             module.pre_process(module)
         progress_bar.finish()
 
-    def generate_top_level_scopes(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+    def generate_top_level_scopes(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Generate symbols for all the modules, including namespaces in the scope manager.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
@@ -65,7 +65,7 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def generate_top_level_aliases(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+    def generate_top_level_aliases(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Alias types for all the modules.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
@@ -74,7 +74,7 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def qualify_types(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+    def qualify_types(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Alias types for all the modules.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
@@ -83,7 +83,7 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def load_super_scopes(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+    def load_super_scopes(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Load the super scopes for all the modules.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
@@ -93,7 +93,7 @@ class Program(CompilerStages):
         progress_bar.finish()
         sm.relink_generics()
 
-    def pre_analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+    def pre_analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Pre analyse all the top level constructs.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
@@ -102,7 +102,7 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[ProgressBar] = None, module_tree: ModuleTree = None) -> None:
+    def analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Analyse the semantics for all the modules.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))

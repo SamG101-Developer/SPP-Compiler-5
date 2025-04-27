@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticError
-from SPPCompiler.Utils.ProgressBar import ProgressBar
+from SPPCompiler.Utils.Progress import Progress
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -20,14 +20,14 @@ if TYPE_CHECKING:
     from SPPCompiler.Compiler.Program import Program
 
 COMPILER_STAGE_NAMES = [
-    "            Lexing",
-    "           Parsing",
-    "    Pre-processing",
-    "  Top-level scopes",
-    " Top-level aliases",
-    "  Qualifying types",
-    "      Super scopes",
-    "      Pre-Analysis",
+    "Lexing            ",
+    "Parsing           ",
+    "Pre-processing    ",
+    "Top-level scopes  ",
+    "Top-level aliases ",
+    "Qualifying types  ",
+    "Super scopes      ",
+    "Pre-Analysis      ",
     "Semantics analysis"]
 
 
@@ -88,7 +88,7 @@ class Compiler:
         """
 
         # Initialise the progress bars for each compiler stage.
-        progress_bars = [ProgressBar(name, self._module_tree.modules.length) for name in COMPILER_STAGE_NAMES]
+        progress_bars = [Progress(name, self._module_tree.modules.length) for name in COMPILER_STAGE_NAMES]
         progress_bar = iter(progress_bars)
 
         # Save the modules into the ProgramAst
