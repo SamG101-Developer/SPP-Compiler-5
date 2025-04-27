@@ -44,7 +44,6 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if kwargs["function_type"].token_type != SppTokenType.KwFun and self.expr:
             raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(
                 kwargs["function_type"], self.expr).scopes(sm.current_scope)
-        self._func_ret_type = kwargs["function_ret_type"]
 
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expr:
@@ -54,8 +53,17 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         else:
             expression_type = CommonTypes.Void(self.pos)
 
+        # If the function return type has been given (function, method) then get it.
+        if kwargs["function_ret_type"]:
+            self._func_ret_type = kwargs["function_ret_type"][0]
+
+        # Otherwise, this is for a lambda, so either set it or get it.
+        else:
+            self._func_ret_type = expression_type
+            kwargs["function_ret_type"].append(self._func_ret_type)
+
         # Determine the return type of the enclosing function.
-        expected_type = kwargs["function_ret_type"]
+        expected_type = kwargs["function_ret_type"][0]
 
         # Check the expression type matches the expected type (for subroutines).
         if kwargs["function_type"].token_type == SppTokenType.KwFun:

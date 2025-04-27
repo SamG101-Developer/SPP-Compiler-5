@@ -49,7 +49,6 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Check the enclosing function is a coroutine and not a subroutine.
         if kwargs["function_type"].token_type != SppTokenType.KwCor:
             raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(kwargs["function_type"], self.kw_gen).scopes(sm.current_scope)
-        self._func_ret_type = kwargs["function_ret_type"]
 
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expression:
@@ -59,17 +58,24 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             void_type = CommonTypes.Void(self.pos)
             expression_type = void_type
 
+        if kwargs["function_ret_type"]:
+            self._func_ret_type = kwargs["function_ret_type"][0]
+        else:
+            # Todo: untested
+            self._func_ret_type = CommonTypes.Gen(expression_type, CommonTypesPrecompiled.VOID)
+            kwargs["function_ret_type"].append(self._func_ret_type)
+
         # Determine the yield type of the enclosing function.
         gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(
-            kwargs["function_ret_type"], sm, kwargs["function_ret_type"], "coroutine")
+            kwargs["function_ret_type"][0], sm, kwargs["function_ret_type"][0], "coroutine")
 
         # Check the expression type matches the expected type.
         if not self.kw_with and not yield_type.symbolic_eq(expression_type, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(yield_type, yield_type, expression_type, expression_type).scopes(sm.current_scope)
 
         # If the "with" keyword is being used, the expression type must be a Gen type that matches the function_ret_type.
-        if self.kw_with and not kwargs["function_ret_type"].symbolic_eq(expression_type, sm.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"], kwargs["function_ret_type"], self.expression, expression_type).scopes(sm.current_scope)
+        if self.kw_with and not kwargs["function_ret_type"][0].symbolic_eq(expression_type, sm.current_scope):
+            raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"][0], kwargs["function_ret_type"][0], self.expression, expression_type).scopes(sm.current_scope)
 
         # Apply the function argument law of exclusivity checks to the expression.
         if self.expression:
