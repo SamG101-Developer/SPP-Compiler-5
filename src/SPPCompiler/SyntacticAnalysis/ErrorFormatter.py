@@ -84,7 +84,7 @@ class ErrorFormatter:
             f"Error in file '{self._file_path}', on line {err_line_number}:" if not minimal else f"Context from file '{self._file_path}', on line {err_line_number}:",
             f"{Fore.LIGHTWHITE_EX}{left_padding} {bar_character}",
             f"{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{err_line_number} {bar_character} {err_line_as_string}",
-            f"{Fore.LIGHTWHITE_EX}{left_padding} {bar_character} {Style.NORMAL}{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{carets}\n",
+            f"{Fore.LIGHTWHITE_EX}{left_padding} {bar_character} {Style.NORMAL}{Fore.LIGHTRED_EX if not minimal else Fore.LIGHTGREEN_EX}{carets}",
             f"{Style.RESET_ALL}{Fore.LIGHTRED_EX}{message}" * (not minimal)])
 
         return final_error_message

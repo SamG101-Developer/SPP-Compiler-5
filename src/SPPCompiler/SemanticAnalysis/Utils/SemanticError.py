@@ -58,12 +58,12 @@ class SemanticError(BaseException):
             return "", True
 
         # Otherwise, combine the message and tip into a single color-formatted string.
-        f = f"\n{Style.BRIGHT}{type(self).__name__}: {Style.NORMAL}{error_info.msg}\n{Fore.LIGHTCYAN_EX}{Style.BRIGHT}Tip: {Style.NORMAL}{error_info.tip}{Fore.RESET}"
+        f = f"\n{Style.BRIGHT}  = err : {type(self).__name__}\n  = note: {Style.NORMAL}{error_info.msg}\n{Fore.LIGHTCYAN_EX}{Style.BRIGHT}  = help: {Style.NORMAL}{error_info.tip}{Fore.RESET}"
         return f, False
 
     def throw(self) -> NoReturn:
         # Format the error messages and raise the error.
-        error_message = ""
+        error_message = "\n\n"
         cycle = self.error_formatters.cycle()
         for error, error_formatter in self.error_info.zip(Seq([next(cycle) for i in range(self.error_info.length)])):
             formatted_message, is_minimal = self._format_message(error)
@@ -73,22 +73,22 @@ class SemanticError(BaseException):
 
 
 class SemanticErrors:
-    class AnnotationInvalidApplicationError(SemanticError):
+    class AnnotationInvalidLocationError(SemanticError):
         """
-        The AnnotationInvalidApplicationError is raised if a standard annotation is applied to a non-compatible AST.
-        This includes applying the "@public" annotation to a superimposition, or the "@no_impl" method annotation to a
-        class. An allowlist of valid ASTs for the annotation is provided in the error message.
+        The AnnotationInvalidLocationError is raised if a standard annotation is applied to a non-compatible AST. This
+        includes applying the "@public" annotation to a superimposition, or the "@no_impl" method annotation to a class.
+        An allowlist of valid ASTs for the annotation is provided in the error message.
         """
 
-        def add(self, annotation: Asts.IdentifierAst, applied_to: Asts.Ast, allow_list: str) -> SemanticError:
+        def add(self, annotation: Asts.IdentifierAst, applied_to: Asts.Ast, block_list: str) -> SemanticError:
             self.add_info(
                 ast=annotation,
                 tag=f"Annotation '{annotation}' defined here")
 
             self.add_error(
                 ast=applied_to,
-                tag=f"Non-{allow_list} AST defined here.",
-                msg=f"The '{annotation}' annotation can only be applied to {allow_list} ASTs.",
+                tag=f"Invalid {block_list} context defined here.",
+                msg=f"This annotation can not be applied here.",
                 tip=f"Remove the annotation from here.")
 
             return self
@@ -104,7 +104,7 @@ class SemanticErrors:
             self.add_error(
                 ast=annotation,
                 tag="Invalid annotation.",
-                msg=f"The annotation '{annotation}' is not a valid annotation.",
+                msg=f"This annotation is unknown.",
                 tip=f"Remove the annotation from here.")
 
             return self
