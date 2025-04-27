@@ -40,3 +40,6 @@ Generators.
 
 Binary Expressions.
 * Check function overload is being analysed.
+
+Lambdas.
+* Mutable captures? Like `mut a: &mut T` but for a capture? `mut &mut a` is not happening.

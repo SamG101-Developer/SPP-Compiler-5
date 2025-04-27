@@ -25,18 +25,5 @@
 - For example, `case x is std::option::Some(val)` should infer `T` from `x`, and not require
   `std::option::Some[std::string::Str](val)` as it currently does.
 
-## Lambdas / Closures
-
-- Need to decide on a syntax => probably mirror function syntax closely.
-- Syntax needs to now look cludgy when used as a function argument.
-- Potentially no need to support generic lambdas.
-- For example, `(a: BigInt) -> Void { ... }` looks alright, but as an argument:
-  - Like: `f((a: BigInt) -> Void { ... }, other_args)` the double `((` looks cludgy.
-- Alternatives:
-  - `|a: BigInt| { ... }`
-  - `|&x, &mut y, a: BigInt, b: Bool| -> Void { ... }`
-  - Need a way to mark coroutines. Maybe `cor | ... | -> Void { }`
-- In argument:
-  - `f(|a: BigInt| { ... }, other_args)`
-- Allow function types to _defer_ to more constricting, ie allow a `FunMut` for a `FunMov` parameter.
-- Set the function type to the most constrictive capture
+## MAJOR ISSUE
+- If a pinned value is returned with no intermediate symbol storage.
