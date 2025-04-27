@@ -39,6 +39,14 @@ class AstTypeUtils:
         return is_tuple or is_array
 
     @staticmethod
+    def is_type_functional(type: Asts.TypeAst, scope: Scope) -> bool:
+        # Check if a type is one of the three function types.
+        is_fun_mov = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_MOV, scope)
+        is_fun_mut = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_MUT, scope)
+        is_fun_ref = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_REF, scope)
+        return is_fun_mov or is_fun_mut or is_fun_ref
+
+    @staticmethod
     def is_index_within_type_bound(index: int, type: Asts.TypeAst, scope: Scope) -> bool:
         # Tuple type: count the number of generic arguments.
         if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope):
@@ -266,4 +274,3 @@ class AstTypeUtils:
         # Extract the "Yield" generic argument's value from the generator type.
         yield_type = gen_type.type_parts()[-1].generic_argument_group["Yield"].value
         return gen_type, yield_type
-
