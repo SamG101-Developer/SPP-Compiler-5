@@ -48,27 +48,27 @@ class AstFunctionUtils:
             * The name is "my_function".
         """
 
-        # Todo: variables that are FunXXX types don't work here. They don't have their own scopes.
+        lhs_type = lhs.infer_type(sm)
 
-        # Runtime access into an object: "object.method()"
+        # Runtime access into an object: "object.method()".
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
             function_owner_type = lhs.lhs.infer_type(sm)
             function_name = lhs.op.field
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
 
-        # Static access into a type: "Type::method()"
+        # Static access into a type: "Type::method()".
         elif isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.lhs, Asts.TypeAst) and lhs.op.is_static_access():
             function_owner_type = lhs.lhs
             function_name = lhs.op.field
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
 
-        # Direct access into a namespaced free function: "std::console::print("hello")"
+        # Direct access into a namespaced free function: "std::console::print("hello")".
         elif isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.lhs.op.field, Asts.IdentifierAst) and lhs.op.is_static_access():
             function_owner_scope = sm.current_scope.get_namespace_symbol(lhs.lhs).scope
             function_name = lhs.op.field
             function_owner_type = function_owner_scope.get_symbol(function_name).type
 
-        # Direct access into a non-namespaced function: "function()"
+        # Direct access into a non-namespaced function: "function()".
         elif isinstance(lhs, Asts.IdentifierAst):
             function_owner_type = None
             function_name = lhs
@@ -77,7 +77,7 @@ class AstFunctionUtils:
         # Non-callable AST.
         else:
             function_owner_type = None
-            function_name = None
+            function_name = lhs
             function_owner_scope = None
 
         # Return the function owner type and function name.
@@ -131,7 +131,7 @@ class AstFunctionUtils:
     @staticmethod
     def get_all_function_scopes(
             function_name: Asts.IdentifierAst, function_owner_scope: Scope)\
-            -> Seq[Tuple[Scope, Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]]:
+            -> Seq[Tuple[Optional[Scope], Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]]:
 
         """
         Get all the function scopes, and their generic argument groups for a function name in a scope. This is used to

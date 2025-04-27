@@ -7,6 +7,7 @@ from typing import Optional, Tuple, TYPE_CHECKING
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
@@ -72,6 +73,14 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         all_overloads = AstFunctionUtils.get_all_function_scopes(function_name, function_owner_scope)
         pass_overloads = Seq()
         fail_overloads = Seq()
+
+        # Create a dummy overload for no-overload identifiers that are function types (lambdas etc).
+        if not all_overloads and AstTypeUtils.is_type_functional(lhs_type := lhs.infer_type(sm, **kwargs), sm.current_scope):
+            dummy_params_types = lhs_type.type_parts()[-1].generic_argument_group["Args"].value.type_parts()[-1].generic_argument_group.arguments.map_attr("value")
+            dummy_return_type = lhs_type.type_parts()[-1].generic_argument_group["Out"].value
+            dummy_params = Asts.FunctionParameterGroupAst(params=dummy_params_types.map(lambda t: Asts.FunctionParameterRequiredAst(type=t)))
+            dummy_overload = Asts.FunctionPrototypeAst(function_parameter_group=dummy_params, return_type=dummy_return_type)
+            all_overloads.append((None, dummy_overload, Asts.GenericArgumentGroupAst()))
 
         for function_scope, function_overload, owner_scope_generic_arguments in all_overloads:
             owner_scope_generic_arguments = owner_scope_generic_arguments.arguments
@@ -215,7 +224,10 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # Return the function's return type.
         return_type = self._overload[1].return_type
-        return_type = self._overload[0].get_symbol(return_type).fq_name
+
+        # If there is a scope present (ie non-lambda), then fully qualify the return type.
+        if self._overload[0] is not None:
+            return_type = self._overload[0].get_symbol(return_type).fq_name
         return return_type
 
     def analyse_semantics(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
@@ -226,7 +238,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         is_coro_resume = kwargs.pop("is_coro_resume", False)
 
         # Analyse the function and generic arguments, and determine the overload.
-        self.function_argument_group.analyse_pre_semantics(sm, **kwargs)
+        self.function_argument_group.pre_analyse_semantics(sm, **kwargs)
         self.generic_argument_group.analyse_semantics(sm, **kwargs)
         self.determine_overload(sm, lhs, **kwargs)  # Also adds the "self" argument if needed.
         self.function_argument_group.analyse_semantics(sm, target_proto=self._overload[1], is_async=self._is_async, is_coro_resume=is_coro_resume, **kwargs)
