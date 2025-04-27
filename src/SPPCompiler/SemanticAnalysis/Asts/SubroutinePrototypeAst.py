@@ -15,7 +15,7 @@ class SubroutinePrototypeAst(Asts.FunctionPrototypeAst):
         Asts.FunctionPrototypeAst.analyse_semantics(self, sm, **kwargs)
 
         kwargs["function_type"] = self.tok_fun
-        kwargs["function_ret_type"] = sm.current_scope.get_symbol(self.return_type).fq_name
+        kwargs["function_ret_type"] = [sm.current_scope.get_symbol(self.return_type).fq_name]
 
         # Analyse the semantics of the function body.
         self.body.analyse_semantics(sm, **kwargs)
