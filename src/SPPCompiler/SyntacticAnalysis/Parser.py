@@ -666,6 +666,7 @@ class SppParser:
 
     def parse_primary_expression(self) -> Optional[Asts.ExpressionAst]:
         p1 = self.parse_alternate(
+            self.parse_lambda_expression,
             self.parse_literal,
             self.parse_object_initializer,
             self.parse_parenthesized_expression,
@@ -1485,49 +1486,44 @@ class SppParser:
 
     # ===== LAMBDAS =====
 
-    # @parser_rule
-    # def parse_lambda_prototype(self) -> LambdaPrototypeAst:
-    #     c1 = self.current_pos()
-    #     p1 = self.parse_token(SppTokenType.KwFun).parse_once()  # todo: allow lambda coroutines
-    #     p2 = self.parse_generic_parameters().parse_optional()
-    #     p3 = self.parse_function_parameters().parse_once()
-    #     p4 = self.parse_token(SppTokenType.TkArrowR).parse_once()
-    #     p5 = self.parse_type().parse_once()
-    #     p6 = self.parse_lambda_capture_block().parse_optional()
-    #     p7 = self.parse_where_block().parse_optional()
-    #     p8 = self.parse_inner_scope().parse_once()
-    #     return LambdaPrototypeAst(c1, p1, p2, p3, p4, p5, p6, p7, p8)
-    #
-    # @parser_rule
-    # def parse_lambda_capture_block(self) -> LambdaCaptureBlockAst:
-    #     c1 = self.current_pos()
-    #     p1 = self.parse_token(SppTokenType.TkBrackL).parse_once()
-    #     p2 = self.parse_lambda_capture_item().parse_zero_or_more(SppTokenType.TkComma)
-    #     p3 = self.parse_token(SppTokenType.TkBrackR).parse_once()
-    #     return LambdaCaptureBlockAst(c1, p1, p2, p3)
-    #
-    # @parser_rule
-    # def parse_lambda_capture_item(self) -> LambdaCaptureItemAst:
-    #     p1 = self.parse_lambda_capture_item_named()
-    #     p2 = self.parse_lambda_capture_item_normal()
-    #     p3 = (p1 | p2).parse_once()
-    #     return p3
-    #
-    # @parser_rule
-    # def parse_lambda_capture_item_normal(self) -> LambdaCaptureItemNormalAst:
-    #     c1 = self.current_pos()
-    #     p1 = self.parse_convention().parse_once()
-    #     p2 = self.parse_expression().parse_once()
-    #     return LambdaCaptureItemNormalAst(c1, p1, p2)
-    #
-    # @parser_rule
-    # def parse_lambda_capture_item_named(self) -> LambdaCaptureItemNamedAst:
-    #     c1 = self.current_pos()
-    #     p1 = self.parse_identifier().parse_once()
-    #     p2 = self.parse_token(SppTokenType.TkAssign).parse_once()
-    #     p3 = self.parse_convention().parse_once()
-    #     p4 = self.parse_expression().parse_once()
-    #     return LambdaCaptureItemNamedAst(c1, p1, p2, p3, p4)
+    def parse_lambda_expression(self) -> Optional[Asts.LambdaExpressionAst]:
+        c1 = self.current_pos()
+        p1 = self.parse_optional(self.parse_keyword_cor)
+        p2 = self.parse_once(self.parse_lambda_expression_parameter_and_capture_group)
+        if p2 is None: return None
+        p3 = self.parse_once(self.parse_expression)
+        if p3 is None: return None
+        return Asts.LambdaExpressionAst(c1, p1, p2, p3)
+
+    def parse_lambda_expression_parameter_and_capture_group(self) -> Optional[Asts.LambdaExpressionParameterAndCaptureGroupAst]:
+        c1 = self.current_pos()
+        p1 = self.parse_once(self.parse_token_vertical_bar)
+        if p1 is None: return None
+        p2 = self.parse_zero_or_more(self.parse_lambda_expression_parameter, self.parse_token_comma)
+        p3 = self.parse_once(self.parse_lambda_expression_capture_group)
+        p4 = self.parse_once(self.parse_token_vertical_bar)
+        if p4 is None: return None
+        return Asts.LambdaExpressionParameterAndCaptureGroupAst(c1, p1, p2, p3, p4)
+
+    def parse_lambda_expression_capture_item(self) -> Optional[Asts.LambdaExpressionCaptureItemAst]:
+        c1 = self.current_pos()
+        p1 = self.parse_optional(self.parse_convention)
+        p2 = self.parse_once(self.parse_identifier)
+        if p2 is None: return None
+        return Asts.LambdaExpressionCaptureItemAst(c1, p1, p2)
+
+    def parse_lambda_expression_capture_group(self) -> Seq[Asts.LambdaExpressionCaptureItemAst]:
+        p1 = self.parse_once(self.parse_keyword_caps)
+        if p1 is None: return Seq()
+        p2 = self.parse_zero_or_more(self.parse_lambda_expression_capture_item, self.parse_token_comma)
+        return p2
+
+    def parse_lambda_expression_parameter(self) -> Optional[Asts.LambdaExpressionParameterAst]:
+        p1 = self.parse_alternate(
+            self.parse_function_parameter_variadic,
+            self.parse_function_parameter_optional,
+            self.parse_function_parameter_required)
+        return p1
 
     # ===== TYPES =====
 
@@ -1606,6 +1602,7 @@ class SppParser:
 
     def parse_type_tuple(self) -> Optional[Asts.TypeSingleAst]:
         p1 = self.parse_alternate(
+            self.parse_type_tuple_0_items,
             self.parse_type_tuple_1_items,
             self.parse_type_tuple_n_items)
         return p1
@@ -1677,6 +1674,14 @@ class SppParser:
         p1 = self.parse_once(self.parse_token_question_mark)
         if p1 is None: return None
         return Asts.TypePostfixOperatorOptionalTypeAst(c1, p1)
+
+    def parse_type_tuple_0_items(self) -> Optional[Asts.TypeSingleAst]:
+        c1 = self.current_pos()
+        p1 = self.parse_once(self.parse_token_left_parenthesis)
+        if p1 is None: return None
+        p2 = self.parse_once(self.parse_token_right_parenthesis)
+        if p2 is None: return None
+        return Asts.TypeTupleAst(c1, p1, Seq(), p2).convert()
 
     def parse_type_tuple_1_items(self) -> Optional[Asts.TypeSingleAst]:
         c1 = self.current_pos()
@@ -1753,7 +1758,6 @@ class SppParser:
 
     def parse_literal_tuple(self, item=None) -> Optional[Asts.TupleLiteralAst]:
         p1 = self.parse_alternate(
-            self.parse_literal_tuple_0_items,
             lambda : self.parse_literal_tuple_1_items(item or self.parse_expression),
             lambda : self.parse_literal_tuple_n_items(item or self.parse_expression))
         return p1
@@ -1850,14 +1854,6 @@ class SppParser:
         return Asts.TypeSingleAst.from_token(p2)
 
     # ===== TUPLES =====
-
-    def parse_literal_tuple_0_items(self) -> Optional[Asts.TupleLiteralAst]:
-        c1 = self.current_pos()
-        p1 = self.parse_once(self.parse_token_left_parenthesis)
-        if p1 is None: return None
-        p2 = self.parse_once(self.parse_token_right_parenthesis)
-        if p2 is None: return None
-        return Asts.TupleLiteralAst(c1, p1, Seq(), p2)
 
     def parse_literal_tuple_1_items(self, item) -> Optional[Asts.TupleLiteralAst]:
         c1 = self.current_pos()
@@ -2018,6 +2014,9 @@ class SppParser:
 
     def parse_token_ampersand(self) -> Optional[Asts.TokenAst]:
         return self.parse_token_raw(RawTokenType.TkAmpersand, SppTokenType.TkAmpersand)
+
+    def parse_token_vertical_bar(self) -> Optional[Asts.TokenAst]:
+        return self.parse_token_raw(RawTokenType.TkVerticalBar, SppTokenType.TkVerticalBar)
 
     def parse_token_quote(self) -> Optional[Asts.TokenAst]:
         return self.parse_token_raw(RawTokenType.TkSpeechMark, SppTokenType.TkSpeechMark)
@@ -2251,6 +2250,9 @@ class SppParser:
 
     def parse_keyword_res(self) -> Optional[Asts.TokenAst]:
         return self.parse_keyword_raw(RawKeywordType.Res, SppTokenType.KwRes, requires_following_space=False)
+
+    def parse_keyword_caps(self) -> Optional[Asts.TokenAst]:
+        return self.parse_keyword_raw(RawKeywordType.Caps, SppTokenType.KwCaps, requires_following_space=True)
 
     # ===== LEXEMES =====
 

@@ -87,6 +87,8 @@ class Lexer:
                     tokens.append(RawToken(RawTokenType.TkColon, c))
                 case "&":
                     tokens.append(RawToken(RawTokenType.TkAmpersand, c))
+                case "|":
+                    tokens.append(RawToken(RawTokenType.TkVerticalBar, c))
                 case ".":
                     tokens.append(RawToken(RawTokenType.TkDot, c))
                 case ",":
