@@ -78,7 +78,7 @@ class GenericArgumentGroupAst(Asts.Ast):
 
     @property
     def pos_end(self) -> int:
-        return self.tok_r.pos_end
+        return self.tok_r.pos_end if self.arguments else self.tok_l.pos_end
 
     def get_type_args(self) -> Seq[Asts.GenericTypeArgumentAst]:
         return self.arguments.filter_to_type(*Asts.GenericTypeArgumentAst.__args__)

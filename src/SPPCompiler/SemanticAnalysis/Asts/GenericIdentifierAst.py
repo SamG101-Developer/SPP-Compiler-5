@@ -18,6 +18,7 @@ class GenericIdentifierAst(Asts.Ast):
         self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=0)
         if not self.generic_argument_group.pos:
             self.generic_argument_group.pos = self.pos + len(self.value)
+            self.generic_argument_group.tok_l.pos = self.pos
             self.generic_argument_group.tok_r.pos = self.pos + len(self.value)
 
     def __eq__(self, other: GenericIdentifierAst) -> bool:
