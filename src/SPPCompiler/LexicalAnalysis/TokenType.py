@@ -51,6 +51,7 @@ class RawTokenType(TokenType):
     TkQuestionMark = 17
     TkColon = 18
     TkAmpersand = 19
+    TkVerticalBar = 20
     TkDot = 21
     TkComma = 22
     TkAt = 23
@@ -111,6 +112,7 @@ class RawKeywordType(TokenType):
     True_ = "true"
     False_ = "false"
     Res = "res"
+    Caps = "caps"
 
 
 class SppTokenType(TokenType):
@@ -154,6 +156,7 @@ class SppTokenType(TokenType):
     KwIn = "in"
     KwAsync = "async"
     KwRes = "res"
+    KwCaps = "caps"
 
     TkEq = "=="
     TkNe = "!="
@@ -185,6 +188,7 @@ class SppTokenType(TokenType):
     TkDoubleDot = ".."
     TkColon = ":"
     TkAmpersand = "&"
+    TkVerticalBar = "|"
     TkDot = "."
     TkDoubleColon = "::"
     TkComma = ","
