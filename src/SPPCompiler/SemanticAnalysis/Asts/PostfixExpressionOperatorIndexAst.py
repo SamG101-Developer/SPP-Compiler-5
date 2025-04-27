@@ -86,3 +86,8 @@ class PostfixExpressionOperatorIndexAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the semantics of the transformed AST, ensuring that the function exists.
         index_call.analyse_semantics(sm, **kwargs)
         self._as_func = index_call
+
+
+__all__ = [
+    "PostfixExpressionOperatorIndexAst",
+]

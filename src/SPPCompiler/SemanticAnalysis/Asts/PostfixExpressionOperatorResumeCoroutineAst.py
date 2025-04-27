@@ -90,3 +90,8 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
         # Analyse the semantics of the transformed AST, ensuring that the function exists.
         resume_call.analyse_semantics(sm, is_coro_resume=True, **kwargs)
         self._as_func = resume_call
+
+
+__all__ = [
+    "PostfixExpressionOperatorResumeCoroutineAst",
+]
