@@ -108,7 +108,7 @@ class TestAnnotationAst(CustomTestCase):
         fun g() -> std::void::Void { }
         """
 
-    @should_fail_compilation(SemanticErrors.AnnotationInvalidApplicationError)
+    @should_fail_compilation(SemanticErrors.AnnotationInvalidLocationError)
     def test_invalid_annotation_virtual_method_outside_sup(self) -> None:
         """
         cls A { }
@@ -117,7 +117,7 @@ class TestAnnotationAst(CustomTestCase):
         fun f() -> A { }
         """
 
-    @should_fail_compilation(SemanticErrors.AnnotationInvalidApplicationError)
+    @should_fail_compilation(SemanticErrors.AnnotationInvalidLocationError)
     def test_invalid_annotation_abstract_method_outside_sup(self) -> None:
         """
         cls A { }
@@ -126,39 +126,55 @@ class TestAnnotationAst(CustomTestCase):
         fun f() -> A { }
         """
 
-    @should_fail_compilation(SemanticErrors.AnnotationInvalidApplicationError)
+    @should_fail_compilation(SemanticErrors.AnnotationInvalidLocationError)
     def test_invalid_annotation_virtual_method_on_non_function(self) -> None:
         """
         @virtual_method
         cls A { }
         """
 
-    @should_fail_compilation(SemanticErrors.AnnotationInvalidApplicationError)
+    @should_fail_compilation(SemanticErrors.AnnotationInvalidLocationError)
     def test_invalid_annotation_abstract_method_on_non_function(self) -> None:
         """
         @abstract_method
         cls A { }
         """
 
-    @should_fail_compilation(SemanticErrors.AnnotationInvalidApplicationError)
+    @should_fail_compilation(SemanticErrors.AnnotationInvalidLocationError)
     def test_invalid_annotation_no_impl_on_non_function(self) -> None:
         """
         @no_impl
         cls A { }
         """
 
-    @should_fail_compilation(SemanticErrors.AnnotationInvalidApplicationError)
+    @should_fail_compilation(SemanticErrors.AnnotationInvalidLocationError)
     def test_invalid_annotation_cold_on_non_function(self) -> None:
         """
         @cold
         cls A { }
         """
 
-    @should_fail_compilation(SemanticErrors.AnnotationInvalidApplicationError)
+    @should_fail_compilation(SemanticErrors.AnnotationInvalidLocationError)
     def test_invalid_annotation_hot_on_non_function(self) -> None:
         """
         @hot
         cls A { }
+        """
+
+    @should_fail_compilation(SemanticErrors.AnnotationInvalidLocationError)
+    def test_invalid_annotation_access_modifier_inside_sup_ext(self) -> None:
+        """
+        cls A { }
+        sup A {
+            @public
+            fun f(&self) -> A { }
+        }
+
+        cls B { }
+        sup B ext A {
+            @public
+            fun f(&self) -> A { }
+        }
         """
 
     @should_fail_compilation(SemanticErrors.AnnotationInvalidError)
