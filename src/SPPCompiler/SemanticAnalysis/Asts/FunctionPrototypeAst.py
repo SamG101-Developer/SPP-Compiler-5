@@ -34,10 +34,6 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     _cold: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
     _hot: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
 
-    def __post_init__(self) -> None:
-        assert self.name
-        assert self.return_type
-
     def __eq__(self, other: FunctionPrototypeAst) -> bool:
         # Check both ASTs are the same type and have the same name, generic parameter group, function parameter group,
         # return type and where block.
