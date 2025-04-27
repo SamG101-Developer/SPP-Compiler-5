@@ -38,9 +38,6 @@ class SppParser:
         self._skip_newline_character = RawTokenType.TkNewLine
         self._skip_whitespace_character = RawTokenType.TkWhitespace
 
-    def current_tok(self) -> RawToken:
-        return self._tokens[self._pos]
-
     def current_pos(self) -> int:
         return self._pos + self._injection_adjust_pos
 
@@ -2278,7 +2275,7 @@ class SppParser:
             return None
         out.token_data += p1.token_data
 
-        while self.current_tok().token_type == RawTokenType.TkDigit:
+        while self._tokens[self._pos].token_type == RawTokenType.TkDigit:
             out.token_data += self.parse_once(self.parse_lexeme_digit).token_data
 
         return out
@@ -2305,7 +2302,7 @@ class SppParser:
             return None
         out.token_data += p3.token_data
 
-        while self.current_tok().token_type == RawTokenType.TkDigit:
+        while self._tokens[self._pos].token_type == RawTokenType.TkDigit:
             p3 = self.parse_once(self.parse_lexeme_digit)
             if p3 is None or p3.token_data not in "01":
                 self.store_error(self.current_pos(), "Invalid binary integer literal")
@@ -2335,7 +2332,7 @@ class SppParser:
             self.store_error(self.current_pos(), "Invalid hexadecimal integer literal")
             return None
 
-        while self.current_tok().token_type in [RawTokenType.TkCharacter, RawTokenType.TkDigit]:
+        while self._tokens[self._pos].token_type in [RawTokenType.TkCharacter, RawTokenType.TkDigit]:
             p3 = self.parse_once(self.parse_lexeme_character_or_digit)
             if p3 is None or p3.token_data not in "0123456789abcdefABCDEF":
                 self.store_error(self.current_pos(), "Invalid hexadecimal integer literal")
@@ -2351,7 +2348,7 @@ class SppParser:
         if p1 is None: return None
         out.token_data += p1.token_data
 
-        while self.current_tok().token_type == RawTokenType.TkCharacter:
+        while self._tokens[self._pos].token_type == RawTokenType.TkCharacter:
             out.token_data += self.parse_once(self.parse_lexeme_character).token_data
 
         p2 = self.parse_once(self.parse_token_quote)
@@ -2373,7 +2370,7 @@ class SppParser:
             return None
         out.token_data += p1.token_data
 
-        while self.current_tok().token_type in self._identifier_characters:
+        while self._tokens[self._pos].token_type in self._identifier_characters:
             p2 = self.parse_once(self.parse_lexeme_character_or_digit_or_underscore)
             if p2 is None: return out
             out.token_data += p2.token_data
@@ -2394,7 +2391,7 @@ class SppParser:
             return None
         out.token_data += p1.token_data
 
-        while self.current_tok().token_type in self._upper_identifier_characters:
+        while self._tokens[self._pos].token_type in self._upper_identifier_characters:
             p2 = self.parse_once(self.parse_lexeme_character_or_digit)
             if p2 is None: return out
             out.token_data += p2.token_data
@@ -2443,30 +2440,30 @@ class SppParser:
             return None
 
         if token != RawTokenType.TkNewLine and token != RawTokenType.TkWhitespace:
-            while self.current_tok().token_type in self._skip_all_characters:
+            while self._tokens[self._pos].token_type in self._skip_all_characters:
                 self._pos += 1
 
         elif token == RawTokenType.TkNewLine:
-            while self.current_tok().token_type == self._skip_whitespace_character:
+            while self._tokens[self._pos].token_type == self._skip_whitespace_character:
                 self._pos += 1
 
         elif token == RawTokenType.TkWhitespace:
-            while self.current_tok().token_type == self._skip_newline_character:
+            while self._tokens[self._pos].token_type == self._skip_newline_character:
                 self._pos += 1
 
         if token == RawTokenType.NoToken:
             return Asts.TokenAst(self.current_pos(), SppTokenType.NoToken, "")
 
-        if self.current_tok().token_type != token:
+        if self._tokens[self._pos].token_type != token:
             if self._error.pos == self._pos:
                 self._error.expected_tokens.append(mapped_token.value)
                 return None
 
-            if self.store_error(self._pos, f"Expected £, got '{self.current_tok().token_data}'"):
+            if self.store_error(self._pos, f"Expected £, got '{self._tokens[self._pos].token_data}'"):
                 self._error.expected_tokens.append(mapped_token.value)
             return None
 
-        token_ast = Asts.TokenAst(self.current_pos(), mapped_token, self.current_tok().token_data if mapped_token in [SppTokenType.LxNumber, SppTokenType.LxString] else mapped_token.value)
+        token_ast = Asts.TokenAst(self.current_pos(), mapped_token, self._tokens[self._pos].token_data if mapped_token in [SppTokenType.LxNumber, SppTokenType.LxString] else mapped_token.value)
         self._pos += 1
         return token_ast
 
