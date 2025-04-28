@@ -139,7 +139,11 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         # todo: change this to use a custom iterator as-well.
         return any(g == Asts.GenericIdentifierAst.from_type(generic_type) for g in self)
 
-    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, debug: bool = False) -> bool:
+    def symbolic_eq(
+            self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True,
+            debug: bool = False) -> bool:
+
+        # Get the scopes of the types.
         that_scope = that_scope or self_scope
         that_scope, that = that.split_to_scope_and_type(that_scope)
 
