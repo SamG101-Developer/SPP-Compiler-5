@@ -41,7 +41,6 @@ html_theme_options = {
         "color-brand-primary": "#4dff6a",
         "color-brand-content": "#4dff6a",
         "color-brand-visited": "#4dff6a",
-        "font-stack": "Aptos, sans-serif",
     }
 }
 html_static_path = ["_static"]

@@ -29,6 +29,7 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.ClassImplementationAst
    SPPCompiler.SemanticAnalysis.Asts.ClassMemberAst
    SPPCompiler.SemanticAnalysis.Asts.ClassPrototypeAst
+   SPPCompiler.SemanticAnalysis.Asts.CmpStatementAst
    SPPCompiler.SemanticAnalysis.Asts.ConventionAst
    SPPCompiler.SemanticAnalysis.Asts.ConventionMutAst
    SPPCompiler.SemanticAnalysis.Asts.ConventionRefAst
@@ -65,11 +66,14 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterOptionalAst
    SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterRequiredAst
    SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterVariadicAst
-   SPPCompiler.SemanticAnalysis.Asts.GlobalConstantAst
    SPPCompiler.SemanticAnalysis.Asts.IdentifierAst
    SPPCompiler.SemanticAnalysis.Asts.InnerScopeAst
    SPPCompiler.SemanticAnalysis.Asts.IntegerLiteralAst
    SPPCompiler.SemanticAnalysis.Asts.IsExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionCaptureItemAst
+   SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionParameterAndCaptureGroupAst
+   SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionParameterAst
    SPPCompiler.SemanticAnalysis.Asts.LetStatementAst
    SPPCompiler.SemanticAnalysis.Asts.LetStatementInitializedAst
    SPPCompiler.SemanticAnalysis.Asts.LetStatementUninitializedAst
@@ -115,13 +119,16 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorEarlyReturnAst
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst
+   SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorIndexAst
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst
+   SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorResumeCoroutineAst
    SPPCompiler.SemanticAnalysis.Asts.PrimaryExpressionAst
    SPPCompiler.SemanticAnalysis.Asts.RetStatementAst
    SPPCompiler.SemanticAnalysis.Asts.StatementAst
    SPPCompiler.SemanticAnalysis.Asts.StringLiteralAst
    SPPCompiler.SemanticAnalysis.Asts.SubroutinePrototypeAst
+   SPPCompiler.SemanticAnalysis.Asts.SupCmpStatementAst
    SPPCompiler.SemanticAnalysis.Asts.SupImplementationAst
    SPPCompiler.SemanticAnalysis.Asts.SupMemberAst
    SPPCompiler.SemanticAnalysis.Asts.SupPrototypeAst
@@ -147,7 +154,9 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionAst
    SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAst
    SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAsyncAst
+   SPPCompiler.SemanticAnalysis.Asts.UseStatementAliasAst
    SPPCompiler.SemanticAnalysis.Asts.UseStatementAst
+   SPPCompiler.SemanticAnalysis.Asts.UseStatementReduxAst
    SPPCompiler.SemanticAnalysis.Asts.WhereBlockAst
    SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsAst
    SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsGroupAst

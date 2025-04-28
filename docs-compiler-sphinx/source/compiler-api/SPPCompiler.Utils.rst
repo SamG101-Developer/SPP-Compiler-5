@@ -7,8 +7,9 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
+   SPPCompiler.Utils.FastDeepcopy
    SPPCompiler.Utils.Functools
-   SPPCompiler.Utils.ProgressBar
+   SPPCompiler.Utils.Progress
    SPPCompiler.Utils.Sequence
 
 Module contents
