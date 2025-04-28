@@ -20,9 +20,9 @@ class CoroutinePrototypeAst(Asts.FunctionPrototypeAst):
 
         # Check the return type superimposes the generator type.
         # Todo: use AstUtils.get_generator_and_yield_type here (+ try/except for error mod).
-        superimposed_types = return_type_symbol.scope.sup_types.map(lambda t: t.without_generics())
+        superimposed_types = [t.without_generics() for t in return_type_symbol.scope.sup_types]
         superimposed_types.append(return_type_symbol.fq_name.without_generics())
-        if not superimposed_types.any(lambda t: t.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope)):
+        if not any(t.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope) for t in superimposed_types):
             raise SemanticErrors.FunctionCoroutineInvalidReturnTypeError().add(
                 self.return_type).scopes(sm.current_scope)
 

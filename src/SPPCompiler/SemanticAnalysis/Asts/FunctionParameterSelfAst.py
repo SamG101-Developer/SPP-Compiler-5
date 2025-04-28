@@ -36,7 +36,7 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
             self.tok_mut.print(printer) + " " if self.tok_mut else "",
             self.convention.print(printer) if self.convention else "",
             self.name.print(printer),
-            f": {self.type}" if self._arbitrary else ""]
+            self.type.print(printer) if self._arbitrary else ""]
         return "".join(string)
 
     @property
@@ -65,7 +65,7 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
             deref_type.analyse_semantics(sm, **kwargs)
 
             self_type_super_types = sm.current_scope.get_symbol(self.type).scope.direct_sup_types
-            if not self_type_super_types.any(lambda t: t.symbolic_eq(deref_type, sm.current_scope, sm.current_scope)):
+            if not any([t.symbolic_eq(deref_type, sm.current_scope, sm.current_scope) for t in self_type_super_types]):
                 raise SemanticErrors.InvalidSelfTypeError().add(
                     self.type).scopes(sm.current_scope)
 

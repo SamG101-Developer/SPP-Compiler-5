@@ -25,6 +25,7 @@ class PatternVariantElseAst(Asts.Ast):
         return self.tok_else.pos_end
 
     def analyse_semantics(self, sm: ScopeManager, cond: Asts.ExpressionAst = None, **kwargs) -> None:
+        # Leave this function here (needs the keyword "cond" parameter for uniform pattern analysis).
         ...
 
 

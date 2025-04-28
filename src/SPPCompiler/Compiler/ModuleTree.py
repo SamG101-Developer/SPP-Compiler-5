@@ -13,7 +13,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 @dataclass(slots=True)
 class Module:
-    """!
+    """
     A Module represents a file of code, and associated information for convenience, such as the token stream, which is
     the lexed output for this module.
 
@@ -29,7 +29,7 @@ class Module:
 
 
 class ModuleTree:
-    """!
+    """
     The ModuleTree holds a list of modules from the local "src" and "vcs" directories. This tree is then used by the
     compiler to iterate through and process each module.
     """
@@ -43,31 +43,34 @@ class ModuleTree:
         self._src_path = os.path.join(path, "src")
         self._vcs_path = os.path.join(path, "vcs")
 
-        # Get all the modules from the src and vcs paths.
-        src_modules = Seq(glob(self._src_path + "/**/*.spp", recursive=True)).map(Module)
-        vcs_modules = Seq(glob(self._vcs_path + "/**/*.spp", recursive=True)).map(Module)
+        # Get all the modules from the src and vcs paths. Todo: cross platform filepaths.
+        src_modules = [Module(f) for f in glob(self._src_path + "/**/*.spp", recursive=True)]
+        vcs_modules = [Module(f) for f in glob(self._vcs_path + "/**/*.spp", recursive=True)]
+
+        # Remove vcs main.spp files (keep src main.spp though).
+        vcs_modules = [m for m in vcs_modules if not m.path.endswith(os.path.sep + "main.spp")]
 
         # Merge the source and version control system modules.
         self._modules = src_modules + vcs_modules
         for m in self._modules:
-            setattr(m, "path", m.path.replace(os.getcwd(), "", 1))
+            m.path = m.path.replace(os.getcwd(), "", 1)
 
     def __iter__(self) -> Iterable[Module]:
-        """!
+        """
         Iterate through the module tree by iterating through the list of modules.
 
-        @return An iterator over the modules.
+        :return: An iterator for the modules in the module tree.
         """
 
         # Iterate over the modules.
-        return iter(self._modules.copy())
+        return iter(self._modules)
 
     @property
     def modules(self) -> Seq[Module]:
-        """!
+        """
         Get the list of modules in the module tree.
 
-        @return The list of modules.
+        :return: The list of modules.
         """
 
         # Return the source and version control system modules.

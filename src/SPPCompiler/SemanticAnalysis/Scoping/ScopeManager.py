@@ -83,7 +83,8 @@ class ScopeManager:
         for scope in self:
 
             # Only check type and alias symbols that are not generic (ie not the T type for Vec[T]).
-            for symbol in scope._symbol_table.all().filter_to_type(AliasSymbol, TypeSymbol).filter(lambda t: not t.is_generic):
+            non_generic_type_symbols = [s for s in scope._symbol_table.all() if isinstance(s, TypeSymbol) and not s.is_generic]
+            for symbol in non_generic_type_symbols:
 
                 # Check the type is a generic implementation (ie Vec[Str]), and remove the symbol.
                 if symbol.scope._non_generic_scope is not symbol.scope:

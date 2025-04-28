@@ -91,8 +91,8 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         
             # Check the target field exists on the type.
             if not lhs_symbol.scope.has_symbol(self.field, exclusive=True):
-                alternatives = sm.current_scope.get_symbol(lhs).scope.all_symbols().map_attr("name")
-                closest_match = difflib.get_close_matches(self.field.value, alternatives.map_attr("value"), n=1, cutoff=0)
+                alternatives = [s.name.value for s in sm.current_scope.get_symbol(lhs).scope.all_symbols()]
+                closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "static member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
         
@@ -134,7 +134,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
             # Check the attribute exists on the lhs. todo
             if not lhs_symbol.scope.has_symbol(self.field):
                 alternatives = Seq()  # lhs_symbol.scope.all_symbols().map_attr("name")
-                closest_match = difflib.get_close_matches(self.field.value, alternatives.map_attr("value"), n=1, cutoff=0)
+                closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "runtime member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
         
@@ -150,8 +150,8 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         
             # Check the variable exists on the lhs.
             if not lhs_ns_symbol.scope.has_symbol(self.field):
-                alternatives = lhs_ns_symbol.scope.all_symbols().map_attr("name")
-                closest_match = difflib.get_close_matches(self.field.value, alternatives.map_attr("value"), n=1, cutoff=0)
+                alternatives = [s.name.value for s in lhs_ns_symbol.scope.all_symbols()]
+                closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "namespace member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
 

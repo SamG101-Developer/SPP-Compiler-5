@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -30,7 +30,7 @@ class ClassImplementationAst(Asts.Ast):
         if self.members:
             string = [
                 self.tok_left_brace.print(printer) + "\n",
-                self.members.print(printer, "\n"),
+                *[m.print(printer) + "\n" for m in self.members],
                 self.tok_right_brace.print(printer) + "\n"]
         else:
             string = [
@@ -68,9 +68,9 @@ class ClassImplementationAst(Asts.Ast):
             m.analyse_semantics(sm, **kwargs)
 
         # Check there are no duplicate attribute names.
-        attribute_names = self.members.map_attr("name")
-        if duplicates := attribute_names.non_unique():
-            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "attribute").scopes(sm.current_scope)
+        attribute_names = [m.name for m in self.members]
+        if duplicates := SequenceUtils.duplicates(attribute_names):
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0], duplicates[1], "attribute").scopes(sm.current_scope)
 
 
 __all__ = [

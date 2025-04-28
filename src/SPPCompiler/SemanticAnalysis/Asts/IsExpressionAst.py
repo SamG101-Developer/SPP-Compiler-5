@@ -60,7 +60,7 @@ class IsExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.lhs, self.op, sm, update_memory_info=False, check_move_from_borrowed_context=False)
 
         # Convert to a "case" destructure and analyse it.
-        n = sm.current_scope.children.length
+        n = len(sm.current_scope.children)
         self._as_func = AstBinUtils._convert_is_expression_to_function_call(self)
         self._as_func.analyse_semantics(sm, **kwargs)
         destructures_symbols = sm.current_scope.children[n].children[0].all_symbols(exclusive=True)

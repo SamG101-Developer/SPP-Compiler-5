@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Optional
+
+from ordered_set import OrderedSet
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
@@ -8,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -34,7 +37,7 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         # Print the AST with auto-formatting.
         string = [
             self.tok_l.print(printer),
-            self.arguments.print(printer, ", "),
+            SequenceUtils.print(printer, self.arguments, sep=", "),
             self.tok_r.print(printer)]
         return "".join(string)
 
@@ -45,11 +48,12 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
     def get_arg_val(self, arg: Asts.ObjectInitializerArgumentAst) -> Asts.ExpressionAst:
         return arg.value if isinstance(arg, Asts.ObjectInitializerArgumentNamedAst) else arg.name
 
-    def get_default_args(self) -> Seq[Asts.ObjectInitializerArgumentNamedAst]:
-        return self.arguments.filter_to_type(Asts.ObjectInitializerArgumentUnnamedAst).filter(lambda a: a.is_default is not None)
+    def get_default_arg(self) -> Optional[Asts.ObjectInitializerArgumentNamedAst]:
+        args = [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst) and a.is_default]
+        return args[0] if args else None
 
     def get_regular_args(self) -> Seq[Asts.ObjectInitializerArgumentAst]:
-        return self.arguments.filter(lambda a: not isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst) or a.is_default is None)
+        return [a for a in self.arguments if not isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst) or a.is_default is None]
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the arguments and enforce memory integrity.
@@ -62,31 +66,32 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         class_symbol = sm.current_scope.get_symbol(class_type)
 
         # Get the attribute information from the class type.
-        all_attributes = Seq([(c, class_symbol.scope) for c in class_symbol.type.body.members])
-        for sup_scope in class_symbol.scope.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)):
-            all_attributes += Seq([(c, sup_scope) for c in sup_scope._ast.body.members])
-        all_attribute_names = all_attributes.map(lambda x: x[0].name)
+        all_attributes = [(c, class_symbol.scope) for c in class_symbol.type.body.members]
+        for sup_scope in class_symbol.scope.sup_scopes:
+            if isinstance(sup_scope._ast, Asts.ClassPrototypeAst):
+                all_attributes += Seq([(c, sup_scope) for c in sup_scope._ast.body.members])
+        all_attribute_names = [a[0].name for a in all_attributes]
 
         # Check there are no duplicate argument names.
-        argument_names = self.get_regular_args().map(lambda a: a.name)
-        if duplicates := argument_names.non_unique():
+        argument_names = [a.name for a in self.get_regular_args()]
+        if duplicates := SequenceUtils.duplicates(argument_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0][0], duplicates[0][1], "named object arguments").scopes(sm.current_scope)
+                duplicates[0], duplicates[1], "named object arguments").scopes(sm.current_scope)
 
         # Check there is at most 1 default argument.
-        if (default_arguments := self.get_default_args()).length > 1:
+        def_args = [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst) and a.is_default]
+        if len(def_args) > 1:
             raise SemanticErrors.ObjectInitializerMultipleDefArgumentsError().add(
-                default_arguments[0], default_arguments[1]).scopes(sm.current_scope)
-        def_argument = self.get_default_args().first()
+                def_args[0], def_args[1]).scopes(sm.current_scope)
 
         # Check there are no invalidly named arguments.
-        if invalid_arguments := argument_names.set_subtract(all_attribute_names):
+        if invalid_arguments := OrderedSet(argument_names) - OrderedSet(all_attribute_names):
             raise SemanticErrors.ArgumentNameInvalidError().add(
-                self, "attribute", invalid_arguments[0], "object initialization argument").scopes(sm.current_scope)
+                self, "attribute", invalid_arguments.pop(0), "object initialization argument").scopes(sm.current_scope)
 
         # Type check the regular arguments against the class attributes.
         for argument in self.get_regular_args():
-            attribute, sup_scope = all_attributes.find(lambda x: x[0].name == argument.name)
+            attribute, sup_scope = [a for a in all_attributes if a[0].name == argument.name][0]
             attribute_type = class_symbol.scope.get_symbol(attribute.name).type
             argument_type = argument.infer_type(sm, **kwargs)
 
@@ -95,8 +100,9 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
                     attribute, attribute_type, argument, argument_type).scopes(sm.current_scope)
 
         # Type check the default argument if it exists.
-        target_def_type = class_type
+        def_argument = self.get_default_arg()
         def_argument_type = def_argument.name.infer_type(sm, **kwargs) if def_argument else None
+        target_def_type = class_type
         if def_argument and not def_argument_type.symbolic_eq(target_def_type, class_symbol.scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
                 class_type, target_def_type, def_argument.name, def_argument_type).scopes(sm.current_scope)

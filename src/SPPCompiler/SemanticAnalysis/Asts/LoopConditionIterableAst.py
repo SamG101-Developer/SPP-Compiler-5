@@ -63,7 +63,7 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         let_ast.analyse_semantics(sm, **kwargs)
 
         # Set the memory information of the symbol based on the type of iteration.
-        symbols = self.variable.extract_names.map(lambda n: sm.current_scope.get_symbol(n))
+        symbols = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]
         for symbol in symbols:
             symbol.memory_info.ast_borrowed = self if type(yield_type.get_convention()) in [Asts.ConventionMutAst, Asts.ConventionRefAst] else None
             symbol.memory_info.is_borrow_mut = type(yield_type.get_convention()) is Asts.ConventionMutAst is not None

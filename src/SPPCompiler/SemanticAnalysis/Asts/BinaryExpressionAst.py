@@ -131,7 +131,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(
                     self.rhs, rhs_tuple_type, self.lhs).scopes(sm.current_scope)
 
-            rhs_num_elements = rhs_tuple_type.type_parts()[0].generic_argument_group.arguments.length
+            rhs_num_elements = len(rhs_tuple_type.type_parts()[0].generic_argument_group.arguments)
 
             # Get the parts of the tuple.
             new_asts = Seq()
@@ -155,7 +155,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(
                     self.rhs, lhs_tuple_type, self.lhs).scopes(sm.current_scope)
 
-            lhs_num_elements = lhs_tuple_type.type_parts()[0].generic_argument_group.arguments.length
+            lhs_num_elements = len(lhs_tuple_type.type_parts()[0].generic_argument_group.arguments)
 
             # Get the parts of the tuple.
             new_asts = Seq()
@@ -166,7 +166,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
             # Convert "t = (0, 1, 2, 3)", "t + .." into "(t.0 + (t.1 + (t.2 + t.3)))".
             self.lhs, self.rhs = new_asts[-2], new_asts[-1]
-            for new_ast in new_asts[:-2].reverse():
+            for new_ast in reversed(new_asts[:-2]):
                 self.lhs, self.rhs = new_ast, BinaryExpressionAst(self.pos, self.lhs, self.op, self.rhs)
             self._as_func = AstBinUtils.convert_to_function_call(self)
             self._as_func.analyse_semantics(sm, **kwargs)

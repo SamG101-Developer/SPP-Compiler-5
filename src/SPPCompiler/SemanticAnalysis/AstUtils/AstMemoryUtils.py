@@ -78,7 +78,7 @@ class MemoryInfo:
         # Remove the partial move from the list, and mark the symbol as initialized if there are no more partial moves.
         if ast in self.ast_partially_moved:
             self.ast_partially_moved.remove(ast)
-            self.ast_partially_moved.is_empty() and self.initialized_by(ast)
+            if not self.ast_partially_moved: self.initialized_by(ast)
 
     def consistency_attrs(self) -> Tuple[Asts.Ast, Asts.Ast, Seq[Asts.Ast], Seq[Asts.Ast], int]:
         return self.ast_initialization, self.ast_moved, self.ast_partially_moved.copy(), self.ast_pinned.copy(), self.initialization_counter
@@ -213,11 +213,7 @@ class AstMemoryUtils:
         # of "a", both "a.b" and "a.b.c.d" must not be partially moved off of "a". This guarantees that "a.b" is
         # fully-initialized when it is moved off of "a". todo: remove "left_overlap" check given "overlap" considers it?
         if check_partial_move and symbol.memory_info.ast_partially_moved and not isinstance(value_ast, Asts.IdentifierAst):
-            if overlaps := symbol.memory_info.ast_partially_moved.filter(lambda p: AstMemoryUtils.left_overlap(p, value_ast)):
-                raise SemanticErrors.MemoryNotInitializedUsageError().add(
-                    value_ast, overlaps[0]).scopes(sm.current_scope)
-
-            if overlaps := symbol.memory_info.ast_partially_moved.filter(lambda p: AstMemoryUtils.overlaps(p, value_ast)):
+            if overlaps := [p for p in symbol.memory_info.ast_partially_moved if AstMemoryUtils.overlaps(p, value_ast)]:
                 raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(
                     value_ast, overlaps[0]).scopes(sm.current_scope)
 

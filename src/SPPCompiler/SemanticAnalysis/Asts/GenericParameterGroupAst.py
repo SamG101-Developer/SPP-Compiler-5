@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -38,7 +38,7 @@ class GenericParameterGroupAst(Asts.Ast):
         if self.parameters:
             string = [
                 self.tok_l.print(printer),
-                self.parameters.print(printer, ", "),
+                SequenceUtils.print(printer, self.parameters, sep=", "),
                 self.tok_r.print(printer) + " "]
         else:
             string = []
@@ -50,29 +50,29 @@ class GenericParameterGroupAst(Asts.Ast):
 
     def get_required_params(self) -> Seq[Asts.GenericParameterRequiredAst]:
         # Get all the required generic parameters.
-        return self.parameters.filter_to_type(Asts.GenericCompParameterRequiredAst, Asts.GenericTypeParameterRequiredAst)
+        return [p for p in self.parameters if isinstance(p, Asts.GenericParameterRequiredAst)]
 
     def get_optional_params(self) -> Seq[Asts.GenericParameterOptionalAst]:
         # Get all the optional generic parameters.
-        return self.parameters.filter_to_type(Asts.GenericCompParameterOptionalAst, Asts.GenericTypeParameterOptionalAst)
+        return [p for p in self.parameters if isinstance(p, Asts.GenericParameterOptionalAst)]
 
     def get_variadic_params(self) -> Seq[Asts.GenericParameterVariadicAst]:
         # Get all the variadic generic parameters.
-        return self.parameters.filter_to_type(Asts.GenericCompParameterVariadicAst, Asts.GenericTypeParameterVariadicAst)
+        return [p for p in self.parameters if isinstance(p, Asts.GenericParameterVariadicAst)]
 
     def get_comp_params(self) -> Seq[Asts.GenericCompParameterAst]:
         # Get all the computation generic parameters.
-        return self.parameters.filter_to_type(*Asts.GenericCompParameterAst.__args__)
+        return [p for p in self.parameters if isinstance(p, Asts.GenericCompParameterAst)]
 
     def get_type_params(self) -> Seq[Asts.GenericTypeParameterAst]:
         # Get all the type generic parameters.
-        return self.parameters.filter_to_type(*Asts.GenericTypeParameterAst.__args__)
+        return [p for p in self.parameters if isinstance(p, Asts.GenericTypeParameterAst)]
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate generic parameter names.
-        generic_parameter_names = self.parameters.map(lambda parameter: parameter.name)
-        if duplicates := generic_parameter_names.non_unique():
-            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0][0], duplicates[0][1], "generic parameter")
+        generic_parameter_names = [p.name for p in self.parameters]
+        if duplicates := SequenceUtils.duplicates(generic_parameter_names):
+            raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0], duplicates[1], "generic parameter")
 
         # Check the generic parameters are in the correct order.
         if difference := AstOrderingUtils.order_params(self.parameters):

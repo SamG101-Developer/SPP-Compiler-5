@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -26,7 +26,7 @@ class TupleLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Print the AST with auto-formatting.
         string = [
             self.tok_l.print(printer),
-            self.elems.print(printer, ", "),
+            SequenceUtils.print(printer, self.elems, sep=", "),
             self.tok_r.print(printer)]
         return "".join(string)
 
@@ -36,8 +36,8 @@ class TupleLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Create the standard "std::tuple::Tup[..Items]" type, with generic items.
-        inner_types = self.elems.map(lambda element: element.infer_type(sm, **kwargs))
-        tuple_type = CommonTypes.Tup2(self.pos, inner_types)
+        inner_types = [e.infer_type(sm, **kwargs) for e in self.elems]
+        tuple_type = CommonTypes.Tup(self.pos, inner_types)
         tuple_type.analyse_semantics(sm, **kwargs)
         return tuple_type
 

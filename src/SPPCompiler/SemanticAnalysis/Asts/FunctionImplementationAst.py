@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 # from llvmlite import ir as llvm
@@ -29,7 +29,7 @@ class FunctionImplementationAst(Asts.Ast):
         if self.members:
             string = [
                 self.tok_l.print(printer) + "\n",
-                self.members.print(printer, "\n"),
+                SequenceUtils.print(printer, self.members, sep="\n"),
                 self.tok_r.print(printer) + "\n"]
         else:
             string = [
@@ -43,7 +43,7 @@ class FunctionImplementationAst(Asts.Ast):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there is no code after a "ret" statement, as this is unreachable.
-        for i, member in self.members.enumerate():
+        for i, member in enumerate(self.members):
             if isinstance(member, (Asts.LoopControlFlowStatementAst, Asts.RetStatementAst)) and member is not self.members[-1]:
                 raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1]).scopes(sm.current_scope)
 

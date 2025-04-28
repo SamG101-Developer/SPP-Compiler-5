@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -41,7 +41,6 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __post_init__(self) -> None:
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftSquareBracket)
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightSquareBracket)
-        assert self.elems.not_empty()
 
     def __eq__(self, other: ArrayLiteralNElementAst) -> bool:
         # Check both ASTs are the same type and have the same elements.
@@ -52,7 +51,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Print the AST with auto-formatting.
         string = [
             self.tok_l.print(printer),
-            self.elems.print(printer, ", "),
+            SequenceUtils.print(printer, self.elems, sep=", "),
             self.tok_r.print(printer)]
         return "".join(string)
 
@@ -71,7 +70,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Create the standard "std::array::Arr[T, n: BigNum]" type, with generic items.
-        size = Asts.IntegerLiteralAst.from_python_literal(self.elems.length)
+        size = Asts.IntegerLiteralAst.from_python_literal(len(self.elems))
         element_type = self.elems[0].infer_type(sm, **kwargs)
         array_type = CommonTypes.Arr2(self.pos, element_type, size)
         array_type.analyse_semantics(sm, **kwargs)
@@ -104,8 +103,8 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             elem.analyse_semantics(sm, **kwargs)
 
         # Check all elements have the same type as the 0th element.
-        all_elem_types_and_ast = self.elems.map(lambda e: e.infer_type(sm, **kwargs)).zip(self.elems)
-        for elem_type, elem in all_elem_types_and_ast[1:]:
+        all_elem_types_and_ast = zip([e.infer_type(sm, **kwargs) for e in self.elems], self.elems)
+        for elem_type, elem in list(all_elem_types_and_ast)[1:]:
             if not zeroth_elem_type.symbolic_eq(elem_type, sm.current_scope):
                 raise SemanticErrors.ArrayElementsDifferentTypesError().add(
                     zeroth_elem, zeroth_elem_type, elem, elem_type).scopes(sm.current_scope)

@@ -6,7 +6,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -16,7 +16,7 @@ class ModuleImplementationAst(Asts.Ast):
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
-        return self.members.print(printer, "\n")
+        return SequenceUtils.print(printer, self.members, sep="\n")
 
     @property
     def pos_end(self) -> int:

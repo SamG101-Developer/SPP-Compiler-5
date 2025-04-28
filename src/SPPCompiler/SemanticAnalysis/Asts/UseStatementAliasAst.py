@@ -41,7 +41,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.annotations.print(printer, " "),
+            *[a.print(printer) + "\n" for a in self.annotations],
             self.kw_use.print(printer) + " ",
             self.new_type.print(printer),
             self.generic_parameter_group.print(printer) or " ",

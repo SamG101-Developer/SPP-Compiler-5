@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import copy
-import operator
 from collections import defaultdict
 from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type
 
+from ordered_set import OrderedSet
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -159,7 +159,7 @@ class AstFunctionUtils:
                 # Find all the scopes at the module level that superimpose a function type over the function:
                 # "sup $Func ext FunXXX { ... }". Note that these superimpositions should always be extending FunXXX
                 # types, because "fun func()" is preprocessed into "sup $Func ext FunRef[...] { ... }".
-                for sup_scope in ancestor_scope.children.filter(lambda c: isinstance(c._ast, Asts.SupPrototypeExtensionAst) and c._ast.name == function_name):
+                for sup_scope in [c for c in ancestor_scope.children if isinstance(c._ast, Asts.SupPrototypeExtensionAst) and c._ast.name == function_name]:
                     generics = Asts.GenericArgumentGroupAst()
                     overload_scopes_and_info.append((ancestor_scope, sup_scope._ast.body.members[0], generics))
 
@@ -177,8 +177,8 @@ class AstFunctionUtils:
             # in the module analysis version, should also only contain FunXXX types. The only addition is grabbing the
             # generics from the superimposition.
             for sup_scope in sup_scopes:
-                for sup_ast in sup_scope._ast.body.members.filter_to_type(Asts.SupPrototypeExtensionAst).filter(lambda m: m.name == function_name):
-                    generics = AstTypeUtils.get_generics_in_scope(sup_scope)
+                for sup_ast in [m for m in sup_scope._ast.body.members if isinstance(m, Asts.SupPrototypeExtensionAst) and m.name == function_name]:
+                    generics = Asts.GenericArgumentGroupAst(arguments=sup_scope.generics)
                     overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))
 
             # When a derived class has overridden a function, the overridden base class function(s) must be removed.
@@ -189,7 +189,7 @@ class AstFunctionUtils:
                     if function_1 is not function_2 and function_owner_scope.depth_difference(scope_1) < function_owner_scope.depth_difference(scope_2):
                         conflict = AstFunctionUtils.check_for_conflicting_override(scope_1, scope_2, function_1)
                         if conflict:
-                            overload_scopes_and_info.remove_if(lambda info: info[1] is conflict)
+                            SequenceUtils.remove_if(overload_scopes_and_info, lambda info: info[1] is conflict)
 
         # Return the overload scopes, and their generic argument groups.
         return overload_scopes_and_info
@@ -201,11 +201,11 @@ class AstFunctionUtils:
 
         # Get the existing functions callable on this type (belong to this type or any supertype).
         existing = AstFunctionUtils.get_all_function_scopes(new_func._orig, target_scope)
-        existing_scopes = existing.map(operator.itemgetter(0))
-        existing_funcs = existing.map(operator.itemgetter(1))
+        existing_scopes = [e[0] for e in existing]
+        existing_funcs  = [e[1] for e in existing]
 
         # Check for an overload conflict with all function of the same name.
-        for old_scope, old_func in existing_scopes.zip(existing_funcs):
+        for old_scope, old_func in zip(existing_scopes, existing_funcs):
             # Ignore if the method is an identical match on a base class (override) or is the same object.
             if old_func is new_func:
                 continue
@@ -217,13 +217,13 @@ class AstFunctionUtils:
             params_old = copy.copy(old_func.function_parameter_group)
 
             # Remove all required parameters on the first parameter list off the other parameter list.
-            for p, q in new_func.function_parameter_group.params.zip(old_func.function_parameter_group.params):
+            for p, q in zip(new_func.function_parameter_group.params, old_func.function_parameter_group.params):
                 if p.type.symbolic_eq(q.type, this_scope, old_scope):
-                    params_new.params.remove_if(lambda x: x.extract_names == p.extract_names)
-                    params_old.params.remove_if(lambda x: x.extract_names == q.extract_names)
+                    SequenceUtils.remove_if(params_new.params, lambda x: x.extract_names == p.extract_names)
+                    SequenceUtils.remove_if(params_old.params, lambda x: x.extract_names == q.extract_names)
 
             # If neither parameter list contains a required parameter, throw an error.
-            if not (params_new.params + params_old.params).map(type).contains(Asts.FunctionParameterRequiredAst):
+            if Asts.FunctionParameterRequiredAst not in [type(p) for p in params_new.params + params_old.params]:
                 return old_func
 
         return None
@@ -245,11 +245,11 @@ class AstFunctionUtils:
 
         # Get the existing functions callable on this type (belong to this type or any supertype).
         existing = AstFunctionUtils.get_all_function_scopes(new_func._orig, target_scope)
-        existing_scopes = existing.map(operator.itemgetter(0))
-        existing_funcs = existing.map(operator.itemgetter(1))
+        existing_scopes = [e[0] for e in existing]
+        existing_funcs  = [e[1] for e in existing]
 
         # Check for an overload conflict with all function of the same name.
-        for old_scope, old_func in existing_scopes.zip(existing_funcs):
+        for old_scope, old_func in zip(existing_scopes, existing_funcs):
 
             # Ignore if the method is the same object.
             if old_func is new_func: continue
@@ -260,13 +260,14 @@ class AstFunctionUtils:
             params_old = copy.copy(old_func.function_parameter_group)
 
             # Check a list of conditions to check for conflicting functions.
-            if params_new.params.length == params_old.params.length:
+            if len(params_new.params) == len(params_old.params):
                 if all(p.extract_names == q.extract_names and p.type.symbolic_eq(q.type, this_scope, old_scope, check_variant=False) for p, q in zip(params_new.get_non_self_params(), params_old.get_non_self_params())):
                     if new_func.tok_fun == old_func.tok_fun:
                         if new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
                             if hs(new_func) == hs(old_func) and sc(new_func) is sc(old_func):
                                 return old_func
 
+        # No conflicting overload found.
         return None
 
     @staticmethod
@@ -290,37 +291,37 @@ class AstFunctionUtils:
         """
 
         # Get the argument names and parameter names, and check for the existence of a variadic parameter.
-        argument_names = arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst).map_attr("name")
-        parameter_names = parameters.map_attr("extract_name")
+        argument_names = [a.name for a in arguments if isinstance(a, Asts.FunctionCallArgumentNamedAst)]
+        parameter_names = [parameter.extract_name for parameter in parameters]
         is_variadic = parameters and isinstance(parameters[-1], Asts.FunctionParameterVariadicAst)
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
-        if invalid_argument_names := argument_names.set_subtract(parameter_names):
+        if invalid_argument_names := OrderedSet(argument_names) - OrderedSet(parameter_names):
             raise SemanticErrors.ArgumentNameInvalidError().add(
-                parameters[0], "parameter", invalid_argument_names[0], "argument").scopes(sm.current_scope)
-        parameter_names = parameter_names.set_subtract(argument_names)
+                parameters[0], "parameter", invalid_argument_names.pop(0), "argument").scopes(sm.current_scope)
+        parameter_names = OrderedSet(parameter_names) - OrderedSet(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
-        for i, unnamed_argument in arguments.filter_to_type(Asts.FunctionCallArgumentUnnamedAst).enumerate():
+        for i, unnamed_argument in enumerate([a for a in arguments if isinstance(a, Asts.FunctionCallArgumentUnnamedAst)]):
+
+            parameter_name = parameter_names.pop(0)
+            named_argument = Asts.FunctionCallArgumentNamedAst(pos=unnamed_argument.pos, name=parameter_name)
 
             # The variadic parameter requires a tuple of the remaining arguments. All future arguments are moved into a
             # tuple, and named by the variadic parameter.
-            if parameter_names.length == 1 and is_variadic:
-                named_argument = Asts.FunctionCallArgumentNamedAst(pos=unnamed_argument.pos, name=parameter_names.pop(0), value=Asts.TupleLiteralAst(elems=arguments[i:].map_attr("value"), pos=unnamed_argument.pos))
-                arguments.replace(unnamed_argument, named_argument, 1)
-                arguments.pop_n(-1, arguments.length - i - 1)
+            if len(parameter_names) == 0 and is_variadic:
+                named_argument.value = Asts.TupleLiteralAst(elems=[a.value for a in arguments[i:]])
+                arguments[i] = named_argument
+                arguments[:] = arguments[:i + 1]
                 break
 
             # Name the argument by parsing the argument with the next available parameter name from the function
             # signature. Copy specially assigned "self" types if present.
             else:
-                parameter_name = parameter_names.pop(0)
-                named_argument = Asts.FunctionCallArgumentNamedAst(
-                    name=parameter_name,
-                    convention=unnamed_argument.convention,
-                    value=unnamed_argument.value,
-                    _type_from_self=unnamed_argument._type_from_self)
-                arguments.replace(unnamed_argument, named_argument, 1)
+                named_argument.convention = unnamed_argument.convention
+                named_argument._type_from_self = unnamed_argument._type_from_self
+                named_argument.value = unnamed_argument.value
+                arguments[i] = named_argument
 
     @staticmethod
     def name_generic_arguments(
@@ -341,7 +342,6 @@ class AstFunctionUtils:
         :param sm: The scope manager to access the current scope.
         :param owner: The type that owns the generic arguments (the type being instantiated).
         :param is_tuple_owner: If the owner type is a tuple (early return).
-        :return: None (the generic arguments are modified in-place).
 
         :raise SemanticErrors.ArgumentNameInvalidError: If an argument name is invalid (doesn't match a parameter name).
         :raise SemanticErrors.GenericArgumentTooManyError: If too many generic arguments are passed.
@@ -360,49 +360,40 @@ class AstFunctionUtils:
         if is_tuple_owner: return
 
         # Get the argument names and parameter names, and check for the existence of a variadic parameter.
-        argument_names = arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__).map(lambda a: a.name.name)
-        parameter_names = parameters.map(lambda p: p.name.name)
-        is_variadic = parameters and isinstance(parameters[-1], Asts.GenericParameterVariadicAst.__args__)
+        argument_names = [a.name.name for a in arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
+        parameter_names = [p.name.name for p in parameters]
+        is_variadic = parameters and isinstance(parameters[-1], Asts.GenericParameterVariadicAst)
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
-        if invalid_argument_names := argument_names.set_subtract(parameter_names):
+        if invalid_argument_names := OrderedSet(argument_names) - OrderedSet(parameter_names):
             raise SemanticErrors.ArgumentNameInvalidError().add(
-                parameters.at(0), "generic parameter", invalid_argument_names[0], "generic argument").scopes(sm.current_scope)
-        parameter_names = parameter_names.set_subtract(argument_names)
+                owner, "owner", invalid_argument_names.pop(0), "generic argument").scopes(sm.current_scope)
+        parameter_names = OrderedSet(parameter_names) - OrderedSet(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
-        # Todo: does this work with comp and type unnamed args?
-        for i, unnamed_argument in arguments.filter_to_type(*Asts.GenericArgumentUnnamedAst.__args__).enumerate():
+        for i, unnamed_argument in enumerate([a for a in arguments if isinstance(a, Asts.GenericArgumentUnnamedAst)]):
 
-            # The variadic parameter requires a tuple of the remaining arguments. All future arguments are moved into a
-            # tuple, and named by the variadic parameter.
-            if parameter_names.length == 1 and is_variadic:
-                parameter_name = parameter_names.pop(0)
-                ctor: type = GEN_MAPPING[type(parameters.find(lambda g: g.name.name == parameter_name))]
-                named_argument = ctor(pos=unnamed_argument.pos, name=Asts.TypeSingleAst.from_generic_identifier(parameter_name), value=CommonTypes.Tup2(pos=unnamed_argument.pos, inner_types=arguments[i:].map_attr("value")))
-                arguments.replace(unnamed_argument, named_argument, 1)
-                arguments.pop_n(-1, arguments.length - i - 1)
+            # Raise an error if too many generic arguments are passed.
+            if not parameter_names:
+                raise SemanticErrors.GenericArgumentTooManyError().add(
+                    parameters, owner, unnamed_argument).scopes(sm.current_scope)
+
+            # Name the argument based on the parameter names available.
+            parameter_name = parameter_names.pop(0)
+            ctor: type = GEN_MAPPING[type([p for p in parameters if p.name.name == parameter_name][0])]
+            named_argument = ctor(pos=unnamed_argument.pos, name=Asts.TypeSingleAst.from_generic_identifier(parameter_name))
+
+            # The variadic parameter requires a tuple of the remaining arguments.
+            if len(parameter_names) == 0 and is_variadic:
+                named_argument.value = CommonTypes.Tup(pos=unnamed_argument.pos, inner_types=[a.value for a in arguments[i:]])
+                arguments[i] = named_argument
+                arguments[:] = arguments[:i + 1]
                 break
 
-            # Name the argument by parsing the argument with the next available parameter name from the type definition
-            # (class prototype). If too many generic arguments have been given, raise an error. This test is done here
-            # due to many different places requiring it. It is not seen in the function naming function, because it is
-            # handled in the single caller of that function; analysing function call ASTs.
+            # Set the value of the named argument to the unnamed argument's value.
             else:
-                try:
-                    parameter_name = parameter_names.pop_with_error(0)
-                    ctor: type = GEN_MAPPING[type(parameters.find(lambda g: g.name.name == parameter_name))]
-                    named_argument = ctor(pos=unnamed_argument.pos, name=Asts.TypeSingleAst.from_generic_identifier(parameter_name), value=unnamed_argument.value)
-                    arguments.replace(unnamed_argument, named_argument, 1)
-
-                # If too many generic arguments have been given, raise an error.
-                except IndexError:
-                    raise SemanticErrors.GenericArgumentTooManyError().add(
-                        parameters, owner, unnamed_argument).scopes(sm.current_scope)
-
-        # For any default generic values, override the default "T=T" with "T=Str" etc.
-        # for parameter in parameters.filter_to_type(Asts.GenericParameterOptionalAst):
-        #     arguments.find(lambda a: a.name == parameter.name).value = parameter.default
+                named_argument.value = unnamed_argument.value
+                arguments[i] = named_argument
 
     @staticmethod
     def infer_generic_arguments(
@@ -428,7 +419,7 @@ class AstFunctionUtils:
                 z: V
             }
 
-            let p = Point[W=Bool](x=1, y="hello", z=False)
+        let p = Point[W=Bool](x=1, y="hello", z=False)
 
         * generic_parameter: [T, U, V, W]
         * explicit_generic_arguments: [W=Bool]
@@ -461,9 +452,9 @@ class AstFunctionUtils:
         }
 
         # print("-" * 100)
-        # print("generic_parameters", generic_parameters)
+        # print("generic_parameters", [str(p) for p in generic_parameters])
         # print("optional_generic_parameters", optional_generic_parameters)
-        # print("explicit_generic_arguments", explicit_generic_arguments)
+        # print("explicit_generic_arguments", [str(e) for e in explicit_generic_arguments])
         # print("infer_source", Seq([f"{k}={v}" for k, v in infer_source.items()]))
         # print("infer_target", Seq([f"{k}={v}" for k, v in infer_target.items()]))
         # print("owner", owner, sm.current_scope)
@@ -473,8 +464,9 @@ class AstFunctionUtils:
             return explicit_generic_arguments
 
         # If there are no generic parameters then skip any inference checks.
-        if generic_parameters.is_empty():
+        if not generic_parameters:
             return explicit_generic_arguments
+        generic_parameter_names = [p.name for p in generic_parameters]
 
         # The inferred generics map is: {TypeAst: [TypeAst]}. This represents all the types that have been inferred per
         # generic parameter. For example, two "T" parameters with "Str" arguments would be: {"T": [Str, Str]}. This is
@@ -488,7 +480,7 @@ class AstFunctionUtils:
 
         # Infer the generic arguments from the source to the target. This maps arguments to parameters, or object
         # arguments to attributes etc.
-        for generic_parameter_name in generic_parameters.map_attr("name"):
+        for generic_parameter_name in generic_parameter_names:
 
             # Check every generic argument on the infer target (function parameters or attributes; these are the generic
             # arguments that are known to be inferrable).
@@ -523,20 +515,20 @@ class AstFunctionUtils:
         # type. For example, "T" can't be inferred as a "Str" and then a "BigInt". All instances must match the first
         # inference, in this case "Str".
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
-            if mismatch := Seq(inferred_generic_arguments.copy()[1:].values()).find(lambda t: not t.symbolic_eq(inferred_generic_argument_value[0], sm.current_scope)):
+            if mismatch := [t for t in inferred_generic_argument_value[1:] if not t.symbolic_eq(inferred_generic_argument_value[0], sm.current_scope)]:
                 raise SemanticErrors.GenericParameterInferredConflictInferredError().add(
-                    inferred_generic_argument_name, inferred_generic_argument_value[0], mismatch).scopes(sm.current_scope)
+                    inferred_generic_argument_name, inferred_generic_argument_value[0], mismatch[0]).scopes(sm.current_scope)
 
         # Check inferred generics aren't passed explicitly. This check is present to remove redundant explicit generic
         # arguments in the code. Whilst it wouldn't have an effect on the compilation, it would be a code smell.
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
-            if inferred_generic_argument_name in explicit_generic_arguments and inferred_generic_argument_value.length > 1:
+            if inferred_generic_argument_name in explicit_generic_arguments and len(inferred_generic_argument_value) > 1:
                 raise SemanticErrors.GenericParameterInferredConflictExplicitError().add(
                     inferred_generic_argument_name, inferred_generic_argument_value[0], explicit_generic_arguments[inferred_generic_argument_name]).scopes(sm.current_scope)
 
         # Check all the generic parameters have been inferred. Any un-inferred generic argument causes an error, because
         # the types must be known when the function is called, or the type is defined.
-        for generic_parameter_name in generic_parameters.map_attr("name"):
+        for generic_parameter_name in generic_parameter_names:
             if generic_parameter_name not in inferred_generic_arguments:
                 raise SemanticErrors.GenericParameterNotInferredError().add(
                     generic_parameter_name, owner).scopes(sm.current_scope)  # , sm.current_scope.get_symbol(owner).scope.parent_module)
@@ -558,7 +550,7 @@ class AstFunctionUtils:
         pos_adjust = owner.pos if owner else 0
         final_args = []
         for k, v in formatted_generic_arguments.items():
-            ctor: type = GEN_MAPPING[type(generic_parameters.find(lambda g: g.name == k))]
+            ctor: type = GEN_MAPPING[type([p for p in generic_parameters if p.name == k][0])]
             value = Asts.IdentifierAst.from_type(v) if isinstance(v, Asts.TypeAst) and ctor is Asts.GenericCompArgumentNamedAst else v
             final_args.append(ctor(pos=pos_adjust, name=k, value=value))
 

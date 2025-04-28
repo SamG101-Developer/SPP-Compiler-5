@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -100,7 +100,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         sm.move_to_next_scope()
 
         # Check every generic parameter is constrained by the type.
-        if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
+        if unconstrained := [p for p in self.generic_parameter_group.parameters if not self.name.contains_generic(p.name)]:
             if self.name.type_parts()[0].value[0] != "$":
                 raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
                     unconstrained[0], self.name).scopes(sm.current_scope)
@@ -118,12 +118,13 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 self.name, self.name, "superimposition type").scopes(sm.current_scope)
 
         # Ensure all the generic arguments are unnamed and match the class's generic parameters.
+        other_cls_symbol = sm.current_scope.get_symbol(self.name.without_generics(), ignore_alias=True)
         for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
             if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__args__):
                 raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(
                     generic_arg).scopes(sm.current_scope)
 
-            if not cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
+            if not [p for p in other_cls_symbol.type.generic_parameter_group.parameters if p.name == generic_arg.value]:
                 raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(
                     generic_arg, self.tok_sup).scopes(sm.current_scope)
 
@@ -136,19 +137,15 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 self.super_class, self.super_class, "superimposition supertype").scopes(sm.current_scope)
 
         # Prevent double inheritance by checking if the sup scope is already in the list.
-        if existing_sup_scope := sup_symbol.scope.sup_scopes.filter(
-                lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
-                lambda s: s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)):
+        if existing_sup_scope := [s for s in sup_symbol.scope.sup_scopes if isinstance(s._ast, SupPrototypeExtensionAst) and s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)]:
             raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
-                existing_sup_scope._ast.super_class, self.name).scopes(sm.current_scope)
+                existing_sup_scope[0]._ast.super_class, self.name).scopes(sm.current_scope)
 
         # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
-        if existing_sup_scope := cls_symbol.scope.sup_scopes.filter(
-                lambda s: isinstance(s._ast, SupPrototypeExtensionAst)).find(
-                lambda s: s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)):
-            if cls_symbol.name.value[0] != "$":
+        if cls_symbol.name.value[0] != "$":
+            if existing_sup_scope := [s for s in cls_symbol.scope.sup_scopes if isinstance(s._ast, SupPrototypeExtensionAst) and s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)]:
                 raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
-                    existing_sup_scope._ast.super_class, self.super_class).scopes(sm.current_scope)
+                    existing_sup_scope[0]._ast.super_class, self.super_class).scopes(sm.current_scope)
 
         sup_symbol = sup_symbol.scope.get_symbol(self.super_class)
 
@@ -161,17 +158,20 @@ class SupPrototypeExtensionAst(Asts.Ast):
         self.body.load_super_scopes(sm, **kwargs)
 
         # Prevent duplicate attributes by checking if the attributes appear in any super class.
-        super_class_attribute_names = (sup_symbol.scope.sup_scopes + Seq([sup_symbol.scope])).filter(
-            lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(
-            lambda s: s._ast.body.members).flat().map_attr("name")
+        # Todo: move beneath symbol logic and follow "use"/"cmp" checks?
+        super_class_attribute_names: Seq[Asts.TypeAst] = SequenceUtils.flatten([
+            [m.name for m in s._ast.body.members]
+            for s in sup_symbol.scope.sup_scopes + [sup_symbol.scope]
+            if isinstance(s._ast, Asts.ClassPrototypeAst)])
 
-        existing_attribute_names = (cls_symbol.scope.sup_scopes + Seq([cls_symbol.scope])).filter(
-            lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(
-            lambda s: s._ast.body.members).flat().map_attr("name")
+        existing_attribute_names: Seq[Asts.TypeAst] = SequenceUtils.flatten([
+            [m.name for m in s._ast.body.members]
+            for s in cls_symbol.scope.sup_scopes + [cls_symbol.scope]
+            if isinstance(s._ast, Asts.ClassPrototypeAst)])
 
-        if duplicates := (existing_attribute_names + super_class_attribute_names).non_unique():
+        if duplicates := SequenceUtils.duplicates(existing_attribute_names + super_class_attribute_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0][0], duplicates[0][1], "attribute").scopes(sm.current_scope)
+                duplicates[0], duplicates[1], "attribute").scopes(sm.current_scope)
 
         # Register sup and sub scopes.
         cls_symbol.scope._direct_sup_scopes.append(sup_symbol.scope)
@@ -179,24 +179,27 @@ class SupPrototypeExtensionAst(Asts.Ast):
         sup_symbol.scope._direct_sub_scopes.append(sm.current_scope)
 
         # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
-        existing_type_names = cls_symbol.scope.sup_scopes.filter(
-            lambda s: isinstance(s._ast, Asts.SupPrototypeAst)).map(
-            lambda s: s._ast.body.members.filter_to_type(Asts.SupUseStatementAst)).flat().map_attr("new_type")
+        existing_type_names = SequenceUtils.flatten([
+            [m.new_type for m in s._ast.body.members if isinstance(m, Asts.SupUseStatementAst)]
+            for s in cls_symbol.scope.sup_scopes
+            if isinstance(s._ast, Asts.SupPrototypeAst)
+        ])
 
-        if duplicates := existing_type_names.non_unique():
+        if duplicates := SequenceUtils.duplicates(existing_type_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0][0], duplicates[0][1], "associated type").scopes(sm.current_scope)
+                duplicates[0], duplicates[1], "associated type").scopes(sm.current_scope)
 
         # Prevent duplicate cmp declarations by checking if the cmp statements appear in any super class. Use the "$"
         # check to skip checking functions, which can be overridden.
-        existing_cmp_names = cls_symbol.scope.sup_scopes.filter(
-            lambda s: isinstance(s._ast, Asts.SupPrototypeAst)).map(
-            lambda s: s._ast.body.members.filter_to_type(Asts.CmpStatementAst).filter(
-                lambda c: c.type.type_parts()[-1].value[0] != "$")).flat().map_attr("name")
+        existing_cmp_names = SequenceUtils.flatten([
+            [m.name for m in s._ast.body.members if isinstance(m, Asts.SupCmpStatementAst) and m.type.type_parts()[-1].value[0] != "$"]  # todo: has the type been analysed at this point
+            for s in cls_symbol.scope.sup_scopes
+            if isinstance(s._ast, Asts.SupPrototypeAst)
+        ])
 
-        if duplicates := existing_cmp_names.non_unique():
+        if duplicates := SequenceUtils.duplicates(existing_cmp_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0][0], duplicates[0][1], "associated const").scopes(sm.current_scope)
+                duplicates[0], duplicates[1], "associated const").scopes(sm.current_scope)
 
         cls_symbol.scope._direct_sup_scopes.append(sm.current_scope)
         sm.move_out_of_current_scope()

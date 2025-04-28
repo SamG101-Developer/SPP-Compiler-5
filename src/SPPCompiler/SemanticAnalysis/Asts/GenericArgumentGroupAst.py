@@ -9,7 +9,8 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUt
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -26,7 +27,7 @@ class GenericArgumentGroupAst(Asts.Ast):
         return GenericArgumentGroupAst(arguments=self.arguments.copy())
 
     def __deepcopy__(self, memodict=None) -> GenericArgumentGroupAst:
-        return GenericArgumentGroupAst(tok_l=self.tok_l, arguments=self.arguments.deepcopy(), tok_r=self.tok_r)
+        return GenericArgumentGroupAst(tok_l=self.tok_l, arguments=fast_deepcopy(self.arguments), tok_r=self.tok_r)
 
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         # Check both ASTs are the same type and have the same arguments.
@@ -34,13 +35,14 @@ class GenericArgumentGroupAst(Asts.Ast):
 
     def __getitem__(self, item: str) -> Optional[Asts.GenericArgumentAst]:
         assert isinstance(item, str), type(item)
-        return self.arguments.find(lambda a: Asts.IdentifierAst.from_type(a.name).value == item)
+        args = [a for a in self.arguments if Asts.IdentifierAst.from_type(a.name).value == item]
+        return args[0] if args else None
 
     def __str__(self) -> str:
         if self.arguments:
             string = [
                 str(self.tok_l),
-                ", ".join(self.arguments.map(str)),
+                ", ".join([str(a) for a in self.arguments]),
                 str(self.tok_r)]
             return "".join(string)
         return ""
@@ -52,7 +54,7 @@ class GenericArgumentGroupAst(Asts.Ast):
             **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__args__},
             **{g: Asts.GenericTypeArgumentNamedAst for g in Asts.GenericTypeParameterAst.__args__}}
 
-        arguments = Seq(parameters).map(lambda p: GenericArgumentCTor[type(p)](name=p.name, value=p.name))
+        arguments = [GenericArgumentCTor[type(p)](name=p.name, value=p.name) for p in parameters]
         return GenericArgumentGroupAst(arguments=arguments)
 
     @staticmethod
@@ -71,7 +73,7 @@ class GenericArgumentGroupAst(Asts.Ast):
         if self.arguments:
             string = [
                 self.tok_l.print(printer),
-                self.arguments.print(printer, ", "),
+                SequenceUtils.print(printer, self.arguments, sep=", "),
                 self.tok_r.print(printer)]
             return "".join(string)
         return ""
@@ -81,23 +83,31 @@ class GenericArgumentGroupAst(Asts.Ast):
         return self.tok_r.pos_end if self.arguments else self.tok_l.pos_end
 
     def get_type_args(self) -> Seq[Asts.GenericTypeArgumentAst]:
-        return self.arguments.filter_to_type(*Asts.GenericTypeArgumentAst.__args__)
+        return [a for a in self.arguments if isinstance(a, Asts.GenericTypeArgumentAst)]
 
     def get_comp_args(self) -> Seq[Asts.GenericCompArgumentAst]:
-        return self.arguments.filter_to_type(*Asts.GenericCompArgumentAst.__args__)
+        return [a for a in self.arguments if isinstance(a, Asts.GenericCompArgumentAst)]
 
     def get_named_args(self) -> Seq[Asts.GenericArgumentNamedAst]:
-        return self.arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__)
+        return [a for a in self.arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
 
     def get_unnamed_args(self) -> Seq[Asts.GenericArgumentUnnamedAst]:
-        return self.arguments.filter_to_type(*Asts.GenericArgumentUnnamedAst.__args__)
+        return [a for a in self.arguments if isinstance(a, Asts.GenericArgumentUnnamedAst)]
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        The analysis for a group of generic arguments requires checking there are no duplicate argument names, and that
+        the named arguments follow the unnamed arguments. Following this, each argument's value is analysed.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        """
+
         # Check there are no duplicate argument names.
-        generic_argument_names = self.arguments.filter_to_type(*Asts.GenericArgumentNamedAst.__args__).map(lambda a: a.name.name)
-        if duplicates := generic_argument_names.non_unique():
+        generic_argument_names = [a.name.name for a in self.arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
+        if duplicates := SequenceUtils.duplicates(generic_argument_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0][0], duplicates[0][1], "named generic argument").scopes(sm.current_scope)
+                duplicates[0], duplicates[0], "named generic argument").scopes(sm.current_scope)
 
         # Check the generic arguments are in the correct order.
         if dif := AstOrderingUtils.order_args(self.arguments):

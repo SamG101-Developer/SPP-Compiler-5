@@ -6,7 +6,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -24,7 +24,7 @@ class PatternVariantDestructureArrayAst(Asts.Ast, Asts.Mixins.AbstractPatternVar
         # Print the AST with auto-formatting.
         string = [
             self.tok_l.print(printer),
-            self.elems.print(printer, ", "),
+            SequenceUtils.print(printer, self.elems, sep=", "),
             self.tok_r.print(printer)]
         return "".join(string)
 
@@ -34,9 +34,8 @@ class PatternVariantDestructureArrayAst(Asts.Ast, Asts.Mixins.AbstractPatternVar
 
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureArrayAst:
         # Convert the array destructuring into a local variable array destructuring.
-        elems = self.elems.filter_to_type(*Asts.PatternVariantNestedForDestructureArrayAst.__args__)
-        converted_elems = elems.map(lambda e: e.convert_to_variable(**kwargs))
-        variable = Asts.LocalVariableDestructureArrayAst(self.pos, self.tok_l, converted_elems, self.tok_r)
+        elems = [e.convert_to_variable(**kwargs) for e in self.elems if isinstance(e, Asts.PatternVariantNestedForDestructureArrayAst)]
+        variable = Asts.LocalVariableDestructureArrayAst(self.pos, self.tok_l, elems, self.tok_r)
         variable._from_pattern = True
         return variable
 

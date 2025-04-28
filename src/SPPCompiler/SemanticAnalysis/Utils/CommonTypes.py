@@ -168,35 +168,26 @@ class CommonTypes:
             f"std::option::Opt[{inner_type}]", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
-    def Tup2(pos: int, inner_types: Seq[Asts.TypeAst] = None):
-        return Asts.TypeUnaryExpressionAst(
-            pos=pos,
-            op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "std")),
-            rhs=Asts.TypeUnaryExpressionAst(
-                pos=pos,
-                op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "tuple")),
-                rhs=Asts.TypeSingleAst(
-                    pos=pos,
-                    name=Asts.GenericIdentifierAst(
-                        pos=pos,
-                        value="Tup",
-                        generic_argument_group=Asts.GenericArgumentGroupAst(
-                            pos=pos,
-                            arguments=Seq(inner_types or []).map(lambda v: Asts.GenericTypeArgumentUnnamedAst(value=v))
-                        )
-                    )
-                )
-            )
-        )
+    def Tup(pos: int, inner_types: Seq[Asts.TypeAst] = None):
+        generics = [Asts.GenericTypeArgumentUnnamedAst(value=v) for v in inner_types or []]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Tup", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "tuple")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def Var(pos: int, inner_types: Seq[Asts.TypeAst] = None):
-        return CodeInjection.inject_code(
-            f"std::variant::Var[{', '.join((inner_types or Seq()).map(str))}]", SppParser.parse_type, pos_adjust=pos)
+        generics = [Asts.GenericTypeArgumentUnnamedAst(value=v) for v in inner_types or []]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Var", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "variant")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
-    def FunMov2(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
-        generics = Seq([Asts.GenericTypeArgumentUnnamedAst(pos, param_types), Asts.GenericTypeArgumentUnnamedAst(pos, return_type)])
+    def FunMov(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
+        generics = [Asts.GenericTypeArgumentUnnamedAst(pos, param_types), Asts.GenericTypeArgumentUnnamedAst(pos, return_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
         type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "FunMov", generics))
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "function")), type)
@@ -204,8 +195,8 @@ class CommonTypes:
         return type
 
     @staticmethod
-    def FunMut2(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
-        generics = Seq([Asts.GenericTypeArgumentUnnamedAst(pos, param_types), Asts.GenericTypeArgumentUnnamedAst(pos, return_type)])
+    def FunMut(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
+        generics = [Asts.GenericTypeArgumentUnnamedAst(pos, param_types), Asts.GenericTypeArgumentUnnamedAst(pos, return_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
         type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "FunMut", generics))
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "function")), type)
@@ -213,8 +204,8 @@ class CommonTypes:
         return type
 
     @staticmethod
-    def FunRef2(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
-        generics = Seq([Asts.GenericTypeArgumentUnnamedAst(pos, param_types), Asts.GenericTypeArgumentUnnamedAst(pos, return_type)])
+    def FunRef(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
+        generics = [Asts.GenericTypeArgumentUnnamedAst(pos, param_types), Asts.GenericTypeArgumentUnnamedAst(pos, return_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
         type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "FunRef", generics))
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "function")), type)
@@ -288,13 +279,13 @@ class CommonTypesPrecompiled:
 
     @staticmethod
     def initialize():
-        CommonTypesPrecompiled.EMPTY_TUPLE = CommonTypes.Tup2(pos=0).without_generics()
+        CommonTypesPrecompiled.EMPTY_TUPLE = CommonTypes.Tup(pos=0).without_generics()
         CommonTypesPrecompiled.EMPTY_ARRAY = CommonTypes.Arr2(pos=0, elem_type=Asts.Ast(), size=Asts.Ast()).without_generics()
         CommonTypesPrecompiled.EMPTY_GENERATOR = CommonTypes.Gen(pos=0).without_generics()
         CommonTypesPrecompiled.EMPTY_VARIANT = CommonTypes.Var(pos=0).without_generics()
-        CommonTypesPrecompiled.EMPTY_FUN_MOV = CommonTypes.FunMov2(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
-        CommonTypesPrecompiled.EMPTY_FUN_MUT = CommonTypes.FunMut2(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
-        CommonTypesPrecompiled.EMPTY_FUN_REF = CommonTypes.FunRef2(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
+        CommonTypesPrecompiled.EMPTY_FUN_MOV = CommonTypes.FunMov(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
+        CommonTypesPrecompiled.EMPTY_FUN_MUT = CommonTypes.FunMut(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
+        CommonTypesPrecompiled.EMPTY_FUN_REF = CommonTypes.FunRef(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
         CommonTypesPrecompiled.VOID = CommonTypes.Void(pos=0).without_generics()
         CommonTypesPrecompiled.COPY = CommonTypes.Copy(pos=0).without_generics()
         CommonTypesPrecompiled.BIGINT = CommonTypes.BigInt(pos=0).without_generics()

@@ -73,10 +73,12 @@ class Scope:
 
     @property
     def generics(self) -> Seq[Asts.GenericArgumentAst]:
-        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst, AliasSymbol: Asts.GenericTypeArgumentNamedAst}
-        generics = self._symbol_table.all().filter(lambda s: s.is_generic)
-        generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
-        return generics
+        GenericArgumentCTor = {
+            VariableSymbol: Asts.GenericCompArgumentNamedAst,
+            TypeSymbol    : Asts.GenericTypeArgumentNamedAst,
+            AliasSymbol   : Asts.GenericTypeArgumentNamedAst}
+
+        return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self._symbol_table.all() if s.is_generic]
 
     def _translate_symbol(self, symbol: Symbol, ignore_alias: bool = False) -> Symbol:
         generics = self.generics
@@ -112,7 +114,7 @@ class Scope:
 
         # Translate the symbols if this is a generic scope.
         if self != self._non_generic_scope:
-            symbols = symbols.map(self._translate_symbol)
+            symbols = [self._translate_symbol(s) for s in symbols]
 
         return symbols
 
@@ -241,7 +243,7 @@ class Scope:
     @property
     def parent_module(self) -> Scope:
         # Get the ancestor module scope.
-        return self.ancestors.filter(lambda s: isinstance(s.name, Asts.IdentifierAst))[0]
+        return [s for s in self.ancestors if isinstance(s.name, Asts.IdentifierAst)][0]
 
     @property
     def children(self) -> Seq[Scope]:
@@ -268,15 +270,15 @@ class Scope:
 
     @property
     def direct_sup_types(self) -> Seq[Asts.TypeAst]:
-        return self._direct_sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name)
+        return [s.type_symbol.fq_name for s in self._direct_sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
 
     @property
     def sup_types(self) -> Seq[Asts.TypeAst]:
-        return self.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: s.type_symbol.fq_name)
+        return [s.type_symbol.fq_name for s in self.sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
 
     @property
     def sup_types_and_scopes(self) -> Seq[(Asts.TypeAst, Scope)]:
-        return self.sup_scopes.filter(lambda s: isinstance(s._ast, Asts.ClassPrototypeAst)).map(lambda s: (s.type_symbol.fq_name, s))
+        return [(s.type_symbol.fq_name, s) for s in self.sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
 
     @property
     def sub_scopes(self) -> Seq[Scope]:

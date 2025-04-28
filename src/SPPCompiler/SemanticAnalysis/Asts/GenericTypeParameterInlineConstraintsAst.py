@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -21,7 +21,7 @@ class GenericTypeParameterInlineConstraintsAst(Asts.Ast):
         if self.constraints:
             string = [
                 self.tok_colon.print(printer),
-                self.constraints.print(printer, ", ")]
+                SequenceUtils.print(printer, self.constraints, sep=", ")]
         else:
             string = []
         return "".join(string)
@@ -35,8 +35,8 @@ class GenericTypeParameterInlineConstraintsAst(Asts.Ast):
             c.analyse_semantics(sm, **kwargs)
 
         # Check there are duplicate constraints types.
-        for i, t in self.constraints.enumerate():
-            for j, u in self.constraints[i + 1:].enumerate():
+        for i, t in enumerate(self.constraints):
+            for j, u in enumerate(self.constraints[i + 1:]):
                 if t.symbolic_eq(u, sm.current_scope):
                     raise SemanticErrors.IdentifierDuplicationError().add(
                         t, u, "constraint").scopes(sm.current_scope)

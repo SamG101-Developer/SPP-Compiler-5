@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -38,9 +38,9 @@ class LambdaExpressionParameterAndCaptureGroupAst(Asts.Ast):
     def print(self, printer: AstPrinter) -> str:
         return "".join([
             self.tok_l.print(printer),
-            ", ".join([capture.print(printer) for capture in self.captures]),
-            ", " if self.captures else "",
-            ", ".join([parameter.print(printer) for parameter in self.params]),
+            SequenceUtils.print(printer, self.params, sep=", "),
+            " caps " if self.captures else "",
+            SequenceUtils.print(printer, self.captures, sep=", "),
             self.tok_r.print(printer)])
 
     @property

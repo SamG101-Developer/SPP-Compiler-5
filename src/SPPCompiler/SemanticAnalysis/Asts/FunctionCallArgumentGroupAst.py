@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -38,7 +38,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         # Print the AST with auto-formatting.
         string = [
             self.tok_l.print(printer),
-            self.arguments.print(printer, ", "),
+            SequenceUtils.print(printer, self.arguments, sep=", "),
             self.tok_r.print(printer)]
         return "".join(string)
 
@@ -48,20 +48,20 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
     def get_named_args(self) -> Seq[Asts.FunctionCallArgumentNamedAst]:
         # Get all the named function call arguments.
-        return self.arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst)
+        return [a for a in self.arguments if isinstance(a, Asts.FunctionCallArgumentNamedAst)]
 
     def get_unnamed_args(self) -> Seq[Asts.FunctionCallArgumentUnnamedAst]:
         # Get all the unnamed function call arguments.
-        return self.arguments.filter_to_type(Asts.FunctionCallArgumentUnnamedAst)
+        return [a for a in self.arguments if isinstance(a, Asts.FunctionCallArgumentUnnamedAst)]
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Code that is run before the overload is selected.
 
         # Check there are no duplicate argument names.
-        argument_names = self.arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst).map(lambda a: a.name)
-        if duplicates := argument_names.non_unique():
+        argument_names = [a.name for a in self.arguments if isinstance(a, Asts.FunctionCallArgumentNamedAst)]
+        if duplicates := SequenceUtils.duplicates(argument_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0][0], duplicates[0][1], "named arguments").scopes(sm.current_scope)
+                duplicates[0], duplicates[1], "named arguments").scopes(sm.current_scope)
 
         # Check the arguments are in the correct order.
         if difference := AstOrderingUtils.order_args(self.arguments):
@@ -69,7 +69,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 difference[0][0], difference[0][1], difference[1][0], difference[1][1], "argument").scopes(sm.current_scope)
 
         # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ...").
-        for i, argument in self.arguments.enumerate():
+        for i, argument in enumerate(self.arguments):
             if isinstance(argument, Asts.FunctionCallArgumentUnnamedAst) and argument.tok_unpack:
 
                 # Check the argument type is a tuple
@@ -79,7 +79,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
                 # Replace the tuple-expansion argument with the expanded arguments
                 self.arguments.pop(i)
-                for j in range(tuple_argument_type.type_parts()[0].generic_argument_group.arguments.length - 1, -1, -1):
+                for j in range(len(tuple_argument_type.type_parts()[0].generic_argument_group.arguments) - 1, -1, -1):
                     new_argument = CodeInjection.inject_code(
                         f"{argument.value}.{j}", SppParser.parse_function_call_argument_unnamed,
                         pos_adjust=self.arguments[i].pos)
@@ -119,9 +119,9 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                     check_move=False, check_partial_move=False, check_pins=True)
 
                 # Check the move doesn't overlap with any borrows.
-                if overlap := (borrows_ref + borrows_mut).find(lambda b: AstMemoryUtils.overlaps(b, argument.value)):
+                if overlap := [b for b in (borrows_ref + borrows_mut) if AstMemoryUtils.overlaps(b, argument.value)]:
                     raise SemanticErrors.MemoryOverlapUsageError().add(
-                        overlap, argument.value).scopes(sm.current_scope)
+                        overlap[0], argument.value).scopes(sm.current_scope)
 
             elif isinstance(argument.convention, Asts.ConventionMutAst):
                 # Check the argument isn't already an immutable borrow.
@@ -135,9 +135,9 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                         argument.value, argument.convention, symbol.memory_info.ast_initialization).scopes(sm.current_scope)
 
                 # Check the mutable borrow doesn't overlap with any other borrow in the same scope.
-                if overlap := (borrows_ref + borrows_mut).find(lambda b: AstMemoryUtils.overlaps(b, argument.value)):
+                if overlap := [b for b in (borrows_ref + borrows_mut) if AstMemoryUtils.overlaps(b, argument.value)]:
                     raise SemanticErrors.MemoryOverlapUsageError().add(
-                        overlap, argument.value).scopes(sm.current_scope)
+                        overlap[0], argument.value).scopes(sm.current_scope)
 
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
@@ -150,9 +150,9 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
             elif isinstance(argument.convention, Asts.ConventionRefAst):
                 # Check the immutable borrow doesn't overlap with any other mutable borrow in the same scope.
-                if overlap := borrows_mut.find(lambda b: AstMemoryUtils.overlaps(b, argument.value)):
+                if overlap := [b for b in borrows_mut if AstMemoryUtils.overlaps(b, argument.value)]:
                     raise SemanticErrors.MemoryOverlapUsageError().add(
-                        overlap, argument.value).scopes(sm.current_scope)
+                        overlap[0], argument.value).scopes(sm.current_scope)
 
                 # If the target requires pinning, pin it automatically.
                 if pins_required:

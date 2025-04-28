@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -27,7 +27,7 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if self.members:
             string = [
                 self.tok_l.print(printer) + "\n",
-                self.members.print(printer, "\n"),
+                SequenceUtils.print(printer, self.members, sep="\n"),
                 self.tok_r.print(printer) + "\n"]
         else:
             string = [
@@ -54,7 +54,7 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Check there is no code after a "ret" statement, as this is unreachable.
         # Todo: this is inefficient; check from the last statement and work backwards.
-        for i, member in self.members.enumerate():
+        for i, member in enumerate(self.members):
             if isinstance(member, (Asts.LoopControlFlowStatementAst, Asts.RetStatementAst)) and member is not self.members[-1]:
                 raise SemanticErrors.UnreachableCodeError().add(member, self.members[i + 1]).scopes(sm.current_scope)
 

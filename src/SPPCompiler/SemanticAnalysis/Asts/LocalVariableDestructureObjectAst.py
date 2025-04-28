@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -28,7 +28,7 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         string = [
             self.class_type.print(printer),
             self.tok_l.print(printer),
-            self.elems.print(printer, ", "),
+            SequenceUtils.print(printer, self.elems, sep=", "),
             self.tok_r.print(printer)]
         return "".join(string)
 
@@ -38,7 +38,7 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
     @property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
-        return self.elems.map(lambda e: e.extract_names).flat()
+        return SequenceUtils.flatten([e.extract_name for e in self.elems])
 
     @property
     def extract_name(self) -> Asts.IdentifierAst:
@@ -54,8 +54,8 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         attributes = sm.current_scope.get_symbol(self.class_type).type.body.members
 
         # Only 1 "multi-skip" allowed in a destructure.
-        multi_arg_skips = self.elems.filter_to_type(Asts.LocalVariableDestructureSkipNArgumentsAst)
-        if multi_arg_skips.length > 1:
+        multi_arg_skips = [e for e in self.elems if isinstance(e, Asts.LocalVariableDestructureSkipNArgumentsAst)]
+        if len(multi_arg_skips) > 1:
             raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(
                 multi_arg_skips[0], multi_arg_skips[1]).scopes(sm.current_scope)
 
@@ -85,8 +85,8 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         # Check for any missing attributes in the destructure, unless a multi-skip is present.
         # Todo: connect correct scope for the class type. sm.current_scope.get_symbol(self.class_type).scope.parent_module?
         if not multi_arg_skips:
-            assigned_attributes = self.elems.filter_not_type(Asts.LocalVariableDestructureSkipNArgumentsAst).map(lambda e: e.name)
-            missing_attributes = attributes.filter(lambda a: a.name not in assigned_attributes)
+            assigned_attributes = [e.name for e in self.elems if not isinstance(e, Asts.LocalVariableDestructureSkipNArgumentsAst)]
+            missing_attributes = [a for a in attributes if a.name not in assigned_attributes]
             if missing_attributes:
                 raise SemanticErrors.ArgumentRequiredNameMissingError().add(
                     self, missing_attributes[0], "attribute", "destructure argument").scopes(sm.current_scope.get_symbol(self.class_type).scope, sm.current_scope)

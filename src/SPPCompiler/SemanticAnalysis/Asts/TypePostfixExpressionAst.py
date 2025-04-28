@@ -45,11 +45,6 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
             return CommonTypes.Opt(self.pos, self.lhs.convert())
         return self
 
-    def type_parts(self) -> Seq[Asts.GenericIdentifierAst]:
-        if isinstance(self.op, Asts.TypePostfixOperatorOptionalTypeAst):
-            return CommonTypes.Opt(self.pos, self.lhs).type_parts()
-        return self.lhs.type_parts() + self.op.type_parts()
-
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         if isinstance(self.op, Asts.TypePostfixOperatorOptionalTypeAst):
             return CommonTypes.Opt(self.pos, self.lhs).fq_type_parts()

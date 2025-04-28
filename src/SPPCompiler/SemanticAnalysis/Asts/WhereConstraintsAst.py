@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -22,7 +22,7 @@ class WhereConstraintsAst(Asts.Ast):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.types.print(printer, ", "),
+            SequenceUtils.print(printer, self.types, sep=", "),
             self.tok_colon.print(printer),
             self.constraints.print(printer, ", ")]
         return " ".join(string)

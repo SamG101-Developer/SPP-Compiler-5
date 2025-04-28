@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceS
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -22,14 +22,6 @@ class AstTypeUtils:
     organising the super-scopes for generic substitutions. This is one of the most complex set of helper functions in
     the compiler, and uses detailed scoping and symbol checks.
     """
-
-    @staticmethod
-    def get_generics_in_scope(scope: Scope) -> Asts.GenericArgumentGroupAst:
-        generic_argument_ctor = {VariableSymbol: Asts.GenericCompArgumentNamedAst, TypeSymbol: Asts.GenericTypeArgumentNamedAst}
-        generics = scope._symbol_table.all().filter(lambda s: s.is_generic)
-        generics = generics.map(lambda s: generic_argument_ctor[type(s)].from_symbol(s))
-        generics = Asts.GenericArgumentGroupAst(arguments=generics)
-        return generics
 
     @staticmethod
     def is_type_indexable(type: Asts.TypeAst, scope: Scope) -> bool:
@@ -50,7 +42,7 @@ class AstTypeUtils:
     def is_index_within_type_bound(index: int, type: Asts.TypeAst, scope: Scope) -> bool:
         # Tuple type: count the number of generic arguments.
         if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope):
-            return index < type.type_parts()[0].generic_argument_group.arguments.length
+            return index < len(type.type_parts()[0].generic_argument_group.arguments)
 
         # Array type: get the "n" generic comp argument.
         if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, scope):
@@ -80,13 +72,13 @@ class AstTypeUtils:
     def get_namespaced_scope_with_error(sm: ScopeManager, namespace: Seq[Asts.IdentifierAst]) -> Scope:
         # Work through each cumulative namespace, checking if the namespace exists.
         namespace_scope = sm.current_scope
-        for i in range(namespace.length):
+        for i in range(len(namespace)):
             sub_namespace = namespace[:i + 1]
 
             # If the namespace does not exist, raise an error.
             if not sm.get_namespaced_scope(sub_namespace):
-                alternatives = namespace_scope.all_symbols().filter_to_type(NamespaceSymbol).map_attr("name")
-                closest_match = difflib.get_close_matches(sub_namespace[-1].value, alternatives.map_attr("value"), n=1, cutoff=0)
+                alternatives = [a.name.value for a in namespace_scope.all_symbols() if isinstance(a, NamespaceSymbol)]
+                closest_match = difflib.get_close_matches(sub_namespace[-1].value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     sub_namespace[-1], "namespace", closest_match[0] if closest_match else None).scopes(sm.current_scope)
 
@@ -104,9 +96,9 @@ class AstTypeUtils:
         # Get the type part's symbol, and raise an error if it does not exist.
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
         if not type_symbol:
-            alternatives = scope.all_symbols().filter_to_type(TypeSymbol).map_attr("name")
-            alternatives.remove_if(lambda a: a.value[0] == "$")
-            closest_match = difflib.get_close_matches(type_part.value, alternatives.map_attr("value"), n=1, cutoff=0)
+            alternatives = [a.name.value for a in scope.all_symbols() if isinstance(a, NamespaceSymbol)]
+            SequenceUtils.remove_if(alternatives, lambda a: a[0] == "$")
+            closest_match = difflib.get_close_matches(type_part.value, alternatives, n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(
                 type_part, "type", closest_match[0] if closest_match else None).scopes(sm.current_scope)
 

@@ -56,7 +56,7 @@ class SymbolTable:
 
     def __json__(self) -> Dict:
         # Dump the SymbolTable as a JSON object.
-        return {"symbols": self.all().list()}
+        return {"symbols": self.all()}
 
     def __copy__(self) -> SymbolTable:
         # Copy the symbol table.

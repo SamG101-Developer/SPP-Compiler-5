@@ -37,7 +37,6 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
     all utility methods.
     """
 
-    @abstractmethod
     def type_parts(self) -> Seq[Asts.GenericIdentifierAst]:
         """
         The type parts of a TypeAst are all the parts of the type asts that are not namespaces. For example, given
@@ -46,6 +45,8 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         :return: The type parts of the type ast.
         """
 
+        return [p for p in self.fq_type_parts() if isinstance(p, Asts.GenericIdentifierAst)]
+
     def namespace_parts(self) -> Seq[Asts.IdentifierAst]:
         """
         The namespace parts of a TypeAst are all the parts of the type asts that are namespaces. For example, given
@@ -53,7 +54,8 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
         :return: The namespace parts of the type ast.
         """
-        return self.fq_type_parts().filter(lambda x: isinstance(x, Asts.IdentifierAst))
+
+        return [p for p in self.fq_type_parts() if isinstance(p, Asts.IdentifierAst)]
 
     @abstractmethod
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:

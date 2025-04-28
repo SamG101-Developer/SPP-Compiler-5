@@ -17,7 +17,7 @@ class ErrorFormatter:
 
     def __init__(self, tokens: List[RawToken], file_path: str) -> None:
         self._tokens = tokens
-        self._file_path = file_path[file_path.rfind("src\\") + 4:]
+        self._file_path = file_path  # [file_path.rfind("src\\") + 4:]
 
     def error(self, start_pos: int, message: str = "", tag_message: str = "", minimal: bool = False) -> str:
         while self._tokens[start_pos].token_type in [RawTokenType.newline_token(), RawTokenType.whitespace_token()]:

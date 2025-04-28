@@ -77,14 +77,14 @@ class SppParser:
 
     def parse_one_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Optional[Seq[T]]:
         result = self.parse_zero_or_more(method, separator)
-        if result.length < 1:
+        if len(result) < 1:
             self.store_error(self._pos, "Expected at least one element")
             return None
         return result
 
     def parse_two_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Optional[Seq[T]]:
         result = self.parse_zero_or_more(method, separator)
-        if result.length < 2:
+        if len(result) < 2:
             self.store_error(self._pos, "Expected at least two elements")
             return None
         return result
@@ -652,14 +652,14 @@ class SppParser:
         p1 = self.parse_zero_or_more(self.parse_unary_op, self.parse_nothing)
         p2 = self.parse_once(self.parse_postfix_expression)
         if p2 is None: return None
-        return reduce(lambda acc, x: Asts.UnaryExpressionAst(c1, x, acc), p1.reverse().list(), p2)
+        return reduce(lambda acc, x: Asts.UnaryExpressionAst(c1, x, acc), p1[::-1], p2)
 
     def parse_postfix_expression(self) -> Optional[Asts.ExpressionAst]:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_primary_expression)
         if p1 is None: return None
         p2 = self.parse_zero_or_more(self.parse_postfix_op, self.parse_nothing)
-        return reduce(lambda acc, x: Asts.PostfixExpressionAst(c1, acc, x), p2.list(), p1)
+        return reduce(lambda acc, x: Asts.PostfixExpressionAst(c1, acc, x), p2, p1)
 
     def parse_primary_expression(self) -> Optional[Asts.ExpressionAst]:
         p1 = self.parse_alternate(
@@ -1552,7 +1552,7 @@ class SppParser:
         p1 = self.parse_zero_or_more(self.parse_type_unary_op_namespace, self.parse_nothing)
         p2 = self.parse_once(self.parse_type_single)
         if p2 is None: return None
-        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(c1, x, acc), p1.reverse().list(), p2)
+        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(c1, x, acc), p1[::-1], p2)
 
     def parse_type_binary_expression_precedence_level_1(self) -> Optional[Asts.TypeAst]:
         return self.parse_binary_type_expression_precedence_level_n(self.parse_type_binary_expression_precedence_level_2, self.parse_type_binary_op_precedence_level_1, self.parse_type_binary_expression_precedence_level_1)
@@ -1575,7 +1575,7 @@ class SppParser:
         p1 = self.parse_once(self.parse_type_unary_expression)
         if p1 is None: return None
         p2 = self.parse_zero_or_more(self.parse_type_postfix_op, self.parse_nothing)
-        return reduce(lambda acc, x: Asts.TypePostfixExpressionAst(c1, acc, x), p2.list(), p1).convert()
+        return reduce(lambda acc, x: Asts.TypePostfixExpressionAst(c1, acc, x), p2, p1).convert()
 
     def parse_type_unary_expression(self) -> Optional[Asts.TypeAst]:
         # Todo: this doesn't allow for &[T, n], has to be &std::Arr[T, n] atm.
@@ -1585,7 +1585,7 @@ class SppParser:
         p3 = self.parse_once(self.parse_type_single)
         if p3 is None: return None
         p2.insert(0, p1) if p1 else None
-        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(c1, x, acc), p2.reverse().list(), p3).convert()
+        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(c1, x, acc), p2[::-1], p3).convert()
 
     def parse_type_parenthesized(self) -> Optional[Asts.TypeSingleAst]:
         c1 = self.current_pos()

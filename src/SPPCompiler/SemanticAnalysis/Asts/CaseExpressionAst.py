@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -142,7 +142,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.kw_case.print(printer) + " ",
             self.cond.print(printer) + " ",
             self.kw_of.print(printer) if self.kw_of else "",
-            self.branches.print(printer, "\n")]
+            SequenceUtils.print(printer, self.branches, sep="\n")]
         return "".join(string)
 
     @property
@@ -171,13 +171,13 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # The checks here only apply when assigning from this expression.
-        branch_inferred_types = self.branches.map(lambda x: x.infer_type(sm))
+        branch_inferred_types = [b.infer_type(sm, **kwargs) for b in self.branches]
 
         # All branches must return the same type.
         zeroth_branch_type = branch_inferred_types[0]
-        if mismatch := branch_inferred_types[1:].find(lambda x: not x.symbolic_eq(zeroth_branch_type, sm.current_scope, sm.current_scope)):
+        if mismatch := [x for x in branch_inferred_types[1:] if not x.symbolic_eq(zeroth_branch_type, sm.current_scope, sm.current_scope)]:
             raise SemanticErrors.CaseBranchesConflictingTypesError().add(
-                zeroth_branch_type, mismatch).scopes(sm.current_scope)
+                zeroth_branch_type, mismatch[0]).scopes(sm.current_scope)
 
         # Ensure there is an "else" branch if the branches are not exhaustive.
         if not isinstance(self.branches[-1].patterns[0], Asts.PatternVariantElseAst):
@@ -185,7 +185,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 self.cond, self.branches[-1]).scopes(sm.current_scope)
 
         # Return the branches' return type, if there are any branches, otherwise Void.
-        if self.branches.length > 0:
+        if len(self.branches) > 0:
             return branch_inferred_types[0]
         return CommonTypes.Void(self.pos)
 
@@ -225,7 +225,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for branch in self.branches:
 
             # Destructures can only use 1 pattern.
-            if branch.op and branch.op.token_type == SppTokenType.KwIs and branch.patterns.length > 1:
+            if branch.op and branch.op.token_type == SppTokenType.KwIs and len(branch.patterns) > 1:
                 raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1]).scopes(sm.current_scope)
 
             # Check the "else" branch is the final branch (also ensures there is only 1).
@@ -245,7 +245,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                     binary_ast.analyse_semantics(sm, **kwargs)
 
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
-            var_symbols_in_scope = sm.current_scope.all_symbols().filter_to_type(VariableSymbol)
+            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols() if isinstance(s, VariableSymbol)]
             old_symbol_mem_info = {s: s.memory_info.consistency_attrs() for s in var_symbols_in_scope}
             branch.analyse_semantics(sm, cond=self.cond, **kwargs)
             new_symbol_mem_info = {s: s.memory_info.consistency_attrs() for s in var_symbols_in_scope}

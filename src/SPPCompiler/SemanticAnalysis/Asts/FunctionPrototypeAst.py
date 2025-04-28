@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -48,7 +48,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.annotations.print(printer, " "),
+            SequenceUtils.print(printer, self.annotations, sep="\n"),
             self.tok_fun.print(printer) + " ",
             self.name.print(printer),
             self.generic_parameter_group.print(printer),
@@ -99,7 +99,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         function_call = Asts.IdentifierAst(self.name.pos, "call")
 
         # If this is the first overload being converted, then the class needs to be made for the type.
-        if ctx.body.members.filter_to_type(Asts.ClassPrototypeAst).filter(lambda c: c.name == mock_class_name).is_empty():
+        if not [m for m in ctx.body.members if isinstance(m, Asts.ClassPrototypeAst) and m.name == mock_class_name]:
             mock_class_ast = Asts.ClassPrototypeAst(
                 name=mock_class_name)
             mock_constant_ast = Asts.CmpStatementAst(
@@ -213,19 +213,19 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def _deduce_mock_class_type(self) -> Asts.TypeAst:
         # Module-level functions are always FunRef.
         if isinstance(self._ctx, Asts.ModulePrototypeAst) or not self.function_parameter_group.get_self_param():
-            return CommonTypes.FunRef2(self.pos, CommonTypes.Tup2(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
+            return CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         # Class methods with "self" are the FunMov type.
         if self.function_parameter_group.get_self_param().convention is None:
-            return CommonTypes.FunMov2(self.pos, CommonTypes.Tup2(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
+            return CommonTypes.FunMov(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         # Class methods with "&mut self" are the FunMut type.
         if isinstance(self.function_parameter_group.get_self_param().convention, Asts.ConventionMutAst):
-            return CommonTypes.FunMut2(self.pos, CommonTypes.Tup2(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
+            return CommonTypes.FunMut(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         # Class methods with "&self" are the FunRef type.
         if isinstance(self.function_parameter_group.get_self_param().convention, Asts.ConventionRefAst):
-            return CommonTypes.FunRef2(self.pos, CommonTypes.Tup2(self.pos, self.function_parameter_group.params.map_attr("type")), self.return_type)
+            return CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         raise NotImplementedError(f"Unknown convention for function {self.name}")
 

@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -36,7 +36,7 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.annotations.print(printer, " "),
+            SequenceUtils.print(printer, self.annotations, sep="\n"),
             self.kw_cmp.print(printer) + " ",
             self.name.print(printer),
             self.tok_colon.print(printer) + " ",

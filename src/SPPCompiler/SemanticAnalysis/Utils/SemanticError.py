@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass
 from typing import NoReturn, Optional, Tuple, TYPE_CHECKING
 
@@ -39,7 +40,7 @@ class SemanticError(BaseException):
 
     def scopes(self, *scopes) -> SemanticError:
         # Register the error formatters against the instance.
-        self.error_formatters = Seq([*scopes]).map_attr("_error_formatter")
+        self.error_formatters = [scope._error_formatter for scope in scopes]
         return self
 
     def add_error(self, ast: Asts.Ast, tag: str, msg: str, tip: str, fmt: Format = Format.NORMAL) -> SemanticError:
@@ -63,9 +64,10 @@ class SemanticError(BaseException):
 
     def throw(self) -> NoReturn:
         # Format the error messages and raise the error.
+        # Todo: tidy this loop up
         error_message = "\n\n"
-        cycle = self.error_formatters.cycle()
-        for error, error_formatter in self.error_info.zip(Seq([next(cycle) for i in range(self.error_info.length)])):
+        cycle = itertools.cycle(self.error_formatters)
+        for error, error_formatter in zip(self.error_info, [next(cycle) for i in range(len(self.error_info))]):
             formatted_message, is_minimal = self._format_message(error)
             error_message += error_formatter.error_ast(error.ast, formatted_message, error.tag, is_minimal)
         print(error_message)
@@ -138,8 +140,7 @@ class SemanticErrors:
         """
 
         def add(
-                self, first_occurrence: Asts.IdentifierAst, second_occurrence: Asts.IdentifierAst,
-                what: str) -> SemanticError:
+                self, first_occurrence: Asts.Ast, second_occurrence: Asts.Ast, what: str) -> SemanticError:
             self.add_info(
                 ast=first_occurrence,
                 tag=f"{what.capitalize()} '{first_occurrence}' defined here")
@@ -533,9 +534,7 @@ class SemanticErrors:
         could be a variable, attribute, namespace, type etc.
         """
 
-        def add(
-                self, identifier: Asts.IdentifierAst | Asts.GenericIdentifierAst, what: str,
-                closest_match: Optional[str]) -> SemanticError:
+        def add(self, identifier: Asts.Ast, what: str, closest_match: Optional[str]) -> SemanticError:
             self.add_error(
                 ast=identifier,
                 tag=f"Undefined {what}: '{identifier}'.",
@@ -1058,7 +1057,7 @@ class SemanticErrors:
             self.add_error(
                 ast=new_method,
                 tag="Invalid member.",
-                msg=f"The subclass member '{new_method}' does not exist in the superclass '{super_class}'.",
+                msg="This member does not match any definitions on the superclass.",
                 tip="Use a valid super member.")
 
             return self
@@ -1318,8 +1317,8 @@ class SemanticErrors:
         """
 
         def add(
-                self, first_multi_skip: Asts.PatternVariantDestructureSkipNArgumentsAst,
-                second_multi_skip: Asts.PatternVariantDestructureSkipNArgumentsAst) -> SemanticError:
+                self, first_multi_skip: Asts.LocalVariableDestructureSkipNArgumentsAst,
+                second_multi_skip: Asts.LocalVariableDestructureSkipNArgumentsAst) -> SemanticError:
             self.add_info(
                 ast=first_multi_skip,
                 tag="First multi-skip defined here")
@@ -1341,7 +1340,7 @@ class SemanticErrors:
 
         def add(
                 self, object_destructure: Asts.LocalVariableDestructureObjectAst,
-                bound_multi_skip: Asts.PatternVariantDestructureSkipNArgumentsAst) -> SemanticError:
+                bound_multi_skip: Asts.LocalVariableDestructureSkipNArgumentsAst) -> SemanticError:
             self.add_info(
                 ast=object_destructure,
                 tag="Object destructure defined here")

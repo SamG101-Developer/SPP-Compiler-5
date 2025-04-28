@@ -4,6 +4,8 @@ import copy
 from dataclasses import dataclass, field
 from typing import Optional, Tuple, TYPE_CHECKING
 
+from ordered_set import OrderedSet
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
@@ -76,9 +78,9 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
         # Create a dummy overload for no-overload identifiers that are function types (lambdas etc).
         if not all_overloads and AstTypeUtils.is_type_functional(lhs_type := lhs.infer_type(sm, **kwargs), sm.current_scope):
-            dummy_params_types = lhs_type.type_parts()[-1].generic_argument_group["Args"].value.type_parts()[-1].generic_argument_group.arguments.map_attr("value")
+            dummy_params_types = [t.value for t in lhs_type.type_parts()[-1].generic_argument_group["Args"].value.type_parts()[-1].generic_argument_group.arguments]
             dummy_return_type = lhs_type.type_parts()[-1].generic_argument_group["Out"].value
-            dummy_params = Asts.FunctionParameterGroupAst(params=dummy_params_types.map(lambda t: Asts.FunctionParameterRequiredAst(type=t)))
+            dummy_params = Asts.FunctionParameterGroupAst(params=[Asts.FunctionParameterRequiredAst(type=t) for t in dummy_params_types])
             dummy_overload = Asts.FunctionPrototypeAst(function_parameter_group=dummy_params, return_type=dummy_return_type)
             all_overloads.append((None, dummy_overload, Asts.GenericArgumentGroupAst()))
 
@@ -87,14 +89,14 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
             # Extract generic/function parameter information from the overload.
             parameters = function_overload.function_parameter_group.params.copy()
-            parameter_names = parameters.map_attr("extract_name")
-            parameter_names_req = function_overload.function_parameter_group.get_required_params().map_attr("extract_name")
+            parameter_names = [p.extract_name for p in parameters]
+            parameter_names_req = [p.extract_name for p in function_overload.function_parameter_group.get_required_params()]
             generic_parameters = function_overload.generic_parameter_group.parameters
             is_variadic = function_overload.function_parameter_group.get_variadic_param() is not None
 
             # Extract generic/function argument information from this AST.
             arguments = self.function_argument_group.arguments.copy()
-            argument_names = arguments.filter_to_type(Asts.FunctionCallArgumentNamedAst).map_attr("name")
+            argument_names = [a.name for a in arguments if isinstance(a, Asts.FunctionCallArgumentNamedAst)]
             generic_arguments = self.generic_argument_group.arguments.copy()
 
             # Use a try-except block to catch any errors as a following overload could still be valid.
@@ -108,30 +110,30 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     ...  # Todo: raise SemanticErrors.FunctionCallNonImplementedMethodError
 
                 # Check if there are too many arguments for the function (non-variadic).
-                if arguments.length > parameters.length and not is_variadic:
+                if len(arguments) > len(parameters) and not is_variadic:
                     raise SemanticErrors.FunctionCallTooManyArgumentsError().add(self, function_overload.name).scopes(sm.current_scope)
 
                 # Check for any named arguments without a corresponding parameter.
                 # Todo: Generic=Void means the associated parameters should be removed.
-                if invalid_arguments := argument_names.set_subtract(parameter_names):
-                    raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_arguments[0], "argument").scopes(sm.current_scope)
+                if invalid_arguments := OrderedSet(argument_names) - OrderedSet(parameter_names):
+                    raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_arguments.pop(0), "argument").scopes(sm.current_scope)
 
                 # Remove all the used parameters names from the set of parameter names, and name the unnamed arguments.
                 AstFunctionUtils.name_function_arguments(arguments, parameters, sm)
                 AstFunctionUtils.name_generic_arguments(generic_arguments, generic_parameters, sm, function_overload.name)
-                argument_names = arguments.map_attr("name")
+                argument_names = [a.name for a in arguments]
 
                 # Check if there are too few arguments for the function (by missing names).
-                if missing_parameters := parameter_names_req.set_subtract(argument_names):
-                    raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_parameters[0], "parameter", "argument")
+                if missing_parameters := OrderedSet(parameter_names_req) - OrderedSet(argument_names):
+                    raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_parameters.pop(0), "parameter", "argument")
 
                 # Infer generic arguments and inherit from the function owner block.
                 generic_arguments = AstFunctionUtils.infer_generic_arguments(
                     generic_parameters=function_overload.generic_parameter_group.parameters,
                     optional_generic_parameters=function_overload.generic_parameter_group.get_optional_params(),
                     explicit_generic_arguments=generic_arguments + owner_scope_generic_arguments,
-                    infer_source=arguments.map(lambda a: (a.name, a.infer_type(sm, **kwargs))).dict(),
-                    infer_target=parameters.map(lambda p: (p.extract_name, p.type)).dict(),
+                    infer_source={a.name: a.infer_type(sm, **kwargs) for a in arguments},
+                    infer_target={p.extract_name: p.type for p in parameters},
                     sm=sm, owner=lhs.infer_type(sm, **kwargs),
                     variadic_parameter_identifier=function_overload.function_parameter_group.get_variadic_param().extract_name if is_variadic else None)
 
@@ -166,13 +168,13 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     function_scope = tm.current_scope
 
                 # Type check the arguments against the parameters.
-                sorted_arguments = arguments.sort(key=lambda a: parameter_names.index(a.name))
-                for argument, parameter in sorted_arguments.zip(parameters):
+                sorted_arguments = sorted(arguments, key=lambda a: parameter_names.index(a.name))
+                for argument, parameter in zip(sorted_arguments, parameters):
                     parameter_type = parameter.type
                     argument_type = argument.infer_type(sm, **kwargs)
 
                     if isinstance(parameter, Asts.FunctionParameterVariadicAst):
-                        parameter_type = CommonTypes.Tup2(parameter.pos, Seq([parameter_type] * argument_type.type_parts()[0].generic_argument_group.arguments.length))
+                        parameter_type = CommonTypes.Tup(parameter.pos, Seq([parameter_type] * len(argument_type.type_parts()[0].generic_argument_group.arguments)))
                         parameter_type.analyse_semantics(sm, **kwargs)
 
                     if isinstance(parameter, Asts.FunctionParameterSelfAst):
@@ -204,15 +206,15 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                 continue
 
         # If there are no pass overloads, raise an error.
-        if pass_overloads.is_empty():
-            failed_signatures_and_errors = fail_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {type(f[2]).__name__}").join("\n")
-            argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(sm, **kwargs)).join(", ")})"
+        if not pass_overloads:
+            failed_signatures_and_errors = "\n".join([f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {type(f[2]).__name__}" for f in fail_overloads])
+            argument_usage_signature = f"{lhs}({", ".join([str(a.infer_type(sm, **kwargs)) for a in self.function_argument_group.arguments])})"
             raise SemanticErrors.FunctionCallNoValidSignaturesError().add(self, failed_signatures_and_errors, argument_usage_signature).scopes(sm.current_scope)
 
         # If there are multiple pass overloads, raise an error.
-        elif pass_overloads.length > 1:
-            passed_signatures = pass_overloads.map(lambda f: f[1].print_signature(AstPrinter(), f[0]._ast.name)).join("\n")
-            argument_usage_signature = f"{lhs}({self.function_argument_group.arguments.map(lambda a: a.infer_type(sm, **kwargs)).join(", ")})"
+        elif len(pass_overloads) > 1:
+            passed_signatures = "\n".join([f[1].print_signature(AstPrinter(), f[0]._ast.name) for f in pass_overloads])
+            argument_usage_signature = f"{lhs}({", ".join([str(a.infer_type(sm, **kwargs)) for a in self.function_argument_group.arguments])})"
             raise SemanticErrors.FunctionCallAmbiguousSignaturesError().add(self, passed_signatures, argument_usage_signature).scopes(sm.current_scope)
 
         # Set the overload to the only pass overload.

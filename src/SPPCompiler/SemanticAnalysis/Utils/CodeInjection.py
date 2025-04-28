@@ -25,7 +25,11 @@ class CodeInjection:
         # Parse the code with the parser function and position adjustment. Because "parse_once" will always be used, use
         # the shortcut version by just applying the rule over the parser (which is how parse_once behaves anyway).
         parser = SppParser(Lexer(code + "\n").lex(), injection_adjust_pos=pos_adjust)
-        return parsing_function(parser)
+        result = parsing_function(parser)
+
+        # Check the result is not None (just for internal testing), and then return the resulting AST.
+        assert result is not None
+        return result
 
 
 __all__ = [

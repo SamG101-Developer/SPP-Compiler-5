@@ -5,11 +5,12 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -30,7 +31,7 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
         string = [
             self.class_type.print(printer),
             self.tok_l.print(printer),
-            self.elems.print(printer, ", "),
+            SequenceUtils.print(printer, self.elems, sep=", "),
             self.tok_r.print(printer)]
         return "".join(string)
 
@@ -40,9 +41,8 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
 
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableDestructureObjectAst:
         # Convert the object destructuring into a local variable object destructuring.
-        elems = self.elems.filter_to_type(*Asts.PatternVariantNestedForDestructureObjectAst.__args__)
-        converted_elems = elems.map(lambda e: e.convert_to_variable(**kwargs))
-        variable = Asts.LocalVariableDestructureObjectAst(self.pos, self.class_type, self.tok_l, converted_elems, self.tok_r)
+        elems = [e.convert_to_variable(**kwargs) for e in self.elems if isinstance(e, Asts.PatternVariantNestedForDestructureObjectAst)]
+        variable = Asts.LocalVariableDestructureObjectAst(self.pos, self.class_type, self.tok_l, elems, self.tok_r)
         variable._from_pattern = True
         return variable
 
@@ -50,7 +50,7 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
         self.class_type.analyse_semantics(sm, **kwargs)
 
         # Flow type the condition symbol if necessary.
-        condition_symbol = sm.current_scope.get_symbol(cond)
+        condition_symbol: VariableSymbol = sm.current_scope.get_symbol(cond)
         is_condition_symbol_variant = condition_symbol and condition_symbol.type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, sm.current_scope)
         if condition_symbol and is_condition_symbol_variant:
             if not condition_symbol.type.symbolic_eq(self.class_type, sm.current_scope, sm.current_scope):

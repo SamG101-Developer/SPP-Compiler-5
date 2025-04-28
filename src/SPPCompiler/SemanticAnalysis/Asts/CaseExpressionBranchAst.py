@@ -6,7 +6,7 @@ from typing import Optional
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -86,7 +86,7 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Print the AST with auto-formatting.
         string = [
             self.op.print(printer) if self.op else "",
-            self.patterns.print(printer, ", "),
+            SequenceUtils.print(printer, self.patterns, sep=", "),
             self.guard.print(printer) if self.guard else "",
             self.body.print(printer) if self.body else ""]
         return "".join(string)

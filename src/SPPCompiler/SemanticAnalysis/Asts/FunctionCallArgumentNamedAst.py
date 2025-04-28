@@ -21,7 +21,6 @@ class FunctionCallArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
     def __post_init__(self) -> None:
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
         self._variant = "Named"
-        assert self.name is not None and self.value is not None
 
     def __eq__(self, other: FunctionCallArgumentNamedAst) -> bool:
         # Check both ASTs are the same type and have the same name and value.

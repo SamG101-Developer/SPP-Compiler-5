@@ -6,7 +6,6 @@ from typing import Optional
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 
@@ -56,20 +55,24 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         captures = self.pc_group.captures
 
         # If there are no captures, return a "FunRef" type.
-        if self.pc_group.captures.length <= 0:
-            ty = CommonTypes.FunRef2(self.pos, CommonTypes.Tup2(self.pos, self.pc_group.params.map_attr("type")), self._ret_type)
+        if len(self.pc_group.captures) <= 0:
+            param_types = [p.type for p in self.pc_group.params]
+            ty = CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, param_types), self._ret_type)
 
         # If there are any "move" captures, return a "FunMov" type.
         elif any(c.convention is None for c in captures):
-            ty = CommonTypes.FunMov2(self.pos, CommonTypes.Tup2(self.pos, self.pc_group.params.map_attr("type")), self._ret_type)
+            param_types = [p.type for p in self.pc_group.params]
+            ty = CommonTypes.FunMov(self.pos, CommonTypes.Tup(self.pos, param_types), self._ret_type)
 
         # If there are any "&mut" captures, return a "FunMut" type.
         elif any(type(c.convention) is Asts.ConventionMutAst for c in captures):
-            ty = CommonTypes.FunMut2(self.pos, CommonTypes.Tup2(self.pos, self.pc_group.params.map_attr("type")), self._ret_type)
+            param_types = [p.type for p in self.pc_group.params]
+            ty = CommonTypes.FunMut(self.pos, CommonTypes.Tup(self.pos, param_types), self._ret_type)
 
         # Otherwise, all captures are "&", so return a "FunRef" type.
         else:
-            ty = CommonTypes.FunRef2(self.pos, CommonTypes.Tup2(self.pos, self.pc_group.params.map_attr("type")), self._ret_type)
+            param_types = [p.type for p in self.pc_group.params]
+            ty = CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, param_types), self._ret_type)
 
         # Analyse the type and return it.
         ty.analyse_semantics(sm, **kwargs)
@@ -117,6 +120,6 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         sm._current_scope = parent_scope
 
         # Pin the lambda symbol if it is assigned to a variable and has borrowed captures.
-        if "assignment" in kwargs and (borrowed_captures := self.pc_group.captures.filter(lambda c: c.convention is not None)):
+        if "assignment" in kwargs and (borrowed_captures := [c for c in self.pc_group.captures if c.convention is not None]):
             for borrow in borrowed_captures:
                 parent_scope._symbol_table.add_deferred_callback(kwargs["assignment"][0], lambda sym: sym.memory_info.ast_pinned.append(borrow.value))

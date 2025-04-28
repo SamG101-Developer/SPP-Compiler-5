@@ -50,7 +50,7 @@ class Program(CompilerStages):
     def pre_process(self, context: PreProcessingContext, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Pre-process all the modules.
         for module in self.modules:
-            module_in_tree = module_tree.modules.find(lambda m: m.module_ast is module)
+            module_in_tree = [m for m in module_tree.modules if m.module_ast is module][0]
             module._name = module_in_tree.path
             progress_bar.next(module.name.value)
             module.pre_process(module)
@@ -59,7 +59,7 @@ class Program(CompilerStages):
     def generate_top_level_scopes(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Generate symbols for all the modules, including namespaces in the scope manager.
         for module in self.modules:
-            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
+            self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
             module.generate_top_level_scopes(sm)
             sm.reset()
@@ -68,7 +68,7 @@ class Program(CompilerStages):
     def generate_top_level_aliases(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Alias types for all the modules.
         for module in self.modules:
-            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
+            self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
             module.generate_top_level_aliases(sm)
             sm.reset()
@@ -77,7 +77,7 @@ class Program(CompilerStages):
     def qualify_types(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Alias types for all the modules.
         for module in self.modules:
-            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
+            self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
             module.qualify_types(sm)
             sm.reset()
@@ -86,7 +86,7 @@ class Program(CompilerStages):
     def load_super_scopes(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Load the super scopes for all the modules.
         for module in self.modules:
-            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
+            self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
             module.load_super_scopes(sm)
             sm.reset()
@@ -96,7 +96,7 @@ class Program(CompilerStages):
     def pre_analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Pre analyse all the top level constructs.
         for module in self.modules:
-            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
+            self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
             module.pre_analyse_semantics(sm)
             sm.reset()
@@ -105,7 +105,7 @@ class Program(CompilerStages):
     def analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Analyse the semantics for all the modules.
         for module in self.modules:
-            self._move_scope_manager_to_namespace(sm, module_tree.modules.find(lambda m: m.module_ast is module))
+            self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
             module.analyse_semantics(sm)
             sm.reset()
@@ -122,8 +122,8 @@ class Program(CompilerStages):
         for part in module_namespace:
             part = Asts.IdentifierAst(-1, part)
 
-            if Seq(sm.current_scope.children).map(lambda s: s.name).contains(part):
-                scope = Seq(sm.current_scope.children).filter(lambda s: s.name == part).first()
+            if part in [s.name for s in sm.current_scope.children]:
+                scope = [s for s in sm.current_scope.children if s.name == part][0]
                 sm.reset(scope)
 
             else:

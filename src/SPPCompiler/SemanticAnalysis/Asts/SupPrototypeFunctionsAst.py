@@ -97,7 +97,7 @@ class SupPrototypeFunctionsAst(Asts.Ast):
                 raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(
                     generic_arg).scopes(sm.current_scope)
 
-            if not other_cls_symbol.type.generic_parameter_group.parameters.find(lambda p: p.name == generic_arg.value):
+            if not [p for p in other_cls_symbol.type.generic_parameter_group.parameters if p.name == generic_arg.value]:
                 raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(
                     generic_arg, self.tok_sup).scopes(sm.current_scope)
 
@@ -121,7 +121,7 @@ class SupPrototypeFunctionsAst(Asts.Ast):
             # print(f"Added {self_symbol} to scope '{sm.current_scope.name}'.")
 
         # Check every generic parameter is constrained by the type.
-        if unconstrained := self.generic_parameter_group.parameters.filter(lambda p: not self.name.contains_generic(p.name)):
+        if unconstrained := [p for p in self.generic_parameter_group.parameters if not self.name.contains_generic(p.name)]:
             raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
                 unconstrained[0], self.name).scopes(sm.current_scope)
 

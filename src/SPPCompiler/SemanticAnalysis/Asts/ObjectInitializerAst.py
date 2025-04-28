@@ -54,7 +54,8 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Determine the generic inference source and target
         generic_infer_source = {
             a.name: self.object_argument_group.get_arg_val(a).infer_type(sm, **kwargs)
-            for a in self.object_argument_group.arguments.filter(lambda a: isinstance(a.name, Asts.IdentifierAst))}
+            for a in self.object_argument_group.arguments
+            if isinstance(a.name, Asts.IdentifierAst)}
 
         generic_infer_target = {
             a.name: a.type

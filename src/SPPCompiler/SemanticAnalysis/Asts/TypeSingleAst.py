@@ -78,22 +78,19 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return Seq([self.name])
 
-    def type_parts(self) -> Seq[Asts.GenericIdentifierAst]:
-        return Seq([self.name])
-
     def without_generics(self) -> Self:
         return TypeSingleAst(self.pos, self.name.without_generics())
 
     def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         name = fast_deepcopy(self.name)
-        for generic_name, generic_type in generic_arguments.map(lambda a: (a.name, a.value)):
+        for generic_name, generic_type in [(a.name, a.value) for a in generic_arguments]:
             if self == generic_name:
                 return generic_type
 
-            for g in name.generic_argument_group.get_type_args():  # comp args?
+            for g in name.generic_argument_group.get_type_args():
                 g.value = g.value.substituted_generics(generic_arguments)
 
-            for g in name.generic_argument_group.get_comp_args().filter(lambda gg: isinstance(gg.value, Asts.TypeAst)):
+            for g in [gg for gg in name.generic_argument_group.get_comp_args() if isinstance(gg.value, Asts.TypeAst)]:
                 g.value = g.value.substituted_generics(generic_arguments)
 
         return TypeSingleAst(pos=self.pos, name=name)
@@ -158,7 +155,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         # Variant type: one of the generic arguments must match the type.
         if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, self_scope, that_scope, check_variant=False):
             composite_types = self_symbol.name.generic_argument_group.arguments[0].value.type_parts()[0].generic_argument_group.arguments
-            if composite_types.any(lambda t: t.value.symbolic_eq(that, self_scope, that_scope, debug=debug)):
+            if any(t.value.symbolic_eq(that, self_scope, that_scope, debug=debug) for t in composite_types):
                 return True
 
         # Otherwise check the symbols are equal.

@@ -88,13 +88,13 @@ class Compiler:
         """
 
         # Initialise the progress bars for each compiler stage.
-        progress_bars = [Progress(name, self._module_tree.modules.length) for name in COMPILER_STAGE_NAMES]
+        progress_bars = [Progress(name, len(self._module_tree.modules)) for name in COMPILER_STAGE_NAMES]
         progress_bar = iter(progress_bars)
 
         # Save the modules into the ProgramAst
         self._ast.lex(next(progress_bar), self._module_tree)
         self._ast.parse(next(progress_bar), self._module_tree)
-        self._ast.modules = Seq([module.module_ast for module in self._module_tree.modules])
+        self._ast.modules = [module.module_ast for module in self._module_tree.modules]
         self._scope_manager = ScopeManager(global_scope=Scope.new_global_from_module(self._module_tree.modules[0]))
         CommonTypesPrecompiled.initialize()
 

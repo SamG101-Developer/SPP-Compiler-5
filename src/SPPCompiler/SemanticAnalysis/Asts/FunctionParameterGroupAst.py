@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, Any
-
-# from llvmlite import ir as llvm
+from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
@@ -11,7 +9,10 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUt
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+
+
+# from llvmlite import ir as llvm
 
 
 @dataclass(slots=True)
@@ -36,7 +37,7 @@ class FunctionParameterGroupAst(Asts.Ast):
         # Print the AST with auto-formatting.
         string = [
             self.tok_l.print(printer),
-            self.params.print(printer, ", "),
+            SequenceUtils.print(printer, self.params, sep=", "),
             self.tok_r.print(printer)]
         return "".join(string)
 
@@ -46,30 +47,35 @@ class FunctionParameterGroupAst(Asts.Ast):
 
     def get_self_param(self) -> Optional[Asts.FunctionParameterSelfAst]:
         # Get the "self" function parameter (if it exists).
-        return self.params.filter_to_type(Asts.FunctionParameterSelfAst).first(None)
+        ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterSelfAst)]
+        return ps[0] if ps else None
 
     def get_required_params(self) -> Seq[Asts.FunctionParameterRequiredAst]:
         # Get all the required function parameters.
-        return self.params.filter_to_type(Asts.FunctionParameterRequiredAst)
+        ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterRequiredAst)]
+        return ps
 
     def get_optional_params(self) -> Seq[Asts.FunctionParameterOptionalAst]:
         # Get all the optional function parameters.
-        return self.params.filter_to_type(Asts.FunctionParameterOptionalAst)
+        ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterOptionalAst)]
+        return ps
 
     def get_variadic_param(self) -> Optional[Asts.FunctionParameterVariadicAst]:
         # Get the variadic function parameter (if it exists).
-        return self.params.filter_to_type(Asts.FunctionParameterVariadicAst).first(None)
+        ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterVariadicAst)]
+        return ps[0] if ps else None
 
     def get_non_self_params(self) -> Seq[Asts.FunctionParameterAst]:
         # Get all the function parameters that are not "self".
-        return self.params.filter_not_type(Asts.FunctionParameterSelfAst)
+        ps = [p for p in self.params if not isinstance(p, Asts.FunctionParameterSelfAst)]
+        return ps
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate parameter names.
-        param_names = self.get_non_self_params().map_attr("extract_names").flat()
-        if duplicates := param_names.non_unique():
+        param_names = SequenceUtils.flatten([p.extract_names for p in self.params])
+        if duplicates := SequenceUtils.duplicates(param_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0][0], duplicates[0][1], "parameter").scopes(sm.current_scope)
+                duplicates[0], duplicates[1], "parameter").scopes(sm.current_scope)
 
         # Check the parameters are in the correct order.
         if dif := AstOrderingUtils.order_params(self.params):
@@ -77,14 +83,14 @@ class FunctionParameterGroupAst(Asts.Ast):
                 dif[0][0], dif[0][1], dif[1][0], dif[1][1], "parameter").scopes(sm.current_scope)
 
         # Check there is only 1 "self" parameter.
-        self_params = self.params.filter_to_type(Asts.FunctionParameterSelfAst)
-        if self_params.length > 1:
+        self_params = [p for p in self.params if isinstance(p, Asts.FunctionParameterSelfAst)]
+        if len(self_params) > 1:
             raise SemanticErrors.ParameterMultipleSelfError().add(
                 self_params[0], self_params[1]).scopes(sm.current_scope)
 
         # Check there is only 1 variadic parameter.
-        variadic_params = self.params.filter_to_type(Asts.FunctionParameterVariadicAst)
-        if variadic_params.length > 1:
+        variadic_params = [p for p in self.params if isinstance(p, Asts.FunctionParameterVariadicAst)]
+        if len(variadic_params) > 1:
             raise SemanticErrors.ParameterMultipleVariadicError().add(
                 variadic_params[0], variadic_params[1]).scopes(sm.current_scope)
 

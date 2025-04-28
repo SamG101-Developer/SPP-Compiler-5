@@ -26,9 +26,10 @@ class AstOrderingUtils:
         @param current The current ASTs in the sequence.
         @return A new, ordered sequence of ASTs. The ASTs themselves are not copied, but a new sequence is created.
         """
-        current = current.map_attr("_variant").zip(current)
-        ordered = current.sort(key=lambda x: ordering.index(x[0]))
-        return current.ordered_difference(ordered)
+
+        current = [(c._variant, c) for c in current]
+        ordered = sorted(current, key=lambda x: ordering.index(x[0]))
+        return [o for c, o in zip(current, ordered) if c != o]
 
     @staticmethod
     def order_args(current: Seq[Asts.Mixins.OrderableAst]) -> Seq[Tuple[str, Asts.Ast]]:

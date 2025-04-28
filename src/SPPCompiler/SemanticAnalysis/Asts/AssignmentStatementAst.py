@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -37,15 +37,14 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __post_init__(self) -> None:
         self.op = self.op or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
-        assert self.lhs.not_empty() and self.rhs.not_empty()
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.lhs.print(printer) + " ",
+            SequenceUtils.print(printer, self.lhs, sep=", "),
             self.op.print(printer) + " ",
-            self.rhs.print(printer)]
+            SequenceUtils.print(printer, self.rhs, sep=", ")]
         return "".join(string)
 
     @property
@@ -86,12 +85,12 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for e in self.rhs: e.analyse_semantics(sm, **kwargs)
 
         # Ensure the lhs targets are all symbolic (assignable to).
-        lhs_syms = self.lhs.map(lambda e: sm.current_scope.get_variable_symbol_outermost_part(e))
-        if non_symbolic := lhs_syms.zip(self.lhs).find(lambda s: not s[0]):
-            raise SemanticErrors.AssignmentInvalidLhsError().add(non_symbolic[1]).scopes(sm.current_scope)
+        lhs_syms = [sm.current_scope.get_variable_symbol_outermost_part(expr) for expr in self.lhs]
+        if non_symbolic := [s for s in zip(lhs_syms, self.lhs) if not s[0]]:
+            raise SemanticErrors.AssignmentInvalidLhsError().add(non_symbolic[0][1]).scopes(sm.current_scope)
 
         # For each assignment, check mutability, types compatibility, and resolve partial moves.
-        for (lhs_expr, rhs_expr), lhs_sym in self.lhs.zip(self.rhs).zip(lhs_syms):
+        for (lhs_expr, rhs_expr), lhs_sym in zip(zip(self.lhs, self.rhs), lhs_syms):
 
             # Ensure the memory status of the left and right hand side.
             # Todo: is the left-hand-side memory check required? all the flags are False, so it seems redundant.

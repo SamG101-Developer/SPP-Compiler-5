@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompile
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -36,7 +36,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.annotations.print(printer, " "),
+            SequenceUtils.print(printer, self.annotations, sep="\n"),
             self.name.print(printer),
             self.tok_colon.print(printer) + " ",
             self.type.print(printer)]
