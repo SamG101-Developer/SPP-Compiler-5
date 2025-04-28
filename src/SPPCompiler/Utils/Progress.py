@@ -14,6 +14,7 @@ class Progress:
     _start_time: float
     _scale: float
     _bar_char: str
+    _finished: bool
 
     def __init__(self, title: str, max_value: int) -> None:
         self._title = title.upper()
@@ -23,6 +24,7 @@ class Progress:
         self._start_time = -1
         self._scale = 0.5
         self._bar_char = "—"
+        self._finished = False
 
     def next(self, label: str) -> None:
         if self._start_time == -1:
@@ -34,6 +36,7 @@ class Progress:
 
     def finish(self) -> None:
         self._current_value = self._max_value
+        self._finished = True
         self._print()
 
     def _print(self) -> None:
@@ -58,10 +61,12 @@ class Progress:
 
         # Create the colour of the progress bar depending on the percentage complete.
         color = colorama.Fore.LIGHTRED_EX if percentage < 25 else colorama.Fore.LIGHTYELLOW_EX if percentage < 75 else colorama.Fore.LIGHTGREEN_EX
+        self._final_print(title, color, reset, label)
 
+    def _final_print(self, title, color, reset, label) -> None:
         # Print the progress bar
         print(f"\r{title}{color}{reset} {label}", end="")
 
         # Print a newline if the progress bar is complete.
-        if self._current_value == self._max_value:
+        if self._finished:
             print("")
