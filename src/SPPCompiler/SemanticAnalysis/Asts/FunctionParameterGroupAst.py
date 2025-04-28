@@ -71,6 +71,12 @@ class FunctionParameterGroupAst(Asts.Ast):
         return ps
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # Check there is only 1 "self" parameter.
+        self_params = [p for p in self.params if isinstance(p, Asts.FunctionParameterSelfAst)]
+        if len(self_params) > 1:
+            raise SemanticErrors.ParameterMultipleSelfError().add(
+                self_params[0], self_params[1]).scopes(sm.current_scope)
+
         # Check there are no duplicate parameter names.
         param_names = SequenceUtils.flatten([p.extract_names for p in self.params])
         if duplicates := SequenceUtils.duplicates(param_names):
@@ -81,12 +87,6 @@ class FunctionParameterGroupAst(Asts.Ast):
         if dif := AstOrderingUtils.order_params(self.params):
             raise SemanticErrors.OrderInvalidError().add(
                 dif[0][0], dif[0][1], dif[1][0], dif[1][1], "parameter").scopes(sm.current_scope)
-
-        # Check there is only 1 "self" parameter.
-        self_params = [p for p in self.params if isinstance(p, Asts.FunctionParameterSelfAst)]
-        if len(self_params) > 1:
-            raise SemanticErrors.ParameterMultipleSelfError().add(
-                self_params[0], self_params[1]).scopes(sm.current_scope)
 
         # Check there is only 1 variadic parameter.
         variadic_params = [p for p in self.params if isinstance(p, Asts.FunctionParameterVariadicAst)]
