@@ -38,6 +38,13 @@ class AstTypeUtils:
         is_fun_ref = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_REF, scope)
         return is_fun_mov or is_fun_mut or is_fun_ref
 
+    # Todo: serch for tuple comparisons and use this function
+    @staticmethod
+    def is_type_tuple(type: Asts.TypeAst, scope: Scope) -> bool:
+        # Check if a type is a tuple type.
+        is_tuple = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope)
+        return is_tuple
+
     @staticmethod
     def is_index_within_type_bound(index: int, type: Asts.TypeAst, scope: Scope) -> bool:
         # Tuple type: count the number of generic arguments.
