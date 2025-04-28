@@ -6,7 +6,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import RawToken, RawTokenType
 
 
 class Lexer:
-    """!
+    """
     The Lexer translates a string of code into a list of tokens. Only single-length tokens are created in the lexer,
     and the parser checks for multi-length tokens.
 
@@ -22,10 +22,11 @@ class Lexer:
         self._code = "\n" + code
 
     def lex(self) -> List[RawToken]:
-        """!
-        Lex the code with single-character comparisons.
+        """
+        Lex the code with single-character comparisons. Track strings and comments to skip and add characters as
+        necessary.
 
-        @return A list of tokens.
+        :return: A list of tokens.
         """
 
         tokens = []

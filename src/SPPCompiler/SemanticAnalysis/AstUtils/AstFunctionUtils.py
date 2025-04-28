@@ -48,8 +48,6 @@ class AstFunctionUtils:
             * The name is "my_function".
         """
 
-        lhs_type = lhs.infer_type(sm)
-
         # Runtime access into an object: "object.method()".
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
             function_owner_type = lhs.lhs.infer_type(sm)

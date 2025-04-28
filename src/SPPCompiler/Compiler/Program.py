@@ -5,7 +5,6 @@ from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.LexicalAnalysis.Lexer import Lexer
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import CompilerStages, PreProcessingContext
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
@@ -20,34 +19,60 @@ if TYPE_CHECKING:
 
 @dataclass(slots=True)
 class Program(CompilerStages):
+    """
+    The Program class holds a list of modules and performs each stage of the compiler on them. It is interacted with
+    from the Compiler class, and is used to abstract boilerplate code per compiler stage.
+    """
+
     modules: Seq[Asts.ModulePrototypeAst] = field(default_factory=Seq, init=False, repr=False)
+    """The list of module prototype ASTs (from parsing)."""
 
-    @ast_printer_method
-    def print(self, printer: AstPrinter) -> str:
-        return ""
+    def lex(
+            self, progress_bar: Optional[Progress] = None,
+            module_tree: ModuleTree = None) -> None:
 
-    def lex(self, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
+        """
+        Lex every module into a list of tokens. Move the list of tokens into the ``Module`` instance. Create an
+        ``ErrorFormatter`` for each module, which in turns contains the token list. This allows error messages use the
+        correct set of tokens depending on the source of the error.
+
+        :param progress_bar: Progress meter for the lexing stage.
+        :param module_tree: List of modules included in the compilation.
+        """
+
         # Lexing stage.
         for module in module_tree:
             with open(os.path.join(os.getcwd(), module.path.lstrip(os.path.sep))) as fo:
                 module.code = fo.read()
-            module.token_stream = Lexer(module.code).lex()
             progress_bar.next(module.path)
+            module.token_stream = Lexer(module.code).lex()
             module.error_formatter = ErrorFormatter(module.token_stream, module.path)
+        progress_bar.finish()
 
-    def parse(self, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
+    def parse(
+            self, progress_bar: Optional[Progress] = None,
+            module_tree: ModuleTree = None) -> None:
+
+        """
+        Parse every module's tokenstream into an AST. Set the AST into the ``Module`` instance. Save the resulting
+        ``ModulePrototypeAst`` nodes into the ``modules`` list on the ``Program``.
+
+        :param progress_bar: Progress meter for the parsing stage.
+        :param module_tree: List of modules included in the compilation.
+        :return:
+        """
+
         # Parsing stage.
         for module in module_tree:
-            module.module_ast = SppParser(module.token_stream, module.path, module.error_formatter).parse()
             progress_bar.next(module.path)
+            module.module_ast = SppParser(module.token_stream, module.path, module.error_formatter).parse()
+            self.modules.append(module.module_ast)
+        progress_bar.finish()
 
-            # Remove vcs "main.spp" files.
-            module_namespace = module.path.split(os.path.sep)
-            module_namespace = module_namespace[module_namespace.index("src") + 1: -1]
-            if module.path.startswith(os.path.sep + "vcs") and not module_namespace:
-                module_tree.modules.remove(module)
+    def pre_process(
+            self, context: PreProcessingContext, progress_bar: Optional[Progress] = None,
+            module_tree: ModuleTree = None) -> None:
 
-    def pre_process(self, context: PreProcessingContext, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Pre-process all the modules.
         for module in self.modules:
             module_in_tree = [m for m in module_tree.modules if m.module_ast is module][0]
@@ -56,7 +81,10 @@ class Program(CompilerStages):
             module.pre_process(module)
         progress_bar.finish()
 
-    def generate_top_level_scopes(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
+    def generate_top_level_scopes(
+            self, sm: ScopeManager, progress_bar: Optional[Progress] = None,
+            module_tree: ModuleTree = None) -> None:
+
         # Generate symbols for all the modules, including namespaces in the scope manager.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
@@ -65,7 +93,10 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def generate_top_level_aliases(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
+    def generate_top_level_aliases(
+            self, sm: ScopeManager, progress_bar: Optional[Progress] = None,
+            module_tree: ModuleTree = None) -> None:
+
         # Alias types for all the modules.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
@@ -74,7 +105,10 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def qualify_types(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
+    def qualify_types(
+            self, sm: ScopeManager, progress_bar: Optional[Progress] = None,
+            module_tree: ModuleTree = None) -> None:
+
         # Alias types for all the modules.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
@@ -111,24 +145,39 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def _move_scope_manager_to_namespace(self, sm: ScopeManager, module: Module):
+    def _move_scope_manager_to_namespace(self, sm: ScopeManager, module: Module) -> None:
+        """
+        Given a module path, either create or move into the namespace for the module. The scope manager tries to visit
+        the next part of the namespace, and if it doesn't exist, then a new scope is created.
+        :param sm: The scope manager to move into or create the namespace.
+        :param module: The module to move into or create the namespace for.
+        """
+
         from SPPCompiler.SemanticAnalysis import Asts
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
+        # Create the module namespace as a list of strings.
         module_namespace = module.path.split(os.path.sep)
         module_namespace = module_namespace[module_namespace.index("src") + 1:]
         module_namespace[-1] = module_namespace[-1].split(".")[0]
 
+        # Iterate over the parts of the module namespace.
         for part in module_namespace:
+
+            # Convert the string part into an IdentifierAst node.
             part = Asts.IdentifierAst(-1, part)
 
+            # If the part exists in the current scope (starting at the global scope), then move into it.
             if part in [s.name for s in sm.current_scope.children]:
                 scope = [s for s in sm.current_scope.children if s.name == part][0]
                 sm.reset(scope)
 
+            # Otherwise, create a new scope and move into it, re-using the module's error formatter for the scope.
             else:
                 sm.current_scope.add_symbol(namespace_symbol := NamespaceSymbol(name=part))
                 scope = sm.create_and_move_into_new_scope(part, error_formatter=module.error_formatter)
+
+                # Create a namespace symbol for this module scope.
                 namespace_symbol.scope = scope
                 namespace_symbol.scope._type_symbol = namespace_symbol
                 namespace_symbol.scope._ast = module.module_ast

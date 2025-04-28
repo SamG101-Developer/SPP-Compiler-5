@@ -24,6 +24,16 @@ MAIN_FILE = "main.spp"
 TOML_FILE = "spp.toml"
 
 
+def _shared_library_extension() -> str:
+    # Get the shared library extension for the current platform.
+    if os.name == "nt":
+        return "dll"
+    elif os.name == "darwin":
+        return "dylib"
+    else:
+        return "so"
+
+
 def cli() -> ArgumentParser:
     # Create the parser and add the subcommands holder.
     parser = ArgumentParser(description="S++ Programming Language Compiler")
@@ -117,7 +127,7 @@ def handle_build(args: Namespace, skip_vcs: bool = False) -> None:
     if not inner_bin_directory.exists(): inner_bin_directory.mkdir()
 
     # Validate the project structure.
-    if not validate_project_structure():
+    if not _validate_project_structure():
         return
 
     # Handle vcs operations.
@@ -151,7 +161,7 @@ def handle_help() -> None:
     print(cli().format_help())
 
 
-def validate_project_structure() -> bool:
+def _validate_project_structure() -> bool:
     # Check there is a spp.toml, src, and src/main.spp file.
     cwd = Path.cwd()
     toml_file = cwd / TOML_FILE
@@ -175,13 +185,13 @@ def validate_project_structure() -> bool:
     if vcs_folder.exists():
         for repo in vcs_folder.iterdir():
             os.chdir(repo)
-            validate_project_structure()
+            _validate_project_structure()
             os.chdir(cwd)
 
     # If there is an FFI folder, check each subfolder is structured properly.
     ffi_folder = cwd / FFI_FOLDER
     if ffi_folder.exists():
-        ext = "dll"  # todo: platform agnostic
+        ext = _shared_library_extension()
 
         for lib_folder in ffi_folder.iterdir():
             if not lib_folder.is_dir():
