@@ -213,6 +213,10 @@ class AstMemoryUtils:
         # of "a", both "a.b" and "a.b.c.d" must not be partially moved off of "a". This guarantees that "a.b" is
         # fully-initialized when it is moved off of "a". todo: remove "left_overlap" check given "overlap" considers it?
         if check_partial_move and symbol.memory_info.ast_partially_moved and not isinstance(value_ast, Asts.IdentifierAst):
+            if overlaps := [p for p in symbol.memory_info.ast_partially_moved if AstMemoryUtils.left_overlap(p, value_ast)]:
+                raise SemanticErrors.MemoryNotInitializedUsageError().add(
+                    value_ast, overlaps[0]).scopes(sm.current_scope)
+
             if overlaps := [p for p in symbol.memory_info.ast_partially_moved if AstMemoryUtils.overlaps(p, value_ast)]:
                 raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(
                     value_ast, overlaps[0]).scopes(sm.current_scope)
