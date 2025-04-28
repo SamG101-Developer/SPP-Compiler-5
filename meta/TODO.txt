@@ -3,7 +3,6 @@ Generators.
 
 Encapsulation annotations.
 * Add support for method encapsulation (methods map to attributes with $Type right now).
-* Overriding functions must keep the same encapsulation level.
 
 Specialization.
 * `sup std::vector::Vec[std::string::Str]` applies to all `std::vector::Vec` types.
