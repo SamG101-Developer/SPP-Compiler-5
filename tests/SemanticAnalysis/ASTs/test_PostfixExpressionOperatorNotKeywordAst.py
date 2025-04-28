@@ -1,9 +1,7 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
-class TestPostfixExpressionNotKeywordAst(CustomTestCase):
+class TestPostfixExpressionOperatorNotKeywordAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ExpressionNotBooleanError)
     def test_invalid_postfix_expression_not_keyword_type_mismatch(self):
         """

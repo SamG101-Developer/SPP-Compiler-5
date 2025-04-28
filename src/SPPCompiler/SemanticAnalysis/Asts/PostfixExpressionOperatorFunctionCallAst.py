@@ -29,6 +29,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
     _overload: Optional[Tuple[Scope, Asts.FunctionPrototypeAst]] = field(default=None, repr=False)
     _is_async: Optional[Asts.Ast] = field(default=None, repr=False)
+    _folded_args: Seq[Asts.FunctionCallArgumentAst] = field(default_factory=Seq, repr=False)
 
     def __copy__(self, memodict=None) -> PostfixExpressionOperatorFunctionCallAst:
         return PostfixExpressionOperatorFunctionCallAst(
@@ -137,6 +138,29 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     sm=sm, owner=lhs.infer_type(sm, **kwargs),
                     variadic_parameter_identifier=function_overload.function_parameter_group.get_variadic_param().extract_name if is_variadic else None)
 
+                # For function folding, identify all tuple arguments that have non-tuple parameters.
+                if self.fold_token is not None:
+                    # Populate the list of arguments to fold.
+                    for argument in arguments:
+                        if AstTypeUtils.is_type_tuple(argument.infer_type(sm, **kwargs), sm.current_scope):
+                            if [p for p in parameters if p.extract_name == argument.name and not AstTypeUtils.is_type_tuple(p.type, sm.current_scope)]:
+                                self._folded_args.append(argument)
+
+                    # Tuples being folded must all have the same element types (per tuple).
+                    for argument in self._folded_args:
+                        first_elem_type = argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[0].value
+                        if mismatch := [t.value for t in argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[1:] if not t.value.symbolic_eq(first_elem_type, sm.current_scope)]:
+                            raise SemanticErrors.FunctionFoldTupleElementTypeMismatchError().add(
+                                first_elem_type, mismatch[0]).scopes(sm.current_scope)  # todo: scopes
+
+                    # Ensure all the tuples are of equal length.
+                    first_tuple_length = len(self._folded_args[0].infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments)
+                    for argument in self._folded_args[1:]:
+                        tuple_length = len(argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments)
+                        if tuple_length != first_tuple_length:
+                            raise SemanticErrors.FunctionFoldTupleLengthMismatchError().add(
+                                self._folded_args[0].value, first_tuple_length, argument.value, tuple_length).scopes(sm.current_scope)
+
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
                     new_overload = fast_deepcopy(function_overload)
@@ -173,10 +197,12 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     parameter_type = parameter.type
                     argument_type = argument.infer_type(sm, **kwargs)
 
+                    # Special case for variadic parameters.
                     if isinstance(parameter, Asts.FunctionParameterVariadicAst):
                         parameter_type = CommonTypes.Tup(parameter.pos, Seq([parameter_type] * len(argument_type.type_parts()[0].generic_argument_group.arguments)))
                         parameter_type.analyse_semantics(sm, **kwargs)
 
+                    # Special case for self parameters.
                     if isinstance(parameter, Asts.FunctionParameterSelfAst):
                         argument.convention = parameter.convention
                         argument_type = argument_type.without_generics()
@@ -184,8 +210,15 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                         if function_overload.function_parameter_group.get_self_param()._arbitrary and not parameter_type.symbolic_eq(argument_type, function_scope, sm.current_scope):
                             raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
-                    elif not parameter_type.symbolic_eq(argument_type, function_scope, sm.current_scope):
-                        raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
+                    # Regular parameters (with a folding argument check too).
+                    else:
+                        if argument in self._folded_args:
+                            if not parameter_type.symbolic_eq(argument_type.type_parts()[0].generic_argument_group.arguments[0].value, function_scope, sm.current_scope):
+                                raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type.type_parts()[0].generic_argument_group.arguments[0].value)
+
+                        else:
+                            if not parameter_type.symbolic_eq(argument_type, function_scope, sm.current_scope):
+                                raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
                 # Mark the overload as a pass.
                 pass_overloads.append((function_scope, function_overload))
@@ -244,6 +277,11 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         self.generic_argument_group.analyse_semantics(sm, **kwargs)
         self.determine_overload(sm, lhs, **kwargs)  # Also adds the "self" argument if needed.
         self.function_argument_group.analyse_semantics(sm, target_proto=self._overload[1], is_async=self._is_async, is_coro_resume=is_coro_resume, **kwargs)
+
+        # If a fold is taking place, analyse the non-folding arguments again (checks for double moves).
+        if self.fold_token is not None and self._folded_args:
+            non_folding_arguments = [a for a in self.function_argument_group.arguments if a.value not in [f.value for f in self._folded_args]]
+            Asts.FunctionCallArgumentGroupAst(arguments=non_folding_arguments).analyse_semantics(sm, **kwargs)
 
         # Link references created by the function call to the overload.
         # Todo: switch this to use "AstTypeUtils.get_generator_and_yielded_type"

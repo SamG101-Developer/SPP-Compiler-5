@@ -1,7 +1,7 @@
 from tests._Utils import *
 
 
-class TestPostfixExpressionIndexAst(CustomTestCase):
+class TestPostfixExpressionOperatorIndexAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
     def test_invalid_postfix_indexing_non_indexable(self):
         """

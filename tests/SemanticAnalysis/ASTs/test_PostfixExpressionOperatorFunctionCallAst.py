@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -292,11 +290,13 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_postfix_function_folding_1(self):
         """
-        fun f(a: std::number::bigint::BigInt) -> std::string::Str { }
+        fun f(a: std::number::bigint::BigInt) -> std::string::Str {
+            ret "hello world"
+        }
+
         fun g() -> std::void::Void {
             let x = (1, 2, 3, 4)
             let mut y = f(x)..
-            y = ("a", "b", "c", "d")
         }
         """
 
@@ -304,11 +304,11 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
     def test_valid_postfix_function_folding_2(self):
         """
         fun f(a: std::number::bigint::BigInt, b: std::number::bigint::BigInt) -> std::void::Void { }
+
         fun g() -> std::void::Void {
             let x = (1, 2, 3, 4)
             let y = (1, 2, 3, 4)
             let mut z = f(x, y)..
-            z = ("a", "b", "c", "d")
         }
         """
 
@@ -327,13 +327,46 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.VariableTupleDestructureTupleSizeMismatchError)
+    @should_fail_compilation(SemanticErrors.FunctionFoldTupleLengthMismatchError)
     def test_invalid_postfix_function_folding_1(self):
         """
         fun f(a: std::number::bigint::BigInt, b: std::number::bigint::BigInt) -> std::void::Void { }
         fun g() -> std::void::Void {
             let x = (1, 2, 3, 4)
             let y = (1, 2)
+            f(x, y)..
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionFoldTupleElementTypeMismatchError)
+    def test_invalid_postfix_function_folding_2(self):
+        """
+        fun f(a: std::number::bigint::BigInt, b: std::number::bigint::BigInt) -> std::void::Void { }
+        fun g() -> std::void::Void {
+            let x = (1, 2, 3, "4")
+            let y = (1, 2, 3, "4")
+            f(x, y)..
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_postfix_function_folding_moving_objects(self):
+        """
+        fun f(a: std::number::bigint::BigInt, b: std::string::Str) -> std::void::Void { }
+        fun g() -> std::void::Void {
+            let x = (1, 2, 3)
+            let y = "hello world"
+            f(x, y)..
+        }
+        """
+
+    @should_pass_compilation()
+    def test_invalid_postfix_function_folding_copying_objects(self):
+        """
+        fun f(a: std::number::bigint::BigInt, b: std::number::usize::USize) -> std::void::Void { }
+        fun g() -> std::void::Void {
+            let x = (1, 2, 3)
+            let y = 0_uz
             f(x, y)..
         }
         """

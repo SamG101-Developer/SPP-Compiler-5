@@ -1569,7 +1569,7 @@ class SemanticErrors:
 
     class UseStatementInvalidGenericArgumentsError(SemanticError):
         """
-        Then UseStatementInvalidGenericArgumentsError is raised is a "use" statement look lise "use std::vector[T]".
+        The UseStatementInvalidGenericArgumentsError is raised is a "use" statement look lise "use std::vector[T]".
         Instead, it should just be "use std::vector" or "use vector[T] = std::vector[T]".
         """
 
@@ -1583,5 +1583,44 @@ class SemanticErrors:
                 tag="Invalid generic argument in use statement.",
                 msg="Generic arguments are not allowed in simple-alias use statements.",
                 tip="Remove the generic argument from the use statement, or use the extended form.")
+
+            return self
+
+    class FunctionFoldTupleElementTypeMismatchError(SemanticError):
+        """
+        The FunctionFoldTupleElementTypeMismatchError is raised if a tuple being folded into a function has a different
+        types in its elements. For example, "f((1, 2, 3)).." is valid, but "f((1, 2, "3")).." is invalid, because there
+        are BigInt and Str elements in the tuple.
+        """
+
+        def add(self, first_type: Asts.TypeAst, mismatch: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=first_type,
+                tag=f"Type inferred as '{first_type}' here")
+
+            self.add_error(
+                ast=mismatch,
+                tag=f"Type inferred as '{mismatch}' here",
+                msg="The tuple elements have different types.",
+                tip="Ensure all tuple elements have the same type.")
+
+            return self
+
+    class FunctionFoldTupleLengthMismatchError(SemanticError):
+        """
+        The FunctionFoldTupleLengthMismatchError is raised if there are > 1 tuples being folded into a function call,
+        and each tuple has a different number of elements.
+        """
+
+        def add(self, first_tuple: Asts.ExpressionAst, first_tuple_length: int, second_tuple: Asts.ExpressionAst, second_tuple_length: int) -> SemanticError:
+            self.add_info(
+                ast=first_tuple,
+                tag=f"Tuple has {first_tuple_length} elements")
+
+            self.add_error(
+                ast=second_tuple,
+                tag=f"Tuple has {second_tuple_length} elements",
+                msg="The tuples have different lengths.",
+                tip="Ensure all tuples have the same length.")
 
             return self

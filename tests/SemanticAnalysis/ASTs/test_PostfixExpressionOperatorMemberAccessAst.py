@@ -1,7 +1,7 @@
 from tests._Utils import *
 
 
-class TestPostfixExpressionMemberAccessAst(CustomTestCase):
+class TestPostfixExpressionOperatorMemberAccessAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MemberAccessStaticOperatorExpectedError)
     def test_invalid_postfix_member_access_static_operator_expected_on_type(self):
         """
