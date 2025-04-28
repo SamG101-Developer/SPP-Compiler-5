@@ -151,6 +151,6 @@ class TestLetStatementAst(CustomTestCase):
     def test_valid_type_hint_variant_2(self):
         """
         fun f() -> std::void::Void {
-            let x: std::option::Opt = std::option::Some(val=123)
+            let x: std::option::Opt[std::number::bigint::BigInt] = std::option::Some(val=123)
         }
         """

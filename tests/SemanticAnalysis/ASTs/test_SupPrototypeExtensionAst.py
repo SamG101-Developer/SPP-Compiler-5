@@ -11,7 +11,13 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
     def test_invalid_superimposition_extension_generic_superclass(self):
         """
-        sup [T] std::number::bigint::BigInt ext T { }
+        sup [T] std::vector::Vec[T] ext T { }
+        """
+
+    @should_fail_compilation(SemanticErrors.SuperimpositionUnconstrainedGenericParameterError)
+    def test_invalid_superimposition_extension_unconstrained_generic(self):
+        """
+        sup [T] std::boolean::Bool ext std::number::bigint::BigInt { }
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError)
