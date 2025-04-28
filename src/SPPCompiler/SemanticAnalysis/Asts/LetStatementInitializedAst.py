@@ -57,6 +57,10 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.InvalidTypeAnnotationError().add(
                 self.explicit_type, self.assign_to).scopes(sm.current_scope)
 
+        # Analyse the explicit type if it exists.
+        if self.explicit_type is not None:
+            self.explicit_type.analyse_semantics(sm, **kwargs)
+
         # Analyse the value to ensure its valid before any destructuring takes place.
         self.value.analyse_semantics(sm, **(kwargs | {"assignment": self.assign_to.extract_names}))
 
