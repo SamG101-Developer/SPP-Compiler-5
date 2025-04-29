@@ -205,7 +205,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             # Handle type aliasing (providing generics to the original type).
             if isinstance(type_symbol, AliasSymbol):
                 # Substitute the old type: "Opt[Str]" => "Var[Some[Str], None]"
-                generics = original_type_scope.generics + self.name.generic_argument_group.arguments
+                generics = self.name.generic_argument_group.arguments + original_type_scope.generics
                 old_type = type_symbol.old_sym.fq_name.substituted_generics(generics)
                 old_type.analyse_semantics(sm, type_scope=type_scope.parent, **kwargs)
 
