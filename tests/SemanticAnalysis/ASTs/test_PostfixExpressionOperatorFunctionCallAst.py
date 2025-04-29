@@ -2,7 +2,7 @@ from tests._Utils import *
 
 
 class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
-    @should_fail_compilation(SemanticErrors.FunctionCallOnNoncallableTypeError)
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
     def test_invalid_postfix_func_call_on_non_callable(self):
         """
         fun f() -> std::void::Void {

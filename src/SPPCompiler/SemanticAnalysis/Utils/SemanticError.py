@@ -456,21 +456,6 @@ class SemanticErrors:
 
             return self
 
-    class FunctionCallOnNoncallableTypeError(SemanticError):
-        """
-        The FunctionCallOnNoncallableTypeError is raised if a non-callable type is called as a function. This could be a
-        literal like "5()".
-        """
-
-        def add(self, function_call: Asts.ExpressionAst) -> SemanticError:
-            self.add_error(
-                ast=function_call,
-                tag="Non-callable inferred here.",
-                msg="The type is not callable.",
-                tip="Change the type to a callable type.")
-
-            return self
-
     class FunctionCallTooManyArgumentsError(SemanticError):
         """
         The FunctionCallTooManyArgumentsError is raised if a function call has too many arguments.

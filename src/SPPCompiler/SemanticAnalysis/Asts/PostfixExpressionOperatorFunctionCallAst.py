@@ -56,12 +56,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     def determine_overload(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
         # function's name and its owner type/namespace.
-        # from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
-        # Todo: Change this to detecting FunMov/Mut/Ref superimpositions over the type
         function_owner_type, function_owner_scope, function_name = AstFunctionUtils.get_function_owner_type_and_function_name(sm, lhs)
-        if not function_name:
-            raise SemanticErrors.FunctionCallOnNoncallableTypeError().add(lhs).scopes(sm.current_scope)
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():

@@ -144,6 +144,9 @@ class AstFunctionUtils:
             be inherited into the function signature.
         """
 
+        if not isinstance(function_name, Asts.IdentifierAst):
+            return []
+
         # Get the function-type name from teh function: "$Func" from "func()".
         function_name = function_name.to_function_identifier()
         overload_scopes_and_info = Seq()
