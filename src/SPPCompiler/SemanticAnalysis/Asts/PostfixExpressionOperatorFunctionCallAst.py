@@ -83,7 +83,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
             dummy_return_type = lhs_type.type_parts()[-1].generic_argument_group["Out"].value
             dummy_params = Asts.FunctionParameterGroupAst(params=[Asts.FunctionParameterRequiredAst(type=t) for t in dummy_params_types])
             dummy_overload = Asts.FunctionPrototypeAst(function_parameter_group=dummy_params, return_type=dummy_return_type)
-            all_overloads.append((None, dummy_overload, Asts.GenericArgumentGroupAst()))
+            all_overloads.append((sm.current_scope, dummy_overload, Asts.GenericArgumentGroupAst()))
 
         for function_scope, function_overload, owner_scope_generic_arguments in all_overloads:
             owner_scope_generic_arguments = owner_scope_generic_arguments.arguments

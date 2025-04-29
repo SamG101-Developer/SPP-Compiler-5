@@ -17,8 +17,8 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
 
     def __post_init__(self) -> None:
         self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
+        self.variable = self.variable or Asts.LocalVariableSingleIdentifierAst(pos=self.pos, name=Asts.IdentifierAst(pos=self.pos, value=f"$l{id(self)}"))
         self._variant = "Required"
-        # assert self.variable is not None and self.type is not None
 
     def __eq__(self, other: FunctionParameterRequiredAst) -> bool:
         # Check both ASTs are the same type and have the same variable.
