@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -26,7 +26,7 @@ class SupImplementationAst(Asts.Ast):
         if self.members:
             string = [
                 self.tok_l.print(printer) + "\n",
-                self.members.print(printer, "\n"),
+                SequenceUtils.print(printer, self.members, sep="\n"),
                 self.tok_r.print(printer) + "\n"]
         else:
             string = [

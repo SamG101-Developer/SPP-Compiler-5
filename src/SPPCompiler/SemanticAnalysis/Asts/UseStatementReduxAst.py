@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
 @dataclass(slots=True)
@@ -30,7 +30,7 @@ class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.annotations.print(printer, " "),
+            SequenceUtils.print(printer, self.annotations, sep="\n"),
             self.kw_use.print(printer) + " ",
             self.old_type.print(printer)]
         return "".join(string)

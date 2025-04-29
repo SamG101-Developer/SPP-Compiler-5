@@ -33,7 +33,7 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.variable.print(printer),
             self.in_keyword.print(printer),
             self.iterable.print(printer)]
-        return "".join(string)
+        return " ".join(string)
 
     @property
     def pos_end(self) -> int:
