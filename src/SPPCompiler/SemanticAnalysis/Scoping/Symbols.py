@@ -153,7 +153,7 @@ class AliasSymbol(TypeSymbol):
     def __json__(self) -> Dict:
         # Dump the AliasSymbol as a JSON object.
         return {
-            "what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
+            "what": "alias", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
             "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym}
 
     def __deepcopy__(self, memodict=None):

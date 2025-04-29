@@ -113,7 +113,7 @@ class Scope:
             symbols.extend(self._parent.all_symbols())
 
         # Translate the symbols if this is a generic scope.
-        if self != self._non_generic_scope:
+        if self != self._non_generic_scope:  # and match_type is not Asts.IdentifierAst:
             symbols = [self._translate_symbol(s) for s in symbols]
 
         return symbols
@@ -127,7 +127,7 @@ class Scope:
             return None
 
         # Handle generic translation.
-        if self != self._non_generic_scope:
+        if self != self._non_generic_scope:  # and not isinstance(name, Asts.IdentifierAst):
             return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias), ignore_alias)
 
         # Namespace adjust, and get the symbol from the symbol table if it exists.
