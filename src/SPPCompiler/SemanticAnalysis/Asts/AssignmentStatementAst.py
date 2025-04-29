@@ -115,7 +115,7 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             # Ensure the lhs and rhs have the same type and convention (cannot do "Str = &Str" for example).
             lhs_type = lhs_expr.infer_type(sm, **kwargs)
             rhs_type = rhs_expr.infer_type(sm, **kwargs)
-            if not lhs_type.symbolic_eq(rhs_type, sm.current_scope):
+            if not lhs_type.symbolic_eq(rhs_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     lhs_sym.memory_info.ast_initialization, lhs_type, rhs_expr, rhs_type).scopes(sm.current_scope)
 
