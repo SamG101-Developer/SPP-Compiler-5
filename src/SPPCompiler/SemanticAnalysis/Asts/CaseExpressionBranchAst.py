@@ -78,7 +78,7 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         else_pattern = Asts.PatternVariantElseAst(pos=pos, tok_else=else_case.tok_else)
         case_branch = CaseExpressionBranchAst(
-            pos=pos, patterns=Seq([else_pattern]), body=Asts.InnerScopeAst(members=Seq([else_case.case_expression])))
+            pos=pos, patterns=[else_pattern], body=Asts.InnerScopeAst(members=[else_case.case_expression]))
         return case_branch
 
     @ast_printer_method

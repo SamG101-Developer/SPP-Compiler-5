@@ -6,7 +6,7 @@ from SPPCompiler.Compiler.ModuleTree import Module
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, \
-    Symbol
+    Symbol, SymbolType
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
@@ -37,10 +37,10 @@ class Scope:
         self._ast = ast
 
         # Initialize everything else with default values.
-        self._children = Seq()
+        self._children = []
         self._symbol_table = SymbolTable()
-        self._direct_sup_scopes = Seq()
-        self._direct_sub_scopes = Seq()
+        self._direct_sup_scopes = []
+        self._direct_sub_scopes = []
         self._type_symbol = None
         self._non_generic_scope = self
 
@@ -84,19 +84,22 @@ class Scope:
         generics = self.generics
         new_symbol = symbol
 
-        if isinstance(symbol, VariableSymbol):
+        if symbol is None:
+            return None
+
+        elif symbol.symbol_type is SymbolType.VariableSymbol:
             new_symbol = fast_deepcopy(symbol)
             new_symbol.type = symbol.type.substituted_generics(generics)
 
-        elif isinstance(symbol, TypeSymbol):
+        elif symbol.symbol_type is SymbolType.TypeSymbol or symbol.symbol_type is SymbolType.AliasSymbol:
             new_fq_name = symbol.fq_name.substituted_generics(generics)
             new_symbol = self._non_generic_scope.get_symbol(new_fq_name, ignore_alias=ignore_alias)
 
         return new_symbol or symbol
 
     def add_symbol(self, symbol: Symbol) -> None:
-        if isinstance(symbol, TypeSymbol):
-            assert isinstance(symbol.name, Asts.GenericIdentifierAst)
+        # if isinstance(symbol, TypeSymbol):
+        #     assert isinstance(symbol.name, Asts.GenericIdentifierAst)
 
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
@@ -108,12 +111,12 @@ class Scope:
     def all_symbols(self, exclusive: bool = False, match_type: type = None) -> Seq[Symbol]:
 
         # Get all the symbols in the scope.
-        symbols = self._symbol_table.all(match_type=match_type)
+        symbols = self._symbol_table.all()
         if not exclusive and self._parent:
             symbols.extend(self._parent.all_symbols())
 
         # Translate the symbols if this is a generic scope.
-        if self != self._non_generic_scope:  # and match_type is not Asts.IdentifierAst:
+        if self != self._non_generic_scope and match_type is not Asts.IdentifierAst:
             symbols = [self._translate_symbol(s) for s in symbols]
 
         return symbols
@@ -123,8 +126,8 @@ class Scope:
 
     def get_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
         # Ensure the name is a valid type.
-        if not isinstance(name, (Asts.IdentifierAst, Asts.TypeAst, Asts.GenericIdentifierAst)):
-            return None
+        # if not isinstance(name, (Asts.IdentifierAst, Asts.TypeAst, Asts.GenericIdentifierAst)):
+        #     return None
 
         # Handle generic translation.
         if self != self._non_generic_scope:  # and not isinstance(name, Asts.IdentifierAst):
@@ -148,19 +151,18 @@ class Scope:
         return confirm_type_with_alias(scope, symbol, ignore_alias)
 
     def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
-        # Todo: why isn't get_symbol being used here? translation issues?
         # Todo: major optimization here: all_symbols() translates (sub_generics) symbols that will never match
 
         if isinstance(name, Asts.IdentifierAst):
             for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.IdentifierAst):
-                if isinstance(symbol, NamespaceSymbol) and symbol.name == name:
+                if symbol.symbol_type is SymbolType.NamespaceSymbol and symbol.name.value == name.value:
                     return symbol
             return None
 
         # Get the type symbol from the symbol table.
         elif isinstance(name, Asts.GenericIdentifierAst):
             for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.GenericIdentifierAst):
-                if isinstance(symbol, TypeSymbol) and symbol.name == name:
+                if symbol.symbol_type is SymbolType.TypeSymbol and symbol.name == name:
                     return symbol
             return None
 
@@ -172,7 +174,7 @@ class Scope:
 
     def get_multiple_symbols(self, name: Asts.IdentifierAst, original_scope: Scope = None) -> Seq[Tuple[Symbol, Scope, int]]:
         # Get all the symbols with the given name (ambiguity checks, function overloads etc), and their "depth".
-        symbols = Seq([(self._symbol_table.get(name), self, self.depth_difference(original_scope or self))])
+        symbols = [(self._symbol_table.get(name), self, self.depth_difference(original_scope or self))]
         symbols.extend(search_super_scopes_multiple(original_scope or self, self, name))
         return symbols
 
@@ -212,7 +214,7 @@ class Scope:
 
         def _depth_difference(source: Scope, target: Scope, depth: int) -> int:
             # Recursively get the depth difference between two scopes.
-            if source == target: return depth
+            if source is target: return depth
             for sup_scope in source._direct_sup_scopes:
                 if (result := _depth_difference(sup_scope, target, depth + 1)) >= 0:
                     return result
@@ -238,7 +240,7 @@ class Scope:
     @property
     def ancestors(self) -> Seq[Scope]:
         # Get all the ancestors, including this scope and the global scope.
-        return Seq([node := self] + [node for _ in iter(lambda: node.parent, None) if (node := node.parent)])
+        return [node := self] + [node for _ in iter(lambda: node.parent, None) if (node := node.parent)]
 
     @property
     def parent_module(self) -> Scope:
@@ -262,7 +264,7 @@ class Scope:
     @property
     def sup_scopes(self) -> Seq[Scope]:
         # Get all the super scopes recursively.
-        all_sup_scopes = Seq()
+        all_sup_scopes = []
         for sup_scope in self._direct_sup_scopes:
             all_sup_scopes.append(sup_scope)
             all_sup_scopes.extend(sup_scope.sup_scopes)
@@ -283,7 +285,7 @@ class Scope:
     @property
     def sub_scopes(self) -> Seq[Scope]:
         # Get all the sub scopes recursively.
-        all_sub_scopes = Seq()
+        all_sub_scopes = []
         for sub_scope in self._direct_sub_scopes:
             all_sub_scopes.append(sub_scope)
             all_sub_scopes.extend(sub_scope.sub_scopes)
@@ -317,7 +319,7 @@ def search_super_scopes(scope: Scope, name: Asts.IdentifierAst | Asts.GenericIde
 
 def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: Asts.IdentifierAst) -> Seq[Tuple[VariableSymbol, Scope, int]]:
     # Recursively search the super scopes for variable symbols with the given name.
-    symbols = Seq()
+    symbols = []
     for super_scope in scope._direct_sup_scopes:
         new_symbols = super_scope.get_multiple_symbols(name, original_scope)
         symbols.extend(new_symbols)

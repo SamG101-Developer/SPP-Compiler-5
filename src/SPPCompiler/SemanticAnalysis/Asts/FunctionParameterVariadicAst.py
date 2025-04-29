@@ -21,10 +21,6 @@ class FunctionParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
         self._variant = "Variadic"
 
-    def __eq__(self, other: FunctionParameterVariadicAst) -> bool:
-        # Check both ASTs are the same type and have the same variable.
-        return isinstance(other, FunctionParameterVariadicAst) and self.variable == other.variable
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

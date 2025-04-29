@@ -13,7 +13,6 @@ from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass(slots=True)
@@ -49,7 +48,9 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __post_init__(self) -> None:
         self.op = self.op or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.NoToken)
-        assert self.lhs is not None and self.rhs is not None
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -134,7 +135,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             rhs_num_elements = len(rhs_tuple_type.type_parts()[0].generic_argument_group.arguments)
 
             # Get the parts of the tuple.
-            new_asts = Seq()
+            new_asts = []
             for i in range(rhs_num_elements):
                 new_ast = CodeInjection.inject_code(f"{self.rhs}.{i}", SppParser.parse_postfix_expression, pos_adjust=self.rhs.pos)
                 new_ast.analyse_semantics(sm, **kwargs)
@@ -158,7 +159,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             lhs_num_elements = len(lhs_tuple_type.type_parts()[0].generic_argument_group.arguments)
 
             # Get the parts of the tuple.
-            new_asts = Seq()
+            new_asts = []
             for i in range(lhs_num_elements):
                 new_ast = CodeInjection.inject_code(f"{self.lhs}.{i}", SppParser.parse_postfix_expression, pos_adjust=self.lhs.pos)
                 new_ast.analyse_semantics(sm, **kwargs)

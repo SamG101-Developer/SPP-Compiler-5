@@ -79,7 +79,7 @@ class PostfixExpressionOperatorIndexAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         index_field = Asts.PostfixExpressionAst(pos=self.pos, lhs=lhs, op=index_field)
 
         # Create a transformed AST that looks like: "lhs.index_ref(expr)" or "lhs.index_mut(expr)".
-        args = Asts.FunctionCallArgumentGroupAst(arguments=Seq([Asts.FunctionCallArgumentUnnamedAst(value=self.expr)]))
+        args = Asts.FunctionCallArgumentGroupAst(arguments=[Asts.FunctionCallArgumentUnnamedAst(value=self.expr)])
         index_call = Asts.PostfixExpressionOperatorFunctionCallAst(function_argument_group=args)
         index_call = Asts.PostfixExpressionAst(pos=self.pos, lhs=index_field, op=index_call)
 

@@ -71,12 +71,12 @@ class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             indexes = [*range(m, m + num_rhs_tuple_elements - num_lhs_tuple_elements + 1)]
             new_ast = Asts.TupleLiteralAst(
                 pos=value.pos,
-                elems=Seq([Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(value.pos, Asts.TokenAst(0, SppTokenType.LxNumber, str(i)))) for i in indexes]))
+                elems=[Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(value.pos, Asts.TokenAst(0, SppTokenType.LxNumber, str(i)))) for i in indexes])
             bound_multi_skip = new_ast
 
         # Create new indexes like [0, 1, 2, 6, 7] if elements 3->5 are skipped (and possibly bound).
-        indexes  = Seq([*range(0, (self.elems.index(multi_arg_skips[0]) if multi_arg_skips else len(self.elems) - 1) + 1)])
-        indexes += Seq([*range(num_lhs_tuple_elements, num_rhs_tuple_elements)])
+        indexes  = [*range(0, (self.elems.index(multi_arg_skips[0]) if multi_arg_skips else len(self.elems) - 1) + 1)]
+        indexes += [*range(num_lhs_tuple_elements, num_rhs_tuple_elements)]
 
         # Create expanded "let" statements for each part of the destructure.
         for i, element in zip(indexes, self.elems):

@@ -32,8 +32,11 @@ class BooleanLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.value = self.value or Asts.TokenAst.raw(token_type=SppTokenType.KwFalse)
 
     def __eq__(self, other: BooleanLiteralAst) -> bool:
-        # Check both ASTs are the same type and have the same value.
-        return self.value == other.value
+        # Needed for cmp-generic arg checking
+        return isinstance(other, BooleanLiteralAst) and self.value.token_data == other.value.token_data
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @staticmethod
     def from_python_literal(pos: int, value: bool) -> BooleanLiteralAst:

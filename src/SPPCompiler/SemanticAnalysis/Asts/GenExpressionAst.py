@@ -10,7 +10,6 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass(slots=True)
@@ -24,6 +23,9 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __post_init__(self) -> None:
         self.kw_gen = self.kw_gen or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwGen)
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -81,13 +83,13 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if self.expression:
             ast = Asts.FunctionCallArgumentGroupAst(
                 pos=(self.convention or self.expression).pos,
-                arguments=Seq([
+                arguments=[
                     Asts.FunctionCallArgumentUnnamedAst(
                         pos=self.expression.pos,
                         convention=self.convention,
                         value=self.expression
                     )
-                ])
+                ]
             )
 
             ast.analyse_semantics(sm, **kwargs)

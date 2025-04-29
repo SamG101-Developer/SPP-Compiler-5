@@ -5,7 +5,8 @@ import difflib
 from typing import Generator, Optional, Tuple, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, \
+    SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
@@ -84,7 +85,7 @@ class AstTypeUtils:
 
             # If the namespace does not exist, raise an error.
             if not sm.get_namespaced_scope(sub_namespace):
-                alternatives = [a.name.value for a in namespace_scope.all_symbols() if isinstance(a, NamespaceSymbol)]
+                alternatives = [a.name.value for a in namespace_scope.all_symbols() if a.symbol_type is SymbolType.NamespaceSymbol]
                 closest_match = difflib.get_close_matches(sub_namespace[-1].value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     sub_namespace[-1], "namespace", closest_match[0] if closest_match else None).scopes(sm.current_scope)
@@ -103,7 +104,7 @@ class AstTypeUtils:
         # Get the type part's symbol, and raise an error if it does not exist.
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
         if not type_symbol:
-            alternatives = [a.name.value for a in scope.all_symbols() if isinstance(a, NamespaceSymbol)]
+            alternatives = [a.name.value for a in scope.all_symbols() if a.symbol_type is SymbolType.NamespaceSymbol]
             SequenceUtils.remove_if(alternatives, lambda a: a[0] == "$")
             closest_match = difflib.get_close_matches(type_part.value, alternatives, n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(
@@ -159,7 +160,7 @@ class AstTypeUtils:
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         old_scopes = base_scope._direct_sup_scopes
-        new_scopes = Seq()
+        new_scopes = []
 
         for scope in old_scopes:
 
@@ -257,7 +258,7 @@ class AstTypeUtils:
 
         # Initialize the generic type to None, and get all the super types.
         gen_type = None
-        sup_types = sm.current_scope.get_symbol(type).scope.sup_types + Seq([type])
+        sup_types = sm.current_scope.get_symbol(type).scope.sup_types + [type]
 
         # Search through the type and supertypes for a generator type.
         for sup_type in sup_types:

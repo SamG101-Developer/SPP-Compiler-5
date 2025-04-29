@@ -149,7 +149,7 @@ class AstFunctionUtils:
 
         # Get the function-type name from teh function: "$Func" from "func()".
         function_name = function_name.to_function_identifier()
-        overload_scopes_and_info = Seq()
+        overload_scopes_and_info = []
 
         # Functions at the module level will have no inheritable generics (no enclosing superimposition). They can
         # appear in the current module or any parent module as they are all parent modules' functions are directly
@@ -172,7 +172,7 @@ class AstFunctionUtils:
             if isinstance(function_owner_scope._ast, Asts.ClassPrototypeAst):
                 sup_scopes = function_owner_scope.sup_scopes
             else:
-                sup_scopes = Seq([function_owner_scope])
+                sup_scopes = [function_owner_scope]
 
             # From the super scopes, check each one for "sup $Func ext FunXXX { ... }" superimpositions. These, as seen
             # in the module analysis version, should also only contain FunXXX types. The only addition is grabbing the
@@ -234,7 +234,7 @@ class AstFunctionUtils:
             this_scope: Scope, target_scope: Scope, new_func: Asts.FunctionPrototypeAst, *,
             exclude: Optional[Scope] = None) -> Optional[Asts.FunctionPrototypeAst]:
 
-        exclude = exclude or Seq()
+        exclude = exclude or []
 
         # Helper function to get the type of the convention AST applied to the "self" parameter.
         def sc(f: Asts.FunctionPrototypeAst) -> Type[Asts.ConventionAst]:
@@ -555,4 +555,4 @@ class AstFunctionUtils:
             value = Asts.IdentifierAst.from_type(v) if isinstance(v, Asts.TypeAst) and ctor is Asts.GenericCompArgumentNamedAst else v
             final_args.append(ctor(pos=pos_adjust, name=k, value=value))
 
-        return Seq(final_args)
+        return final_args

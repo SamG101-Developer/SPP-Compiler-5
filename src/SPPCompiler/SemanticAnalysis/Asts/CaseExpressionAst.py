@@ -8,7 +8,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol, SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -65,7 +65,9 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __post_init__(self) -> None:
         self.kw_case = self.kw_case or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwCase)
         self.kw_of = self.kw_of or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwOf)
-        assert self.cond is not None
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @staticmethod
     def from_simple(
@@ -115,9 +117,6 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                             ...
                         }
 
-        .. todo::
-            this structure is probably why there is the memory bug for shared symbols in simple-case conditions
-
         :param c1: The position of the AST.
         :param p1: The "case" keyword.
         :param p2: The case expression/condition.
@@ -128,8 +127,8 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Convert condition into an "== true" comparison.
         first_pattern = Asts.PatternVariantExpressionAst(c1, expr=Asts.BooleanLiteralAst.from_python_literal(c1, True))
-        first_branch = Asts.CaseExpressionBranchAst(c1, patterns=Seq([first_pattern]), body=p3)  # todo: "op" need setting?
-        branches = Seq([first_branch]) + p4
+        first_branch = Asts.CaseExpressionBranchAst(c1, patterns=[first_pattern], body=p3)  # todo: "op" need setting?
+        branches = [first_branch] + p4
 
         # Return the case expression.
         out = CaseExpressionAst(c1, p1, Asts.ParenthesizedExpressionAst(p2.pos, expr=p2), branches=branches)
@@ -245,7 +244,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                     binary_ast.analyse_semantics(sm, **kwargs)
 
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
-            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols() if isinstance(s, VariableSymbol)]
+            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols() if s.symbol_type is SymbolType.VariableSymbol]
             old_symbol_mem_info = {s: s.memory_info.consistency_attrs() for s in var_symbols_in_scope}
             branch.analyse_semantics(sm, cond=self.cond, **kwargs)
             new_symbol_mem_info = {s: s.memory_info.consistency_attrs() for s in var_symbols_in_scope}

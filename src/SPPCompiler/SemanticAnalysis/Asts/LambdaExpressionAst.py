@@ -30,6 +30,12 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     _ret_type: Asts.TypeAst = field(default=None)
     """The return type of the lambda expression. Inferred from the body."""
 
+    def __post_init__(self) -> None:
+        self.pc_group = self.pc_group or Asts.LambdaExpressionParameterAndCaptureGroupAst()
+
+    def __hash__(self) -> int:
+        return id(self)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return "".join([

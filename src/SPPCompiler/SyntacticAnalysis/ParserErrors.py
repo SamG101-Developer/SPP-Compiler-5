@@ -25,6 +25,14 @@ class ParserErrors:
             self.pos = -1
             self.expected_tokens = []
 
+        def add_expected_token(self, token: str) -> None:
+            """
+            Add an expected token to the list of expected tokens.
+
+            :param token: The expected token.
+            """
+            self.expected_tokens.append(token)
+
         def throw(self, error_formatter: ErrorFormatter) -> NoReturn:
             # Convert the list of expected tokens into a set of strings.
             all_expected_tokens = OrderedSet(self.expected_tokens)

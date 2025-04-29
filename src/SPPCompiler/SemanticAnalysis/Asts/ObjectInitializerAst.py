@@ -19,7 +19,9 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __post_init__(self) -> None:
         self.object_argument_group = self.object_argument_group or Asts.ObjectInitializerArgumentGroupAst(pos=self.pos)
-        assert self.class_type is not None
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

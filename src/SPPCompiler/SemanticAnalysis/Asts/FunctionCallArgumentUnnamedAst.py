@@ -20,10 +20,6 @@ class FunctionCallArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mi
         self._variant = "Unnamed"
         assert self.value is not None
 
-    def __eq__(self, other: FunctionCallArgumentUnnamedAst) -> bool:
-        # Check both ASTs are the same type and have the same value.
-        return isinstance(other, FunctionCallArgumentUnnamedAst) and self.value == other.value
-
     def __hash__(self) -> int:
         # Get the id of the AST (same as "is" matching).
         return id(self)

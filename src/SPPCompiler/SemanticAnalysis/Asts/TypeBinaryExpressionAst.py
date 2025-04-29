@@ -6,7 +6,6 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
-from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass(slots=True)
@@ -30,7 +29,7 @@ class TypeBinaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
     def convert(self) -> Asts.TypeAst:
         match self.op.token_type:
             case SppTokenType.KwOr:
-                return CommonTypes.Var(self.pos, Seq([self.lhs, self.rhs]))
+                return CommonTypes.Var(self.pos, [self.lhs, self.rhs])
             case _:
                 raise Exception(f"Invalid binary operator '{self.op.token_type}'")
 

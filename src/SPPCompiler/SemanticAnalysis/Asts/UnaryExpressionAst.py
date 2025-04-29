@@ -16,6 +16,9 @@ class UnaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __post_init__(self) -> None:
         assert self.op is not None and self.rhs is not None
 
+    def __hash__(self) -> int:
+        return id(self)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

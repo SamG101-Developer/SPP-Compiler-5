@@ -14,8 +14,7 @@ class TokenAst(Asts.Ast):
     token_data: str = field(default="")
 
     def __eq__(self, other: TokenAst) -> bool:
-        # Check both ASTs are the same type and have the same token.
-        return isinstance(other, TokenAst) and self.token_type == other.token_type
+        return self.token_type == other.token_type
 
     def __hash__(self) -> int:
         # Hash the token type's name into a fixed string and convert it into an integer.

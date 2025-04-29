@@ -104,7 +104,7 @@ class AstBinUtils:
         method_name = BINARY_METHODS.get(ast.op.token_type, None)
         function_call_ast = CodeInjection.inject_code(
             f"{ast.lhs}.{method_name}()", SppParser.parse_postfix_expression, pos_adjust=ast.pos)
-        function_call_ast.op.function_argument_group.arguments = Seq([Asts.FunctionCallArgumentUnnamedAst(value=ast.rhs)])
+        function_call_ast.op.function_argument_group.arguments = [Asts.FunctionCallArgumentUnnamedAst(value=ast.rhs)]
         return function_call_ast
 
     @staticmethod

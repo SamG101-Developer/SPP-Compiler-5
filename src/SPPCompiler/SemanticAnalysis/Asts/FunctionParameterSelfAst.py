@@ -25,10 +25,6 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
         self.type = self.type or CommonTypes.Self(self.pos)
         self._variant = "Self"
 
-    def __eq__(self, other: FunctionParameterSelfAst) -> bool:
-        # Check both ASTs are the same type.
-        return isinstance(other, FunctionParameterSelfAst)
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -45,7 +41,7 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
 
     @property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
-        return Seq([self.name])
+        return [self.name]
 
     @property
     def extract_name(self) -> Asts.IdentifierAst:

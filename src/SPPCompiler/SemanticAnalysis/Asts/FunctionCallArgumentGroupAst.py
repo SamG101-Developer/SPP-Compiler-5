@@ -29,10 +29,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
     def __copy__(self) -> FunctionCallArgumentGroupAst:
         return FunctionCallArgumentGroupAst(arguments=self.arguments.copy())
 
-    def __eq__(self, other: FunctionCallArgumentGroupAst) -> bool:
-        # Check both ASTs are the same type and have the same arguments.
-        return isinstance(other, FunctionCallArgumentGroupAst) and self.arguments == other.arguments
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -97,8 +93,8 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         pins_required = is_async or (target_proto if isinstance(target_proto, Asts.CoroutinePrototypeAst) and not is_coro_resume else None)
 
         # Define the borrow sets to maintain the law of exclusivity.
-        borrows_ref = Seq()
-        borrows_mut = Seq()
+        borrows_ref = []
+        borrows_mut = []
 
         # Begin the analysis of the arguments against each other.
         for argument in self.arguments:
@@ -142,7 +138,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
                     symbol.memory_info.ast_pinned.append(argument.value)
-                    for assign_target in kwargs.get("assignment", Seq()):
+                    for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.symbol_table.add_deferred_callback(assign_target, lambda sym: sym.memory_info.ast_pinned.append(argument.value))
 
                 # Add the mutable borrow to the mutable borrow set.
@@ -157,7 +153,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
                     symbol.memory_info.ast_pinned.append(argument.value)
-                    for assign_target in kwargs.get("assignment", Seq()):
+                    for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.symbol_table.add_deferred_callback(assign_target, lambda sym: sym.memory_info.ast_pinned.append(argument.value))
 
                 # Add the immutable borrow to the immutable borrow set.

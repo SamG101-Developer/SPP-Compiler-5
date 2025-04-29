@@ -26,7 +26,7 @@ class LocalVariableDestructureSkip1ArgumentAst(Asts.Ast, Asts.Mixins.VariableLik
 
     @property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
-        return Seq()
+        return []
 
     @property
     def extract_name(self) -> Asts.IdentifierAst:

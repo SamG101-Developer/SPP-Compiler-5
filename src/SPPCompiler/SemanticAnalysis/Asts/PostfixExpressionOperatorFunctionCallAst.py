@@ -70,8 +70,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
         # Record the "pass" and "fail" overloads
         all_overloads = AstFunctionUtils.get_all_function_scopes(function_name, function_owner_scope)
-        pass_overloads = Seq()
-        fail_overloads = Seq()
+        pass_overloads = []
+        fail_overloads = []
 
         # Create a dummy overload for no-overload identifiers that are function types (lambdas etc).
         if not all_overloads and AstTypeUtils.is_type_functional(lhs_type := lhs.infer_type(sm, **kwargs), sm.current_scope):
@@ -162,7 +162,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     new_overload = fast_deepcopy(function_overload)
                     tm = ScopeManager(sm.global_scope, function_scope)
 
-                    new_overload.generic_parameter_group.parameters = Seq()
+                    new_overload.generic_parameter_group.parameters = []
                     for p in new_overload.function_parameter_group.params.copy():
                         p.type = p.type.substituted_generics(generic_arguments)
                         p.type.analyse_semantics(tm, **kwargs)
@@ -195,7 +195,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                     # Special case for variadic parameters.
                     if isinstance(parameter, Asts.FunctionParameterVariadicAst):
-                        parameter_type = CommonTypes.Tup(parameter.pos, Seq([parameter_type] * len(argument_type.type_parts()[0].generic_argument_group.arguments)))
+                        parameter_type = CommonTypes.Tup(parameter.pos, [parameter_type] * len(argument_type.type_parts()[0].generic_argument_group.arguments))
                         parameter_type.analyse_semantics(sm, **kwargs)
 
                     # Special case for self parameters.
@@ -285,7 +285,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
             coro_return_type = self.infer_type(sm, lhs, **kwargs)
 
             # Find the generator type superimposed over the return type.
-            for super_type in sm.current_scope.get_symbol(coro_return_type).scope.sup_types + Seq([coro_return_type]):
+            for super_type in sm.current_scope.get_symbol(coro_return_type).scope.sup_types + [coro_return_type]:
                 if super_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope):
                     coro_return_type = super_type
                     break
@@ -297,7 +297,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     if is_mutable:
                         outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
 
-                outermost.memory_info.refer_to_asts = Seq([(ast, False) for ast in kwargs.get("assignment", Seq())])
+                outermost.memory_info.refer_to_asts = [(ast, False) for ast in kwargs.get("assignment", [])]
 
             # Mutable reference invalidates all mutable and immutable references.
             elif type(coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_convention()) is Asts.ConventionMutAst:
@@ -305,7 +305,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                 for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
                     outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
 
-                outermost.memory_info.refer_to_asts = Seq([(ast, True) for ast in kwargs.get("assignment", Seq())])
+                outermost.memory_info.refer_to_asts = [(ast, True) for ast in kwargs.get("assignment", [])]
 
 
 __all__ = ["PostfixExpressionOperatorFunctionCallAst"]

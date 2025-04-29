@@ -22,10 +22,6 @@ class FunctionCallArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
         self._variant = "Named"
 
-    def __eq__(self, other: FunctionCallArgumentNamedAst) -> bool:
-        # Check both ASTs are the same type and have the same name and value.
-        return isinstance(other, FunctionCallArgumentNamedAst) and self.name == other.name and self.value == other.value
-
     def __hash__(self) -> int:
         # Get the id of the AST (same as "is" matching).
         return id(self)

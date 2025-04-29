@@ -18,7 +18,9 @@ class ParenthesizedExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __post_init__(self) -> None:
         self.tok_l = Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
         self.tok_r = Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightParenthesis)
-        assert self.expr is not None
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

@@ -31,7 +31,7 @@ class LocalVariableDestructureSkipNArgumentsAst(Asts.Ast, Asts.Mixins.VariableLi
 
     @property
     def extract_names(self) -> Seq[Asts.IdentifierAst]:
-        return self.binding.extract_names if self.binding else Seq()
+        return self.binding.extract_names if self.binding else []
 
     @property
     def extract_name(self) -> Asts.IdentifierAst:

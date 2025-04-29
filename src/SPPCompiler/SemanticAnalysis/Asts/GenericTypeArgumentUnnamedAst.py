@@ -16,7 +16,6 @@ class GenericTypeArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Unnamed"
 
     def __eq__(self, other: GenericTypeArgumentUnnamedAst) -> bool:
-        # Check both ASTs are the same type and have the same value.
         return isinstance(other, GenericTypeArgumentUnnamedAst) and self.value == other.value
 
     def __deepcopy__(self, memodict=None) -> GenericTypeArgumentUnnamedAst:

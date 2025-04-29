@@ -15,6 +15,13 @@ class StringLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __post_init__(self) -> None:
         self.value = self.value or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.LxString)
 
+    def __eq__(self, other: StringLiteralAst) -> bool:
+        # Needed for cmp-generic arg checking
+        return self.value.token_data == other.value.token_data
+
+    def __hash__(self) -> int:
+        return id(self)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

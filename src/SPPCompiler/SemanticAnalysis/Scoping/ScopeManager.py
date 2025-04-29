@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Iterator, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol, SymbolType
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -83,7 +83,7 @@ class ScopeManager:
         for scope in self:
 
             # Only check type and alias symbols that are not generic (ie not the T type for Vec[T]).
-            non_generic_type_symbols = [s for s in scope._symbol_table.all() if isinstance(s, TypeSymbol) and not s.is_generic]
+            non_generic_type_symbols = [s for s in scope._symbol_table.all() if s.symbol_type is SymbolType.TypeSymbol and not s.is_generic]
             for symbol in non_generic_type_symbols:
 
                 # Check the type is a generic implementation (ie Vec[Str]), and remove the symbol.

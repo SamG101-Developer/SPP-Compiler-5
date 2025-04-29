@@ -28,10 +28,6 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         # Create a shallow copy of the AST.
         return ObjectInitializerArgumentGroupAst(arguments=self.arguments.copy())
 
-    def __eq__(self, other: ObjectInitializerArgumentGroupAst) -> bool:
-        # Check both ASTs are the same type and have the same arguments.
-        return isinstance(other, ObjectInitializerArgumentGroupAst) and self.arguments == other.arguments
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -69,7 +65,7 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         all_attributes = [(c, class_symbol.scope) for c in class_symbol.type.body.members]
         for sup_scope in class_symbol.scope.sup_scopes:
             if isinstance(sup_scope._ast, Asts.ClassPrototypeAst):
-                all_attributes += Seq([(c, sup_scope) for c in sup_scope._ast.body.members])
+                all_attributes += [(c, sup_scope) for c in sup_scope._ast.body.members]
         all_attribute_names = [a[0].name for a in all_attributes]
 
         # Check there are no duplicate argument names.

@@ -17,7 +17,7 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
         self.tok_dbl_colon = self.tok_dbl_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDoubleColon)
 
     def __eq__(self, other: TypeUnaryOperatorNamespaceAst) -> bool:
-        return self.name == other.name
+        return self.name.value == other.name.value
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -34,10 +34,10 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
         return self.tok_dbl_colon.pos_end
 
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        return Seq([self.name])
+        return [self.name]
 
     def type_parts(self) -> Seq[Asts.GenericIdentifierAst]:
-        return Seq()
+        return []
 
 
 __all__ = [

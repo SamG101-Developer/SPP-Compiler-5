@@ -19,6 +19,9 @@ class PostfixExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __eq__(self, other: PostfixExpressionAst) -> bool:
         return isinstance(other, PostfixExpressionAst) and self.lhs == other.lhs and self.op == other.op
 
+    def __hash__(self) -> int:
+        return id(self)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

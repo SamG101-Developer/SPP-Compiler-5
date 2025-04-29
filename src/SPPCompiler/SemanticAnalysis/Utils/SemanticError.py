@@ -33,7 +33,7 @@ class SemanticError(BaseException):
 
     def __init__(self, *args) -> None:
         super().__init__(args)
-        self.error_info = Seq()
+        self.error_info = []
 
     def add(self, *args, **kwargs) -> SemanticError:
         ...

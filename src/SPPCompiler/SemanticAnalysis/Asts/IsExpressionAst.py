@@ -23,7 +23,9 @@ class IsExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __post_init__(self) -> None:
         self.op = self.op or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwIs)
-        assert self.lhs is not None and self.rhs is not None
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

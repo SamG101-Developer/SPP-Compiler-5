@@ -42,9 +42,12 @@ class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     value: Asts.TokenAst = field(default=None)
     type: Optional[Asts.TypeAst] = field(default=None)
 
+    def __hash__(self) -> int:
+        return id(self)
+
     def __eq__(self, other: IntegerLiteralAst) -> bool:
-        # Check both ASTs are the same type and have the same sign, value and type.
-        return isinstance(other, IntegerLiteralAst) and self.tok_sign == other.tok_sign and self.value.token_data == other.value.token_data and self.type == other.type
+        # Needed for cmp-generic arg checking
+        return isinstance(other, IntegerLiteralAst) and self.tok_sign == other.tok_sign and self.value.token_data == other.value.token_data
 
     @staticmethod
     def from_token(value: Asts.TokenAst, pos: int = 0) -> IntegerLiteralAst:

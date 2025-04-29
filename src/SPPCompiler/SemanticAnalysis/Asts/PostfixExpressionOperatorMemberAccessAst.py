@@ -7,10 +7,9 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol, SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass(slots=True)
@@ -55,6 +54,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         return self.tok_access.token_type == SppTokenType.TkDoubleColon
 
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
+        # The NamespaceSymbol type check seems dumb but check hack in "elif" block beneath.
         lhs_type = lhs.infer_type(sm)
         lhs_symbol = sm.current_scope.get_symbol(lhs_type) if not isinstance(lhs_type, NamespaceSymbol) else lhs_type
 
@@ -68,11 +68,11 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         field_symbol = lhs_symbol.scope.get_symbol(self.field, exclusive=True)
 
         # Accessing a member from the scope by the identifier.
-        if isinstance(self.field, Asts.IdentifierAst) and isinstance(field_symbol, VariableSymbol):
+        if isinstance(self.field, Asts.IdentifierAst) and field_symbol.symbol_type is SymbolType.VariableSymbol:
             attribute_type = field_symbol.type
             return attribute_type
 
-        elif isinstance(self.field, Asts.IdentifierAst) and isinstance(field_symbol, NamespaceSymbol):
+        elif isinstance(self.field, Asts.IdentifierAst) and field_symbol.symbol_type is SymbolType.NamespaceSymbol:
             attribute_type = field_symbol
             return attribute_type
 
@@ -122,7 +122,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
             lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
             # Check the lhs is a variable and not a namespace.
-            if isinstance(lhs_symbol, NamespaceSymbol):
+            if lhs_symbol.symbol_type is SymbolType.NamespaceSymbol:
                 raise SemanticErrors.MemberAccessStaticOperatorExpectedError().add(
                     lhs, self.tok_access).scopes(sm.current_scope)
 
@@ -133,7 +133,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         
             # Check the attribute exists on the lhs. todo
             if not lhs_symbol.scope.has_symbol(self.field):
-                alternatives = Seq()  # lhs_symbol.scope.all_symbols().map_attr("name")
+                alternatives = []  # lhs_symbol.scope.all_symbols().map_attr("name")
                 closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "runtime member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
@@ -144,7 +144,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
             lhs_ns_symbol = sm.current_scope.get_namespace_symbol(lhs)
 
             # Check the lhs is a namespace and not a variable.
-            if isinstance(lhs_symbol, VariableSymbol):
+            if lhs_symbol is not None and lhs_symbol.symbol_type is SymbolType.VariableSymbol:
                 raise SemanticErrors.MemberAccessRuntimeOperatorExpectedError().add(
                     lhs, self.tok_access).scopes(sm.current_scope)
         

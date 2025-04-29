@@ -23,7 +23,9 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __post_init__(self) -> None:
         self.kw_loop = self.kw_loop or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwLoop)
-        assert self.cond is not None and self.body is not None
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

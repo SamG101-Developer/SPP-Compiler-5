@@ -22,11 +22,6 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
         self._variant = "Optional"
-        assert self.variable is not None and self.type is not None and self.default is not None
-
-    def __eq__(self, other: FunctionParameterOptionalAst) -> bool:
-        # Check both ASTs are the same type and have the same variable.
-        return isinstance(other, FunctionParameterOptionalAst) and self.variable == other.variable
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

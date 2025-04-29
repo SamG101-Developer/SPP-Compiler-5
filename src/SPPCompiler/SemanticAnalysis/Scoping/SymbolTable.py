@@ -44,11 +44,9 @@ class SymbolTable:
         # Check if a symbol is in the table.
         return name in self._table
 
-    def all(self, match_type: type = None) -> Seq[Symbol]:
+    def all(self) -> Seq[Symbol]:
         # Get all symbols in the table.
-        if match_type is not None:
-            return Seq([symbol for name, symbol in self._table.items() if isinstance(name, match_type)])
-        return Seq([*self._table.values()])
+        return [*self._table.values()]
 
     def add_deferred_callback(self, symbol_name: Asts.IdentifierAst | Asts.GenericIdentifierAst, callback: Callable) -> None:
         # Add a deferred callback.

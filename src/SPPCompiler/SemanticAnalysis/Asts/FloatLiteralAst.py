@@ -38,13 +38,7 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.decimal_value = self.decimal_value or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.LxNumber)
 
     def __eq__(self, other: FloatLiteralAst) -> bool:
-        # Check both ASTs are the same type and have the same sign, value and type.
-        return all([
-            isinstance(other, FloatLiteralAst),
-            self.tok_sign == other.tok_sign,
-            self.integer_value.token_data == other.integer_value.token_data,
-            self.decimal_value.token_data == other.decimal_value.token_data,
-            self.type == other.type])
+        return isinstance(other, FloatLiteralAst) and self.tok_sign == other.tok_sign and self.integer_value.token_data == other.integer_value.token_data and self.decimal_value.token_data == other.decimal_value.token_data
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

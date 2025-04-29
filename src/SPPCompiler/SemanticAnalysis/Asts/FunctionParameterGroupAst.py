@@ -28,10 +28,6 @@ class FunctionParameterGroupAst(Asts.Ast):
     def __copy__(self) -> FunctionParameterGroupAst:
         return FunctionParameterGroupAst(params=self.params.copy())
 
-    def __eq__(self, other: FunctionParameterGroupAst) -> bool:
-        # Check both ASTs are the same type and have the same parameters.
-        return isinstance(other, FunctionParameterGroupAst) and self.params == other.params
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

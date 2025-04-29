@@ -30,7 +30,7 @@ class GenericParameterGroupAst(Asts.Ast):
 
     def __eq__(self, other: GenericParameterGroupAst) -> bool:
         # Check both ASTs are the same type and have the same parameters.
-        return isinstance(other, GenericParameterGroupAst) and self.parameters == other.parameters
+        return self.parameters == other.parameters
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

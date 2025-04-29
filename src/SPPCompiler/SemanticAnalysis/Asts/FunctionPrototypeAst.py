@@ -34,16 +34,6 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     _cold: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
     _hot: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
 
-    def __eq__(self, other: FunctionPrototypeAst) -> bool:
-        # Check both ASTs are the same type and have the same name, generic parameter group, function parameter group,
-        # return type and where block.
-        return all([
-            self.name == other.name,
-            self.generic_parameter_group == other.generic_parameter_group,
-            self.function_parameter_group == other.function_parameter_group,
-            self.return_type == other.return_type,
-            self.where_block == other.where_block])
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -81,7 +71,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Substitute the "Self" parameter's type with the name of the method.
         generic_substitution = Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(pos=0), value=ctx.name)
-        generic_substitution = Seq([generic_substitution])
+        generic_substitution = [generic_substitution]
         if not isinstance(ctx, Asts.ModulePrototypeAst) and self.function_parameter_group.get_self_param():
             self.function_parameter_group.get_self_param()._true_self_type = ctx.name
             self.function_parameter_group.get_self_param().type = self.function_parameter_group.get_self_param().type.substituted_generics(generic_substitution)
@@ -99,7 +89,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         function_call = Asts.IdentifierAst(self.name.pos, "call")
 
         # If this is the first overload being converted, then the class needs to be made for the type.
-        if not [m for m in ctx.body.members if isinstance(m, Asts.ClassPrototypeAst) and m.name == mock_class_name]:
+        if not [m for m in ctx.body.members if isinstance(m, Asts.ClassPrototypeAst) and m.name.without_generics() == mock_class_name.without_generics()]:
             mock_class_ast = Asts.ClassPrototypeAst(
                 name=mock_class_name)
             mock_constant_ast = Asts.CmpStatementAst(
@@ -110,7 +100,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         # Superimpose the function type over the mock class. Todo: switch to parser?
         function_ast = self
         function_ast._orig = self.name
-        mock_superimposition_body = Asts.SupImplementationAst(members=Seq([function_ast]))
+        mock_superimposition_body = Asts.SupImplementationAst(members=[function_ast])
         mock_superimposition = Asts.SupPrototypeExtensionAst(
             pos=self.pos, generic_parameter_group=self.generic_parameter_group, name=mock_class_name,
             super_class=function_type, where_block=self.where_block, body=mock_superimposition_body, _ctx=self._ctx)

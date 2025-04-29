@@ -30,11 +30,10 @@ class GenericArgumentGroupAst(Asts.Ast):
         return GenericArgumentGroupAst(tok_l=self.tok_l, arguments=fast_deepcopy(self.arguments), tok_r=self.tok_r)
 
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
-        # Check both ASTs are the same type and have the same arguments.
         return self.arguments == other.arguments
 
     def __getitem__(self, item: str) -> Optional[Asts.GenericArgumentAst]:
-        assert isinstance(item, str), type(item)
+        # assert isinstance(item, str), type(item)
         args = [a for a in self.arguments if Asts.IdentifierAst.from_type(a.name).value == item]
         return args[0] if args else None
 
@@ -59,7 +58,7 @@ class GenericArgumentGroupAst(Asts.Ast):
 
     @staticmethod
     def from_dict(dictionary: dict[Asts.TypeAst, Asts.ExpressionAst | Asts.TypeAst]) -> GenericArgumentGroupAst:
-        args = Seq()
+        args = []
         for arg_name, arg_val in dictionary.items():
             if isinstance(arg_val, Asts.TypeAst):
                 args.append(Asts.GenericTypeArgumentNamedAst(name=arg_name, value=arg_val))

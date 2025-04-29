@@ -137,9 +137,7 @@ class AstMemoryUtils:
         """
 
         # Todo: coroutine returns can be borrows - check moving logic here, as the outermost part may not be symbolic.
-        # Todo: copyable attribute aren't checked I don't think (always get marked as moved)
-
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
 
         # For tuple and array literals, analyse each element (recursively). This ensures that all elements are
         # memory-integral such that the entire tuple or array is memory-integral.
@@ -159,7 +157,7 @@ class AstMemoryUtils:
 
         # An identifier that is a namespace cannot be used as an expression. As all expressions are analysed in this
         # function, the check is performed here.
-        if isinstance(symbol, NamespaceSymbol):
+        if symbol.symbol_type is SymbolType.NamespaceSymbol:
             raise SemanticErrors.ExpressionTypeInvalidError().add(
                 value_ast).scopes(sm.current_scope)
 

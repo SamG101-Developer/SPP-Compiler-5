@@ -152,10 +152,9 @@ class CommonTypes:
                         value="Arr",
                         generic_argument_group=Asts.GenericArgumentGroupAst(
                             pos=pos,
-                            arguments=Seq([
+                            arguments=[
                                 Asts.GenericTypeArgumentUnnamedAst(value=elem_type),
                                 Asts.GenericCompArgumentUnnamedAst(value=size)]
-                            )
                         )
                     )
                 )

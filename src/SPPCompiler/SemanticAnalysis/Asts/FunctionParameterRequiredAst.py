@@ -20,10 +20,6 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.variable = self.variable or Asts.LocalVariableSingleIdentifierAst(pos=self.pos, name=Asts.IdentifierAst(pos=self.pos, value=f"$l{id(self)}"))
         self._variant = "Required"
 
-    def __eq__(self, other: FunctionParameterRequiredAst) -> bool:
-        # Check both ASTs are the same type and have the same variable.
-        return isinstance(other, FunctionParameterRequiredAst) and self.variable == other.variable
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

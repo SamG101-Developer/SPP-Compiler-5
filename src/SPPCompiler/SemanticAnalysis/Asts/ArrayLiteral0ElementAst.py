@@ -48,6 +48,12 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.tok_comma = self.tok_comma or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkComma)
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightSquareBracket)
 
+    def __eq__(self, other: ArrayLiteral0ElementAst) -> bool:
+        return isinstance(other, ArrayLiteral0ElementAst)
+
+    def __hash__(self) -> int:
+        return id(self)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

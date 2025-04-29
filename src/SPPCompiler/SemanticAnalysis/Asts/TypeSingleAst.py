@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
@@ -76,7 +76,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         return self
 
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        return Seq([self.name])
+        return [self.name]
 
     def without_generics(self) -> Self:
         return TypeSingleAst(self.pos, self.name.without_generics())
@@ -151,10 +151,10 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         self_symbol = self_scope.get_symbol(self.name)
         that_symbol = that_scope.get_symbol(that.name)
 
-        if debug:
-            print("-" * 100)
-            print("SELF", self, self_scope, self_symbol)
-            print("THAT", that, that_scope, that_symbol)
+        # if debug:
+        #     print("-" * 100)
+        #     print("SELF", self, self_scope, self_symbol)
+        #     print("THAT", that, that_scope, that_symbol)
 
         # Variant type: one of the generic arguments must match the type.
         if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, self_scope, that_scope, check_variant=False):
@@ -176,7 +176,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         if type_symbol.is_generic: return
 
         # Name all the generic arguments.
-        is_tuple = type_symbol.fq_name.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE
+        is_tuple = type_symbol.fq_name.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE  # Think this is ok...
         AstFunctionUtils.name_generic_arguments(
             self.name.generic_argument_group.arguments,
             type_symbol.type.generic_parameter_group.parameters,
@@ -203,7 +203,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             new_scope = AstTypeUtils.create_generic_scope(sm, self.name, type_symbol, is_tuple=is_tuple)
 
             # Handle type aliasing (providing generics to the original type).
-            if isinstance(type_symbol, AliasSymbol):
+            if type_symbol.symbol_type is SymbolType.AliasSymbol:
                 # Substitute the old type: "Opt[Str]" => "Var[Some[Str], None]"
                 generics = self.name.generic_argument_group.arguments + original_type_scope.generics
                 old_type = type_symbol.old_sym.fq_name.substituted_generics(generics)

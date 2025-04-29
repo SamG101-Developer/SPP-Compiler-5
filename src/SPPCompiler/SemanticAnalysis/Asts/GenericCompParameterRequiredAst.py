@@ -26,7 +26,6 @@ class GenericCompParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Required"
 
     def __eq__(self, other: GenericCompParameterRequiredAst) -> bool:
-        # Check both ASTs are the same type and have the same name.
         return isinstance(other, GenericCompParameterRequiredAst) and self.name == other.name
 
     @ast_printer_method

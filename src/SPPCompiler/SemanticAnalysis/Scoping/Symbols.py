@@ -3,9 +3,8 @@ from __future__ import annotations
 import copy
 import json
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Dict, Optional, TYPE_CHECKING
-
-import json_fix
 
 from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
 from SPPCompiler.SemanticAnalysis import Asts
@@ -17,13 +16,26 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
+class SymbolType(Enum):
+    NamespaceSymbol = "namespace"
+    VariableSymbol = "variable"
+    TypeSymbol = "type"
+    AliasSymbol = "alias"
+
+
 @dataclass(slots=True, kw_only=True)
-class NamespaceSymbol:
+class BaseSymbol:
+    symbol_type: SymbolType = field(default=None)
+
+
+@dataclass(slots=True, kw_only=True)
+class NamespaceSymbol(BaseSymbol):
     name: Asts.IdentifierAst
     scope: Optional[Scope] = field(default=None)
 
     def __post_init__(self) -> None:
         # Ensure the name is an IdentifierAst.
+        self.symbol_type = SymbolType.NamespaceSymbol
         assert isinstance(self.name, Asts.IdentifierAst)
 
     def __json__(self) -> Dict:
@@ -40,7 +52,7 @@ class NamespaceSymbol:
 
 
 @dataclass(slots=True, kw_only=True)
-class VariableSymbol:
+class VariableSymbol(BaseSymbol):
     name: Asts.IdentifierAst
     type: Asts.TypeAst
     is_mutable: bool = field(default=False)
@@ -50,6 +62,7 @@ class VariableSymbol:
 
     def __post_init__(self) -> None:
         # Ensure the name is an IdentifierAst, and the type is a TypeAst.
+        self.symbol_type = SymbolType.VariableSymbol
         assert isinstance(self.name, Asts.IdentifierAst)
         assert isinstance(self.type, Asts.TypeAst)
 
@@ -72,7 +85,7 @@ class VariableSymbol:
 
 
 @dataclass(slots=True, kw_only=True)
-class TypeSymbol:
+class TypeSymbol(BaseSymbol):
     name: Asts.GenericIdentifierAst
     type: Optional[Asts.ClassPrototypeAst]
     scope: Optional[Scope] = field(default=None)
@@ -87,6 +100,7 @@ class TypeSymbol:
 
     def __post_init__(self) -> None:
         # Ensure the name is a GenericIdentifierAst, and the type is a ClassPrototypeAst or None.
+        self.symbol_type = SymbolType.TypeSymbol
         assert isinstance(self.name, Asts.GenericIdentifierAst)
         assert isinstance(self.type, Asts.ClassPrototypeAst) or self.type is None
 
@@ -116,13 +130,11 @@ class TypeSymbol:
     @property
     def fq_name(self) -> Asts.TypeAst:
         fq_name = Asts.TypeSingleAst.from_generic_identifier(self.name)
-        # if self.type:
-        #     fq_name = fq_name.sub_generics(Asts.GenericArgumentGroupAst.from_parameter_group(self.type.generic_parameter_group.parameters).arguments)
 
         if self.is_generic:
             return fq_name
 
-        if isinstance(self, AliasSymbol):
+        if self.symbol_type is SymbolType.AliasSymbol:
             return fq_name
 
         if self.name.value[0] == "$":
@@ -131,24 +143,20 @@ class TypeSymbol:
         if self.name.value == "Self":
             return self.scope.type_symbol.fq_name
 
-        # for i, generic in enumerate(self.name.generic_argument_group.arguments.copy()):
-        #     if isinstance(generic, Asts.GenericTypeArgumentAst):
-        #         self.name.generic_argument_group.arguments[i].value = self.scope.get_symbol(generic.value).fq_name if self.scope.has_symbol(generic.value) else generic.value
-
         scope = self.scope.parent_module
         while scope.parent:
-            if isinstance(scope.name, Asts.IdentifierAst):
-                fq_name = Asts.TypeUnaryExpressionAst(pos=fq_name.pos, op=Asts.TypeUnaryOperatorNamespaceAst(pos=scope.name.pos, name=scope.name), rhs=fq_name)
-            else:
-                raise NotImplementedError("Nested types are not supported yet.")
+            fq_name = Asts.TypeUnaryExpressionAst(pos=fq_name.pos, op=Asts.TypeUnaryOperatorNamespaceAst(pos=scope.name.pos, name=scope.name), rhs=fq_name)
             scope = scope.parent
-
         return fq_name.with_convention(self.convention)
 
 
 @dataclass(slots=True, kw_only=True)
 class AliasSymbol(TypeSymbol):
     old_sym: TypeSymbol = field(default=None)
+
+    def __post_init__(self) -> None:
+        TypeSymbol.__post_init__(self)
+        self.symbol_type = SymbolType.AliasSymbol
 
     def __json__(self) -> Dict:
         # Dump the AliasSymbol as a JSON object.
@@ -163,7 +171,8 @@ class AliasSymbol(TypeSymbol):
             is_copyable=self.is_copyable, visibility=self.visibility, old_sym=fast_deepcopy(self.old_sym))
 
 
-type Symbol = AliasSymbol | NamespaceSymbol | VariableSymbol | TypeSymbol
+type Symbol = NamespaceSymbol | VariableSymbol | TypeSymbol | AliasSymbol
+
 
 __all__ = [
     "Symbol",

@@ -21,6 +21,12 @@ class TupleLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightParenthesis)
 
+    def __eq__(self, other: TupleLiteralAst) -> bool:
+        return self.elems == other.elems
+
+    def __hash__(self) -> int:
+        return id(self)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
