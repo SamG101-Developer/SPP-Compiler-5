@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
 
@@ -43,7 +42,7 @@ type VisibilityPair = Tuple[Optional[Visibility], Optional[Asts.AnnotationAst]]
 
 
 @dataclass
-class VisibilityEnabledAst(ABC):
+class VisibilityEnabledAst:
     """!
     Visibility enabled Asts contain an attribute pertaining to the visibility of the object. The visibility of an object
     is a pair of the type os visibility (from the enumeration), and the annotationAst that marked the visibility (for

@@ -23,7 +23,7 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
         return hash(self.name)
 
     def __str__(self) -> str:
-        return f"{self.name}{self.tok_dbl_colon}"
+        return f"{self.name}::"
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

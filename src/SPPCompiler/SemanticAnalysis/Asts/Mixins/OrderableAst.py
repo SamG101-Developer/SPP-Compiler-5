@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass, field
 
 
 @dataclass
-class OrderableAst(ABC):
+class OrderableAst:
     """!
     An OrderableAst is an AST that should be ordered inside its associated group. For example, all parameter and
     argument ASTs are OrderableAsts, because in a function parameter grop, required parameters should precede optional

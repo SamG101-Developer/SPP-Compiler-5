@@ -53,10 +53,10 @@ class Progress:
 
         # Create the subtext label, describing the current step, and pad it to the end of the bar.
         if self._current_value == self._max_value:
-            label = f"100% ✅  ({time.time() - self._start_time:.3f}s)"
+            label = f"100%  ({time.time() - self._start_time:.3f}s)"
         else:
             pad_0 = " " * (3 - len(str(int(percentage))))
-            label = f"{pad_0}{int(percentage)}% ⏳  ({self._current_label})"
+            label = f"{pad_0}{int(percentage)}%  ({self._current_label})"
         label = f"{color}{label}{reset}"
 
         # Create the colour of the progress bar depending on the percentage complete.

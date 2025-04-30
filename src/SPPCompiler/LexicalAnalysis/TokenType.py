@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from enum import Enum
+from fastenum import Enum
 
 
 class TokenType(Enum):

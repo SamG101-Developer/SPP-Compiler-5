@@ -19,8 +19,8 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     op: Asts.TypeUnaryOperatorAst = field(default=None)
     rhs: Asts.TypeAst = field(default=None)
 
-    def __eq__(self, that: TypeUnaryExpressionAst) -> bool:
-        return isinstance(that, TypeUnaryExpressionAst) and type(self.op) is type(that.op) and self.op == that.op and self.rhs == that.rhs
+    def __eq__(self, other: TypeUnaryExpressionAst) -> bool:
+        return isinstance(other, TypeUnaryExpressionAst) and type(self.op) is type(other.op) and self.op == other.op and self.rhs == other.rhs
 
     def __hash__(self) -> int:
         return hash((self.op, self.rhs))

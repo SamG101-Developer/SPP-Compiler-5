@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Self, Optional, Tuple, TYPE_CHECKING
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(slots=True)
-class AbstractTypeTemporaryAst(ABC):
+class AbstractTypeTemporaryAst:
     """
     The AbstractTypeTemporaryAst is a temporary type ast that is used or instant-conversion purposes. The ast that it is
     inherited by will only be created for conversion purposes, ie shorthand type syntax.

@@ -18,14 +18,14 @@ from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 @dataclass(slots=True)
 class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
-    tok_fun: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwFun))
+    tok_fun: Asts.TokenAst = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
-    generic_parameter_group: Asts.GenericParameterGroupAst = field(default_factory=lambda: Asts.GenericParameterGroupAst())
-    function_parameter_group: Asts.FunctionParameterGroupAst = field(default_factory=lambda: Asts.FunctionParameterGroupAst())
-    tok_arrow: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkArrowR))
+    generic_parameter_group: Asts.GenericParameterGroupAst = field(default=None)
+    function_parameter_group: Asts.FunctionParameterGroupAst = field(default=None)
+    tok_arrow: Asts.TokenAst = field(default=None)
     return_type: Asts.TypeAst = field(default=None)
-    where_block: Asts.WhereBlockAst = field(default_factory=lambda: Asts.WhereBlockAst())
-    body: Asts.FunctionImplementationAst = field(default_factory=lambda: Asts.FunctionImplementationAst())
+    where_block: Asts.WhereBlockAst = field(default=None)
+    body: Asts.FunctionImplementationAst = field(default=None)
 
     _orig: Optional[Asts.IdentifierAst] = field(default=None, kw_only=True, repr=False)
     _abstract: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
@@ -33,6 +33,14 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     _non_implemented: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
     _cold: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
     _hot: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
+
+    def __post_init__(self) -> None:
+        self.tok_fun = self.tok_fun or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwFun)
+        self.function_parameter_group = self.function_parameter_group or Asts.FunctionParameterGroupAst()
+        self.generic_parameter_group = self.generic_parameter_group or Asts.GenericParameterGroupAst()
+        self.where_block = self.where_block or Asts.WhereBlockAst()
+        self.body = self.body or Asts.FunctionImplementationAst()
+        self.tok_arrow = self.tok_arrow or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkArrowR)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

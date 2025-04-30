@@ -19,14 +19,10 @@ if TYPE_CHECKING:
 
 @dataclass(slots=True)
 class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
-    name: Asts.GenericIdentifierAst = field(default_factory=lambda: Asts.GenericIdentifierAst())
+    name: Asts.GenericIdentifierAst = field(default=None)
 
     def __eq__(self, other: TypeSingleAst) -> bool:
-        if isinstance(other, Asts.TypeSingleAst):
-            return self.name == other.name
-        elif isinstance(other, Asts.IdentifierAst):
-            return self.name.value == other.value
-        return False
+        return isinstance(other, Asts.TypeSingleAst) and self.name == other.name or isinstance(other, Asts.IdentifierAst) and self.name.value == other.value
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -47,6 +43,9 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
     def __str__(self) -> str:
         return f"{self.name}"
+
+    def __post_init__(self) -> None:
+        self.name = self.name or Asts.GenericIdentifierAst(pos=self.pos)
 
     @staticmethod
     def from_identifier(ast: Asts.IdentifierAst) -> TypeSingleAst:

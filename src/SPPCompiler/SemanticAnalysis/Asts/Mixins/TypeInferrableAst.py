@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-class TypeInferrable(ABC):
+class TypeInferrable:
     """!
     The TypeInferrable class allows for the resulting type of evaluating the code that created an AST, to be determined.
     Every expression-based AST, and a few others, are type inferrable.

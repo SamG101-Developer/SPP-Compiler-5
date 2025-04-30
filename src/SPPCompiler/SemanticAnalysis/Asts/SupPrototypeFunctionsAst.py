@@ -93,7 +93,7 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         # Ensure all the generic arguments are unnamed and match the class's generic parameters.
         other_cls_symbol = sm.current_scope.get_symbol(self.name.without_generics(), ignore_alias=True)
         for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
-            if isinstance(generic_arg, Asts.GenericArgumentNamedAst.__args__):
+            if isinstance(generic_arg, Asts.GenericArgumentNamedAst):
                 raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(
                     generic_arg).scopes(sm.current_scope)
 

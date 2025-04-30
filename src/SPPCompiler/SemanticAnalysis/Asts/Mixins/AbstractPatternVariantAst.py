@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass
 
 from SPPCompiler.SemanticAnalysis import Asts
 
 
 @dataclass(slots=True)
-class AbstractPatternVariantAst(ABC):
+class AbstractPatternVariantAst:
     """
     The AbstractPatternVariantAst class is a mixin that provides the ability to convert an instance of a pattern variant
     into a corresponding local variable declaration. This is because most of the patterns are mirrors of creating

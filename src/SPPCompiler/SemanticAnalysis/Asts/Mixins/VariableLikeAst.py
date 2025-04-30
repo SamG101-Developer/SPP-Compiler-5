@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -9,7 +9,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
-class VariableLikeAst(ABC):
+class VariableLikeAst:
     UNMATCHABLE_VARIABLE: Final[str] = field(default="_UNMATCHABLE", init=False, repr=False)
 
     """!

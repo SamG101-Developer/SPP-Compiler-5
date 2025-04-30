@@ -3,6 +3,19 @@
 S++ conditional blocks combine standard if-else statements with pattern-matching. This simplifies the language by
 reducing the number of constructs needed to handle conditional logic.
 
+A wide range of pattern matching is supported:
+- Literals: `1`, `1.0`, `true`, `false`, `"hello"`
+- Wildcards: `_`
+- Capture variables: `x`, `y`, `z`
+- Or patterns: `"yes" | "no"`
+- Array destructuring: `[1, 2, 3]`
+- Tuple destructuring: `(1, 2, 3)`
+- Object destructuring: `Person(name="john", age=30)`
+- Guard clauses: `and ...`
+- Attribute aliasing: `Person(name as new_name, age)`
+- Skipping multiple elements: `[1, .., last]`, `(1, .., last)`, `Person(name="john", ..)`
+- Nested destructuring: `[a, (0, y, z), Person(name="john", ..), _, other, ..]`
+
 ## Basic Branching
 
 The following example shows the most basic version of the `case-else` block. It follows the standard `if-else` syntax of
