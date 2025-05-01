@@ -4,14 +4,13 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-from SPPCompiler.Utils.Sequence import Seq
 
 BINARY_METHODS = {
-    SppTokenType.TkPlus: "add", SppTokenType.TkMinus: "sub", SppTokenType.TkMultiply: "mul", SppTokenType.TkDivide: "div",
-    SppTokenType.TkRemainder: "rem", SppTokenType.TkModulo: "mod", SppTokenType.TkExponent: "pow", SppTokenType.KwAnd: "and_",
-    SppTokenType.KwOr: "ior_", SppTokenType.TkEq: "eq", SppTokenType.TkNe: "ne", SppTokenType.TkLt: "lt",
-    SppTokenType.TkGt: "gt", SppTokenType.TkLe: "le", SppTokenType.TkGe: "ge",
-    SppTokenType.TkPlusAssign: "add_assign", SppTokenType.TkMinusAssign: "sub_assign",
+    SppTokenType.TkPlus: "add", SppTokenType.TkMinus: "sub", SppTokenType.TkMultiply: "mul",
+    SppTokenType.TkDivide: "div", SppTokenType.TkRemainder: "rem", SppTokenType.TkModulo: "mod",
+    SppTokenType.TkExponent: "pow", SppTokenType.KwAnd: "and", SppTokenType.KwOr: "ior", SppTokenType.TkEq: "eq",
+    SppTokenType.TkNe: "ne", SppTokenType.TkLt: "lt", SppTokenType.TkGt: "gt", SppTokenType.TkLe: "le",
+    SppTokenType.TkGe: "ge", SppTokenType.TkPlusAssign: "add_assign", SppTokenType.TkMinusAssign: "sub_assign",
     SppTokenType.TkMultiplyAssign: "mul_assign", SppTokenType.TkDivideAssign: "div_assign",
     SppTokenType.TkRemainderAssign: "rem_assign", SppTokenType.TkModuloAssign: "mod_assign",
     SppTokenType.TkExponentAssign: "pow_assign",
@@ -87,7 +86,7 @@ class AstBinUtils:
         """
 
         # Check the lhs is a binary expression with a comparison operator.
-        if not isinstance(ast.lhs, Asts.BinaryExpressionAst) or ast.op.token_type not in BINARY_COMPARISON_OPERATORS:
+        if not isinstance(ast.lhs, Asts.BinaryExpressionAst) or ast.op.token_type not in BINARY_COMPARISON_OPERATORS or ast.lhs.op.token_type not in BINARY_COMPARISON_OPERATORS:
             return ast
 
         # Otherwise, split the lhs into two binary expressions recursively.
