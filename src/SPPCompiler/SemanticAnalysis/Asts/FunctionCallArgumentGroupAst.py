@@ -7,6 +7,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
@@ -70,7 +71,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
                 # Check the argument type is a tuple
                 tuple_argument_type = argument.infer_type(sm, **kwargs)
-                if not tuple_argument_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope):
+                if not AstTypeUtils.is_type_tuple(tuple_argument_type, sm.current_scope):
                     raise SemanticErrors.ArgumentTupleExpansionOfNonTupleError().add(argument.value, tuple_argument_type).scopes(sm.current_scope)
 
                 # Replace the tuple-expansion argument with the expanded arguments

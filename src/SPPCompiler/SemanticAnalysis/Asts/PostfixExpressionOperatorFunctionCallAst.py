@@ -145,7 +145,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     # Tuples being folded must all have the same element types (per tuple).
                     for argument in self._folded_args:
                         first_elem_type = argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[0].value
-                        if mismatch := [t.value for t in argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[1:] if not t.value.symbolic_eq(first_elem_type, sm.current_scope)]:
+                        if mismatch := [t.value for t in argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[1:] if not t.value.symbolic_eq(first_elem_type, sm.current_scope, sm.current_scope)]:
                             raise SemanticErrors.FunctionFoldTupleElementTypeMismatchError().add(
                                 first_elem_type, mismatch[0]).scopes(sm.current_scope)  # todo: scopes
 
@@ -286,7 +286,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
             # Find the generator type superimposed over the return type.
             for super_type in sm.current_scope.get_symbol(coro_return_type).scope.sup_types + [coro_return_type]:
-                if super_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope):
+                if super_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope, sm.current_scope):
                     coro_return_type = super_type
                     break
 

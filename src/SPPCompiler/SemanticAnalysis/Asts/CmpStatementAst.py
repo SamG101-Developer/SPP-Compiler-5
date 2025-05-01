@@ -91,7 +91,7 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         expected_type = self.type
         given_type = self.value.infer_type(sm, **kwargs)
 
-        if not expected_type.symbolic_eq(given_type, sm.current_scope):
+        if not expected_type.symbolic_eq(given_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(self.type, expected_type, self.value, given_type).scopes(sm.current_scope)
 
         # Todo: for an identifier, check the identifier itself is a constant value (and copyable)

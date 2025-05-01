@@ -75,7 +75,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def contains_generic(self, generic_type: Asts.TypeSingleAst) -> bool:
         return self.rhs.contains_generic(generic_type)
 
-    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True, debug: bool = False) -> bool:
+    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Scope, check_variant: bool = True, debug: bool = False) -> bool:
         # Convention mismatch (except for allowing "&mut" to coerce into "&")
         if type(self.get_convention()) is not type(that.get_convention()) and not (isinstance(self.get_convention(), Asts.ConventionRefAst) and isinstance(that.get_convention(), Asts.ConventionMutAst)):
             return False

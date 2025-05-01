@@ -5,8 +5,7 @@ import difflib
 from typing import Generator, Optional, Tuple, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, \
-    SymbolType
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol, VariableSymbol, SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
@@ -27,33 +26,47 @@ class AstTypeUtils:
     @staticmethod
     def is_type_indexable(type: Asts.TypeAst, scope: Scope) -> bool:
         # Only tuple and array types are indexable.
-        is_tuple = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope)
-        is_array = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, scope)
+        is_tuple = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope, scope)
+        is_array = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, scope, scope)
         return is_tuple or is_array
 
     @staticmethod
     def is_type_functional(type: Asts.TypeAst, scope: Scope) -> bool:
         # Check if a type is one of the three function types.
-        is_fun_mov = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_MOV, scope)
-        is_fun_mut = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_MUT, scope)
-        is_fun_ref = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_REF, scope)
+        is_fun_mov = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_MOV, scope, scope)
+        is_fun_mut = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_MUT, scope, scope)
+        is_fun_ref = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_REF, scope, scope)
         return is_fun_mov or is_fun_mut or is_fun_ref
 
-    # Todo: search for tuple comparisons and use this function
     @staticmethod
     def is_type_tuple(type: Asts.TypeAst, scope: Scope) -> bool:
+        # Todo: search for tuple comparisons and use this function
         # Check if a type is a tuple type.
-        is_tuple = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope)
+        is_tuple = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope, scope, check_variant=False)
         return is_tuple
+
+    @staticmethod
+    def is_type_array(type: Asts.TypeAst, scope: Scope) -> bool:
+        # Todo: search for array comparisons and use this function
+        # Check if a type is an array type.
+        is_array = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, scope, scope, check_variant=False)
+        return is_array
+
+    @staticmethod
+    def is_type_variant(type: Asts.TypeAst, scope: Scope) -> bool:
+        # Todo: search for array comparisons and use this function
+        # Check if a type is a variant type.
+        is_variant = type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, scope, scope)
+        return is_variant
 
     @staticmethod
     def is_index_within_type_bound(index: int, type: Asts.TypeAst, scope: Scope) -> bool:
         # Tuple type: count the number of generic arguments.
-        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope):
+        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, scope, scope):
             return index < len(type.type_parts()[0].generic_argument_group.arguments)
 
         # Array type: get the "n" generic comp argument.
-        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, scope):
+        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, scope, scope):
             return index < int(type.type_parts()[0].generic_argument_group.arguments[1].value.value.token_data)
 
         raise NotImplementedError("Only tuple and array types are indexable.")
@@ -61,11 +74,11 @@ class AstTypeUtils:
     @staticmethod
     def get_nth_type_of_indexable_type(sm: ScopeManager, index: int, type: Asts.TypeAst) -> Asts.TypeAst:
         # Tuple type: get the nth generic argument.
-        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope):
+        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope, sm.current_scope):
             return type.type_parts()[0].generic_argument_group.arguments[index].value
 
         # Array type: get the first generic argument as an "Opt[T]" type (safety check).
-        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope):
+        if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope, sm.current_scope):
             return type.type_parts()[0].generic_argument_group.arguments[0].value
 
         # Array type: get the first generic argument as an "Opt[T]" type (safety check).
@@ -262,7 +275,7 @@ class AstTypeUtils:
 
         # Search through the type and supertypes for a generator type.
         for sup_type in sup_types:
-            if sup_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope):
+            if sup_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope, sm.current_scope):
                 gen_type = sup_type
                 break
 

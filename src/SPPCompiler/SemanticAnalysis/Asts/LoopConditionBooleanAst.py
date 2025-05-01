@@ -43,7 +43,7 @@ class LoopConditionBooleanAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Check the loop condition is boolean.
         return_type = self.condition.infer_type(sm)
         target_type = CommonTypes.Bool(self.pos)
-        if not target_type.symbolic_eq(return_type, sm.current_scope):
+        if not target_type.symbolic_eq(return_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.ExpressionNotBooleanError().add(
                 self.condition, return_type, "loop").scopes(sm.current_scope)
 

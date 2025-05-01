@@ -42,7 +42,7 @@ class PatternGuardAst(Asts.Ast):
         # Check the guard's type is boolean.
         target_type = CommonTypes.Bool(self.pos)
         return_type = self.expression.infer_type(sm)
-        if not target_type.symbolic_eq(return_type, sm.current_scope):
+        if not target_type.symbolic_eq(return_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.ExpressionNotBooleanError().add(
                 self.expression, return_type, "pattern guard").scopes(sm.current_scope)
 

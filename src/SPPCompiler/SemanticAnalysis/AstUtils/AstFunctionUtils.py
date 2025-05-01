@@ -461,7 +461,7 @@ class AstFunctionUtils:
         # print("owner", owner, sm.current_scope)
 
         # Special case for tuples to prevent infinite-recursion.
-        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and owner.symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope):
+        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and owner.symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope, sm.current_scope):
             return explicit_generic_arguments
 
         # If there are no generic parameters then skip any inference checks.
@@ -516,7 +516,7 @@ class AstFunctionUtils:
         # type. For example, "T" can't be inferred as a "Str" and then a "BigInt". All instances must match the first
         # inference, in this case "Str".
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
-            if mismatch := [t for t in inferred_generic_argument_value[1:] if not t.symbolic_eq(inferred_generic_argument_value[0], sm.current_scope)]:
+            if mismatch := [t for t in inferred_generic_argument_value[1:] if not t.symbolic_eq(inferred_generic_argument_value[0], sm.current_scope, sm.current_scope)]:
                 raise SemanticErrors.GenericParameterInferredConflictInferredError().add(
                     inferred_generic_argument_name, inferred_generic_argument_value[0], mismatch[0]).scopes(sm.current_scope)
 

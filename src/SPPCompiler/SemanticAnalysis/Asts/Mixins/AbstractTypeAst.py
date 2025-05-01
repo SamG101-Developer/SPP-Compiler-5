@@ -109,7 +109,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
     @abstractmethod
     def symbolic_eq(
-            self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True,
+            self, that: Asts.TypeAst, self_scope: Scope, that_scope: Scope, check_variant: bool = True,
             debug: bool = False) -> bool:
         """
         Symbolic equality is the core of the type checking utility. It gets two given types, and two scopes, and gets

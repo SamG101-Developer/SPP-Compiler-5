@@ -69,7 +69,7 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.explicit_type.analyse_semantics(sm, **kwargs)
 
             # This allows a variant type as the annotation with a composite-type value.
-            if not self.explicit_type.symbolic_eq(val_type := self.value.infer_type(sm, **kwargs), sm.current_scope):
+            if not self.explicit_type.symbolic_eq(val_type := self.value.infer_type(sm, **kwargs), sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     self.explicit_type, self.explicit_type, self.value, val_type).scopes(sm.current_scope)
 

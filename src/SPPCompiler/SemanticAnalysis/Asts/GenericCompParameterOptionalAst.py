@@ -76,7 +76,7 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         # Make sure the default expression is of the correct type.
         default_type = self.default.infer_type(sm)
         target_type = self.type
-        if not target_type.symbolic_eq(default_type, sm.current_scope):
+        if not target_type.symbolic_eq(default_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
                 self.name, target_type, self.default, default_type).scopes(sm.current_scope)
 

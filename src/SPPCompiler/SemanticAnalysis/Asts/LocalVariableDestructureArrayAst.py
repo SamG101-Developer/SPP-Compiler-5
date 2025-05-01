@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
@@ -52,7 +53,7 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # Ensure the rhs value is an array.
         value_type = value.infer_type(sm, **kwargs)
-        if not CommonTypesPrecompiled.EMPTY_ARRAY.symbolic_eq(value_type.without_generics(), sm.current_scope):
+        if not AstTypeUtils.is_type_array(value_type, sm.current_scope):
             raise SemanticErrors.VariableArrayDestructureArrayTypeMismatchError().add(
                 self, value, value_type).scopes(sm.current_scope)
 

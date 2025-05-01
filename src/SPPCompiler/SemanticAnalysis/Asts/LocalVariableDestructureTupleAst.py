@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
@@ -50,9 +51,9 @@ class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(
                 multi_arg_skips[0], multi_arg_skips[1]).scopes(sm.current_scope)
 
-        # Ensure the rhs value is an array.
+        # Ensure the rhs value is aa tuple.
         value_type = value.infer_type(sm, **kwargs)
-        if not CommonTypesPrecompiled.EMPTY_TUPLE.symbolic_eq(value_type.without_generics(), sm.current_scope):
+        if not AstTypeUtils.is_type_tuple(value_type, sm.current_scope):
             raise SemanticErrors.VariableTupleDestructureTupleTypeMismatchError().add(
                 self, value, value_type).scopes(sm.current_scope)
 

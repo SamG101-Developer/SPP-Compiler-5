@@ -150,7 +150,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         sup_symbol = sup_symbol.scope.get_symbol(self.super_class)
 
         # Mark the class as copyable if the Copy type is the super class.
-        if self.super_class.symbolic_eq(CommonTypesPrecompiled.COPY, sm.current_scope):
+        if self.super_class.symbolic_eq(CommonTypesPrecompiled.COPY, sm.current_scope, sm.current_scope):
             cls_symbol.is_copyable = True
 
         # Run the inject steps for the body.

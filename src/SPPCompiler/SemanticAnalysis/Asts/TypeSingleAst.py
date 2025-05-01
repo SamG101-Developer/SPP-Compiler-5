@@ -139,21 +139,20 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         return any(g == Asts.GenericIdentifierAst.from_type(generic_type) for g in self)
 
     def symbolic_eq(
-            self, that: Asts.TypeAst, self_scope: Scope, that_scope: Optional[Scope] = None, check_variant: bool = True,
+            self, that: Asts.TypeAst, self_scope: Scope, that_scope: Scope, check_variant: bool = True,
             debug: bool = False) -> bool:
 
         # Get the scopes of the types.
-        that_scope = that_scope or self_scope
         that_scope, that = that.split_to_scope_and_type(that_scope)
 
         # Get the symbols of the types.
         self_symbol = self_scope.get_symbol(self.name)
         that_symbol = that_scope.get_symbol(that.name)
 
-        # if debug:
-        #     print("-" * 100)
-        #     print("SELF", self, self_scope, self_symbol)
-        #     print("THAT", that, that_scope, that_symbol)
+        if debug:
+            print("-" * 100)
+            print("SELF", self, self_scope, self_symbol)
+            print("THAT", that, that_scope, that_symbol)
 
         # Variant type: one of the generic arguments must match the type.
         if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, self_scope, that_scope, check_variant=False):

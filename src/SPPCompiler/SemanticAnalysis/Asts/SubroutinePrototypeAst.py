@@ -21,7 +21,7 @@ class SubroutinePrototypeAst(Asts.FunctionPrototypeAst):
         self.body.analyse_semantics(sm, **kwargs)
 
         # Check there is a return statement at the end (for non-void functions).
-        non_void_return_type = not self.return_type.symbolic_eq(CommonTypesPrecompiled.VOID, sm.current_scope)
+        non_void_return_type = not self.return_type.symbolic_eq(CommonTypesPrecompiled.VOID, sm.current_scope, sm.current_scope)
         if non_void_return_type and not (self._non_implemented or self._abstract) and not (self.body.members and isinstance(self.body.members[-1], Asts.RetStatementAst)):
             final_member = self.body.members[-1] if self.body.members else self.body.tok_r
             raise SemanticErrors.FunctionSubroutineMissingReturnStatementError().add(

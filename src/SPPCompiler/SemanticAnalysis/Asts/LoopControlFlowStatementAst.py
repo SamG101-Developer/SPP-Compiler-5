@@ -71,7 +71,7 @@ class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 that_expr, that_exit_type = kwargs["loop_types"][depth]
 
                 # Todo: should be 2 different scopes in case of a typedef inside 1 of the scopes
-                if not exit_type.symbolic_eq(that_exit_type, sm.current_scope):
+                if not exit_type.symbolic_eq(that_exit_type, sm.current_scope, sm.current_scope):
                     raise SemanticErrors.TypeMismatchError().add(
                         that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type).scopes(sm.current_scope)
 

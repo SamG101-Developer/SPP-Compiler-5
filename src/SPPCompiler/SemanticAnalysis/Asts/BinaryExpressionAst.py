@@ -7,10 +7,11 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstBinUtils import AstBinUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
@@ -128,7 +129,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if isinstance(self.lhs, Asts.TokenAst):
             # Check the rhs is a tuple.
             rhs_tuple_type = self.rhs.infer_type(sm, **kwargs)
-            if not rhs_tuple_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope):
+            if not AstTypeUtils.is_type_tuple(rhs_tuple_type, sm.current_scope):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(
                     self.rhs, rhs_tuple_type, self.lhs).scopes(sm.current_scope)
 
@@ -152,7 +153,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         elif isinstance(self.rhs, Asts.TokenAst):
             # Check the rhs is a tuple.
             lhs_tuple_type = self.lhs.infer_type(sm, **kwargs)
-            if not lhs_tuple_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope):
+            if not AstTypeUtils.is_type_tuple(lhs_tuple_type, sm.current_scope):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(
                     self.rhs, lhs_tuple_type, self.lhs).scopes(sm.current_scope)
 

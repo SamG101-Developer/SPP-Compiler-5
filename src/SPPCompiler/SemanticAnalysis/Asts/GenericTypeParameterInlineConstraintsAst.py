@@ -37,7 +37,7 @@ class GenericTypeParameterInlineConstraintsAst(Asts.Ast):
         # Check there are duplicate constraints types.
         for i, t in enumerate(self.constraints):
             for j, u in enumerate(self.constraints[i + 1:]):
-                if t.symbolic_eq(u, sm.current_scope):
+                if t.symbolic_eq(u, sm.current_scope, sm.current_scope):
                     raise SemanticErrors.IdentifierDuplicationError().add(
                         t, u, "constraint").scopes(sm.current_scope)
 

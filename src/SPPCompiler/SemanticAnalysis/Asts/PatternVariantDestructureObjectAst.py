@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -51,7 +52,7 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
 
         # Flow type the condition symbol if necessary.
         condition_symbol: VariableSymbol = sm.current_scope.get_symbol(cond)
-        is_condition_symbol_variant = condition_symbol and condition_symbol.type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, sm.current_scope)
+        is_condition_symbol_variant = condition_symbol and AstTypeUtils.is_type_variant(condition_symbol.type, sm.current_scope)
         if condition_symbol and is_condition_symbol_variant:
             if not condition_symbol.type.symbolic_eq(self.class_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(cond, condition_symbol.type, self.class_type, self.class_type).scopes(sm.current_scope)

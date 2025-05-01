@@ -58,7 +58,7 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
 
         # Make sure the default expression is of the correct type.
         default_type = self.default.infer_type(sm)
-        if not self.type.symbolic_eq(default_type, sm.current_scope):
+        if not self.type.symbolic_eq(default_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
                 self.extract_name, self.type, self.default, default_type).scopes(sm.current_scope)
 
