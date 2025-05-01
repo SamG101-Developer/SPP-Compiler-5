@@ -1326,13 +1326,13 @@ class SppParser:
         p1 = self.parse_alternate([
             self.parse_token_multiply_assign,
             self.parse_token_divide_assign,
-            self.parse_token_remainder_assign,
             self.parse_token_modulo_assign,
+            self.parse_token_remainder_assign,
             self.parse_token_exponent_assign,
             self.parse_token_multiply,
             self.parse_token_divide,
-            self.parse_token_remainder,
             self.parse_token_modulo,
+            self.parse_token_remainder,
             self.parse_token_exponent])
         return p1
 
@@ -2017,8 +2017,8 @@ class SppParser:
     def parse_token_divide(self) -> Optional[Asts.TokenAst]:
         return self.parse_token_raw(RawTokenType.TkForwardSlash, SppTokenType.TkDivide)
 
-    def parse_token_modulo(self) -> Optional[Asts.TokenAst]:
-        return self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkModulo)
+    def parse_token_remainder(self) -> Optional[Asts.TokenAst]:
+        return self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkRemainder)
 
     def parse_token_dot(self) -> Optional[Asts.TokenAst]:
         return self.parse_token_raw(RawTokenType.TkDot, SppTokenType.TkDot)
@@ -2110,13 +2110,13 @@ class SppParser:
         p2.pos = p1.pos
         return p2
 
-    def parse_token_modulo_assign(self) -> Optional[Asts.TokenAst]:
-        p1 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkModuloAssign)
+    def parse_token_remainder_assign(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkRemainderAssign)
         if p1 is None: return None
-        p2 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkModuloAssign)
-        if p2 is None: return None
-        p2.pos = p1.pos
-        return p2
+        p3 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkRemainderAssign)
+        if p3 is None: return None
+        p3.pos = p1.pos
+        return p3
 
     def parse_token_greater_than_or_equals(self) -> Optional[Asts.TokenAst]:
         p1 = self.parse_token_raw(RawTokenType.TkGreaterThanSign, SppTokenType.TkGe)
@@ -2126,10 +2126,10 @@ class SppParser:
         p2.pos = p1.pos
         return p2
 
-    def parse_token_remainder(self) -> Optional[Asts.TokenAst]:
-        p1 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkRemainder)
+    def parse_token_modulo(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkModulo)
         if p1 is None: return None
-        p2 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkRemainder)
+        p2 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkModulo)
         if p2 is None: return None
         p2.pos = p1.pos
         return p2
@@ -2150,12 +2150,12 @@ class SppParser:
         p2.pos = p1.pos
         return p2
 
-    def parse_token_remainder_assign(self) -> Optional[Asts.TokenAst]:
-        p1 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkRemainderAssign)
+    def parse_token_modulo_assign(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkModuloAssign)
         if p1 is None: return None
-        p2 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkRemainderAssign)
+        p2 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkModuloAssign)
         if p2 is None: return None
-        p3 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkRemainderAssign)
+        p3 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkModuloAssign)
         if p3 is None: return None
         p3.pos = p1.pos
         return p3
