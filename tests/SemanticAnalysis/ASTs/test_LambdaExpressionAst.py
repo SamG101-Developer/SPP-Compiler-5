@@ -216,3 +216,25 @@ class LambdaExpressionAst(CustomTestCase):
             x()
         }
         """
+
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    def test_invalid_lambda_move_borrowed_capture(self):
+        """
+        fun f() -> std::void::Void {
+            let some_variable = "hello world"
+            let x = |caps &some_variable| 123_u32
+            let b = some_variable
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_lambda_use_moved_capture_as_borrow(self):
+        """
+        fun g(x: &std::string::Str) -> std::void::Void { }
+
+        fun f() -> std::void::Void {
+            let some_variable = "hello world"
+            let x = |caps some_variable| 123_u32
+            g(&some_variable)
+        }
+        """
