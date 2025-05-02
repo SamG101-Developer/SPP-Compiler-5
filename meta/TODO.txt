@@ -1,6 +1,3 @@
-Generators.
-* Some sort of `GenOnce` or one-hit coroutines for indexing.
-
 Encapsulation annotations.
 * Add support for method encapsulation (methods map to attributes with $Type right now).
 
@@ -8,37 +5,26 @@ Specialization.
 * `sup std::vector::Vec[std::string::Str]` applies to all `std::vector::Vec` types.
 * Generic arguments must match their parameters exactly for sup Type[T=T] to work (generic type regeneration)
 
-Function folding.
-* Binary and regular function folding.
-
 Equality methods.
-* Should all be (&Self, &Self), not (&Self, Self) conventions.
-* Change a == b at the compiler level into a == &b.
+* Should all be (&Self, &Self), not (&Self, Self) conventions?
+* Change a == b at the compiler level into a == &b?
 
 Smart pointers.
 * Attribute access to deferred types
 
 Types.
-* Callables: should be able to call variables that are a function type.
 * Postfix types cannot be used as parameters, return types or attributes.
 
 Arrays
-* Indexing operator should return `Opt[T]` not `T`
+* Indexing operator should return `Opt[T]` not `T`?
 
 Function types.
 * Mostly requires closures
 * Superimpose function types.
 
-Superimpositions.
-* Don't allow method access modifiers inside sup-ext (only sup)
-
 Generators.
 * For `GenOnce`, only one `gen` expression should be allowed.
 * Auto `.res()` on `gen` value being received for `GenOnce`?
-* Currently no forced return at the end like for subroutines.
-
-Binary Expressions.
-* Check function overload is being analysed.
 
 Lambdas.
 * Mutable captures? Like `mut a: &mut T` but for a capture? `mut &mut a` is not happening.
