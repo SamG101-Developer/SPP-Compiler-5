@@ -196,11 +196,23 @@ class LambdaExpressionAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_invalid_lambda_expression_with_capture_mov_use_capture(self):
+    def test_valid_lambda_expression_with_capture_mov_use_capture(self):
         """
         use std::number::u32::U32
         fun f() -> std::void::Void {
             let a = "test"
             let x = |caps a| a
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
+    def test_invalid_lambda_call_fun_mov_twice(self):
+        """
+        use std::string::Str
+        fun f() -> std::void::Void {
+            let a = "test"
+            let x = |caps a| a
+            x()
+            x()
         }
         """
