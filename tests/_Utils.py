@@ -2,6 +2,8 @@ import os.path
 from argparse import Namespace
 from unittest import TestCase
 
+import json_fix
+
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticError, SemanticErrors
 from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
 from spp_cli import handle_build, handle_init, handle_vcs
