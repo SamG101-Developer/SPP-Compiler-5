@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
@@ -27,6 +28,19 @@ class Ast(CompilerStages):
 
     _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
     """The scope representing top-level ASTs (function/class scopes)"""
+
+    def clone_at(self, pos: int) -> Ast:
+        """
+        Clone an AST at a new position. This is used to create a new AST with the same attributes as the original, but
+        with a different position.
+
+        :param pos: The new position of the cloned AST.
+        :return: The cloned AST.
+        """
+
+        d = copy.deepcopy(self)
+        d.pos = pos
+        return d
 
     @ast_printer_method
     @abstractmethod
