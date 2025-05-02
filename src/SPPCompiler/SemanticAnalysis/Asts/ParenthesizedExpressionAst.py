@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -47,6 +48,7 @@ class ParenthesizedExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the expression.
         self.expr.analyse_semantics(sm, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(self.expr, self.expr, sm, check_pins=False, update_memory_info=False)
 
 
 __all__ = [

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -63,6 +64,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
         # Analyse the value of the named argument.
         self.value.analyse_semantics(sm, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(self.value, self.tok_assign, sm, check_pins=False, update_memory_info=False)
 
 
 __all__ = [

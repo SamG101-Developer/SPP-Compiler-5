@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -44,6 +45,7 @@ class GenericCompArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
         # Analyse the value of the unnamed argument.
         self.value.analyse_semantics(sm, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(self.value, self.value, sm, check_pins=False, update_memory_info=False)
 
 
 __all__ = [

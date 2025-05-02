@@ -93,8 +93,7 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for (lhs_expr, rhs_expr), lhs_sym in zip(zip(self.lhs, self.rhs), lhs_syms):
 
             # Ensure the memory status of the left and right hand side.
-            # Todo: is the left-hand-side memory check required? all the flags are False, so it seems redundant.
-            AstMemoryUtils.enforce_memory_integrity(lhs_sym.name, self.op, sm, check_move=False, check_partial_move=False, update_memory_info=False, check_pins=False)
+            AstMemoryUtils.enforce_memory_integrity(lhs_sym.name.clone_at(lhs_expr.pos), self.op, sm, check_move=not isinstance(lhs_expr, Asts.IdentifierAst), check_partial_move=False, update_memory_info=False, check_pins=False)
             AstMemoryUtils.enforce_memory_integrity(rhs_expr, self.op, sm)
 
             # Full assignment (ie "x = y") requires the "x" symbol to be marked as "mut".
