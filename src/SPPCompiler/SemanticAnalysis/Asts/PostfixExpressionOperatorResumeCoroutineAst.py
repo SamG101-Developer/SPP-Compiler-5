@@ -60,6 +60,7 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
         """
 
         func_ret_type = self._as_func.infer_type(sm, **kwargs)
+        func_ret_type.analyse_semantics(sm, **kwargs)
         gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(func_ret_type, sm, lhs, "resume expression")
         return yield_type
 

@@ -70,6 +70,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         # Accessing a member from the scope by the identifier.
         if isinstance(self.field, Asts.IdentifierAst) and field_symbol.symbol_type is SymbolType.VariableSymbol:
             attribute_type = field_symbol.type
+            attribute_type = lhs_symbol.scope.get_symbol(attribute_type).fq_name
             return attribute_type
 
         elif isinstance(self.field, Asts.IdentifierAst) and field_symbol.symbol_type is SymbolType.NamespaceSymbol:
