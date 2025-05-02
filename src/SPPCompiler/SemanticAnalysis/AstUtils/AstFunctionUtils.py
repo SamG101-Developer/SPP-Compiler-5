@@ -32,11 +32,11 @@ class AstFunctionUtils:
         related to getting the overloads of a function. The function owner type is the type of the class the method
         belongs to if the callable is a method rather than a free-function. The scope id for the function itself, not
         its owner. This following cases are handled:
-            * `generator.res()`: keyword function on generators maps to `.next()`.
             * `object.method()`: runtime access into an object.
             * `Type::method()`: static access into a type.
+            * `namespace::function()`: direct access into a namespaced free function.
             * `function()`: direct function call.
-            * `<anything else>()`: invalid function call.
+            * `<anything else>()`: lambda identifier or invalid function call.
 
         @param sm The scope manager to access function scopes.
         @param lhs The left-hand side of the function call.

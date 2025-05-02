@@ -67,6 +67,7 @@ class GenericCompParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
         ast.analyse_semantics(sm, **kwargs)
 
         # Mark the symbol as initialized.
+        # Todo: Why again? also in other GenericCompParameterAsts?
         symbol = sm.current_scope.get_symbol(Asts.IdentifierAst.from_type(self.name))
         symbol.memory_info.initialized_by(self)
 
