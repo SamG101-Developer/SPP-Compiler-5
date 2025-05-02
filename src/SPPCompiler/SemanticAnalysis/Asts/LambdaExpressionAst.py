@@ -129,3 +129,9 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if "assignment" in kwargs and (borrowed_captures := [c for c in self.pc_group.captures if c.convention is not None]):
             for borrow in borrowed_captures:
                 parent_scope._symbol_table.add_deferred_callback(kwargs["assignment"][0], lambda sym: sym.memory_info.ast_pinned.append(borrow.value))
+
+        # Pin any values that have been borrowed as captures as borrows.
+        for cap in self.pc_group.captures:
+            if cap.convention is not None:
+                cap_sym = sm.current_scope.get_symbol(cap.value)
+                cap_sym.memory_info.ast_pinned.append(cap)
