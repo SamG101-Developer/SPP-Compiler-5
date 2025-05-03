@@ -13,9 +13,12 @@ class CustomTestCase(TestCase):
     ...
 
 
-def _build_temp_project_v3(code):
+def _build_temp_project_v3(code, add_main: bool = True):
     cwd = os.getcwd()
     fp = f"test_outputs"
+
+    if add_main:
+        code = "fun main(args: std::vector::Vec[std::string::Str]) -> std::void::Void { }\n" + code
 
     if not os.path.exists(os.path.join(cwd, fp)):
         os.makedirs(os.path.join(cwd, fp))
@@ -32,21 +35,21 @@ def _build_temp_project_v3(code):
     os.chdir(cwd)
 
 
-def should_pass_compilation():
+def should_pass_compilation(no_main: bool = False):
     def inner(test_func):
         def wrapper(self):
             code = test_func.__doc__
-            _build_temp_project_v3(code)
+            _build_temp_project_v3(code, add_main=not no_main)
         return wrapper
     return inner
 
 
-def should_fail_compilation(expected_error):
+def should_fail_compilation(expected_error, no_main: bool = False):
     def inner(test_func):
         def wrapper(self):
             code = test_func.__doc__
             with self.assertRaises(expected_error):
-                _build_temp_project_v3(code)
+                _build_temp_project_v3(code, add_main=not no_main)
         return wrapper
     return inner
 

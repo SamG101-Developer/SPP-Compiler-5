@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+from abc import abstractmethod
 from dataclasses import dataclass
 from typing import NoReturn, Optional, Tuple, TYPE_CHECKING
 
@@ -35,8 +36,9 @@ class SemanticError(BaseException):
         super().__init__(args)
         self.error_info = []
 
+    @abstractmethod
     def add(self, *args, **kwargs) -> SemanticError:
-        ...
+        return self
 
     def scopes(self, *scopes) -> SemanticError:
         # Register the error formatters against the instance.
@@ -1608,4 +1610,18 @@ class SemanticErrors:
                 msg="The tuples have different lengths.",
                 tip="Ensure all tuples have the same length.")
 
+            return self
+
+    class MissingMainFunction(SemanticError):
+        """
+        The MissingMainFunction is raised if the main function is missing from the program. The main function is the
+        entry point and must match a certain signature.
+        """
+
+        def add(self, main_module: Asts.ModulePrototypeAst) -> SemanticError:
+            self.add_error(
+                ast=main_module,
+                tag="Missing main function.",
+                msg="The main function is missing from the program.",
+                tip="Add a main function to the program.")
             return self

@@ -5,7 +5,9 @@ from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.LexicalAnalysis.Lexer import Lexer
+from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import CompilerStages, PreProcessingContext
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Progress import Progress
@@ -145,10 +147,33 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
+        self._validate_entry_point(sm)
+
+    def _validate_entry_point(self, sm: ScopeManager) -> None:
+        """
+        Check there is a "main" function inside the "main" module, with the matching signature of a "Vec[Str]",
+        returning the "Void" type.
+
+        :param sm: The scope manager to use for the validation.
+        """
+
+        # Get the main module.
+        main_module = [m for m in self.modules if m.name.value == "main.spp"][0]
+
+        # Check the "main" function exists with the correct signature.
+        dummy_main_call = "main::main(std::vector::Vec[std::string::Str]())"
+        dummy_main_call = CodeInjection.inject_code(dummy_main_call, SppParser.parse_expression, pos_adjust=0)
+        sm.reset(sm.global_scope)
+        try:
+            dummy_main_call.analyse_semantics(sm)
+        except (SemanticErrors.FunctionCallNoValidSignaturesError, SemanticErrors.IdentifierUnknownError):
+            raise SemanticErrors.MissingMainFunction().add(main_module).scopes(sm.global_scope)
+
     def _move_scope_manager_to_namespace(self, sm: ScopeManager, module: Module) -> None:
         """
         Given a module path, either create or move into the namespace for the module. The scope manager tries to visit
         the next part of the namespace, and if it doesn't exist, then a new scope is created.
+
         :param sm: The scope manager to move into or create the namespace.
         :param module: The module to move into or create the namespace for.
         """
