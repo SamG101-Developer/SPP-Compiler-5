@@ -14,14 +14,14 @@ class PostfixExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     lhs: Asts.ExpressionAst = field(default=None)
     op: Asts.PostfixExpressionOperatorAst = field(default=None)
 
-    def __post_init__(self) -> None:
-        assert self.lhs is not None and self.op is not None
-
     def __eq__(self, other: PostfixExpressionAst) -> bool:
         return isinstance(other, PostfixExpressionAst) and self.lhs == other.lhs and self.op == other.op
 
     def __hash__(self) -> int:
         return id(self)
+
+    def __str__(self) -> str:
+        return f"{self.lhs}{self.op}"
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
