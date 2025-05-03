@@ -1,4 +1,4 @@
-from _Utils import *
+from tests._Utils import *
 
 
 class TestMain(CustomTestCase):

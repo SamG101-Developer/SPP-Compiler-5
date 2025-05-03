@@ -1,9 +1,6 @@
 from tests._Utils import *
 
 
-# Todo: invalid and valid testing of binary "is" operation
-
-
 class TestBinaryExpressionAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_binary_operation(self):
