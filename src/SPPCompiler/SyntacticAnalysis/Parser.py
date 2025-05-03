@@ -1564,7 +1564,7 @@ class SppParser:
             self.parse_type_binary_expression_precedence_level_1])
         return p1
 
-    def parse_type_simple(self) -> Optional[Asts.TypeSingleAst]:
+    def parse_type_simple(self) -> Optional[Asts.TypeAst]:
         c1 = self.current_pos()
         p1 = self.parse_zero_or_more(self.parse_type_unary_op_namespace, self.parse_nothing)
         p2 = self.parse_once(self.parse_type_single)
