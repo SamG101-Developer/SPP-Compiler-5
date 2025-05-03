@@ -150,7 +150,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     lhs, self.tok_access).scopes(sm.current_scope)
         
             # Check the variable exists on the lhs.
-            if not lhs_ns_symbol.scope.has_symbol(self.field):
+            if not lhs_ns_symbol.scope.has_symbol(self.field, exclusive=True):
                 alternatives = [s.name.value for s in lhs_ns_symbol.scope.all_symbols()]
                 closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
