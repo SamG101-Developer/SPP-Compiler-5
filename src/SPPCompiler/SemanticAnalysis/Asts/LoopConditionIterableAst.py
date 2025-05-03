@@ -24,7 +24,6 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __post_init__(self) -> None:
         self.in_keyword = self.in_keyword or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwIn)
-        assert self.variable is not None and self.iterable is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

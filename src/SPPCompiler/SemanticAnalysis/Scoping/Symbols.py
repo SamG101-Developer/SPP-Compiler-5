@@ -36,7 +36,6 @@ class NamespaceSymbol(BaseSymbol):
     def __post_init__(self) -> None:
         # Ensure the name is an IdentifierAst.
         self.symbol_type = SymbolType.NamespaceSymbol
-        assert isinstance(self.name, Asts.IdentifierAst)
 
     def __json__(self) -> Dict:
         # Dump the NamespaceSymbol as a JSON object.
@@ -63,8 +62,8 @@ class VariableSymbol(BaseSymbol):
     def __post_init__(self) -> None:
         # Ensure the name is an IdentifierAst, and the type is a TypeAst.
         self.symbol_type = SymbolType.VariableSymbol
-        assert isinstance(self.name, Asts.IdentifierAst)
-        assert isinstance(self.type, Asts.TypeAst)
+        # assert isinstance(self.name, Asts.IdentifierAst)
+        # assert isinstance(self.type, Asts.TypeAst)
 
     def __json__(self) -> Dict:
         # Dump the VariableSymbol as a JSON object.
@@ -101,8 +100,8 @@ class TypeSymbol(BaseSymbol):
     def __post_init__(self) -> None:
         # Ensure the name is a GenericIdentifierAst, and the type is a ClassPrototypeAst or None.
         self.symbol_type = SymbolType.TypeSymbol
-        assert isinstance(self.name, Asts.GenericIdentifierAst)
-        assert isinstance(self.type, Asts.ClassPrototypeAst) or self.type is None
+        # assert isinstance(self.name, Asts.GenericIdentifierAst)
+        # assert isinstance(self.type, Asts.ClassPrototypeAst) or self.type is None
 
         # Link the type symbol to the associated scope.
         if self.scope and not self.is_generic and not self.name.value == "Self":

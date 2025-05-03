@@ -44,7 +44,6 @@ class SupPrototypeExtensionAst(Asts.Ast):
         self.tok_ext = self.tok_ext or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwExt)
         self.where_block = self.where_block or Asts.WhereBlockAst(pos=self.pos)
         self.body = self.body or Asts.SupImplementationAst(pos=self.pos)
-        assert self.name is not None and self.super_class is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

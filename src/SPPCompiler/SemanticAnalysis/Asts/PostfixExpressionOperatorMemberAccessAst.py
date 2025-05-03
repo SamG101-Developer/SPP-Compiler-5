@@ -17,9 +17,6 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
     tok_access: Asts.TokenAst = field(default=None)
     field: Asts.IdentifierAst | Asts.TokenAst = field(default=None)
 
-    def __post_init__(self) -> None:
-        assert self.tok_access is not None and self.field is not None
-
     def __eq__(self, other: PostfixExpressionOperatorMemberAccessAst) -> bool:
         return self.tok_access == other.tok_access and self.field == other.field
 

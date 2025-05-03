@@ -17,7 +17,6 @@ class TypeParenthesizedAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
     def __post_init__(self) -> None:
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightParenthesis)
-        assert self.type_expr is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

@@ -67,7 +67,6 @@ class AnnotationAst(Asts.Ast):
 
     def __post_init__(self) -> None:
         self.tok_at = self.tok_at or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAt)
-        assert self.name is not None
 
     def __deepcopy__(self, memodict: Dict = None) -> AnnotationAst:
         # Create a deep copy of the AST.

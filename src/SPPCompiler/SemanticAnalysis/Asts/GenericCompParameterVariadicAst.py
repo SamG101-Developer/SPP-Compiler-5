@@ -26,7 +26,6 @@ class GenericCompParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self.tok_variadic = self.tok_variadic or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDoubleDot)
         self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
         self._variant = "Variadic"
-        assert self.name is not None and self.type is not None
 
     def __eq__(self, other: GenericCompParameterVariadicAst) -> bool:
         return isinstance(other, GenericCompParameterVariadicAst) and self.name == other.name

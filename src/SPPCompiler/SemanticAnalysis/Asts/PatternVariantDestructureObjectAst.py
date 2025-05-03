@@ -24,7 +24,6 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
     def __post_init__(self) -> None:
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightParenthesis)
-        assert self.class_type is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

@@ -19,7 +19,6 @@ class LetStatementUninitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __post_init__(self) -> None:
         self.kw_let = self.kw_let or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwLet)
         self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
-        assert self.assign_to is not None and self.type is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

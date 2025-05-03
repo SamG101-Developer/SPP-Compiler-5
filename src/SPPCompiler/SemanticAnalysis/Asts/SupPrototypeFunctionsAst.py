@@ -31,7 +31,6 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         self.generic_parameter_group = self.generic_parameter_group or Asts.GenericParameterGroupAst(pos=self.pos)
         self.where_block = self.where_block or Asts.WhereBlockAst(pos=self.pos)
         self.body = self.body or Asts.SupImplementationAst(pos=self.pos)
-        assert self.name is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

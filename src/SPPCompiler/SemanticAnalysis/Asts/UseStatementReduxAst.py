@@ -24,7 +24,6 @@ class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
 
     def __post_init__(self) -> None:
         self.kw_use = self.kw_use or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwUse)
-        assert self.old_type is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

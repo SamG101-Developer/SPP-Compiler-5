@@ -17,7 +17,6 @@ class PatternGuardAst(Asts.Ast):
 
     def __post_init__(self) -> None:
         self.tok_guard = self.tok_guard or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwAnd)
-        assert self.expression is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

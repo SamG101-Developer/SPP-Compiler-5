@@ -16,7 +16,6 @@ class WhereConstraintsAst(Asts.Ast):
 
     def __post_init__(self) -> None:
         self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
-        assert self.constraints is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

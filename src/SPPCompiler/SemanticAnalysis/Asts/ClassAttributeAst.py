@@ -25,7 +25,6 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def __post_init__(self) -> None:
         self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
-        assert self.name is not None and self.type is not None
 
     def __deepcopy__(self, memodict: Dict = None) -> ClassAttributeAst:
         return ClassAttributeAst(

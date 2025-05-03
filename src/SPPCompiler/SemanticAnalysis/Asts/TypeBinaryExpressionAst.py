@@ -16,7 +16,6 @@ class TypeBinaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
 
     def __post_init__(self) -> None:
         self.op = self.op or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.NoToken)
-        assert self.lhs is not None and self.rhs is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

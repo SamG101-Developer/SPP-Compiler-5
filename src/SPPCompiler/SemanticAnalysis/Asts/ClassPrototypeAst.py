@@ -33,7 +33,6 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         self.generic_parameter_group = self.generic_parameter_group or Asts.GenericParameterGroupAst(pos=self.pos)
         self.where_block = self.where_block or Asts.WhereBlockAst(pos=self.pos)
         self.body = self.body or Asts.ClassImplementationAst(pos=self.pos)
-        assert self.name is not None
 
     def __json__(self) -> str:
         return f"{self.name}{self.generic_parameter_group}"

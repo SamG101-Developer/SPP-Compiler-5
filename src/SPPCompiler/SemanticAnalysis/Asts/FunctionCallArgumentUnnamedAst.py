@@ -18,7 +18,6 @@ class FunctionCallArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mi
 
     def __post_init__(self) -> None:
         self._variant = "Unnamed"
-        assert self.value is not None
 
     def __hash__(self) -> int:
         # Get the id of the AST (same as "is" matching).

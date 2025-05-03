@@ -35,7 +35,6 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         self.generic_parameter_group = self.generic_parameter_group or Asts.GenericParameterGroupAst(pos=self.pos)
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
         self.new_type = self.new_type or Asts.TypeSingleAst(self.old_type.pos, self.old_type.type_parts()[-1])
-        assert self.old_type is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

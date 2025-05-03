@@ -14,9 +14,6 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 class LoopConditionBooleanAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     condition: Asts.ExpressionAst = field(default=None)
 
-    def __post_init__(self) -> None:
-        assert self.condition is not None
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

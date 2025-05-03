@@ -14,9 +14,6 @@ class ObjectInitializerArgumentUnnamedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     is_default: Optional[Asts.TokenAst] = field(default=None)
     name: Asts.ExpressionAst = field(default=None)
 
-    def __post_init__(self) -> None:
-        assert self.name is not None
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

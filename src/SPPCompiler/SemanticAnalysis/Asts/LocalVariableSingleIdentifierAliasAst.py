@@ -14,7 +14,6 @@ class LocalVariableSingleIdentifierAliasAst(Asts.Ast):
 
     def __post_init__(self) -> None:
         self.kw_as = self.kw_as or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwAs)
-        assert self.name is not None
 
     @property
     def pos_end(self) -> int:

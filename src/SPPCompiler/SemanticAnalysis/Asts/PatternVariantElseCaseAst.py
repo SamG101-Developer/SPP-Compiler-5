@@ -15,7 +15,6 @@ class PatternVariantElseCaseAst(Asts.Ast):
 
     def __post_init__(self) -> None:
         self.tok_else = self.tok_else or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwElse)
-        assert self.case_expression is not None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

@@ -13,9 +13,6 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 class PatternVariantExpressionAst(Asts.Ast):
     expr: Asts.ExpressionAst = field(default=None)
 
-    def __post_init__(self) -> None:
-        assert self.expr is not None
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

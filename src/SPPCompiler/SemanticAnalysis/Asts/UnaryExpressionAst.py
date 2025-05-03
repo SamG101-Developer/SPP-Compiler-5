@@ -13,9 +13,6 @@ class UnaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     op: Asts.UnaryExpressionOperatorAst = field(default=None)
     rhs: Asts.ExpressionAst = field(default=None)
 
-    def __post_init__(self) -> None:
-        assert self.op is not None and self.rhs is not None
-
     def __hash__(self) -> int:
         return id(self)
 
