@@ -11,7 +11,6 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
@@ -78,10 +77,6 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         :return: The type of the result of executing the binary expression.
         """
 
-        # Comparisons using the "is" keyword are always boolean.
-        if self.op.token_type == SppTokenType.KwIs:
-            return CommonTypes.Bool(self.pos)
-
         # Infer the type from the function equivalent of the binary expression.
         if not self._as_func:
             self.analyse_semantics(sm, **kwargs)
@@ -124,7 +119,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.AssignmentInvalidCompoundLhsError().add(self.lhs).scopes(sm.current_scope)
 
         # Todo: Check on the tuple size to be > 1 ?
-        # Todo: Instead of tuple checks, do the "indexable" check - allow folding arrays too.
+        # Todo: Instead of tuple checks, do the "indexable" check - allow folding arrays too?
         # Handle lhs-folding
         if isinstance(self.lhs, Asts.TokenAst):
             # Check the rhs is a tuple.
