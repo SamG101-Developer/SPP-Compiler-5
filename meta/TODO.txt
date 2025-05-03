@@ -13,14 +13,11 @@ Smart pointers.
 * Attribute access to deferred types
 
 Types.
-* Postfix types cannot be used as parameters, return types or attributes.
+* Postfix types need to be usable as parameters, return types or attributes.
+* Add testing for the IdentifierDuplicationError.
 
 Arrays
-* Indexing operator should return `Opt[T]` not `T`?
-
-Function types.
-* Mostly requires closures
-* Superimpose function types.
+* Indexing operator should return `Opt[T]` not `T`? Must be compatible with generators.
 
 Generators.
 * For `GenOnce`, only one `gen` expression should be allowed.
@@ -28,3 +25,8 @@ Generators.
 
 Lambdas.
 * Mutable captures? Like `mut a: &mut T` but for a capture? `mut &mut a` is not happening.
+
+Aliasing.
+* Allow `use std::iterator::(IterMov, IterMut, IterRef)` in one statement (check syntax).
+* Allow aliasing namespaces, things like `use std::{iterator::{IterMov, IterMut, IterRef}, number::bigint::BigInt}`
+* Allow non type aliasing? => `use std::console::print`
