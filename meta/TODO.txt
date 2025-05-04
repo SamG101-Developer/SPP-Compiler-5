@@ -24,9 +24,6 @@ Generators.
 * Auto `.res()` on `gen` value being received for `GenOnce`?
 * Any type being yielded to (`cor ... -> Iterator[T]`) etc, must have no attributes.
 
-Lambdas.
-* When a lambda is called, pass the actuall lambda into itself with the correct convention (like a mock self)
-
 Aliasing.
 * Allow `use std::iterator::(IterMov, IterMut, IterRef)` in one statement (check syntax).
 * Allow aliasing namespaces, things like `use std::{iterator::{IterMov, IterMut, IterRef}, number::bigint::BigInt}`

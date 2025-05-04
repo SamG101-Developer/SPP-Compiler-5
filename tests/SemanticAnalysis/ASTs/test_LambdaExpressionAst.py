@@ -217,6 +217,17 @@ class LambdaExpressionAst(CustomTestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.MutabilityInvalidMutationError)
+    def test_invalid_lambda_call_fun_mut_immutable(self):
+        """
+        use std::string::Str
+        fun f() -> std::void::Void {
+            let mut a = "test"
+            let x = |caps &mut a| { }
+            x()
+        }
+        """
+
     @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
     def test_invalid_lambda_move_borrowed_capture(self):
         """

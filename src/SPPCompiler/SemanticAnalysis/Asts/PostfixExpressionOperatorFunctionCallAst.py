@@ -75,12 +75,14 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         fail_overloads = []
 
         # Create a dummy overload for no-overload identifiers that are function types (lambdas etc).
+        is_closure = False
         if not all_overloads and AstTypeUtils.is_type_functional(lhs_type := lhs.infer_type(sm, **kwargs), sm.current_scope):
             dummy_params_types = [t.value for t in lhs_type.type_parts()[-1].generic_argument_group["Args"].value.type_parts()[-1].generic_argument_group.arguments]
             dummy_return_type = lhs_type.type_parts()[-1].generic_argument_group["Out"].value
             dummy_params = Asts.FunctionParameterGroupAst(params=[Asts.FunctionParameterRequiredAst(type=t) for t in dummy_params_types])
             dummy_overload = Asts.FunctionPrototypeAst(function_parameter_group=dummy_params, return_type=dummy_return_type)
             all_overloads.append((sm.current_scope, dummy_overload, Asts.GenericArgumentGroupAst()))
+            is_closure = True
 
         for function_scope, function_overload, owner_scope_generic_arguments in all_overloads:
             owner_scope_generic_arguments = owner_scope_generic_arguments.arguments
@@ -251,6 +253,16 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
             passed_signatures = "\n".join([f[1].print_signature(AstPrinter(), f[0]._ast.name if f[0]._ast else "") for f in pass_overloads])
             argument_usage_signature = f"{lhs}({", ".join([str(a.infer_type(sm, **kwargs)) for a in self.function_argument_group.arguments])})"
             raise SemanticErrors.FunctionCallAmbiguousSignaturesError().add(self, passed_signatures, argument_usage_signature).scopes(sm.current_scope)
+
+        # Special case for closures: apply the convention to the closure name to ensure it is movable or mutable etc.
+        if is_closure:
+            dummy_self_argument = Asts.FunctionCallArgumentUnnamedAst(pos=lhs.pos, value=lhs)
+            if lhs_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_MUT, sm.current_scope, sm.current_scope):
+                dummy_self_argument.convention = Asts.ConventionMutAst(pos=lhs.pos)
+            elif lhs_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_REF, sm.current_scope, sm.current_scope):
+                dummy_self_argument.convention = Asts.ConventionRefAst(pos=lhs.pos)
+            group = Asts.FunctionCallArgumentGroupAst(pos=lhs.pos, arguments=[dummy_self_argument])
+            group.analyse_semantics(sm)
 
         # Set the overload to the only pass overload.
         self._overload = pass_overloads[0]
