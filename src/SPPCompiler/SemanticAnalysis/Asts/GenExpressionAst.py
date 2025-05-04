@@ -5,6 +5,7 @@ from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -12,12 +13,16 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTy
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
+# Todo: test in lambdas
+# Todo: test "cor || { ... }"
+
+
 @dataclass(slots=True)
 class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_gen: Asts.TokenAst = field(default=None)
     kw_with: Optional[Asts.TokenAst] = field(default=None)
     convention: Optional[Asts.ConventionAst] = field(default=None)
-    expression: Optional[Asts.ExpressionAst] = field(default=None)
+    expr: Optional[Asts.ExpressionAst] = field(default=None)
 
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
@@ -34,12 +39,12 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.kw_gen.print(printer) + " ",
             (self.kw_with.print(printer) + " ") if self.kw_with else "",
             self.convention.print(printer) if self.convention else "",
-            self.expression.print(printer) if self.expression else ""]
+            self.expr.print(printer) if self.expr else ""]
         return "".join(string)
 
     @property
     def pos_end(self) -> int:
-        return self.expression.pos_end if self.expression else self.kw_gen.pos_end
+        return self.expr.pos_end if self.expr else self.kw_gen.pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # The inferred type of a gen expression is the type of the value being sent back into the coroutine.
@@ -53,18 +58,24 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(kwargs["function_type"], self.kw_gen).scopes(sm.current_scope)
 
         # Analyse the expression if it exists, and determine the type of the expression.
-        if self.expression:
-            self.expression.analyse_semantics(sm, **kwargs)
-            expression_type = self.expression.infer_type(sm, **kwargs).with_convention(self.convention)
+        if self.expr:
+            if isinstance(self.expr, Asts.PostfixExpressionAst) and isinstance(self.expr.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+                gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(
+                    kwargs["function_ret_type"][0], sm, kwargs["function_ret_type"][0], "coroutine")
+                kwargs |= {"inferred_return_type": kwargs["function_ret_type"][0] if self.kw_with else yield_type}
+
+            self.expr.analyse_semantics(sm, **kwargs)
+            # AstMemoryUtils.enforce_memory_integrity(self.expr, self.kw_gen, sm) todo
+            expression_type = self.expr.infer_type(sm, **kwargs).with_convention(self.convention)
         else:
-            void_type = CommonTypes.Void(self.pos)
-            expression_type = void_type
+            expression_type = CommonTypesPrecompiled.VOID
 
         if kwargs["function_ret_type"]:
+            # If the function return type has been given (function, method) then get and store it.
             self._func_ret_type = kwargs["function_ret_type"][0]
         else:
-            # Todo: untested
-            self._func_ret_type = CommonTypes.Gen(expression_type, CommonTypesPrecompiled.VOID)
+            # If there is no function return type, then this is the first return statement for a lambda, so store the type.
+            self._func_ret_type = CommonTypes.Gen(self.expr.pos, expression_type, CommonTypesPrecompiled.VOID)
             kwargs["function_ret_type"].append(self._func_ret_type)
 
         # Determine the yield type of the enclosing function.
@@ -77,21 +88,13 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # If the "with" keyword is being used, the expression type must be a Gen type that matches the function_ret_type.
         if self.kw_with and not kwargs["function_ret_type"][0].symbolic_eq(expression_type, sm.current_scope, sm.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"][0], kwargs["function_ret_type"][0], self.expression, expression_type).scopes(sm.current_scope)
+            raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"][0], kwargs["function_ret_type"][0], self.expr, expression_type).scopes(sm.current_scope)
 
         # Apply the function argument law of exclusivity checks to the expression.
-        if self.expression:
+        if self.expr:
             ast = Asts.FunctionCallArgumentGroupAst(
-                pos=(self.convention or self.expression).pos,
-                arguments=[
-                    Asts.FunctionCallArgumentUnnamedAst(
-                        pos=self.expression.pos,
-                        convention=self.convention,
-                        value=self.expression
-                    )
-                ]
-            )
-
+                pos=(self.convention or self.expr).pos,
+                arguments=[Asts.FunctionCallArgumentUnnamedAst(pos=self.expr.pos, convention=self.convention, value=self.expr)])
             ast.analyse_semantics(sm, **kwargs)
 
 

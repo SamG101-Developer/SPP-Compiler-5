@@ -82,7 +82,11 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Ensure the LHS and RHS are semantically valid.
         for e in self.lhs: e.analyse_semantics(sm, **kwargs)
-        for e in self.rhs: e.analyse_semantics(sm, **kwargs)
+
+        for i, e in enumerate(self.rhs):
+            if isinstance(e, Asts.PostfixExpressionAst) and isinstance(e.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+                kwargs |= {"inferred_return_type": self.lhs[i].infer_type(sm, **kwargs)}
+            e.analyse_semantics(sm, **kwargs)
 
         # Ensure the lhs targets are all symbolic (assignable to).
         lhs_syms = [sm.current_scope.get_variable_symbol_outermost_part(expr) for expr in self.lhs]

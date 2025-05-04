@@ -213,6 +213,10 @@ class AstFunctionUtils:
             if old_func is AstFunctionUtils.check_for_conflicting_override(this_scope, old_scope, new_func, exclude=old_scope):
                 continue
 
+            # Ignore if the return types are different.
+            if not new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
+                continue
+
             # Get the two parameter lists and create copies to remove duplicate parameters from.
             params_new = copy.copy(new_func.function_parameter_group)
             params_old = copy.copy(old_func.function_parameter_group)

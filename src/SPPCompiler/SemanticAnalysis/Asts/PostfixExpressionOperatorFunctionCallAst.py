@@ -53,17 +53,18 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     def pos_end(self) -> int:
         return self.function_argument_group.pos_end
 
-    def determine_overload(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
+    def determine_overload(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, expected_return_type: Asts.TypeAst = None, **kwargs) -> None:
+        # Todo: split this function up, might be the worst function in the codebase.
+
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
         # function's name and its owner type/namespace.
-
         function_owner_type, function_owner_scope, function_name = AstFunctionUtils.get_function_owner_type_and_function_name(sm, lhs)
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
             transformed_lhs, transformed_function_call = AstFunctionUtils.convert_method_to_function_form(
                 sm, function_owner_type, function_name, lhs, self)
-            transformed_function_call.determine_overload(sm, transformed_lhs, **kwargs)
+            transformed_function_call.determine_overload(sm, transformed_lhs, expected_return_type=expected_return_type, **kwargs)
             self._overload = transformed_function_call._overload
             self.function_argument_group = transformed_function_call.function_argument_group
             return
@@ -216,6 +217,11 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                             if not parameter_type.symbolic_eq(argument_type, function_scope, sm.current_scope):
                                 raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
+                # If an expected type has been provided, ensure it matches the function prototype's return type.
+                if expected_return_type is not None and not expected_return_type.symbolic_eq(function_overload.return_type, sm.current_scope, sm.current_scope):
+                    raise SemanticErrors.TypeMismatchError().add(
+                        function_overload.return_type, function_overload.return_type, expected_return_type, expected_return_type).scopes(sm.current_scope)
+
                 # Mark the overload as a pass.
                 pass_overloads.append((function_scope, function_overload))
 
@@ -236,13 +242,13 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
         # If there are no pass overloads, raise an error.
         if not pass_overloads:
-            failed_signatures_and_errors = "\n".join([f[1].print_signature(AstPrinter(), f[0]._ast.name) + f" - {type(f[2]).__name__}" for f in fail_overloads])
+            failed_signatures_and_errors = "\n".join([f[1].print_signature(AstPrinter(), f[0]._ast.name if f[0]._ast else "") + f" - {type(f[2]).__name__}" for f in fail_overloads])
             argument_usage_signature = f"{lhs}({", ".join([str(a.infer_type(sm, **kwargs)) for a in self.function_argument_group.arguments])})"
             raise SemanticErrors.FunctionCallNoValidSignaturesError().add(self, failed_signatures_and_errors, argument_usage_signature).scopes(sm.current_scope)
 
         # If there are multiple pass overloads, raise an error.
         elif len(pass_overloads) > 1:
-            passed_signatures = "\n".join([f[1].print_signature(AstPrinter(), f[0]._ast.name) for f in pass_overloads])
+            passed_signatures = "\n".join([f[1].print_signature(AstPrinter(), f[0]._ast.name if f[0]._ast else "") for f in pass_overloads])
             argument_usage_signature = f"{lhs}({", ".join([str(a.infer_type(sm, **kwargs)) for a in self.function_argument_group.arguments])})"
             raise SemanticErrors.FunctionCallAmbiguousSignaturesError().add(self, passed_signatures, argument_usage_signature).scopes(sm.current_scope)
 
@@ -267,11 +273,12 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
         # Check if this function call is from a transformed coroutine resume AST.
         is_coro_resume = kwargs.pop("is_coro_resume", False)
+        inferred_return_type = kwargs.pop("inferred_return_type", None)
 
         # Analyse the function and generic arguments, and determine the overload.
         self.function_argument_group.pre_analyse_semantics(sm, **kwargs)
         self.generic_argument_group.analyse_semantics(sm, **kwargs)
-        self.determine_overload(sm, lhs, **kwargs)  # Also adds the "self" argument if needed.
+        self.determine_overload(sm, lhs, expected_return_type=inferred_return_type, **kwargs)
         self.function_argument_group.analyse_semantics(sm, target_proto=self._overload[1], is_async=self._is_async, is_coro_resume=is_coro_resume, **kwargs)
 
         # If a fold is taking place, analyse the non-folding arguments again (checks for double moves).

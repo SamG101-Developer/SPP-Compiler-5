@@ -56,13 +56,6 @@ class TestFunctionPrototypeAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
-    def test_invalid_function_prototype_conflict_different_return_type(self):
-        """
-        fun f(a: std::boolean::Bool) -> std::void::Void { }
-        fun f(a: std::boolean::Bool) -> std::boolean::Bool { }
-        """
-
-    @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
     def test_invalid_function_prototype_conflict_different_param_variation_1_param(self):
         """
         fun f(a: std::boolean::Bool = false) -> std::void::Void { }
@@ -160,6 +153,13 @@ class TestFunctionPrototypeAst(CustomTestCase):
         fun g() -> std::void::Void {
             let x = f[&std::string::Str]()
         }
+        """
+
+    @should_pass_compilation()
+    def test_valid_function_prototype_overload_different_return_type(self):
+        """
+        fun f(a: std::boolean::Bool) -> std::void::Void { }
+        fun f(a: std::boolean::Bool) -> std::boolean::Bool { ret true }
         """
 
     @should_pass_compilation()

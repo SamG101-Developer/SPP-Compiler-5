@@ -51,14 +51,38 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
     def get_regular_args(self) -> Seq[Asts.ObjectInitializerArgumentAst]:
         return [a for a in self.arguments if not isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst) or a.is_default is None]
 
-    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # Analyse the arguments and enforce memory integrity.
+    def get_named_args(self) -> Seq[Asts.ObjectInitializerArgumentNamedAst]:
+        return [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentNamedAst)]
+
+    def get_unnamed_args(self) -> Seq[Asts.ObjectInitializerArgumentUnnamedAst]:
+        return [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst)]
+
+    def pre_analyse_semantics(self, sm: ScopeManager, class_type: Asts.TypeAst = None, **kwargs) -> None:
+        # Get the symbol of the class type.
+        class_symbol = sm.current_scope.get_symbol(class_type)
+
+        # Get the attribute information from the class type.
+        all_attributes = [(c, class_symbol.scope) for c in class_symbol.type.body.members]
+        for sup_scope in class_symbol.scope.sup_scopes:
+            if isinstance(sup_scope._ast, Asts.ClassPrototypeAst):
+                all_attributes += [(c, sup_scope) for c in sup_scope._ast.body.members]
+
         for argument in self.arguments:
+
+            # Return-type-overloading helper code.
+            if isinstance(argument, Asts.ObjectInitializerArgumentNamedAst):
+                if isinstance(argument.value, Asts.PostfixExpressionAst) and isinstance(argument.value.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+                    attr = [(a, s) for a, s in all_attributes if a.name == argument.name]
+                    attr_sym = attr[0][1].get_symbol(attr[0][0].type)
+                    attr_type = attr_sym.fq_name if attr else None
+                    kwargs |= {"inferred_return_type": attr_type if not attr_sym.is_generic else None}
+
+            # Analyse the argument and enforce memory integrity.
             argument.analyse_semantics(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(self.get_arg_val(argument), argument, sm)
 
     def analyse_semantics(self, sm: ScopeManager, class_type: Asts.TypeAst = None, **kwargs) -> None:
-        # Get the symbol of the class type, and check it isn't abstract.
+        # Get the symbol of the class type.
         class_symbol = sm.current_scope.get_symbol(class_type)
 
         # Get the attribute information from the class type.

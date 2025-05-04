@@ -41,6 +41,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         self.where_block = self.where_block or Asts.WhereBlockAst()
         self.body = self.body or Asts.FunctionImplementationAst()
         self.tok_arrow = self.tok_arrow or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkArrowR)
+        self._orig = self._orig or Asts.IdentifierAst(pos=self.pos, value="<anonymous>")
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

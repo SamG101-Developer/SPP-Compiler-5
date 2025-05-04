@@ -7,8 +7,6 @@
 ## Looping
 
 - Analyse the body of a loop block twice for memory safety.
-- Check the iterator convention from the iterable.
-  - `loop x in vector.iter_mut()` => `Gen[&mut T]` => `&mut T` is the type of `x`.
 
 ## Slicing
 
@@ -20,19 +18,6 @@
         - `vector.set(0, 5)` or `vector.place(0, 5)`.
     - For slicing:
         - `vector.set_slice(5, 10, other.iter_mov())`
-
-## Coroutine Update
-
-- Introduce the `GenOnce` type -> acts as `Gen` but with an auto call to `.res()`
-- The `GenOnce::resume` must be a consuming method?
-
-## Return Type Overloading
-
-- For the function call, optionally send in a left-hand side target type.
-- This is either the type of the assignment target variable, or the optional explicit type of the `let`.
-- If a `return_type=` kwarg is provided, match it against the return type.
-- No `return_type=` can create ambiguity errors with overloads.
-- Remove the return type check from the overload conflict checker.
 
 ## Generic Inference
 

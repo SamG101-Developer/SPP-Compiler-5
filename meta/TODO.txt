@@ -22,9 +22,10 @@ Arrays
 Generators.
 * For `GenOnce`, only one `gen` expression should be allowed.
 * Auto `.res()` on `gen` value being received for `GenOnce`?
+* Any type being yielded to (`cor ... -> Iterator[T]`) etc, must have no attributes.
 
 Lambdas.
-* Mutable captures? Like `mut a: &mut T` but for a capture? `mut &mut a` is not happening.
+* When a lambda is called, pass the actuall lambda into itself with the correct convention (like a mock self)
 
 Aliasing.
 * Allow `use std::iterator::(IterMov, IterMut, IterRef)` in one statement (check syntax).

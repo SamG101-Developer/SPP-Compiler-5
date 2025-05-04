@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 # TODO
-#  - Prevent abstract types being initialized (types with an abstract method)
+#  - Prevent abstract types being initialized (types with an abstract method)?
 
 
 @dataclass(slots=True)
@@ -51,9 +51,9 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.GenericTypeInvalidUsageError().add(
                 self.class_type, self.class_type, "object initializer").scopes(sm.current_scope)
 
-        self.object_argument_group.pre_analyse_semantics(sm, **kwargs)
+        self.object_argument_group.pre_analyse_semantics(sm, class_type=self.class_type.without_generics(), **kwargs)
 
-        # Determine the generic inference source and target
+        # Determine the generic inference source and target.
         generic_infer_source = {
             a.name: self.object_argument_group.get_arg_val(a).infer_type(sm, **kwargs)
             for a in self.object_argument_group.arguments

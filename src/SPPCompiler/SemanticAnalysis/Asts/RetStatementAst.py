@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
@@ -17,7 +17,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 @dataclass(slots=True)
 class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
-    tok_ret: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwRet))
+    kw_ret: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwRet))
     expr: Optional[Asts.ExpressionAst] = field(default=None)
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
@@ -25,21 +25,19 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.tok_ret.print(printer),
+            self.kw_ret.print(printer),
             f" {self.expr.print(printer)}" if self.expr is not None else ""]
         return "".join(string)
 
     @property
     def pos_end(self) -> int:
-        return self.expr.pos_end if self.expr else self.tok_ret.pos_end
+        return self.expr.pos_end if self.expr else self.kw_ret.pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # Todo: allow returning from a coroutine if there is no expression attached to it (early return).
-
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token_type != SppTokenType.KwFun and self.expr:
             raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(
@@ -47,25 +45,25 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expr:
+            if isinstance(self.expr, Asts.PostfixExpressionAst) and isinstance(self.expr.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+                kwargs |= {"inferred_return_type": kwargs["function_ret_type"][0]}
+
             self.expr.analyse_semantics(sm, **kwargs)
-            AstMemoryUtils.enforce_memory_integrity(self.expr, self.tok_ret, sm)
+            AstMemoryUtils.enforce_memory_integrity(self.expr, self.kw_ret, sm)
             expression_type = self.expr.infer_type(sm, **kwargs)
         else:
-            expression_type = CommonTypes.Void(self.pos)
+            expression_type = CommonTypesPrecompiled.VOID
 
-        # If the function return type has been given (function, method) then get it.
         if kwargs["function_ret_type"]:
+            # If the function return type has been given (function, method) then get and store it.
             self._func_ret_type = kwargs["function_ret_type"][0]
-
-        # Otherwise, this is for a lambda, so either set it or get it.
         else:
+            # If there is no function return type, then this is the first return statement for a lambda, so store the type.
             self._func_ret_type = expression_type
             kwargs["function_ret_type"].append(self._func_ret_type)
 
-        # Determine the return type of the enclosing function.
+        # Do a type check on the return expression vs the expected returning type.
         expected_type = kwargs["function_ret_type"][0]
-
-        # Check the expression type matches the expected type (for subroutines).
         if kwargs["function_type"].token_type == SppTokenType.KwFun:
             if not expected_type.symbolic_eq(expression_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(

@@ -61,6 +61,8 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.explicit_type.analyse_semantics(sm, **kwargs)
 
         # Analyse the value to ensure its valid before any destructuring takes place.
+        if isinstance(self.value, Asts.PostfixExpressionAst) and isinstance(self.value.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+            kwargs |= {"inferred_return_type": self.explicit_type}
         self.value.analyse_semantics(sm, **(kwargs | {"assignment": self.assign_to.extract_names}))
 
         # If an explicit type has been given, analyse it and then check it against the value type.

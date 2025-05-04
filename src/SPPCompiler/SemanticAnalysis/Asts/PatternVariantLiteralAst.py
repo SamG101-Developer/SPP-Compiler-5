@@ -22,7 +22,7 @@ class PatternVariantLiteralAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
 
     def convert_to_variable(self, **kwargs) -> Asts.LocalVariableSingleIdentifierAst:
         # Convert the dummy single identifier into a local variable single identifier.
-        variable = Asts.LocalVariableSingleIdentifierAst(pos=self.pos, name=Asts.IdentifierAst(self.pos, f"$l{id(self)}"))
+        variable = Asts.LocalVariableSingleIdentifierAst(pos=self.pos, name=Asts.IdentifierAst(self.pos, f"$_{id(self)}"))
         variable._from_pattern = True
         return variable
 
