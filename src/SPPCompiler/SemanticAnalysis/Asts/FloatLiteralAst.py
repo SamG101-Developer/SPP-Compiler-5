@@ -7,7 +7,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
@@ -38,6 +38,7 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.decimal_value = self.decimal_value or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.LxNumber)
 
     def __eq__(self, other: FloatLiteralAst) -> bool:
+        # Needed for cmp-generic arg checking.
         return isinstance(other, FloatLiteralAst) and self.tok_sign == other.tok_sign and self.integer_value.token_data == other.integer_value.token_data and self.decimal_value.token_data == other.decimal_value.token_data
 
     @ast_printer_method
@@ -59,19 +60,19 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Match the type against the allowed type postfixes (no postfix is BigDec).
         match self.type:
             case None:
-                return CommonTypesPrecompiled.BIGDEC
+                return CommonTypes.BigDec(self.pos)
             case type if type.type_parts()[0].value == "f8":
-                return CommonTypesPrecompiled.F8
+                return CommonTypes.F8(self.pos)
             case type if type.type_parts()[0].value == "f16":
-                return CommonTypesPrecompiled.F16
+                return CommonTypes.F16(self.pos)
             case type if type.type_parts()[0].value == "f32":
-                return CommonTypesPrecompiled.F32
+                return CommonTypes.F32(self.pos)
             case type if type.type_parts()[0].value == "f64":
-                return CommonTypesPrecompiled.F64
+                return CommonTypes.F64(self.pos)
             case type if type.type_parts()[0].value == "f128":
-                return CommonTypesPrecompiled.F128
+                return CommonTypes.F128(self.pos)
             case type if type.type_parts()[0].value == "f256":
-                return CommonTypesPrecompiled.F256
+                return CommonTypes.F256(self.pos)
             case _:
                 raise
 

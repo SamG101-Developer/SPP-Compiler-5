@@ -7,7 +7,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
@@ -46,7 +46,7 @@ class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return id(self)
 
     def __eq__(self, other: IntegerLiteralAst) -> bool:
-        # Needed for cmp-generic arg checking
+        # Needed for cmp-generic arg checking.
         return isinstance(other, IntegerLiteralAst) and self.tok_sign == other.tok_sign and self.value.token_data == other.value.token_data
 
     @staticmethod
@@ -77,33 +77,33 @@ class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Match the type against the allowed type postfixes (no postfix is BigInt).
         match self.type:
             case None:
-                return CommonTypesPrecompiled.BIGINT
+                return CommonTypes.BigInt(self.pos)
             case type if type.type_parts()[0].value == "i8":
-                return CommonTypesPrecompiled.I8
+                return CommonTypes.I8(self.pos)
             case type if type.type_parts()[0].value == "u8":
-                return CommonTypesPrecompiled.U8
+                return CommonTypes.U8(self.pos)
             case type if type.type_parts()[0].value == "i16":
-                return CommonTypesPrecompiled.I16
+                return CommonTypes.I16(self.pos)
             case type if type.type_parts()[0].value == "u16":
-                return CommonTypesPrecompiled.U16
+                return CommonTypes.U16(self.pos)
             case type if type.type_parts()[0].value == "i32":
-                return CommonTypesPrecompiled.I32
+                return CommonTypes.I32(self.pos)
             case type if type.type_parts()[0].value == "u32":
-                return CommonTypesPrecompiled.U32
+                return CommonTypes.U32(self.pos)
             case type if type.type_parts()[0].value == "i64":
-                return CommonTypesPrecompiled.I64
+                return CommonTypes.I64(self.pos)
             case type if type.type_parts()[0].value == "u64":
-                return CommonTypesPrecompiled.U64
+                return CommonTypes.U64(self.pos)
             case type if type.type_parts()[0].value == "i128":
-                return CommonTypesPrecompiled.I128
+                return CommonTypes.I128(self.pos)
             case type if type.type_parts()[0].value == "u128":
-                return CommonTypesPrecompiled.U128
+                return CommonTypes.U128(self.pos)
             case type if type.type_parts()[0].value == "i256":
-                return CommonTypesPrecompiled.I256
+                return CommonTypes.I256(self.pos)
             case type if type.type_parts()[0].value == "u256":
-                return CommonTypesPrecompiled.U256
+                return CommonTypes.U256(self.pos)
             case type if type.type_parts()[0].value == "uz":
-                return CommonTypesPrecompiled.USIZE
+                return CommonTypes.USize(self.pos)
             case _:
                 raise
 
