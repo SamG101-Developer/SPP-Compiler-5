@@ -1,7 +1,7 @@
 from tests._Utils import *
 
 
-class TestOverloads(CustomTestCase):
+class TestOverrides(CustomTestCase):
     @should_pass_compilation()
     def test_valid_overrides(self):
         """

@@ -101,20 +101,6 @@ class TestFunctionPrototypeAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
-    def test_invalid_function_prototype_overload_parameter_conventions_1(self):
-        """
-        fun f(a: &std::boolean::Bool) -> std::void::Void { }
-        fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
-        """
-
-    @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
-    def test_invalid_function_prototype_overload_parameter_conventions_2(self):
-        """
-        fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
-        fun f(a: &std::boolean::Bool) -> std::void::Void { }
-        """
-
     @should_fail_compilation(SemanticErrors.ParameterSelfOutsideSuperimpositionError)
     def test_invalid_function_prototype_self_outside_superimposition(self):
         """
@@ -153,62 +139,6 @@ class TestFunctionPrototypeAst(CustomTestCase):
         fun g() -> std::void::Void {
             let x = f[&std::string::Str]()
         }
-        """
-
-    @should_pass_compilation()
-    def test_valid_function_prototype_overload_different_return_type(self):
-        """
-        fun f(a: std::boolean::Bool) -> std::void::Void { }
-        fun f(a: std::boolean::Bool) -> std::boolean::Bool { ret true }
-        """
-
-    @should_pass_compilation()
-    def test_valid_function_prototype_overload_parameter_count(self):
-        """
-        fun f(a: std::boolean::Bool) -> std::void::Void { }
-        fun f(a: std::boolean::Bool, b: std::boolean::Bool) -> std::void::Void { }
-        """
-
-    @should_pass_compilation()
-    def test_valid_function_prototype_overload_parameter_conventions_1(self):
-        """
-        fun f(a: &std::boolean::Bool) -> std::void::Void { }
-        fun f(a: std::boolean::Bool) -> std::void::Void { }
-        """
-
-    @should_pass_compilation()
-    def test_valid_function_prototype_overload_parameter_conventions_2(self):
-        """
-        fun f(a: std::boolean::Bool) -> std::void::Void { }
-        fun f(a: &std::boolean::Bool) -> std::void::Void { }
-        """
-
-    @should_pass_compilation()
-    def test_valid_function_prototype_overload_parameter_conventions_3(self):
-        """
-        fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
-        fun f(a: std::boolean::Bool) -> std::void::Void { }
-        """
-
-    @should_pass_compilation()
-    def test_valid_function_prototype_overload_parameter_conventions_4(self):
-        """
-        fun f(a: std::boolean::Bool) -> std::void::Void { }
-        fun f(a: &mut std::boolean::Bool) -> std::void::Void { }
-        """
-
-    @should_pass_compilation()
-    def test_valid_function_prototype_overload_parameter_types(self):
-        """
-        fun f(a: std::boolean::Bool) -> std::void::Void { }
-        fun f(a: std::number::bigint::BigInt) -> std::void::Void { }
-        """
-
-    @should_pass_compilation()
-    def test_valid_generic_function_prototype(self):
-        """
-        fun f[T](a: T) -> std::void::Void { }
-        fun f(a: std::number::bigint::BigInt) -> std::void::Void { }
         """
 
     @should_pass_compilation()
