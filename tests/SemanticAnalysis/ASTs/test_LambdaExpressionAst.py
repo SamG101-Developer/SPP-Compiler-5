@@ -249,3 +249,43 @@ class LambdaExpressionAst(CustomTestCase):
             g(&some_variable)
         }
         """
+
+    @should_pass_compilation()
+    def test_valid_lambda_expression_containing_ret_statement(self):
+        """
+        use std::number::u32::U32
+        fun f() -> std::void::Void {
+            let a = 5_u32
+            let x = |caps a| { ret a }
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionSubroutineContainsGenExpressionError)
+    def test_invalid_lambda_expression_containing_gen_expression(self):
+        """
+        use std::number::u32::U32
+        fun f() -> std::void::Void {
+            let a = 5_u32
+            let x = |caps a| { gen a }
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_lambda_expression_containing_gen_expression(self):
+        """
+        use std::number::u32::U32
+        fun f() -> std::void::Void {
+            let a = 5_u32
+            let x = cor |caps a| { gen a }
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCoroutineContainsReturnStatementError)
+    def test_invalid_lambda_expression_containing_ret_statement(self):
+        """
+        use std::number::u32::U32
+        fun f() -> std::void::Void {
+            let a = 5_u32
+            let x = cor |caps a| { ret a }
+        }
+        """

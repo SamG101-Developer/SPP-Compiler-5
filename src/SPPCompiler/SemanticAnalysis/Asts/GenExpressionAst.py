@@ -76,6 +76,7 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         else:
             # If there is no function return type, then this is the first return statement for a lambda, so store the type.
             self._func_ret_type = CommonTypes.Gen(self.expr.pos, expression_type, CommonTypesPrecompiled.VOID)
+            self._func_ret_type.analyse_semantics(sm, **kwargs)
             kwargs["function_ret_type"].append(self._func_ret_type)
 
         # Determine the yield type of the enclosing function.
