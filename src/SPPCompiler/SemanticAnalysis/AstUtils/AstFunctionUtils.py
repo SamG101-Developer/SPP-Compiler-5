@@ -9,6 +9,7 @@ from ordered_set import OrderedSet
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
@@ -128,7 +129,7 @@ class AstFunctionUtils:
 
     @staticmethod
     def get_all_function_scopes(
-            function_name: Asts.IdentifierAst, function_owner_scope: Scope)\
+            target_function_name: Asts.IdentifierAst, target_scope: Scope, *, for_override: bool = False)\
             -> Seq[Tuple[Optional[Scope], Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]]:
 
         """
@@ -137,60 +138,64 @@ class AstFunctionUtils:
         matching by name. The generic arguments from the outer scope (ie superimposition) are saved,so they can be
         inherited into the function signature for generic substitution.
 
-        :param function_name: The name of the function to get the overloads for.
-        :param function_owner_scope: The scope of the class or module that the function belongs to.
+        :param target_function_name: The name of the function to get the overloads for.
+        :param target_scope: The scope of the class or module that the functions should belong to.
+        :param for_override: If the overloads are being checked for an override.
         :return: A list of 3-tuples, containing for each overload, the scope o the function the overload is represented
             by, the function prototype of the overload, and associated generic arguments in the owning context that must
             be inherited into the function signature.
         """
 
-        if not isinstance(function_name, Asts.IdentifierAst):
+        if not isinstance(target_function_name, Asts.IdentifierAst):
             return []
 
         # Get the function-type name from teh function: "$Func" from "func()".
-        function_name = function_name.to_function_identifier()
+        target_function_name = target_function_name.to_function_identifier()
         overload_scopes_and_info = []
 
-        # Functions at the module level will have no inheritable generics (no enclosing superimposition). They can
-        # appear in the current module or any parent module as they are all parent modules' functions are directly
-        # accessible from a module.
-        if isinstance(function_owner_scope.name, Asts.IdentifierAst):
-            for ancestor_scope in function_owner_scope.ancestors:
+        # Check for namespaced (module-level) functions. They will have no "inheritable generics".
+        if target_scope.type_symbol is not None and target_scope.type_symbol.symbol_type == SymbolType.NamespaceSymbol:
+            for ancestor_scope in target_scope.ancestors:
 
-                # Find all the scopes at the module level that superimpose a function type over the function:
-                # "sup $Func ext FunXXX { ... }". Note that these superimpositions should always be extending FunXXX
-                # types, because "fun func()" is preprocessed into "sup $Func ext FunRef[...] { ... }".
-                for sup_scope in [c for c in ancestor_scope.children if isinstance(c._ast, Asts.SupPrototypeExtensionAst) and c._ast.name == function_name]:
+                # Find all the scopes at the module level superimposing a function type over the function.
+                for sup_scope in [c for c in ancestor_scope.children if isinstance(c._ast, Asts.SupPrototypeExtensionAst) and c._ast.name == target_function_name]:
                     generics = Asts.GenericArgumentGroupAst()
-                    overload_scopes_and_info.append((ancestor_scope, sup_scope._ast.body.members[0], generics))
+                    if not for_override:
+                        inner_function_scope = sup_scope.children[0]
+                    overload_scopes_and_info.append((inner_function_scope, sup_scope._ast.body.members[0], generics))
 
-        # Functions belonging to a type will have inheritable generics from "sup [...] Type { ... }". Note that either a
-        # class for the type of the function's owner ("cls Type"), or a specific superimposition ("sup Type ..."), can
-        # be provided as the function scope's owner. If a class is provided, then super-scopes are retrieved from it.
-        # Otherwise, the superimposition's scope is used directly.
+        # Functions belonging to a type will have inheritable generics from "sup [...] Type { ... }".
         else:
-            if isinstance(function_owner_scope._ast, Asts.ClassPrototypeAst):
-                sup_scopes = function_owner_scope.sup_scopes
-            else:
-                sup_scopes = [function_owner_scope]
 
-            # From the super scopes, check each one for "sup $Func ext FunXXX { ... }" superimpositions. These, as seen
-            # in the module analysis version, should also only contain FunXXX types. The only addition is grabbing the
-            # generics from the superimposition.
+            # If a class scope was provided as the function owner scope, then check all associated super scopes.
+            if isinstance(target_scope._ast, Asts.ClassPrototypeAst):
+                sup_scopes = target_scope.sup_scopes
+
+            # Otherwise, just use the super scope that was provided, as this isa more "refined" search.
+            else:
+                sup_scopes = [target_scope]
+
+            # From the super scopes, check each one for "sup $Func ext FunXXX { ... }" superimpositions.
             for sup_scope in sup_scopes:
-                for sup_ast in [m for m in sup_scope._ast.body.members if isinstance(m, Asts.SupPrototypeExtensionAst) and m.name == function_name]:
+                for sup_ast in [m for m in sup_scope._ast.body.members if isinstance(m, Asts.SupPrototypeExtensionAst) and m.name == target_function_name]:
                     generics = Asts.GenericArgumentGroupAst(arguments=sup_scope.generics)
                     overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))
 
             # When a derived class has overridden a function, the overridden base class function(s) must be removed.
             # This is done by checking for every candidate method, if there is a conflicting method (by signature)
-            # closer to the derived class. If there is, then it must be an overridden / a base method, and is removed.
+            # closer to the derived class. If there is, then it must be [an overridden / a base] method, and is removed.
             for scope_1, function_1, _ in overload_scopes_and_info.copy():
                 for scope_2, function_2, _ in overload_scopes_and_info.copy():
-                    if function_1 is not function_2 and function_owner_scope.depth_difference(scope_1) < function_owner_scope.depth_difference(scope_2):
+                    if function_1 is not function_2 and target_scope.depth_difference(scope_1) < target_scope.depth_difference(scope_2):
                         conflict = AstFunctionUtils.check_for_conflicting_override(scope_1, scope_2, function_1)
                         if conflict:
                             SequenceUtils.remove_if(overload_scopes_and_info, lambda info: info[1] is conflict)
+
+            # Adjust the scope in the tuple to the inner function scope, now that the superimposition base classes have
+            # been removed.
+            if not for_override:
+                for i, (scope, function, generics) in enumerate(overload_scopes_and_info):
+                    overload_scopes_and_info[i] = (scope.children[0], function, generics)
 
         # Return the overload scopes, and their generic argument groups.
         return overload_scopes_and_info
@@ -205,8 +210,18 @@ class AstFunctionUtils:
         existing_scopes = [e[0] for e in existing]
         existing_funcs  = [e[1] for e in existing]
 
+        # print("-" * 100)
+        # print("Checking for conflicting overload")
+        # print("\tTarget scope:", target_scope)
+        # print("\tNew scope:", this_scope)
+        # print("\tNew function:", new_func)
+
         # Check for an overload conflict with all function of the same name.
         for old_scope, old_func in zip(existing_scopes, existing_funcs):
+            # print("##")
+            # print("Old scope:", old_scope)
+            # print("Old function:", old_func)
+
             # Ignore if the method is an identical match on a base class (override) or is the same object.
             if old_func is new_func:
                 continue
@@ -215,6 +230,10 @@ class AstFunctionUtils:
 
             # Ignore if the return types are different.
             if not new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
+                continue
+
+            # Ignore if there are a different number of required generic parameters.
+            if len(new_func.generic_parameter_group.get_type_params()) != len(old_func.generic_parameter_group.get_type_params()) or len(new_func.generic_parameter_group.get_comp_params()) != len(old_func.generic_parameter_group.get_comp_params()):
                 continue
 
             # Get the two parameter lists and create copies to remove duplicate parameters from.
@@ -249,7 +268,7 @@ class AstFunctionUtils:
             return f.function_parameter_group.get_self_param() is not None
 
         # Get the existing functions callable on this type (belong to this type or any supertype).
-        existing = AstFunctionUtils.get_all_function_scopes(new_func._orig, target_scope)
+        existing = AstFunctionUtils.get_all_function_scopes(new_func._orig, target_scope, for_override=True)
         existing_scopes = [e[0] for e in existing]
         existing_funcs  = [e[1] for e in existing]
 
