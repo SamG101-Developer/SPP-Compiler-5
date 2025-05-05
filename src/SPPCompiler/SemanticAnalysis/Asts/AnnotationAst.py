@@ -145,8 +145,8 @@ class AnnotationAst(Asts.Ast):
 
         :param sm: The scope manager.
         :return: None.
-        :raise SemanticErrors.AnnotationInvalidApplicationError: This exception is thrown if an annotation is applied to
-            an invalid context. For example, applying ``virtual_method`` to a free function, or ``hot`` to a class.
+        :raise SemanticErrors.AnnotationInvalidLocationError: This exception is thrown if an annotation is applied to an
+            invalid context. For example, applying ``virtual_method`` to a free function, or ``hot`` to a class.
         :raise SemanticErrors.AnnotationConflictError: This exception is raised if the annotation conflicts with another
             annotation; an example would be both ``hot`` and ``cold`` being applied to a function.
         :raise SemanticErrors.AnnotationInvalidError: This exception is thrown if the annotation is unknown. In future
