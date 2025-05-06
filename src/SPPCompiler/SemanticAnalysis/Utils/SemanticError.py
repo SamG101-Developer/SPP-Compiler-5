@@ -1612,10 +1612,10 @@ class SemanticErrors:
 
             return self
 
-    class MissingMainFunction(SemanticError):
+    class MissingMainFunctionError(SemanticError):
         """
-        The MissingMainFunction is raised if the main function is missing from the program. The main function is the
-        entry point and must match a certain signature.
+        The MissingMainFunctionError is raised if the main function is missing from the program. The main function is
+        the entry point and must match a certain signature.
         """
 
         def add(self, main_module: Asts.ModulePrototypeAst) -> SemanticError:

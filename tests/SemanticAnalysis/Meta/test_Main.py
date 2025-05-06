@@ -23,18 +23,18 @@ class TestMain(CustomTestCase):
         fun main(args: Vec[Str]) -> Void { }
         """
 
-    @should_fail_compilation(SemanticErrors.MissingMainFunction, no_main=True)
+    @should_fail_compilation(SemanticErrors.MissingMainFunctionError, no_main=True)
     def test_invalid_main_missing(self) -> None:
         """
         """
 
-    @should_fail_compilation(SemanticErrors.MissingMainFunction, no_main=True)
+    @should_fail_compilation(SemanticErrors.MissingMainFunctionError, no_main=True)
     def test_invalid_main_no_argument(self) -> None:
         """
         fun main() -> std::void::Void { }
         """
 
-    @should_fail_compilation(SemanticErrors.MissingMainFunction, no_main=True)
+    @should_fail_compilation(SemanticErrors.MissingMainFunctionError, no_main=True)
     def test_invalid_main_argument_type_mismatch(self) -> None:
         """
         fun main(args: std::vector::Vec[std::number::bigint::BigInt]) -> std::void::Void { }

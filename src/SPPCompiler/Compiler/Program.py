@@ -167,7 +167,7 @@ class Program(CompilerStages):
         try:
             dummy_main_call.analyse_semantics(sm)
         except (SemanticErrors.FunctionCallNoValidSignaturesError, SemanticErrors.IdentifierUnknownError):
-            raise SemanticErrors.MissingMainFunction().add(main_module).scopes(sm.global_scope)
+            raise SemanticErrors.MissingMainFunctionError().add(main_module).scopes(sm.global_scope)
 
     def _move_scope_manager_to_namespace(self, sm: ScopeManager, module: Module) -> None:
         """
