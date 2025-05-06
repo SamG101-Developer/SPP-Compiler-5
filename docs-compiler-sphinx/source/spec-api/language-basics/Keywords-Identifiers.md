@@ -44,6 +44,7 @@ but don't introduce ASTs.
 - `and`: logical and binary operator
 - `or`: logical or binary operator
 - `not`: logical not postfix operator
+- `caps`: introduce captures for lambda functions
 
 ### Annotations List
 
