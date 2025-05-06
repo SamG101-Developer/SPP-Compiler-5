@@ -31,6 +31,7 @@ but don't introduce ASTs.
 - `exit`: exit a loop
 - `ret`: return a value from a function
 - `gen`: yield a value from a coroutine
+- `res`: advance a generator
 - `async` <format color="yellow">?</format>: call a function asynchronously
 - `where` <format color="yellow">?</format>: introduce type constraints on a generic
 - `is`: introduce a type check & potential destructure

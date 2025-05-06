@@ -28,3 +28,6 @@ Aliasing.
 * Allow `use std::iterator::(IterMov, IterMut, IterRef)` in one statement (check syntax).
 * Allow aliasing namespaces, things like `use std::{iterator::{IterMov, IterMut, IterRef}, number::bigint::BigInt}`
 * Allow non type aliasing? => `use std::console::print`
+
+Lambda.
+* Use the `mut` symbol status from the original symbol in the capture.

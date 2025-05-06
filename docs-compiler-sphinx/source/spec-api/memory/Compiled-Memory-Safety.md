@@ -8,10 +8,12 @@ include:
 - Address space layout randomization
 - Read-only relocations
 - Non-executable areas
-- Fortified functions
+- Fortified functions (bounds checking)
 - Shadow stacks
 - Indirect branch tracking
+- Memory tagging
 - Digital signatures
+- FFI safety
 
 ## Stack canaries
 

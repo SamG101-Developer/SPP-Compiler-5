@@ -10,6 +10,7 @@ let x = {
 }
 ```
 
-After the block, as there is no symbol leakage, `y` is not accessible. Anonymous blocks can be used to create temporary
-variables that are only accessible within the block. They can also be used to group statements together, or to create
-temporary scopes for variables.
+As blocks defined scopes, symbols defined within the block cannot be accessed from outside the scope. This means that
+the symbol `y` cannot be accessed from outside the defined block. All the symbols defined inside the block, that are
+still in the initialized state at the end of the block, will have their custom destructors run, if defined, as the end
+of the block signifies the end of the scope and therefore the end of the lifetime these symbols can be alive for.
