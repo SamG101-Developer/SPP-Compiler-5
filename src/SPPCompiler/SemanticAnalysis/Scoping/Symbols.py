@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, Optional, TYPE_CHECKING
 
-from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmSymbolInfo
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import MemoryInfo
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
@@ -91,7 +90,6 @@ class TypeSymbol(BaseSymbol):
     is_generic: bool = field(default=False)
     is_copyable: bool = field(default=False)
     visibility: Visibility = field(default=Visibility.Private)
-    llvm_info: LlvmSymbolInfo = field(default_factory=LlvmSymbolInfo)
     convention: Optional[Asts.ConventionAst] = field(default=None)
     generic_impl: TypeSymbol = field(default=None, repr=False)
 
