@@ -9,7 +9,7 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol, VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
@@ -113,10 +113,16 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         sm.move_to_next_scope()
         sm.move_to_next_scope()
 
+        # Todo: Analyse the old type without generics beforehand? Because of fq-typing the generic comp arg types.
+
         # Ensure the validity of the old type, with its generic arguments set.
-        for generic_parameter in self.generic_parameter_group.parameters:
+        for generic_parameter in self.generic_parameter_group.get_type_params():
             type_symbol = TypeSymbol(name=generic_parameter.name.type_parts()[0], type=None, is_generic=True)
             sm.current_scope.add_symbol(type_symbol)
+        for generic_parameter in self.generic_parameter_group.get_comp_params():
+            sym_type = sm.current_scope.get_symbol(self.old_type).scope.get_symbol(generic_parameter.type).fq_name
+            var_symbol = VariableSymbol(name=Asts.IdentifierAst.from_type(generic_parameter.name), type=sym_type, is_generic=True)
+            sm.current_scope.add_symbol(var_symbol)
 
         # Register the old type against the new alias symbol.
         self.old_type.analyse_semantics(sm)
