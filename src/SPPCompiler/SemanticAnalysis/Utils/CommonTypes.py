@@ -138,33 +138,31 @@ class CommonTypes:
             f"std::future::Fut[{inner_type}]", SppParser.parse_type, pos_adjust=pos)
 
     @staticmethod
-    def Arr2(pos: int, elem_type: Asts.TypeAst, size: Asts.IntegerLiteralAst):
-        return Asts.TypeUnaryExpressionAst(
-            pos=pos,
-            op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "std")),
-            rhs=Asts.TypeUnaryExpressionAst(
-                pos=pos,
-                op=Asts.TypeUnaryOperatorNamespaceAst(pos=pos, name=Asts.IdentifierAst(pos, "array")),
-                rhs=Asts.TypeSingleAst(
-                    pos=pos,
-                    name=Asts.GenericIdentifierAst(
-                        pos=pos,
-                        value="Arr",
-                        generic_argument_group=Asts.GenericArgumentGroupAst(
-                            pos=pos,
-                            arguments=[
-                                Asts.GenericTypeArgumentUnnamedAst(value=elem_type),
-                                Asts.GenericCompArgumentUnnamedAst(value=size)]
-                        )
-                    )
-                )
-            )
-        )
+    def Arr(pos: int, elem_type: Asts.TypeAst, size: Asts.IntegerLiteralAst):
+        generics = [Asts.GenericTypeArgumentUnnamedAst(value=elem_type), Asts.GenericCompArgumentUnnamedAst(value=size)]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Arr", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "array")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
+
+    @staticmethod
+    def ArrDynamic(pos: int, elem_type: Asts.TypeAst) -> Asts.TypeAst:
+        generics = [Asts.GenericTypeArgumentUnnamedAst(value=elem_type)]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "ArrDynamic", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "array")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def Opt(pos: int, inner_type: Asts.TypeAst):
-        return CodeInjection.inject_code(
-            f"std::option::Opt[{inner_type}]", SppParser.parse_type, pos_adjust=pos)
+        generics = [Asts.GenericTypeArgumentUnnamedAst(value=inner_type)]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Opt", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "option")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def Tup(pos: int, inner_types: Seq[Asts.TypeAst] = None):
@@ -245,6 +243,7 @@ class CommonTypes:
 class CommonTypesPrecompiled:
     EMPTY_TUPLE: Asts.TypeAst = "Pending..."
     EMPTY_ARRAY: Asts.TypeAst = "Pending..."
+    EMPTY_ARRAY_DYNAMIC: Asts.TypeAst = "Pending..."
     EMPTY_GENERATOR: Asts.TypeAst = "Pending..."
     EMPTY_VARIANT: Asts.TypeAst = "Pending..."
     EMPTY_FUN_MOV: Asts.TypeAst = "Pending..."
@@ -279,7 +278,8 @@ class CommonTypesPrecompiled:
     @staticmethod
     def initialize():
         CommonTypesPrecompiled.EMPTY_TUPLE = CommonTypes.Tup(pos=0).without_generics()
-        CommonTypesPrecompiled.EMPTY_ARRAY = CommonTypes.Arr2(pos=0, elem_type=Asts.Ast(), size=Asts.Ast()).without_generics()
+        CommonTypesPrecompiled.EMPTY_ARRAY = CommonTypes.Arr(pos=0, elem_type=Asts.Ast(), size=Asts.Ast()).without_generics()
+        CommonTypesPrecompiled.EMPTY_ARRAY_DYNAMIC = CommonTypes.ArrDynamic(pos=0, elem_type=Asts.Ast()).without_generics()
         CommonTypesPrecompiled.EMPTY_GENERATOR = CommonTypes.Gen(pos=0).without_generics()
         CommonTypesPrecompiled.EMPTY_VARIANT = CommonTypes.Var(pos=0).without_generics()
         CommonTypesPrecompiled.EMPTY_FUN_MOV = CommonTypes.FunMov(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
