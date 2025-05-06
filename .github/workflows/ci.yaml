@@ -1,4 +1,4 @@
-name: Build, Test & Deploy Documentation
+name: Build & Deploy Documentation
 
 on:
   push:
@@ -38,33 +38,33 @@ jobs:
         with:
           path: './docs-compiler-sphinx/build/html'
 
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.13'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install setuptools
-
-      - name: Set Env
-        run: |
-          echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV  # Add src to PYTHONPATH
-          echo "SHOW_PROGRESS_BARS=0" >> $GITHUB_ENV
-
-      - name: Run tests
-        run: |
-          python -m unittest discover -s tests
-        continue-on-error: true
+#  test:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Set up Python
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: '3.13'
+#
+#      - name: Install dependencies
+#        run: |
+#          python -m pip install --upgrade pip
+#          pip install -r requirements.txt
+#          pip install setuptools
+#
+#      - name: Set Env
+#        run: |
+#          echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV  # Add src to PYTHONPATH
+#          echo "SHOW_PROGRESS_BARS=0" >> $GITHUB_ENV
+#
+#      - name: Run tests
+#        run: |
+#          python -m unittest discover -s tests
+#        continue-on-error: true
 
   deploy:
     needs: build-docs

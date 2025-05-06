@@ -210,17 +210,8 @@ class AstFunctionUtils:
         existing_scopes = [e[0] for e in existing]
         existing_funcs  = [e[1] for e in existing]
 
-        # print("-" * 100)
-        # print("Checking for conflicting overload")
-        # print("\tTarget scope:", target_scope)
-        # print("\tNew scope:", this_scope)
-        # print("\tNew function:", new_func)
-
         # Check for an overload conflict with all function of the same name.
         for old_scope, old_func in zip(existing_scopes, existing_funcs):
-            # print("##")
-            # print("Old scope:", old_scope)
-            # print("Old function:", old_func)
 
             # Ignore if the method is an identical match on a base class (override) or is the same object.
             if old_func is new_func:
