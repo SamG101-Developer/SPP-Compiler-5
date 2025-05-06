@@ -92,26 +92,27 @@ As all languages available to the ffi must conform to the `C` ABI, it is known t
 exported using `extern "C"` or something similar. This means only a type-mapping between `S++` and `C` ABI types is
 needed. The following table shows the conversions that are made when calling a `C` ABI function from S++:
 
-| C Type               | S++ Type | Notes                        |
-|----------------------|----------|------------------------------|
-| `char`               | `I8`     | Identical types, no change   |
-| `short`              | `I16`    | Identical types, no change   |
-| `int`                | `I32`    | Identical types, no change   |
-| `long`               | `I64`    | Identical types, no change   |
-| `long long`          | `I64`    | Identical types, no change   |
-| `unsigned char`      | `U8`     | Identical types, no change   |
-| `unsigned short`     | `U16`    | Identical types, no change   |
-| `unsigned int`       | `U32`    | Identical types, no change   |
-| `unsigned long`      | `U64`    | Identical types, no change   |
-| `unsigned long long` | `U64`    | Identical types, no change   |
-| `float`              | `F32`    | Identical types, no change   |
-| `double`             | `F64`    | Identical types, no change   |
-| `long double`        | `F64`    | Identical types, no change   |
-| `bool`               | `Bool`   | Identical types, no change   |
-| `void`               | `Void`   | Identical types, no change   |
-| `T*`                 | `&mut T` | Only as a function parameter |
-| `const T*`           | `&T`     | Only as a function parameter |
-| `T[]`                | `Arr[T]` | ?                            |
+| C Type               | S++ Type        | Notes                        |
+|----------------------|-----------------|------------------------------|
+| `char`               | `I8`            | Identical types, no change   |
+| `short`              | `I16`           | Identical types, no change   |
+| `int`                | `I32`           | Identical types, no change   |
+| `long`               | `I64`           | Identical types, no change   |
+| `long long`          | `I64`           | Identical types, no change   |
+| `unsigned char`      | `U8`            | Identical types, no change   |
+| `unsigned short`     | `U16`           | Identical types, no change   |
+| `unsigned int`       | `U32`           | Identical types, no change   |
+| `unsigned long`      | `U64`           | Identical types, no change   |
+| `unsigned long long` | `U64`           | Identical types, no change   |
+| `float`              | `F32`           | Identical types, no change   |
+| `double`             | `F64`           | Identical types, no change   |
+| `long double`        | `F64`           | Identical types, no change   |
+| `bool`               | `Bool`          | Identical types, no change   |
+| `void`               | `Void`          | Identical types, no change   |
+| `T*`                 | `&mut T`        | Only as a function parameter |
+| `const T*`           | `&T`            | Only as a function parameter |
+| `T[]`                | `ArrDyanmic[T]` | ?                            |
+| `T[n]`               | `Arr[T, n]`     | ?                            |
 
 ### Important notes
 
