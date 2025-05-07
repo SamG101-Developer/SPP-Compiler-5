@@ -149,7 +149,7 @@ class AstFunctionUtils:
         if not isinstance(target_function_name, Asts.IdentifierAst):
             return []
 
-        # Get the function-type name from teh function: "$Func" from "func()".
+        # Get the function-type name from the function: "$Func" from "func()".
         target_function_name = target_function_name.to_function_identifier()
         overload_scopes_and_info = []
 

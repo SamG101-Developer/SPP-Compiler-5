@@ -15,7 +15,7 @@ class TypeInferrable:
     @abstractmethod
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         """!
-        Given the AST, and the scope manager (with knowledge o the current scope etc), determine teh resulting type of
+        Given the AST, and the scope manager (with knowledge o the current scope etc), determine the resulting type of
         this AST. A lot of ASTs will recursively call this method on their children for more type information.
         @param sm The scope manager.
         @param kwargs Additional keyword arguments.
