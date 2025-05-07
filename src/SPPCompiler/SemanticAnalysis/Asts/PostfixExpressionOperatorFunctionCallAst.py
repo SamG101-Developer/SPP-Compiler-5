@@ -170,7 +170,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                         p.type = p.type.substituted_generics(generic_arguments)
                         p.type.analyse_semantics(tm, **kwargs)
 
-                        # Remove the "Void" parameters from the signatures.
+                        # Todo: Remove the "Void" parameters from the signatures.
 
                     new_overload.return_type = new_overload.return_type.substituted_generics(generic_arguments)
                     new_overload.return_type.analyse_semantics(tm, **kwargs)
@@ -180,13 +180,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                         raise SemanticErrors.InvalidConventionLocationError().add(
                             c, new_overload.return_type, "function return type").scopes(sm.current_scope)
 
-                    # new_overload.generate_top_level_scopes(tm)
-                    # tm.reset(new_overload._scope)
-
                     parameters = new_overload.function_parameter_group.params.copy()
-                    # if new_overload not in function_overload._generic_overrides:
-                    #     function_overload._generic_overrides.append(new_overload)
-                    #     new_overload.analyse_semantics(tm, **(kwargs | {"no_scope": True}))
                     function_overload = new_overload
                     function_scope = tm.current_scope
 
