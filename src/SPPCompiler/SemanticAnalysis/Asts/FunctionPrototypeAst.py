@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
+from llvmlite import ir
+
+from SPPCompiler.CodeGen import LlvmExternalSymbolRegister
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
@@ -176,8 +180,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         sm.move_out_of_current_scope()
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        if "no_scope" not in kwargs:
-            sm.move_to_next_scope()
+        sm.move_to_next_scope()
 
         # Analyse the semantics of everything except the body (subclasses handle this).
         for a in self.annotations:
@@ -195,6 +198,17 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         self.where_block.analyse_semantics(sm, **kwargs)
 
         # Subclasses will finish analysis and exit the scope.
+
+    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        # Generate the LLVM code for the function.
+        sm.move_to_next_scope()
+
+        if str(sm.current_scope.ancestors[-2].name) == "ffi":
+            dll_name = str(sm.current_scope.ancestors[-3].name)
+            dll_path = os.path.join(kwargs["root_path"], "ffi", dll_name, "lib", dll_name + ".dll")
+            LlvmExternalSymbolRegister.register_external_functions(self, dll_path, sm)
+        self.body.code_gen(sm, llvm_module, **kwargs)
+        sm.move_out_of_current_scope()
 
     # def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
     #     sm.move_to_next_scope()

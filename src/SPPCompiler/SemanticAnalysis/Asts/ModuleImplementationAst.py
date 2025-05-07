@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from llvmlite import ir
+
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -49,6 +51,10 @@ class ModuleImplementationAst(Asts.Ast):
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the members.
         for m in self.members: m.analyse_semantics(sm, **kwargs)
+
+    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        # Generate the code for the members.
+        for m in self.members: m.code_gen(sm, llvm_module, **kwargs)
 
 
 __all__ = [

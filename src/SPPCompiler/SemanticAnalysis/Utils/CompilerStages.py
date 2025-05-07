@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Union
 
-# from llvmlite import ir as llvm
+from llvmlite import ir
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -73,6 +73,17 @@ class CompilerStages:
         generated, and all types to be aliased, loaded, and post-processed. All functions scopes are inspected.
         @param sm The scope manager
         @param kwargs Additional keyword arguments.
+        """
+
+    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        """
+        The code generation stage is the final stage of the compiler. This stage generates the LLVM IR for the module,
+        with implementations. This is to generate the actual code for the module. All the definitions will have
+        associated declarations from the previous stage.
+        todo This stage is not yet implemented.
+        :param sm: The scope manager
+        :param llvm_module: The LLVM module to generate code for.
+        :param kwargs: Additional keyword arguments.
         """
 
     # def generate_llvm_declarations(self, sm: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:

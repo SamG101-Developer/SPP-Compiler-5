@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
+from llvmlite import ir
+
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -26,8 +28,14 @@ class ModulePrototypeAst(Asts.Ast):
     @property
     def name(self) -> Asts.IdentifierAst:
         parts = self._name.split(os.path.sep)
-        parts = parts[parts.index("src") + 1:]
-        name = "::".join(parts)
+
+        if "src" in parts:
+            parts = parts[parts.index("src") + 1:]
+            name = "::".join(parts)
+        else:
+            parts = [parts[0], parts[1] + ".spp"]
+            name = "::".join(parts)
+
         return Asts.IdentifierAst(self.pos, name)
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
@@ -59,6 +67,12 @@ class ModulePrototypeAst(Asts.Ast):
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the module implementation.
         self.body.analyse_semantics(sm, **kwargs)
+
+    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> ir.Module:
+        # Generate the LLVM code for the module implementation.
+        llvm_module = ir.Module(self.name)
+        self.body.code_gen(sm, llvm_module, **kwargs)
+        return llvm_module
 
 
 __all__ = [

@@ -4,6 +4,8 @@ import copy
 from dataclasses import dataclass, field
 from typing import Optional
 
+from llvmlite import ir
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -85,3 +87,6 @@ class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         self._conversion.analyse_semantics(sm, **kwargs)
+
+    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        self._conversion.code_gen(sm, llvm_module, **kwargs)

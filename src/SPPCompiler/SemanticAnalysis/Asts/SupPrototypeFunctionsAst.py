@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
+from llvmlite import ir
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -145,6 +147,12 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         self.body.analyse_semantics(sm, **kwargs)
 
         # Move out of the current scope.
+        sm.move_out_of_current_scope()
+
+    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        # Generate the LLVM code for the superimposition.
+        sm.move_to_next_scope()
+        self.body.code_gen(sm, llvm_module, **kwargs)
         sm.move_out_of_current_scope()
 
 

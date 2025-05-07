@@ -5,6 +5,8 @@ import itertools
 from dataclasses import dataclass, field
 from typing import Optional
 
+from llvmlite import ir
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
@@ -177,6 +179,9 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
             sm.reset(current_scope, new_iterator)
             sm._iterator, new_iterator = itertools.tee(sm._iterator)
             self.generate_top_level_aliases(sm, **kwargs)
+
+    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        self._skip_all_use_statement_scopes(sm, **kwargs)
 
 
 __all__ = ["UseStatementAliasAst"]

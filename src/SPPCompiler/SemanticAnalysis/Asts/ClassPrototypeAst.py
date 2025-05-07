@@ -4,6 +4,8 @@ import copy
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Type
 
+from llvmlite import ir
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
@@ -139,8 +141,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Move into the class scope.
-        if "no_scope" not in kwargs:
-            sm.move_to_next_scope()
+        sm.move_to_next_scope()
 
         # Analyse the annotations.
         for a in self.annotations:
@@ -156,8 +157,13 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             raise SemanticErrors.RecursiveTypeDefinitionError(self, recursion).scopes(sm.current_scope)
 
         # Move out of the class scope.
-        if "no_scope" not in kwargs:
-            sm.move_out_of_current_scope()
+        sm.move_out_of_current_scope()
+
+    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        # Generate the LLVM code for the class implementation.
+        sm.move_to_next_scope()
+        self.body.code_gen(sm, llvm_module, **kwargs)
+        sm.move_out_of_current_scope()
 
     # def generate_llvm_declarations(self, sm: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
     #     # Move into the class scope.
