@@ -34,24 +34,29 @@ class ModuleTree:
     compiler to iterate through and process each module.
     """
 
+    _root: str
     _src_path: str
     _vcs_path: str
+    _ffi_path: str
     _modules: Seq[Module]
 
     def __init__(self, path: str) -> None:
         # Get all the spp module files from the src path.
+        self._root = path
         self._src_path = os.path.join(path, "src")
         self._vcs_path = os.path.join(path, "vcs")
+        self._ffi_path = os.path.join(path, "ffi")
 
         # Get all the modules from the src and vcs paths. Todo: cross platform filepaths.
         src_modules = [Module(f) for f in glob(self._src_path + "/**/*.spp", recursive=True)]
         vcs_modules = [Module(f) for f in glob(self._vcs_path + "/**/*.spp", recursive=True)]
+        ffi_modules = [Module(f) for f in glob(self._ffi_path + "/**/*.spp", recursive=True)]
 
         # Remove vcs main.spp files (keep src main.spp though).
         vcs_modules = [m for m in vcs_modules if not m.path.endswith(os.path.sep + "main.spp")]
 
         # Merge the source and version control system modules.
-        self._modules = src_modules + vcs_modules
+        self._modules = src_modules + vcs_modules + ffi_modules
         for m in self._modules:
             m.path = m.path.replace(os.getcwd(), "", 1)
 
