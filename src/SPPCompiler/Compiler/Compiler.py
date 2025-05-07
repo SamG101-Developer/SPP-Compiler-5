@@ -7,6 +7,7 @@ from typing import Optional, TYPE_CHECKING
 
 import xxhash
 
+from SPPCompiler.CodeGen import LllvInitialization
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter
@@ -27,7 +28,8 @@ COMPILER_STAGE_NAMES = [
     "Qualifying types  ",
     "Super scopes      ",
     "Pre-Analysis      ",
-    "Semantics analysis"]
+    "Semantics analysis",
+    "Code generation   ",]
 
 
 class Compiler:
@@ -115,6 +117,9 @@ class Compiler:
             self._ast.pre_analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
             self.try_dump()
+
+            LllvInitialization.initialize_llvm()
+            self._ast.code_gen(self._scope_manager, next(progress_bar), self._module_tree)
 
         except SemanticError as error:
             self.try_dump()
