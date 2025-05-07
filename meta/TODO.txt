@@ -33,4 +33,4 @@ Lambda.
 * Use the `mut` symbol status from the original symbol in the capture.
 
 Comp generic arguments.
-* Think they're missing type checks
+* Think they're missing type checks.
