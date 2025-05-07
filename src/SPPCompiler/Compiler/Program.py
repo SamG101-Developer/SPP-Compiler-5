@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import os.path
 from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, List
+
+from llvmlite import ir
 
 from SPPCompiler.LexicalAnalysis.Lexer import Lexer
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
@@ -149,6 +151,17 @@ class Program(CompilerStages):
 
         self._validate_entry_point(sm)
 
+    def code_gen(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> List[ir.Module]:
+        # Generate the LLVM IR for all the modules.
+        llvm_modules = []
+        for module in self.modules:
+            self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
+            progress_bar.next(module.name.value)
+            llvm_modules.append(module.code_gen(sm, None, **{"root_path": module_tree._root}))
+            sm.reset()
+        progress_bar.finish()
+        return llvm_modules
+
     def _validate_entry_point(self, sm: ScopeManager) -> None:
         """
         Check there is a "main" function inside the "main" module, with the matching signature of a "Vec[Str]",
@@ -182,8 +195,11 @@ class Program(CompilerStages):
         from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
         # Create the module namespace as a list of strings.
-        module_namespace = module.path.split(os.path.sep)
-        module_namespace = module_namespace[module_namespace.index("src") + 1:]
+        module_namespace = module.path.strip(os.path.sep).split(os.path.sep)
+        if "src" in module_namespace:
+            module_namespace = module_namespace[module_namespace.index("src") + 1:]
+        else:
+            module_namespace = [module_namespace[0], module_namespace[1] + ".spp"]
         module_namespace[-1] = module_namespace[-1].split(".")[0]
 
         # Iterate over the parts of the module namespace.
