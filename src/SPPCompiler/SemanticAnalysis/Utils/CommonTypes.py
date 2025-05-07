@@ -210,6 +210,15 @@ class CommonTypes:
         return type
 
     @staticmethod
+    def Single(pos: int, internal_type: Asts.TypeAst):
+        generics = [Asts.GenericTypeArgumentUnnamedAst(value=internal_type)]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Single", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "single")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
+
+    @staticmethod
     def Gen(pos: int, yield_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
         return CodeInjection.inject_code(
             f"std::generator::Gen[{yield_type}, {send_type}]", SppParser.parse_type, pos_adjust=pos)
@@ -249,6 +258,7 @@ class CommonTypesPrecompiled:
     EMPTY_FUN_MOV: Asts.TypeAst = "Pending..."
     EMPTY_FUN_MUT: Asts.TypeAst = "Pending..."
     EMPTY_FUN_REF: Asts.TypeAst = "Pending..."
+    EMPTY_SINGLE: Asts.TypeAst = "Pending..."
     VOID: Asts.TypeAst = "Pending..."
     COPY: Asts.TypeAst = "Pending..."
     BIGINT: Asts.TypeAst = "Pending..."
@@ -285,6 +295,7 @@ class CommonTypesPrecompiled:
         CommonTypesPrecompiled.EMPTY_FUN_MOV = CommonTypes.FunMov(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
         CommonTypesPrecompiled.EMPTY_FUN_MUT = CommonTypes.FunMut(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
         CommonTypesPrecompiled.EMPTY_FUN_REF = CommonTypes.FunRef(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
+        CommonTypesPrecompiled.EMPTY_SINGLE = CommonTypes.Single(pos=0, internal_type=Asts.Ast()).without_generics()
         CommonTypesPrecompiled.VOID = CommonTypes.Void(pos=0).without_generics()
         CommonTypesPrecompiled.COPY = CommonTypes.Copy(pos=0).without_generics()
         CommonTypesPrecompiled.BIGINT = CommonTypes.BigInt(pos=0).without_generics()
