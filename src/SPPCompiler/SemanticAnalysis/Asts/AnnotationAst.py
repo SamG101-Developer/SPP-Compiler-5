@@ -21,6 +21,7 @@ Todo - ideas:
 """
 
 
+# Todo: only allow @ffi in stub files.
 class _Annotations(Enum):
     """
     The _Annotations class is used to define the possible annotations that can be applied to ASTs. As Custom annotations
@@ -29,13 +30,14 @@ class _Annotations(Enum):
 
     VirtualMethod = "virtual_method"
     AbstractMethod = "abstract_method"
-    NonImplementedMethod = "no_impl"
+    FFI = "ffi"
+    NoImpl = "no_impl"  # temporary
     Public = "public"
     Protected = "protected"
     Private = "private"
     Cold = "cold"
     Hot = "hot"
-    CompilerBuiltin = "compiler_builtin"
+    CompilerBuiltin = "compiler_builtin"  # temporary
 
 
 @dataclass(slots=True)
@@ -108,7 +110,7 @@ class AnnotationAst(Asts.Ast):
             ctx._abstract = self
 
         # Mark a method context as non-implemented.
-        elif self.name.value in [_Annotations.NonImplementedMethod.value, _Annotations.CompilerBuiltin.value]:
+        elif self.name.value in [_Annotations.FFI.value, _Annotations.NoImpl.value, _Annotations.CompilerBuiltin.value]:
             ctx._non_implemented = self
 
         # Mark a context as public.
@@ -188,8 +190,8 @@ class AnnotationAst(Asts.Ast):
                 raise SemanticErrors.AnnotationConflictError().add(
                     self.name, (self._ctx._virtual or self._ctx._abstract).name).scopes(self._scope)
 
-        elif self.name.value in [_Annotations.NonImplementedMethod.value, _Annotations.CompilerBuiltin.value]:
-            # The "non_implemented_method" annotation can only be applied to functions.
+        elif self.name.value in [_Annotations.FFI.value, _Annotations.NoImpl.value, _Annotations.CompilerBuiltin.value]:
+            # The "ffi/no_impl/compiler_builtin" annotation can only be applied to functions.
             if not isinstance(self._ctx, Asts.FunctionPrototypeAst):
                 raise SemanticErrors.AnnotationInvalidLocationError().add(
                     self.name, self._ctx.name, "non-function").scopes(self._scope)
