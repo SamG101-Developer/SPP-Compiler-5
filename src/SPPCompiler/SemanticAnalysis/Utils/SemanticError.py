@@ -1625,3 +1625,33 @@ class SemanticErrors:
                 msg="The main function is missing from the program.",
                 tip="Add a main function to the program.")
             return self
+
+    class InvalidFfiSppTypeError(SemanticError):
+        """
+        The InvalidFfiSppTypeError is raised if a type is not a valid FFI type. This means it has to C ABI conversion,
+        and therefore cannot be used for FFI.
+        """
+
+        def add(self, type: Asts.TypeAst) -> SemanticError:
+            self.add_error(
+                ast=type,
+                tag=f"Type inferred as '{type}'",
+                msg="The type is not a valid FFI type.",
+                tip="Change the type to a valid FFI type.")
+
+            return self
+
+    class InvalidFfiFunctionError(SemanticError):
+        """
+        The InvalidFfiFunctionError is raised if a function is not a valid FFI function. This means it has to C ABI
+        conversion, and therefore cannot be used for FFI.
+        """
+
+        def add(self, function: Asts.IdentifierAst, dll: str) -> SemanticError:
+            self.add_error(
+                ast=function,
+                tag=f"Sub function defined here.",
+                msg=f"The function does not exist in the dll '{dll}'.",
+                tip="Remove the invalid stub.")
+
+            return self
