@@ -199,7 +199,8 @@ class Program(CompilerStages):
         if "src" in module_namespace:
             module_namespace = module_namespace[module_namespace.index("src") + 1:]
         else:
-            module_namespace = [module_namespace[0], module_namespace[1] + ".spp"]
+            # skip the "vcs", "<ns>", "ffi" parts of the namespace.
+            module_namespace = [module_namespace[1] + ".spp"]
         module_namespace[-1] = module_namespace[-1].split(".")[0]
 
         # Iterate over the parts of the module namespace.
