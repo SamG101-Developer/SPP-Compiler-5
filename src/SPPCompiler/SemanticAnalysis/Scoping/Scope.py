@@ -136,6 +136,7 @@ class Scope:
         # Namespace adjust, and get the symbol from the symbol table if it exists.
         scope = self
         if isinstance(name, Asts.TypeAst):
+            name = name.without_conventions()
             scope, name = shift_scope_for_namespaced_type(self, name)
         symbol = scope._symbol_table.get(name)
 
@@ -300,7 +301,7 @@ def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[S
     # For TypeAsts, move through each namespace/type part accessing the namespace scope.
     for part in type.fq_type_parts()[:-1]:
         # Get the next type/namespace symbol from the scope.
-        inner_symbol = scope.get_namespace_symbol(part)
+        inner_symbol = scope.get_namespace_symbol(part) if isinstance(part, Asts.IdentifierAst) else scope.get_symbol(part)
         match inner_symbol:
             case None: break
             case _: scope = inner_symbol.scope
