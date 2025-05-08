@@ -34,3 +34,7 @@ Lambda.
 
 Comp generic arguments.
 * Think they're missing type checks.
+
+Tuples.
+* Variant elements aren't compared.
+* So a (USize, Opt[Str]) can't be matched by (USize, Some[Str]) at the moment.
