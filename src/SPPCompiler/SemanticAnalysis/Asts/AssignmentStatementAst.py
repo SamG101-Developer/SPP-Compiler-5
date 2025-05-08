@@ -99,6 +99,8 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             # Ensure the memory status of the left and right hand side.
             AstMemoryUtils.enforce_memory_integrity(lhs_sym.name.clone_at(lhs_expr.pos), self.op, sm, check_move=not isinstance(lhs_expr, Asts.IdentifierAst), check_partial_move=False, update_memory_info=False, check_pins=False)
             AstMemoryUtils.enforce_memory_integrity(rhs_expr, self.op, sm)
+            if isinstance(lhs_expr, Asts.PostfixExpressionAst):
+                AstMemoryUtils.enforce_memory_integrity(lhs_expr.lhs, self.op, sm, check_partial_move=not isinstance(lhs_expr.lhs, Asts.IdentifierAst), update_memory_info=False, check_pins=False)
 
             # Full assignment (ie "x = y") requires the "x" symbol to be marked as "mut".
             if isinstance(lhs_expr, Asts.IdentifierAst) and not (lhs_sym.is_mutable or lhs_sym.memory_info.initialization_counter == 0):

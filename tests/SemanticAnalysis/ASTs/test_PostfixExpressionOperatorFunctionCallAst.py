@@ -81,6 +81,14 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_postfix_func_call_unnecessary_explicit_generic(self):
+        """
+        fun f[T](a: T) -> std::void::Void {
+            f[std::string::Str](1)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
     def test_invalid_postfix_func_call_extra_generic(self):
         """
         fun f[T](a: T) -> std::void::Void {

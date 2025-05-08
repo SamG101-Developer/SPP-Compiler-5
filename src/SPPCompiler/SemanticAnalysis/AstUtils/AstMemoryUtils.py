@@ -98,9 +98,9 @@ class AstMemoryUtils:
         return c1 or c2
 
     @staticmethod
-    def left_overlap(ast_1: Asts.Ast, ast_2: Asts.Ast) -> bool:
-        c1 = str(ast_1).startswith(str(ast_2))
-        return c1
+    def right_overlaps(ast_1: Asts.Ast, ast_2: Asts.Ast) -> bool:
+        c2 = str(ast_2).startswith(str(ast_1))
+        return c2
 
     @staticmethod
     def enforce_memory_integrity(
@@ -209,14 +209,14 @@ class AstMemoryUtils:
 
         # Check there are overlapping partial moves, for a new partial move. This means that for "a.b.c" to be moved off
         # of "a", both "a.b" and "a.b.c.d" must not be partially moved off of "a". This guarantees that "a.b" is
-        # fully-initialized when it is moved off of "a". todo: remove "left_overlap" check given "overlap" considers it?
+        # fully-initialized when it is moved off of "a".
         if check_partial_move and symbol.memory_info.ast_partially_moved and not isinstance(value_ast, Asts.IdentifierAst):
-            if overlaps := [p for p in symbol.memory_info.ast_partially_moved if AstMemoryUtils.left_overlap(p, value_ast)]:
-                raise SemanticErrors.MemoryNotInitializedUsageError().add(
-                    value_ast, overlaps[0]).scopes(sm.current_scope)
+            # if overlaps := [p for p in symbol.memory_info.ast_partially_moved if AstMemoryUtils.left_overlap(p, value_ast)]:
+            #     raise SemanticErrors.MemoryNotInitializedUsageError().add(
+            #         value_ast, overlaps[0]).scopes(sm.current_scope)
 
-            if overlaps := [p for p in symbol.memory_info.ast_partially_moved if AstMemoryUtils.overlaps(p, value_ast)]:
-                raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(
+            if overlaps := [p for p in symbol.memory_info.ast_partially_moved if AstMemoryUtils.right_overlaps(p, value_ast)]:
+                raise SemanticErrors.MemoryNotInitializedUsageError().add(
                     value_ast, overlaps[0]).scopes(sm.current_scope)
 
         # Check the symbol is not being moved from a borrowed context. This prevents partial moves off of borrowed

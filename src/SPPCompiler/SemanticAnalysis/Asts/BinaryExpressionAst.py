@@ -112,7 +112,8 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the parts of the binary expression.
         self.rhs.analyse_semantics(sm, **kwargs)
         self.lhs.analyse_semantics(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.rhs, self.op, sm)
+        if not isinstance(self.lhs, Asts.TokenAst):
+            AstMemoryUtils.enforce_memory_integrity(self.rhs, self.op, sm)
         AstMemoryUtils.enforce_memory_integrity(self.lhs, self.op, sm, update_memory_info=False, check_move_from_borrowed_context=False)
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
