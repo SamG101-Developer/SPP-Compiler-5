@@ -53,7 +53,11 @@ class ModuleTree:
         ffi_modules = [Module(f) for f in glob(self._ffi_path + "/**/*.spp", recursive=True)]
 
         # Remove vcs main.spp files (keep src main.spp though).
-        vcs_modules = [m for m in vcs_modules if not m.path.endswith(os.path.sep + "main.spp")]
+        for m in vcs_modules.copy():
+            inner_path = m.path.replace(self._vcs_path + os.sep, "", 1)
+            inner_path = os.sep.join(inner_path.split(os.sep)[1:])
+            if inner_path == os.path.join("src", "main.spp") or inner_path.startswith("ffi" + os.sep):
+                vcs_modules.remove(m)
 
         # Merge the source and version control system modules.
         self._modules = src_modules + vcs_modules + ffi_modules
