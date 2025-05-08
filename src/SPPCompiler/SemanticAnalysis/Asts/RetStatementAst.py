@@ -61,13 +61,14 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             # If there is no function return type, then this is the first return statement for a lambda, so store the type.
             self._func_ret_type = expression_type
             kwargs["function_ret_type"].append(self._func_ret_type)
+            kwargs["function_scope"] = sm.current_scope
 
         # Do a type check on the return expression vs the expected returning type.
         expected_type = kwargs["function_ret_type"][0]
         if kwargs["function_type"].token_type == SppTokenType.KwFun:
-            if not expected_type.symbolic_eq(expression_type, sm.current_scope, sm.current_scope):
+            if not expected_type.symbolic_eq(expression_type, kwargs["function_scope"], sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
-                    expression_type, expected_type, self.expr, expected_type).scopes(sm.current_scope)
+                    expression_type, expected_type, self.expr, expected_type).scopes(kwargs["function_scope"], sm.current_scope)
 
     # def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
     #     # Create a return instruction with the expression if it exists.

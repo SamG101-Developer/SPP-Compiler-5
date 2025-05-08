@@ -17,6 +17,7 @@ class CoroutinePrototypeAst(Asts.FunctionPrototypeAst):
         return_type_symbol = sm.current_scope.get_symbol(self.return_type)
         kwargs["function_type"] = self.tok_fun
         kwargs["function_ret_type"] = [return_type_symbol.fq_name]
+        kwargs["function_scope"] = sm.current_scope
 
         # Check the return type superimposes the generator type.
         # Todo: use AstUtils.get_generator_and_yield_type here (+ try/except for error mod).

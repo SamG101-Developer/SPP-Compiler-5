@@ -97,10 +97,6 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         parent_scope = sm.current_scope
 
-        function_info = {
-            "function_type": self.kw_cor or Asts.TokenAst.raw(token_type=SppTokenType.KwFun),
-            "function_ret_type": []}
-
         # Perform memory checks on the captures against the symbols from the outermost scope.
         caps = Asts.FunctionCallArgumentGroupAst(arguments=self.pc_group.captures)
         caps.pre_analyse_semantics(sm, **kwargs)
@@ -109,6 +105,7 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # New scope for the parameters.
         sm.create_and_move_into_new_scope(f"<lambda-outer:{self.pos}>")
         self.pc_group.analyse_semantics(sm, **kwargs)
+        kwargs["function_scope"] = sm.current_scope
 
         # Once the captures have been analysed, prevent access to the parent scope.
         sm.current_scope.parent = sm.current_scope.parent_module
@@ -117,7 +114,8 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         sm.create_and_move_into_new_scope(f"<lambda-inner:{self.pos}>")
 
         # Analyse the body of the lambda expression.
-        kwargs |= function_info
+        kwargs["function_type"] = self.kw_cor or Asts.TokenAst.raw(token_type=SppTokenType.KwFun)
+        kwargs["function_ret_type"] = []
         self.body.analyse_semantics(sm, **kwargs)
         final_body_type = self.body.infer_type(sm, **kwargs)
         self._ret_type = kwargs["function_ret_type"][0] if kwargs["function_ret_type"] else final_body_type

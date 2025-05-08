@@ -78,18 +78,19 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self._func_ret_type = CommonTypes.Gen(self.expr.pos, expression_type, CommonTypesPrecompiled.VOID)
             self._func_ret_type.analyse_semantics(sm, **kwargs)
             kwargs["function_ret_type"].append(self._func_ret_type)
+            kwargs["function_scope"] = sm.current_scope
 
         # Determine the yield type of the enclosing function.
         gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(
             kwargs["function_ret_type"][0], sm, kwargs["function_ret_type"][0], "coroutine")
 
         # Check the expression type matches the expected type.
-        if not self.kw_with and not yield_type.symbolic_eq(expression_type, sm.current_scope, sm.current_scope):
+        if not self.kw_with and not yield_type.symbolic_eq(expression_type, kwargs["function_scope"], sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(yield_type, yield_type, expression_type, expression_type).scopes(sm.current_scope)
 
         # If the "with" keyword is being used, the expression type must be a Gen type that matches the function_ret_type.
         if self.kw_with and not kwargs["function_ret_type"][0].symbolic_eq(expression_type, sm.current_scope, sm.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"][0], kwargs["function_ret_type"][0], self.expr, expression_type).scopes(sm.current_scope)
+            raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"][0], kwargs["function_ret_type"][0], self.expr, expression_type).scopes(kwargs["function_scope"], sm.current_scope)
 
         # Apply the function argument law of exclusivity checks to the expression.
         if self.expr:
