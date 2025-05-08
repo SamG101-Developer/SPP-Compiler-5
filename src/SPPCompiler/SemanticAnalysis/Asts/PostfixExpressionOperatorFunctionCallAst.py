@@ -213,11 +213,6 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                             if not parameter_type.symbolic_eq(argument_type, function_scope, sm.current_scope):
                                 raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
-                # If an expected type has been provided, ensure it matches the function prototype's return type.
-                if expected_return_type is not None and not expected_return_type.symbolic_eq(function_overload.return_type, sm.current_scope, sm.current_scope):
-                    raise SemanticErrors.TypeMismatchError().add(
-                        function_overload.return_type, function_overload.return_type, expected_return_type, expected_return_type).scopes(sm.current_scope)
-
                 # Mark the overload as a pass.
                 pass_overloads.append((function_scope, function_overload))
 
@@ -236,16 +231,26 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                 fail_overloads.append((function_scope, function_overload, e))
                 continue
 
+        # Perform the return type overload selection separately here, for error reasons.
+        return_matches = []
+        if expected_return_type:
+            for function_scope, function_overload in pass_overloads:
+                if function_overload.return_type.symbolic_eq(expected_return_type, function_scope, sm.current_scope):
+                    return_matches.append((function_scope, function_overload))
+            if len(return_matches) == 1:
+                pass_overloads = return_matches
+
         # If there are no pass overloads, raise an error.
+        # Todo: print the convention with "Self" (issue is ".convention" is set at bottom of function after this)
         if not pass_overloads:
             failed_signatures_and_errors = "\n".join([f[1].print_signature(AstPrinter(), f[0]._ast.name if f[0]._ast else "") + f" - {type(f[2]).__name__}" for f in fail_overloads])
-            argument_usage_signature = f"{lhs}({", ".join([str(a.infer_type(sm, **kwargs)) for a in self.function_argument_group.arguments])})"
+            argument_usage_signature = f"{lhs}({", ".join([str(a.infer_type(sm, **kwargs)) if not a._type_from_self else "Self" for a in self.function_argument_group.arguments])})"
             raise SemanticErrors.FunctionCallNoValidSignaturesError().add(self, failed_signatures_and_errors, argument_usage_signature).scopes(sm.current_scope)
 
         # If there are multiple pass overloads, raise an error.
         elif len(pass_overloads) > 1:
             passed_signatures = "\n".join([f[1].print_signature(AstPrinter(), f[0]._ast.name if f[0]._ast else "") for f in pass_overloads])
-            argument_usage_signature = f"{lhs}({", ".join([str(a.infer_type(sm, **kwargs)) for a in self.function_argument_group.arguments])})"
+            argument_usage_signature = f"{lhs}({", ".join([str(a.infer_type(sm, **kwargs)) if not a._type_from_self else "Self" for a in self.function_argument_group.arguments])})"
             raise SemanticErrors.FunctionCallAmbiguousSignaturesError().add(self, passed_signatures, argument_usage_signature).scopes(sm.current_scope)
 
         # Special case for closures: apply the convention to the closure name to ensure it is movable or mutable etc.
