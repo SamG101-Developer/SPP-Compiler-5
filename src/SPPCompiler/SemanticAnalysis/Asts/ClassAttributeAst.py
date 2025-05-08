@@ -84,8 +84,15 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         if c := self.type.get_convention():
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.type, "attribute type").scopes(sm.current_scope)
+
+        try:
+            self.type.analyse_semantics(sm, **kwargs)
+        except SemanticErrors.IdentifierUnknownError:
+            # TODO
+            pass
             
         # If a default value is present, analyse it and check its type.
+        # Todo: prevent generic attributes from having defaults + test
         if self.default:
             self.default.analyse_semantics(sm, **kwargs)
             default_type = self.default.infer_type(sm)
