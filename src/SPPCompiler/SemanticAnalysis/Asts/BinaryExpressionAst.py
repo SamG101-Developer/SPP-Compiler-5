@@ -52,6 +52,10 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __hash__(self) -> int:
         return id(self)
 
+    def __str__(self) -> str:
+        # Add () for debugging.
+        return f"({self.lhs} {self.op} {self.rhs})"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -105,14 +109,11 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if isinstance(self.rhs, Asts.TypeAst):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs).scopes(sm.current_scope)
 
-        # Analyse the LHS of the binary expression. The function conversion will do the RHS.
+        # Analyse the parts of the binary expression.
+        self.rhs.analyse_semantics(sm, **kwargs)
         self.lhs.analyse_semantics(sm, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(self.rhs, self.op, sm)
         AstMemoryUtils.enforce_memory_integrity(self.lhs, self.op, sm, update_memory_info=False, check_move_from_borrowed_context=False)
-
-        # Analyse the RHS of the binary expression.
-        # self.rhs.analyse_semantics(sm, **kwargs)
-        # AstMemoryUtils.enforce_memory_integrity(self.rhs, self.op, sm)
-        # if not isinstance(self.rhs, Asts.TokenAst) and not isinstance(self.lhs, Asts.TokenAst):
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
         if self.op.token_type.name.endswith("Assign") and not sm.current_scope.get_variable_symbol_outermost_part(self.lhs):
@@ -141,7 +142,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.lhs, self.rhs = new_asts[0], new_asts[1]
             for new_ast in new_asts[2:]:
                 self.lhs, self.rhs = BinaryExpressionAst(self.pos, self.lhs, self.op, self.rhs), new_ast
-            self._as_func = AstBinUtils.convert_to_function_call(self)
+            self._as_func = AstBinUtils.convert_to_function_call(self, sm)
             self._as_func.analyse_semantics(sm, **kwargs)
 
         # Handle rhs-folding
@@ -165,12 +166,12 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.lhs, self.rhs = new_asts[-2], new_asts[-1]
             for new_ast in reversed(new_asts[:-2]):
                 self.lhs, self.rhs = new_ast, BinaryExpressionAst(self.pos, self.lhs, self.op, self.rhs)
-            self._as_func = AstBinUtils.convert_to_function_call(self)
+            self._as_func = AstBinUtils.convert_to_function_call(self, sm)
             self._as_func.analyse_semantics(sm, **kwargs)
 
         # Analyse the function equivalent of the binary expression.
         else:
-            self._as_func = AstBinUtils.convert_to_function_call(self)
+            self._as_func = AstBinUtils.convert_to_function_call(self, sm)
             self._as_func.analyse_semantics(sm, **kwargs)
 
 

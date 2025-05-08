@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
@@ -47,10 +48,10 @@ class AstBinUtils:
     """
 
     @staticmethod
-    def convert_to_function_call(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst:
+    def convert_to_function_call(ast: Asts.BinaryExpressionAst, sm: ScopeManager) -> Asts.PostfixExpressionAst:
         ast = AstBinUtils._fix_associativity(ast)
         ast = AstBinUtils._combine_comparison_operators(ast)
-        ast = AstBinUtils._convert_to_function_call(ast)
+        ast = AstBinUtils._convert_binary_expression_to_function_call(ast, sm)
         return ast
 
     @staticmethod
@@ -99,11 +100,22 @@ class AstBinUtils:
             return ast
 
     @staticmethod
-    def _convert_binary_expression_to_function_call(ast: Asts.BinaryExpressionAst) -> Asts.PostfixExpressionAst:
+    def _convert_binary_expression_to_function_call(ast: Asts.BinaryExpressionAst, sm: ScopeManager) -> Asts.PostfixExpressionAst:
         method_name = BINARY_METHODS.get(ast.op.token_type, None)
         function_call_ast = CodeInjection.inject_code(
             f"{ast.lhs}.{method_name}()", SppParser.parse_postfix_expression, pos_adjust=ast.pos)
-        function_call_ast.op.function_argument_group.arguments = [Asts.FunctionCallArgumentUnnamedAst(pos=ast.rhs.pos, convention=Asts.ConventionRefAst(pos=ast.rhs.pos), value=ast.rhs)]
+
+        # Create dummy arguments, for example, if "x" is U32, replace it with "U32()" etc.
+        rhs_type = ast.rhs.infer_type(sm)
+        mock_init = Asts.ObjectInitializerAst(pos=ast.rhs.pos, class_type=rhs_type)
+        new_arg = Asts.FunctionCallArgumentUnnamedAst(pos=ast.rhs.pos, convention=Asts.ConventionRefAst(pos=ast.rhs.pos), value=mock_init)
+        function_call_ast.op.function_argument_group.arguments = [new_arg]
+
+        lhs_type = ast.lhs.infer_type(sm)
+        mock_init = Asts.ObjectInitializerAst(pos=ast.lhs.pos, class_type=lhs_type)
+        function_call_ast.lhs.lhs = mock_init
+        function_call_ast.analyse_semantics(sm)
+
         return function_call_ast
 
     @staticmethod
@@ -111,20 +123,6 @@ class AstBinUtils:
         case_ast = CodeInjection.inject_code(
             f"case {ast.lhs} of is {ast.rhs} {{}}", SppParser.parse_case_expression, pos_adjust=ast.pos)
         return case_ast
-
-    @staticmethod
-    def _convert_to_function_call(ast: Asts.ExpressionAst) -> Asts.PostfixExpressionAst | Asts.BinaryExpressionAst:
-        """
-        Convert the binary expression into a postfix expression, with the binary operator being a function call.
-        """
-
-        # Nested parts of the binary expressions could be any expression.
-        if not isinstance(ast, Asts.BinaryExpressionAst):
-            return ast
-
-        ast.lhs = AstBinUtils._convert_to_function_call(ast.lhs)
-        ast.rhs = AstBinUtils._convert_to_function_call(ast.rhs)
-        return AstBinUtils._convert_binary_expression_to_function_call(ast)
 
 
 __all__ = ["AstBinUtils"]
