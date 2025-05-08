@@ -30,7 +30,7 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
     kw_res: Asts.TokenAst = field(default=None)
     """The res keyword that indicates the resume coroutine operation."""
 
-    function_arguments: Asts.FunctionCallArgumentGroupAst = field(default=None)
+    function_argument_group: Asts.FunctionCallArgumentGroupAst = field(default=None)
     """The function arguments to be passed to the coroutine."""
 
     _as_func: Asts.PostfixExpressionAst = field(default=None, init=False, repr=False)
@@ -41,11 +41,11 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        return " ".join([self.kw_res.print(printer), self.function_arguments.print(printer)])
+        return " ".join([self.kw_res.print(printer), self.function_argument_group.print(printer)])
 
     @property
     def pos_end(self) -> int:
-        return self.function_arguments.pos_end
+        return self.function_argument_group.pos_end
 
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         """
@@ -85,7 +85,7 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
         resume_field = Asts.PostfixExpressionAst(pos=self.pos, lhs=lhs, op=resume_field)
 
         # Create a transformed AST that looks like: "lhs.resume(expr)".
-        resume_call = Asts.PostfixExpressionOperatorFunctionCallAst(function_argument_group=self.function_arguments)
+        resume_call = Asts.PostfixExpressionOperatorFunctionCallAst(pos=self.pos, function_argument_group=self.function_argument_group)
         resume_call = Asts.PostfixExpressionAst(pos=self.pos, lhs=resume_field, op=resume_call)
 
         # Analyse the semantics of the transformed AST, ensuring that the function exists.

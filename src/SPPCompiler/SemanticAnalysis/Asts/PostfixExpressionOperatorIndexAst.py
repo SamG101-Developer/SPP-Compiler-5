@@ -74,13 +74,13 @@ class PostfixExpressionOperatorIndexAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Create a transformed AST that looks like: "lhs.index_ref" or "lhs.index_mut".
-        index_type = Asts.IdentifierAst(value="index_ref" if not self.kw_mut else "index_mut")
+        index_type = Asts.IdentifierAst(pos=self.pos, value="index_ref" if not self.kw_mut else "index_mut")
         index_field = Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(pos=self.pos, new_field=index_type)
         index_field = Asts.PostfixExpressionAst(pos=self.pos, lhs=lhs, op=index_field)
 
         # Create a transformed AST that looks like: "lhs.index_ref(expr)" or "lhs.index_mut(expr)".
-        args = Asts.FunctionCallArgumentGroupAst(arguments=[Asts.FunctionCallArgumentUnnamedAst(value=self.expr)])
-        index_call = Asts.PostfixExpressionOperatorFunctionCallAst(function_argument_group=args)
+        args = Asts.FunctionCallArgumentGroupAst(pos=self.pos, arguments=[Asts.FunctionCallArgumentUnnamedAst(pos=self.pos, value=self.expr)])
+        index_call = Asts.PostfixExpressionOperatorFunctionCallAst(pos=self.pos, function_argument_group=args)
         index_call = Asts.PostfixExpressionAst(pos=self.pos, lhs=index_field, op=index_call)
 
         # Analyse the semantics of the transformed AST, ensuring that the function exists.
