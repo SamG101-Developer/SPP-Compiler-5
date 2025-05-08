@@ -9,6 +9,7 @@ import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
 import tomllib
+import shutil
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
@@ -46,6 +47,7 @@ def cli() -> ArgumentParser:
     subcommands.add_parser("run", help="Run the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", help="Choose the run mode")
     subcommands.add_parser("clean", help="Clean the S++ project").add_argument("--mode", "-m", choices=["dev", "rel", "all"], default="all", help="Choose the clean mode")
     subcommands.add_parser("test", help="Test the S++ project").add_argument("--mode", "-m", choices=["dev", "rel"], default="dev", help="Choose the test mode")
+    subcommands.add_parser("validate", help="Validate the S++ project structure")
     subcommands.add_parser("version", help="Show the version")
     subcommands.add_parser("help", help="Show help")
 
@@ -60,7 +62,7 @@ def handle_init() -> None:
         print("Directory is not empty")
         return
 
-    # Determine teh directory structure (src and bin folders).
+    # Determine the directory structure (src and bin folders).
     bin_directory = cwd / OUT_FOLDER
     src_directory = cwd / SRC_FOLDER
     ffi_directory = cwd / FFI_FOLDER
@@ -100,6 +102,10 @@ def handle_vcs() -> None:
     if not vcs_folder.exists(): vcs_folder.mkdir()
     os.chdir(vcs_folder)
 
+    # Ensure the "ffi" folder exists, as vcs repositories may have their own "ffi" folders.
+    ffi_folder = cwd / FFI_FOLDER
+    if not ffi_folder.exists(): ffi_folder.mkdir()
+
     # Iterate over the vcs section and clone/update the repositories.
     for key, info in vcs.items():
         repo_name, repo_url, repo_branch = key, info.get("git"), info.get("branch", "master")
@@ -107,11 +113,20 @@ def handle_vcs() -> None:
         if not repo_folder.exists():
             os.system(f"git clone {repo_url} {repo_folder}")
             os.system(f"git -C {repo_folder} checkout {repo_branch} {NULL_STDOUT}")
-            print(f"Cloned {repo_name} repository")
+            print(f"Cloned '{repo_name}' repository")
         else:
             os.system(f"git -C {repo_folder} pull origin {repo_branch}")
             os.system(f"git -C {repo_folder} checkout {repo_branch} {NULL_STDOUT}")
-            print(f"Updated {repo_name} repository")
+            print(f"Updated '{repo_name}' repository")
+
+        # Copy all DLLs from the vcs's ffi folder into this project's ffi folder.
+        # Todo: something about conflicting DLLs.
+        ffi_repo_folder = repo_folder / FFI_FOLDER
+        if ffi_repo_folder.exists():
+            for lib in ffi_repo_folder.iterdir():
+                print(f"Linking ffi library '{lib.name}' from '{repo_name}'")
+                # (ffi_folder / lib.name).symlink_to(lib.name)
+                shutil.copytree(lib, ffi_folder / lib.name, dirs_exist_ok=True)
 
     # Reset the working directory.
     os.chdir(cwd)
@@ -127,12 +142,16 @@ def handle_build(args: Namespace, skip_vcs: bool = False) -> None:
     if not inner_bin_directory.exists(): inner_bin_directory.mkdir()
 
     # Validate the project structure.
-    if not _validate_project_structure():
+    if not handle_validate():
         return
 
     # Handle vcs operations.
     if not skip_vcs:
         handle_vcs()
+
+    # Validate the project structure (including vcs).
+    if not handle_validate():
+        return
 
     # Compile the code.
     try:
@@ -161,7 +180,7 @@ def handle_help() -> None:
     print(cli().format_help())
 
 
-def _validate_project_structure() -> bool:
+def handle_validate() -> bool:
     # Check there is a spp.toml, src, and src/main.spp file.
     cwd = Path.cwd()
     toml_file = cwd / TOML_FILE
@@ -185,7 +204,7 @@ def _validate_project_structure() -> bool:
     if vcs_folder.exists():
         for repo in vcs_folder.iterdir():
             os.chdir(repo)
-            _validate_project_structure()
+            handle_validate()
             os.chdir(cwd)
 
     # If there is an FFI folder, check each subfolder is structured properly.
