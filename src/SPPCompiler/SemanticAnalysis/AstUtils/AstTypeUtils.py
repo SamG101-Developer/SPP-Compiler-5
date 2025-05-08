@@ -117,7 +117,7 @@ class AstTypeUtils:
         # Get the type part's symbol, and raise an error if it does not exist.
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
         if not type_symbol:
-            alternatives = [a.name.value for a in scope.all_symbols() if a.symbol_type is SymbolType.NamespaceSymbol]
+            alternatives = [a.name.value for a in scope.all_symbols() if a.symbol_type is SymbolType.TypeSymbol]
             SequenceUtils.remove_if(alternatives, lambda a: a[0] == "$")
             closest_match = difflib.get_close_matches(type_part.value, alternatives, n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(
@@ -135,7 +135,7 @@ class AstTypeUtils:
 
         # Create a new scope & symbol for the generic substituted type.
         new_cls_prototype = fast_deepcopy(base_symbol.scope._ast)
-        new_scope = Scope(type_part, base_symbol.scope.parent, ast=new_cls_prototype)
+        new_scope = Scope(name=type_part, parent=base_symbol.scope.parent, ast=new_cls_prototype)
         new_symbol = TypeSymbol(
             name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
             visibility=base_symbol.visibility, scope_defined_in=sm.current_scope)
