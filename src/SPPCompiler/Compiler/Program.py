@@ -166,7 +166,9 @@ class Program(CompilerStages):
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
-            llvm_modules.append(module.code_gen(sm, None, **{"root_path": module_tree._root}))
+            llvm_module = ir.Module(module.name.value)
+            module.code_gen(sm, llvm_module, **{"root_path": module_tree._root})
+            llvm_modules.append(llvm_module)
             sm.reset()
         progress_bar.finish()
         return llvm_modules
