@@ -199,7 +199,7 @@ class SppParser:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_assign)
         if p1 is None: return None
-        p2 = self.parse_once(self.parse_expression)
+        p2 = self.parse_once(self.parse_cmp_value)
         if p2 is None: return None
         return p2
 
@@ -419,7 +419,7 @@ class SppParser:
         if p3 is None: return None
         p4 = self.parse_once(self.parse_token_assign)
         if p4 is None: return None
-        p5 = self.parse_once(self.parse_expression)
+        p5 = self.parse_once(self.parse_cmp_value)
         if p5 is None: return None
         return Asts.FunctionParameterOptionalAst(c1, p1, p2, p3, p4, p5)
 
@@ -1713,7 +1713,7 @@ class SppParser:
         c1 = self.current_pos()
         p1 = self.parse_once(self.parse_token_left_parenthesis)
         if p1 is None: return None
-        p2 = self.parse_one_or_more(self.parse_type, self.parse_token_comma)
+        p2 = self.parse_two_or_more(self.parse_type, self.parse_token_comma)
         if p2 is None: return None
         p3 = self.parse_once(self.parse_token_right_parenthesis)
         if p3 is None: return None
