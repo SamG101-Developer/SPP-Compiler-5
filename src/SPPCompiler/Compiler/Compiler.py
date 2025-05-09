@@ -29,6 +29,7 @@ COMPILER_STAGE_NAMES = [
     "Super scopes      ",
     "Pre-Analysis      ",
     "Semantics analysis",
+    "Memory check      ",
     "Code generation   ",]
 
 
@@ -116,6 +117,7 @@ class Compiler:
             self._ast.load_super_scopes(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.pre_analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.check_memory(self._scope_manager, next(progress_bar), self._module_tree)
             self.try_dump()
 
             LllvInitialization.initialize_llvm()

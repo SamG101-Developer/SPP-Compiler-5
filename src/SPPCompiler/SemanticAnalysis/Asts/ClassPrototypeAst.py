@@ -159,6 +159,11 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         # Move out of the class scope.
         sm.move_out_of_current_scope()
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        sm.move_to_next_scope()
+        self.body.check_memory(sm, **kwargs)
+        sm.move_out_of_current_scope()
+
     def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
         # Generate the LLVM code for the class implementation.
         sm.move_to_next_scope()

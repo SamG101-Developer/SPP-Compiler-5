@@ -43,7 +43,7 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self.iterable.infer_type(sm, **kwargs)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # Todo: iteration should be optional values? how this work with conventions?
+        # Todo: iteration should be optional values? how this work with conventions? maybe like "&T | None"?
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.iterable, (Asts.TokenAst, Asts.TypeAst)):
@@ -51,11 +51,11 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the iterable.
         self.iterable.analyse_semantics(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.iterable, self.iterable, sm, update_memory_info=False)
 
         # Get the generator and yielded type from the iterable.
         iterable_type = self.iterable.infer_type(sm, **kwargs)
-        gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(iterable_type, sm, self.iterable, "loop condition")
+        gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(
+            iterable_type, sm, self.iterable, "loop condition")
 
         # Create a "let" statement to introduce the loop variable into the scope.
         let_ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=yield_type)
@@ -64,10 +64,14 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Set the memory information of the symbol based on the type of iteration.
         symbols = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]
         for symbol in symbols:
-            symbol.memory_info.ast_borrowed = self if type(yield_type.get_convention()) in [Asts.ConventionMutAst, Asts.ConventionRefAst] else None
+            symbol.memory_info.ast_borrowed = self if yield_type.get_convention() else None
             symbol.memory_info.is_borrow_mut = type(yield_type.get_convention()) is Asts.ConventionMutAst is not None
             symbol.memory_info.is_borrow_ref = type(yield_type.get_convention()) is Asts.ConventionRefAst is not None
             symbol.memory_info.initialized_by(self)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self.iterable.check_memory(sm, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(self.iterable, self.iterable, sm, mark_moves=False)
 
 
 __all__ = [

@@ -62,6 +62,11 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for m in self.members:
             m.analyse_semantics(sm, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the memory of each member.
+        for m in self.members:
+            m.check_memory(sm, **kwargs)
+
 
 __all__ = [
     "InnerScopeAst"]

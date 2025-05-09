@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -65,7 +66,7 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Create a type symbol for this type in the current scope (class / function).
         symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
-        symbol.memory_info.ast_pinned.append(self.name)
+        symbol.memory_info.ast_pins.append(self.name)
         symbol.memory_info.ast_comptime_const = self
         symbol.memory_info.initialized_by(self)
         sm.current_scope.add_symbol(symbol)
@@ -78,10 +79,6 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         for a in self.annotations:
             a.analyse_semantics(sm, **kwargs)
 
-        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
-        if isinstance(self.value, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(self.value).scopes(sm.current_scope)
-
         # Analyse the type and value.
         self.type.analyse_semantics(sm, **kwargs)
         self.value.analyse_semantics(sm, **kwargs)
@@ -91,9 +88,21 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         given_type = self.value.infer_type(sm, **kwargs)
 
         if not expected_type.symbolic_eq(given_type, sm.current_scope, sm.current_scope):
-            raise SemanticErrors.TypeMismatchError().add(self.type, expected_type, self.value, given_type).scopes(sm.current_scope)
+            raise SemanticErrors.TypeMismatchError().add(
+                self.type, expected_type, self.value, given_type).scopes(sm.current_scope)
 
-        # Todo: for an identifier, check the identifier itself is a constant value (and copyable)
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        Check the memory integrity of the value. Comptime constants don't have nested checks as they are a subset of
+        possible expressions, and none of these values have deeper ASTs that would require extra analysis.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        AstMemoryUtils.enforce_memory_integrity(
+            self.value, self.value, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+            check_pins=True, mark_moves=True)
 
 
 __all__ = ["CmpStatementAst"]

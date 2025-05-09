@@ -29,7 +29,12 @@ class PatternVariantExpressionAst(Asts.Ast):
 
         # Analyse the expression and enforce memory integrity.
         self.expr.analyse_semantics(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.expr, self.expr, sm)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self.expr.check_memory(sm, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(
+            self.expr, self.expr, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+            check_pins=True, mark_moves=True)
 
 
 __all__ = [

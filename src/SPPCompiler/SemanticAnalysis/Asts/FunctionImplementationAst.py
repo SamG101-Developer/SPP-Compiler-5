@@ -51,6 +51,11 @@ class FunctionImplementationAst(Asts.Ast):
         for m in self.members:
             m.analyse_semantics(sm, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check memory for each member of the class implementation.
+        for m in self.members:
+            m.check_memory(sm, **kwargs)
+
     # def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
     #     # Create an entry block to start the function.
     #     entry_block = llvm_function.append_basic_block(name="entry")

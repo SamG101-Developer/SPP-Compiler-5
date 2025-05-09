@@ -151,6 +151,15 @@ class Program(CompilerStages):
 
         self._validate_entry_point(sm)
 
+    def check_memory(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
+        # Check the memory for all the modules.
+        for module in self.modules:
+            self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
+            progress_bar.next(module.name.value)
+            module.check_memory(sm)
+            sm.reset()
+        progress_bar.finish()
+
     def code_gen(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> List[ir.Module]:
         # Generate the LLVM IR for all the modules.
         llvm_modules = []

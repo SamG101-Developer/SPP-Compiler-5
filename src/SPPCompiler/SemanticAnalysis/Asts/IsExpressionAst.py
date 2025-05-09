@@ -6,7 +6,6 @@ from typing import Optional
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstBinUtils import AstBinUtils
-from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
@@ -17,7 +16,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 class IsExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     lhs: Asts.ExpressionAst = field(default=None)
     op: Asts.TokenAst = field(default=None)
-    rhs: Asts.ExpressionAst = field(default=None)
+    rhs: Asts.PatternVariantAst = field(default=None)
 
     _as_func: Optional[Asts.CaseExpressionAst] = field(default=None, init=False, repr=False)
 
@@ -58,16 +57,17 @@ class IsExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the LHS of the binary expression.
         self.lhs.analyse_semantics(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(
-            self.lhs, self.op, sm, update_memory_info=False, check_move_from_borrowed_context=False)
 
         # Convert to a "case" destructure and analyse it.
         n = len(sm.current_scope.children)
         self._as_func = AstBinUtils._convert_is_expression_to_function_call(self)
         self._as_func.analyse_semantics(sm, **kwargs)
-        destructures_symbols = sm.current_scope.children[n].children[0].all_symbols(exclusive=True)
-        for symbol in destructures_symbols:
-            sm.current_scope.add_symbol(symbol)
+        destructures_symbols = sm.current_scope.children[n].children[0].all_symbols(exclusive=True, match_type=Asts.IdentifierAst)
+        for sym in destructures_symbols:
+            sm.current_scope.add_symbol(sym)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self._as_func.check_memory(sm, **kwargs)
 
 
 __all__ = [

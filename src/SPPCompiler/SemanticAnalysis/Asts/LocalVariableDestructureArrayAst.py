@@ -7,7 +7,6 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
@@ -17,6 +16,8 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_l: Asts.TokenAst = field(default=None)
     elems: Seq[Asts.LocalVariableNestedForDestructureArrayAst] = field(default_factory=Seq)
     tok_r: Asts.TokenAst = field(default=None)
+
+    _new_asts: list[Asts.LetStatementAst] = field(default_factory=list, init=False)
 
     def __post_init__(self) -> None:
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
@@ -84,6 +85,7 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             if isinstance(element, Asts.LocalVariableDestructureSkipNArgumentsAst) and multi_arg_skips[0].binding:
                 new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element.binding, value=bound_multi_skip)
                 new_ast.analyse_semantics(sm, **kwargs)
+                self._new_asts.append(new_ast)
 
             elif isinstance(element, Asts.LocalVariableDestructureSkip1ArgumentAst):
                 continue
@@ -96,6 +98,11 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
                 postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(value.pos, i))
                 new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
+                self._new_asts.append(new_ast)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        for new_ast in self._new_asts:
+            new_ast.check_memory(sm, **kwargs)
 
 
 __all__ = [

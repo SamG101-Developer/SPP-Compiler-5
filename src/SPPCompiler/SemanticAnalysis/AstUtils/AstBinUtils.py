@@ -105,16 +105,8 @@ class AstBinUtils:
         function_call_ast = CodeInjection.inject_code(
             f"{ast.lhs}.{method_name}()", SppParser.parse_postfix_expression, pos_adjust=ast.pos)
 
-        # Create dummy arguments, for example, if "x" is U32, replace it with "U32()" etc.
-        rhs_type = ast.rhs.infer_type(sm)
-        mock_init = Asts.ObjectInitializerAst(pos=ast.rhs.pos, class_type=rhs_type)
-        new_arg = Asts.FunctionCallArgumentUnnamedAst(pos=ast.rhs.pos, convention=Asts.ConventionRefAst(pos=ast.rhs.pos), value=mock_init)
-        function_call_ast.op.function_argument_group.arguments = [new_arg]
-
-        lhs_type = ast.lhs.infer_type(sm)
-        mock_init = Asts.ObjectInitializerAst(pos=ast.lhs.pos, class_type=lhs_type)
-        function_call_ast.lhs.lhs = mock_init
-        function_call_ast.analyse_semantics(sm)
+        function_call_ast.op.function_argument_group.arguments = [
+            Asts.FunctionCallArgumentUnnamedAst(pos=ast.rhs.pos, convention=Asts.ConventionRefAst(pos=ast.rhs.pos), value=ast.rhs)]
 
         return function_call_ast
 

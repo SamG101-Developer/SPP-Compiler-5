@@ -56,7 +56,6 @@ class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             # Ensure the memory integrity of the expression.
             if self.skip_or_expr:
                 self.skip_or_expr.analyse_semantics(sm, **kwargs)
-                AstMemoryUtils.enforce_memory_integrity(self.skip_or_expr, self.skip_or_expr, sm, update_memory_info=False)
 
             # Infer the exit type of this loop control flow statement.
             match self.skip_or_expr:
@@ -74,6 +73,12 @@ class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 if not exit_type.symbolic_eq(that_exit_type, sm.current_scope, sm.current_scope):
                     raise SemanticErrors.TypeMismatchError().add(
                         that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type).scopes(sm.current_scope)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        if self.skip_or_expr:
+            AstMemoryUtils.enforce_memory_integrity(
+                self.skip_or_expr, self.skip_or_expr, sm, check_move=True, check_partial_move=True,
+                check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=True)
 
 
 __all__ = [

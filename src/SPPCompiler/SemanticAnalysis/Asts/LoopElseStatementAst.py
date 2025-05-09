@@ -37,6 +37,11 @@ class LoopElseStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.body.analyse_semantics(sm, **kwargs)
         sm.move_out_of_current_scope()
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        sm.move_to_next_scope()
+        self.body.check_memory(sm, **kwargs)
+        sm.move_out_of_current_scope()
+
 
 __all__ = [
     "LoopElseStatementAst"]

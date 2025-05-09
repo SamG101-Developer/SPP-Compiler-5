@@ -89,8 +89,21 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
         resume_call = Asts.PostfixExpressionAst(pos=self.pos, lhs=resume_field, op=resume_call)
 
         # Analyse the semantics of the transformed AST, ensuring that the function exists.
-        resume_call.analyse_semantics(sm, is_coro_resume=True, **kwargs)
+        resume_call.analyse_semantics(sm, **kwargs)
         self._as_func = resume_call
+
+    def check_memory(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
+        """
+        The additional "is_coro_resume" is required because any call to a coroutine will trigger the pinning logic.
+        The exception is resuming a coroutine, because this would pin the actual coroutine itself, which causes issues
+        when trying to resume the coroutine again.
+
+        Todo: check this is the reason for the "is_coro_resume" flag, am 90% sure it is correct.
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        self._as_func.check_memory(sm, is_coro_resume=True, **kwargs)
 
 
 __all__ = [

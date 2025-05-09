@@ -72,6 +72,10 @@ class ClassImplementationAst(Asts.Ast):
         if duplicates := SequenceUtils.duplicates(attribute_names):
             raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0], duplicates[1], "attribute").scopes(sm.current_scope)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the memory of the members.
+        for m in self.members: m.check_memory(sm, **kwargs)
+
 
 __all__ = [
     "ClassImplementationAst"]

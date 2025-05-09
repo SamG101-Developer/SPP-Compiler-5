@@ -180,6 +180,9 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
             sm._iterator, new_iterator = itertools.tee(sm._iterator)
             self.generate_top_level_aliases(sm, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self._skip_all_use_statement_scopes(sm, **kwargs)
+
     def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
         self._skip_all_use_statement_scopes(sm, **kwargs)
 

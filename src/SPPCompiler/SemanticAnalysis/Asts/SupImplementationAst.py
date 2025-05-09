@@ -61,6 +61,9 @@ class SupImplementationAst(Asts.Ast):
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         for member in self.members: member.analyse_semantics(sm, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        for member in self.members: member.check_memory(sm, **kwargs)
+
     def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
         for member in self.members: member.code_gen(sm, llvm_module, **kwargs)
 

@@ -1,9 +1,37 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
 class TestLocalVariableDestructureObjectAst(CustomTestCase):
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_convention_of_target_object_ref(self):
+        """
+        use std::number::bigint::BigInt
+
+        cls Point {
+            x: BigInt
+            y: BigInt
+        }
+
+        fun f(p: &Point) -> std::void::Void {
+            let Point(x, y) = p
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_invalid_convention_of_target_object_mut(self):
+        """
+        use std::number::bigint::BigInt
+
+        cls Point {
+            x: BigInt
+            y: BigInt
+        }
+
+        fun f(p: &mut Point) -> std::void::Void {
+            let Point(x, y) = p
+        }
+        """
+
     @should_fail_compilation(SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError)
     def test_invalid_local_variable_destructure_object_multiple_multi_skip(self):
         """

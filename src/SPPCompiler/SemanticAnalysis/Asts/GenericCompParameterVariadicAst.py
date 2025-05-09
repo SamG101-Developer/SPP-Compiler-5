@@ -55,7 +55,7 @@ class GenericCompParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
         symbol = VariableSymbol(
             name=Asts.IdentifierAst.from_type(self.name),
             type=self.type, visibility=Visibility.Public, is_generic=True)
-        symbol.memory_info.ast_pinned.append(self.name)
+        symbol.memory_info.ast_pins.append(self.name)
         symbol.memory_info.ast_comptime_const = self
         symbol.memory_info.initialized_by(self)
         sm.current_scope.add_symbol(symbol)

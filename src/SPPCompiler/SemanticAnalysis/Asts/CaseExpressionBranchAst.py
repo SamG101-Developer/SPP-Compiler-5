@@ -120,7 +120,6 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         :param sm: The scope manager.
         :param cond: The condition (from the ``Asts.CaseExpressionAst`` ast).
         :param kwargs: Additional keyword arguments.
-        :return: None.
         """
 
         # Create a new scope for the pattern block.
@@ -132,6 +131,28 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if self.guard:
             self.guard.analyse_semantics(sm, **kwargs)
         self.body.analyse_semantics(sm, **kwargs)
+
+        # Move out of the current scope.
+        sm.move_out_of_current_scope()
+
+    def check_memory(self, sm: ScopeManager, cond: Asts.ExpressionAst = None, **kwargs) -> None:
+        """
+        Do all memory checks of the attributes of this AST.
+
+        :param sm: The scope manager.
+        :param cond: The condition (from the ``Asts.CaseExpressionAst`` ast).
+        :param kwargs: Additional keyword arguments.
+        """
+
+        # Move into the branch's scope.
+        sm.move_to_next_scope()
+
+        # Check the patterns, guard and body.
+        for p in self.patterns:
+            p.check_memory(sm, **kwargs)
+        if self.guard:
+            self.guard.check_memory(sm, **kwargs)
+        self.body.check_memory(sm, **kwargs)
 
         # Move out of the current scope.
         sm.move_out_of_current_scope()

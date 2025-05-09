@@ -68,6 +68,10 @@ class ModulePrototypeAst(Asts.Ast):
         # Analyse the module implementation.
         self.body.analyse_semantics(sm, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the memory of the module implementation.
+        self.body.check_memory(sm, **kwargs)
+
     def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> ir.Module:
         # Generate the LLVM code for the module implementation.
         llvm_module = ir.Module(self.name)

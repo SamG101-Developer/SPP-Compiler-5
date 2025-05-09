@@ -94,6 +94,11 @@ class FunctionParameterGroupAst(Asts.Ast):
         for p in self.params:
             p.analyse_semantics(sm, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the parameters for memory errors.
+        for p in self.params:
+            p.check_memory(sm, **kwargs)
+
     # def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
     #     # Get the parameter's llvm types.
     #     parameter_types = self.params.map_attr("type")

@@ -210,6 +210,13 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         self.body.code_gen(sm, llvm_module, **kwargs)
         sm.move_out_of_current_scope()
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the memory of the function body.
+        sm.move_to_next_scope()
+        self.function_parameter_group.check_memory(sm, **kwargs)
+        self.body.check_memory(sm, **kwargs)
+        sm.move_out_of_current_scope()
+
     # def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
     #     sm.move_to_next_scope()
     #

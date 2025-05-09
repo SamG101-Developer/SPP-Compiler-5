@@ -69,7 +69,11 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         return self.op.name.symbolic_eq(that, self_scope, that_scope, check_variant, debug)
 
     def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
-        raise NotImplementedError()
+        if isinstance(self.op, Asts.TypePostfixOperatorNestedTypeAst):
+            scope = scope.get_symbol(self.lhs).scope
+            return self.op.name.split_to_scope_and_type(scope)
+
+        raise NotImplementedError(f"Cannot split {self.op} to scope and type.")
 
     def get_convention(self) -> Optional[Asts.ConventionAst]:
         return None

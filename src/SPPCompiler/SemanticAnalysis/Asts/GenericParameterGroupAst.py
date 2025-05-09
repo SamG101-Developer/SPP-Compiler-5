@@ -75,12 +75,17 @@ class GenericParameterGroupAst(Asts.Ast):
             raise SemanticErrors.IdentifierDuplicationError().add(duplicates[0], duplicates[1], "generic parameter")
 
         # Check the generic parameters are in the correct order.
-        if difference := AstOrderingUtils.order_params(self.parameters):
-            raise SemanticErrors.OrderInvalidError().add(difference[0][0], difference[0][1], difference[1][0], difference[1][1], "generic parameter")
+        if dif := AstOrderingUtils.order_params(self.parameters):
+            raise SemanticErrors.OrderInvalidError().add(dif[0][0], dif[0][1], dif[1][0], dif[1][1], "generic parameter")
 
         # Analyse the parameters.
         for p in self.parameters:
             p.analyse_semantics(sm, **kwargs)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the memory of the parameters.
+        for p in self.parameters:
+            p.check_memory(sm, **kwargs)
 
 
 __all__ = [

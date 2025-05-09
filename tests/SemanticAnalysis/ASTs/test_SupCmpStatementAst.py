@@ -58,8 +58,9 @@ class TestSupCmpStatementAst(CustomTestCase):
         }
         """
 
-    @should_pass_compilation()
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
     def test_valid_sup_use_statement_with_generic(self):
+        # T is assumed to be non-Copy (until constraints support are supported: "T: Copy")
         """
         cls MyType[T, cmp m: T] { }
         sup [T, cmp m: T] MyType[T, m] {

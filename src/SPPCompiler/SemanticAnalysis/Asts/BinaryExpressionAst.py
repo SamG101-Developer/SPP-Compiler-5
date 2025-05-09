@@ -112,8 +112,6 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the parts of the binary expression.
         self.rhs.analyse_semantics(sm, **kwargs)
         self.lhs.analyse_semantics(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.rhs, self.op, sm)
-        AstMemoryUtils.enforce_memory_integrity(self.lhs, self.op, sm, update_memory_info=False, check_move_from_borrowed_context=False)
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
         if self.op.token_type.name.endswith("Assign") and not sm.current_scope.get_variable_symbol_outermost_part(self.lhs):
@@ -173,6 +171,17 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         else:
             self._as_func = AstBinUtils.convert_to_function_call(self, sm)
             self._as_func.analyse_semantics(sm, **kwargs)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        Forward all memory checks to the function equivalent of the binary expression. This handles the "self"
+        convention for the left-hand-side, and any fold expressions as-well.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        self._as_func.check_memory(sm, **kwargs)
 
 
 __all__ = [

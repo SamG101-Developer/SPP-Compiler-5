@@ -18,7 +18,6 @@ class VariableLikeAst:
     destructured named to be returned where required.
     """
 
-    _new_asts: dict = field(default_factory=dict, init=False, repr=False)
     _from_pattern: bool = field(default=False, init=False, repr=False)
 
     @property

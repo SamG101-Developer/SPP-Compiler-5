@@ -5,7 +5,6 @@ from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
@@ -13,6 +12,9 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
 # from llvmlite import ir as llvm
+
+
+# TODO: test destructuring a borrow
 
 
 @dataclass(slots=True)
@@ -63,6 +65,7 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the value to ensure its valid before any destructuring takes place.
         if isinstance(self.value, Asts.PostfixExpressionAst) and isinstance(self.value.op, Asts.PostfixExpressionOperatorFunctionCallAst):
             kwargs |= {"inferred_return_type": self.explicit_type}
+
         self.value.analyse_semantics(sm, **(kwargs | {"assignment": self.assign_to.extract_names}))
 
         # If an explicit type has been given, analyse it and then check it against the value type.
@@ -74,11 +77,13 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 raise SemanticErrors.TypeMismatchError().add(
                     self.explicit_type, self.explicit_type, self.value, val_type).scopes(sm.current_scope)
 
-        AstMemoryUtils.enforce_memory_integrity(self.value, self.tok_assign, sm, update_memory_info=False)
-
         # Ensure each destructuring part is valid.
         kwargs.pop("explicit_type", None)
         self.assign_to.analyse_semantics(sm, value=self.value, explicit_type=self.explicit_type, **kwargs)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        kwargs.pop("value", None)
+        self.assign_to.check_memory(sm, value=self.value, **(kwargs | {"assignment": self.assign_to.extract_names}))
 
     # def generate_llvm_definitions(
     #         self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None,

@@ -4,13 +4,12 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 
 @dataclass(slots=True)
@@ -57,17 +56,12 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         symbol = VariableSymbol(
             name=Asts.IdentifierAst.from_type(self.name),
             type=self.type, visibility=Visibility.Public, is_generic=True)
-        symbol.memory_info.ast_pinned.append(self.name)
+        symbol.memory_info.ast_pins.append(self.name)
         symbol.memory_info.ast_comptime_const = self
         symbol.memory_info.initialized_by(self)
         sm.current_scope.add_symbol(symbol)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default.
-        if isinstance(self.default, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(
-                self.default).scopes(sm.current_scope)
-
         # Analyse the type of the default expression.
         self.type.analyse_semantics(sm, **kwargs)
         self.default.analyse_semantics(sm, **kwargs)
@@ -80,13 +74,26 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
                 self.name, target_type, self.default, default_type).scopes(sm.current_scope)
 
         # Create the variable for the const parameter.
-        ast = CodeInjection.inject_code(
-            f"let {self.name}: {self.type}", SppParser.parse_let_statement_uninitialized, pos_adjust=self.pos)
+        var = Asts.LocalVariableSingleIdentifierAst(pos=self.name.pos, name=Asts.IdentifierAst.from_type(self.name))
+        ast = Asts.LetStatementUninitializedAst(pos=self.pos, assign_to=var, type=self.type)
         ast.analyse_semantics(sm, **kwargs)
 
         # Mark the symbol as initialized.
         symbol = sm.current_scope.get_symbol(Asts.IdentifierAst.from_type(self.name))
         symbol.memory_info.initialized_by(self)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        Check the memory integrity of the default. Comptime constants don't have nested checks as they are a subset of
+        possible expressions, and none of these values have deeper ASTs that would require extra analysis.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        AstMemoryUtils.enforce_memory_integrity(
+            self.default, self.default, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+            check_pins=True, mark_moves=True)
 
 
 __all__ = [

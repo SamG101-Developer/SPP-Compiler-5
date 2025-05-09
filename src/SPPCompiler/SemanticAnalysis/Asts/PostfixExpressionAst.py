@@ -47,10 +47,18 @@ class PostfixExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the "lhs" and "op".
         inferred_return_type = kwargs.pop("inferred_return_type", None)
         self.lhs.analyse_semantics(sm, **kwargs)
+        self.op.analyse_semantics(sm, lhs=self.lhs, **(kwargs | {"inferred_return_type": inferred_return_type}))
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Todo: what on earth does this if statement do?
         lhs_type = self.lhs.infer_type(sm, **kwargs)
         if isinstance(self.lhs, Asts.IdentifierAst) and isinstance(lhs_type, Asts.TypeAst) and lhs_type.type_parts()[0].value[0] != "$":
-            AstMemoryUtils.enforce_memory_integrity(self.lhs, self.lhs, sm, check_move_from_borrowed_context=False, check_partial_move=False, check_pins=False, update_memory_info=False)
-        self.op.analyse_semantics(sm, lhs=self.lhs, **(kwargs | {"inferred_return_type": inferred_return_type}))
+            AstMemoryUtils.enforce_memory_integrity(
+                self.lhs, self.op, sm, check_move=True, check_partial_move=False, check_move_from_borrowed_ctx=False,
+                check_pins=False, mark_moves=False)
+
+        self.lhs.check_memory(sm, **kwargs)
+        self.op.check_memory(sm, lhs=self.lhs, **kwargs)
 
 
 __all__ = [

@@ -287,6 +287,11 @@ class SupPrototypeExtensionAst(Asts.Ast):
         self.body.code_gen(sm, llvm_module, **kwargs)
         sm.move_out_of_current_scope()
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        sm.move_to_next_scope()
+        self.body.check_memory(sm, **kwargs)
+        sm.move_out_of_current_scope()
+
 
 __all__ = [
     "SupPrototypeExtensionAst"]

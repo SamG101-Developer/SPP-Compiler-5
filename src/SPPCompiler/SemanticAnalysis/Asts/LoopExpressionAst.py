@@ -61,9 +61,6 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         sm.create_and_move_into_new_scope(f"<loop:{self.pos}>")
         self.cond.analyse_semantics(sm, **kwargs)
 
-        # Todo: Analyse twice (for memory checks).
-        # for i in range(("loop_level" not in kwargs) + 1):
-
         # For the top level loop, set the count to 0, and create empty dictionaries for the loop types and ASTs.
         kwargs["loop_level"] = kwargs.get("loop_level", 0)
         kwargs["loop_types"] = kwargs.get("loop_types", {})
@@ -82,6 +79,17 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.else_block.analyse_semantics(sm, **kwargs)
 
         # Move out of the loop scope.
+        sm.move_out_of_current_scope()
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Todo: Check twice (for memory move checks in a loop).
+        #  for i in range(("loop_level" not in kwargs) + 1):
+
+        sm.move_to_next_scope()
+        self.cond.check_memory(sm, **kwargs)
+        self.body.check_memory(sm, **kwargs)
+        if self.else_block:
+            self.else_block.check_memory(sm, **kwargs)
         sm.move_out_of_current_scope()
 
 

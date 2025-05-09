@@ -8,7 +8,6 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
@@ -20,6 +19,8 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
     tok_l: Asts.TokenAst = field(default=None)
     elems: Seq[Asts.PatternVariantNestedForDestructureObjectAst] = field(default_factory=Seq)
     tok_r: Asts.TokenAst = field(default=None)
+
+    _new_ast: Asts.LetStatementInitializedAst = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
@@ -62,8 +63,11 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
 
         # Create the new variables from the pattern in the patterns scope.
         variable = self.convert_to_variable(**kwargs)
-        new_ast = Asts.LetStatementInitializedAst(pos=variable.pos, assign_to=variable, value=cond)
-        new_ast.analyse_semantics(sm, **kwargs)
+        self._new_ast = Asts.LetStatementInitializedAst(pos=variable.pos, assign_to=variable, value=cond)
+        self._new_ast.analyse_semantics(sm, **kwargs)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self._new_ast.check_memory(sm, **kwargs)
 
 
 __all__ = [

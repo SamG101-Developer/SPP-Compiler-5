@@ -99,7 +99,6 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Perform memory checks on the captures against the symbols from the outermost scope.
         caps = Asts.FunctionCallArgumentGroupAst(arguments=self.pc_group.captures)
-        caps.pre_analyse_semantics(sm, **kwargs)
         caps.analyse_semantics(sm, **kwargs)
 
         # New scope for the parameters.
@@ -123,13 +122,31 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Move out of the inner and outer lambda scopes.
         sm._current_scope = parent_scope
 
+        # Note there is no "sm.move_out_of_current_scope()" here, as the parent scope is manually chosen above. This is
+        # because of scope re-arranging to prevent access to uncaptured variables.
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        parent_scope = sm.current_scope
+
+        caps = Asts.FunctionCallArgumentGroupAst(arguments=self.pc_group.captures)
+        caps.check_memory(sm, **kwargs)
+
+        sm.move_to_next_scope()
+        self.pc_group.check_memory(sm, **kwargs)
+
+        sm.move_to_next_scope()
+        self.body.check_memory(sm, **kwargs)
+
+        # Move out of the inner and outer lambda scopes.
+        sm._current_scope = parent_scope
+
         # Pin the lambda symbol if it is assigned to a variable and has borrowed captures.
         if "assignment" in kwargs and (borrowed_captures := [c for c in self.pc_group.captures if c.convention is not None]):
             for borrow in borrowed_captures:
-                parent_scope._symbol_table.add_deferred_callback(kwargs["assignment"][0], lambda sym: sym.memory_info.ast_pinned.append(borrow.value))
+                parent_scope.get_symbol(kwargs["assignment"][0]).memory_info.ast_pins.append(borrow.value)
 
         # Pin any values that have been borrowed as captures as borrows.
         for cap in self.pc_group.captures:
             if cap.convention is not None:
                 cap_sym = sm.current_scope.get_symbol(cap.value)
-                cap_sym.memory_info.ast_pinned.append(cap)
+                cap_sym.memory_info.ast_pins.append(cap)

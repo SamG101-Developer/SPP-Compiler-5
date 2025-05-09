@@ -117,6 +117,18 @@ class GenericArgumentGroupAst(Asts.Ast):
         for a in self.arguments:
             a.analyse_semantics(sm, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        Check the memory of the generic arguments. This is done by checking the memory of each argument. This is only
+        needed for the comp generic args, as they use actual values, not types.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        for a in self.arguments:
+            a.check_memory(sm, **kwargs)
+
 
 __all__ = [
     "GenericArgumentGroupAst"]

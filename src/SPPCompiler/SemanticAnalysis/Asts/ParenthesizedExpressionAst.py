@@ -48,7 +48,12 @@ class ParenthesizedExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the expression.
         self.expr.analyse_semantics(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.expr, self.expr, sm, check_pins=False, update_memory_info=False)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self.expr.check_memory(sm, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(
+            self.expr, self.expr, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+            check_pins=True, mark_moves=True)
 
 
 __all__ = [
