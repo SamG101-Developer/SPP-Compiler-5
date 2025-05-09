@@ -75,7 +75,7 @@ class ModulePrototypeAst(Asts.Ast):
 
     def code_gen(self, sm: ScopeManager, llvm_module: Optional[ir.Module] = None, **kwargs) -> ir.Module:
         # Generate the LLVM code for the module implementation.
-        llvm_module = ir.Module(self.name)
+        llvm_module = llvm_module or ir.Module(self.name)
         self.body.code_gen(sm, llvm_module, **kwargs)
         return llvm_module
 
