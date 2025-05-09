@@ -6,9 +6,11 @@ class TestAstMemoryPartialMoves(CustomTestCase):
     def test_assign_attribute_on_non_initialized_variable(self):
         """
         use std::string::Str
+        use std::number::u8::U8
+        use std::vector::Vec
 
         fun f() -> std::void::Void {
-            let x: Str
+            let mut x: Str
             x.data = Vec[U8]()
         }
         """
