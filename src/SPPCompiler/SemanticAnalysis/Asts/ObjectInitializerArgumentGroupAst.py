@@ -79,7 +79,6 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
 
             # Analyse the argument and enforce memory integrity.
             argument.analyse_semantics(sm, **kwargs)
-            AstMemoryUtils.enforce_memory_integrity(self.get_arg_val(argument), argument, sm)
 
     def analyse_semantics(self, sm: ScopeManager, class_type: Asts.TypeAst = None, **kwargs) -> None:
         # Get the symbol of the class type.
@@ -126,6 +125,14 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         if def_argument and not def_argument_type.symbolic_eq(target_def_type, class_symbol.scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
                 class_type, target_def_type, def_argument.name, def_argument_type).scopes(sm.current_scope)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        for argument in self.arguments:
+            val = self.get_arg_val(argument)
+            val.check_memory(sm, **kwargs)
+            AstMemoryUtils.enforce_memory_integrity(
+                val, argument, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+                check_pins=True, mark_moves=True)
 
 
 __all__ = ["ObjectInitializerArgumentGroupAst"]

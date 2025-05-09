@@ -56,6 +56,10 @@ class ModuleImplementationAst(Asts.Ast):
         # Generate the code for the members.
         for m in self.members: m.code_gen(sm, llvm_module, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the memory for the members.
+        for m in self.members: m.check_memory(sm, **kwargs)
+
 
 __all__ = [
     "ModuleImplementationAst"]

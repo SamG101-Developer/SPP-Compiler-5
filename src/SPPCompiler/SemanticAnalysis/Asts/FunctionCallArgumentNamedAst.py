@@ -54,8 +54,11 @@ class FunctionCallArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
             raise SemanticErrors.ExpressionTypeInvalidError().add(
                 self.value).scopes(sm.current_scope)
 
-        # Analyse the value of the named argument.
+        # Analyse the semantics of the argument's value.
         self.value.analyse_semantics(sm, **kwargs)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self.value.check_memory(sm, **kwargs)
 
 
 __all__ = [

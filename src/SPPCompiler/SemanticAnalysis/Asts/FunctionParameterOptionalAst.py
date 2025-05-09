@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -47,11 +48,6 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         return self.variable.extract_name
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the default value.
-        if isinstance(self.default, (Asts.TokenAst, Asts.TypeAst)):
-            raise SemanticErrors.ExpressionTypeInvalidError().add(
-                self.default).scopes(sm.current_scope)
-
         # Analyse the type of the default expression.
         self.type.analyse_semantics(sm, **kwargs)
         self.default.analyse_semantics(sm, **kwargs)
@@ -74,6 +70,18 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
             symbol.memory_info.is_borrow_mut = isinstance(convention, Asts.ConventionMutAst)
             symbol.memory_info.is_borrow_ref = isinstance(convention, Asts.ConventionRefAst)
             symbol.memory_info.initialized_by(self)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        Check the memory integrity of the default. This is a regular expression AST, so deeper analysis may be required.
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        self.default.check_memory(sm, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(
+            self.default, self.default, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+            check_pins=True, mark_moves=True)
 
 
 __all__ = [

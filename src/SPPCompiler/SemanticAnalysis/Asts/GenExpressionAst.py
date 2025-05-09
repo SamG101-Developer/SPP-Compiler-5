@@ -65,7 +65,6 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 kwargs |= {"inferred_return_type": kwargs["function_ret_type"][0] if self.kw_with else yield_type}
 
             self.expr.analyse_semantics(sm, **kwargs)
-            # AstMemoryUtils.enforce_memory_integrity(self.expr, self.kw_gen, sm) todo
             expression_type = self.expr.infer_type(sm, **kwargs).with_convention(self.convention)
         else:
             expression_type = CommonTypesPrecompiled.VOID
@@ -98,6 +97,20 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 pos=(self.convention or self.expr).pos,
                 arguments=[Asts.FunctionCallArgumentUnnamedAst(pos=self.expr.pos, convention=self.convention, value=self.expr)])
             ast.analyse_semantics(sm, **kwargs)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        Check the memory integrity of the expression. This is a regular expression AST, so deeper analysis may be
+        required.
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        if self.expr:
+            ast = Asts.FunctionCallArgumentGroupAst(
+                pos=(self.convention or self.expr).pos,
+                arguments=[Asts.FunctionCallArgumentUnnamedAst(pos=self.expr.pos, convention=self.convention, value=self.expr)])
+            ast.check_memory(sm, **kwargs)
 
 
 __all__ = [

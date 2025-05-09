@@ -41,6 +41,9 @@ class UnaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.op.analyse_semantics(sm, rhs=self.rhs, **kwargs)
         self.rhs.analyse_semantics(sm, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self.rhs.check_memory(sm, **kwargs)
+
 
 __all__ = [
     "UnaryExpressionAst"]

@@ -49,7 +49,6 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 kwargs |= {"inferred_return_type": kwargs["function_ret_type"][0]}
 
             self.expr.analyse_semantics(sm, **kwargs)
-            AstMemoryUtils.enforce_memory_integrity(self.expr, self.kw_ret, sm)
             expression_type = self.expr.infer_type(sm, **kwargs)
         else:
             expression_type = CommonTypesPrecompiled.VOID
@@ -69,6 +68,14 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             if not expected_type.symbolic_eq(expression_type, kwargs["function_scope"], sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     expression_type, expected_type, self.expr, expected_type).scopes(kwargs["function_scope"], sm.current_scope)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the memory of the expression if it exists.
+        if self.expr:
+            self.expr.check_memory(sm, **kwargs)
+            AstMemoryUtils.enforce_memory_integrity(
+                self.expr, self.kw_ret, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+                check_pins=True, mark_moves=True)
 
     # def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
     #     # Create a return instruction with the expression if it exists.

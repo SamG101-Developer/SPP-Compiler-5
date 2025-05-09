@@ -5,6 +5,7 @@ from typing import Dict, Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -88,18 +89,38 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         try:
             self.type.analyse_semantics(sm, **kwargs)
         except SemanticErrors.IdentifierUnknownError:
-            # TODO
+            # TODO: This is for generic substitutions. what needs to happen is the generic class's scope (ie Vec[T=U],
+            #  where U is generic) needs to made a child of the "current_scope", to access generics from that scope,
+            #  like U as a "fun f[U]()" generic, then post attribute analysis, the parent scope can be set back to what
+            #  is should have been. The issue (again) is that the type being analysed will mess up because the scope
+            #  search order will be broken. The best cause of action is to probably temporarily add the generic symbols
+            #  in? Again though, say for the Type[T, U], if a U from the current scope is added, then is messes this up
+            #  AGAIN. So I'm not really sure right now, aside from actually storing symbols in the generics AST, and
+            #  then using .value as a property accessor to the mapped symbol maybe?
             pass
             
         # If a default value is present, analyse it and check its type.
         # Todo: prevent generic attributes from having defaults + test
-        if self.default:
+        if self.default is not None:
             self.default.analyse_semantics(sm, **kwargs)
             default_type = self.default.infer_type(sm)
 
             if not self.type.symbolic_eq(default_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     self, self.type, self.default, default_type).scopes(sm.current_scope)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        Check the default value, if given, is memory-enforced. The unique case where this is applicable is if it is
+        referring to a comptime constant. This ensures that the constant superimposes the "Copy" type.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        # Check the default's memory state (cmp value, so no need to iterate deeper).
+        if self.default is not None:
+            AstMemoryUtils.enforce_memory_integrity(self.default, self.default, sm)
 
 
 __all__ = [

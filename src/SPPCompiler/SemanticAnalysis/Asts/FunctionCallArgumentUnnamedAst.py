@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -49,7 +50,11 @@ class FunctionCallArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mi
             raise SemanticErrors.ExpressionTypeInvalidError().add(
                 self.value).scopes(sm.current_scope)
 
+        # Analyse the semantics of the argument's value.
         self.value.analyse_semantics(sm, **kwargs)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self.value.check_memory(sm, **kwargs)
 
 
 __all__ = [

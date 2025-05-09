@@ -11,7 +11,6 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
@@ -51,9 +50,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         # Get all the unnamed function call arguments.
         return [a for a in self.arguments if isinstance(a, Asts.FunctionCallArgumentUnnamedAst)]
 
-    def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # Code that is run before the overload is selected.
-
+    def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate argument names.
         argument_names = [a.name for a in self.arguments if isinstance(a, Asts.FunctionCallArgumentNamedAst)]
         if duplicates := SequenceUtils.duplicates(argument_names):
@@ -61,18 +58,19 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 duplicates[0], duplicates[1], "named arguments").scopes(sm.current_scope)
 
         # Check the arguments are in the correct order.
-        if difference := AstOrderingUtils.order_args(self.arguments):
+        if dif := AstOrderingUtils.order_args(self.arguments):
             raise SemanticErrors.OrderInvalidError().add(
-                difference[0][0], difference[0][1], difference[1][0], difference[1][1], "argument").scopes(sm.current_scope)
+                dif[0][0], dif[0][1], dif[1][0], dif[1][1], "argument").scopes(sm.current_scope)
 
         # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ...").
         for i, argument in enumerate(self.arguments):
-            if isinstance(argument, Asts.FunctionCallArgumentUnnamedAst) and argument.tok_unpack:
+            if isinstance(argument, Asts.FunctionCallArgumentUnnamedAst) and argument.tok_unpack is not None:
 
                 # Check the argument type is a tuple
                 tuple_argument_type = argument.infer_type(sm, **kwargs)
                 if not AstTypeUtils.is_type_tuple(tuple_argument_type, sm.current_scope):
-                    raise SemanticErrors.ArgumentTupleExpansionOfNonTupleError().add(argument.value, tuple_argument_type).scopes(sm.current_scope)
+                    raise SemanticErrors.ArgumentTupleExpansionOfNonTupleError().add(
+                        argument.value, tuple_argument_type).scopes(sm.current_scope)
 
                 # Replace the tuple-expansion argument with the expanded arguments
                 self.arguments.pop(i)
@@ -87,40 +85,67 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         for a in self.arguments:
             a.analyse_semantics(sm, **kwargs)
 
-    def analyse_semantics(self, sm: ScopeManager, target_proto: Asts.FunctionPrototypeAst = None, is_async: Optional[Asts.TokenAst] = None, is_coro_resume: bool = False, **kwargs) -> None:
-        # Code that is run after the overload is selected.
+    def check_memory(self, sm: ScopeManager, target_proto: Asts.FunctionPrototypeAst = None, is_async: Optional[Asts.TokenAst] = None, is_coro_resume: bool = False, **kwargs) -> None:
+        """
+        The function call argument group has some of the most complex memory analysis rules. This is the key area for
+        the "law of exclusivity" to be applied. Other areas that require this, such as lambda captures, are re-modelled
+        as a function argument group to re-use this logic.
+
+        There can be 1 mutable XOR n immutable overlapping borrows to a symbol, allowing for thread safety. Pins are
+        also applied for borrows into coroutines and async function calls.
+
+        An additional 2 checks for mutable borrows are required, to ensure that mutability is allowed for the argument.
+        The two checks are:
+            1. For borrowed arguments, ensure the borrow is not a "&" (immutable) borrow.
+            2. For non-borrowed arguments, ensure the symbol is marked as "mut" (mutable).
+
+        :param sm: The scope manager.
+        :param target_proto: The target function prototype that is being called.
+        :param is_async: Whether these arguments are being applied as "async f()".
+        :param is_coro_resume: Whether these arguments are being applied to a coroutine call.
+        :param kwargs: Additional keyword arguments.
+        """
 
         # Mark if pins are required, and the ast to mark as errored if required.
-        pins_required = is_async or (target_proto if isinstance(target_proto, Asts.CoroutinePrototypeAst) and not is_coro_resume else None)
+        is_target_coro = isinstance(target_proto, Asts.CoroutinePrototypeAst)
+        pins_required = is_async or (target_proto if is_target_coro and not is_coro_resume else None)
 
         # Define the borrow sets to maintain the law of exclusivity.
         borrows_ref = []
         borrows_mut = []
 
-        # Begin the analysis of the arguments against each other.
         for argument in self.arguments:
 
+            # Get the outermost part of the argument as a symbol. If the argument is non-symbolic, then there is no need
+            # to track borrows to it, as it is a temporary value.
             symbol = sm.current_scope.get_variable_symbol_outermost_part(argument.value)
             if not symbol: continue
 
-            # Ensure the argument isn't moved or partially moved (applies to all conventions).
+            # Ensure the argument isn't moved or partially moved (applies to all conventions). For non-symbolic
+            # arguments, nested checking is done via the argument itself.
+            argument.check_memory(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(
-                argument.value, argument, sm,
-                check_move_from_borrowed_context=False, check_pins=False, update_memory_info=False)
+                argument.value, argument, sm, check_move=True, check_partial_move=True,
+                check_move_from_borrowed_ctx=False, check_pins=False, mark_moves=False)
 
             if argument.convention is None:
-
-                # Don't recheck the moves or partial moves, but ensure the pins are maintained here.
+                # Don't bother rechecking the moves or partial moves, but ensure that attributes aren't being moved off
+                # of a borrowed value and that pins are maintained. Mark the move or partial move of the argument.
+                argument.check_memory(sm, **kwargs)
                 AstMemoryUtils.enforce_memory_integrity(
-                    argument.value, argument, sm,
-                    check_move=False, check_partial_move=False, check_pins=True)
+                    argument.value, argument, sm, check_move=False, check_partial_move=False,
+                    check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=True)
 
-                # Check the move doesn't overlap with any borrows.
+                # Check the move doesn't overlap with any borrows. This is to ensure that "f(&x, x)" can never happen,
+                # because the first argument requires the owned object to outlive the function call, and moving it as
+                # the second argument breaks this.
                 if overlap := [b for b in (borrows_ref + borrows_mut) if AstMemoryUtils.overlaps(b, argument.value)]:
                     raise SemanticErrors.MemoryOverlapUsageError().add(
                         overlap[0], argument.value).scopes(sm.current_scope)
 
             elif isinstance(argument.convention, Asts.ConventionMutAst):
+                argument.check_memory(sm, **kwargs)
+
                 # Check the argument isn't already an immutable borrow.
                 if symbol.memory_info.is_borrow_ref:
                     raise SemanticErrors.MutabilityInvalidMutationError().add(
@@ -138,14 +163,16 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
-                    symbol.memory_info.ast_pinned.append(argument.value)
+                    symbol.memory_info.ast_pins.append(argument.value)
                     for assign_target in kwargs.get("assignment", []):
-                        sm.current_scope.symbol_table.add_deferred_callback(assign_target, lambda sym: sym.memory_info.ast_pinned.append(argument.value))
+                        sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
 
                 # Add the mutable borrow to the mutable borrow set.
                 borrows_mut.append(argument.value)
 
             elif isinstance(argument.convention, Asts.ConventionRefAst):
+                argument.check_memory(sm, **kwargs)
+
                 # Check the immutable borrow doesn't overlap with any other mutable borrow in the same scope.
                 if overlap := [b for b in borrows_mut if AstMemoryUtils.overlaps(b, argument.value)]:
                     raise SemanticErrors.MemoryOverlapUsageError().add(
@@ -153,9 +180,9 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
-                    symbol.memory_info.ast_pinned.append(argument.value)
+                    symbol.memory_info.ast_pins.append(argument.value)
                     for assign_target in kwargs.get("assignment", []):
-                        sm.current_scope.symbol_table.add_deferred_callback(assign_target, lambda sym: sym.memory_info.ast_pinned.append(argument.value))
+                        sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
 
                 # Add the immutable borrow to the immutable borrow set.
                 borrows_ref.append(argument.value)

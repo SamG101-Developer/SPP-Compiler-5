@@ -68,6 +68,10 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.class_type.analyse_semantics(sm, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
         self.object_argument_group.analyse_semantics(sm, class_type=self.class_type, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the memory of the object argument group.
+        self.object_argument_group.check_memory(sm, **kwargs)
+
 
 __all__ = [
     "ObjectInitializerAst"]

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
@@ -44,6 +45,12 @@ class PatternGuardAst(Asts.Ast):
         if not target_type.symbolic_eq(return_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.ExpressionNotBooleanError().add(
                 self.expression, return_type, "pattern guard").scopes(sm.current_scope)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self.expression.check_memory(sm, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(
+            self.expression, self.tok_guard, sm, check_move=True, check_partial_move=True, check_pins=True,
+            check_move_from_borrowed_ctx=True, mark_moves=True)
 
 
 __all__ = [

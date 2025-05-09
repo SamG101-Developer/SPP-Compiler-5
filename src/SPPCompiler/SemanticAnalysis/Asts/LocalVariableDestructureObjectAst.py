@@ -17,6 +17,8 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     elems: Seq[Asts.LocalVariableNestedForDestructureObjectAst] = field(default_factory=Seq)
     tok_r: Asts.TokenAst = field(default=None)
 
+    _new_asts: list[Asts.LetStatementAst] = field(default_factory=list, init=False)
+
     def __post_init__(self) -> None:
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightParenthesis)
@@ -72,6 +74,7 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
                 postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(element.name.pos, element.name))
                 new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
+                self._new_asts.append(new_ast)
 
             elif isinstance(element, Asts.LocalVariableAttributeBindingAst) and isinstance(element.value, Asts.LocalVariableSingleIdentifierAst):
                 continue
@@ -80,6 +83,7 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
                 postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(element.name.pos, element.name))
                 new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element.value, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
+                self._new_asts.append(new_ast)
 
         # Check for any missing attributes in the destructure, unless a multi-skip is present.
         # Todo: connect correct scope for the class type. sm.current_scope.get_symbol(self.class_type).scope.parent_module?
@@ -89,6 +93,10 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             if missing_attributes:
                 raise SemanticErrors.ArgumentRequiredNameMissingError().add(
                     self, missing_attributes[0], "attribute", "destructure argument").scopes(sm.current_scope.get_symbol(self.class_type).scope, sm.current_scope)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        for new_ast in self._new_asts:
+            new_ast.check_memory(sm, **kwargs)
 
 
 __all__ = [

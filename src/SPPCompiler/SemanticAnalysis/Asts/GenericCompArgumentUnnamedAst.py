@@ -45,7 +45,19 @@ class GenericCompArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
         # Analyse the value of the unnamed argument.
         self.value.analyse_semantics(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.value, self.value, sm, check_pins=False, update_memory_info=False)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        Check the memory integrity of the value. Comptime constants don't have nested checks as they are a subset of
+        possible expressions, and none of these values have deeper ASTs that would require extra analysis.
+
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        AstMemoryUtils.enforce_memory_integrity(
+            self.value, self.value, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+            check_pins=True, mark_moves=True)
 
 
 __all__ = [

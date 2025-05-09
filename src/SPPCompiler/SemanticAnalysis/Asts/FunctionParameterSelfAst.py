@@ -72,7 +72,8 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
             type=self.type)
         ast.analyse_semantics(sm, **kwargs)
 
-        # Mark the symbol as initialized.
+        # Mark the symbol as initialized. The "mut" being also set from the "&mut" is because "&mut self" implies symbol
+        # mutability as-well.
         symbol = sm.current_scope.get_symbol(self.name)
         symbol.is_mutable = self.tok_mut is not None or isinstance(self.convention, Asts.ConventionMutAst)
         symbol.memory_info.ast_borrowed = self.convention

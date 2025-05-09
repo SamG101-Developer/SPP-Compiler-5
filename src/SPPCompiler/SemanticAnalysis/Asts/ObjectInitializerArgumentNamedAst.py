@@ -44,6 +44,10 @@ class ObjectInitializerArgumentNamedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the value of the argument.
         self.value.analyse_semantics(sm, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Check the memory of the value of the argument.
+        self.value.check_memory(sm, **kwargs)
+
 
 __all__ = [
     "ObjectInitializerArgumentNamedAst"]

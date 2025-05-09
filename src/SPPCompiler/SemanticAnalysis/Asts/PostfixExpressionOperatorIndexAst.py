@@ -87,6 +87,9 @@ class PostfixExpressionOperatorIndexAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         index_call.analyse_semantics(sm, **kwargs)
         self._as_func = index_call
 
+    def check_memory(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
+        self._as_func.check_memory(sm, **kwargs)
+
 
 __all__ = [
     "PostfixExpressionOperatorIndexAst",

@@ -6,7 +6,7 @@ from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils, LightweightMemoryInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -216,17 +216,14 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if isinstance(self.cond, (Asts.TokenAst, Asts.TypeAst)):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.cond).scopes(sm.current_scope)
 
-        # Analyse the condition and enforce memory integrity (outside the new scope).
+        # Analyse the condition (outside the new scope).
         self.cond.analyse_semantics(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.cond, self.cond, sm, update_memory_info=False)
 
         # Create the scope for the case expression.
         sm.create_and_move_into_new_scope(f"<case-expr:{self.pos}>")
 
         # Analyse each branch of the case expression.
-        symbol_mem_info = defaultdict(Seq)
         for branch in self.branches:
-
             # Destructures can only use 1 pattern.
             if branch.op and branch.op.token_type == SppTokenType.KwIs and len(branch.patterns) > 1:
                 raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1]).scopes(sm.current_scope)
@@ -247,51 +244,75 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                     binary_ast = Asts.BinaryExpressionAst(self.pos, binary_lhs_ast, branch.op, binary_rhs_ast)
                     binary_ast.analyse_semantics(sm, **kwargs)
 
-            # Make a record of the symbols' memory status in the scope before the branch is analysed.
-            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols() if s.symbol_type is SymbolType.VariableSymbol]
-            old_symbol_mem_info = {s: s.memory_info.consistency_attrs() for s in var_symbols_in_scope}
             branch.analyse_semantics(sm, cond=self.cond, **kwargs)
-            new_symbol_mem_info = {s: s.memory_info.consistency_attrs() for s in var_symbols_in_scope}
+
+        # Move out of the case expression scope.
+        sm.move_out_of_current_scope()
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # Enforce memory integrity
+        self.cond.check_memory(sm, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(self.cond, self.cond, sm, mark_moves=False)
+
+        sm.move_to_next_scope()
+
+        # Check the memory status of the symbols in the case expression.
+        symbol_mem_info = defaultdict(list[tuple[Asts.CaseExpressionBranchAst, LightweightMemoryInfo]])
+        for branch in self.branches:
+            # Make a record of the symbols' memory status in the scope before the branch is analysed.
+            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols(match_type=Asts.IdentifierAst) if s.symbol_type is SymbolType.VariableSymbol]
+            old_symbol_mem_info = {s: s.memory_info.snapshot() for s in var_symbols_in_scope}
+            branch.check_memory(sm, cond=self.cond, **kwargs)
+            new_symbol_mem_info = {s: s.memory_info.snapshot() for s in var_symbols_in_scope}
 
             # Reset the memory status of the symbols for the next branch to be analysed in the same state.
             for symbol, old_memory_status in old_symbol_mem_info.items():
-                symbol.memory_info.ast_initialization = old_memory_status[0]
-                symbol.memory_info.ast_moved = old_memory_status[1]
-                symbol.memory_info.ast_partially_moved = old_memory_status[2]
-                symbol.memory_info.ast_pinned = old_memory_status[3]
-                symbol.memory_info.initialization_counter = old_memory_status[4]
+                symbol.memory_info.ast_initialization = old_memory_status.ast_initialization
+                symbol.memory_info.ast_moved = old_memory_status.ast_moved
+                symbol.memory_info.ast_partial_moves = old_memory_status.ast_partial_moves
+                symbol.memory_info.ast_pins = old_memory_status.ast_pins
+                symbol.memory_info.initialization_counter = old_memory_status.initialization_counter
 
                 # Insert or append the new memory status of the symbol.
                 symbol_mem_info[symbol].append((branch, new_symbol_mem_info[symbol]))
 
         # Update the memory status of the symbols.
-        # Todo: tidy this up omg
         for symbol, new_memory_info_list in symbol_mem_info.items():
+            first_branch = self.branches[0]
+            first_memory_info_list = new_memory_info_list[0][1]
 
             # Assuming all new memory states are consistent across branches, update to the first "new" state list.
-            symbol.memory_info.ast_initialization = new_memory_info_list[0][1][0]
-            symbol.memory_info.ast_moved = new_memory_info_list[0][1][1]
-            symbol.memory_info.ast_partially_moved = new_memory_info_list[0][1][2]
-            symbol.memory_info.ast_pinned = new_memory_info_list[0][1][3]
+            symbol.memory_info.ast_initialization = first_memory_info_list.ast_initialization
+            symbol.memory_info.ast_moved = first_memory_info_list.ast_moved
+            symbol.memory_info.ast_partial_moves = first_memory_info_list.ast_partial_moves
+            symbol.memory_info.ast_pins = first_memory_info_list.ast_pins
 
             # Check the new memory status for each symbol is consistent across all branches.
-            for branch, memory_info_list in new_memory_info_list:
+            for branch, memory_info_list in new_memory_info_list[1:]:
 
                 # Check for consistent initialization.
-                if new_memory_info_list[0][1][0] != memory_info_list[0]:
-                    symbol.memory_info.is_inconsistently_initialized = ((self.branches[0], new_memory_info_list[0][1][0]), (branch, memory_info_list[0]))
+                if (first_memory_info_list.ast_initialization is None) is not (memory_info_list.ast_initialization is None):
+                    symbol.memory_info.is_inconsistently_initialized = (
+                        (first_branch, first_memory_info_list.ast_initialization),
+                        (branch, memory_info_list.ast_initialization))
 
                 # Check for consistent movement.
-                if new_memory_info_list[0][1][1] != memory_info_list[1]:
-                    symbol.memory_info.is_inconsistently_moved = ((self.branches[0], new_memory_info_list[0][1][1]), (branch, memory_info_list[1]))
+                if (first_memory_info_list.ast_moved is None) is not (memory_info_list.ast_moved is None):
+                    symbol.memory_info.is_inconsistently_moved = (
+                        (first_branch, first_memory_info_list.ast_moved),
+                        (branch, memory_info_list.ast_moved))
 
                 # Check for consistent partial movement.
-                if new_memory_info_list[0][1][2] != memory_info_list[2]:
-                    symbol.memory_info.is_inconsistently_partially_moved = ((self.branches[0], new_memory_info_list[0][1][2]), (branch, memory_info_list[2]))
+                if first_memory_info_list.ast_partial_moves != memory_info_list.ast_partial_moves:
+                    symbol.memory_info.is_inconsistently_partially_moved = (
+                        (first_branch, first_memory_info_list.ast_partial_moves),
+                        (branch, memory_info_list.ast_partial_moves))
 
                 # Check for consistent pinning.
-                if new_memory_info_list[0][1][3] != memory_info_list[3]:
-                    symbol.memory_info.is_inconsistently_pinned = ((self.branches[0], new_memory_info_list[0][1][3]), (branch, memory_info_list[3]))
+                if first_memory_info_list.ast_pins != memory_info_list.ast_pins:
+                    symbol.memory_info.is_inconsistently_pinned = (
+                        (first_branch, first_memory_info_list.ast_pins),
+                        (branch, memory_info_list.ast_pins))
 
         # Move out of the case expression scope.
         sm.move_out_of_current_scope()

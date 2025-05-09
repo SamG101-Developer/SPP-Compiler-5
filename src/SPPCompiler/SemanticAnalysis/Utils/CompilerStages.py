@@ -75,6 +75,16 @@ class CompilerStages:
         @param kwargs Additional keyword arguments.
         """
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        """
+        The check memory stage is the final stage of the semantic pipeline. This stage performs all the memory checks,
+        and has to happen after, and not during semantic analysis, because sometimes the ASTs are analysed out of order
+        to allow for type-inference. This messes up the strict order of memory checks, so the additional stage enforces
+        the order of memory checks.
+        :param sm: The scope manager
+        :param kwargs: Additional keyword arguments.
+        """
+
     def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
         """
         The code generation stage is the final stage of the compiler. This stage generates the LLVM IR for the module,

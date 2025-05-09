@@ -30,6 +30,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     _overload: Optional[Tuple[Scope, Asts.FunctionPrototypeAst]] = field(default=None, repr=False)
     _is_async: Optional[Asts.Ast] = field(default=None, repr=False)
     _folded_args: Seq[Asts.FunctionCallArgumentAst] = field(default_factory=Seq, repr=False)
+    _closure_arg: Optional[Asts.FunctionCallArgumentUnnamedAst] = field(default=None, repr=False)
 
     def __copy__(self, memodict=None) -> PostfixExpressionOperatorFunctionCallAst:
         return PostfixExpressionOperatorFunctionCallAst(
@@ -260,8 +261,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                 dummy_self_argument.convention = Asts.ConventionMutAst(pos=lhs.pos)
             elif lhs_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_REF, sm.current_scope, sm.current_scope):
                 dummy_self_argument.convention = Asts.ConventionRefAst(pos=lhs.pos)
-            group = Asts.FunctionCallArgumentGroupAst(pos=lhs.pos, arguments=[dummy_self_argument])
-            group.analyse_semantics(sm)
+            self._closure_arg = dummy_self_argument
 
         # Set the overload to the only pass overload.
         self._overload = pass_overloads[0]
@@ -283,47 +283,52 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
             return
 
         # Check if this function call is from a transformed coroutine resume AST.
-        is_coro_resume = kwargs.pop("is_coro_resume", False)
         inferred_return_type = kwargs.pop("inferred_return_type", None)
 
         # Analyse the function and generic arguments, and determine the overload.
-        self.function_argument_group.pre_analyse_semantics(sm, **kwargs)
+        self.function_argument_group.analyse_semantics(sm, **kwargs)
         self.generic_argument_group.analyse_semantics(sm, **kwargs)
         self.determine_overload(sm, lhs, expected_return_type=inferred_return_type, **kwargs)
-        self.function_argument_group.analyse_semantics(sm, target_proto=self._overload[1], is_async=self._is_async, is_coro_resume=is_coro_resume, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # If a fold is taking place, analyse the non-folding arguments again (checks for double moves).
         if self.fold_token is not None and self._folded_args:
             non_folding_arguments = [a for a in self.function_argument_group.arguments if a.value not in [f.value for f in self._folded_args]]
-            Asts.FunctionCallArgumentGroupAst(arguments=non_folding_arguments).analyse_semantics(sm, **kwargs)
+            group = Asts.FunctionCallArgumentGroupAst(arguments=non_folding_arguments)
+            group.check_memory(sm, **kwargs)
+
+        # If a closure is being called, apply memory rules to symbolic target.
+        if self._closure_arg:
+            group = Asts.FunctionCallArgumentGroupAst(pos=lhs.pos, arguments=[self._closure_arg])
+            group.check_memory(sm)
 
         # Link references created by the function call to the overload.
-        # Todo: switch this to use "AstTypeUtils.get_generator_and_yielded_type"
         if self._overload[1].tok_fun.token_type == SppTokenType.KwCor:
             coro_return_type = self.infer_type(sm, lhs, **kwargs)
 
             # Find the generator type superimposed over the return type.
-            for super_type in sm.current_scope.get_symbol(coro_return_type).scope.sup_types + [coro_return_type]:
-                if super_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope, sm.current_scope):
-                    coro_return_type = super_type
-                    break
+            _, yield_type = AstTypeUtils.get_generator_and_yielded_type(
+                coro_return_type, sm, coro_return_type, "coroutine call")
 
             # Immutable reference invalidates all mutable references.
-            if type(coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_convention()) is Asts.ConventionRefAst:
+            if type(yield_type.get_convention()) is Asts.ConventionRefAst:
                 outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
                 for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
-                    if is_mutable:
-                        outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
-
+                    if is_mutable: outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
                 outermost.memory_info.refer_to_asts = [(ast, False) for ast in kwargs.get("assignment", [])]
 
             # Mutable reference invalidates all mutable and immutable references.
-            elif type(coro_return_type.type_parts()[-1].generic_argument_group["Yield"].value.get_convention()) is Asts.ConventionMutAst:
+            elif type(yield_type.get_convention()) is Asts.ConventionMutAst:
                 outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
-                for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
+                for existing_referred_to, _ in outermost.memory_info.refer_to_asts:
                     outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
-
                 outermost.memory_info.refer_to_asts = [(ast, True) for ast in kwargs.get("assignment", [])]
+
+        # Check the argument group, now any old borrows have been invalidated.
+        is_coro_resume = kwargs.pop("is_coro_resume", False)
+        self.generic_argument_group.check_memory(sm, **kwargs)
+        self.function_argument_group.check_memory(
+            sm, target_proto=self._overload[1], is_async=self._is_async, is_coro_resume=is_coro_resume, **kwargs)
 
 
 __all__ = ["PostfixExpressionOperatorFunctionCallAst"]

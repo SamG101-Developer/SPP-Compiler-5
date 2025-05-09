@@ -51,13 +51,27 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # Set the initialization ast (for errors). Increment the initialization counter for initialized variables.
         symbol.memory_info.ast_initialization = self.name
-        if not isinstance(value, Asts.TypeAst):
+        if not kwargs.get("from_non_init", False):
             symbol.memory_info.initialization_counter = 1
-            AstMemoryUtils.enforce_memory_integrity(value, self, sm)
+
+            # Set any borrow ast based on the potentially symbolic value being set to this variable.
+            if val_symbol := sm.current_scope.get_symbol(value):
+                symbol.memory_info.ast_borrowed = value
+                symbol.memory_info.is_borrow_mut = val_symbol.memory_info.is_borrow_mut
+                symbol.memory_info.is_borrow_ref = val_symbol.memory_info.is_borrow_ref
+
         else:
             symbol.memory_info.ast_moved = self
 
         sm.current_scope.add_symbol(symbol)
+
+    def check_memory(self, sm: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
+        sym = sm.current_scope.get_symbol(self.name)
+        if not kwargs.get("from_non_init", False):
+            value.check_memory(sm, **kwargs)
+            AstMemoryUtils.enforce_memory_integrity(
+                value, self, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+                check_pins=True, mark_moves=True)
 
 
 __all__ = [

@@ -32,6 +32,9 @@ class PatternVariantElseCaseAst(Asts.Ast):
         # Analyse the case expression.
         self.case_expression.analyse_semantics(sm, **kwargs)
 
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self.case_expression.check_memory(sm, **kwargs)
+
 
 __all__ = [
     "PatternVariantElseCaseAst"]

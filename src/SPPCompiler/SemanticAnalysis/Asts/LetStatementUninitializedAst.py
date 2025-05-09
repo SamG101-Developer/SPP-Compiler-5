@@ -38,11 +38,15 @@ class LetStatementUninitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return CommonTypesPrecompiled.VOID
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # Analyse the variable's type.
-        self.type.analyse_semantics(sm, **kwargs)
+        # Create a dummy object initializer for the variable.
+        mock_init = Asts.ObjectInitializerAst(pos=self.type.pos, class_type=self.type)
 
-        # Recursively analyse the variable.
-        self.assign_to.analyse_semantics(sm, value=self.type, **kwargs)
+        # Analyse the variable's type, and recursively analyse the variable.
+        self.type.analyse_semantics(sm, **kwargs)
+        self.assign_to.analyse_semantics(sm, value=mock_init, **(kwargs | {"from_non_init": True}))
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        self.assign_to.check_memory(sm, **(kwargs | {"from_non_init": True}))
 
 
 __all__ = [
