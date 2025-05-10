@@ -31,7 +31,7 @@ into a coroutine.
 A generator is advanced by using the `.res()` method. As this requires compiler specific code to invalidate the
 previously yielded borrow, `res` is a callable postfix keyword, rather than a method.
 
-```
+```S++
 cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
     gen &a
     gen &b
@@ -57,7 +57,7 @@ borrowed and used in the caller.
 If the `Gen` argument is `Void`, then the generator type must be `Gen[Yield=Void]`, because borrows cannot be taken
 from nothing, ie `gen` is valid on its own, but `gen &mut` doesn't make sense without a value to borrow.
 
-```
+```S++
 cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
     gen &a
     gen &b
@@ -70,7 +70,7 @@ cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
 When borrowed values are yielded from a coroutine, they are only valid until the next `.res()` call is made to the
 coroutine. This is to ensure they remain valid for the coroutine to use in steps up to the next yield.
 
-```
+```S++
 cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
     gen &a
     
@@ -101,7 +101,7 @@ Values are received by placing the `gen` expression on the right-hand-side of a 
 are always moved into a coroutine, not borrowed. This means that receiving a second value into the coroutine doesn't
 invalidate the first one.
 
-```
+```S++
 cor coroutine() -> Gen[Yield=BigInt, Send=BigInt] {
     let a = gen 1
     let b = gen 2
@@ -136,7 +136,7 @@ coroutine.
 
 The following example shows equivalent code using a loop and coroutine chaining:
 
-```
+```S++
 cor coroutine() -> Gen[Yield=BigInt] {
     gen 1
     gen 2
@@ -151,7 +151,7 @@ cor coroutine_chain() -> Gen[Yield=BigInt] {
 }
 ```
 
-```
+```S++
 cor coroutine() -> Gen[Yield=BigInt] {
     gen 1
     gen 2
