@@ -80,9 +80,9 @@ cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
 
 fun main() -> Void {
     let generator = coroutine(1, 2, 3)
-    let a = generator.step()
-    let b = generator.step()  # invalidates "a"
-    let c = generator.step()  # invalidates "b"
+    let a = generator.res()
+    let b = generator.res()  # invalidates "a"
+    let c = generator.res()  # invalidates "b"
 }
 ```
 
@@ -111,10 +111,10 @@ cor coroutine() -> Gen[Yield=BigInt, Send=BigInt] {
 
 fun main() -> Void {
     let generator = coroutine()
-    let a = generator.step(1)
-    let b = generator.step(2)
-    let c = generator.step(3)
-    let t = generator.step(0)
+    let a = generator.res(1)
+    let b = generator.res(2)
+    let c = generator.res(3)
+    let t = generator.res(0)
 }
 ```
 
