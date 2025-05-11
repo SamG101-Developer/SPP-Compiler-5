@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import copy
 from collections import defaultdict
-from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type
+from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type, List
 
 from ordered_set import OrderedSet
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
@@ -571,3 +572,39 @@ class AstFunctionUtils:
 
         # Finally, re-order the arguments to match the parameter order.
         return sorted(final_args, key=lambda arg: generic_parameter_names.index(arg.name))
+
+    @staticmethod
+    def is_target_callable(expr: Asts.ExpressionAst, sm: ScopeManager, **kwargs) -> Optional[Asts.TypeAst]:
+        """
+        This function checks that, given provided information during function overload resolution, if the expression
+        provided represents a callable type or not. The check is only executed if there are no provided overloads, and
+        if the type is functional (one of the FunXXX types, then the type is returned).
+        :param expr: The expression to check.
+        :param sm: The scope manager.
+        :param kwargs: Additional keyword arguments.
+        :return: The function type is the expression is a function type, otherwise None.
+        """
+
+        # Infer the expression's type, and compare it against the known function types.
+        expr_type = expr.infer_type(sm, **kwargs)
+        is_type_functional = AstTypeUtils.is_type_functional(expr_type, sm.current_scope)
+        return expr_type if is_type_functional else None
+
+    @staticmethod
+    def create_callable_prototype(expr_type: Asts.TypeAst) -> Asts.FunctionPrototypeAst:
+        """
+        This function generates a dummy prototype for a callable type. This is for when a callable variable exists;
+        there is no "function prototype" to point to, because any function could have been assigned to it, given the
+        signature matches, so a temporary dummy prototype is created.
+        :param expr_type: The type of the callable variable.
+        :return: The dummy prototype for the callable variable.
+        """
+
+        # Extract the parameter and return types from the expression type.
+        dummy_params_types = [t.value for t in expr_type.type_parts()[-1].generic_argument_group["Args"].value.type_parts()[-1].generic_argument_group.arguments]
+        dummy_return_type = expr_type.type_parts()[-1].generic_argument_group["Out"].value
+
+        # Create a function prototype based off of the parameter and return types.
+        dummy_params = Asts.FunctionParameterGroupAst(params=[Asts.FunctionParameterRequiredAst(type=t) for t in dummy_params_types])
+        dummy_overload = Asts.FunctionPrototypeAst(function_parameter_group=dummy_params, return_type=dummy_return_type)
+        return dummy_overload
