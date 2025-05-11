@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from collections import defaultdict
-from typing import Dict, Optional, TYPE_CHECKING, Callable, List
+from typing import Dict, Optional, TYPE_CHECKING
 
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -38,7 +37,7 @@ class SymbolTable:
 
     def all(self) -> Seq[Symbol]:
         # Get all symbols in the table.
-        return [*self._table.values()]
+        return list(self._table.values())
 
     def __json__(self) -> Dict:
         # Dump the SymbolTable as a JSON object.
