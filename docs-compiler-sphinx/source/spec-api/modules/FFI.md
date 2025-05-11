@@ -111,7 +111,7 @@ needed. The following table shows the conversions that are made when calling a `
 | `void`               | `Void`          | Identical types, no change   |
 | `T*`                 | `&mut T`        | Only as a function parameter |
 | `const T*`           | `&T`            | Only as a function parameter |
-| `T[]`                | `ArrDyanmic[T]` | ?                            |
+| `T[]`                | `ArrDynamic[T]` | ?                            |
 | `T[n]`               | `Arr[T, n]`     | ?                            |
 
 ### Important notes

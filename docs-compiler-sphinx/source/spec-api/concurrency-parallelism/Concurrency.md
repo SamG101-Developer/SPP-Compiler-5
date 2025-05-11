@@ -28,8 +28,8 @@ into a coroutine.
 
 ## Advancing a Generator
 
-A generator is advanced by using the `.res()` method. As this requires compiler specific code to invalidate the
-previously yielded borrow, `res` is a callable postfix keyword, rather than a method.
+A generator is advanced by using the `.res()` method. As this requires a special compiler intrinsic (the `resume` method
+is a coroutine, but the internal value needs to be got), `res` is a callable postfix keyword, rather than a method.
 
 ```S++
 cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
@@ -53,9 +53,6 @@ See the [](#invalidating-borrows) section for how and why earlier generated borr
 As seen above, data is passed out of a coroutine using the `gen` expression, including an optional convention. Allowing
 borrows to be yielded from coroutines is the basis for iteration, as it allows elements of a vector, for example, to be
 borrowed and used in the caller.
-
-If the `Gen` argument is `Void`, then the generator type must be `Gen[Yield=Void]`, because borrows cannot be taken
-from nothing, ie `gen` is valid on its own, but `gen &mut` doesn't make sense without a value to borrow.
 
 ```S++
 cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
