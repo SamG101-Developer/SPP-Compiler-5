@@ -49,6 +49,14 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_postfix_func_call_name_missing_with_generic_type(self):
+        """
+        fun f[T](a: std::number::bigint::BigInt, b: T) -> std::void::Void {
+            f(1)
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
     def test_invalid_postfix_func_call_arg_type_mismatch(self):
         """
         fun f(a: std::number::bigint::BigInt) -> std::void::Void {
@@ -376,5 +384,67 @@ class TestPostfixExpressionOperatorFunctionCallAst(CustomTestCase):
             let x = (1, 2, 3)
             let y = 0_uz
             f(x, y)..
+        }
+        """
+
+
+class TestPostfixExpressionOperatorFunctionCallAst_VariadicParameter(CustomTestCase):
+    @should_pass_compilation()
+    def test_valid_variadic_fixed_type(self):
+        """
+        fun g(a: std::string::Str, ..b: std::boolean::Bool) -> std::void::Void {
+            ret
+        }
+
+        fun f() -> std::void::Void {
+            g("hello", true, false, true, false)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_variadic_single_generic_type(self):
+        """
+        fun g[T](a: std::string::Str, ..b: T) -> std::void::Void {
+            ret
+        }
+
+        fun f() -> std::void::Void {
+            g("hello", 1, 2, 3, 4)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_variadic_mixed_generic_type(self):
+        """
+        fun g[..Ts](a: std::string::Str, ..b: Ts) -> std::void::Void {
+            ret
+        }
+
+        fun f() -> std::void::Void {
+            g("hello", 1, true, "world")
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_variadic_given_no_args(self):
+        """
+        fun g(a: std::string::Str, ..b: std::boolean::Bool) -> std::void::Void {
+            ret
+        }
+
+        fun f() -> std::void::Void {
+            g("hello")
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
+    def test_invalid_variadic_mixed_arg_types(self):
+        """
+        fun g(a: std::string::Str, ..b: std::boolean::Bool) -> std::void::Void {
+            ret
+        }
+
+        fun f() -> std::void::Void {
+            g("hello", 1, true, "world")
         }
         """
