@@ -130,7 +130,7 @@ class Scope:
         #     return None
 
         # Handle generic translation.
-        if self != self._non_generic_scope:  # and not isinstance(name, Asts.IdentifierAst):
+        if self is not self._non_generic_scope:  # and not isinstance(name, Asts.IdentifierAst):
             return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias), ignore_alias)
 
         # Namespace adjust, and get the symbol from the symbol table if it exists.
@@ -141,18 +141,18 @@ class Scope:
         symbol = scope._symbol_table.get(name)
 
         # If this is not an exclusive search, search the parent scope.
-        if not symbol and scope._parent and not exclusive:
+        if symbol is None and scope._parent and not exclusive:
             symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
-        if not symbol:
+        if symbol is None:
             symbol = search_super_scopes(scope, name, ignore_alias=ignore_alias)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
 
     def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
-        # Todo: major optimization here: all_symbols() translates (sub_generics) symbols that will never match
+        symbol = None
 
         # For an IdentifierAst, get any identifier-named symbols from the symbol table.
         if name.__class__ is Asts.IdentifierAst:
@@ -168,6 +168,7 @@ class Scope:
                     return symbol
             return None
 
+        # For a PostfixExpressionAst iterate the parts.
         scope = self.get_namespace_symbol(name.lhs, exclusive=exclusive).scope
         while isinstance(name, Asts.PostfixExpressionAst) and isinstance(name.op, Asts.PostfixExpressionOperatorMemberAccessAst):
             symbol = scope.get_namespace_symbol(name := name.op.field, exclusive=exclusive)
