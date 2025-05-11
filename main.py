@@ -37,7 +37,7 @@ def main() -> None:
         p.dump_stats(f"{profile_path}/profile.prof")
 
         # Convert the profile.prof into a dot file & render it into a svg
-        gprof2dot.main(["-f", "pstats", f"{profile_path}/profile.prof", "-o", f"{profile_path}/profile.dot", "-n", "2", "-e", "0.5"])
+        gprof2dot.main(["-f", "pstats", f"{profile_path}/profile.prof", "-o", f"{profile_path}/profile.dot"])
         graph = graphviz.Source.from_file(f"{profile_path}/profile.dot")
         graph.render(f"{profile_path}/profile", format="svg")
 
