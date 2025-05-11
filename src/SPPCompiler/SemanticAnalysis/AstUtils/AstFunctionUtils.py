@@ -569,4 +569,5 @@ class AstFunctionUtils:
             value = Asts.IdentifierAst.from_type(v) if isinstance(v, Asts.TypeAst) and ctor is Asts.GenericCompArgumentNamedAst else v
             final_args.append(ctor(pos=pos_adjust, name=k, value=value))
 
-        return final_args
+        # Finally, re-order the arguments to match the parameter order.
+        return sorted(final_args, key=lambda arg: generic_parameter_names.index(arg.name))
