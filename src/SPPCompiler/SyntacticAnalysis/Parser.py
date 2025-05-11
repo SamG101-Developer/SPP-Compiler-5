@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import Callable, List, Optional, Tuple, Union
 
+from inline.inline_runtime import inline, inline_cls
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType, RawToken, RawTokenType, RawKeywordType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
 from SPPCompiler.Utils.Functools import reduce
 from SPPCompiler.Utils.Sequence import Seq
-
-from inline.inline_runtime import inline, inline_cls
 
 
 @inline_cls
@@ -2472,7 +2472,7 @@ class SppParser:
                 self._pos += 1
 
         if token == RawTokenType.NoToken:
-            return Asts.TokenAst(self.current_pos(), SppTokenType.NoToken, "")
+            return 1
 
         if self._tokens[self._pos].token_type != token:
             if self._error.pos == self._pos:
