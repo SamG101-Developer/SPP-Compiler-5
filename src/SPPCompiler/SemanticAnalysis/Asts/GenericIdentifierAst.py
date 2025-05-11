@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import xxhash
-
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
@@ -26,8 +24,8 @@ class GenericIdentifierAst(Asts.Ast):
         return self.value == other.value and self.generic_argument_group == other.generic_argument_group
 
     def __hash__(self) -> int:
-        # Hash the value into a fixed string and convert it into an integer.
-        return int.from_bytes(xxhash.xxh3_64(self.value).digest())
+        # Convert the value into an integer
+        return int.from_bytes(self.value.encode())
 
     def __deepcopy__(self, memodict=None) -> GenericIdentifierAst:
         # Create a deep copy of the AST.

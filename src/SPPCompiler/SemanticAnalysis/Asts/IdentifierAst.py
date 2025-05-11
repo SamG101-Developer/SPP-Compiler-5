@@ -3,7 +3,6 @@ from __future__ import annotations
 import difflib
 from dataclasses import dataclass, field
 
-import xxhash
 from convert_case import pascal_case
 
 from SPPCompiler.SemanticAnalysis import Asts
@@ -25,7 +24,7 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
-        return int.from_bytes(xxhash.xxh3_64(self.value).digest())
+        return int.from_bytes(self.value.encode())
 
     def __add__(self, other: IdentifierAst | str) -> IdentifierAst:
         if isinstance(other, str):
