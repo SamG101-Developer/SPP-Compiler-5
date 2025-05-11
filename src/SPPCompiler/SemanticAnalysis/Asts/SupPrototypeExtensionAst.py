@@ -121,7 +121,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         # Ensure all the generic arguments are unnamed and match the class's generic parameters.
         other_cls_symbol = sm.current_scope.get_symbol(self.name.without_generics(), ignore_alias=True)
         for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
-            if isinstance(generic_arg, Asts.GenericArgumentNamedAst):
+            if generic_arg.__class__ is Asts.GenericArgumentNamedAst:
                 raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(
                     generic_arg).scopes(sm.current_scope)
 
@@ -138,13 +138,13 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 self.super_class, self.super_class, "superimposition supertype").scopes(sm.current_scope)
 
         # Prevent double inheritance by checking if the sup scope is already in the list.
-        if existing_sup_scope := [s for s in sup_symbol.scope.sup_scopes if isinstance(s._ast, SupPrototypeExtensionAst) and s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)]:
+        if existing_sup_scope := [s for s in sup_symbol.scope.sup_scopes if (s._ast.__class__ is SupPrototypeExtensionAst) and s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)]:
             raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
                 existing_sup_scope[0]._ast.super_class, self.name).scopes(sm.current_scope)
 
         # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
         if cls_symbol.name.value[0] != "$":
-            if existing_sup_scope := [s for s in cls_symbol.scope.sup_scopes if isinstance(s._ast, SupPrototypeExtensionAst) and s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)]:
+            if existing_sup_scope := [s for s in cls_symbol.scope.sup_scopes if (s._ast.__class__ is SupPrototypeExtensionAst) and s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)]:
                 raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
                     existing_sup_scope[0]._ast.super_class, self.super_class).scopes(sm.current_scope)
 
@@ -163,12 +163,12 @@ class SupPrototypeExtensionAst(Asts.Ast):
         super_class_attribute_names: Seq[Asts.TypeAst] = SequenceUtils.flatten([
             [m.name for m in s._ast.body.members]
             for s in sup_symbol.scope.sup_scopes + [sup_symbol.scope]
-            if isinstance(s._ast, Asts.ClassPrototypeAst)])
+            if s._ast.__class__ is Asts.ClassPrototypeAst])
 
         existing_attribute_names: Seq[Asts.TypeAst] = SequenceUtils.flatten([
             [m.name for m in s._ast.body.members]
             for s in cls_symbol.scope.sup_scopes + [cls_symbol.scope]
-            if isinstance(s._ast, Asts.ClassPrototypeAst)])
+            if s._ast.__class__ is Asts.ClassPrototypeAst])
 
         if duplicates := SequenceUtils.duplicates(existing_attribute_names + super_class_attribute_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
@@ -183,8 +183,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         existing_type_names = SequenceUtils.flatten([
             [m.new_type for m in s._ast.body.members if isinstance(m, Asts.SupUseStatementAst)]
             for s in cls_symbol.scope.sup_scopes
-            if isinstance(s._ast, Asts.SupPrototypeAst)
-        ])
+            if isinstance(s._ast, Asts.SupPrototypeAst)])
 
         if duplicates := SequenceUtils.duplicates(existing_type_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
@@ -195,8 +194,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         existing_cmp_names = SequenceUtils.flatten([
             [m.name for m in s._ast.body.members if isinstance(m, Asts.SupCmpStatementAst) and m.type.type_parts()[-1].value[0] != "$"]  # todo: has the type been analysed at this point
             for s in cls_symbol.scope.sup_scopes
-            if isinstance(s._ast, Asts.SupPrototypeAst)
-        ])
+            if isinstance(s._ast, Asts.SupPrototypeAst)])
 
         if duplicates := SequenceUtils.duplicates(existing_cmp_names):
             raise SemanticErrors.IdentifierDuplicationError().add(

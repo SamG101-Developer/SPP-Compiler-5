@@ -45,7 +45,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         :return: The type parts of the type ast.
         """
 
-        return [p for p in self.fq_type_parts() if isinstance(p, Asts.GenericIdentifierAst)]
+        return [p for p in self.fq_type_parts() if p.__class__ is Asts.GenericIdentifierAst]
 
     def namespace_parts(self) -> Seq[Asts.IdentifierAst]:
         """
@@ -55,7 +55,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         :return: The namespace parts of the type ast.
         """
 
-        return [p for p in self.fq_type_parts() if isinstance(p, Asts.IdentifierAst)]
+        return [p for p in self.fq_type_parts() if p.__class__ is Asts.IdentifierAst]
 
     @abstractmethod
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:

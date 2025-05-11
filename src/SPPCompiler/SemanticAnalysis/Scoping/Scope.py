@@ -154,14 +154,15 @@ class Scope:
     def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
         # Todo: major optimization here: all_symbols() translates (sub_generics) symbols that will never match
 
-        if isinstance(name, Asts.IdentifierAst):
+        # For an IdentifierAst, get any identifier-named symbols from the symbol table.
+        if name.__class__ is Asts.IdentifierAst:
             for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.IdentifierAst):
                 if symbol.symbol_type is SymbolType.NamespaceSymbol and symbol.name.value == name.value:
                     return symbol
             return None
 
-        # Get the type symbol from the symbol table.
-        elif isinstance(name, Asts.GenericIdentifierAst):
+        # For a GenericIdentifierAst, get any type-named symbols from the symbol table.
+        elif name.__class__ is Asts.GenericIdentifierAst:
             for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.GenericIdentifierAst):
                 if symbol.symbol_type is SymbolType.TypeSymbol and symbol.name == name:
                     return symbol
@@ -246,7 +247,7 @@ class Scope:
     @property
     def parent_module(self) -> Scope:
         # Get the ancestor module scope.
-        return [s for s in self.ancestors if isinstance(s.name, Asts.IdentifierAst)][0]
+        return [s for s in self.ancestors if s.name.__class__ is Asts.IdentifierAst][0]
 
     @property
     def children(self) -> Seq[Scope]:

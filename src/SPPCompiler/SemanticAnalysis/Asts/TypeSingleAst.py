@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     name: Asts.GenericIdentifierAst = field(default=None)
 
-    def __eq__(self, other: TypeSingleAst) -> bool:
-        return isinstance(other, Asts.TypeSingleAst) and self.name == other.name or isinstance(other, Asts.IdentifierAst) and self.name.value == other.value
+    def __eq__(self, other: TypeSingleAst | Asts.IdentifierAst) -> bool:
+        return other.__class__ is Asts.TypeSingleAst and self.name == other.name or other.__class__ is Asts.IdentifierAst and self.name.value == other.value
 
     def __hash__(self) -> int:
         return hash(self.name)

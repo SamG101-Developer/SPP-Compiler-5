@@ -20,7 +20,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     rhs: Asts.TypeAst = field(default=None)
 
     def __eq__(self, other: TypeUnaryExpressionAst) -> bool:
-        return isinstance(other, TypeUnaryExpressionAst) and type(self.op) is type(other.op) and self.op == other.op and self.rhs == other.rhs
+        return other.__class__ is TypeUnaryExpressionAst and type(self.op) is type(other.op) and self.op == other.op and self.rhs == other.rhs
 
     def __hash__(self) -> int:
         return hash((self.op, self.rhs))
@@ -50,7 +50,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return self
 
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
+        if self.op.__class__ is Asts.TypeUnaryOperatorNamespaceAst:
             return self.op.fq_type_parts() + self.rhs.fq_type_parts()
         return self.rhs.fq_type_parts()
 
@@ -81,11 +81,11 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
             return False
 
         # Conventions are compatible, remove them and move in a layer.
-        elif isinstance(that, Asts.TypeUnaryExpressionAst) and isinstance(that.op, Asts.TypeUnaryOperatorBorrowAst):
+        elif (that.__class__ is Asts.TypeUnaryExpressionAst) and (that.op.__class__ is Asts.TypeUnaryOperatorBorrowAst):
             that = that.rhs
 
         # Adjust the scope of this type.
-        if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
+        if self.op.__class__ is Asts.TypeUnaryOperatorNamespaceAst:
             self_scope = self_scope.get_namespace_symbol(self.op.name).scope
 
         # Test the inner layer of types against each other.
