@@ -70,7 +70,7 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self._loop_type_info = kwargs["loop_types"]
         self._loop_level = kwargs["loop_level"]
 
-        # Analyse the loop body and reduce the loop count.
+        # Analyse the loop body with an increased loop level.
         kwargs["loop_level"] += 1
         self.body.analyse_semantics(sm, **kwargs)
 

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import copy
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import *
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import CompilerStages, PreProcessingContext
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -38,7 +38,7 @@ class Ast(CompilerStages):
         :return: The cloned AST.
         """
 
-        d = copy.deepcopy(self)
+        d = fast_deepcopy(self)
         d.pos = pos
         return d
 

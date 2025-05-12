@@ -125,10 +125,6 @@ class Scope:
         return self.get_symbol(name, exclusive, ignore_alias=True) is not None
 
     def get_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
-        # Ensure the name is a valid type.
-        # if not isinstance(name, (Asts.IdentifierAst, Asts.TypeAst, Asts.GenericIdentifierAst)):
-        #     return None
-
         # Handle generic translation.
         if self is not self._non_generic_scope:  # and not isinstance(name, Asts.IdentifierAst):
             return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias), ignore_alias)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from collections import defaultdict
-from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type, List
+from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type
 
 from ordered_set import OrderedSet
 
@@ -430,10 +430,10 @@ class AstFunctionUtils:
         arguments and class attributes.
 
         cls Point[T, U, V, W] {
-                x: T
-                y: U
-                z: V
-            }
+            x: T
+            y: U
+            z: V
+        }
 
         let p = Point[W=Bool](x=1, y="hello", z=False)
 
@@ -441,6 +441,9 @@ class AstFunctionUtils:
         * explicit_generic_arguments: [W=Bool]
         * infer_source: {x: BigInt, y: Str, z: Bool}
         * infer_target: {x: T, y: U, z: V}
+
+        Todo: variadic generic parameters combined with variadic function parameters.
+         - Needs to append the type to the tuple rather than set it as a value and then check for matches.
 
         :param generic_parameters: The generic parameters that need the values assigned via inference.
         :param optional_generic_parameters: The defaults to fill missing generic arguments with.
