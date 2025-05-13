@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -50,6 +52,7 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # sm.create_and_move_into_new_scope(f"<inner-scope:{self.pos}>")
         self._scope = sm.current_scope
 
         # Check there is no code after a "ret" statement, as this is unreachable.
@@ -62,10 +65,27 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for m in self.members:
             m.analyse_semantics(sm, **kwargs)
 
+        # sm.move_out_of_current_scope()
+
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        # sm.move_to_next_scope()
+
         # Check the memory of each member.
         for m in self.members:
             m.check_memory(sm, **kwargs)
+
+        all_syms = sm.current_scope.all_symbols(exclusive=False, match_type=Asts.IdentifierAst)
+        inner_sym_names = [m.name for m in sm.current_scope.all_symbols(exclusive=True, match_type=Asts.IdentifierAst)]
+
+        # Invalidate borrows that are referred to by pins.
+        for sym in all_syms:
+            if sym.symbol_type is SymbolType.VariableSymbol:
+                for existing_referred_to, _ in sym.memory_info.refer_to_asts:
+                    if existing_referred_to in inner_sym_names:
+                        AstMemoryUtils.invalidate_referred_borrow(sm, existing_referred_to, self.tok_r)
+                        sym.memory_info.refer_to_asts = [x for x in sym.memory_info.refer_to_asts if x[0] != existing_referred_to]
+
+        # sm.move_out_of_current_scope()
 
 
 __all__ = [

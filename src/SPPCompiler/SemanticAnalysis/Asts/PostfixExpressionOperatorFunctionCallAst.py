@@ -9,6 +9,7 @@ from ordered_set import OrderedSet
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -294,10 +295,12 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         self.determine_overload(sm, lhs, expected_return_type=inferred_return_type, **kwargs)
 
     def check_memory(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
+        # Todo: lhs.pos or self.pos for these 2 mock groups?
+
         # If a fold is taking place, analyse the non-folding arguments again (checks for double moves).
         if self.fold_token is not None and self._folded_args:
             non_folding_arguments = [a for a in self.function_argument_group.arguments if a.value not in [f.value for f in self._folded_args]]
-            group = Asts.FunctionCallArgumentGroupAst(arguments=non_folding_arguments)
+            group = Asts.FunctionCallArgumentGroupAst(pos=lhs.pos, arguments=non_folding_arguments)
             group.check_memory(sm, **kwargs)
 
         # If a closure is being called, apply memory rules to symbolic target.
@@ -316,16 +319,18 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
             # Immutable reference invalidates all mutable references.
             if type(yield_type.get_convention()) is Asts.ConventionRefAst:
                 outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
-                for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
-                    if is_mutable: outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
-                outermost.memory_info.refer_to_asts = [(ast, False) for ast in kwargs.get("assignment", [])]
+                if outermost:
+                    for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
+                        if is_mutable: AstMemoryUtils.invalidate_referred_borrow(sm, existing_referred_to, self)
+                    outermost.memory_info.refer_to_asts = [(ast, False) for ast in kwargs.get("assignment", [])]
 
             # Mutable reference invalidates all mutable and immutable references.
             elif type(yield_type.get_convention()) is Asts.ConventionMutAst:
                 outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
-                for existing_referred_to, _ in outermost.memory_info.refer_to_asts:
-                    outermost.memory_info.invalidate_referred_borrow(sm, existing_referred_to, self)
-                outermost.memory_info.refer_to_asts = [(ast, True) for ast in kwargs.get("assignment", [])]
+                if outermost:
+                    for existing_referred_to, _ in outermost.memory_info.refer_to_asts:
+                        AstMemoryUtils.invalidate_referred_borrow(sm, existing_referred_to, self)
+                    outermost.memory_info.refer_to_asts = [(ast, True) for ast in kwargs.get("assignment", [])]
 
         # Check the argument group, now any old borrows have been invalidated.
         is_coro_resume = kwargs.pop("is_coro_resume", False)

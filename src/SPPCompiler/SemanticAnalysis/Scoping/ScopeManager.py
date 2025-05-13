@@ -16,12 +16,14 @@ class ScopeManager:
     _global_scope: Scope
     _current_scope: Scope
     _iterator: Iterator[Scope]
+    _borrows_to_release: Seq[VariableSymbol]
 
     def __init__(self, global_scope, current_scop: Optional[Scope] = None) -> None:
         # Create the default global and current scopes if they are not provided.
         self._global_scope = global_scope
         self._current_scope = current_scop or self._global_scope
         self._iterator = iter(self)
+        self._borrows_to_release = []
 
     def __iter__(self) -> Iterator[Scope]:
         # Iterate over the scope manager's scopes, starting from the global scope.
@@ -55,6 +57,10 @@ class ScopeManager:
     def move_out_of_current_scope(self) -> Scope:
         # Exit the current scope into the parent scope and return the parent scope.
         self._current_scope = self._current_scope._parent
+        for symbol in self._borrows_to_release:
+            symbol.memory_info.ast_borrowed_ex = None
+            symbol.memory_info.is_borrow_mut = False
+            symbol.memory_info.is_borrow_ref = False
         return self._current_scope
 
     def move_to_next_scope(self) -> Scope:
@@ -97,6 +103,10 @@ class ScopeManager:
                     symbol.scope._direct_sup_scopes = AstTypeUtils.create_generic_sup_scopes(self, base_symbol.scope, symbol.scope, symbol.name.generic_argument_group)
 
         self.reset()
+
+    def add_ex_borrow_to_release(self, symbol: VariableSymbol) -> None:
+        # Add the symbol to the list of symbols to release.
+        self._borrows_to_release.append(symbol)
 
     @property
     def global_scope(self) -> Scope:

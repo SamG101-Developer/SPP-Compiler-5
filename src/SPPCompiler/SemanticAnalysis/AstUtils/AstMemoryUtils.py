@@ -36,6 +36,7 @@ class MemoryInfo:
         ast_initialization_old: Tracks most recent initialization despite moves (for errors).
         ast_moved: The AST where the memory is consumed (function argument, binary expression, etc).
         ast_borrowed: The AST where the memory is marked as borrowed (from parameter convention).
+        ast_borrowed_ex: Extended borrows like a variable being iterated over: ".iter_mut()".
         ast_partial_moves: A list of partial moves (attributes).
         ast_pins: A list of pinned attributes (or the entire object).
 
@@ -52,6 +53,7 @@ class MemoryInfo:
     ast_initialization_old: Optional[Asts.Ast] = field(default=None)
     ast_moved: Optional[Asts.Ast] = field(default=None)
     ast_borrowed: Optional[Asts.Ast] = field(default=None)
+    ast_borrowed_ex: Optional[Asts.Ast] = field(default=None)
     ast_partial_moves: Seq[Asts.Ast] = field(default_factory=Seq)
     ast_pins: Seq[Asts.Ast] = field(default_factory=Seq)
     ast_comptime_const: Optional[Asts.ExpressionAst] = field(default=None)
@@ -82,13 +84,6 @@ class MemoryInfo:
             is_inconsistently_partially_moved=self.is_inconsistently_partially_moved,
             is_inconsistently_pinned=self.is_inconsistently_pinned,
             refer_to_asts=self.refer_to_asts.copy())
-
-    def invalidate_referred_borrow(self, sm: ScopeManager, ast: Asts.Ast, mover: Asts.Ast) -> None:
-        # Invalidate the referred borrow AST recursively.
-        sym = sm.current_scope.get_symbol(ast)
-        for r in sym.memory_info.refer_to_asts:
-            self.invalidate_referred_borrow(sm, r[0], mover)
-        sym.memory_info.moved_by(mover)
 
     def moved_by(self, ast: Asts.Ast) -> None:
         # If a symbol's contents is moved, mark the symbol as moved and non-initialized.
@@ -275,3 +270,11 @@ class AstMemoryUtils:
             symbol.memory_info.moved_by(move_ast)
         elif mark_moves and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
             symbol.memory_info.ast_partial_moves.append(value_ast)
+
+    @staticmethod
+    def invalidate_referred_borrow(sm: ScopeManager, ast: Asts.Ast, mover: Asts.Ast) -> None:
+        # Invalidate the referred borrow AST recursively.
+        sym = sm.current_scope.get_symbol(ast)
+        for r in sym.memory_info.refer_to_asts:
+            AstMemoryUtils.invalidate_referred_borrow(sm, r[0], mover)
+        sym.memory_info.moved_by(mover)

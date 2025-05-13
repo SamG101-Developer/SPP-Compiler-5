@@ -27,7 +27,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightParenthesis)
 
     def __copy__(self) -> FunctionCallArgumentGroupAst:
-        return FunctionCallArgumentGroupAst(arguments=self.arguments.copy())
+        return FunctionCallArgumentGroupAst(pos=self.pos, arguments=self.arguments.copy())
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -114,6 +114,13 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         borrows_ref = []
         borrows_mut = []
 
+        # Add the extended borrows into the borrow lists.
+        for argument in self.arguments:
+            sym = sm.current_scope.get_symbol(argument.value)
+            if sym is None: continue
+            if sym.memory_info.ast_borrowed_ex is None: continue
+            (borrows_mut if sym.memory_info.is_borrow_mut else borrows_ref).append(sym.memory_info.ast_borrowed_ex)
+
         for argument in self.arguments:
 
             # Get the outermost part of the argument as a symbol. If the argument is non-symbolic, then there is no need
@@ -146,6 +153,11 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
             elif isinstance(argument.convention, Asts.ConventionMutAst):
                 argument.check_memory(sm, **kwargs)
 
+                # Check the mutable borrow doesn't overlap with any other borrow in the same scope.
+                if overlap := [b for b in (borrows_ref + borrows_mut) if AstMemoryUtils.overlaps(b, argument.value)]:
+                    raise SemanticErrors.MemoryOverlapUsageError().add(
+                        overlap[0], argument.value).scopes(sm.current_scope)
+
                 # Check the argument isn't already an immutable borrow.
                 if symbol.memory_info.is_borrow_ref:
                     raise SemanticErrors.MutabilityInvalidMutationError().add(
@@ -156,14 +168,12 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                     raise SemanticErrors.MutabilityInvalidMutationError().add(
                         argument.value, argument.convention, symbol.memory_info.ast_initialization).scopes(sm.current_scope)
 
-                # Check the mutable borrow doesn't overlap with any other borrow in the same scope.
-                if overlap := [b for b in (borrows_ref + borrows_mut) if AstMemoryUtils.overlaps(b, argument.value)]:
-                    raise SemanticErrors.MemoryOverlapUsageError().add(
-                        overlap[0], argument.value).scopes(sm.current_scope)
-
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
                     symbol.memory_info.ast_pins.append(argument.value)
+                    symbol.memory_info.ast_borrowed_ex = argument.value
+                    symbol.memory_info.is_borrow_mut = True
+                    sm.add_ex_borrow_to_release(symbol)
                     for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
 
@@ -181,6 +191,9 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
                     symbol.memory_info.ast_pins.append(argument.value)
+                    symbol.memory_info.ast_borrowed_ex = argument.value
+                    symbol.memory_info.is_borrow_ref = True
+                    sm.add_ex_borrow_to_release(symbol)
                     for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
 
