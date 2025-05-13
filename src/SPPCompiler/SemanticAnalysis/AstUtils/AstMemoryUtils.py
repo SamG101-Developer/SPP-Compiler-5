@@ -33,6 +33,7 @@ class MemoryInfo:
 
     Attributes:
         ast_initialization: The AST where the memory is initialized (variable, parameter, etc).
+        ast_initialization_old: Tracks most recent initialization despite moves (for errors).
         ast_moved: The AST where the memory is consumed (function argument, binary expression, etc).
         ast_borrowed: The AST where the memory is marked as borrowed (from parameter convention).
         ast_partial_moves: A list of partial moves (attributes).
@@ -48,6 +49,7 @@ class MemoryInfo:
     """
 
     ast_initialization: Optional[Asts.Ast] = field(default=None)
+    ast_initialization_old: Optional[Asts.Ast] = field(default=None)
     ast_moved: Optional[Asts.Ast] = field(default=None)
     ast_borrowed: Optional[Asts.Ast] = field(default=None)
     ast_partial_moves: Seq[Asts.Ast] = field(default_factory=Seq)
@@ -96,6 +98,7 @@ class MemoryInfo:
     def initialized_by(self, ast: Asts.Ast) -> None:
         # If a symbol's contents is initialized, mark the symbol as initialized and non-moved.
         self.ast_initialization = ast
+        self.ast_initialization_old = ast
         self.ast_moved = None
         self.initialization_counter += 1
 
@@ -233,7 +236,7 @@ class AstMemoryUtils:
         # partial move, if it is an attribute access taking place).
         if check_move and symbol.memory_info.ast_moved:
             raise SemanticErrors.MemoryNotInitializedUsageError().add(
-                value_ast, symbol.memory_info.ast_moved).scopes(sm.current_scope)
+                symbol.memory_info.ast_initialization_old, value_ast, symbol.memory_info.ast_moved).scopes(sm.current_scope)
 
         # Check the symbol doesn't have any outstanding partial moves, in the case that the entire symbol itself is
         # being used. This means that "a" cannot be moved, or borrowed from etc, if "a.b has been moved. This guarantees
@@ -248,7 +251,7 @@ class AstMemoryUtils:
         if check_partial_move and symbol.memory_info.ast_partial_moves and not isinstance(value_ast, Asts.IdentifierAst):
             if overlaps := [p for p in symbol.memory_info.ast_partial_moves if AstMemoryUtils.right_overlaps(p, value_ast)]:
                 raise SemanticErrors.MemoryNotInitializedUsageError().add(
-                    value_ast, overlaps[0]).scopes(sm.current_scope)
+                    symbol.memory_info.ast_initialization_old, value_ast, overlaps[0]).scopes(sm.current_scope)
 
         # Check the symbol is not being moved from a borrowed context. This prevents partial moves off of borrowed
         # object, because the current context doesn't have ownership of the object. This guarantees that when control is

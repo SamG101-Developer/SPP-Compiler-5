@@ -51,6 +51,7 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # Set the initialization ast (for errors). Increment the initialization counter for initialized variables.
         symbol.memory_info.ast_initialization = self.name
+        symbol.memory_info.ast_initialization_old = self.name
         if not kwargs.get("from_non_init", False):
             symbol.memory_info.initialization_counter = 1
 
