@@ -159,11 +159,19 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for (lhs_expr, rhs_expr), lhs_sym in zip(zip(self.lhs, self.rhs), lhs_syms):
 
             # Ensure the memory status of the left and right hand side.
-            AstMemoryUtils.enforce_memory_integrity(lhs_sym.name.clone_at(lhs_expr.pos), self.op, sm, check_move=is_attr(lhs_expr), check_partial_move=False, mark_moves=False, check_pins=False)
+            AstMemoryUtils.enforce_memory_integrity(
+                lhs_sym.name.clone_at(lhs_expr.pos), self.op, sm, check_move=is_attr(lhs_expr),
+                check_partial_move=False, check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=False)
+
             rhs_expr.check_memory(sm, **(kwargs | {"assignment": [lhs_expr]}))
-            AstMemoryUtils.enforce_memory_integrity(rhs_expr, self.op, sm)
+            AstMemoryUtils.enforce_memory_integrity(
+                rhs_expr, self.op, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+                check_pins=True, mark_moves=True)
+
             if is_attr(lhs_expr):
-                AstMemoryUtils.enforce_memory_integrity(lhs_expr.lhs, self.op, sm, check_partial_move=is_attr(lhs_expr.lhs), mark_moves=False, check_pins=False)
+                AstMemoryUtils.enforce_memory_integrity(
+                    lhs_expr.lhs, self.op, sm, check_move=True, check_partial_move=is_attr(lhs_expr.lhs),
+                    check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=False)
 
             # Extra check to prevent "let: Type" being assigned more than once (bypasses lack of "mut").
             if isinstance(lhs_expr, Asts.IdentifierAst) and not lhs_sym.is_mutable and lhs_sym.memory_info.initialization_counter == 1:
