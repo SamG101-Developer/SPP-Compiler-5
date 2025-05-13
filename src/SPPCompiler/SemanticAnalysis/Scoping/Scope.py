@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, \
     Symbol, SymbolType
-from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
+from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
