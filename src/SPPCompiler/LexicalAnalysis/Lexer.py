@@ -5,7 +5,7 @@ from typing import List
 from SPPCompiler.LexicalAnalysis.TokenType import RawToken, RawTokenType
 
 
-class Lexer:
+class SppLexer:
     """
     The Lexer translates a string of code into a list of tokens. Only single-length tokens are created in the lexer,
     and the parser checks for multi-length tokens.
@@ -118,4 +118,4 @@ class Lexer:
         return tokens
 
 
-__all__ = ["Lexer"]
+__all__ = ["SppLexer"]
