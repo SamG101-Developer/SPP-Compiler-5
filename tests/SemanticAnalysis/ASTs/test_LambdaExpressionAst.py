@@ -12,7 +12,7 @@ class LambdaExpressionAst(CustomTestCase):
         fun f() -> std::void::Void {
             let a = 5_u32
             let x = |b: U32 caps a| { a = b }
-            x()
+            x(123_u32)
         }
         """
 

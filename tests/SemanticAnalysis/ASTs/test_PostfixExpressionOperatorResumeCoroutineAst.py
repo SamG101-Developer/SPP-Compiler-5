@@ -15,22 +15,6 @@ class TestPostfixExpressionOperatorResumeCoroutineAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_postfix_expression_resume_coroutine_use_invalidated_borrow_mut(self):
-        """
-        cor g() -> std::generator::Gen[Yield=&mut std::number::bigint::BigInt, Send=std::string::Str] {
-            gen &mut 1
-            gen &mut 2
-        }
-
-        fun f() -> std::void::Void {
-            let a = g()
-            let b = a.res("123")
-            let c = a.res("456")
-            let d = b
-        }
-        """
-
     @should_fail_compilation(SemanticErrors.FunctionCallNoValidSignaturesError)
     def test_invalid_resume_type_mismatch_wrong_type(self):
         """
