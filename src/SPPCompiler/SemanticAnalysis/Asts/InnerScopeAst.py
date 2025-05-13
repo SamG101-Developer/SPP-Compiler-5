@@ -77,13 +77,19 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         all_syms = sm.current_scope.all_symbols(exclusive=False, match_type=Asts.IdentifierAst)
         inner_sym_names = [m.name for m in sm.current_scope.all_symbols(exclusive=True, match_type=Asts.IdentifierAst)]
 
-        # Invalidate borrows that are referred to by pins.
+        # Invalidate yielded borrows that are linked.
         for sym in all_syms:
             if sym.symbol_type is SymbolType.VariableSymbol:
-                for existing_referred_to, _ in sym.memory_info.refer_to_asts:
-                    if existing_referred_to in inner_sym_names:
-                        AstMemoryUtils.invalidate_referred_borrow(sm, existing_referred_to, self.tok_r)
-                        sym.memory_info.refer_to_asts = [x for x in sym.memory_info.refer_to_asts if x[0] != existing_referred_to]
+                for info in sym.memory_info.borrow_refers_to.copy():
+                    yielded_borrow, this_borrow, is_mutable = info
+
+                    # Check if the borrow that was yielded was created in this scope.
+                    if yielded_borrow in inner_sym_names:
+                        AstMemoryUtils.invalidate_yielded_borrow(sm, yielded_borrow, self.tok_r)
+                        sym.memory_info.borrow_refers_to.remove(info)
+
+                    elif yielded_borrow is None:
+                        sym.memory_info.borrow_refers_to.remove(info)
 
         # sm.move_out_of_current_scope()
 

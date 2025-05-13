@@ -99,6 +99,14 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
             1. For borrowed arguments, ensure the borrow is not a "&" (immutable) borrow.
             2. For non-borrowed arguments, ensure the symbol is marked as "mut" (mutable).
 
+        There are instances when "pins are required". This forces the owned object being borrowed to remain exactly in
+        place in memory, in the current and parent scopes. On top of this, the borrow is marked as "extended", to ensure
+        that not only is the owned object moved, the borrow doesn't conflict with future borrows in the scope. For
+        example, given the coroutine "cor g(a: &mut BigInt)", called as "let generator = g(&mut x)", the "x" is pinned,
+        and "&mut x" is an extended borrow. This prevents "let y = x" and "other_func(&x)" from being valid, as the
+        coroutine is borrowing the owned object "x", and the borrow is extended to the end of the scope. As soon as this
+        scope ends, the pin is released, and the extended borrow is invalidated.
+
         :param sm: The scope manager.
         :param target_proto: The target function prototype that is being called.
         :param is_async: Whether these arguments are being applied as "async f()".
@@ -118,15 +126,16 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         for argument in self.arguments:
             sym = sm.current_scope.get_symbol(argument.value)
             if sym is None: continue
-            if sym.memory_info.ast_borrowed_ex is None: continue
-            (borrows_mut if sym.memory_info.is_borrow_mut else borrows_ref).append(sym.memory_info.ast_borrowed_ex)
+            if not sym.memory_info.borrow_refers_to: continue
+            for _, b, m in sym.memory_info.borrow_refers_to:
+                (borrows_mut if m else borrows_ref).append(b.value)
 
         for argument in self.arguments:
 
             # Get the outermost part of the argument as a symbol. If the argument is non-symbolic, then there is no need
             # to track borrows to it, as it is a temporary value.
-            symbol = sm.current_scope.get_variable_symbol_outermost_part(argument.value)
-            if not symbol: continue
+            sym = sm.current_scope.get_variable_symbol_outermost_part(argument.value)
+            if not sym: continue
 
             # Ensure the argument isn't moved or partially moved (applies to all conventions). For non-symbolic
             # arguments, nested checking is done via the argument itself.
@@ -159,23 +168,24 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                         overlap[0], argument.value).scopes(sm.current_scope)
 
                 # Check the argument isn't already an immutable borrow.
-                if symbol.memory_info.is_borrow_ref:
+                if sym.memory_info.ast_borrowed and sym.memory_info.is_borrow_ref:
                     raise SemanticErrors.MutabilityInvalidMutationError().add(
-                        argument.value, argument.convention, symbol.memory_info.ast_initialization).scopes(sm.current_scope)
+                        argument.value, argument.convention, sym.memory_info.ast_borrowed).scopes(sm.current_scope)
 
                 # Check the argument's value is mutable.
-                if not symbol.is_mutable:
+                if not sym.is_mutable:
                     raise SemanticErrors.MutabilityInvalidMutationError().add(
-                        argument.value, argument.convention, symbol.memory_info.ast_initialization).scopes(sm.current_scope)
+                        argument.value, argument.convention, sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
-                    symbol.memory_info.ast_pins.append(argument.value)
-                    symbol.memory_info.ast_borrowed_ex = argument.value
-                    symbol.memory_info.is_borrow_mut = True
-                    sm.add_ex_borrow_to_release(symbol)
+                    sym.memory_info.ast_pins.append(argument.value)
+                    sym.memory_info.is_borrow_mut = True
                     for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
+                        sym.memory_info.borrow_refers_to.append((assign_target, argument, True))
+                    else:
+                        sym.memory_info.borrow_refers_to.append((None, argument, True))
 
                 # Add the mutable borrow to the mutable borrow set.
                 borrows_mut.append(argument.value)
@@ -190,12 +200,13 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
-                    symbol.memory_info.ast_pins.append(argument.value)
-                    symbol.memory_info.ast_borrowed_ex = argument.value
-                    symbol.memory_info.is_borrow_ref = True
-                    sm.add_ex_borrow_to_release(symbol)
+                    sym.memory_info.ast_pins.append(argument.value)
+                    sym.memory_info.is_borrow_ref = True
                     for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
+                        sym.memory_info.borrow_refers_to.append((assign_target, argument, False))
+                    else:
+                        sym.memory_info.borrow_refers_to.append((None, argument, False))
 
                 # Add the immutable borrow to the immutable borrow set.
                 borrows_ref.append(argument.value)

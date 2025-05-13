@@ -309,30 +309,28 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
             group.check_memory(sm)
 
         # Link references created by the function call to the overload. This is only caused by ".res()".
-        if self._overload[1].tok_fun.token_type == SppTokenType.KwCor:
-            coro_return_type = self.infer_type(sm, lhs, **kwargs)
+        # if self._overload[1].tok_fun.token_type == SppTokenType.KwCor:
+        #     coro_return_type = self.infer_type(sm, lhs, **kwargs)
+        #
+        #     # Find the generator type superimposed over the return type.
+        #     _, yield_type = AstTypeUtils.get_generator_and_yielded_type(
+        #         coro_return_type, sm, coro_return_type, "coroutine call")
+        #
+        #     # Immutable references invalidate all mutable references.
+        #     if yield_type.get_convention().__class__ is Asts.ConventionRefAst:
+        #         outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
+        #         for yielded_borrow, is_mutable in outermost.memory_info.yielded_borrows_linked:
+        #             if is_mutable: AstMemoryUtils.invalidate_yielded_borrow(sm, yielded_borrow, self)
+        #         outermost.memory_info.yielded_borrows_linked = [(ast, False) for ast in kwargs.get("assignment", [])]
+        #
+        #     # Mutable references invalidate all mutable and immutable references.
+        #     elif yield_type.get_convention().__class__ is Asts.ConventionMutAst:
+        #         outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
+        #         for yielded_borrow, _ in outermost.memory_info.yielded_borrows_linked:
+        #             AstMemoryUtils.invalidate_yielded_borrow(sm, yielded_borrow, self)
+        #         outermost.memory_info.yielded_borrows_linked = [(ast, True) for ast in kwargs.get("assignment", [])]
 
-            # Find the generator type superimposed over the return type.
-            _, yield_type = AstTypeUtils.get_generator_and_yielded_type(
-                coro_return_type, sm, coro_return_type, "coroutine call")
-
-            # Immutable reference invalidates all mutable references.
-            if type(yield_type.get_convention()) is Asts.ConventionRefAst:
-                outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
-                if outermost:
-                    for existing_referred_to, is_mutable in outermost.memory_info.refer_to_asts:
-                        if is_mutable: AstMemoryUtils.invalidate_referred_borrow(sm, existing_referred_to, self)
-                    outermost.memory_info.refer_to_asts = [(ast, False) for ast in kwargs.get("assignment", [])]
-
-            # Mutable reference invalidates all mutable and immutable references.
-            elif type(yield_type.get_convention()) is Asts.ConventionMutAst:
-                outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
-                if outermost:
-                    for existing_referred_to, _ in outermost.memory_info.refer_to_asts:
-                        AstMemoryUtils.invalidate_referred_borrow(sm, existing_referred_to, self)
-                    outermost.memory_info.refer_to_asts = [(ast, True) for ast in kwargs.get("assignment", [])]
-
-        # Check the argument group, now any old borrows have been invalidated.
+        # Check the argument group, now the old borrows have been invalidated.
         is_coro_resume = kwargs.pop("is_coro_resume", False)
         self.generic_argument_group.check_memory(sm, **kwargs)
         self.function_argument_group.check_memory(

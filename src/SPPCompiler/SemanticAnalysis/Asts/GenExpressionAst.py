@@ -106,7 +106,9 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         :param kwargs: Additional keyword arguments.
         """
 
-        if self.expr:
+        # Todo: memory checks involving "with"
+
+        if self.expr and self.kw_with is None:
             ast = Asts.FunctionCallArgumentGroupAst(
                 pos=(self.convention or self.expr).pos,
                 arguments=[Asts.FunctionCallArgumentUnnamedAst(pos=self.expr.pos, convention=self.convention, value=self.expr)])
