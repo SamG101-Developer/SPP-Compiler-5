@@ -10,17 +10,17 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 
 @dataclass(slots=True)
 class PatternVariantElseCaseAst(Asts.Ast):
-    tok_else: Asts.TokenAst = field(default=None)
+    kw_else: Asts.TokenAst = field(default=None)
     case_expression: Asts.CaseExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:
-        self.tok_else = self.tok_else or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwElse)
+        self.kw_else = self.kw_else or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwElse)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            self.tok_else.print(printer) + " ",
+            self.kw_else.print(printer) + " ",
             self.case_expression.print(printer)]
         return "".join(string)
 

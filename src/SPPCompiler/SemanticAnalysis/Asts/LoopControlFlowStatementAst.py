@@ -48,7 +48,7 @@ class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Check the depth of the loop is greater than or equal to the number of control statements.
         if number_of_controls > nested_loop_depth:
             raise SemanticErrors.LoopTooManyControlFlowStatementsError().add(
-                kwargs["loop_ast"], self, number_of_controls, nested_loop_depth).scopes(sm.current_scope)
+                kwargs["loop_ast"].kw_loop, self, number_of_controls, nested_loop_depth).scopes(sm.current_scope)
 
         # Save and compare the loop's "exiting" type against other nested loop's exit statement types.
         if not isinstance(self.skip_or_expr, Asts.TokenAst):

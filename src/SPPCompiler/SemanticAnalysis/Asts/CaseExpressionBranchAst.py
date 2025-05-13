@@ -52,7 +52,7 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     allows all points with a positive ``x`` value to be accepted, whilst the ``x`` symbol is still available for use.
     """
 
-    body: Asts.InnerScopeAst = field(default_factory=lambda: Asts.InnerScopeAst())
+    body: Asts.InnerScopeAst = field(default=None)
     """
     The body of the branch. This contains all the statements that will be executed if this branch is chosen when the
     code is executing. It will have its own scope, nested inside the scope created for this pattern (to save destructure
@@ -76,7 +76,7 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         :return: The remodelled branch.
         """
 
-        else_pattern = Asts.PatternVariantElseAst(pos=pos, tok_else=else_case.tok_else)
+        else_pattern = Asts.PatternVariantElseAst(pos=pos, kw_else=else_case.kw_else)
         case_branch = CaseExpressionBranchAst(
             pos=pos, patterns=[else_pattern], body=Asts.InnerScopeAst(members=[else_case.case_expression]))
         return case_branch

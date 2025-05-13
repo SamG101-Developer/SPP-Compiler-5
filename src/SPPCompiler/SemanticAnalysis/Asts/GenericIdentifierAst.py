@@ -14,10 +14,10 @@ class GenericIdentifierAst(Asts.Ast):
 
     def __post_init__(self) -> None:
         self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=0)
-        if not self.generic_argument_group.pos:
-            self.generic_argument_group.pos = self.pos + len(self.value)
-            self.generic_argument_group.tok_l.pos = self.pos
-            self.generic_argument_group.tok_r.pos = self.pos + len(self.value)
+        # if not self.generic_argument_group.pos:
+        #     self.generic_argument_group.pos = self.pos + len(self.value)
+        #     self.generic_argument_group.tok_l.pos = self.pos
+        #     self.generic_argument_group.tok_r.pos = self.pos + len(self.value)
 
     def __eq__(self, other: GenericIdentifierAst) -> bool:
         # Check both ASTs are the same type and have the same value and generic argument group.
@@ -51,7 +51,7 @@ class GenericIdentifierAst(Asts.Ast):
 
     @property
     def pos_end(self) -> int:
-        return self.generic_argument_group.pos_end
+        return self.generic_argument_group.pos_end if self.generic_argument_group.arguments else self.pos + len(self.value)
 
     @staticmethod
     def from_identifier(identifier: Asts.IdentifierAst) -> GenericIdentifierAst:

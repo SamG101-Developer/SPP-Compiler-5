@@ -75,7 +75,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     @staticmethod
     def from_simple(
-            c1: int, p1: Asts.TokenAst, p2: Asts.ExpressionAst, p3: Asts.InnerScopeAst,
+            p1: Asts.TokenAst, p2: Asts.ExpressionAst, p3: Asts.InnerScopeAst,
             p4: Seq[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
 
         """
@@ -121,7 +121,6 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                             ...
                         }
 
-        :param c1: The position of the AST.
         :param p1: The "case" keyword.
         :param p2: The case expression/condition.
         :param p3: The inner scope body.
@@ -130,12 +129,12 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Convert condition into an "== true" comparison.
-        first_pattern = Asts.PatternVariantExpressionAst(c1, expr=Asts.BooleanLiteralAst.from_python_literal(c1, True))
-        first_branch = Asts.CaseExpressionBranchAst(c1, patterns=[first_pattern], body=p3)  # todo: "op" need setting?
+        first_pattern = Asts.PatternVariantExpressionAst(p1.pos, expr=Asts.BooleanLiteralAst.from_python_literal(p1.pos, True))
+        first_branch = Asts.CaseExpressionBranchAst(p1.pos, patterns=[first_pattern], body=p3)  # todo: "op" need setting?
         branches = [first_branch] + p4
 
         # Return the case expression.
-        out = CaseExpressionAst(c1, p1, Asts.ParenthesizedExpressionAst(p2.pos, expr=p2), branches=branches)
+        out = CaseExpressionAst(p1.pos, p1, Asts.ParenthesizedExpressionAst(p2.pos, expr=p2), branches=branches)
         return out
 
     @ast_printer_method
@@ -230,7 +229,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
             # Check the "else" branch is the final branch (also ensures there is only 1).
             if isinstance(branch.patterns[0], Asts.PatternVariantElseAst) and branch != self.branches[-1]:
-                raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch, self.branches[-1]).scopes(sm.current_scope)
+                raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch.patterns[0].kw_else, self.branches[-1]).scopes(sm.current_scope)
 
             # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
             if branch.op and branch.op.token_type != SppTokenType.KwIs:

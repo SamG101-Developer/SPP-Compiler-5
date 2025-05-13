@@ -98,7 +98,7 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         parent_scope = sm.current_scope
 
         # Perform memory checks on the captures against the symbols from the outermost scope.
-        caps = Asts.FunctionCallArgumentGroupAst(arguments=self.pc_group.captures)
+        caps = Asts.FunctionCallArgumentGroupAst(pos=self.pc_group.pos, arguments=self.pc_group.captures)
         caps.analyse_semantics(sm, **kwargs)
 
         # New scope for the parameters.
@@ -128,7 +128,7 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         parent_scope = sm.current_scope
 
-        caps = Asts.FunctionCallArgumentGroupAst(arguments=self.pc_group.captures)
+        caps = Asts.FunctionCallArgumentGroupAst(pos=self.pc_group.pos, arguments=self.pc_group.captures)
         caps.check_memory(sm, **kwargs)
 
         sm.move_to_next_scope()

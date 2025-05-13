@@ -74,7 +74,7 @@ class PostfixExpressionOperatorIndexAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Create a transformed AST that looks like: "lhs.index_ref" or "lhs.index_mut".
-        index_type = Asts.IdentifierAst(pos=self.pos, value="index_ref" if not self.kw_mut else "index_mut")
+        index_type = Asts.IdentifierAst(pos=self.tok_l.pos, value="index_ref" if not self.kw_mut else "index_mut")
         index_field = Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(pos=self.pos, new_field=index_type)
         index_field = Asts.PostfixExpressionAst(pos=self.pos, lhs=lhs, op=index_field)
 

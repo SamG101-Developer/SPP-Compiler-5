@@ -80,7 +80,7 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
         AstTypeUtils.get_generator_and_yielded_type(lhs_type, sm, lhs, "resume expression")
 
         # Create a transformed AST that looks like: "lhs.resume".
-        resume_identifier = Asts.IdentifierAst(value="resume")
+        resume_identifier = Asts.IdentifierAst(pos=self.kw_res.pos, value="resume")
         resume_field = Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(pos=self.pos, new_field=resume_identifier)
         resume_field = Asts.PostfixExpressionAst(pos=self.pos, lhs=lhs, op=resume_field)
 
@@ -100,6 +100,7 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
 
         Todo: check this is the reason for the "is_coro_resume" flag, am 90% sure it is correct.
         :param sm: The scope manager.
+        :param lhs: The left-hand side expression.
         :param kwargs: Additional keyword arguments.
         """
 

@@ -10,19 +10,19 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 
 @dataclass(slots=True)
 class PatternVariantElseAst(Asts.Ast):
-    tok_else: Asts.TokenAst = field(default=None)
+    kw_else: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
-        self.tok_else = self.tok_else or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwElse)
+        self.kw_else = self.kw_else or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwElse)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
-        return self.tok_else.print(printer)
+        return self.kw_else.print(printer)
 
     @property
     def pos_end(self) -> int:
-        return self.tok_else.pos_end
+        return self.kw_else.pos_end
 
     def analyse_semantics(self, sm: ScopeManager, cond: Asts.ExpressionAst = None, **kwargs) -> None:
         # Leave this function here (needs the keyword "cond" parameter for uniform pattern analysis).
