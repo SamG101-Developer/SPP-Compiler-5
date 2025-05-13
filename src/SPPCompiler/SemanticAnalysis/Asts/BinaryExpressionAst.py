@@ -5,8 +5,7 @@ from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.AstUtils.AstBinUtils import AstBinUtils
-from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstBinUtils import AstBinUtils, BINARY_COMPOUND_ASSIGNMENT_OPERATORS
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -114,7 +113,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.lhs.analyse_semantics(sm, **kwargs)
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
-        if self.op.token_type.name.endswith("Assign") and not sm.current_scope.get_variable_symbol_outermost_part(self.lhs):
+        if self.op.token_type in BINARY_COMPOUND_ASSIGNMENT_OPERATORS and not sm.current_scope.get_variable_symbol_outermost_part(self.lhs):
             raise SemanticErrors.AssignmentInvalidCompoundLhsError().add(self.lhs).scopes(sm.current_scope)
 
         # Todo: Check on the tuple size to be > 1 ?

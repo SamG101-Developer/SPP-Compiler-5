@@ -39,6 +39,12 @@ BINARY_COMPARISON_OPERATORS = {
     SppTokenType.TkEq, SppTokenType.TkNe, SppTokenType.TkLt, SppTokenType.TkGt, SppTokenType.TkLe, SppTokenType.TkGe,
 }
 
+BINARY_COMPOUND_ASSIGNMENT_OPERATORS = {
+    SppTokenType.TkPlusAssign, SppTokenType.TkMinusAssign, SppTokenType.TkMultiplyAssign,
+    SppTokenType.TkDivideAssign, SppTokenType.TkRemainderAssign, SppTokenType.TkModuloAssign,
+    SppTokenType.TkExponentAssign,
+}
+
 
 class AstBinUtils:
     """!
