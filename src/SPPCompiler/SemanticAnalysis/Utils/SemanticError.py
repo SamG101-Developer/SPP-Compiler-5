@@ -13,6 +13,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis import Asts
+    from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
 class SemanticError(BaseException):
@@ -735,11 +736,14 @@ class SemanticErrors:
         been moved.
         """
 
-        def add(self, init_location: Asts.Ast, ast: Asts.ExpressionAst, move_location: Asts.Ast) -> SemanticError:
+        def add(
+                self, init_location: Asts.Ast, ast: Asts.ExpressionAst, move_location: Asts.Ast,
+                sm: ScopeManager) -> SemanticError:
+
             if init_location:
                 self.add_info(
                     ast=init_location,
-                    tag=f"Symbol '{ast}' initialized here")
+                    tag=f"Symbol '{init_location}' initialized here")
 
             self.add_info(
                 ast=move_location,
@@ -749,7 +753,7 @@ class SemanticErrors:
                 ast=ast,
                 tag="Uninitialized memory used here.",
                 msg="The memory has not been initialized or has been moved.",
-                tip="Ensure the memory is initialized before use.")
+                tip=f"Ensure the memory is initialized before use\n\n\tlet {ast} = {ast.infer_type(sm).type_parts()[-1]}().")
 
             return self
 
@@ -800,7 +804,7 @@ class SemanticErrors:
         def add(self, move_location: Asts.Ast, pin_location: Asts.Ast) -> SemanticError:
             self.add_info(
                 ast=pin_location,
-                tag="Symbol pinned here")
+                tag=f"Symbol '{move_location}' pinned here")
 
             self.add_error(
                 ast=move_location,
