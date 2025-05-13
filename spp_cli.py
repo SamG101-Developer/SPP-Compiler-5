@@ -97,14 +97,14 @@ def handle_vcs() -> None:
     vcs = toml.get("vcs")
     if not vcs: return
 
+    # Ensure the "ffi" folder exists, as vcs repositories may have their own "ffi" folders.
+    ffi_folder = cwd / FFI_FOLDER
+    if not ffi_folder.exists(): ffi_folder.mkdir()
+
     # Check if the "vcs" folder exists, create it if it doesn't.
     vcs_folder = cwd / VCS_FOLDER
     if not vcs_folder.exists(): vcs_folder.mkdir()
     os.chdir(vcs_folder)
-
-    # Ensure the "ffi" folder exists, as vcs repositories may have their own "ffi" folders.
-    ffi_folder = cwd / FFI_FOLDER
-    if not ffi_folder.exists(): ffi_folder.mkdir()
 
     # Iterate over the vcs section and clone/update the repositories.
     for key, info in vcs.items():

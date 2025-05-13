@@ -16,6 +16,7 @@ from SPPCompiler.Utils.Sequence import Seq
 class SppParser:
     _pos: int
     _tokens: List[RawToken]
+    _token_types: List[RawTokenType]
     _tokens_len: int
     _error: ParserErrors.SyntaxError
     _error_formatter: ErrorFormatter
@@ -23,14 +24,19 @@ class SppParser:
 
     _identifier_characters: List[RawTokenType]
     _upper_identifier_characters: List[RawTokenType]
-    _skip_all_characters: List[RawTokenType]
-    _skip_newline_character: RawTokenType
-    _skip_whitespace_character: RawTokenType
+    _nl_ws_characters: List[RawTokenType]
+    _nl_characters: RawTokenType
+    _ws_characters: RawTokenType
     _stringable_characters: List[SppTokenType]
+
+    _mask_nl_ws: List[bool]
+    _mask_nl: List[bool]
+    _mask_ws: List[bool]
 
     def __init__(self, tokens: List[RawToken], file_name: str = "", error_formatter: Optional[ErrorFormatter] = None, injection_adjust_pos: int = 0) -> None:
         self._pos = 0
         self._tokens = tokens
+        self._token_types = [token.token_type for token in tokens]
         self._tokens_len = len(tokens)
         self._error = ParserErrors.SyntaxError()
         self._error_formatter = error_formatter or ErrorFormatter(tokens, file_name)
@@ -38,10 +44,14 @@ class SppParser:
 
         self._identifier_characters = [RawTokenType.TkCharacter, RawTokenType.TkDigit, RawTokenType.TkUnderscore]
         self._upper_identifier_characters = [RawTokenType.TkCharacter, RawTokenType.TkDigit]
-        self._skip_all_characters = [RawTokenType.TkWhitespace, RawTokenType.TkNewLine]
-        self._skip_newline_character = RawTokenType.TkNewLine
-        self._skip_whitespace_character = RawTokenType.TkWhitespace
+        self._nl_ws_characters = [RawTokenType.TkWhitespace, RawTokenType.TkNewLine]
+        self._nl_characters = RawTokenType.TkNewLine
+        self._ws_characters = RawTokenType.TkWhitespace
         self._stringable_characters = [SppTokenType.LxNumber, SppTokenType.LxString]
+
+        self._mask_nl_ws = [t not in [RawTokenType.TkNewLine, RawTokenType.TkWhitespace] for t in self._token_types]
+        self._mask_nl    = [t not in [RawTokenType.TkNewLine] for t in self._token_types]
+        self._mask_ws    = [t not in [RawTokenType.TkWhitespace] for t in self._token_types]
 
     @inline
     def current_pos(self) -> int:
@@ -2158,7 +2168,7 @@ class SppParser:
             return None
         out.token_data += p1.token_data
 
-        while self._tokens[self._pos].token_type == RawTokenType.TkDigit:
+        while self._token_types[self._pos] == RawTokenType.TkDigit:
             p2 = self.parse_once(self.parse_lexeme_digit)
             out.token_data += p2.token_data
 
@@ -2186,7 +2196,7 @@ class SppParser:
             return None
         out.token_data += p3.token_data
 
-        while self._tokens[self._pos].token_type == RawTokenType.TkDigit:
+        while self._token_types[self._pos] == RawTokenType.TkDigit:
             p3 = self.parse_once(self.parse_lexeme_digit)
             if p3 is None or p3.token_data not in "01":
                 self.store_error(self.current_pos(), "Invalid binary integer literal")
@@ -2216,7 +2226,7 @@ class SppParser:
             self.store_error(self.current_pos(), "Invalid hexadecimal integer literal")
             return None
 
-        while self._tokens[self._pos].token_type in [RawTokenType.TkCharacter, RawTokenType.TkDigit]:
+        while self._token_types[self._pos] in [RawTokenType.TkCharacter, RawTokenType.TkDigit]:
             p3 = self.parse_once(self.parse_lexeme_character_or_digit)
             if p3 is None or p3.token_data not in "0123456789abcdefABCDEF":
                 self.store_error(self.current_pos(), "Invalid hexadecimal integer literal")
@@ -2233,7 +2243,7 @@ class SppParser:
         if p1 is None: return None
         out.token_data += p1.token_data
 
-        while self._tokens[self._pos].token_type == RawTokenType.TkCharacter:
+        while self._token_types[self._pos] == RawTokenType.TkCharacter:
             p2 = self.parse_once(self.parse_lexeme_character)
             out.token_data += p2.token_data
 
@@ -2256,7 +2266,7 @@ class SppParser:
             return None
         out.token_data += p1.token_data
 
-        while self._tokens[self._pos].token_type in self._identifier_characters:
+        while self._token_types[self._pos] in self._identifier_characters:
             p2 = self.parse_once(self.parse_lexeme_character_or_digit_or_underscore)
             if p2 is None: return out
             out.token_data += p2.token_data
@@ -2277,7 +2287,7 @@ class SppParser:
             return None
         out.token_data += p1.token_data
 
-        while self._tokens[self._pos].token_type in self._upper_identifier_characters:
+        while self._token_types[self._pos] in self._upper_identifier_characters:
             p2 = self.parse_once(self.parse_lexeme_character_or_digit)
             if p2 is None: return out
             out.token_data += p2.token_data
@@ -2329,21 +2339,21 @@ class SppParser:
             return None
 
         if token != RawTokenType.TkNewLine and token != RawTokenType.TkWhitespace:
-            while self._tokens[self._pos].token_type in self._skip_all_characters:
+            while self._token_types[self._pos] in self._nl_ws_characters:
                 self._pos += 1
 
         elif token == RawTokenType.TkNewLine:
-            while self._tokens[self._pos].token_type == self._skip_whitespace_character:
+            while self._token_types[self._pos] is self._ws_characters:
                 self._pos += 1
 
         elif token == RawTokenType.TkWhitespace:
-            while self._tokens[self._pos].token_type == self._skip_newline_character:
+            while self._token_types[self._pos] is self._nl_characters:
                 self._pos += 1
 
         if token == RawTokenType.NoToken:
             return 1
 
-        if self._tokens[self._pos].token_type != token:
+        if self._token_types[self._pos] != token:
             if self._error.pos == self._pos:
                 self._error.add_expected_token(mapped_token.value)
                 return None
