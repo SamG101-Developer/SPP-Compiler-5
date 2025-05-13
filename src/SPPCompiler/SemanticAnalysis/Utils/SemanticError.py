@@ -8,7 +8,7 @@ from typing import NoReturn, Optional, Tuple, TYPE_CHECKING
 from colorama import Fore, Style
 from enum import Enum
 
-from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
+from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -735,7 +735,12 @@ class SemanticErrors:
         been moved.
         """
 
-        def add(self, ast: Asts.ExpressionAst, move_location: Asts.Ast) -> SemanticError:
+        def add(self, init_location: Asts.Ast, ast: Asts.ExpressionAst, move_location: Asts.Ast) -> SemanticError:
+            if init_location:
+                self.add_info(
+                    ast=init_location,
+                    tag=f"Symbol '{ast}' initialized here")
+
             self.add_info(
                 ast=move_location,
                 tag=f"Symbol '{ast}' moved/uninitialized here")
@@ -814,7 +819,7 @@ class SemanticErrors:
         def add(self, overlap: Asts.Ast, ast: Asts.Ast) -> SemanticError:
             self.add_info(
                 ast=overlap,
-                tag="Memory overlap defined here")
+                tag="Memory borrowed here.")
 
             self.add_error(
                 ast=ast,
@@ -1262,9 +1267,7 @@ class SemanticErrors:
         The CaseBranchesElseBranchNotLastError is raised if the else branch is not the last branch in a case statement.
         """
 
-        def add(
-                self, else_branch: Asts.CaseExpressionBranchAst,
-                last_branch: Asts.CaseExpressionBranchAst) -> SemanticError:
+        def add(self, else_branch: Asts.TokenAst, last_branch: Asts.CaseExpressionBranchAst) -> SemanticError:
             self.add_info(
                 ast=else_branch,
                 tag="Else branch defined here")
@@ -1392,6 +1395,7 @@ class SemanticErrors:
         def add(
                 self, lhs: Asts.LocalVariableDestructureArrayAst, lhs_count: int, rhs: Asts.Ast,
                 rhs_count: int) -> SemanticError:
+
             self.add_info(
                 ast=lhs,
                 tag=f"{lhs_count}-array destructure defined here")

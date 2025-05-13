@@ -6,12 +6,12 @@ from typing import Optional, TYPE_CHECKING, List
 
 from llvmlite import ir
 
-from SPPCompiler.LexicalAnalysis.Lexer import Lexer
+from SPPCompiler.LexicalAnalysis.Lexer import SppLexer
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import CompilerStages, PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Progress import Progress
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -49,7 +49,7 @@ class Program(CompilerStages):
             with open(os.path.join(os.getcwd(), module.path.lstrip(os.path.sep))) as fo:
                 module.code = fo.read()
             progress_bar.next(module.path)
-            module.token_stream = Lexer(module.code).lex()
+            module.token_stream = SppLexer(module.code).lex()
             module.error_formatter = ErrorFormatter(module.token_stream, module.path)
         progress_bar.finish()
 

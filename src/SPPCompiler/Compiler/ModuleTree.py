@@ -7,7 +7,7 @@ from typing import Iterable, List, Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import RawToken
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
+from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Sequence import Seq
 
 

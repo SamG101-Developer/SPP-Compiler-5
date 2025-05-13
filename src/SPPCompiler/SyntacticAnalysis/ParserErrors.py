@@ -4,7 +4,7 @@ from typing import List, NoReturn
 
 from ordered_set import OrderedSet
 
-from SPPCompiler.SyntacticAnalysis.ErrorFormatter import ErrorFormatter
+from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
 
 class ParserError(BaseException):
