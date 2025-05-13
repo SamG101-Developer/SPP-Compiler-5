@@ -17,6 +17,7 @@ class TestFunctionParameterGroupAst(CustomTestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.OrderInvalidError)
     def test_invalid_function_parameter_group_order_invalid_opt_self(self):
         """
         cls A { }
@@ -25,6 +26,7 @@ class TestFunctionParameterGroupAst(CustomTestCase):
         }
         """
 
+    @should_fail_compilation(SemanticErrors.OrderInvalidError)
     def test_invalid_function_parameter_group_order_invalid_var_self(self):
         """
         cls A { }

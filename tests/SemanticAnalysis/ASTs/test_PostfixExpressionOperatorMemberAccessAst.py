@@ -158,7 +158,7 @@ class TestPostfixExpressionOperatorMemberAccessAst(CustomTestCase):
     def test_valid_postfix_member_access_static_operator_on_namespace(self):
         """
         fun f() -> std::void::Void {
-            std::console::print("hello")
+            std::console::print(&"hello")
         }
         """
 
@@ -221,6 +221,6 @@ class TestPostfixExpressionOperatorMemberAccessAst(CustomTestCase):
     def test_valid_postfix_member_access_on_namespace(self):
         """
         fun f() -> std::void::Void {
-            let x = std::console::print("hello")
+            let x = std::console::print(&"hello")
         }
         """

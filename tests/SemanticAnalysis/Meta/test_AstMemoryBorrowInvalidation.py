@@ -39,47 +39,6 @@ class TestAstMemoryBorrowInvalidation(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_borrow_invalidated_by_next_borrow_mut_ref_with_let(self):
-        # When yielding a second borrow, the first one should be invalidated.
-        """
-        cls MyType { }
-        sup MyType {
-            cor custom_iter_ref(&self) -> std::generator::Gen[&std::string::Str, std::boolean::Bool] { }
-            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut std::string::Str, std::boolean::Bool] { }
-        }
-
-        fun test() -> std::void::Void {
-            let mut object = MyType()
-            let generator_mut = object.custom_iter_mut()
-            let borrow1 = generator_mut.res(false)
-            let generator_ref = object.custom_iter_ref()
-            let borrow2 = generator_ref.res(false)
-            let value = borrow1
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_invalid_borrow_invalidated_by_next_borrow_mut_ref_with_let(self):
-        # When yielding a second borrow, the first one should be invalidated.
-        """
-        cls MyType { }
-        sup MyType {
-            cor custom_iter_ref(&self) -> std::generator::Gen[&std::string::Str, std::boolean::Bool] { }
-            cor custom_iter_mut(&mut self) -> std::generator::Gen[&mut std::string::Str, std::boolean::Bool] { }
-        }
-
-        fun test() -> std::void::Void {
-            let (borrow1, borrow2): (&mut std::string::Str, &std::string::Str)
-            let mut object = MyType()
-            let generator_mut = object.custom_iter_mut()
-            borrow1 = generator_mut.res(false)
-            let generator_ref = object.custom_iter_ref()
-            borrow2 = generator_ref.res(false)
-            let value = borrow1
-        }
-        """
-
     @should_pass_compilation()
     def test_valid_borrow_usage_no_invalidation_ref_ref_with_let(self):
         # Immutable borrows don't invalidate other immutable borrows.

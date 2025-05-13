@@ -15,7 +15,7 @@ class TestCaseExpressionAst(CustomTestCase):
         """
         fun f() -> std::void::Void {
             case (1, 2) of
-                is (a, b), (a, 1) { }
+            is (a, b), (a, 1) { }
         }
         """
 
@@ -24,8 +24,8 @@ class TestCaseExpressionAst(CustomTestCase):
         """
         fun f() -> std::void::Void {
             case 1 of
-                else { }
-                == 2 { }
+            else { }
+            == 2 { }
         }
         """
 
@@ -34,9 +34,9 @@ class TestCaseExpressionAst(CustomTestCase):
         """
         fun f() -> std::void::Void {
             case 1 of
-                == 1 { }
-                == 2 { }
-                else { }
+            == 1 { }
+            == 2 { }
+            else { }
         }
         """
 
@@ -45,8 +45,8 @@ class TestCaseExpressionAst(CustomTestCase):
         """
         fun f() -> std::void::Void {
             case [1, 2, 3] of
-                is [1, a, b] { }
-                is [2, c, d] { }
+            is [1, a, b] { }
+            is [2, c, d] { }
         }
         """
 
