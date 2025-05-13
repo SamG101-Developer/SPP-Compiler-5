@@ -52,13 +52,18 @@ class FunctionParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         ast.analyse_semantics(sm, **kwargs)
 
         # Mark the symbol as initialized.
-        convention = self.type.get_convention()
+        conv = self.type.get_convention()
         for name in self.variable.extract_names:
-            symbol = sm.current_scope.get_symbol(name)
-            symbol.memory_info.ast_borrowed = convention
-            symbol.memory_info.is_borrow_mut = isinstance(convention, Asts.ConventionMutAst)
-            symbol.memory_info.is_borrow_ref = isinstance(convention, Asts.ConventionRefAst)
-            symbol.memory_info.initialized_by(self)
+            sym = sm.current_scope.get_symbol(name)
+            sym.memory_info.initialized_by(self)
+            sym.memory_info.ast_borrowed = conv
+            sym.memory_info.is_borrow_mut = isinstance(conv, Asts.ConventionMutAst)
+            sym.memory_info.is_borrow_ref = isinstance(conv, Asts.ConventionRefAst)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        for name in self.variable.extract_names:
+            sym = sm.current_scope.get_symbol(name)
+            sym.memory_info.initialized_by(self)
 
 
 __all__ = [

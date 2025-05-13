@@ -74,12 +74,16 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
 
         # Mark the symbol as initialized. The "mut" being also set from the "&mut" is because "&mut self" implies symbol
         # mutability as-well.
-        symbol = sm.current_scope.get_symbol(self.name)
-        symbol.is_mutable = self.tok_mut is not None or isinstance(self.convention, Asts.ConventionMutAst)
-        symbol.memory_info.ast_borrowed = self.convention
-        symbol.memory_info.is_borrow_mut = isinstance(self.convention, Asts.ConventionMutAst)
-        symbol.memory_info.is_borrow_ref = isinstance(self.convention, Asts.ConventionRefAst)
-        symbol.memory_info.initialized_by(self)
+        sym = sm.current_scope.get_symbol(self.name)
+        sym.is_mutable = self.tok_mut is not None or isinstance(self.convention, Asts.ConventionMutAst)
+        sym.memory_info.initialized_by(self)
+        sym.memory_info.ast_borrowed = self.convention
+        sym.memory_info.is_borrow_mut = isinstance(self.convention, Asts.ConventionMutAst)
+        sym.memory_info.is_borrow_ref = isinstance(self.convention, Asts.ConventionRefAst)
+
+    def check_memory(self, sm: ScopeManager, **kwargs) -> None:
+        sym = sm.current_scope.get_symbol(self.name)
+        sym.memory_info.initialized_by(self)
 
 
 __all__ = [

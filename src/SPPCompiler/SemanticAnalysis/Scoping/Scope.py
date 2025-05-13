@@ -98,9 +98,6 @@ class Scope:
         return new_symbol or symbol
 
     def add_symbol(self, symbol: Symbol) -> None:
-        # if isinstance(symbol, TypeSymbol):
-        #     assert isinstance(symbol.name, Asts.GenericIdentifierAst)
-
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
 
@@ -109,7 +106,6 @@ class Scope:
         self._symbol_table.rem(symbol_name)
 
     def all_symbols(self, exclusive: bool = False, match_type: type = None) -> Seq[Symbol]:
-
         # Get all the symbols in the scope.
         symbols = self._symbol_table.all()
         if not exclusive and self._parent:
@@ -122,6 +118,7 @@ class Scope:
         return symbols
 
     def has_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False) -> bool:
+        # Get the symbol and check if it is None or not (None => not found).
         return self.get_symbol(name, exclusive, ignore_alias=True) is not None
 
     def get_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:

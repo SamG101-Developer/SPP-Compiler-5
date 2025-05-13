@@ -65,11 +65,11 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
                 c, self.type, "global constant type").scopes(sm.current_scope)
 
         # Create a type symbol for this type in the current scope (class / function).
-        symbol = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
-        symbol.memory_info.ast_pins.append(self.name)
-        symbol.memory_info.ast_comptime_const = self
-        symbol.memory_info.initialized_by(self)
-        sm.current_scope.add_symbol(symbol)
+        sym = VariableSymbol(name=self.name, type=self.type, visibility=self._visibility[0])
+        sym.memory_info.ast_pins.append(self.name)
+        sym.memory_info.ast_comptime_const = self
+        sym.memory_info.initialized_by(self)  # this is here because cross-file analysis will involve this symbol
+        sm.current_scope.add_symbol(sym)
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         self.type.analyse_semantics(sm, **kwargs)

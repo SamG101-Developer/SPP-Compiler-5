@@ -62,16 +62,21 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         let_ast.analyse_semantics(sm, **kwargs)
 
         # Set the memory information of the symbol based on the type of iteration.
-        symbols = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]
-        for symbol in symbols:
-            symbol.memory_info.ast_borrowed = self if yield_type.get_convention() else None
-            symbol.memory_info.is_borrow_mut = type(yield_type.get_convention()) is Asts.ConventionMutAst is not None
-            symbol.memory_info.is_borrow_ref = type(yield_type.get_convention()) is Asts.ConventionRefAst is not None
-            symbol.memory_info.initialized_by(self)
+        syms = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]
+        for sym in syms:
+            sym.memory_info.initialized_by(self)
+            sym.memory_info.ast_borrowed = self if yield_type.get_convention() else None
+            sym.memory_info.is_borrow_mut = type(yield_type.get_convention()) is Asts.ConventionMutAst is not None
+            sym.memory_info.is_borrow_ref = type(yield_type.get_convention()) is Asts.ConventionRefAst is not None
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self.iterable.check_memory(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(self.iterable, self.iterable, sm, mark_moves=False)
+
+        # Re-initialize for the double-loop analysis.
+        syms = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]
+        for sym in syms:
+            sym.memory_info.initialized_by(self)
 
 
 __all__ = [

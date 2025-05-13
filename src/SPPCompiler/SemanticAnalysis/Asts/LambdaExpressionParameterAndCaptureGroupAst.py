@@ -53,21 +53,21 @@ class LambdaExpressionParameterAndCaptureGroupAst(Asts.Ast):
 
         # Add the capture variables after analysis, otherwise their symbol checks refer to the new captures not original
         # asts from the argument group analysis.
-        for capture in self.captures:
+        for cap in self.captures:
             # Create a "let" statement to insert the symbol into the current scope.
-            var = Asts.LocalVariableSingleIdentifierAst(name=capture.value)
-            var_type = capture.value.infer_type(sm, **kwargs)
+            var = Asts.LocalVariableSingleIdentifierAst(name=cap.value)
+            var_type = cap.value.infer_type(sm, **kwargs)
             ast = Asts.LetStatementInitializedAst(assign_to=var, value=Asts.ObjectInitializerAst(class_type=var_type))
             ast.analyse_semantics(sm, **kwargs)
 
             # Apply the borrow to the symbol.
-            sym: VariableSymbol = sm.current_scope.get_symbol(capture.value)
-            sym.memory_info.ast_borrowed = capture.convention
-            sym.memory_info.is_borrow_mut = isinstance(capture.convention, Asts.ConventionMutAst)
-            sym.memory_info.is_borrow_ref = isinstance(capture.convention, Asts.ConventionRefAst)
+            sym: VariableSymbol = sm.current_scope.get_symbol(cap.value)
+            sym.memory_info.ast_borrowed = cap.convention
+            sym.memory_info.is_borrow_mut = isinstance(cap.convention, Asts.ConventionMutAst)
+            sym.memory_info.is_borrow_ref = isinstance(cap.convention, Asts.ConventionRefAst)
 
             # Apply the borrow to the type.
-            sym.type = sym.type.with_convention(capture.convention)
+            sym.type = sym.type.with_convention(cap.convention)
 
 
 __all__ = [

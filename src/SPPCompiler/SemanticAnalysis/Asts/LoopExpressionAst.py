@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import LightweightMemoryInfo
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -86,8 +89,13 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         #  for i in range(("loop_level" not in kwargs) + 1):
 
         sm.move_to_next_scope()
+
+        # Check twice so that once-time invalidation fail on the second loop.
+        # tm = ScopeManager(sm.global_scope, sm.current_scope)
+        # for m in [tm, sm]:
         self.cond.check_memory(sm, **kwargs)
         self.body.check_memory(sm, **kwargs)
+
         if self.else_block:
             self.else_block.check_memory(sm, **kwargs)
         sm.move_out_of_current_scope()

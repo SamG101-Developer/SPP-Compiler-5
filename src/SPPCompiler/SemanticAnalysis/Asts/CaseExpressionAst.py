@@ -251,7 +251,9 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         # Enforce memory integrity
         self.cond.check_memory(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.cond, self.cond, sm, mark_moves=False)
+        AstMemoryUtils.enforce_memory_integrity(
+            self.cond, self.cond, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+            check_pins=True, mark_moves=False)
 
         sm.move_to_next_scope()
 

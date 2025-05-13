@@ -9,6 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 
 
 @dataclass(slots=True, kw_only=True)
@@ -36,7 +37,7 @@ class MemoryInfo:
         ast_initialization_old: Tracks most recent initialization despite moves (for errors).
         ast_moved: The AST where the memory is consumed (function argument, binary expression, etc).
         ast_borrowed: The AST where the memory is marked as borrowed (from parameter convention).
-        ast_borrowed_ex: Extended borrows like a variable being iterated over: ".iter_mut()".
+        ast_borrowed_persistent: Extended borrows like a variable being iterated over: ".iter_mut()".
         ast_partial_moves: A list of partial moves (attributes).
         ast_pins: A list of pinned attributes (or the entire object).
 
@@ -53,9 +54,9 @@ class MemoryInfo:
     ast_initialization_old: Optional[Asts.Ast] = field(default=None)
     ast_moved: Optional[Asts.Ast] = field(default=None)
     ast_borrowed: Optional[Asts.Ast] = field(default=None)
-    ast_borrowed_ex: Optional[Asts.Ast] = field(default=None)
-    ast_partial_moves: Seq[Asts.Ast] = field(default_factory=Seq)
-    ast_pins: Seq[Asts.Ast] = field(default_factory=Seq)
+    # ast_borrowed_persistent: Optional[Asts.Ast] = field(default=None)
+    ast_partial_moves: Seq[Asts.Ast] = field(default_factory=list)
+    ast_pins: Seq[Asts.Ast] = field(default_factory=list)
     ast_comptime_const: Optional[Asts.ExpressionAst] = field(default=None)
 
     initialization_counter: int = field(default=0)
@@ -67,7 +68,7 @@ class MemoryInfo:
     is_inconsistently_partially_moved: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
     is_inconsistently_pinned: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
 
-    refer_to_asts: Seq[tuple[Asts.Ast, bool]] = field(default_factory=Seq)
+    borrow_refers_to: Seq[Tuple[Optional[Asts.Ast], Asts.FunctionCallArgumentAst, bool]] = field(default_factory=list)
 
     def __copy__(self) -> MemoryInfo:
         return MemoryInfo(
@@ -83,7 +84,7 @@ class MemoryInfo:
             is_inconsistently_moved=self.is_inconsistently_moved,
             is_inconsistently_partially_moved=self.is_inconsistently_partially_moved,
             is_inconsistently_pinned=self.is_inconsistently_pinned,
-            refer_to_asts=self.refer_to_asts.copy())
+            borrow_refers_to=self.borrow_refers_to.copy())
 
     def moved_by(self, ast: Asts.Ast) -> None:
         # If a symbol's contents is moved, mark the symbol as moved and non-initialized.
@@ -156,7 +157,6 @@ class AstMemoryUtils:
         :param check_move_from_borrowed_ctx: If moving an attribute out of a borrowed context is being checked.
         :param check_pins: If moving pinned objects is being checked.
         :param mark_moves: Whether to update the memory information in the symbol table.
-        :return: None
 
         :raise SemanticErrors.MemoryNotInitializedUsageError: If a symbol is used before being initialized.
         :raise SemanticErrors.MemoryPartiallyInitializedUsageError: If a symbol is used before being fully initialized.
@@ -182,15 +182,15 @@ class AstMemoryUtils:
         # Get the symbol representing the outermost part of the expression being moved. If the outermost part is
         # non-symbolic, then the expression is not a variable or attribute access to a variable. No further checks are
         # required, because the expression is guaranteed to be an initialized value (function return value or literal).
-        symbol = sm.current_scope.get_variable_symbol_outermost_part(value_ast)
-        if not symbol:
+        sym = sm.current_scope.get_variable_symbol_outermost_part(value_ast)
+        if not sym:
             return
-        copies = sm.current_scope.get_symbol(symbol.type).is_copyable
+        copies = sm.current_scope.get_symbol(sym.type).is_copyable
         partial_copies = sm.current_scope.get_symbol(value_ast.infer_type(sm)).is_copyable
 
         # An identifier that is a namespace cannot be used as an expression. As all expressions are analysed in this
         # function, the check is performed here.
-        if symbol.symbol_type is SymbolType.NamespaceSymbol:
+        if sym.symbol_type is SymbolType.NamespaceSymbol:
             raise SemanticErrors.ExpressionTypeInvalidError().add(
                 value_ast).scopes(sm.current_scope)
 
@@ -198,7 +198,7 @@ class AstMemoryUtils:
         # but not in another branch. This means the memory status of the symbol cannot be guaranteed, which could cause
         # memory runtime-errors: if a symbol is used, and the branch that executed moved the value. Mitigate by raising
         # a compile-time error.
-        if check_move and (m := symbol.memory_info.is_inconsistently_moved):
+        if check_move and (m := sym.memory_info.is_inconsistently_moved):
             raise SemanticErrors.MemoryInconsistentlyInitializedError().add(
                 value_ast, m[0], m[1], "moved").scopes(sm.current_scope)
 
@@ -206,7 +206,7 @@ class AstMemoryUtils:
         # above, but for initialization. This is when a symbol is non-initialized before the branching, and only
         # initialized in some of the branches. Using the symbol after the branching could cause a memory runtime-error,
         # if the symbol is still non-initialized.
-        if check_move and (m := symbol.memory_info.is_inconsistently_initialized):
+        if check_move and (m := sym.memory_info.is_inconsistently_initialized):
             raise SemanticErrors.MemoryInconsistentlyInitializedError().add(
                 value_ast, m[0], m[1], "initialized").scopes(sm.current_scope)
 
@@ -214,14 +214,14 @@ class AstMemoryUtils:
         # check, but just for partial moves. Because partial moves affect the memory status of the entire object, and
         # restrict the operations performable on it, the partial move status must also be the same across all the
         # branches.
-        if check_move and (m := symbol.memory_info.is_inconsistently_partially_moved):
+        if check_move and (m := sym.memory_info.is_inconsistently_partially_moved):
             raise SemanticErrors.MemoryInconsistentlyInitializedError().add(
                 value_ast, m[0], m[1], "partially moved").scopes(sm.current_scope)
 
         # Check for "inconsistent" memory pin status, from branches. The final consistency check is for the "pin" status
         # of objects. This is required, because if a borrow is subsequently used, say in a coroutine call, then the pin
         # status of the object must be guaranteed. As such, it must be consistent across all branches.
-        if check_pins and (m := symbol.memory_info.is_inconsistently_pinned):
+        if check_pins and (m := sym.memory_info.is_inconsistently_pinned):
             raise SemanticErrors.MemoryInconsistentlyPinnedError().add(
                 value_ast, m[0], m[1]).scopes(sm.current_scope)
 
@@ -229,52 +229,52 @@ class AstMemoryUtils:
         # ever occurring in the code. If a value is marked as moved, then that value, nor its attributes, can be used
         # against until the outermost symbol is marked as fully initialized, (and the attribute symbol isn't marked as a
         # partial move, if it is an attribute access taking place).
-        if check_move and symbol.memory_info.ast_moved:
+        if check_move and sym.memory_info.ast_moved:
             raise SemanticErrors.MemoryNotInitializedUsageError().add(
-                symbol.memory_info.ast_initialization_old, value_ast, symbol.memory_info.ast_moved).scopes(sm.current_scope)
+                sym.memory_info.ast_initialization_old, value_ast, sym.memory_info.ast_moved, sm).scopes(sm.current_scope)
 
         # Check the symbol doesn't have any outstanding partial moves, in the case that the entire symbol itself is
         # being used. This means that "a" cannot be moved, or borrowed from etc, if "a.b has been moved. This guarantees
         # the fully-initialized status of symbols for memory operations involving the entire symbol.
-        if check_partial_move and symbol.memory_info.ast_partial_moves and isinstance(value_ast, Asts.IdentifierAst):
+        if check_partial_move and sym.memory_info.ast_partial_moves and isinstance(value_ast, Asts.IdentifierAst):
             raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(
-                value_ast, symbol.memory_info.ast_partial_moves[0]).scopes(sm.current_scope)
+                value_ast, sym.memory_info.ast_partial_moves[0]).scopes(sm.current_scope)
 
         # Check there are overlapping partial moves, for a new partial move. This means that for "a.b.c" to be moved off
         # of "a", both "a.b" and "a.b.c.d" must not be partially moved off of "a". This guarantees that "a.b" is
         # fully-initialized when it is moved off of "a".
-        if check_partial_move and symbol.memory_info.ast_partial_moves and not isinstance(value_ast, Asts.IdentifierAst):
-            if overlaps := [p for p in symbol.memory_info.ast_partial_moves if AstMemoryUtils.right_overlaps(p, value_ast)]:
+        if check_partial_move and sym.memory_info.ast_partial_moves and not isinstance(value_ast, Asts.IdentifierAst):
+            if overlaps := [p for p in sym.memory_info.ast_partial_moves if AstMemoryUtils.right_overlaps(p, value_ast)]:
                 raise SemanticErrors.MemoryNotInitializedUsageError().add(
-                    symbol.memory_info.ast_initialization_old, value_ast, overlaps[0]).scopes(sm.current_scope)
+                    sym.memory_info.ast_initialization_old, value_ast, overlaps[0], sm).scopes(sm.current_scope)
 
         # Check the symbol is not being moved from a borrowed context. This prevents partial moves off of borrowed
         # object, because the current context doesn't have ownership of the object. This guarantees that when control is
         # returned to the original context, the object is still in the same (fully-initialized) memory state as before
         # the borrow took place. todo: add "partial_copies" to tests
-        if check_move_from_borrowed_ctx and symbol.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
+        if check_move_from_borrowed_ctx and sym.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
             raise SemanticErrors.MemoryMovedFromBorrowedContextError().add(
-                value_ast, symbol.memory_info.ast_borrowed).scopes(sm.current_scope)
+                value_ast, sym.memory_info.ast_borrowed).scopes(sm.current_scope)
 
         # Check the symbol being moved is not pinned. This prevents pinned objects from moving memory location. Pinned
         # objects must not move location, because they might be being borrowed into a coroutine or asynchronous function
         # call. Todo: partial_copies with pins?
-        if check_pins and symbol.memory_info.ast_pins and not copies:
+        if check_pins and sym.memory_info.ast_pins and not copies:
             raise SemanticErrors.MemoryMovedWhilstPinnedError().add(
-                value_ast, symbol.memory_info.ast_pins[0]).scopes(sm.current_scope)
+                value_ast, sym.memory_info.ast_pins[0]).scopes(sm.current_scope)
 
         # Mark the symbol as either moved or partially moved (for non-copy types). Entire objects are marked as moved,
         # and attribute accesses are marked as partial moves on the symbol representing the entire object. If the type
         # is copyable, then no movements are marked.
         if mark_moves and isinstance(value_ast, Asts.IdentifierAst) and not copies:
-            symbol.memory_info.moved_by(move_ast)
+            sym.memory_info.moved_by(move_ast)
         elif mark_moves and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
-            symbol.memory_info.ast_partial_moves.append(value_ast)
+            sym.memory_info.ast_partial_moves.append(value_ast)
 
     @staticmethod
-    def invalidate_referred_borrow(sm: ScopeManager, ast: Asts.Ast, mover: Asts.Ast) -> None:
+    def invalidate_yielded_borrow(sm: ScopeManager, ast: Asts.Ast, mover: Asts.Ast) -> None:
         # Invalidate the referred borrow AST recursively.
         sym = sm.current_scope.get_symbol(ast)
-        for r in sym.memory_info.refer_to_asts:
-            AstMemoryUtils.invalidate_referred_borrow(sm, r[0], mover)
+        for target, _ in sym.memory_info.borrow_refers_to:
+            AstMemoryUtils.invalidate_yielded_borrow(sm, target, mover)
         sym.memory_info.moved_by(mover)

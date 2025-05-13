@@ -43,28 +43,28 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         inferred_type = value.infer_type(sm, **kwargs)
 
         # Create a variable symbol for this identifier and value.
-        symbol = VariableSymbol(
+        sym = VariableSymbol(
             name=self.alias.name if self.alias else self.name,
             type=kwargs.pop("explicit_type", inferred_type) or inferred_type,
             is_mutable=self.tok_mut is not None,
             visibility=Visibility.Public)
 
         # Set the initialization ast (for errors). Increment the initialization counter for initialized variables.
-        symbol.memory_info.ast_initialization = self.name
-        symbol.memory_info.ast_initialization_old = self.name
+        sym.memory_info.ast_initialization = self.name
+        sym.memory_info.ast_initialization_old = self.name
+
         if not kwargs.get("from_non_init", False):
-            symbol.memory_info.initialization_counter = 1
+            sym.memory_info.initialization_counter = 1
 
             # Set any borrow ast based on the potentially symbolic value being set to this variable.
             if val_symbol := sm.current_scope.get_symbol(value):
-                symbol.memory_info.ast_borrowed = value
-                symbol.memory_info.is_borrow_mut = val_symbol.memory_info.is_borrow_mut
-                symbol.memory_info.is_borrow_ref = val_symbol.memory_info.is_borrow_ref
-
+                sym.memory_info.ast_borrowed = value
+                sym.memory_info.is_borrow_mut = val_symbol.memory_info.is_borrow_mut
+                sym.memory_info.is_borrow_ref = val_symbol.memory_info.is_borrow_ref
         else:
-            symbol.memory_info.ast_moved = self
+            sym.memory_info.ast_moved = self
 
-        sm.current_scope.add_symbol(symbol)
+        sm.current_scope.add_symbol(sym)
 
     def check_memory(self, sm: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
         sym = sm.current_scope.get_symbol(self.name)
@@ -73,6 +73,7 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             AstMemoryUtils.enforce_memory_integrity(
                 value, self, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
                 check_pins=True, mark_moves=True)
+            sym.memory_info.initialized_by(self.name)
 
 
 __all__ = [
