@@ -7,6 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -76,6 +77,13 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return self.rhs.contains_generic(generic_type)
 
     def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Scope, check_variant: bool = True, debug: bool = False) -> bool:
+        self_symbol = self_scope.get_symbol(self)
+
+        if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, self_scope, that_scope, check_variant=False):
+            composite_types = self_symbol.name.generic_argument_group.arguments[0].value.type_parts()[0].generic_argument_group.arguments
+            if any(t.value.symbolic_eq(that, self_scope, that_scope, debug=debug) for t in composite_types):
+                return True
+
         # Convention mismatch (except for allowing "&mut" to coerce into "&")
         if type(self.get_convention()) is not type(that.get_convention()) and not (isinstance(self.get_convention(), Asts.ConventionRefAst) and isinstance(that.get_convention(), Asts.ConventionMutAst)):
             return False
