@@ -146,3 +146,27 @@ class TestVariantTypes(CustomTestCase):
             a = b
         }
         """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_variant_including_a_borrowed_type_1(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+
+        fun f(a: &Str or U64 or Bool) -> Str {
+            ret a
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
+    def test_variant_including_a_borrowed_type_2(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+
+        fun f(a: Str or &mut U64 or Bool) -> Str {
+            ret a
+        }
+        """

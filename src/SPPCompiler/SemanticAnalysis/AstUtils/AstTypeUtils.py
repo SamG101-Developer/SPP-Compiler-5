@@ -302,8 +302,16 @@ class AstTypeUtils:
 
         out = []
         for generic_arg in type.type_parts()[-1].generic_argument_group.arguments[0].value.type_parts()[-1].generic_argument_group.arguments:
+
+            # Inspect inner variant types by extending the composite type list.
             if generic_arg.value.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, scope, scope):
                 out.extend(AstTypeUtils.deduplicate_composite_types(generic_arg.value, scope))
+
+            # Ensure there are no borrowed types inside the variant type.
+            elif (c := generic_arg.value.get_convention()) is not None:
+                raise SemanticErrors.InvalidConventionLocationError().add(c, generic_arg, "variant type argument").scopes(scope)
+
+            # Inspect a non-variant type, and if it hasn't been added to the list, add it.
             elif not any([generic_arg.value.symbolic_eq(a, scope, scope) for a in out]):
                 out.append(generic_arg.value)
         return out
