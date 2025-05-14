@@ -287,3 +287,23 @@ class AstTypeUtils:
         # Extract the "Yield" generic argument's value from the generator type.
         yield_type = gen_type.type_parts()[-1].generic_argument_group["Yield"].value
         return gen_type, yield_type
+
+    @staticmethod
+    def deduplicate_composite_types(type: Asts.TypeSingleAst, scope: Scope) -> list[Asts.TypeAst]:
+        """
+        Given a variant type, such as "Str or Bool or Bool or U32", create a list of the composite types, including
+        nested variants. This example will return [Str, Bool, Bool, U32]. Semantic analysis will collapse any
+        duplicates.
+
+        :param type: The incoming variant type.
+        :param scope: The scope for comparing the type against "Var".
+        :return: The list of composite types.
+        """
+
+        out = []
+        for generic_arg in type.type_parts()[-1].generic_argument_group.arguments[0].value.type_parts()[-1].generic_argument_group.arguments:
+            if generic_arg.value.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, scope, scope):
+                out.extend(AstTypeUtils.deduplicate_composite_types(generic_arg.value, scope))
+            elif not any([generic_arg.value.symbolic_eq(a, scope, scope) for a in out]):
+                out.append(generic_arg.value)
+        return out
