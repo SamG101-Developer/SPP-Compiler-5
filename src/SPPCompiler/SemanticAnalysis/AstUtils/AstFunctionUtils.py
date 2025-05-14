@@ -472,7 +472,7 @@ class AstFunctionUtils:
 
         # print("-" * 100)
         # print("generic_parameters", [str(p) for p in generic_parameters])
-        # print("optional_generic_parameters", optional_generic_parameters)
+        # print("optional_generic_parameters", [str(p) for p in optional_generic_parameters])
         # print("explicit_generic_arguments", [str(e) for e in explicit_generic_arguments])
         # print("infer_source", Seq([f"{k}={v}" for k, v in infer_source.items()]))
         # print("infer_target", Seq([f"{k}={v}" for k, v in infer_target.items()]))
@@ -562,7 +562,10 @@ class AstFunctionUtils:
         # example, Cls[T, Vec[T]] when T.
         for generic_parameter_name, generic_parameter_value in formatted_generic_arguments.copy().items():
             if isinstance(generic_parameter_value, Asts.TypeAst):
-                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(Asts.GenericArgumentGroupAst.from_dict(formatted_generic_arguments).arguments)
+                args_excluding_this_one = formatted_generic_arguments.copy()
+                del args_excluding_this_one[generic_parameter_name]
+
+                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(Asts.GenericArgumentGroupAst.from_dict(args_excluding_this_one).arguments)
 
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
         # GenericXXXArgumentASTs. Todo: pos_adjust?
