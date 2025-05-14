@@ -95,10 +95,9 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
     def check_memory(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         """
         The additional "is_coro_resume" is required because any call to a coroutine will trigger the pinning logic.
-        The exception is resuming a coroutine, because this would pin the actual coroutine itself, which causes issues
-        when trying to resume the coroutine again.
+        The exception is resuming a coroutine, because this would pin the yielded values themselves, which means they
+        aren't assignable to anything.
 
-        Todo: check this is the reason for the "is_coro_resume" flag, am 90% sure it is correct.
         :param sm: The scope manager.
         :param lhs: The left-hand side expression.
         :param kwargs: Additional keyword arguments.

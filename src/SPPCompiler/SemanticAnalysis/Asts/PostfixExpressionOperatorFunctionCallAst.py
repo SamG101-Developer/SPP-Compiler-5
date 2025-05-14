@@ -161,6 +161,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                         p.type.analyse_semantics(tm, **kwargs)
 
                         # Remove a parameter if it is substituted with a "Void" type.
+                        # Todo: this should be done outside generic substitution, because what if f(x: Void)
+                        #  Maybe make the "if generic_arguments" include "or any(p.type.symbolic_eq(CommonTypesPrecompiled.VOID, tm.current_scope, tm.current_scope) for p in parameters)"
                         if p.type.symbolic_eq(CommonTypesPrecompiled.VOID, tm.current_scope, tm.current_scope):
                             new_fn_proto.function_parameter_group.params.remove(p)
 
