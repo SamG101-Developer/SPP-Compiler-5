@@ -12,6 +12,9 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.Utils.Sequence import Seq
 
 
+# Todo: check the ast_initialization (when there's aliases) - what do we want to show exactly?
+
+
 @dataclass(slots=True)
 class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
@@ -67,7 +70,7 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         sm.current_scope.add_symbol(sym)
 
     def check_memory(self, sm: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
-        sym = sm.current_scope.get_symbol(self.name)
+        sym = sm.current_scope.get_symbol(self.alias.name if self.alias else self.name)
         if not kwargs.get("from_non_init", False):
             value.check_memory(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(
