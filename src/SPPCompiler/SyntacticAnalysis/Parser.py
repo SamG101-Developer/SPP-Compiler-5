@@ -1124,7 +1124,7 @@ class SppParser:
         return Asts.PatternVariantDestructureArrayAst(p1.pos, p1, p2, p3)
 
     def parse_pattern_variant_destructure_object(self) -> Optional[Asts.PatternVariantDestructureObjectAst]:
-        p1 = self.parse_once(self.parse_type_simple)
+        p1 = self.parse_once(self.parse_type)
         if p1 is None: return None
         p2 = self.parse_once(self.parse_token_left_parenthesis)
         if p2 is None: return None
