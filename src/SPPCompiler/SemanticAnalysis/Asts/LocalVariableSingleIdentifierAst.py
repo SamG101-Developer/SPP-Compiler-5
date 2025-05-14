@@ -59,7 +59,7 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         if not kwargs.get("from_non_init", False):
             sym.memory_info.initialization_counter = 1
 
-            # Set any borrow ast based on the potentially symbolic value being set to this variable.
+            # Set any borrow asts based on the potentially symbolic value being set to this variable.
             if val_symbol := sm.current_scope.get_symbol(value):
                 sym.memory_info.ast_borrowed = value
                 sym.memory_info.is_borrow_mut = val_symbol.memory_info.is_borrow_mut

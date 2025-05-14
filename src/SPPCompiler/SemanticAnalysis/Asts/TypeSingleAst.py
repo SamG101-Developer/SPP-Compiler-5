@@ -153,7 +153,6 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             print("-" * 100)
             print("SELF", self, self_scope, self_symbol)
             print("THAT", that, that_scope, that_symbol)
-            print("EQ", self_symbol.type is that_symbol.type)
 
         # Variant type: one of the generic arguments must match the type.
         if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, self_scope, that_scope, check_variant=False):
