@@ -1,8 +1,8 @@
 # S++ Compiler
 
 [![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-blue?logo=github)](https://samg101-developer.github.io/SPP-Compiler-5/)
-[![Tests](https://img.shields.io/badge/Tests-746-green?logo=pytest&logoColor=ffffff)]()
-[![Coverage Status](https://img.shields.io/badge/Test%20Coverage-98.79%25%20(737/746)-cactus?logo=pytest&logoColor=ffffff)]()
+[![Tests](https://img.shields.io/badge/Tests-757-green?logo=pytest&logoColor=ffffff)]()
+[![Coverage Status](https://img.shields.io/badge/Test%20Coverage-99.08%25%20(750/757)-cactus?logo=pytest&logoColor=ffffff)]()
 [![License](https://img.shields.io/badge/Liscence-MIT-orange)](https://github.com/SamG101-Developer/SPP-Compiler-5/blob/master/LICENSE.txt)
 [![security: bandit](https://img.shields.io/badge/Security-Bandit-yellow)](https://github.com/PyCQA/bandit)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=SamG101-Developer_SPP-Compiler-5)

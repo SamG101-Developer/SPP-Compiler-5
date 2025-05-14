@@ -1,0 +1,148 @@
+from tests._Utils import *
+
+
+class TestVariantTypes(CustomTestCase):
+    @should_pass_compilation()
+    def test_variant_type_assign_1(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool) -> Void {
+            a = "hello world"
+        }
+        """
+
+    @should_pass_compilation()
+    def test_variant_type_assign_2(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool) -> Void {
+            a = 123_u64
+        }
+        """
+
+    @should_pass_compilation()
+    def test_variant_type_assign_3(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool) -> Void {
+            a = true
+        }
+        """
+
+    @should_pass_compilation
+    def test_variant_type_assign_from_subset_variant_1(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool, b: Str or U64) -> Void {
+            a = b
+        }
+        """
+
+    @should_pass_compilation
+    def test_variant_type_assign_from_subset_variant_2(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool, b: Str or Bool) -> Void {
+            a = b
+        }
+        """
+
+    @should_pass_compilation
+    def test_variant_type_assign_from_subset_variant_3(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool, b: U64 or Bool) -> Void {
+            a = b
+        }
+        """
+
+    @should_pass_compilation
+    def test_variant_type_assign_from_equal_variant(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool, b: Str or U64 or Bool) -> Void {
+            a = b
+        }
+        """
+
+    @should_pass_compilation()
+    def test_variant_collapse_arguments(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool, b: Str or U64 or Bool or Bool) -> Void {
+            a = b
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_variant_type_assign_mismatched_composite_type(self):
+        """
+        use std::boolean::Bool
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool) -> Void {
+            a = 123_i64
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_variant_type_assign_from_superset_variant(self):
+        """
+        use std::boolean::Bool
+        use std::number::u32::U32
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool, b: Str or U64 or Bool or U32) -> Void {
+            a = b
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    def test_variant_type_assign_from_invalid_variant_some_overlap(self):
+        """
+        use std::boolean::Bool
+        use std::number::u32::U32
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun f(mut a: Str or U64 or Bool, b: Str or U64 or U32) -> Void {
+            a = b
+        }
+        """
