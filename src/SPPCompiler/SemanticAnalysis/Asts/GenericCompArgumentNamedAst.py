@@ -36,7 +36,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
             str(self.name),
             str(self.tok_assign),
             str(self.value)]
-        return " ".join(string)
+        return "".join(string)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -45,7 +45,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
             self.name.print(printer),
             self.tok_assign.print(printer),
             self.value.print(printer)]  # todo ?
-        return " ".join(string)
+        return "".join(string)
 
     @property
     def pos_end(self) -> int:

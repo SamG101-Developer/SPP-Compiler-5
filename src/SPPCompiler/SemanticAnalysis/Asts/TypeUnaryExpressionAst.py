@@ -6,6 +6,7 @@ from typing import Self, Optional, Dict, Tuple, Iterator, TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
@@ -76,26 +77,10 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def contains_generic(self, generic_type: Asts.TypeSingleAst) -> bool:
         return self.rhs.contains_generic(generic_type)
 
-    def symbolic_eq(self, that: Asts.TypeAst, self_scope: Scope, that_scope: Scope, check_variant: bool = True, debug: bool = False) -> bool:
-        # Convention mismatch (except for allowing "&mut" to coerce into "&")
-        if type(self.get_convention()) is not type(that.get_convention()) and not (isinstance(self.get_convention(), Asts.ConventionRefAst) and isinstance(that.get_convention(), Asts.ConventionMutAst)):
-            return False
-
-        # Conventions are compatible, remove them and move in a layer.
-        elif (that.__class__ is Asts.TypeUnaryExpressionAst) and (that.op.__class__ is Asts.TypeUnaryOperatorBorrowAst):
-            that = that.rhs
-
-        # Adjust the scope of this type.
-        if self.op.__class__ is Asts.TypeUnaryOperatorNamespaceAst:
-            self_scope = self_scope.get_namespace_symbol(self.op.name).scope
-
-        # Test the inner layer of types against each other.
-        return self.rhs.symbolic_eq(that, self_scope, that_scope, check_variant, debug)
-
-    def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
+    def get_symbol(self, scope: Scope) -> TypeSymbol:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             scope = scope.get_namespace_symbol(self.op.name).scope
-        return self.rhs.split_to_scope_and_type(scope)
+        return self.rhs.get_symbol(scope)
 
     def get_convention(self) -> Optional[Asts.ConventionAst]:
         return self.op.convention if isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst) else None

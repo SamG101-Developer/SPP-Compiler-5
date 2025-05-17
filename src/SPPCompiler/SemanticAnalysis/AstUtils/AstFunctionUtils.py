@@ -221,7 +221,7 @@ class AstFunctionUtils:
                 continue
 
             # Ignore if the return types are different.
-            if not new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
+            if not AstTypeUtils.symbolic_eq(new_func.return_type, old_func.return_type, this_scope, old_scope):
                 continue
 
             # Ignore if there are a different number of required generic parameters.
@@ -234,7 +234,7 @@ class AstFunctionUtils:
 
             # Remove all required parameters on the first parameter list off the other parameter list.
             for p, q in zip(new_func.function_parameter_group.params, old_func.function_parameter_group.params):
-                if p.type.symbolic_eq(q.type, this_scope, old_scope):
+                if AstTypeUtils.symbolic_eq(p.type, q.type, this_scope, old_scope):
                     SequenceUtils.remove_if(params_new.params, lambda x: x.extract_names == p.extract_names)
                     SequenceUtils.remove_if(params_old.params, lambda x: x.extract_names == q.extract_names)
 
@@ -277,9 +277,9 @@ class AstFunctionUtils:
 
             # Check a list of conditions to check for conflicting functions.
             if len(params_new.params) == len(params_old.params):
-                if all(p.extract_names == q.extract_names and p.type.symbolic_eq(q.type, this_scope, old_scope, check_variant=False) for p, q in zip(params_new.get_non_self_params(), params_old.get_non_self_params())):
+                if all(p.extract_names == q.extract_names and AstTypeUtils.symbolic_eq(p.type, q.type, this_scope, old_scope, check_variant=False) for p, q in zip(params_new.get_non_self_params(), params_old.get_non_self_params())):
                     if new_func.tok_fun == old_func.tok_fun:
-                        if new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
+                        if AstTypeUtils.symbolic_eq(new_func.return_type, old_func.return_type, this_scope, old_scope):
                             if hs(new_func) == hs(old_func) and sc(new_func) is sc(old_func):
                                 return old_func
 
@@ -479,7 +479,7 @@ class AstFunctionUtils:
         # print("owner", owner, sm.current_scope)
 
         # Special case for tuples to prevent infinite-recursion.
-        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and owner.symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope, sm.current_scope):
+        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and AstTypeUtils.symbolic_eq(owner, CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope, sm.current_scope):
             return explicit_generic_arguments
 
         # If there are no generic parameters then skip any inference checks.
@@ -534,7 +534,7 @@ class AstFunctionUtils:
         # type. For example, "T" can't be inferred as a "Str" and then a "BigInt". All instances must match the first
         # inference, in this case "Str".
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
-            if mismatch := [t for t in inferred_generic_argument_value[1:] if not t.symbolic_eq(inferred_generic_argument_value[0], sm.current_scope, sm.current_scope)]:
+            if mismatch := [t for t in inferred_generic_argument_value[1:] if not AstTypeUtils.symbolic_eq(t, inferred_generic_argument_value[0], sm.current_scope, sm.current_scope)]:
                 raise SemanticErrors.GenericParameterInferredConflictInferredError().add(
                     inferred_generic_argument_name, inferred_generic_argument_value[0], mismatch[0]).scopes(sm.current_scope)
 

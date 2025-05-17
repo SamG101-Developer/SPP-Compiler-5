@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import Self, Optional, Tuple, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -108,30 +110,13 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @abstractmethod
-    def symbolic_eq(
-            self, that: Asts.TypeAst, self_scope: Scope, that_scope: Scope, check_variant: bool = True,
-            debug: bool = False) -> bool:
+    def get_symbol(self, scope: Scope) -> TypeSymbol:
         """
-        Symbolic equality is the core of the type checking utility. It gets two given types, and two scopes, and gets
-        the symbols representing the types from the respective scopes. If the two symbol's types match, then the types
-        are a match.
+        Get the symbol for this type. This is used to get the symbol for the type in the current scope. Type unary
+        expressions use their namespace to move into the type, and postfix types use the lhs types.
 
-        :param that: The type (ast) to compare against.
-        :param self_scope: The scope to get the symbol for this type.
-        :param that_scope: The scope to get the symbol for the other type.
-        :param check_variant: Check the internal types (if this type is a std::Var[..]).
-        :param debug: Flag to optionally print debug information.
-        :return: True if the types are equal, False otherwise.
-        """
-
-    @abstractmethod
-    def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
-        """
-        Split a type ast, and a given scope into a new scope and type ast. This allows for "number::BigInt", in the
-        scope "std", to be split into "std::number" and "BigInt".
-
-        :param scope: The scope to split the type ast into.
-        :return: A tuple containing the new scope and the type ast.
+        :param scope: The scope to get the symbol from.
+        :return: The type symbol for this type.
         """
 
     @abstractmethod

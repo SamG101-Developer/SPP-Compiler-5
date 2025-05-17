@@ -1,3 +1,8 @@
 .idea
 .venv
+__pycache__
+docs-compiler-sphinx/build
+profiles
+project
+tests/test_outputs
 /tmp/

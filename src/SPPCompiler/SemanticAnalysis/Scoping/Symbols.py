@@ -110,8 +110,8 @@ class TypeSymbol(BaseSymbol):
     def __json__(self) -> Dict:
         # Dump the TypeSymbol as a JSON object.
         return {
-            "what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
-            "parent": self.scope.parent.name if self.scope and self.scope.parent else ""}
+            "what": "type", "name": str(self.name), "type": str(self.type), "scope": str(self.scope.name) if self.scope else "",
+            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else ""}
 
     def __str__(self) -> str:
         # Dump the TypeSymbol as a JSON string.
@@ -120,7 +120,7 @@ class TypeSymbol(BaseSymbol):
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the TypeSymbol, but link the scope.
         return TypeSymbol(
-            name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
+            name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
             is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
             generic_impl=self.generic_impl, scope_defined_in=self.scope_defined_in)
 
@@ -164,7 +164,7 @@ class AliasSymbol(TypeSymbol):
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the AliasSymbol, but link the old scope.
         return AliasSymbol(
-            name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
+            name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
             is_copyable=self.is_copyable, visibility=self.visibility, old_sym=fast_deepcopy(self.old_sym))
 
 

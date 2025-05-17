@@ -9,6 +9,7 @@ from llvmlite import ir
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -138,20 +139,20 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 self.super_class, self.super_class, "superimposition supertype").scopes(sm.current_scope)
 
         # Prevent double inheritance by checking if the sup scope is already in the list.
-        if existing_sup_scope := [s for s in sup_symbol.scope.sup_scopes if (s._ast.__class__ is SupPrototypeExtensionAst) and s._ast.super_class.symbolic_eq(self.name, s, sm.current_scope)]:
+        if existing_sup_scope := [s for s in sup_symbol.scope.sup_scopes if (s._ast.__class__ is SupPrototypeExtensionAst) and AstTypeUtils.symbolic_eq(s._ast.super_class, self.name, s, sm.current_scope)]:
             raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
                 existing_sup_scope[0]._ast.super_class, self.name).scopes(sm.current_scope)
 
         # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
         if cls_symbol.name.value[0] != "$":
-            if existing_sup_scope := [s for s in cls_symbol.scope.sup_scopes if (s._ast.__class__ is SupPrototypeExtensionAst) and s._ast.super_class.symbolic_eq(self.super_class, s, sm.current_scope)]:
+            if existing_sup_scope := [s for s in cls_symbol.scope.sup_scopes if (s._ast.__class__ is SupPrototypeExtensionAst) and AstTypeUtils.symbolic_eq(s._ast.super_class, self.super_class, s, sm.current_scope)]:
                 raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
                     existing_sup_scope[0]._ast.super_class, self.super_class).scopes(sm.current_scope)
 
         sup_symbol = sup_symbol.scope.get_symbol(self.super_class)
 
         # Mark the class as copyable if the Copy type is the super class.
-        if self.super_class.symbolic_eq(CommonTypesPrecompiled.COPY, sm.current_scope, sm.current_scope):
+        if AstTypeUtils.symbolic_eq(self.super_class, CommonTypesPrecompiled.COPY, sm.current_scope, sm.current_scope):
             cls_symbol.is_copyable = True
 
         # Run the inject steps for the body.

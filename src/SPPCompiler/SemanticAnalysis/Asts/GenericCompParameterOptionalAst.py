@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
@@ -69,7 +70,7 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         # Make sure the default expression is of the correct type.
         default_type = self.default.infer_type(sm)
         target_type = self.type
-        if not target_type.symbolic_eq(default_type, sm.current_scope, sm.current_scope):
+        if not AstTypeUtils.symbolic_eq(target_type, default_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
                 self.name, target_type, self.default, default_type).scopes(sm.current_scope)
 

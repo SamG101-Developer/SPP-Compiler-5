@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
@@ -125,7 +126,7 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             # Ensure the lhs and rhs have the same type.
             lhs_type = lhs_expr.infer_type(sm, **kwargs)
             rhs_type = rhs_expr.infer_type(sm, **kwargs)
-            if not lhs_type.symbolic_eq(rhs_type, sm.current_scope, sm.current_scope):
+            if not AstTypeUtils.symbolic_eq(lhs_type, rhs_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     lhs_sym.memory_info.ast_initialization, lhs_type, rhs_expr, rhs_type).scopes(sm.current_scope)
 

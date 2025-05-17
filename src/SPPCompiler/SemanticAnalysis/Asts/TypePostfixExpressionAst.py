@@ -6,6 +6,7 @@ from typing import Optional, Dict, TYPE_CHECKING, Self, Tuple
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
@@ -62,18 +63,9 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def contains_generic(self, generic_type: Asts.TypeSingleAst) -> bool:
         return self.op.name.contains_generic(generic_type)
 
-    def symbolic_eq(
-            self, that: Asts.TypeAst, self_scope: Scope, that_scope: Scope, check_variant: bool = True,
-            debug: bool = False) -> bool:
-        self_scope = self_scope.get_symbol(self.lhs.infer_type(ScopeManager(self_scope, self_scope))).scope
-        return self.op.name.symbolic_eq(that, self_scope, that_scope, check_variant, debug)
-
-    def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
-        if isinstance(self.op, Asts.TypePostfixOperatorNestedTypeAst):
-            scope = scope.get_symbol(self.lhs).scope
-            return self.op.name.split_to_scope_and_type(scope)
-
-        raise NotImplementedError(f"Cannot split {self.op} to scope and type.")
+    def get_symbol(self, scope: Scope) -> TypeSymbol:
+        self_scope = scope.get_symbol(self.lhs.infer_type(ScopeManager(scope, scope))).scope
+        return self_scope.get_symbol(self.op.name)
 
     def get_convention(self) -> Optional[Asts.ConventionAst]:
         return None

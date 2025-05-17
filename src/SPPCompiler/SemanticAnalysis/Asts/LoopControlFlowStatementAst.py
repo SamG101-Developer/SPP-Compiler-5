@@ -5,6 +5,7 @@ from typing import Optional
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
@@ -70,7 +71,7 @@ class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 that_expr, that_exit_type = kwargs["loop_types"][depth]
 
                 # Todo: should be 2 different scopes in case of a typedef inside 1 of the scopes
-                if not exit_type.symbolic_eq(that_exit_type, sm.current_scope, sm.current_scope):
+                if not AstTypeUtils.symbolic_eq(exit_type, that_exit_type, sm.current_scope, sm.current_scope):
                     raise SemanticErrors.TypeMismatchError().add(
                         that_expr, that_exit_type, self.skip_or_expr or self.tok_seq_exit[-1], exit_type).scopes(sm.current_scope)
 

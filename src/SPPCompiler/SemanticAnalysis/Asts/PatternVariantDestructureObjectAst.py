@@ -54,8 +54,9 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
         condition_symbol: VariableSymbol = sm.current_scope.get_symbol(cond)
         is_condition_symbol_variant = condition_symbol and AstTypeUtils.is_type_variant(condition_symbol.type, sm.current_scope)
         if condition_symbol and is_condition_symbol_variant:
-            if not condition_symbol.type.symbolic_eq(self.class_type, sm.current_scope, sm.current_scope):
-                raise SemanticErrors.TypeMismatchError().add(cond, condition_symbol.type, self.class_type, self.class_type).scopes(sm.current_scope)
+            if not AstTypeUtils.symbolic_eq(condition_symbol.type, self.class_type, sm.current_scope, sm.current_scope):
+                raise SemanticErrors.TypeMismatchError().add(
+                    cond, condition_symbol.type, self.class_type, self.class_type).scopes(sm.current_scope)
 
             flow_symbol = fast_deepcopy(condition_symbol)
             flow_symbol.type = self.class_type

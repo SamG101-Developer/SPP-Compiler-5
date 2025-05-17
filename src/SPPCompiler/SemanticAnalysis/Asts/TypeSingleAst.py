@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, SymbolType
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, SymbolType, TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
@@ -138,30 +138,8 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         # todo: change this to use a custom iterator as-well.
         return any(g == Asts.GenericIdentifierAst.from_type(generic_type) for g in self)
 
-    def symbolic_eq(
-            self, that: Asts.TypeAst, self_scope: Scope, that_scope: Scope, check_variant: bool = True,
-            debug: bool = False) -> bool:
-
-        # Get the scopes of the types.
-        that_scope, that = that.split_to_scope_and_type(that_scope)
-
-        # Get the symbols of the types.
-        self_symbol = self_scope.get_symbol(self.name)
-        that_symbol = that_scope.get_symbol(that.name)
-
-        if debug:
-            print("-" * 100)
-            print("SELF", self, self_scope, self_symbol)
-            print("THAT", that, that_scope, that_symbol)
-
-        # Variant type: one of the generic arguments must match the type.
-        if check_variant and self_symbol.fq_name.type_parts()[0].generic_argument_group.arguments and self_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, self_scope, that_scope, check_variant=False):
-            composite_types = self_symbol.name.generic_argument_group.arguments[0].value.type_parts()[0].generic_argument_group.arguments
-            if any(t.value.symbolic_eq(that, self_scope, that_scope, debug=debug) for t in composite_types):
-                return True
-
-        # Otherwise check the symbols are equal.
-        return self_symbol.type is that_symbol.type
+    def get_symbol(self, scope: Scope) -> TypeSymbol:
+        return scope.get_symbol(self.name.without_generics(), exclusive=True)
 
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
         type_scope = type_scope or sm.current_scope
@@ -197,7 +175,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         self.name.generic_argument_group.analyse_semantics(tm, **kwargs)
 
         # For variant types, collapse any duplicate generic arguments.
-        if self.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, type_scope, sm.current_scope):
+        if AstTypeUtils.symbolic_eq(self.without_generics(), CommonTypesPrecompiled.EMPTY_VARIANT, type_scope, sm.current_scope, check_variant=False, lhs_ignore_alias=True):
             composite_types = AstTypeUtils.deduplicate_composite_types(self, sm.current_scope)
             composite_types = CommonTypes.Tup(self.pos, composite_types)
             composite_types.analyse_semantics(sm, type_scope=type_scope)
@@ -229,18 +207,6 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
         else:
             type_symbol = type_scope.parent.get_symbol(self.name)
-
-        # Check for the std::variant type, there are no types with conventions.
-        # type_symbol = AstTypeUtils.get_type_part_symbol_with_error(type_scope.parent, sm, self.name)
-        # print("Scopes:", type_scope, original_scope)
-        # if type_symbol.fq_name.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_VARIANT, original_scope, debug=True):
-        #     for generic_argument in type_symbol.fq_name.type_parts()[-1].generic_argument_group["Variants"].value.type_parts()[-1].generic_argument_group.arguments:
-        #         if c := generic_argument.value.get_convention():
-        #             raise SemanticErrors.InvalidConventionLocationError().add(
-        #                 c, generic_argument.value, "variant composite type").scopes(sm.current_scope)
-
-    def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
-        return scope, self
 
     def get_convention(self) -> Optional[Asts.ConventionAst]:
         return None

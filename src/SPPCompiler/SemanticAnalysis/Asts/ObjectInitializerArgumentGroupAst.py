@@ -8,6 +8,7 @@ from ordered_set import OrderedSet
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -114,7 +115,7 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
             attribute_type = class_symbol.scope.get_symbol(attribute.name).type
             argument_type = argument.infer_type(sm, **kwargs)
 
-            if not attribute_type.symbolic_eq(argument_type, sup_scope, sm.current_scope):
+            if not AstTypeUtils.symbolic_eq(attribute_type, argument_type, sup_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     attribute, attribute_type, argument, argument_type).scopes(sm.current_scope)
 
@@ -122,7 +123,7 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         def_argument = self.get_default_arg()
         def_argument_type = def_argument.name.infer_type(sm, **kwargs) if def_argument else None
         target_def_type = class_type
-        if def_argument and not def_argument_type.symbolic_eq(target_def_type, class_symbol.scope, sm.current_scope):
+        if def_argument and not AstTypeUtils.symbolic_eq(def_argument_type, target_def_type, class_symbol.scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
                 class_type, target_def_type, def_argument.name, def_argument_type).scopes(sm.current_scope)
 

@@ -6,10 +6,8 @@ from typing import Optional, Tuple, TYPE_CHECKING
 
 from ordered_set import OrderedSet
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
-from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -138,7 +136,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     # Tuples being folded must all have the same element types (per tuple).
                     for argument in self._folded_args:
                         first_elem_type = argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[0].value
-                        if mismatch := [t.value for t in argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[1:] if not t.value.symbolic_eq(first_elem_type, sm.current_scope, sm.current_scope)]:
+                        if mismatch := [t.value for t in argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[1:] if not AstTypeUtils.symbolic_eq(t.value, first_elem_type, sm.current_scope, sm.current_scope)]:
                             raise SemanticErrors.FunctionFoldTupleElementTypeMismatchError().add(
                                 first_elem_type, mismatch[0]).scopes(sm.current_scope)  # todo: scopes
 
@@ -163,7 +161,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                         # Remove a parameter if it is substituted with a "Void" type.
                         # Todo: this should be done outside generic substitution, because what if f(x: Void)
                         #  Maybe make the "if generic_arguments" include "or any(p.type.symbolic_eq(CommonTypesPrecompiled.VOID, tm.current_scope, tm.current_scope) for p in parameters)"
-                        if p.type.symbolic_eq(CommonTypesPrecompiled.VOID, tm.current_scope, tm.current_scope):
+                        if AstTypeUtils.symbolic_eq(p.type, CommonTypesPrecompiled.VOID, tm.current_scope, tm.current_scope):
                             new_fn_proto.function_parameter_group.params.remove(p)
 
                     new_fn_proto.return_type = new_fn_proto.return_type.substituted_generics(generic_arguments)
@@ -207,17 +205,17 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                         argument.convention = parameter.convention
                         argument_type = argument_type.without_generics()
 
-                        if fn_proto.function_parameter_group.get_self_param()._arbitrary and not parameter_type.symbolic_eq(argument_type, fn_scope, sm.current_scope):
+                        if fn_proto.function_parameter_group.get_self_param()._arbitrary and not AstTypeUtils.symbolic_eq(parameter_type, argument_type, fn_scope, sm.current_scope):
                             raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
                     # Regular parameters (with a folding argument check too).
                     else:
                         if argument in self._folded_args:
-                            if not parameter_type.symbolic_eq(argument_type.type_parts()[0].generic_argument_group.arguments[0].value, fn_scope, sm.current_scope):
+                            if not AstTypeUtils.symbolic_eq(parameter_type, argument_type.type_parts()[0].generic_argument_group.arguments[0].value, fn_scope, sm.current_scope):
                                 raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type.type_parts()[0].generic_argument_group.arguments[0].value)
 
                         else:
-                            if not parameter_type.symbolic_eq(argument_type, fn_scope, sm.current_scope):
+                            if not AstTypeUtils.symbolic_eq(parameter_type, argument_type, fn_scope, sm.current_scope):
                                 raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
                 # Mark the overload as a pass.
@@ -242,7 +240,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         return_matches = []
         if expected_return_type:
             for fn_scope, fn_proto in pass_overloads:
-                if fn_proto.return_type.symbolic_eq(expected_return_type, fn_scope, sm.current_scope):
+                if AstTypeUtils.symbolic_eq(fn_proto.return_type, expected_return_type, fn_scope, sm.current_scope):
                     return_matches.append((fn_scope, fn_proto))
             if len(return_matches) == 1:
                 pass_overloads = return_matches
@@ -263,9 +261,9 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         # Special case for closures: apply the convention to the closure name to ensure it is movable or mutable etc.
         if is_closure:
             dummy_self_argument = Asts.FunctionCallArgumentUnnamedAst(pos=lhs.pos, value=lhs)
-            if lhs_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_MUT, sm.current_scope, sm.current_scope):
+            if AstTypeUtils.symbolic_eq(lhs_type.without_generics(), CommonTypesPrecompiled.EMPTY_FUN_MUT, sm.current_scope, sm.current_scope):
                 dummy_self_argument.convention = Asts.ConventionMutAst(pos=lhs.pos)
-            elif lhs_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_REF, sm.current_scope, sm.current_scope):
+            elif AstTypeUtils.symbolic_eq(lhs_type.without_generics(), CommonTypesPrecompiled.EMPTY_FUN_REF, sm.current_scope, sm.current_scope):
                 dummy_self_argument.convention = Asts.ConventionRefAst(pos=lhs.pos)
             self._closure_arg = dummy_self_argument
 

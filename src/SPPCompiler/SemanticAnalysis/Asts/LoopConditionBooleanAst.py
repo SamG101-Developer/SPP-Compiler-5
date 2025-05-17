@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
@@ -39,7 +40,7 @@ class LoopConditionBooleanAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Check the loop condition is boolean.
         return_type = self.condition.infer_type(sm)
         target_type = CommonTypes.Bool(self.pos)
-        if not target_type.symbolic_eq(return_type, sm.current_scope, sm.current_scope):
+        if not AstTypeUtils.symbolic_eq(target_type, return_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.ExpressionNotBooleanError().add(
                 self.condition, return_type, "loop").scopes(sm.current_scope)
 

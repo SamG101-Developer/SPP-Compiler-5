@@ -7,6 +7,7 @@ from typing import Optional
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import LightweightMemoryInfo
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -53,7 +54,7 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Check the else block's type if it exists and match it against the loop type.
         if self.else_block:
             else_type = self.else_block.infer_type(sm, **kwargs)
-            if not loop_type.symbolic_eq(else_type, sm.current_scope, sm.current_scope):
+            if not AstTypeUtils.symbolic_eq(loop_type, else_type, sm.current_scope, sm.current_scope):
                 final_member = self.body.members[-1] if self.body.members else self.body.tok_r
                 raise SemanticErrors.TypeMismatchError().add(self, loop_type, final_member, else_type).scopes(sm.current_scope)
 

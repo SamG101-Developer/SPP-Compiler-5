@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -54,7 +55,7 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
 
         # Make sure the default expression is of the correct type.
         default_type = self.default.infer_type(sm)
-        if not self.type.symbolic_eq(default_type, sm.current_scope, sm.current_scope):
+        if not AstTypeUtils.symbolic_eq(self.type, default_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
                 self.extract_name, self.type, self.default, default_type).scopes(sm.current_scope)
 

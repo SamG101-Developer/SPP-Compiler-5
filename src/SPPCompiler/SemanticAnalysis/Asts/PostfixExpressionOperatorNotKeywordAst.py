@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
@@ -48,7 +49,7 @@ class PostfixExpressionOperatorNotKeywordAst(Asts.Ast, Asts.Mixins.TypeInferrabl
         # Check the loop condition is boolean.
         target_type = CommonTypes.Bool(self.pos)
         return_type = lhs.infer_type(sm)
-        if not target_type.symbolic_eq(return_type, sm.current_scope, sm.current_scope):
+        if not AstTypeUtils.symbolic_eq(target_type, return_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.ExpressionNotBooleanError().add(
                 lhs, return_type, "not expression").scopes(sm.current_scope)
 

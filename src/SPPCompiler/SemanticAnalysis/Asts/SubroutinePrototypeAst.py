@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -23,7 +24,7 @@ class SubroutinePrototypeAst(Asts.FunctionPrototypeAst):
         self.body.analyse_semantics(sm, **kwargs)
 
         # Check there is a return statement at the end (for non-void functions).
-        not_void = not self.return_type.symbolic_eq(CommonTypesPrecompiled.VOID, sm.current_scope, sm.current_scope)
+        not_void = not AstTypeUtils.symbolic_eq(self.return_type, CommonTypesPrecompiled.VOID, sm.current_scope, sm.current_scope)
         if not_void and not (self._non_implemented or self._abstract) and not (self.body.members and isinstance(self.body.members[-1], Asts.RetStatementAst)):
             final_member = self.body.members[-1] if self.body.members else self.body.tok_r
             raise SemanticErrors.FunctionSubroutineMissingReturnStatementError().add(

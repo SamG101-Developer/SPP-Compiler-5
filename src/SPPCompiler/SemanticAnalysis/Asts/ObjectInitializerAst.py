@@ -20,6 +20,10 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __post_init__(self) -> None:
         self.object_argument_group = self.object_argument_group or Asts.ObjectInitializerArgumentGroupAst(pos=self.pos)
 
+    def __eq__(self, other: ObjectInitializerAst) -> bool:
+        # Check there are the same attribute keys on both objects, then compare the expressions on them (might be in a different order). Todo
+        return False
+
     def __hash__(self) -> int:
         return id(self)
 

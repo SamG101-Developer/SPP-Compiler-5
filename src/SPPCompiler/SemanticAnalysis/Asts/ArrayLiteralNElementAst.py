@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -108,7 +109,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Check all elements have the same type as the 0th element.
         all_elem_types_and_ast = zip([e.infer_type(sm, **kwargs) for e in self.elems], self.elems)
         for elem_type, elem in list(all_elem_types_and_ast)[1:]:
-            if not zeroth_elem_type.symbolic_eq(elem_type, sm.current_scope, sm.current_scope):
+            if not AstTypeUtils.symbolic_eq(zeroth_elem_type, elem_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.ArrayElementsDifferentTypesError().add(
                     zeroth_elem, zeroth_elem_type, elem, elem_type).scopes(sm.current_scope)
 

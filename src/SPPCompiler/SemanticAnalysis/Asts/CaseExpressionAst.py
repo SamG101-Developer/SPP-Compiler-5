@@ -7,6 +7,7 @@ from typing import Optional
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils, LightweightMemoryInfo
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -177,7 +178,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # All branches must return the same type.
         zeroth_branch_type = branch_inferred_types[0]
-        if mismatch := [x for x in branch_inferred_types[1:] if not x.symbolic_eq(zeroth_branch_type, sm.current_scope, sm.current_scope)]:
+        if mismatch := [x for x in branch_inferred_types[1:] if not AstTypeUtils.symbolic_eq(x, zeroth_branch_type, sm.current_scope, sm.current_scope)]:
             raise SemanticErrors.CaseBranchesConflictingTypesError().add(
                 zeroth_branch_type, mismatch[0]).scopes(sm.current_scope)
 
