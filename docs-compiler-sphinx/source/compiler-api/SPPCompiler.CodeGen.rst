@@ -1,14 +1,22 @@
 SPPCompiler.CodeGen package
 ===========================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 1
+
+   SPPCompiler.CodeGen.FFI
+
 Submodules
 ----------
 
 .. toctree::
    :maxdepth: 1
 
-   SPPCompiler.CodeGen.BuildTypes
-   SPPCompiler.CodeGen.LlvmSymbolInfo
+   SPPCompiler.CodeGen.LllvInitialization
+   SPPCompiler.CodeGen.LlvmExternalSymbolRegister
 
 Module contents
 ---------------
