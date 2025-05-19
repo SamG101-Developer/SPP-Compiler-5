@@ -25,6 +25,9 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         # Create a deep copy of the AST.
         return TypePostfixExpressionAst(pos=self.pos, lhs=fast_deepcopy(self.lhs), op=fast_deepcopy(self.op))
 
+    def __hash__(self) -> int:
+        return hash((self.lhs, self.op))
+
     def __json__(self) -> str:
         return f"{self.lhs}{self.op}"
 
