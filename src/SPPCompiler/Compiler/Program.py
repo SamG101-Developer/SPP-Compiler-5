@@ -27,7 +27,7 @@ class Program(CompilerStages):
     from the Compiler class, and is used to abstract boilerplate code per compiler stage.
     """
 
-    modules: Seq[Asts.ModulePrototypeAst] = field(default_factory=Seq, init=False, repr=False)
+    modules: List[Asts.ModulePrototypeAst] = field(default_factory=list, init=False, repr=False)
     """The list of module prototype ASTs (from parsing)."""
 
     def lex(
@@ -120,7 +120,7 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def load_super_scopes(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
+    def load_super_scopes(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, attachment_progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Load the super scopes for all the modules.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
@@ -128,7 +128,7 @@ class Program(CompilerStages):
             module.load_super_scopes(sm)
             sm.reset()
         progress_bar.finish()
-        sm.relink_generics()
+        sm.attach_super_scopes(attachment_progress_bar)
 
     def pre_analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Pre analyse all the top level constructs.
@@ -147,7 +147,6 @@ class Program(CompilerStages):
             module.analyse_semantics(sm)
             sm.reset()
         progress_bar.finish()
-
         self._validate_entry_point(sm)
 
     def check_memory(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
