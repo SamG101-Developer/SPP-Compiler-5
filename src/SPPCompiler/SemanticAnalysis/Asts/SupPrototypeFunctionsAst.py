@@ -23,8 +23,6 @@ class SupPrototypeFunctionsAst(Asts.Ast):
     where_block: Optional[Asts.WhereBlockAst] = field(default=None)
     body: Asts.SupImplementationAst = field(default=None)
 
-    _scope_cls: Optional[Scope] = field(init=False, default=None)
-
     def __post_init__(self) -> None:
         self.tok_sup = self.tok_sup or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwSup)
         self.generic_parameter_group = self.generic_parameter_group or Asts.GenericParameterGroupAst(pos=self.pos)
@@ -53,8 +51,18 @@ class SupPrototypeFunctionsAst(Asts.Ast):
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Create a new scope for the superimposition.
-        sm.create_and_move_into_new_scope(f"<sup:{self.name}:{self.pos}>", self)
+        sm.create_and_move_into_new_scope(f"<sup#{self.name}#{self.pos}>", self)
         Asts.Ast.generate_top_level_scopes(self, sm)
+
+        # Check there are no optional generic parameters.
+        if optional := self.generic_parameter_group.get_optional_params():
+            raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(
+                optional[0]).scopes(sm.current_scope)
+
+        # Check every generic parameter is constrained by the type.
+        if unconstrained := [p for p in self.generic_parameter_group.parameters if not self.name.contains_generic(p.name)]:
+            raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
+                unconstrained[0], self.name).scopes(sm.current_scope)
 
         # Ensure the superimposition type does not have a convention.
         if c := self.name.get_convention():
@@ -81,56 +89,26 @@ class SupPrototypeFunctionsAst(Asts.Ast):
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
+        self.name.analyse_semantics(sm, **kwargs)
+        self.name = sm.current_scope.get_symbol(self.name).fq_name
 
-        # Cannot superimpose over a generic type.
-        cls_symbol = sm.current_scope.get_symbol(self.name.without_generics())
-        if cls_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(
-                self.name, self.name, "superimposition type").scopes(sm.current_scope)
-
-        # Ensure all the generic arguments are unnamed and match the class's generic parameters.
-        other_cls_symbol = sm.current_scope.get_symbol(self.name.without_generics(), ignore_alias=True)
-        for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
-            if isinstance(generic_arg, Asts.GenericArgumentNamedAst):
-                raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(
-                    generic_arg).scopes(sm.current_scope)
-
-            if not [p for p in other_cls_symbol.type.generic_parameter_group.parameters if p.name == generic_arg.value]:
-                raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(
-                    generic_arg, self.tok_sup).scopes(sm.current_scope)
-
-        # Register the superimposition as a "sup scope" and run the load steps for the body.
-        cls_symbol.scope._direct_sup_scopes.append(sm.current_scope)
-        self._scope_cls = cls_symbol.scope
-        self.body.load_super_scopes(sm)
-
+        self.body.load_super_scopes(sm, **kwargs)
         sm.move_out_of_current_scope()
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
+        self.name.analyse_semantics(sm, **kwargs)
+        cls_symbol = sm.current_scope.get_symbol(self.name)
 
         # Add the "Self" symbol into the scope.
         if self.name.type_parts()[0].value[0] != "$":
-            cls_symbol = sm.current_scope.get_symbol(self.name.without_generics())
             self_symbol = TypeSymbol(
                 name=Asts.GenericIdentifierAst.from_type(CommonTypes.Self(self.name.pos)), type=cls_symbol.type,
-                scope=cls_symbol.scope)
+                scope=cls_symbol.scope, scope_defined_in=sm.current_scope)
             sm.current_scope.add_symbol(self_symbol)
-            # print(f"Added {self_symbol} to scope '{sm.current_scope.name}'.")
-
-        # Check every generic parameter is constrained by the type.
-        if unconstrained := [p for p in self.generic_parameter_group.parameters if not self.name.contains_generic(p.name)]:
-            raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
-                unconstrained[0], self.name).scopes(sm.current_scope)
-
-        # Check there are no optional generic parameters.
-        if optional := self.generic_parameter_group.get_optional_params():
-            raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(
-                optional[0]).scopes(sm.current_scope)
 
         # Pre-analyse all the members.
         self.body.pre_analyse_semantics(sm, **kwargs)
-
         sm.move_out_of_current_scope()
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:

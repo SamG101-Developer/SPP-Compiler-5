@@ -35,8 +35,6 @@ class SupPrototypeExtensionAst(Asts.Ast):
     where_block: Optional[Asts.WhereBlockAst] = field(default=None)
     body: Asts.SupImplementationAst = field(default=None)
 
-    _scope_cls: Optional[Scope] = field(init=False, default=None)
-
     def __post_init__(self) -> None:
         self.tok_sup = self.tok_sup or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwSup)
         self.generic_parameter_group = self.generic_parameter_group or Asts.GenericParameterGroupAst(pos=self.pos)
@@ -61,6 +59,59 @@ class SupPrototypeExtensionAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.body.pos_end
 
+    def _check_double_inheritance(self, cls_symbol: TypeSymbol, sup_symbol: TypeSymbol, sm: ScopeManager) -> None:
+        # Prevent cyclic inheritance by checking if the sup scope is already in the list.
+        existing_sup_scope = [
+            s for s in cls_symbol.scope.sup_scopes
+            if (s._ast.__class__ is SupPrototypeExtensionAst) and s._ast is not self and AstTypeUtils.symbolic_eq(s._ast.super_class, self.super_class, s, sm.current_scope)]
+
+        if existing_sup_scope and cls_symbol.name.value[0] != "$":
+            raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
+                existing_sup_scope[0]._ast.super_class, self.super_class).scopes(sm.current_scope)
+
+    def _check_cyclic_inheritance(self, sup_symbol: TypeSymbol, sm: ScopeManager) -> None:
+        # Prevent double inheritance by checking if the scopes are already registered the other way around.
+        existing_sup_scope = [
+            s for s in sup_symbol.scope.sup_scopes
+            if (s._ast.__class__ is SupPrototypeExtensionAst) and AstTypeUtils.symbolic_eq(s._ast.super_class, self.name, s, sm.current_scope)]
+
+        if existing_sup_scope:
+            raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
+                existing_sup_scope[0]._ast.super_class, self.name).scopes(sm.current_scope)
+
+    def _check_conflicting_attributes(self, cls_symbol: TypeSymbol, sup_symbol: TypeSymbol, sm: ScopeManager) -> None:
+        # Prevent duplicate attributes by checking if the attributes appear in any super class.
+        attribute_names = SequenceUtils.flatten([
+            [m.name for m in s._ast.body.members]
+            for s in cls_symbol.scope.sup_scopes
+            if s._ast.__class__ is Asts.ClassPrototypeAst])
+
+        if duplicates := SequenceUtils.duplicates(attribute_names):
+            raise SemanticErrors.IdentifierDuplicationError().add(
+                duplicates[0], duplicates[1], "attribute").scopes(sm.current_scope)
+
+    def _check_conflicting_use_statements(self, cls_symbol: TypeSymbol, sm: ScopeManager) -> None:
+        # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
+        existing_type_names = SequenceUtils.flatten([
+            [m.new_type for m in s._ast.body.members if isinstance(m, Asts.SupUseStatementAst)]
+            for s in cls_symbol.scope.sup_scopes
+            if isinstance(s._ast, Asts.SupPrototypeAst)])
+
+        if duplicates := SequenceUtils.duplicates(existing_type_names):
+            raise SemanticErrors.IdentifierDuplicationError().add(
+                duplicates[0], duplicates[1], "associated type").scopes(sm.current_scope)
+
+    def _check_conflicting_cmp_statements(self, cls_symbol: TypeSymbol, sm: ScopeManager) -> None:
+        # Prevent duplicate cmp declarations by checking if the cmp statements appear in any super class.
+        existing_cmp_names = SequenceUtils.flatten([
+            [m.name for m in s._ast.body.members if isinstance(m, Asts.SupCmpStatementAst) and m.type.type_parts()[-1].value[0] != "$"]
+            for s in cls_symbol.scope.sup_scopes
+            if isinstance(s._ast, Asts.SupPrototypeAst)])
+
+        if duplicates := SequenceUtils.duplicates(existing_cmp_names):
+            raise SemanticErrors.IdentifierDuplicationError().add(
+                duplicates[0], duplicates[1], "associated const").scopes(sm.current_scope)
+
     def pre_process(self, ctx: PreProcessingContext) -> None:
         if self.name.type_parts()[0].value[0] == "$": return
         Asts.Ast.pre_process(self, ctx)
@@ -68,8 +119,18 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Create a new scope for the superimposition.
-        sm.create_and_move_into_new_scope(f"<sup:{self.name} ext {self.super_class}:{self.pos}>", self)
+        sm.create_and_move_into_new_scope(f"<sup#{self.name} ext {self.super_class}#{self.pos}>", self)
         Asts.Ast.generate_top_level_scopes(self, sm)
+
+        # Check there are no optional generic parameters.
+        if optional := self.generic_parameter_group.get_optional_params():
+            raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(
+                optional[0]).scopes(sm.current_scope)
+
+        # Check every generic parameter is constrained by the type.
+        if self.name.type_parts()[0].value[0] != "$" and (unconstrained := [p for p in self.generic_parameter_group.parameters if not (self.name.contains_generic(p.name) or self.super_class.contains_generic(p.name))]):
+            raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
+                unconstrained[0], self.name).scopes(sm.current_scope)
 
         # Ensure the superimposition type does not have a convention.
         if c := self.name.get_convention():
@@ -96,127 +157,46 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
-
-        # Check every generic parameter is constrained by the type.
-        if unconstrained := [p for p in self.generic_parameter_group.parameters if not self.name.contains_generic(p.name)]:
-            if self.name.type_parts()[0].value[0] != "$":
-                raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
-                    unconstrained[0], self.name).scopes(sm.current_scope)
-
         self.body.qualify_types(sm, **kwargs)
         sm.move_out_of_current_scope()
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
 
-        # Cannot superimpose with a generic super class.
-        cls_symbol = sm.current_scope.get_symbol(self.name.without_generics())
-        if cls_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(
-                self.name, self.name, "superimposition type").scopes(sm.current_scope)
-
-        # Ensure all the generic arguments are unnamed and match the class's generic parameters.
-        other_cls_symbol = sm.current_scope.get_symbol(self.name.without_generics(), ignore_alias=True)
-        for generic_arg in self.name.type_parts()[0].generic_argument_group.arguments:
-            if generic_arg.__class__ is Asts.GenericArgumentNamedAst:
-                raise SemanticErrors.SuperimpositionGenericNamedArgumentError().add(
-                    generic_arg).scopes(sm.current_scope)
-
-            if not [p for p in other_cls_symbol.type.generic_parameter_group.parameters if p.name == generic_arg.value]:
-                raise SemanticErrors.SuperimpositionGenericArgumentMismatchError().add(
-                    generic_arg, self.tok_sup).scopes(sm.current_scope)
+        self.name.analyse_semantics(sm, **kwargs)
+        self.name = sm.current_scope.get_symbol(self.name).fq_name
 
         self.super_class.analyse_semantics(sm, **kwargs)
         self.super_class = sm.current_scope.get_symbol(self.super_class).fq_name
 
-        sup_symbol = sm.current_scope.get_symbol(self.super_class.without_generics())
-        if sup_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(
-                self.super_class, self.super_class, "superimposition supertype").scopes(sm.current_scope)
-
-        # Prevent double inheritance by checking if the sup scope is already in the list.
-        if existing_sup_scope := [s for s in sup_symbol.scope.sup_scopes if (s._ast.__class__ is SupPrototypeExtensionAst) and AstTypeUtils.symbolic_eq(s._ast.super_class, self.name, s, sm.current_scope)]:
-            raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
-                existing_sup_scope[0]._ast.super_class, self.name).scopes(sm.current_scope)
-
-        # Prevent cyclic inheritance by checking if the scopes are already registered the other way around.
-        if cls_symbol.name.value[0] != "$":
-            if existing_sup_scope := [s for s in cls_symbol.scope.sup_scopes if (s._ast.__class__ is SupPrototypeExtensionAst) and AstTypeUtils.symbolic_eq(s._ast.super_class, self.super_class, s, sm.current_scope)]:
-                raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
-                    existing_sup_scope[0]._ast.super_class, self.super_class).scopes(sm.current_scope)
-
-        sup_symbol = sup_symbol.scope.get_symbol(self.super_class)
-
-        # Mark the class as copyable if the Copy type is the super class.
-        if AstTypeUtils.symbolic_eq(self.super_class, CommonTypesPrecompiled.COPY, sm.current_scope, sm.current_scope):
-            cls_symbol.is_copyable = True
-
-        # Run the inject steps for the body.
-        self._scope_cls = cls_symbol.scope
         self.body.load_super_scopes(sm, **kwargs)
-
-        # Prevent duplicate attributes by checking if the attributes appear in any super class.
-        # Todo: move beneath symbol logic and follow "use"/"cmp" checks?
-        super_class_attribute_names: Seq[Asts.TypeAst] = SequenceUtils.flatten([
-            [m.name for m in s._ast.body.members]
-            for s in sup_symbol.scope.sup_scopes + [sup_symbol.scope]
-            if s._ast.__class__ is Asts.ClassPrototypeAst])
-
-        existing_attribute_names: Seq[Asts.TypeAst] = SequenceUtils.flatten([
-            [m.name for m in s._ast.body.members]
-            for s in cls_symbol.scope.sup_scopes + [cls_symbol.scope]
-            if s._ast.__class__ is Asts.ClassPrototypeAst])
-
-        if duplicates := SequenceUtils.duplicates(existing_attribute_names + super_class_attribute_names):
-            raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0], duplicates[1], "attribute").scopes(sm.current_scope)
-
-        # Register sup and sub scopes.
-        cls_symbol.scope._direct_sup_scopes.append(sup_symbol.scope)
-        sup_symbol.scope._direct_sub_scopes.append(cls_symbol.scope)
-        sup_symbol.scope._direct_sub_scopes.append(sm.current_scope)
-
-        # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
-        existing_type_names = SequenceUtils.flatten([
-            [m.new_type for m in s._ast.body.members if isinstance(m, Asts.SupUseStatementAst)]
-            for s in cls_symbol.scope.sup_scopes
-            if isinstance(s._ast, Asts.SupPrototypeAst)])
-
-        if duplicates := SequenceUtils.duplicates(existing_type_names):
-            raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0], duplicates[1], "associated type").scopes(sm.current_scope)
-
-        # Prevent duplicate cmp declarations by checking if the cmp statements appear in any super class. Use the "$"
-        # check to skip checking functions, which can be overridden.
-        existing_cmp_names = SequenceUtils.flatten([
-            [m.name for m in s._ast.body.members if isinstance(m, Asts.SupCmpStatementAst) and m.type.type_parts()[-1].value[0] != "$"]  # todo: has the type been analysed at this point
-            for s in cls_symbol.scope.sup_scopes
-            if isinstance(s._ast, Asts.SupPrototypeAst)])
-
-        if duplicates := SequenceUtils.duplicates(existing_cmp_names):
-            raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0], duplicates[1], "associated const").scopes(sm.current_scope)
-
-        cls_symbol.scope._direct_sup_scopes.append(sm.current_scope)
         sm.move_out_of_current_scope()
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Move to the next scope.
         sm.move_to_next_scope()
-        sup_symbol = sm.current_scope.get_symbol(self.super_class)
+        self.name.analyse_semantics(sm, **kwargs)
+        self.super_class.analyse_semantics(sm, **kwargs)
+        cls_symbol = sm.current_scope.get_symbol(self.name)
 
         # Add the "Self" symbol into the scope.
         if self.name.type_parts()[0].value[0] != "$":
-            cls_symbol = sm.current_scope.get_symbol(self.name.without_generics())
             self_symbol = TypeSymbol(
                 name=Asts.GenericIdentifierAst.from_type(CommonTypes.Self(self.name.pos)), type=cls_symbol.type,
-                scope=cls_symbol.scope)
+                scope=cls_symbol.scope, scope_defined_in=sm.current_scope)
             sm.current_scope.add_symbol(self_symbol)
 
-        # Check there are no optional generic parameters.
-        if optional := self.generic_parameter_group.get_optional_params():
-            raise SemanticErrors.SuperimpositionOptionalGenericParameterError().add(
-                optional[0]).scopes(sm.current_scope)
+        # Mark the class as copyable if the "Copy" type is the super class.
+        if AstTypeUtils.symbolic_eq(self.super_class, CommonTypesPrecompiled.COPY, sm.current_scope, sm.current_scope):
+            sm.current_scope.get_symbol(self.name.without_generics()).is_copyable = True
+            cls_symbol.is_copyable = True
+
+        sup_symbol = sm.current_scope.get_symbol(self.super_class)
+        self._check_double_inheritance(cls_symbol, sup_symbol, sm)
+        self._check_cyclic_inheritance(sup_symbol, sm)
+        self._check_conflicting_attributes(cls_symbol, sup_symbol, sm)
+        self._check_conflicting_use_statements(cls_symbol, sm)
+        self._check_conflicting_cmp_statements(cls_symbol, sm)
 
         # Check every member on the superimposition exists on the super class (all sup scopes must be loaded here).
         for member in self.body.members:
