@@ -18,10 +18,10 @@ class ScopeManager:
     _iterator: Iterator[Scope]
     _borrows_to_release: Seq[VariableSymbol]
 
-    def __init__(self, global_scope, current_scop: Optional[Scope] = None) -> None:
+    def __init__(self, global_scope, current_scope: Optional[Scope] = None, all_sup_scopes: Seq[Scope] = None) -> None:
         # Create the default global and current scopes if they are not provided.
         self._global_scope = global_scope
-        self._current_scope = current_scop or self._global_scope
+        self._current_scope = current_scope or self._global_scope
         self._iterator = iter(self)
         self._borrows_to_release = []
 
