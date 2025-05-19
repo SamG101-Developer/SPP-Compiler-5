@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Any, Iterator, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType, VariableSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
+from SPPCompiler.Utils.Progress import Progress
 from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
@@ -16,14 +17,14 @@ class ScopeManager:
     _global_scope: Scope
     _current_scope: Scope
     _iterator: Iterator[Scope]
-    _borrows_to_release: Seq[VariableSymbol]
+    _all_super_scopes: Seq[Scope]
 
     def __init__(self, global_scope, current_scope: Optional[Scope] = None, all_sup_scopes: Seq[Scope] = None) -> None:
         # Create the default global and current scopes if they are not provided.
         self._global_scope = global_scope
         self._current_scope = current_scope or self._global_scope
         self._iterator = iter(self)
-        self._borrows_to_release = []
+        self._all_super_scopes = all_sup_scopes or []
 
     def __iter__(self) -> Iterator[Scope]:
         # Iterate over the scope manager's scopes, starting from the global scope.
@@ -82,25 +83,74 @@ class ScopeManager:
             return scope
         return None
 
-    def relink_generics(self) -> None:
-        # Check every scope in the symbol table.
-        for scope in self:
+    def attach_super_scopes(self, progress: Progress) -> None:
+        """
+        The first thing to do is to identify every single "super scope". These are scopes whose "ast" is either a
+        SupPrototypeExtensionAst or a SupPrototypeFunctionsAst. Store them in a dictionary, with the key being their
+        "name" attribute.
 
-            # Only check type and alias symbols that are not generic (ie not the T type for Vec[T]).
-            non_generic_type_symbols = [s for s in scope._symbol_table.all() if s.symbol_type is SymbolType.TypeSymbol and not s.is_generic]
-            for symbol in non_generic_type_symbols:
+        Iterate through every "top-level" scope, and identify each type scope. This is a scope whose "ast" is a
+        ClassPrototypeAst. Only look inside module scopes for these (they will never be in more nested scopes). Once a
+        type scope is found, compare its name against the dictionary of super scopes, using the relaxed symbolic
+        comparison.
 
-                # Check the type is a generic implementation (ie Vec[Str]), and remove the symbol.
-                if symbol.scope._non_generic_scope is not symbol.scope:
-                    self.reset(symbol.scope_defined_in)
+        For every match found, attach the super scope to the class scope's "_direct_up_scopes". For sup-ext blocks, also
+        add the class scope for the super-class, by using "get_symbol(super_class).scope". This is required to use the
+        attributes (state) of superclasses. Only add unique superclasses once.
+        """
 
-                    # Get the base symbol (Vec), to pull the super scopes from.
-                    base_symbol = scope.get_symbol(symbol.name.without_generics(), ignore_alias=True)
+        progress.set_max(1)
+        progress.next("-")
 
-                    # Add the substituted super scopes to the substituted symbol.
-                    symbol.scope._direct_sup_scopes = AstTypeUtils.create_generic_sup_scopes(self, base_symbol.scope, symbol.scope, symbol.name.generic_argument_group)
-
+        # Ensure the scope manager is in the global scope for scope-searching.
         self.reset()
+        self._all_super_scopes = self._get_all_super_scopes()
+        iterator = [*iter(self)]
+        for scope in iterator:
+            if isinstance(scope.type_symbol, AliasSymbol):
+                if scope.type_symbol.old_sym.scope:
+                    self.attach_super_scope_to_target_scope(scope, scope.type_symbol.old_sym.scope._direct_sup_scopes)
+            elif isinstance(scope.type_symbol, TypeSymbol):
+                self.attach_super_scope_to_target_scope(scope)
+
+        progress.finish()
+        self.reset()
+
+    def attach_super_scope_to_target_scope(self, scope: Scope, custom_scopes: list[Scope] = None, progress: Optional[Progress] = None) -> None:
+        scope._direct_sup_scopes = []
+        super_scopes = custom_scopes if custom_scopes is not None else self._all_super_scopes
+
+        # Iterate through all the super scopes and check if the name matches.
+        for super_scope in super_scopes:
+            if not AstTypeUtils.relaxed_symbolic_eq(scope.name, super_scope._ast.name, scope, super_scope.get_symbol(super_scope._ast.name.without_generics(), ignore_alias=True).scope):
+                continue
+
+            tm = ScopeManager(self.global_scope, scope.type_symbol.scope_defined_in, self._all_super_scopes)
+            new_sup_scope, new_cls_scope = AstTypeUtils.create_generic_sup_scope(
+                tm, super_scope, scope, scope.name.type_parts()[0].generic_argument_group)
+            scope._direct_sup_scopes.append(new_sup_scope)
+            if new_cls_scope:
+                scope._direct_sup_scopes.append(new_cls_scope)
+
+        if progress:
+            progress.next(str(scope.name))
+
+    def _get_all_super_scopes(self) -> Seq[Scope]:
+
+        """
+        Get all the super scopes in the scope manager (from the global scope).
+        """
+        from SPPCompiler.SemanticAnalysis import Asts
+
+        temp_scope_manager = ScopeManager(self.global_scope, self._global_scope, self._all_super_scopes)
+        super_scopes = []
+        for scope in temp_scope_manager:
+            if scope._ast.__class__ in [Asts.SupPrototypeExtensionAst, Asts.SupPrototypeFunctionsAst]:
+                if scope._ast.__class__ is Asts.SupPrototypeExtensionAst and str(scope._ast.name)[0] == "$":
+                    continue
+                if scope.parent is scope.parent_module:
+                    super_scopes.append(scope)
+        return super_scopes
 
     @property
     def global_scope(self) -> Scope:
@@ -109,6 +159,10 @@ class ScopeManager:
     @property
     def current_scope(self) -> Scope:
         return self._current_scope
+
+    @property
+    def all_super_scopes(self) -> Seq[Scope]:
+        return self._all_super_scopes
 
 
 __all__ = [
