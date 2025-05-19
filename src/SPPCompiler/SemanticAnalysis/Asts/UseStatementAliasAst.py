@@ -134,7 +134,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         # Create a sup ast to allow the attribute and method access.
         sup_ast = Asts.SupPrototypeExtensionAst(
             pos=self.pos,
-            generic_parameter_group=self.generic_parameter_group,
+            generic_parameter_group=self.generic_parameter_group.without_defaults(),
             name=self.new_type,
             super_class=self.old_type)
 

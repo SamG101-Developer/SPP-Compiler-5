@@ -68,6 +68,18 @@ class GenericParameterGroupAst(Asts.Ast):
         # Get all the type generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericTypeParameterAst)]
 
+    def without_defaults(self) -> GenericParameterGroupAst:
+        # Create a new group where optional parameters become required.
+        new_params = []
+        for p in self.parameters:
+            if isinstance(p, Asts.GenericTypeParameterOptionalAst):
+                new_params.append(Asts.GenericTypeParameterRequiredAst(p.pos, name=p.name, constraints=p.constraints))
+            elif isinstance(p, Asts.GenericCompParameterOptionalAst):
+                new_params.append(Asts.GenericCompParameterRequiredAst(p.pos, name=p.name, type=p.type))
+            else:
+                new_params.append(p)
+        return GenericParameterGroupAst(self.pos, self.tok_l, new_params, self.tok_r)
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate generic parameter names.
         generic_parameter_names = [p.name for p in self.parameters]
