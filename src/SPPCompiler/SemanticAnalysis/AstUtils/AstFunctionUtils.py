@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from collections import defaultdict
-from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type
+from typing import Dict, Optional, TYPE_CHECKING, Tuple, Type
 
 from ordered_set import OrderedSet
 
@@ -10,8 +10,8 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
@@ -155,7 +155,7 @@ class AstFunctionUtils:
         overload_scopes_and_info = []
 
         # Check for namespaced (module-level) functions. They will have no "inheritable generics".
-        if target_scope.type_symbol is not None and target_scope.type_symbol.symbol_type == SymbolType.NamespaceSymbol:
+        if target_scope.type_symbol is not None and target_scope.type_symbol.__class__ == NamespaceSymbol:
             for ancestor_scope in target_scope.ancestors:
 
                 # Find all the scopes at the module level superimposing a function type over the function.
@@ -248,8 +248,6 @@ class AstFunctionUtils:
     def check_for_conflicting_override(
             this_scope: Scope, target_scope: Scope, new_func: Asts.FunctionPrototypeAst, *,
             exclude: Optional[Scope] = None) -> Optional[Asts.FunctionPrototypeAst]:
-
-        exclude = exclude or []
 
         # Helper function to get the type of the convention AST applied to the "self" parameter.
         def sc(f: Asts.FunctionPrototypeAst) -> Type[Asts.ConventionAst]:
@@ -565,7 +563,8 @@ class AstFunctionUtils:
                 args_excluding_this_one = formatted_generic_arguments.copy()
                 del args_excluding_this_one[generic_parameter_name]
 
-                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(Asts.GenericArgumentGroupAst.from_dict(args_excluding_this_one).arguments)
+                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(
+                    Asts.GenericArgumentGroupAst.from_dict(args_excluding_this_one).arguments)
 
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
         # GenericXXXArgumentASTs. Todo: pos_adjust?
