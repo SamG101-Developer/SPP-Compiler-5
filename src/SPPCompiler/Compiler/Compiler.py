@@ -27,6 +27,7 @@ COMPILER_STAGE_NAMES = [
     "Top-level aliases ",
     "Qualifying types  ",
     "Super scopes      ",
+    "Attaching sups    ",
     "Pre-Analysis      ",
     "Semantics analysis",
     "Memory check      ",
@@ -114,7 +115,7 @@ class Compiler:
             self._ast.generate_top_level_scopes(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.generate_top_level_aliases(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.qualify_types(self._scope_manager, next(progress_bar), self._module_tree)
-            self._ast.load_super_scopes(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.load_super_scopes(self._scope_manager, next(progress_bar), next(progress_bar), self._module_tree)
             self._ast.pre_analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.check_memory(self._scope_manager, next(progress_bar), self._module_tree)
@@ -126,6 +127,10 @@ class Compiler:
         except SemanticError as error:
             self.try_dump()
             error.throw()
+
+        except Exception:
+            self.try_dump()
+            raise
 
     def try_dump(self) -> None:
         """
