@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 
 @dataclass(slots=True)
@@ -14,14 +15,15 @@ class GenericIdentifierAst(Asts.Ast):
 
     def __post_init__(self) -> None:
         self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=0)
-        # if not self.generic_argument_group.pos:
-        #     self.generic_argument_group.pos = self.pos + len(self.value)
-        #     self.generic_argument_group.tok_l.pos = self.pos
-        #     self.generic_argument_group.tok_r.pos = self.pos + len(self.value)
 
     def __eq__(self, other: GenericIdentifierAst) -> bool:
-        # Check both ASTs are the same type and have the same value and generic argument group.
-        return self.value == other.value and self.generic_argument_group == other.generic_argument_group
+        if isinstance(other, GenericIdentifierAst):
+            return self.value == other.value and self.generic_argument_group == other.generic_argument_group
+        elif isinstance(other, Asts.IdentifierAst):
+            return self.value == other.value
+        elif isinstance(other, Asts.TypeSingleAst):
+            return self.value == other.name.value
+        return False
 
     def __hash__(self) -> int:
         # Convert the value into an integer

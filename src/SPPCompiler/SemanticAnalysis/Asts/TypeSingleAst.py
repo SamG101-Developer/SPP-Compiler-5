@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, Self, Dict, Tuple, Iterator, TYPE_CHECKING
+from typing import Dict, Iterator, List, Optional, Self, TYPE_CHECKING, Tuple
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, SymbolType, TypeSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import Seq
 
@@ -22,7 +22,11 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     name: Asts.GenericIdentifierAst = field(default=None)
 
     def __eq__(self, other: TypeSingleAst | Asts.IdentifierAst) -> bool:
-        return other.__class__ is Asts.TypeSingleAst and self.name == other.name or other.__class__ is Asts.IdentifierAst and self.name.value == other.value
+        if isinstance(other, Asts.TypeSingleAst):
+            return self.name == other.name
+        elif isinstance(other, Asts.IdentifierAst):
+            return self.name.value == other.value
+        return False
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -61,7 +65,9 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
     @staticmethod
     def from_string(ast: str) -> TypeSingleAst:
-        return TypeSingleAst.from_generic_identifier(ast=Asts.GenericIdentifierAst(pos=0, value=ast))
+        from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
+        from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+        return CodeInjection.inject_code(ast, SppParser.parse_type_single, pos_adjust=0)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -80,7 +86,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     def without_generics(self) -> Self:
         return TypeSingleAst(self.pos, self.name.without_generics())
 
-    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+    def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         name = fast_deepcopy(self.name)
         for generic_name, generic_type in [(a.name, a.value) for a in generic_arguments]:
             if self == generic_name:
@@ -171,8 +177,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             sm=sm, owner=type_symbol.fq_name)
 
         # Analyse the semantics of the generic arguments.
-        tm = ScopeManager(sm.global_scope, sm.current_scope)
-        self.name.generic_argument_group.analyse_semantics(tm, **kwargs)
+        self.name.generic_argument_group.analyse_semantics(sm, **kwargs)
 
         # For variant types, collapse any duplicate generic arguments.
         if AstTypeUtils.symbolic_eq(self.without_generics(), CommonTypesPrecompiled.EMPTY_VARIANT, type_scope, sm.current_scope, check_variant=False, lhs_ignore_alias=True):
@@ -186,7 +191,8 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             new_scope = AstTypeUtils.create_generic_scope(sm, self.name, type_symbol, is_tuple=is_tuple)
 
             # Handle type aliasing (providing generics to the original type).
-            if type_symbol.symbol_type is SymbolType.AliasSymbol:
+            if type_symbol.__class__ is AliasSymbol:
+
                 # Substitute the old type: "Opt[Str]" => "Var[Some[Str], None]"
                 generics = self.name.generic_argument_group.arguments + original_scope.generics
                 old_type = type_symbol.old_sym.fq_name.substituted_generics(generics)
