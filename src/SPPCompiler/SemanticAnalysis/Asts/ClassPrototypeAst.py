@@ -65,15 +65,15 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         SymbolType: Type[TypeSymbol] = TypeSymbol if not self._is_alias else AliasSymbol
 
         symbol_name = fast_deepcopy(self.name.type_parts()[0])
-        symbol_name.generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)
+        symbol_name.generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters, sm)
 
-        symbol_1 = SymbolType(name=symbol_name, type=self, scope=sm.current_scope, visibility=self._visibility[0])
+        symbol_1 = SymbolType(name=symbol_name, type=self, scope=sm.current_scope, visibility=self._visibility[0], scope_defined_in=sm.current_scope)
         sm.current_scope.parent.add_symbol(symbol_1)
         sm.current_scope._type_symbol = symbol_1
         self._cls_sym = symbol_1
 
         if self.generic_parameter_group.parameters:
-            symbol_2 = SymbolType(name=self.name.type_parts()[0], type=self, scope=sm.current_scope, visibility=self._visibility[0])
+            symbol_2 = SymbolType(name=self.name.type_parts()[0], type=self, scope=sm.current_scope, visibility=self._visibility[0], scope_defined_in=sm.current_scope)
             symbol_2.generic_impl = symbol_1
             sm.current_scope.parent.add_symbol(symbol_2)
             return symbol_2

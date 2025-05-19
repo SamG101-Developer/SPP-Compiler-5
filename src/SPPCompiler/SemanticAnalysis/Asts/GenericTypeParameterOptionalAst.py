@@ -47,7 +47,7 @@ class GenericTypeParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Create a type symbol for this type in the current scope (class / function).
-        symbol = TypeSymbol(name=self.name.type_parts()[0], type=None, is_generic=True)
+        symbol = TypeSymbol(name=self.name.type_parts()[0], type=None, is_generic=True, scope_defined_in=sm.current_scope)
         sm.current_scope.add_symbol(symbol)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
