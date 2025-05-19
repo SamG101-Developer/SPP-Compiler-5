@@ -96,35 +96,41 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
                 c, self.new_type, "use statement new type").scopes(sm.current_scope)
 
         # Create a class ast for the aliased type, and generate it.
-        cls_ast = Asts.ClassPrototypeAst(pos=self.pos, name=self.new_type)
-        cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
+        cls_ast = Asts.ClassPrototypeAst(
+            pos=self.pos, name=self.new_type, generic_parameter_group=copy.copy(self.generic_parameter_group))
         cls_ast._is_alias = True
         cls_ast._visibility = (visibility, None)
         self._alias_symbol = cls_ast.generate_top_level_scopes(sm)
         self._cls_ast = cls_ast
 
         # Create a scope for the alias' generics, so analysing can be done with the generics, without them leaking.
-        sm.create_and_move_into_new_scope(f"<type-alias:{self.new_type}:{self.pos}>", self)
+        sm.create_and_move_into_new_scope(f"<type-alias#{self.new_type}#{self.pos}>", self)
         sm.move_out_of_current_scope()
 
         # Mark this AST as generated, so it is not generated in the analysis phase.
         self._generated = True
 
     def generate_top_level_aliases(self, sm: ScopeManager, old_sym: Optional[TypeSymbol] = None, **kwargs) -> None:
-        # Skip the class scope and move into the type-alias scope (generic access)
+        # Skip the class scope.
         sm.move_to_next_scope()
+        cls_scope = sm.current_scope
+
+        # Move into the type-alias scope.
         sm.move_to_next_scope()
 
         # Todo: Analyse the old type without generics beforehand? Because of fq-typing the generic comp arg types.
 
         # Ensure the validity of the old type, with its generic arguments set.
         for generic_parameter in self.generic_parameter_group.get_type_params():
-            type_symbol = TypeSymbol(name=generic_parameter.name.type_parts()[0], type=None, is_generic=True)
+            type_symbol = TypeSymbol(name=generic_parameter.name.type_parts()[0], type=None, is_generic=True, scope_defined_in=sm.current_scope)
             sm.current_scope.add_symbol(type_symbol)
+            cls_scope.add_symbol(type_symbol)
+
         for generic_parameter in self.generic_parameter_group.get_comp_params():
             sym_type = sm.current_scope.get_symbol(self.old_type).scope.get_symbol(generic_parameter.type).fq_name
             var_symbol = VariableSymbol(name=Asts.IdentifierAst.from_type(generic_parameter.name), type=sym_type, is_generic=True)
             sm.current_scope.add_symbol(var_symbol)
+            cls_scope.add_symbol(var_symbol)
 
         # Register the old type against the new alias symbol.
         self.old_type.analyse_semantics(sm)
