@@ -135,7 +135,7 @@ class Scope:
 
     def __json__(self) -> dict:
         return {
-            "scope_name": self._name, "parent": self._parent.name if self._parent else "", "children": self._children,
+            "scope_name": self._name, "id": id(self), "non-generic": id(self._non_generic_scope), "parent": self._parent.name if self._parent else "", "children": self._children,
             "symbol_table": self._symbol_table, "sup_scopes": [s.name for s in self._direct_sup_scopes],
             "sub_scopes": [s.name for s in self._direct_sub_scopes], "type_symbol": self._type_symbol.name if self._type_symbol else "",
         }
@@ -152,18 +152,19 @@ class Scope:
 
         return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self._symbol_table.all() if s.is_generic]
 
-    def _translate_symbol(self, symbol: Symbol, ignore_alias: bool = False) -> Symbol:
+    @FunctionCache.cache
+    def _translate_symbol(self, symbol: Symbol, ignore_alias: bool = False) -> Optional[Symbol]:
         generics = self.generics
         new_symbol = symbol
 
         if symbol is None:
             return None
 
-        elif symbol.symbol_type is SymbolType.VariableSymbol:
+        elif symbol.__class__ is VariableSymbol:
             new_symbol = fast_deepcopy(symbol)
             new_symbol.type = symbol.type.substituted_generics(generics)
 
-        elif symbol.symbol_type is SymbolType.TypeSymbol or symbol.symbol_type is SymbolType.AliasSymbol:
+        elif symbol.__class__ is TypeSymbol or symbol.__class__ is AliasSymbol:
             new_fq_name = symbol.fq_name.substituted_generics(generics)
             new_symbol = self._non_generic_scope.get_symbol(new_fq_name, ignore_alias=ignore_alias)
 
@@ -216,20 +217,21 @@ class Scope:
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         return confirm_type_with_alias(scope, symbol, ignore_alias)
 
+    @FunctionCache.cache
     def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
         symbol = None
 
         # For an IdentifierAst, get any identifier-named symbols from the symbol table.
         if name.__class__ is Asts.IdentifierAst:
             for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.IdentifierAst):
-                if symbol.symbol_type is SymbolType.NamespaceSymbol and symbol.name.value == name.value:
+                if symbol.__class__ is NamespaceSymbol and symbol.name.value == name.value:
                     return symbol
             return None
 
         # For a GenericIdentifierAst, get any type-named symbols from the symbol table.
         elif name.__class__ is Asts.GenericIdentifierAst:
             for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.GenericIdentifierAst):
-                if symbol.symbol_type is SymbolType.TypeSymbol and symbol.name == name:
+                if symbol.__class__ is TypeSymbol and symbol.name == name:
                     return symbol
             return None
 
