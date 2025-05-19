@@ -43,7 +43,6 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self.iterable.infer_type(sm, **kwargs)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # Todo: iteration should be optional values? how this work with conventions? maybe like "&T | None"?
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.iterable, (Asts.TokenAst, Asts.TypeAst)):

@@ -56,12 +56,7 @@ class CompilerStages:
         """
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
-        """!
-        The load super scopes stage links all super scopes to classes. This allows a type to know what attributes and
-        methods are on its superclasses, and is requires for symbol resolution.
-        @param sm The scope manager
-        @param kwargs Additional keyword arguments.
-        """
+        ...
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         ...
