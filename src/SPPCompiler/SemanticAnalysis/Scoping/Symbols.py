@@ -92,7 +92,7 @@ class TypeSymbol(BaseSymbol):
         # Dump the TypeSymbol as a JSON object.
         return {
             "what": "type", "name": str(self.name), "type": str(self.type), "scope": str(self.scope.name) if self.scope else "",
-            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else "", "id": id(self), "scope_id": id(self.scope),}
+            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else ""}
 
     def __hash__(self) -> int:
         return hash(self.name)
