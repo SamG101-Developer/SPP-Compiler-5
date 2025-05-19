@@ -48,6 +48,10 @@ Redo standard symbolic matching:
 - [x] Alter the standard symbolic equality
 - [x] Check the non-generic names are symbolically equal
 - [x] Then check all the arguments recursively
+- [ ] Should allow variants in tuples to match now too
+
+Aliases (TODO)
+- The alias symbol doesn't have the sup scopes attached to it
 
 Blanket superimpositions
 
