@@ -52,7 +52,7 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # sm.create_and_move_into_new_scope(f"<inner-scope:{self.pos}>")
+        # sm.create_and_move_into_new_scope(f"<inner-scope#{self.pos}>")
         self._scope = sm.current_scope
 
         # Check there is no code after a "ret" statement, as this is unreachable.

@@ -33,7 +33,7 @@ class LoopElseStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self.body.infer_type(sm, **kwargs)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        sm.create_and_move_into_new_scope(f"<loop-else:{self.pos}>")
+        sm.create_and_move_into_new_scope(f"<loop-else#{self.pos}>")
         self.body.analyse_semantics(sm, **kwargs)
         sm.move_out_of_current_scope()
 
