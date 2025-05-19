@@ -28,6 +28,9 @@ class NamespaceSymbol(BaseSymbol):
         # Dump the NamespaceSymbol as a JSON object.
         return {"what": "ns", "name": self.name, "scope": self.scope.name if self.scope else None}
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
     def __str__(self) -> str:
         # Dump the NamespaceSymbol as a JSON string.
         return json.dumps(self)
@@ -89,7 +92,10 @@ class TypeSymbol(BaseSymbol):
         # Dump the TypeSymbol as a JSON object.
         return {
             "what": "type", "name": str(self.name), "type": str(self.type), "scope": str(self.scope.name) if self.scope else "",
-            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else ""}
+            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else "", "id": id(self), "scope_id": id(self.scope),}
+
+    def __hash__(self) -> int:
+        return hash(self.name)
 
     def __str__(self) -> str:
         # Dump the TypeSymbol as a JSON string.
@@ -129,15 +135,15 @@ class TypeSymbol(BaseSymbol):
 class AliasSymbol(TypeSymbol):
     old_sym: TypeSymbol = field(default=None)
 
-    def __post_init__(self) -> None:
-        TypeSymbol.__post_init__(self)
-        self.symbol_type = SymbolType.AliasSymbol
-
     def __json__(self) -> Dict:
         # Dump the AliasSymbol as a JSON object.
         return {
             "what": "alias", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
-            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym}
+            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym,
+            "id": id(self)}
+
+    def __hash__(self) -> int:
+        return hash(self.name)
 
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the AliasSymbol, but link the old scope.
