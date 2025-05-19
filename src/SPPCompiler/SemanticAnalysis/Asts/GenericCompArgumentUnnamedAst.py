@@ -22,6 +22,9 @@ class GenericCompArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         # Check both ASTs are the same type and have the same value.
         return isinstance(other, GenericCompArgumentUnnamedAst) and self.value == other.value
 
+    def __hash__(self) -> int:
+        return hash(self.value)
+
     def __deepcopy__(self, memodict=None) -> GenericCompArgumentUnnamedAst:
         # Create a deep copy of the AST.
         return GenericCompArgumentUnnamedAst(

@@ -26,6 +26,9 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
         return isinstance(other, GenericCompArgumentNamedAst) and self.name == other.name and self.value == other.value
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
     def __deepcopy__(self, memodict=None) -> GenericCompArgumentNamedAst:
         # Create a deep copy of the AST.
         return GenericCompArgumentNamedAst(

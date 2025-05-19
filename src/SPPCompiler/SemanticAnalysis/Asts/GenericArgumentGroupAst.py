@@ -32,6 +32,9 @@ class GenericArgumentGroupAst(Asts.Ast):
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         return self.arguments == other.arguments
 
+    def __hash__(self) -> int:
+        return id(self)
+
     def __getitem__(self, item: str) -> Optional[Asts.GenericArgumentAst]:
         # assert isinstance(item, str), type(item)
         args = [a for a in self.arguments if Asts.IdentifierAst.from_type(a.name).value == item]

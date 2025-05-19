@@ -24,6 +24,9 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def __eq__(self, other: GenericTypeArgumentNamedAst) -> bool:
         return other.__class__ is GenericTypeArgumentNamedAst and self.name == other.name and self.value == other.value
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
     def __deepcopy__(self, memodict=None) -> GenericTypeArgumentNamedAst:
         # Create a deep copy of the AST.
         return GenericTypeArgumentNamedAst(
