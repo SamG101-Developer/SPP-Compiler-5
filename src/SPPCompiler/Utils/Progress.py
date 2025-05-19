@@ -39,6 +39,10 @@ class Progress:
         self._finished = True
         self._print()
 
+    def set_max(self, max_value: int) -> None:
+        # Set the maximum value of the progress bar.
+        self._max_value = max_value
+
     def _print(self) -> None:
         if not SHOW_PROGRESS_BARS:
             return
