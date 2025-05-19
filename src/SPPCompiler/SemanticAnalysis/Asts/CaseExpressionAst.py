@@ -9,8 +9,8 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils, LightweightMemoryInfo
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
@@ -150,7 +150,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     @property
     def pos_end(self) -> int:
-        return self.branches[-1].pos_end
+        return self.cond.pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         """
@@ -220,7 +220,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.cond.analyse_semantics(sm, **kwargs)
 
         # Create the scope for the case expression.
-        sm.create_and_move_into_new_scope(f"<case-expr:{self.pos}>")
+        sm.create_and_move_into_new_scope(f"<case-expr#{self.pos}>")
 
         # Analyse each branch of the case expression.
         for branch in self.branches:
@@ -262,7 +262,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         symbol_mem_info = defaultdict(list[tuple[Asts.CaseExpressionBranchAst, LightweightMemoryInfo]])
         for branch in self.branches:
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
-            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols(match_type=Asts.IdentifierAst) if s.symbol_type is SymbolType.VariableSymbol]
+            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols(match_type=Asts.IdentifierAst) if s.__class__ is VariableSymbol]
             old_symbol_mem_info = {s: s.memory_info.snapshot() for s in var_symbols_in_scope}
             branch.check_memory(sm, cond=self.cond, **kwargs)
             new_symbol_mem_info = {s: s.memory_info.snapshot() for s in var_symbols_in_scope}

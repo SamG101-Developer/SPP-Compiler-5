@@ -102,7 +102,7 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         caps.analyse_semantics(sm, **kwargs)
 
         # New scope for the parameters.
-        sm.create_and_move_into_new_scope(f"<lambda-outer:{self.pos}>")
+        sm.create_and_move_into_new_scope(f"<lambda-outer#{self.pos}>")
         self.pc_group.analyse_semantics(sm, **kwargs)
         kwargs["function_scope"] = sm.current_scope
 
@@ -110,7 +110,7 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         sm.current_scope.parent = sm.current_scope.parent_module
 
         # New scope for the body.
-        sm.create_and_move_into_new_scope(f"<lambda-inner:{self.pos}>")
+        sm.create_and_move_into_new_scope(f"<lambda-inner#{self.pos}>")
 
         # Analyse the body of the lambda expression.
         kwargs["function_type"] = self.kw_cor or Asts.TokenAst.raw(token_type=SppTokenType.KwFun)

@@ -122,7 +122,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Create a new scope for the function.
-        sm.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
+        sm.create_and_move_into_new_scope(f"<function#{self._orig}#{self.pos}>", self)
         Asts.Ast.generate_top_level_scopes(self, sm)
 
         # If there is a self parameter in a free function, throw an error.
@@ -170,7 +170,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         # Get the owner scope for function conflict checking.
         match self._ctx:
             case Asts.ModulePrototypeAst(): type_scope = sm.current_scope.parent_module
-            case _: type_scope = self._ctx._scope_cls
+            case _: type_scope = self._ctx._scope.get_symbol(self._ctx.name).scope
 
         # Check for function conflicts.
         if conflict := AstFunctionUtils.check_for_conflicting_overload(sm.current_scope, type_scope, self):
