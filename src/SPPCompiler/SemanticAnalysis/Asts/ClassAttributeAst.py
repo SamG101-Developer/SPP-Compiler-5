@@ -71,12 +71,6 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         self.type.analyse_semantics(sm, **kwargs)
 
-        # Ensure the attribute type is not void.
-        # Todo: Check the order of comparison (variants).
-        if AstTypeUtils.symbolic_eq(self.type, CommonTypesPrecompiled.VOID, sm.current_scope, sm.current_scope):
-            raise SemanticErrors.TypeVoidInvalidUsageError().add(
-                self.type).scopes(sm.current_scope)
-
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the semantics of the annotations and the type of the attribute.
         for a in self.annotations:
