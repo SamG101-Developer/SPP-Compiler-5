@@ -4,15 +4,12 @@ from abc import abstractmethod
 from typing import List, Optional, TYPE_CHECKING, final
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
-from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass(slots=True)
 class AbstractTypeTemporaryAst:
     """
     The AbstractTypeTemporaryAst is a temporary type ast that is used or instant-conversion purposes. The ast that it is
@@ -30,7 +27,6 @@ class AbstractTypeTemporaryAst:
         """
 
 
-@dataclass(slots=True)
 class AbstractTypeAst(AbstractTypeTemporaryAst):
     """
     The AbstractTypeAst contains a number of methods required to be implemented by all the different TypeAst classes.
@@ -61,14 +57,13 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
     @abstractmethod
     def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         """
-        The fully qualified type parts of a TypeAst are all the parts of the type asts that are namespace or type parts.
+        The fully-qualified type parts of a TypeAst are all the parts of the type asts that are namespace or type parts.
         For example, given "ns1::ns2::Type1::Type2", the fq type parts are "ns1", "ns2", "Type1" and "Type2".
 
-        :return: The fully qualified type parts of the type ast.
+        :return: The fully-qualified type parts of the type ast.
         """
 
-    @abstractmethod
-    def without_generics(self) -> Self:
+    def without_generics(self) -> Asts.TypeAst:
         """
         Create a new instance of ehte type asts that has had its generics removed. This is used especially for checking
         if types exist or need to be specialised. For example, "Vec[T]" becomes "Vec" when the generics are removed.
@@ -127,6 +122,16 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         :return: The convention attached to the type, or None if no convention is attached.
         """
 
+    @abstractmethod
+    def without_conventions(self) -> Asts.TypeAst:
+        """
+        Get this type without its associated convention, if it exists. This is used to remove the convention from a type
+        when it is no longer needed.
+
+        :return: The type ast without the convention.
+        """
+
+    @final
     def with_convention(self, convention: Optional[Asts.ConventionAst]) -> Asts.TypeAst:
         """
         Create a new instance of a type (that contains this original type), which acts as a unary type wrapper, with the
@@ -145,15 +150,6 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
         else:
             return Asts.TypeUnaryExpressionAst(pos=self.pos, op=Asts.TypeUnaryOperatorBorrowAst(pos=self.pos, convention=convention), rhs=self)
-
-    @abstractmethod
-    def without_conventions(self) -> Asts.TypeAst:
-        """
-        Get this type without its associated convention, if it exists. This is used to remove the convention from a type
-        when it is no longer needed.
-
-        :return: The type ast without the convention.
-        """
 
 
 __all__ = [

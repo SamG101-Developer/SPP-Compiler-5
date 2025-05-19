@@ -5,8 +5,6 @@ from typing import List, Optional
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
@@ -95,7 +93,7 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     @property
     def pos_end(self) -> int:
-        return self.body.pos_end
+        return (self.guard or self.patterns[-1]).pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         """
@@ -125,7 +123,7 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Create a new scope for the pattern block.
-        sm.create_and_move_into_new_scope(f"<pattern:{self.pos}>")
+        sm.create_and_move_into_new_scope(f"<pattern#{self.pos}>")
 
         # Analyse the patterns, guard and body.
         for p in self.patterns:
