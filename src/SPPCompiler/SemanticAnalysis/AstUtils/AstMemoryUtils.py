@@ -167,6 +167,7 @@ class AstMemoryUtils:
         """
 
         # Todo: coroutine returns can be borrows - check moving logic here, as the outermost part may not be symbolic.
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
         # For tuple and array literals, analyse each element (recursively). This ensures that all elements are
         # memory-integral such that the entire tuple or array is memory-integral.
