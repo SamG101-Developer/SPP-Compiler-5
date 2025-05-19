@@ -352,3 +352,56 @@ class AstTypeUtils:
 
         # If all the generic arguments are equal, return true.
         return True
+
+    @staticmethod
+    @FunctionCache.cache
+    def relaxed_symbolic_eq(lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope) -> bool:
+        """
+        The relaxed version of the symbolic equality check is the same as normal symbolic matching, but it allows a
+        generic to be matched against any type. For example, `Vec[Str]` will match `[T] Vec[T]`. This is required in
+        superimpositions, for fallthrough generic types to have the correct sup-ext blocks applied. Similarly,
+        `Vec[Str]` will also match against `[T] T` (blanket superimpositions), because `T` itself would be a generic.
+
+        Notably, `check_variant` is not present in this function, because "Str | Bool" cannot have the methods of `Str`
+        and `Bool` (use pattern matching to extract), and both Str and Bool can't have methods attached to the variant,
+        as they are different types (Str vs Var[Str, Bool] etc).
+
+        :param lhs_type: The left-hand side type to compare.
+        :param rhs_type: The right-hand side type to compare.
+        :param lhs_scope: The scope to get the left-hand side type from.
+        :param rhs_scope: The scope to get the right-hand side type from.
+        :return: Whether the two types are equal.
+        """
+
+        # Handle generic comp arguments (simple value comparison).
+        if not isinstance(lhs_type, Asts.TypeAst):
+            return lhs_type == rhs_type
+
+        # Strip the generics from the types.
+        stripped_lhs = lhs_type.without_generics()
+        stripped_rhs = rhs_type.without_generics()
+
+        # If the right hand side is generic, then return a match: "sup [T] T" matches all types.
+        stripped_rhs_symbol = rhs_scope.get_symbol(stripped_rhs)
+        if stripped_rhs_symbol.is_generic:
+            return True
+
+        # If the stripped types are not equal, return false.
+        stripped_lhs_symbol = lhs_scope.get_symbol(stripped_lhs)
+        if stripped_lhs_symbol.type is not stripped_rhs_symbol.type:
+            return False
+
+        # The next step is to get the generic arguments for both types.
+        lhs_type_fq = lhs_scope.get_symbol(lhs_type).fq_name
+        rhs_type_fq = rhs_scope.get_symbol(rhs_type).fq_name
+
+        lhs_generics = lhs_type_fq.type_parts()[-1].generic_argument_group.arguments
+        rhs_generics = rhs_type_fq.type_parts()[-1].generic_argument_group.arguments
+
+        # Ensure each generic argument is symbolically equal to the other.
+        for lhs_generic, rhs_generic in zip(lhs_generics, rhs_generics):
+            if not AstTypeUtils.relaxed_symbolic_eq(lhs_generic.value, rhs_generic.value, lhs_scope, rhs_scope):
+                return False
+
+        # If all the generic arguments are equal, return true.
+        return True
