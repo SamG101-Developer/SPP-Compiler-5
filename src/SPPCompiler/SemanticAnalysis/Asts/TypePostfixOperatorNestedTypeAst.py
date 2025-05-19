@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import List
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
-from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass(slots=True)
@@ -24,10 +24,10 @@ class TypePostfixOperatorNestedTypeAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.name.pos_end
 
-    def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return self.name.fq_type_parts()
 
-    def type_parts(self) -> Seq[Asts.GenericIdentifierAst]:
+    def type_parts(self) -> List[Asts.GenericIdentifierAst]:
         return self.name.type_parts()
 
 

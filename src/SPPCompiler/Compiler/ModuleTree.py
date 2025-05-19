@@ -8,7 +8,6 @@ from typing import Iterable, List, Optional
 from SPPCompiler.LexicalAnalysis.TokenType import RawToken
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
-from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass(slots=True)
@@ -23,7 +22,7 @@ class Module:
 
     path: str
     code: str = field(default="")
-    token_stream: List[RawToken] = field(default_factory=Seq)
+    token_stream: List[RawToken] = field(default_factory=list)
     module_ast: Optional[Asts.ModulePrototypeAst] = field(default=None)
     error_formatter: Optional[ErrorFormatter] = field(default=None)
 
@@ -38,7 +37,7 @@ class ModuleTree:
     _src_path: str
     _vcs_path: str
     _ffi_path: str
-    _modules: Seq[Module]
+    _modules: List[Module]
 
     def __init__(self, path: str) -> None:
         # Get all the spp module files from the src path.
@@ -75,7 +74,7 @@ class ModuleTree:
         return iter(self._modules)
 
     @property
-    def modules(self) -> Seq[Module]:
+    def modules(self) -> List[Module]:
         """
         Get the list of modules in the module tree.
 

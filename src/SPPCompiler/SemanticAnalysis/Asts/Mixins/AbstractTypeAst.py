@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from dataclasses import dataclass
-from typing import Self, Optional, Tuple, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, final
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -39,7 +38,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
     all utility methods.
     """
 
-    def type_parts(self) -> Seq[Asts.GenericIdentifierAst]:
+    def type_parts(self) -> List[Asts.GenericIdentifierAst]:
         """
         The type parts of a TypeAst are all the parts of the type asts that are not namespaces. For example, given
         "ns1::ns2::Type1::Type2", the type parts are "Type1" and "Type2".
@@ -49,7 +48,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
         return [p for p in self.fq_type_parts() if p.__class__ is Asts.GenericIdentifierAst]
 
-    def namespace_parts(self) -> Seq[Asts.IdentifierAst]:
+    def namespace_parts(self) -> List[Asts.IdentifierAst]:
         """
         The namespace parts of a TypeAst are all the parts of the type asts that are namespaces. For example, given
         "ns1::ns2::Type1::Type2", the namespace parts are "ns1" and "ns2".
@@ -60,7 +59,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         return [p for p in self.fq_type_parts() if p.__class__ is Asts.IdentifierAst]
 
     @abstractmethod
-    def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         """
         The fully qualified type parts of a TypeAst are all the parts of the type asts that are namespace or type parts.
         For example, given "ns1::ns2::Type1::Type2", the fq type parts are "ns1", "ns2", "Type1" and "Type2".
@@ -78,7 +77,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @abstractmethod
-    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+    def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         """
         Substitute the generic arguments in a type. This allows "Vec[T]" to become "Vec[Str]" when it is known that "T"
         is a "Str". This is used in the type inference process. This creates a new type ast with the generics

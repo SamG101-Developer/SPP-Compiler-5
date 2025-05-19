@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, List
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
@@ -9,7 +9,6 @@ from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibi
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.Utils.Sequence import Seq
 
 
 # Todo: check the ast_initialization (when there's aliases) - what do we want to show exactly?
@@ -35,7 +34,7 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         return self.alias.pos_end if self.alias else self.name.pos_end
 
     @property
-    def extract_names(self) -> Seq[Asts.IdentifierAst]:
+    def extract_names(self) -> List[Asts.IdentifierAst]:
         return [self.name]
 
     @property

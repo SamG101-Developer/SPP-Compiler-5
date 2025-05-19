@@ -1,35 +1,107 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from SPPCompiler.Compiler.ModuleTree import Module
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol, \
-    Symbol, SymbolType
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, Symbol, TypeSymbol, \
+    VariableSymbol
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 
 class Scope:
-    _name: Any
-    _parent: Optional[Scope]
-    _children: Seq[Scope]
-    _symbol_table: SymbolTable
-    _ast: Optional[Asts.FunctionPrototypeAst | Asts.ClassPrototypeAst | Asts.SupPrototypeAst]
+    """
+    A scope is an object in a tree that holds symbols and other associated information about code within a block. Scopes
+    are created for things like functions, loops, classes, etc. A scope has a parent scope (except for the top-level
+    global scope, and a list of child scopes).
 
-    _direct_sup_scopes: Seq[Scope]
-    _direct_sub_scopes: Seq[Scope]
+    The "sup scopes" are connected for type scopes (created by ClassPrototypeAsts), allowing symbol searching into
+    superclasses. This allows extended classes to integrate seamlessly symbol resolution.
+    """
+
+    _name: str | Asts.IdentifierAst | Asts.TypeAst
+    """
+    The name of the scope. Likely to be a string, IdentifierAst or TypeAst. For classes, it will be the TypeAst
+    representing the name of the class. For namespace/module scopes, it will be the IdentifierAst representing the
+    name of the module. Otherwise, there will be string containing the type of the scope, ie function/loop/case etc,
+    and the token position of the scope, mainly for debugging.
+    """
+
+    _parent: Optional[Scope]
+    """
+    The parent scope of this module. This is used to search for symbols in parent scopes if they aren't found in the
+    current scope. Every scope has a [rent scope, except for the global scope which is the top level scope of the entire
+    program.
+    """
+
+    _children: List[Scope]
+    """
+    The children scopes of a scope are the scopes that are created within this scope. A function scope will contain all
+    scopes created by the statements that make up the function, and module scopes will contain all the class, function
+    and superimposition scopes.
+    """
+
+    _symbol_table: SymbolTable
+    """
+    The symbol table is a wrapper around a dictionary of symbols, indexed by their name. This is used to store all the
+    symbols created in this scope. Symbols can be added, removed, set, got and checked for existence.
+    """
+
+    _ast: Optional[Asts.FunctionPrototypeAst | Asts.ClassPrototypeAst | Asts.SupPrototypeAst]
+    """
+    Top level scopes, representing functions, classes, superimpositions, etc, have associated ASTs (the ast that was
+    analysed to create this scope). This AST is stored as there are some analysis stages that use information from the
+    AST directly.
+    """
+
+    _direct_sup_scopes: List[Scope]
+    """
+    If this is a type scope, representing a ClassPrototypeAst, then this scope may have super scopes attached to it.
+    This allows for symbol resolution from super classes when they aren't found on the current class. Recursive
+    searching of superscopes is used for the actual resolution.
+    """
+
+    _direct_sub_scopes: List[Scope]
+    """
+    The sub scopes are an inverse to the sup scope lists. So if B extends A, then A is a super scope of B, and B is a
+    sub scope of A. This is used for access modifier checking, where protected symbols are accessible from sub types.
+    """
+
     _type_symbol: Optional[TypeSymbol | NamespaceSymbol]
+    """
+    Type scopes have the associated type symbol attached to it for convenience. This is the symbol that represents the
+    type in the symbol table. This is also set to the namespace symbol for module scopes.
+    """
+
     _non_generic_scope: Optional[Scope]
+    """
+    Some scopes represent a generic scope such as Vec[Str]. This attribute will point to the non-specialized, base
+    version of the type, like Vec[T]. This is used for symbol translation.
+    """
 
     _error_formatter: ErrorFormatter
+    """
+    The error formatter for a scope is the same as the error formatter for the module that this scope is inside. Each
+    module has its own error formatter, containing the tokens that make up the source code in the module. this allows
+    for errors to be reported over the correct set of tokens depending on the source of the error.
+    """
 
     def __init__(
             self, name: Any, parent: Optional[Scope] = None, *, ast: Optional[Asts.Ast] = None,
             error_formatter: Optional[ErrorFormatter] = None)\
             -> None:
+
+        """
+        Create a new scope with the given name and parent. The AST and error formatter are optional. Attributes are
+        defaulted here, with the error formatter of the parent scope being used if not provided.
+        :param name: The name of the scope. This is usually a string, but can be an IdentifierAst or TypeAst.
+        :param parent: The parent scope that this scope was created in.
+        :param ast: The optional AST for this scope. This is used for top level scopes, such as functions and classes.
+        :param error_formatter: The error formatter for this scope, or None if the module error formatter is to be used.
+        """
 
         # Initialize the scope with the given name, parent, and AST.
         self._name = name
@@ -72,7 +144,7 @@ class Scope:
         return str(self._name)
 
     @property
-    def generics(self) -> Seq[Asts.GenericArgumentAst]:
+    def generics(self) -> List[Asts.GenericArgumentAst]:
         GenericArgumentCTor = {
             VariableSymbol: Asts.GenericCompArgumentNamedAst,
             TypeSymbol    : Asts.GenericTypeArgumentNamedAst,
@@ -105,7 +177,7 @@ class Scope:
         # Remove a symbol from the scope.
         self._symbol_table.rem(symbol_name)
 
-    def all_symbols(self, exclusive: bool = False, match_type: type = None) -> Seq[Symbol]:
+    def all_symbols(self, exclusive: bool = False, match_type: type = None) -> List[Symbol]:
         # Get all the symbols in the scope.
         symbols = self._symbol_table.all()
         if not exclusive and self._parent:
@@ -168,7 +240,7 @@ class Scope:
             scope = symbol.scope
         return symbol
 
-    def get_multiple_symbols(self, name: Asts.IdentifierAst, original_scope: Scope = None) -> Seq[Tuple[Symbol, Scope, int]]:
+    def get_multiple_symbols(self, name: Asts.IdentifierAst, original_scope: Scope = None) -> List[Tuple[Symbol, Scope, int]]:
         # Get all the symbols with the given name (ambiguity checks, function overloads etc), and their "depth".
         symbols = [(self._symbol_table.get(name), self, self.depth_difference(original_scope or self))]
         symbols.extend(search_super_scopes_multiple(original_scope or self, self, name))
@@ -233,18 +305,18 @@ class Scope:
         # Set the parent scope.
         self._parent = parent
 
-    @property
-    def ancestors(self) -> Seq[Scope]:
+    @FunctionCache.cache_property
+    def ancestors(self) -> List[Scope]:
         # Get all the ancestors, including this scope and the global scope.
         return [node := self] + [node for _ in iter(lambda: node.parent, None) if (node := node.parent)]
 
-    @property
+    @FunctionCache.cache_property
     def parent_module(self) -> Scope:
         # Get the ancestor module scope.
         return [s for s in self.ancestors if s.name.__class__ is Asts.IdentifierAst][0]
 
     @property
-    def children(self) -> Seq[Scope]:
+    def children(self) -> List[Scope]:
         # Get the children scopes.
         return self._children
 
@@ -258,7 +330,7 @@ class Scope:
         self._type_symbol = symbol
 
     @property
-    def sup_scopes(self) -> Seq[Scope]:
+    def sup_scopes(self) -> List[Scope]:
         # Get all the super scopes recursively.
         all_sup_scopes = []
         for sup_scope in self._direct_sup_scopes:
@@ -267,19 +339,15 @@ class Scope:
         return all_sup_scopes
 
     @property
-    def direct_sup_types(self) -> Seq[Asts.TypeAst]:
+    def direct_sup_types(self) -> List[Asts.TypeAst]:
         return [s.type_symbol.fq_name for s in self._direct_sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
 
     @property
-    def sup_types(self) -> Seq[Asts.TypeAst]:
+    def sup_types(self) -> List[Asts.TypeAst]:
         return [s.type_symbol.fq_name for s in self.sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
 
     @property
-    def sup_types_and_scopes(self) -> Seq[(Asts.TypeAst, Scope)]:
-        return [(s.type_symbol.fq_name, s) for s in self.sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
-
-    @property
-    def sub_scopes(self) -> Seq[Scope]:
+    def sub_scopes(self) -> List[Scope]:
         # Get all the sub scopes recursively.
         all_sub_scopes = []
         for sub_scope in self._direct_sub_scopes:
@@ -313,7 +381,7 @@ def search_super_scopes(scope: Scope, name: Asts.IdentifierAst | Asts.GenericIde
     return symbol
 
 
-def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: Asts.IdentifierAst) -> Seq[Tuple[VariableSymbol, Scope, int]]:
+def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: Asts.IdentifierAst) -> List[Tuple[VariableSymbol, Scope, int]]:
     # Recursively search the super scopes for variable symbols with the given name.
     symbols = []
     for super_scope in scope._direct_sup_scopes:
