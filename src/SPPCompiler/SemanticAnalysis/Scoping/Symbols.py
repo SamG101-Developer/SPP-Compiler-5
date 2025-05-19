@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import json
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Dict, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
@@ -15,26 +14,15 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-class SymbolType(Enum):
-    NamespaceSymbol = "namespace"
-    VariableSymbol = "variable"
-    TypeSymbol = "type"
-    AliasSymbol = "alias"
-
-
 @dataclass(slots=True, kw_only=True)
 class BaseSymbol:
-    symbol_type: SymbolType = field(default=None)
+    ...
 
 
 @dataclass(slots=True, kw_only=True)
 class NamespaceSymbol(BaseSymbol):
     name: Asts.IdentifierAst
     scope: Optional[Scope] = field(default=None)
-
-    def __post_init__(self) -> None:
-        # Ensure the name is an IdentifierAst.
-        self.symbol_type = SymbolType.NamespaceSymbol
 
     def __json__(self) -> Dict:
         # Dump the NamespaceSymbol as a JSON object.
@@ -57,12 +45,6 @@ class VariableSymbol(BaseSymbol):
     is_generic: bool = field(default=False)
     memory_info: MemoryInfo = field(default_factory=MemoryInfo)
     visibility: Visibility = field(default=Visibility.Public)
-
-    def __post_init__(self) -> None:
-        # Ensure the name is an IdentifierAst, and the type is a TypeAst.
-        self.symbol_type = SymbolType.VariableSymbol
-        # assert isinstance(self.name, Asts.IdentifierAst)
-        # assert isinstance(self.type, Asts.TypeAst)
 
     def __json__(self) -> Dict:
         # Dump the VariableSymbol as a JSON object.
@@ -96,10 +78,6 @@ class TypeSymbol(BaseSymbol):
     scope_defined_in: Optional[Scope] = field(default=None)
 
     def __post_init__(self) -> None:
-        # Ensure the name is a GenericIdentifierAst, and the type is a ClassPrototypeAst or None.
-        self.symbol_type = SymbolType.TypeSymbol
-        # assert isinstance(self.name, Asts.GenericIdentifierAst)
-        # assert isinstance(self.type, Asts.ClassPrototypeAst) or self.type is None
 
         # Link the type symbol to the associated scope.
         if self.scope and not self.is_generic and not self.name.value == "Self":
@@ -131,7 +109,7 @@ class TypeSymbol(BaseSymbol):
         if self.is_generic:
             return fq_name
 
-        if self.symbol_type is SymbolType.AliasSymbol:
+        if self.__class__ is AliasSymbol:
             return fq_name
 
         if self.name.value[0] == "$":

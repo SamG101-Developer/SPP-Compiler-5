@@ -7,8 +7,8 @@ from convert_case import pascal_case
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
@@ -20,7 +20,12 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return IdentifierAst(pos=self.pos, value=self.value)
 
     def __eq__(self, other: IdentifierAst) -> bool:
-        return isinstance(other, IdentifierAst) and self.value == other.value
+        if isinstance(other, (IdentifierAst, Asts.GenericIdentifierAst)):
+            return self.value == other.value
+        elif isinstance(other, Asts.TypeSingleAst):
+            return self.value == other.name.value
+        else:
+            return False
 
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
@@ -65,11 +70,11 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         symbol = sm.current_scope.get_symbol(self)
 
         # If the symbol is a variable, then get its type.
-        if symbol.symbol_type is SymbolType.VariableSymbol:
+        if symbol.__class__ is VariableSymbol:
             return symbol.type
 
         # If the symbol is a namespace, then return "self" as the type.
-        elif symbol.symbol_type is SymbolType.NamespaceSymbol:
+        elif symbol.__class__ is NamespaceSymbol:
             return self
 
         else:
@@ -78,7 +83,7 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there is a symbol with the same name in the current scope.
         if not sm.current_scope.has_symbol(self):
-            alternatives = [s.name.value for s in sm.current_scope.all_symbols() if s.symbol_type is SymbolType.VariableSymbol]
+            alternatives = [s.name.value for s in sm.current_scope.all_symbols() if s.__class__ is VariableSymbol]
             closest_match = difflib.get_close_matches(self.value, alternatives, n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(
                 self, "identifier", closest_match[0] if closest_match else None).scopes(sm.current_scope)

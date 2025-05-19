@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -79,17 +79,19 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Invalidate yielded borrows that are linked.
         for sym in all_syms:
-            if sym.symbol_type is SymbolType.VariableSymbol:
-                for info in sym.memory_info.borrow_refers_to.copy():
-                    yielded_borrow, this_borrow, is_mutable = info
+            if sym.__class__ is not VariableSymbol:
+                continue
 
-                    # Check if the borrow that was yielded was created in this scope.
-                    if yielded_borrow in inner_sym_names:
-                        AstMemoryUtils.invalidate_yielded_borrow(sm, yielded_borrow, self.tok_r)
-                        sym.memory_info.borrow_refers_to.remove(info)
+            for info in sym.memory_info.borrow_refers_to.copy():
+                yielded_borrow, this_borrow, is_mutable = info
 
-                    elif yielded_borrow is None:
-                        sym.memory_info.borrow_refers_to.remove(info)
+                # Check if the borrow that was yielded was created in this scope.
+                if yielded_borrow in inner_sym_names:
+                    AstMemoryUtils.invalidate_yielded_borrow(sm, yielded_borrow, self.tok_r)
+                    sym.memory_info.borrow_refers_to.remove(info)
+
+                elif yielded_borrow is None:
+                    sym.memory_info.borrow_refers_to.remove(info)
 
         # sm.move_out_of_current_scope()
 
