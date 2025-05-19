@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import copy
 import difflib
-from typing import Generator, Optional, Tuple, TYPE_CHECKING
+from typing import Generator, List, Optional, TYPE_CHECKING, Tuple
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol, VariableSymbol, SymbolType
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.FunctionCache import FunctionCache
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -90,7 +91,7 @@ class AstTypeUtils:
         raise NotImplementedError("Only tuple and array types are indexable.")
 
     @staticmethod
-    def get_namespaced_scope_with_error(sm: ScopeManager, namespace: Seq[Asts.IdentifierAst]) -> Scope:
+    def get_namespaced_scope_with_error(sm: ScopeManager, namespace: List[Asts.IdentifierAst]) -> Scope:
         # Work through each cumulative namespace, checking if the namespace exists.
         namespace_scope = sm.current_scope
         for i in range(len(namespace)):
@@ -98,7 +99,7 @@ class AstTypeUtils:
 
             # If the namespace does not exist, raise an error.
             if not sm.get_namespaced_scope(sub_namespace):
-                alternatives = [a.name.value for a in namespace_scope.all_symbols() if a.symbol_type is SymbolType.NamespaceSymbol]
+                alternatives = [a.name.value for a in namespace_scope.all_symbols() if a.__class__ is NamespaceSymbol]
                 closest_match = difflib.get_close_matches(sub_namespace[-1].value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     sub_namespace[-1], "namespace", closest_match[0] if closest_match else None).scopes(sm.current_scope)
@@ -117,7 +118,7 @@ class AstTypeUtils:
         # Get the type part's symbol, and raise an error if it does not exist.
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
         if not type_symbol:
-            alternatives = [a.name.value for a in scope.all_symbols() if a.symbol_type is SymbolType.TypeSymbol]
+            alternatives = [a.name.value for a in scope.all_symbols() if a.__class__ in [TypeSymbol, AliasSymbol]]
             SequenceUtils.remove_if(alternatives, lambda a: a[0] == "$")
             closest_match = difflib.get_close_matches(type_part.value, alternatives, n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(
@@ -131,11 +132,9 @@ class AstTypeUtils:
             sm: ScopeManager, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol, is_tuple: bool) -> Scope:
 
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
-        # from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
         # Create a new scope & symbol for the generic substituted type.
-        # new_cls_prototype = fast_deepcopy(base_symbol.scope._ast)
-        new_scope = Scope(name=type_part, parent=base_symbol.scope.parent, ast=base_symbol.scope._ast)
+        new_scope = Scope(name=Asts.TypeSingleAst.from_generic_identifier(type_part), parent=base_symbol.scope.parent, ast=base_symbol.scope._ast)
         new_symbol = TypeSymbol(
             name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
             visibility=base_symbol.visibility, scope_defined_in=sm.current_scope)
@@ -144,6 +143,11 @@ class AstTypeUtils:
         new_scope.parent.add_symbol(new_symbol)
         new_scope._children = base_symbol.scope._children
         new_scope._symbol_table = fast_deepcopy(base_symbol.scope._symbol_table)
+        new_scope._non_generic_scope = base_symbol.scope
+        if not isinstance(new_scope.parent.name, str):
+            new_scope.parent.children.append(new_scope)
+        # print("ADDED NEW SCOPE", new_scope, "TO", new_scope.parent, "PARENT_NAME_TYPE")
+        sm.attach_super_scope_to_target_scope(new_scope)
 
         # No more checks for the tuple type (avoid recursion, is textual because it is to do with generics).
         if is_tuple: return new_scope
@@ -153,63 +157,36 @@ class AstTypeUtils:
             generic_symbol = AstTypeUtils.create_generic_symbol(sm, generic_argument)
             new_scope.add_symbol(generic_symbol)
 
-        new_scope._direct_sup_scopes = AstTypeUtils.create_generic_sup_scopes(sm, base_symbol.scope, new_scope, type_part.generic_argument_group)
-        new_scope._direct_sub_scopes = base_symbol.scope._direct_sub_scopes
-        new_scope._non_generic_scope = base_symbol.scope
-
-        # tm = ScopeManager(sm.global_scope, new_scope)
-        # for attribute in new_scope._ast.body.members:
-        #     attribute.type = attribute.type.substituted_generics(type_part.generic_argument_group.arguments)
-        #     attribute.analyse_semantics(tm)
-
         # Return the new scope.
         return new_scope
 
     @staticmethod
-    def create_generic_sup_scopes(
-            sm: ScopeManager, base_scope: Scope, true_scope: Scope,
-            generic_arguments: Asts.GenericArgumentGroupAst) -> Seq[Scope]:
+    def create_generic_sup_scope(
+            sm: ScopeManager, old_sup_scope: Scope, true_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Tuple[Scope, Scope]:
 
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
-        old_scopes = base_scope._direct_sup_scopes
-        new_scopes = []
+        # Create the scope for the new super class type. This will handle recursive sup-scope creation.
+        new_cls_scope = None
+        if isinstance(old_sup_scope._ast, Asts.SupPrototypeExtensionAst):
+            new_fq_super_type = fast_deepcopy(old_sup_scope._ast.super_class)
+            new_fq_super_type = new_fq_super_type.substituted_generics(generic_arguments.arguments)
+            new_fq_super_type.analyse_semantics(sm)
+            new_cls_scope = true_scope.get_symbol(new_fq_super_type).scope
 
-        for scope in old_scopes:
+        # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
+        new_scope_name = AstTypeUtils.generic_convert_sup_scope_name(old_sup_scope.name, generic_arguments, old_sup_scope._ast.name.pos)
+        new_scope = Scope(new_scope_name, old_sup_scope.parent, ast=old_sup_scope._ast)
+        new_scope._children = old_sup_scope._children
+        new_scope._symbol_table = copy.copy(old_sup_scope._symbol_table)
+        new_scope._non_generic_scope = old_sup_scope
 
-            # Create the scope with the generic arguments injected. This will handle recursive scope creation.
-            if isinstance(scope._ast, Asts.ClassPrototypeAst):
-                # The superimposition-ext checker handles these scopes.
-                continue
+        # Add the generic arguments to the new scope.
+        for generic_argument in generic_arguments.arguments:
+            generic_symbol = AstTypeUtils.create_generic_symbol(sm, generic_argument)
+            new_scope.add_symbol(generic_symbol)
 
-            # Create the scope for the new super class type. This will handle recursive sup-scope creation.
-            elif isinstance(scope._ast, Asts.SupPrototypeExtensionAst):
-                new_fq_super_type = fast_deepcopy(scope._ast.super_class)
-                new_fq_super_type = new_fq_super_type.substituted_generics(generic_arguments.arguments)
-                new_fq_super_type.analyse_semantics(sm)
-
-                # Get the class scope generated for the super class and add it to the new scopes too.
-                modified_class_scope = true_scope.get_symbol(new_fq_super_type).scope
-                if modified_class_scope not in new_scopes:
-                    new_scopes.append(modified_class_scope)
-
-            # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
-            new_scope_name = AstTypeUtils.generic_convert_sup_scope_name(scope.name, generic_arguments, scope._ast.name.pos)
-            new_scope = Scope(new_scope_name, scope.parent, ast=scope._ast)
-            new_scope._children = scope._children
-            new_scope._symbol_table = copy.copy(scope._symbol_table)
-            new_scope._non_generic_scope = scope
-
-            # Add the generic arguments to the new scope.
-            for generic_argument in generic_arguments.arguments:
-                generic_symbol = AstTypeUtils.create_generic_symbol(sm, generic_argument)
-                new_scope.add_symbol(generic_symbol)
-
-            # Add the new scope to the list of new scopes.
-            new_scopes.append(new_scope)
-
-        # Return the new scopes.
-        return new_scopes
+        return new_scope, new_cls_scope
 
     @staticmethod
     def create_generic_symbol(sm: ScopeManager, generic_argument: Asts.GenericArgumentAst) -> TypeSymbol | VariableSymbol:
@@ -220,7 +197,7 @@ class AstTypeUtils:
             return TypeSymbol(
                 name=generic_argument.name.type_parts()[0], type=true_value_symbol.type if true_value_symbol else None,
                 scope=true_value_symbol.scope if true_value_symbol else None, is_generic=True,
-                convention=generic_argument.value.get_convention())
+                convention=generic_argument.value.get_convention(), scope_defined_in=sm.current_scope)
 
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
             return VariableSymbol(
@@ -231,16 +208,16 @@ class AstTypeUtils:
 
     @staticmethod
     def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst, pos: int) -> str:
-        parts = name.split(":")
+        parts = name.split("#")
 
         if " ext " not in parts:
             t = Asts.TypeSingleAst.from_string(parts[1]).substituted_generics(generics.arguments)
-            return f"{parts[0]}:{t}:{parts[2]}"
+            return f"{parts[0]}#{t}#{parts[2]}"
 
         else:
             t = Asts.TypeSingleAst.from_string(parts[1].split(" ext ")[0]).substituted_generics(generics.arguments)
             u = Asts.TypeSingleAst.from_string(parts[1].split(" ext ")[1]).substituted_generics(generics.arguments)
-            return f"{parts[0]}:#{t} ext {u}:{parts[2]}"
+            return f"{parts[0]}#{t} ext {u}#{parts[2]}"
 
     @staticmethod
     def is_type_recursive(type: Asts.ClassPrototypeAst, sm: ScopeManager) -> Optional[Asts.TypeAst]:
@@ -320,7 +297,8 @@ class AstTypeUtils:
         return out
 
     @staticmethod
-    def symbolic_eq(lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope, check_variant: bool = True, lhs_ignore_alias: bool =  False, debug: bool = False) -> bool:
+    @FunctionCache.cache
+    def symbolic_eq(lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope, check_variant: bool = True, lhs_ignore_alias: bool = False, debug: bool = False) -> bool:
         """
         Compare the two types for symbolic equality. This ensures that they are teh exact same type, and not just
         textually the same.
@@ -330,6 +308,7 @@ class AstTypeUtils:
         :param lhs_scope: The scope to get the left-hand side type from.
         :param rhs_scope: The scope to get the right-hand side type from.
         :param check_variant: Whether to allow variant type matching.
+        :param lhs_ignore_alias: Whether to ignore alias types on the left-hand side.
         :param debug: Whether to print debug information.
         :return: Whether the two types are equal.
         """
@@ -346,12 +325,6 @@ class AstTypeUtils:
         stripped_lhs_symbol = lhs_scope.get_symbol(stripped_lhs, ignore_alias=lhs_ignore_alias)
         stripped_rhs_symbol = rhs_scope.get_symbol(stripped_rhs)
 
-        if debug:
-            print()
-            print("-" * 100)
-            print(f"LHS: {lhs_scope.get_symbol(lhs_type, ignore_alias=lhs_ignore_alias).fq_name}")
-            print(f"RHS: {rhs_scope.get_symbol(rhs_type).fq_name}")
-
         # If the left-hand-side is a Variant type, then check the composite types first.
         if check_variant and lhs_type.type_parts()[-1].generic_argument_group.arguments and AstTypeUtils.symbolic_eq(stripped_lhs_symbol.fq_name.without_generics(), CommonTypesPrecompiled.EMPTY_VARIANT, lhs_scope, lhs_scope, check_variant=False, debug=debug):
             lhs_composite_types = AstTypeUtils.deduplicate_composite_types(lhs_scope.get_symbol(lhs_type).fq_name, lhs_scope)
@@ -363,10 +336,6 @@ class AstTypeUtils:
 
         # If the stripped types are not equal, return false.
         if stripped_lhs_symbol.type is not stripped_rhs_symbol.type:
-            if debug:
-                print("Not equal")
-                print(stripped_lhs_symbol.type, stripped_rhs_symbol.type)
-                print(id(stripped_lhs_symbol.type), id(stripped_rhs_symbol.type))
             return False
 
         # The next step is to get the generic arguments for both types.
