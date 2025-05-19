@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Optional
-from typing import TYPE_CHECKING
 
 from llvmlite import ir
 
@@ -16,10 +15,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 # Todo
