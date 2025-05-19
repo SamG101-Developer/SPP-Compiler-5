@@ -151,7 +151,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
                     new_fn_proto = fast_deepcopy(fn_proto)
-                    tm = ScopeManager(sm.global_scope, fn_scope)
+                    tm = ScopeManager(sm.global_scope, fn_scope, sm.all_super_scopes)
 
                     new_fn_proto.generic_parameter_group.parameters = []
                     for p in new_fn_proto.function_parameter_group.params.copy():
