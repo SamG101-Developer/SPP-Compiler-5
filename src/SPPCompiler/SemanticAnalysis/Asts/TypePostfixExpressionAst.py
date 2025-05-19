@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, TYPE_CHECKING, Self, Tuple
+from typing import Optional, Dict, TYPE_CHECKING, Self, List
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
@@ -24,6 +24,9 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def __deepcopy__(self, memodict=None) -> TypePostfixExpressionAst:
         # Create a deep copy of the AST.
         return TypePostfixExpressionAst(pos=self.pos, lhs=fast_deepcopy(self.lhs), op=fast_deepcopy(self.op))
+
+    def __json__(self) -> str:
+        return f"{self.lhs}{self.op}"
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
