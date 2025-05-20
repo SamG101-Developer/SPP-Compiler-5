@@ -56,7 +56,7 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
         if self._arbitrary:
 
             # The convention is taken from the arbitrary type.
-            self.convention = self.type.get_convention()
+            self.convention = self.type.convention
 
             deref_type = CommonTypes.DerefRef(self.pos, self._true_self_type)
             deref_type.analyse_semantics(sm, **kwargs)

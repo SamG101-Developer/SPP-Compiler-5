@@ -27,7 +27,7 @@ class GenericIdentifierAst(Asts.Ast):
 
     def __hash__(self) -> int:
         # Convert the value into an integer
-        return int.from_bytes(self.value.encode())
+        return hash(self.value)
 
     def __deepcopy__(self, memodict=None) -> GenericIdentifierAst:
         # Create a deep copy of the AST.
@@ -51,6 +51,10 @@ class GenericIdentifierAst(Asts.Ast):
             self.generic_argument_group.print(printer)]
         return "".join(string)
 
+    @FunctionCache.cache_property
+    def without_generics(self) -> GenericIdentifierAst:
+        return GenericIdentifierAst(pos=self.pos, value=self.value)
+
     @property
     def pos_end(self) -> int:
         return self.generic_argument_group.pos_end if self.generic_argument_group.arguments else self.pos + len(self.value)
@@ -61,10 +65,7 @@ class GenericIdentifierAst(Asts.Ast):
 
     @staticmethod
     def from_type(type: Asts.TypeAst) -> GenericIdentifierAst:
-        return type.type_parts()[0]
-
-    def without_generics(self) -> GenericIdentifierAst:
-        return GenericIdentifierAst(self.pos, self.value)
+        return type.type_parts[0]
 
 
 __all__ = [

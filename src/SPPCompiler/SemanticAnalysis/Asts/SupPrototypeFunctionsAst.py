@@ -65,7 +65,7 @@ class SupPrototypeFunctionsAst(Asts.Ast):
                 unconstrained[0], self.name).scopes(sm.current_scope)
 
         # Ensure the superimposition type does not have a convention.
-        if c := self.name.get_convention():
+        if c := self.name.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.name, "superimposition type").scopes(sm.current_scope)
 
@@ -101,7 +101,7 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         cls_symbol = sm.current_scope.get_symbol(self.name)
 
         # Add the "Self" symbol into the scope.
-        if self.name.type_parts()[0].value[0] != "$":
+        if self.name.type_parts[0].value[0] != "$":
             self_symbol = TypeSymbol(
                 name=Asts.GenericIdentifierAst.from_type(CommonTypes.Self(self.name.pos)), type=cls_symbol.type,
                 scope=cls_symbol.scope, scope_defined_in=sm.current_scope)

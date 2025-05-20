@@ -52,7 +52,7 @@ class PostfixExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         # Todo: what on earth does this if statement do?
         lhs_type = self.lhs.infer_type(sm, **kwargs)
-        if isinstance(self.lhs, Asts.IdentifierAst) and isinstance(lhs_type, Asts.TypeAst) and lhs_type.type_parts()[0].value[0] != "$":
+        if isinstance(self.lhs, Asts.IdentifierAst) and isinstance(lhs_type, Asts.TypeAst) and lhs_type.type_parts[0].value[0] != "$":
             AstMemoryUtils.enforce_memory_integrity(
                 self.lhs, self.op, sm, check_move=True, check_partial_move=False, check_move_from_borrowed_ctx=False,
                 check_pins=False, mark_moves=False)

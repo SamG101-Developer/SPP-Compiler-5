@@ -60,7 +60,7 @@ class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # Determine the number of elements in the lhs and rhs tuples.
         num_lhs_tuple_elements = len(self.elems)
-        num_rhs_tuple_elements = len(value.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments)
+        num_rhs_tuple_elements = len(value.infer_type(sm, **kwargs).type_parts[0].generic_argument_group.arguments)
 
         # Ensure the lhs and rhs tuples have the same number of elements unless a multi-skip is present.
         if (num_lhs_tuple_elements < num_rhs_tuple_elements and not multi_arg_skips) or num_lhs_tuple_elements > num_rhs_tuple_elements:

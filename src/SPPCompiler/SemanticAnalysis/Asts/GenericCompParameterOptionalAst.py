@@ -49,7 +49,7 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Ensure the type does not have a convention.
-        if c := self.type.get_convention():
+        if c := self.type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.type, "comp generic parameter type").scopes(sm.current_scope)
 

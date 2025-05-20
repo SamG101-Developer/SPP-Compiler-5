@@ -20,8 +20,8 @@ def spp_to_llvm_type(spp_type: Asts.TypeAst, sm: ScopeManager, *, is_return: boo
     :return:
     """
 
-    if spp_type.get_convention():
-        return ir.PointerType(spp_to_llvm_type(spp_type.without_conventions(), sm))
+    if spp_type.convention:
+        return ir.PointerType(spp_to_llvm_type(spp_type.without_conventions, sm))
     elif AstTypeUtils.symbolic_eq(spp_type, CommonTypesPrecompiled.F32, sm.current_scope, sm.current_scope):
         return ir.FloatType()
     elif AstTypeUtils.symbolic_eq(spp_type, CommonTypesPrecompiled.F64, sm.current_scope, sm.current_scope):
@@ -48,12 +48,12 @@ def spp_to_llvm_type(spp_type: Asts.TypeAst, sm: ScopeManager, *, is_return: boo
         return ir.ArrayType(ir.IntType(8), 0)
     elif AstTypeUtils.symbolic_eq(spp_type, CommonTypesPrecompiled.VOID, sm.current_scope, sm.current_scope):
         return ir.VoidType()
-    elif AstTypeUtils.symbolic_eq(spp_type.without_generics(), CommonTypesPrecompiled.EMPTY_ARRAY_DYNAMIC, sm.current_scope, sm.current_scope):
-        return ir.PointerType(spp_to_llvm_type(spp_type.type_parts()[0].generic_argument_group.arguments[0].value, sm))
-    elif AstTypeUtils.symbolic_eq(spp_type.without_generics(), CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope, sm.current_scope):
-        n = int(spp_type.type_parts()[0].generic_argument_group.arguments[1].value.value.token_data)
-        return ir.ArrayType(spp_to_llvm_type(spp_type.type_parts()[0].generic_argument_group.arguments[0].value, sm), n)
-    elif is_return and AstTypeUtils.symbolic_eq(spp_type.without_generics(), CommonTypesPrecompiled.EMPTY_SINGLE, sm.current_scope, sm.current_scope):
-        return ir.PointerType(spp_to_llvm_type(spp_type.type_parts()[0].generic_argument_group.arguments[0].value, sm))
+    elif AstTypeUtils.symbolic_eq(spp_type.without_generics, CommonTypesPrecompiled.EMPTY_ARRAY_DYNAMIC, sm.current_scope, sm.current_scope):
+        return ir.PointerType(spp_to_llvm_type(spp_type.type_parts[0].generic_argument_group.arguments[0].value, sm))
+    elif AstTypeUtils.symbolic_eq(spp_type.without_generics, CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope, sm.current_scope):
+        n = int(spp_type.type_parts[0].generic_argument_group.arguments[1].value.value.token_data)
+        return ir.ArrayType(spp_to_llvm_type(spp_type.type_parts[0].generic_argument_group.arguments[0].value, sm), n)
+    elif is_return and AstTypeUtils.symbolic_eq(spp_type.without_generics, CommonTypesPrecompiled.EMPTY_SINGLE, sm.current_scope, sm.current_scope):
+        return ir.PointerType(spp_to_llvm_type(spp_type.type_parts[0].generic_argument_group.arguments[0].value, sm))
     else:
         raise SemanticErrors.InvalidFfiSppTypeError().add(spp_type).scopes(sm.current_scope)

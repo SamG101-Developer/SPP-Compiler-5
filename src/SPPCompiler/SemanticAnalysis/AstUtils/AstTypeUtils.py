@@ -27,64 +27,64 @@ class AstTypeUtils:
     @staticmethod
     def is_type_indexable(type: Asts.TypeAst, scope: Scope) -> bool:
         # Only tuple and array types are indexable.
-        is_tuple = AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_TUPLE, scope, scope)
-        is_array = AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_ARRAY, scope, scope)
+        is_tuple = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_TUPLE, scope, scope)
+        is_array = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_ARRAY, scope, scope)
         return is_tuple or is_array
 
     @staticmethod
     def is_type_functional(type: Asts.TypeAst, scope: Scope) -> bool:
         # Check if a type is one of the three function types.
-        is_fun_mov = AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_FUN_MOV, scope, scope)
-        is_fun_mut = AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_FUN_MUT, scope, scope)
-        is_fun_ref = AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_FUN_REF, scope, scope)
+        is_fun_mov = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_MOV, scope, scope)
+        is_fun_mut = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_MUT, scope, scope)
+        is_fun_ref = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_REF, scope, scope)
         return is_fun_mov or is_fun_mut or is_fun_ref
 
     @staticmethod
     def is_type_tuple(type: Asts.TypeAst, scope: Scope) -> bool:
         # Todo: search for tuple comparisons and use this function
         # Check if a type is a tuple type.
-        is_tuple = AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_TUPLE, scope, scope, check_variant=False)
+        is_tuple = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_TUPLE, scope, scope, check_variant=False)
         return is_tuple
 
     @staticmethod
     def is_type_array(type: Asts.TypeAst, scope: Scope) -> bool:
         # Todo: search for array comparisons and use this function
         # Check if a type is an array type.
-        is_array = AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_ARRAY, scope, scope, check_variant=False)
+        is_array = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_ARRAY, scope, scope, check_variant=False)
         return is_array
 
     @staticmethod
     def is_type_variant(type: Asts.TypeAst, scope: Scope) -> bool:
         # Todo: search for array comparisons and use this function
         # Check if a type is a variant type.
-        is_variant = AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_VARIANT, scope, scope)
+        is_variant = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_VARIANT, scope, scope)
         return is_variant
 
     @staticmethod
     def is_index_within_type_bound(index: int, type: Asts.TypeAst, scope: Scope) -> bool:
         # Tuple type: count the number of generic arguments.
-        if AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_TUPLE, scope, scope):
-            return index < len(type.type_parts()[0].generic_argument_group.arguments)
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_TUPLE, scope, scope):
+            return index < len(type.type_parts[0].generic_argument_group.arguments)
 
         # Array type: get the "n" generic comp argument.
-        if AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_ARRAY, scope, scope):
-            return index < int(type.type_parts()[0].generic_argument_group.arguments[1].value.value.token_data)
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_ARRAY, scope, scope):
+            return index < int(type.type_parts[0].generic_argument_group.arguments[1].value.value.token_data)
 
         raise NotImplementedError("Only tuple and array types are indexable.")
 
     @staticmethod
     def get_nth_type_of_indexable_type(sm: ScopeManager, index: int, type: Asts.TypeAst) -> Asts.TypeAst:
         # Tuple type: get the nth generic argument.
-        if AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope, sm.current_scope):
-            return type.type_parts()[0].generic_argument_group.arguments[index].value
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope, sm.current_scope):
+            return type.type_parts[0].generic_argument_group.arguments[index].value
 
         # Array type: get the first generic argument as an "Opt[T]" type (safety check).
-        if AstTypeUtils.symbolic_eq(type.without_generics(), CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope, sm.current_scope):
-            return type.type_parts()[0].generic_argument_group.arguments[0].value
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope, sm.current_scope):
+            return type.type_parts[0].generic_argument_group.arguments[0].value
 
         # Array type: get the first generic argument as an "Opt[T]" type (safety check).
-        # if type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope):
-        #     safe_type = CommonTypes.Opt(type.pos, type.type_parts()[0].generic_argument_group.arguments[0].value)
+        # if type.without_generics.symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope):
+        #     safe_type = CommonTypes.Opt(type.pos, type.type_parts[0].generic_argument_group.arguments[0].value)
         #     safe_type.analyse_semantics(sm)
         #     return safe_type
 
@@ -195,9 +195,9 @@ class AstTypeUtils:
 
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
             return TypeSymbol(
-                name=generic_argument.name.type_parts()[0], type=true_value_symbol.type if true_value_symbol else None,
+                name=generic_argument.name.type_parts[0], type=true_value_symbol.type if true_value_symbol else None,
                 scope=true_value_symbol.scope if true_value_symbol else None, is_generic=True,
-                convention=generic_argument.value.get_convention(), scope_defined_in=sm.current_scope)
+                convention=generic_argument.value.convention, scope_defined_in=sm.current_scope)
 
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
             return VariableSymbol(
@@ -252,7 +252,7 @@ class AstTypeUtils:
 
         # Search through the type and supertypes for a generator type.
         for sup_type in sup_types:
-            if AstTypeUtils.symbolic_eq(sup_type.without_generics(), CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope, sm.current_scope):
+            if AstTypeUtils.symbolic_eq(sup_type.without_generics, CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope, sm.current_scope):
                 gen_type = sup_type
                 break
 
@@ -262,7 +262,7 @@ class AstTypeUtils:
                 expr, type, what).scopes(sm.current_scope)
 
         # Extract the "Yield" generic argument's value from the generator type.
-        yield_type = gen_type.type_parts()[-1].generic_argument_group["Yield"].value
+        yield_type = gen_type.type_parts[-1].generic_argument_group["Yield"].value
         return gen_type, yield_type
 
     @staticmethod
@@ -278,17 +278,17 @@ class AstTypeUtils:
         """
 
         out = []
-        if not type.type_parts()[-1].generic_argument_group.arguments:
+        if not type.type_parts[-1].generic_argument_group.arguments:
             return out
 
-        for generic_arg in type.type_parts()[-1].generic_argument_group.arguments[0].value.type_parts()[-1].generic_argument_group.arguments:
+        for generic_arg in type.type_parts[-1].generic_argument_group.arguments[0].value.type_parts[-1].generic_argument_group.arguments:
 
             # Inspect inner variant types by extending the composite type list.
-            if AstTypeUtils.symbolic_eq(generic_arg.value.without_generics(), CommonTypesPrecompiled.EMPTY_VARIANT, scope, scope):
+            if AstTypeUtils.symbolic_eq(generic_arg.value.without_generics, CommonTypesPrecompiled.EMPTY_VARIANT, scope, scope):
                 out.extend(AstTypeUtils.deduplicate_composite_types(generic_arg.value, scope))
 
             # Ensure there are no borrowed types inside the variant type.
-            elif (c := generic_arg.value.get_convention()) is not None:
+            elif (c := generic_arg.value.convention) is not None:
                 raise SemanticErrors.InvalidConventionLocationError().add(c, generic_arg, "variant type argument").scopes(scope)
 
             # Inspect a non-variant type, and if it hasn't been added to the list, add it.
@@ -318,15 +318,15 @@ class AstTypeUtils:
             return lhs_type == rhs_type
 
         # Strip the generics from the types.
-        stripped_lhs = lhs_type.without_generics()
-        stripped_rhs = rhs_type.without_generics()
+        stripped_lhs = lhs_type.without_generics
+        stripped_rhs = rhs_type.without_generics
 
         # First step is to get the symbols for the non-generic versions of both types.
         stripped_lhs_symbol = lhs_scope.get_symbol(stripped_lhs, ignore_alias=lhs_ignore_alias)
         stripped_rhs_symbol = rhs_scope.get_symbol(stripped_rhs)
 
         # If the left-hand-side is a Variant type, then check the composite types first.
-        if check_variant and lhs_type.type_parts()[-1].generic_argument_group.arguments and AstTypeUtils.symbolic_eq(stripped_lhs_symbol.fq_name.without_generics(), CommonTypesPrecompiled.EMPTY_VARIANT, lhs_scope, lhs_scope, check_variant=False, debug=debug):
+        if check_variant and lhs_type.type_parts[-1].generic_argument_group.arguments and AstTypeUtils.symbolic_eq(stripped_lhs_symbol.fq_name.without_generics, CommonTypesPrecompiled.EMPTY_VARIANT, lhs_scope, lhs_scope, check_variant=False, debug=debug):
             lhs_composite_types = AstTypeUtils.deduplicate_composite_types(lhs_scope.get_symbol(lhs_type).fq_name, lhs_scope)
 
             # Check each composite type against the other.
@@ -342,8 +342,8 @@ class AstTypeUtils:
         lhs_type_fq = lhs_scope.get_symbol(lhs_type, ignore_alias=lhs_ignore_alias).fq_name
         rhs_type_fq = rhs_scope.get_symbol(rhs_type).fq_name
 
-        lhs_generics = lhs_type_fq.type_parts()[-1].generic_argument_group.arguments
-        rhs_generics = rhs_type_fq.type_parts()[-1].generic_argument_group.arguments
+        lhs_generics = lhs_type_fq.type_parts[-1].generic_argument_group.arguments
+        rhs_generics = rhs_type_fq.type_parts[-1].generic_argument_group.arguments
 
         # Ensure each generic argument is symbolically equal to the other.
         for lhs_generic, rhs_generic in zip(lhs_generics, rhs_generics):
@@ -378,8 +378,8 @@ class AstTypeUtils:
             return lhs_type == rhs_type
 
         # Strip the generics from the types.
-        stripped_lhs = lhs_type.without_generics()
-        stripped_rhs = rhs_type.without_generics()
+        stripped_lhs = lhs_type.without_generics
+        stripped_rhs = rhs_type.without_generics
 
         # If the right hand side is generic, then return a match: "sup [T] T" matches all types.
         stripped_rhs_symbol = rhs_scope.get_symbol(stripped_rhs)
@@ -395,8 +395,8 @@ class AstTypeUtils:
         lhs_type_fq = lhs_scope.get_symbol(lhs_type).fq_name
         rhs_type_fq = rhs_scope.get_symbol(rhs_type).fq_name
 
-        lhs_generics = lhs_type_fq.type_parts()[-1].generic_argument_group.arguments
-        rhs_generics = rhs_type_fq.type_parts()[-1].generic_argument_group.arguments
+        lhs_generics = lhs_type_fq.type_parts[-1].generic_argument_group.arguments
+        rhs_generics = rhs_type_fq.type_parts[-1].generic_argument_group.arguments
 
         # Ensure each generic argument is symbolically equal to the other.
         for lhs_generic, rhs_generic in zip(lhs_generics, rhs_generics):

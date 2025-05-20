@@ -29,7 +29,7 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
-        return int.from_bytes(self.value.encode())
+        return hash(self.value)
 
     def __add__(self, other: IdentifierAst | str) -> IdentifierAst:
         if isinstance(other, str):
@@ -56,7 +56,7 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     @staticmethod
     def from_type(type: Asts.TypeAst) -> Asts.IdentifierAst:
-        return IdentifierAst.from_generic_identifier(type.type_parts()[0])
+        return IdentifierAst.from_generic_identifier(type.type_parts[0])
 
     @staticmethod
     def from_generic_identifier(identifier: Asts.GenericIdentifierAst) -> IdentifierAst:

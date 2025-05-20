@@ -518,7 +518,7 @@ class AstFunctionUtils:
 
                 # Handle the variadic parameter if it exists.
                 if variadic_parameter_identifier and infer_target_name == variadic_parameter_identifier:
-                    inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].type_parts()[0].generic_argument_group.arguments[0].value
+                    inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].type_parts[0].generic_argument_group.arguments[0].value
 
         # Add any default generic arguments in that were missing.
         for optional_generic_parameter in optional_generic_parameters:
@@ -606,8 +606,8 @@ class AstFunctionUtils:
         """
 
         # Extract the parameter and return types from the expression type.
-        dummy_params_types = [t.value for t in expr_type.type_parts()[-1].generic_argument_group["Args"].value.type_parts()[-1].generic_argument_group.arguments]
-        dummy_return_type = expr_type.type_parts()[-1].generic_argument_group["Out"].value
+        dummy_params_types = [t.value for t in expr_type.type_parts[-1].generic_argument_group["Args"].value.type_parts[-1].generic_argument_group.arguments]
+        dummy_return_type = expr_type.type_parts[-1].generic_argument_group["Out"].value
 
         # Create a function prototype based off of the parameter and return types.
         dummy_params = Asts.FunctionParameterGroupAst(params=[Asts.FunctionParameterRequiredAst(type=t) for t in dummy_params_types])

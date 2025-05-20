@@ -60,7 +60,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Ensure the attribute type does not have a convention.
-        if c := self.type.get_convention():
+        if c := self.type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.type, "attribute type").scopes(sm.current_scope)
 
@@ -77,7 +77,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.analyse_semantics(sm, **kwargs)
 
         # Repeat the check here for generic substitution attribute types.
-        if c := self.type.get_convention():
+        if c := self.type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.type, "attribute type").scopes(sm.current_scope)
 

@@ -58,7 +58,7 @@ class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         self._conversion = Asts.UseStatementAliasAst(
             pos=self.pos,
             annotations=self.annotations,
-            new_type=Asts.TypeSingleAst.from_generic_identifier(self.old_type.type_parts()[-1].without_generics()),
+            new_type=Asts.TypeSingleAst.from_generic_identifier(self.old_type.type_parts[-1].without_generics),
             old_type=self.old_type)
         self._conversion.generate_top_level_scopes(sm)
 
@@ -70,13 +70,13 @@ class UseStatementReduxAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         generic_params = old_type_symbol.type.generic_parameter_group
         self._conversion.generic_parameter_group = copy.copy(generic_params)
         self._conversion._cls_ast.generic_parameter_group = copy.copy(generic_params)
-        self._conversion.old_type.type_parts()[-1].generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(generic_params.parameters)
+        self._conversion.old_type.type_parts[-1].generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(generic_params.parameters)
 
-        plain_old_sym = sm.current_scope.get_symbol(self.old_type.without_generics()).generic_impl
+        plain_old_sym = sm.current_scope.get_symbol(self.old_type.without_generics).generic_impl
         self._conversion.generate_top_level_aliases(sm, old_sym=plain_old_sym, **kwargs)
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
-        plain_old_sym = sm.current_scope.get_symbol(self.old_type.without_generics()).generic_impl
+        plain_old_sym = sm.current_scope.get_symbol(self.old_type.without_generics).generic_impl
         self._conversion.qualify_types(sm, old_sym=plain_old_sym, **kwargs)
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:

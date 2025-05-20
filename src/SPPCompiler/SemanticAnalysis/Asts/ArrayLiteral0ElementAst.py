@@ -100,7 +100,7 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.elem_type.analyse_semantics(sm, **kwargs)
 
         # Ensure there is no convention on the array literal.
-        if c := self.elem_type.get_convention():
+        if c := self.elem_type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.elem_type, "array element type").scopes(sm.current_scope)
 

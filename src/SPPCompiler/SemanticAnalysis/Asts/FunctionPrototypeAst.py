@@ -102,7 +102,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         function_call = Asts.IdentifierAst(self.name.pos, "call")
 
         # If this is the first overload being converted, then the class needs to be made for the type.
-        if not [m for m in ctx.body.members if isinstance(m, Asts.ClassPrototypeAst) and m.name.without_generics() == mock_class_name.without_generics()]:
+        if not [m for m in ctx.body.members if isinstance(m, Asts.ClassPrototypeAst) and m.name.without_generics == mock_class_name.without_generics]:
             mock_class_ast = Asts.ClassPrototypeAst(
                 name=mock_class_name)
             mock_constant_ast = Asts.CmpStatementAst(
@@ -135,7 +135,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Ensure the function return type does not have a convention.
-        if c := self.return_type.get_convention():
+        if c := self.return_type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.return_type, "function return type").scopes(sm.current_scope)
 
@@ -191,7 +191,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Repeat the check here for generic substitution return types.
         self.return_type.analyse_semantics(sm, **kwargs)
-        if c := self.return_type.get_convention():
+        if c := self.return_type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.return_type, "function return type").scopes(sm.current_scope)
 

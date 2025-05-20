@@ -126,7 +126,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(
                     self.rhs, rhs_tuple_type, self.lhs).scopes(sm.current_scope)
 
-            rhs_num_elements = len(rhs_tuple_type.type_parts()[0].generic_argument_group.arguments)
+            rhs_num_elements = len(rhs_tuple_type.type_parts[0].generic_argument_group.arguments)
 
             # Get the parts of the tuple.
             new_asts = []
@@ -150,7 +150,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(
                     self.rhs, lhs_tuple_type, self.lhs).scopes(sm.current_scope)
 
-            lhs_num_elements = len(lhs_tuple_type.type_parts()[0].generic_argument_group.arguments)
+            lhs_num_elements = len(lhs_tuple_type.type_parts[0].generic_argument_group.arguments)
 
             # Get the parts of the tuple.
             new_asts = []

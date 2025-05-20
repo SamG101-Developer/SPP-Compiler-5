@@ -36,7 +36,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         self.kw_use = self.kw_use or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwUse)
         self.generic_parameter_group = self.generic_parameter_group or Asts.GenericParameterGroupAst(pos=self.pos)
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
-        self.new_type = self.new_type or Asts.TypeSingleAst(self.old_type.pos, self.old_type.type_parts()[-1])
+        self.new_type = self.new_type or Asts.TypeSingleAst(self.old_type.pos, self.old_type.type_parts[-1])
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -86,12 +86,12 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
             a.generate_top_level_scopes(sm)
 
         # Ensure the old type does not have a convention.
-        if c := self.old_type.get_convention():
+        if c := self.old_type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.old_type, "use statement old type").scopes(sm.current_scope)
 
         # Ensure the new type does not have a convention.
-        if c := self.new_type.get_convention():
+        if c := self.new_type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.new_type, "use statement new type").scopes(sm.current_scope)
 
@@ -122,7 +122,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
 
         # Ensure the validity of the old type, with its generic arguments set.
         for generic_parameter in self.generic_parameter_group.get_type_params():
-            type_symbol = TypeSymbol(name=generic_parameter.name.type_parts()[0], type=None, is_generic=True, scope_defined_in=sm.current_scope)
+            type_symbol = TypeSymbol(name=generic_parameter.name.type_parts[0], type=None, is_generic=True, scope_defined_in=sm.current_scope)
             sm.current_scope.add_symbol(type_symbol)
             cls_scope.add_symbol(type_symbol)
 

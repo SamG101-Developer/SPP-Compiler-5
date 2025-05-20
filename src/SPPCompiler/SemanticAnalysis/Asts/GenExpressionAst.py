@@ -49,7 +49,7 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # The inferred type of a gen expression is the type of the value being sent back into the coroutine.
         generator_type = self._func_ret_type
-        send_type = generator_type.type_parts()[0].generic_argument_group["Send"].value
+        send_type = generator_type.type_parts[0].generic_argument_group["Send"].value
         return send_type
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:

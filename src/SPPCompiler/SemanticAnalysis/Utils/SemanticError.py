@@ -753,7 +753,7 @@ class SemanticErrors:
                 ast=ast,
                 tag="Uninitialized memory used here.",
                 msg="The memory has not been initialized or has been moved.",
-                tip=f"Ensure the memory is initialized before use\n\n\tlet {ast} = {ast.infer_type(sm).type_parts()[-1]}().")
+                tip=f"Ensure the memory is initialized before use\n\n\tlet {ast} = {ast.infer_type(sm).type_parts[-1]}().")
 
             return self
 

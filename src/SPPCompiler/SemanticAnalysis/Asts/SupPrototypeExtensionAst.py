@@ -104,7 +104,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
     def _check_conflicting_cmp_statements(self, cls_symbol: TypeSymbol, sm: ScopeManager) -> None:
         # Prevent duplicate cmp declarations by checking if the cmp statements appear in any super class.
         existing_cmp_names = SequenceUtils.flatten([
-            [m.name for m in s._ast.body.members if isinstance(m, Asts.SupCmpStatementAst) and m.type.type_parts()[-1].value[0] != "$"]
+            [m.name for m in s._ast.body.members if isinstance(m, Asts.SupCmpStatementAst) and m.type.type_parts[-1].value[0] != "$"]
             for s in cls_symbol.scope.sup_scopes
             if isinstance(s._ast, Asts.SupPrototypeAst)])
 
@@ -113,7 +113,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 duplicates[0], duplicates[1], "associated const").scopes(sm.current_scope)
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
-        if self.name.type_parts()[0].value[0] == "$": return
+        if self.name.type_parts[0].value[0] == "$": return
         Asts.Ast.pre_process(self, ctx)
         self.body.pre_process(self)
 
@@ -128,17 +128,17 @@ class SupPrototypeExtensionAst(Asts.Ast):
                 optional[0]).scopes(sm.current_scope)
 
         # Check every generic parameter is constrained by the type.
-        if self.name.type_parts()[0].value[0] != "$" and (unconstrained := [p for p in self.generic_parameter_group.parameters if not (self.name.contains_generic(p.name) or self.super_class.contains_generic(p.name))]):
+        if self.name.type_parts[0].value[0] != "$" and (unconstrained := [p for p in self.generic_parameter_group.parameters if not (self.name.contains_generic(p.name) or self.super_class.contains_generic(p.name))]):
             raise SemanticErrors.SuperimpositionUnconstrainedGenericParameterError().add(
                 unconstrained[0], self.name).scopes(sm.current_scope)
 
         # Ensure the superimposition type does not have a convention.
-        if c := self.name.get_convention():
+        if c := self.name.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.name, "superimposition type").scopes(sm.current_scope)
 
         # Ensure the superimposition supertype does not have a convention.
-        if c := self.super_class.get_convention():
+        if c := self.super_class.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.super_class, "superimposition supertype").scopes(sm.current_scope)
 
@@ -180,7 +180,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         cls_symbol = sm.current_scope.get_symbol(self.name)
 
         # Add the "Self" symbol into the scope.
-        if self.name.type_parts()[0].value[0] != "$":
+        if self.name.type_parts[0].value[0] != "$":
             self_symbol = TypeSymbol(
                 name=Asts.GenericIdentifierAst.from_type(CommonTypes.Self(self.name.pos)), type=cls_symbol.type,
                 scope=cls_symbol.scope, scope_defined_in=sm.current_scope)
@@ -188,7 +188,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
         # Mark the class as copyable if the "Copy" type is the super class.
         if AstTypeUtils.symbolic_eq(self.super_class, CommonTypesPrecompiled.COPY, sm.current_scope, sm.current_scope):
-            sm.current_scope.get_symbol(self.name.without_generics()).is_copyable = True
+            sm.current_scope.get_symbol(self.name.without_generics).is_copyable = True
             cls_symbol.is_copyable = True
 
         sup_symbol = sm.current_scope.get_symbol(self.super_class)

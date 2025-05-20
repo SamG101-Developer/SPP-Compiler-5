@@ -61,7 +61,7 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Ensure the old type does not have a convention.
-        if c := self.type.get_convention():
+        if c := self.type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.type, "global constant type").scopes(sm.current_scope)
 

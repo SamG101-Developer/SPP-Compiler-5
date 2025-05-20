@@ -55,7 +55,7 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the name and value of the generic type argument.
-        convention = self.value.get_convention()
+        convention = self.value.convention
         self.value.analyse_semantics(sm, **kwargs)
         self.value = sm.current_scope.get_symbol(self.value).fq_name.with_convention(convention)
 
