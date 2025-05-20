@@ -381,6 +381,10 @@ class AstTypeUtils:
         stripped_lhs = lhs_type.without_generics
         stripped_rhs = rhs_type.without_generics
 
+        # If the rhs scope is None, then the scope itself is generic, so auto match it.
+        if rhs_scope is None:
+            return True
+
         # If the right hand side is generic, then return a match: "sup [T] T" matches all types.
         stripped_rhs_symbol = rhs_scope.get_symbol(stripped_rhs)
         if stripped_rhs_symbol.is_generic:

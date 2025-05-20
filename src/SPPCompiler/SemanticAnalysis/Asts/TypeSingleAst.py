@@ -64,7 +64,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     def from_string(ast: str) -> TypeSingleAst:
         from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-        return CodeInjection.inject_code(ast, SppParser.parse_type_single, pos_adjust=0)
+        return CodeInjection.inject_code(ast, SppParser.parse_type, pos_adjust=0)
 
     @property
     def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:

@@ -196,8 +196,8 @@ class Scope:
 
     def get_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
         # Handle generic translation.
-        if self is not self._non_generic_scope:  # and not isinstance(name, Asts.IdentifierAst):
-            return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias), ignore_alias)
+        # if self is not self._non_generic_scope:  # and not isinstance(name, Asts.IdentifierAst):
+        #     return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias), ignore_alias)
 
         # Namespace adjust, and get the symbol from the symbol table if it exists.
         scope = self
