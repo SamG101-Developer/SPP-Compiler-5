@@ -33,7 +33,7 @@ def _build_temp_project_v3(code, add_main: bool = True):
         f.write(code)
 
     os.chdir(fp)
-    handle_build(Namespace(mode="rel"), skip_vcs=True)
+    handle_build(Namespace(mode="dev"), skip_vcs=True)
     os.chdir(cwd)
 
 
