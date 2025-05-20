@@ -24,14 +24,16 @@ class TypePostfixOperatorNestedTypeAst(Asts.Ast):
         return f"{self.tok_sep}{self.name}"
 
     @property
+    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+        return self.name.fq_type_parts
+
+    @property
+    def type_parts(self) -> List[Asts.GenericIdentifierAst]:
+        return self.name.type_parts
+
+    @property
     def pos_end(self) -> int:
         return self.name.pos_end
-
-    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        return self.name.fq_type_parts()
-
-    def type_parts(self) -> List[Asts.GenericIdentifierAst]:
-        return self.name.type_parts()
 
 
 __all__ = [

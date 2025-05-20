@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, TYPE_CHECKING, Self, List
+from typing import Dict, List, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -35,6 +35,22 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def print(self, printer: AstPrinter) -> str:
         return f"{self.lhs}{self.op}"
 
+    @FunctionCache.cache_property
+    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+        return CommonTypes.Opt(self.pos, self.lhs).fq_type_parts if isinstance(self.op, Asts.TypePostfixOperatorOptionalTypeAst) else self.lhs.fq_type_parts + self.op.fq_type_parts
+
+    @FunctionCache.cache_property
+    def without_generics(self) -> Optional[Asts.TypeAst]:
+        return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs, op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.without_generics))
+
+    @property
+    def without_conventions(self) -> Optional[Asts.TypeAst]:
+        return self
+
+    @property
+    def convention(self) -> Optional[Asts.TypeAst]:
+        return None
+
     @property
     def pos_end(self) -> int:
         return self.op.pos_end
@@ -52,14 +68,6 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
             return CommonTypes.Opt(self.pos, self.lhs.convert())
         return self
 
-    def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        if isinstance(self.op, Asts.TypePostfixOperatorOptionalTypeAst):
-            return CommonTypes.Opt(self.pos, self.lhs).fq_type_parts()
-        return self.lhs.fq_type_parts() + self.op.fq_type_parts()
-
-    def without_generics(self) -> Self:
-        return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs, op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.without_generics()))
-
     def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs.substituted_generics(generic_arguments), op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.substituted_generics(generic_arguments)))
 
@@ -72,12 +80,6 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def get_symbol(self, scope: Scope) -> TypeSymbol:
         self_scope = scope.get_symbol(self.lhs.infer_type(ScopeManager(scope, scope))).scope
         return self_scope.get_symbol(self.op.name)
-
-    def get_convention(self) -> Optional[Asts.ConventionAst]:
-        return None
-
-    def without_conventions(self) -> Asts.TypeAst:
-        return self
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         self.lhs.analyse_semantics(sm, **kwargs)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Iterator, List, Optional, Self, TYPE_CHECKING, Tuple
+from typing import Dict, Iterator, List, Optional, TYPE_CHECKING, Tuple
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -48,9 +48,6 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     def __str__(self) -> str:
         return f"{self.name}"
 
-    def __post_init__(self) -> None:
-        self.name = self.name or Asts.GenericIdentifierAst(pos=self.pos)
-
     @staticmethod
     def from_identifier(ast: Asts.IdentifierAst) -> TypeSingleAst:
         return TypeSingleAst(pos=ast.pos, name=Asts.GenericIdentifierAst.from_identifier(ast))
@@ -69,6 +66,22 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         from SPPCompiler.SyntacticAnalysis.Parser import SppParser
         return CodeInjection.inject_code(ast, SppParser.parse_type_single, pos_adjust=0)
 
+    @property
+    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+        return [self.name]
+
+    @FunctionCache.cache_property
+    def without_generics(self) -> Optional[Asts.TypeAst]:
+        return TypeSingleAst(self.pos, self.name.without_generics)
+
+    @property
+    def without_conventions(self) -> Optional[Asts.TypeAst]:
+        return self
+
+    @property
+    def convention(self) -> Optional[Asts.TypeAst]:
+        return None
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return f"{self.name.print(printer)}"
@@ -79,12 +92,6 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
     def convert(self) -> Asts.TypeAst:
         return self
-
-    def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        return [self.name]
-
-    def without_generics(self) -> Self:
-        return TypeSingleAst(self.pos, self.name.without_generics())
 
     def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         name = fast_deepcopy(self.name)
@@ -114,7 +121,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         """
 
         def custom_iterate(t: Asts.TypeAst, depth: int) -> Iterator[Tuple[Asts.GenericArgumentAst, int]]:
-            for g in t.type_parts()[-1].generic_argument_group.get_type_args():
+            for g in t.type_parts[-1].generic_argument_group.get_type_args():
                 yield g, depth
                 yield from custom_iterate(g.value, depth + 1)
 
@@ -145,19 +152,19 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         return any(g == Asts.GenericIdentifierAst.from_type(generic_type) for g in self)
 
     def get_symbol(self, scope: Scope) -> TypeSymbol:
-        return scope.get_symbol(self.name.without_generics(), exclusive=True)
+        return scope.get_symbol(self.name.without_generics, exclusive=True)
 
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
         type_scope = type_scope or sm.current_scope
         original_scope = type_scope
 
         # Determine the type scope and type symbol.
-        type_symbol = AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.name.without_generics(), ignore_alias=True)
+        type_symbol = AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.name.without_generics, ignore_alias=True)
         type_scope = type_symbol.scope
         if type_symbol.is_generic: return
 
         # Name all the generic arguments.
-        is_tuple = type_symbol.fq_name.without_generics() == CommonTypesPrecompiled.EMPTY_TUPLE  # Think this is ok...
+        is_tuple = type_symbol.fq_name.without_generics == CommonTypesPrecompiled.EMPTY_TUPLE  # Think this is ok...
         AstFunctionUtils.name_generic_arguments(
             self.name.generic_argument_group.arguments,
             type_symbol.type.generic_parameter_group.parameters,
@@ -180,7 +187,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         self.name.generic_argument_group.analyse_semantics(sm, **kwargs)
 
         # For variant types, collapse any duplicate generic arguments.
-        if AstTypeUtils.symbolic_eq(self.without_generics(), CommonTypesPrecompiled.EMPTY_VARIANT, type_scope, sm.current_scope, check_variant=False, lhs_ignore_alias=True):
+        if AstTypeUtils.symbolic_eq(self.without_generics, CommonTypesPrecompiled.EMPTY_VARIANT, type_scope, sm.current_scope, check_variant=False, lhs_ignore_alias=True):
             composite_types = AstTypeUtils.deduplicate_composite_types(self, sm.current_scope)
             composite_types = CommonTypes.Tup(self.pos, composite_types)
             composite_types.analyse_semantics(sm, type_scope=type_scope)
@@ -213,12 +220,6 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
         else:
             type_symbol = type_scope.parent.get_symbol(self.name)
-
-    def get_convention(self) -> Optional[Asts.ConventionAst]:
-        return None
-
-    def without_conventions(self) -> Asts.TypeAst:
-        return self
 
     def infer_type(self, sm: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or sm.current_scope

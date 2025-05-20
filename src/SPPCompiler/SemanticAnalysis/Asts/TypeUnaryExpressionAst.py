@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Self, Optional, Dict, Iterator, TYPE_CHECKING, List
+from typing import Dict, Iterator, List, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -42,6 +43,22 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def print(self, printer: AstPrinter) -> str:
         return f"{self.op.print(printer)}{self.rhs.print(printer)}"
 
+    @FunctionCache.cache_property
+    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+        return self.op.fq_type_parts + self.rhs.fq_type_parts if self.op.__class__ is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.fq_type_parts
+
+    @FunctionCache.cache_property
+    def without_generics(self) -> Optional[Asts.TypeAst]:
+        return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics)
+
+    @property
+    def without_conventions(self) -> Optional[Asts.TypeAst]:
+        return self if self.op.__class__ is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.without_conventions
+
+    @property
+    def convention(self) -> Optional[Asts.TypeAst]:
+        return self.op.convention if isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst) else None
+
     @property
     def pos_end(self) -> int:
         return self.rhs.pos_end
@@ -49,19 +66,11 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def convert(self) -> Asts.TypeAst:
         return self
 
-    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        if self.op.__class__ is Asts.TypeUnaryOperatorNamespaceAst:
-            return self.op.fq_type_parts() + self.rhs.fq_type_parts()
-        return self.rhs.fq_type_parts()
-
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             temp_manager = ScopeManager(sm.global_scope, type_scope or sm.current_scope, sm.all_super_scopes)
             type_scope = AstTypeUtils.get_namespaced_scope_with_error(temp_manager, [self.op.name])
         self.rhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
-
-    def without_generics(self) -> Self:
-        return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics())
 
     def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         x = self.rhs.substituted_generics(generic_arguments)
@@ -80,21 +89,10 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
             scope = scope.get_namespace_symbol(self.op.name).scope
         return self.rhs.get_symbol(scope)
 
-    def get_convention(self) -> Optional[Asts.ConventionAst]:
-        return self.op.convention if isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst) else None
-
-    def without_conventions(self) -> Asts.TypeAst:
-        # If the type is a unary type expression with a borrow operator, then return the rhs of the expression.
-        if isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst):
-            return self.rhs.without_conventions()
-
-        # Otherwise, return the type as is.
-        return self
-
     def infer_type(self, sm: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or sm.current_scope
         type_symbol = type_scope.get_symbol(self)
-        return type_symbol.fq_name.with_convention(self.get_convention())
+        return type_symbol.fq_name.with_convention(self.convention)
 
 
 __all__ = ["TypeUnaryExpressionAst"]

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from dataclasses import dataclass, field
 from typing import List, Optional, TYPE_CHECKING, final
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -27,6 +29,7 @@ class AbstractTypeTemporaryAst:
         """
 
 
+@dataclass()
 class AbstractTypeAst(AbstractTypeTemporaryAst):
     """
     The AbstractTypeAst contains a number of methods required to be implemented by all the different TypeAst classes.
@@ -34,42 +37,33 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
     all utility methods.
     """
 
-    def type_parts(self) -> List[Asts.GenericIdentifierAst]:
-        """
-        The type parts of a TypeAst are all the parts of the type asts that are not namespaces. For example, given
-        "ns1::ns2::Type1::Type2", the type parts are "Type1" and "Type2".
-
-        :return: The type parts of the type ast.
-        """
-
-        return [p for p in self.fq_type_parts() if p.__class__ is Asts.GenericIdentifierAst]
-
-    def namespace_parts(self) -> List[Asts.IdentifierAst]:
-        """
-        The namespace parts of a TypeAst are all the parts of the type asts that are namespaces. For example, given
-        "ns1::ns2::Type1::Type2", the namespace parts are "ns1" and "ns2".
-
-        :return: The namespace parts of the type ast.
-        """
-
-        return [p for p in self.fq_type_parts() if p.__class__ is Asts.IdentifierAst]
-
+    @property
     @abstractmethod
     def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        """
-        The fully-qualified type parts of a TypeAst are all the parts of the type asts that are namespace or type parts.
-        For example, given "ns1::ns2::Type1::Type2", the fq type parts are "ns1", "ns2", "Type1" and "Type2".
+        ...
 
-        :return: The fully-qualified type parts of the type ast.
-        """
+    @property
+    @abstractmethod
+    def without_generics(self) -> Optional[Asts.TypeAst]:
+        ...
 
-    def without_generics(self) -> Asts.TypeAst:
-        """
-        Create a new instance of ehte type asts that has had its generics removed. This is used especially for checking
-        if types exist or need to be specialised. For example, "Vec[T]" becomes "Vec" when the generics are removed.
+    @property
+    @abstractmethod
+    def without_conventions(self) -> Optional[Asts.TypeAst]:
+        ...
 
-        :return: The type ast without generics.
-        """
+    @property
+    @abstractmethod
+    def convention(self) -> Optional[Asts.ConventionAst]:
+        ...
+
+    @FunctionCache.cache_property
+    def namespace_parts(self) -> List[Asts.IdentifierAst]:
+        return [p for p in self.fq_type_parts if isinstance(p, Asts.IdentifierAst)]
+
+    @FunctionCache.cache_property
+    def type_parts(self) -> List[Asts.GenericIdentifierAst | Asts.TokenAst]:
+        return [p for p in self.fq_type_parts if isinstance(p, (Asts.GenericIdentifierAst, Asts.TokenAst))]
 
     @abstractmethod
     def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
@@ -111,24 +105,6 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
         :param scope: The scope to get the symbol from.
         :return: The type symbol for this type.
-        """
-
-    @abstractmethod
-    def get_convention(self) -> Optional[Asts.ConventionAst]:
-        """
-        Get the convention attached to a type. This will either be "&" or "&mut", and the AST will only ever be part of
-        a TypeUnaryExpressionAst.
-
-        :return: The convention attached to the type, or None if no convention is attached.
-        """
-
-    @abstractmethod
-    def without_conventions(self) -> Asts.TypeAst:
-        """
-        Get this type without its associated convention, if it exists. This is used to remove the convention from a type
-        when it is no longer needed.
-
-        :return: The type ast without the convention.
         """
 
     @final
