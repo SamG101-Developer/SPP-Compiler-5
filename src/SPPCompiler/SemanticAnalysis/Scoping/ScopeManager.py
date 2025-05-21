@@ -117,17 +117,20 @@ class ScopeManager:
         self.reset()
 
     def attach_super_scope_to_target_scope(self, scope: Scope, custom_scopes: list[Scope] = None, progress: Optional[Progress] = None) -> None:
+        from SPPCompiler.SemanticAnalysis import Asts
+
         scope._direct_sup_scopes = []
         super_scopes = custom_scopes if custom_scopes is not None else self._all_super_scopes
 
         # Iterate through all the super scopes and check if the name matches.
         for super_scope in super_scopes:
-            if not AstTypeUtils.relaxed_symbolic_eq(scope.name, super_scope._ast.name, scope, super_scope.get_symbol(super_scope._ast.name.without_generics, ignore_alias=True).scope):
+            scope_generics_dict = {}
+            if not AstTypeUtils.relaxed_symbolic_eq(scope.name, super_scope._ast.name, scope, super_scope, scope_generics_dict):  # .get_symbol(super_scope._ast.name.without_generics, ignore_alias=True).scope):
                 continue
+            scope_generics = Asts.GenericArgumentGroupAst.from_dict(scope_generics_dict)
 
             tm = ScopeManager(self.global_scope, scope.type_symbol.scope_defined_in, self._all_super_scopes)
-            new_sup_scope, new_cls_scope = AstTypeUtils.create_generic_sup_scope(
-                tm, super_scope, scope, scope.name.type_parts[0].generic_argument_group)
+            new_sup_scope, new_cls_scope = AstTypeUtils.create_generic_sup_scope(tm, super_scope, scope, scope_generics)
             scope._direct_sup_scopes.append(new_sup_scope)
             if new_cls_scope:
                 scope._direct_sup_scopes.append(new_cls_scope)
