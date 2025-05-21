@@ -142,6 +142,12 @@ class Scope:
     def __str__(self) -> str:
         return str(self._name)
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+    def __eq__(self, other: Scope) -> bool:
+        return self is other
+
     @property
     def generics(self) -> List[Asts.GenericArgumentAst]:
         GenericArgumentCTor = {
