@@ -185,6 +185,8 @@ class AstTypeUtils:
         new_scope._children = old_sup_scope._children
         new_scope._symbol_table = copy.copy(old_sup_scope._symbol_table)
         new_scope._non_generic_scope = old_sup_scope
+        new_scope.parent = old_sup_scope.parent
+        new_scope.parent.children.append(new_scope)
 
         # Add the generic arguments to the new scope.
         for generic_argument in generic_arguments.arguments:
@@ -359,8 +361,7 @@ class AstTypeUtils:
         return True
 
     @staticmethod
-    @FunctionCache.cache
-    def relaxed_symbolic_eq(lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope) -> bool:
+    def relaxed_symbolic_eq(lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope, generics: Optional[dict] = None) -> bool:
         """
         The relaxed version of the symbolic equality check is the same as normal symbolic matching, but it allows a
         generic to be matched against any type. For example, `Vec[Str]` will match `[T] Vec[T]`. This is required in
@@ -378,6 +379,8 @@ class AstTypeUtils:
         :return: Whether the two types are equal.
         """
 
+        generics = generics if generics is not None else {}
+
         # Handle generic comp arguments (simple value comparison).
         if not isinstance(lhs_type, Asts.TypeAst):
             return lhs_type == rhs_type
@@ -393,6 +396,7 @@ class AstTypeUtils:
         # If the right hand side is generic, then return a match: "sup [T] T" matches all types.
         stripped_rhs_symbol = rhs_scope.get_symbol(stripped_rhs)
         if stripped_rhs_symbol.is_generic:
+            generics[stripped_rhs] = lhs_type
             return True
 
         # If the stripped types are not equal, return false.
@@ -409,7 +413,7 @@ class AstTypeUtils:
 
         # Ensure each generic argument is symbolically equal to the other.
         for lhs_generic, rhs_generic in zip(lhs_generics, rhs_generics):
-            if not AstTypeUtils.relaxed_symbolic_eq(lhs_generic.value, rhs_generic.value, lhs_scope, rhs_scope):
+            if not AstTypeUtils.relaxed_symbolic_eq(lhs_generic.value, rhs_generic.value, lhs_scope, rhs_scope, generics):
                 return False
 
         # If all the generic arguments are equal, return true.
