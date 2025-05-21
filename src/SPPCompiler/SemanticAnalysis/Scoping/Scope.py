@@ -152,24 +152,6 @@ class Scope:
 
         return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self._symbol_table.all() if s.is_generic]
 
-    @FunctionCache.cache
-    def _translate_symbol(self, symbol: Symbol, ignore_alias: bool = False) -> Optional[Symbol]:
-        generics = self.generics
-        new_symbol = symbol
-
-        if symbol is None:
-            return None
-
-        elif symbol.__class__ is VariableSymbol:
-            new_symbol = fast_deepcopy(symbol)
-            new_symbol.type = symbol.type.substituted_generics(generics)
-
-        elif symbol.__class__ is TypeSymbol or symbol.__class__ is AliasSymbol:
-            new_fq_name = symbol.fq_name.substituted_generics(generics)
-            new_symbol = self._non_generic_scope.get_symbol(new_fq_name, ignore_alias=ignore_alias)
-
-        return new_symbol or symbol
-
     def add_symbol(self, symbol: Symbol) -> None:
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
@@ -184,10 +166,6 @@ class Scope:
         if not exclusive and self._parent:
             symbols.extend(self._parent.all_symbols())
 
-        # Translate the symbols if this is a generic scope.
-        if self != self._non_generic_scope and match_type is not Asts.IdentifierAst:
-            symbols = [self._translate_symbol(s) for s in symbols]
-
         return symbols
 
     def has_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False) -> bool:
@@ -195,10 +173,6 @@ class Scope:
         return self.get_symbol(name, exclusive, ignore_alias=True) is not None
 
     def get_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
-        # Handle generic translation.
-        # if self is not self._non_generic_scope:  # and not isinstance(name, Asts.IdentifierAst):
-        #     return self._translate_symbol(self._non_generic_scope.get_symbol(name, exclusive, ignore_alias), ignore_alias)
-
         # Namespace adjust, and get the symbol from the symbol table if it exists.
         scope = self
         if isinstance(name, Asts.TypeAst):

@@ -157,6 +157,11 @@ class AstTypeUtils:
             generic_symbol = AstTypeUtils.create_generic_symbol(sm, generic_argument)
             new_scope.add_symbol(generic_symbol)
 
+        # Run generic substitution on the symbols in the new scope.
+        for scoped_sym in new_scope.all_symbols(exclusive=True):
+            if isinstance(scoped_sym, VariableSymbol):
+                scoped_sym.type = scoped_sym.type.substituted_generics(type_part.generic_argument_group.arguments)
+
         # Return the new scope.
         return new_scope
 
