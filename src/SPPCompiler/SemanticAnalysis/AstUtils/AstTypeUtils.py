@@ -146,7 +146,6 @@ class AstTypeUtils:
         new_scope._non_generic_scope = base_symbol.scope
         if not isinstance(new_scope.parent.name, str):
             new_scope.parent.children.append(new_scope)
-        # print("ADDED NEW SCOPE", new_scope, "TO", new_scope.parent, "PARENT_NAME_TYPE")
         sm.attach_super_scope_to_target_scope(new_scope)
 
         # No more checks for the tuple type (avoid recursion, is textual because it is to do with generics).
@@ -157,7 +156,7 @@ class AstTypeUtils:
             generic_symbol = AstTypeUtils.create_generic_symbol(sm, generic_argument)
             new_scope.add_symbol(generic_symbol)
 
-        # Run generic substitution on the symbols in the new scope.
+        # Run generic substitution on the symbols in the new scope. (todo: analyse new types?)
         for scoped_sym in new_scope.all_symbols(exclusive=True):
             if isinstance(scoped_sym, VariableSymbol):
                 scoped_sym.type = scoped_sym.type.substituted_generics(type_part.generic_argument_group.arguments)
@@ -183,7 +182,7 @@ class AstTypeUtils:
         new_scope_name = AstTypeUtils.generic_convert_sup_scope_name(old_sup_scope.name, generic_arguments, old_sup_scope._ast.name.pos)
         new_scope = Scope(new_scope_name, old_sup_scope.parent, ast=old_sup_scope._ast)
         new_scope._children = old_sup_scope._children
-        new_scope._symbol_table = copy.copy(old_sup_scope._symbol_table)
+        new_scope._symbol_table = fast_deepcopy(old_sup_scope._symbol_table)
         new_scope._non_generic_scope = old_sup_scope
         new_scope.parent = old_sup_scope.parent
         new_scope.parent.children.append(new_scope)
@@ -193,11 +192,15 @@ class AstTypeUtils:
             generic_symbol = AstTypeUtils.create_generic_symbol(sm, generic_argument)
             new_scope.add_symbol(generic_symbol)
 
+        # Run generic substitution on the aliases in the new scope.
+        for scoped_sym in new_scope.all_symbols(exclusive=True):
+            if isinstance(scoped_sym, AliasSymbol):
+                scoped_sym.old_sym = old_sup_scope.get_symbol(scoped_sym.old_sym.fq_name.substituted_generics(generic_arguments.arguments))
+
         return new_scope, new_cls_scope
 
     @staticmethod
     def create_generic_symbol(sm: ScopeManager, generic_argument: Asts.GenericArgumentAst) -> TypeSymbol | VariableSymbol:
-
         true_value_symbol = sm.current_scope.get_symbol(generic_argument.value)
 
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
@@ -376,6 +379,7 @@ class AstTypeUtils:
         :param rhs_type: The right-hand side type to compare.
         :param lhs_scope: The scope to get the left-hand side type from.
         :param rhs_scope: The scope to get the right-hand side type from.
+        :param generics: The generics that have been accepted as relaxed comparative (value = generic).
         :return: Whether the two types are equal.
         """
 
