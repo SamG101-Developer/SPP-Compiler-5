@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
+from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 
@@ -74,7 +74,8 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Create the standard "std::array::Arr[T, n: BigNum]" type, with generic items.
-        size = Asts.IntegerLiteralAst.from_python_literal(len(self.elems))
+        size = Asts.TokenAst.raw(token_type=SppTokenType.LxNumber, token_metadata=str(len(self.elems)))
+        size = Asts.IntegerLiteralAst(pos=self.pos, value=size, type=Asts.TypeSingleAst.from_identifier(Asts.IdentifierAst(value="uz")))
         element_type = self.elems[0].infer_type(sm, **kwargs)
         array_type = CommonTypes.Arr(self.pos, element_type, size)
         array_type.analyse_semantics(sm, **kwargs)
