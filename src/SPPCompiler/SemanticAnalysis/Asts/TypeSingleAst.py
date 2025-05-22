@@ -99,11 +99,13 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             if self == generic_name:
                 return generic_type
 
-            for g in name.generic_argument_group.get_type_args():
-                g.value = g.value.substituted_generics(generic_arguments)
+            for g in name.generic_argument_group.get_comp_args():
+                if isinstance(g.value, Asts.IdentifierAst):
+                    if g.value == Asts.IdentifierAst.from_type(generic_name):
+                        g.value = generic_type
 
-            for g in [gg for gg in name.generic_argument_group.get_comp_args() if isinstance(gg.value, Asts.TypeAst)]:
-                g.value = g.value.substituted_generics(generic_arguments)
+        for g in name.generic_argument_group.get_type_args():
+            g.value = g.value.substituted_generics(generic_arguments)
 
         return TypeSingleAst(pos=self.pos, name=name)
 
