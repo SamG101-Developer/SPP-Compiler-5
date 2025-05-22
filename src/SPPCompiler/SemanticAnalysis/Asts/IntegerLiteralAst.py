@@ -6,8 +6,8 @@ from typing import Optional, Tuple
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
@@ -40,7 +40,7 @@ SIZE_MAPPING = {
 class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
     value: Asts.TokenAst = field(default=None)
-    type: Optional[Asts.TypeAst] = field(default=None)
+    type: Optional[Asts.TypeAst] = field(default=None)  # why TypeSingleAst? just use str metadata?
 
     def __hash__(self) -> int:
         return id(self)
@@ -50,13 +50,9 @@ class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return isinstance(other, IntegerLiteralAst) and self.tok_sign == other.tok_sign and self.value.token_data == other.value.token_data
 
     @staticmethod
-    def from_token(value: Asts.TokenAst, pos: int = 0) -> IntegerLiteralAst:
-        return IntegerLiteralAst(pos, None, value, None)
-
-    @staticmethod
     def from_python_literal(value: int) -> IntegerLiteralAst:
         token = Asts.TokenAst.raw(token_type=SppTokenType.LxNumber, token_metadata=str(value))
-        return IntegerLiteralAst.from_token(token)
+        return IntegerLiteralAst(value=token)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -105,7 +101,7 @@ class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             case type if type.type_parts[0].value == "uz":
                 return CommonTypes.USize(self.pos)
             case _:
-                raise
+                raise ValueError(f"Invalid type for integer literal: {self.type}.")
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # No analysis needs to be done for the BigInt automatically inferred type.
