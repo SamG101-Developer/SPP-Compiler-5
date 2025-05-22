@@ -153,7 +153,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         sm.move_to_next_scope()
         sm.move_to_next_scope()
 
-        if old_sym:
+        if old_sym is not None:
             self._alias_symbol.old_sym = old_sym
             self._alias_symbol.generic_impl.old_sym = self._alias_symbol.old_sym
 
