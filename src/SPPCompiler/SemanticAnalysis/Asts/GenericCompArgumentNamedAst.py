@@ -20,8 +20,8 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def __post_init__(self) -> None:
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
+        self.value = self.value or Asts.IdentifierAst.from_type(self.name)
         self._variant = "Named"
-        self.value = self.value or self.name
 
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
         return isinstance(other, GenericCompArgumentNamedAst) and self.name == other.name and self.value == other.value
