@@ -575,8 +575,22 @@ class AstFunctionUtils:
             value = Asts.IdentifierAst.from_type(v) if isinstance(v, Asts.TypeAst) and ctor is Asts.GenericCompArgumentNamedAst else v
             final_args.append(ctor(pos=pos_adjust, name=k, value=value))
 
+        # Re-order the arguments to match the parameter order.
+        final_args.sort(key=lambda arg: generic_parameter_names.index(arg.name))
+
+        # For the "comp" args, type-check them.
+        # Todo: add to test suite
+        for comp_arg, comp_param in zip(final_args, generic_parameters):
+            if isinstance(comp_arg, Asts.GenericCompArgumentNamedAst):
+                a_type = comp_arg.value.infer_type(sm)
+                p_type = comp_param.type
+
+                if not AstTypeUtils.symbolic_eq(p_type, a_type, sm.current_scope.get_symbol(owner).scope, sm.current_scope):
+                    raise SemanticErrors.TypeMismatchError().add(
+                        comp_param, p_type, comp_arg, a_type).scopes(sm.current_scope)
+
         # Finally, re-order the arguments to match the parameter order.
-        return sorted(final_args, key=lambda arg: generic_parameter_names.index(arg.name))
+        return final_args
 
     @staticmethod
     def is_target_callable(expr: Asts.ExpressionAst, sm: ScopeManager, **kwargs) -> Optional[Asts.TypeAst]:
