@@ -56,7 +56,9 @@ class GenericArgumentGroupAst(Asts.Ast):
             **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__args__},
             **{g: Asts.GenericTypeArgumentNamedAst for g in Asts.GenericTypeParameterAst.__args__}}
 
-        arguments = [GenericArgumentCTor[type(p)](name=p.name, value=p.name) for p in parameters]
+        val = lambda p: p.name if isinstance(p, Asts.GenericTypeParameterAst) else Asts.IdentifierAst.from_type(p.name)
+
+        arguments = [GenericArgumentCTor[type(p)](name=p.name, value=val(p)) for p in parameters]
         return GenericArgumentGroupAst(arguments=arguments)
 
     @staticmethod
