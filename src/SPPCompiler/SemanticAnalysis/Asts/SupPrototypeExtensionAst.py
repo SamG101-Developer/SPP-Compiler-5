@@ -81,12 +81,12 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
     def _check_conflicting_attributes(self, cls_symbol: TypeSymbol, sup_symbol: TypeSymbol, sm: ScopeManager) -> None:
         # Prevent duplicate attributes by checking if the attributes appear in any super class.
-        attribute_names = SequenceUtils.flatten([
+        existing_attr_names = SequenceUtils.flatten([
             [m.name for m in s._ast.body.members]
-            for s in cls_symbol.scope.sup_scopes
+            for s in cls_symbol.scope.sup_scopes + [cls_symbol.scope]
             if s._ast.__class__ is Asts.ClassPrototypeAst])
 
-        if duplicates := SequenceUtils.duplicates(attribute_names):
+        if duplicates := SequenceUtils.duplicates(existing_attr_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
                 duplicates[0], duplicates[1], "attribute").scopes(sm.current_scope)
 
@@ -163,9 +163,11 @@ class SupPrototypeExtensionAst(Asts.Ast):
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
 
+        # Analyse the type being superimposed over.
         self.name.analyse_semantics(sm, **kwargs)
         self.name = sm.current_scope.get_symbol(self.name).fq_name
 
+        # Register the superimposition against the base symbol.
         if sm.current_scope.parent is sm.current_scope.parent_module:
             cls_symbol = sm.current_scope.get_symbol(self.name.without_generics)
             if not cls_symbol.is_generic:
@@ -173,8 +175,15 @@ class SupPrototypeExtensionAst(Asts.Ast):
             else:
                 sm.generic_sup_blocks[cls_symbol] = sm.current_scope
 
+        # Analyse the supertype.
         self.super_class.analyse_semantics(sm, **kwargs)
         self.super_class = sm.current_scope.get_symbol(self.super_class).fq_name
+
+        # Check the supertype is not generic.
+        sup_symbol = sm.current_scope.get_symbol(self.super_class)
+        if sup_symbol.is_generic:
+            raise SemanticErrors.GenericTypeInvalidUsageError().add(
+                self.super_class, self.super_class, "superimposition supertype").scopes(sm.current_scope)
 
         self.body.load_super_scopes(sm, **kwargs)
         sm.move_out_of_current_scope()
@@ -199,11 +208,6 @@ class SupPrototypeExtensionAst(Asts.Ast):
             cls_symbol.is_copyable = True
 
         sup_symbol = sm.current_scope.get_symbol(self.super_class)
-        self._check_double_inheritance(cls_symbol, sup_symbol, sm)
-        self._check_cyclic_inheritance(sup_symbol, sm)
-        self._check_conflicting_attributes(cls_symbol, sup_symbol, sm)
-        self._check_conflicting_use_statements(cls_symbol, sm)
-        self._check_conflicting_cmp_statements(cls_symbol, sm)
 
         # Check every member on the superimposition exists on the super class (all sup scopes must be loaded here).
         for member in self.body.members:

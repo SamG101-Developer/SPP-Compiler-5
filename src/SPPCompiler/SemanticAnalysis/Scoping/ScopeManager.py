@@ -134,9 +134,21 @@ class ScopeManager:
 
             tm = ScopeManager(self.global_scope, scope.type_symbol.scope_defined_in, self.normal_sup_blocks, self.generic_sup_blocks)
             new_sup_scope, new_cls_scope = AstTypeUtils.create_generic_sup_scope(tm, super_scope, scope, scope_generics)
+            sup_symbol = new_cls_scope.type_symbol if new_cls_scope else None
+            cls_symbol = scope.type_symbol
+
+            if isinstance(super_scope._ast, Asts.SupPrototypeExtensionAst):
+                super_scope._ast._check_double_inheritance(cls_symbol, sup_symbol, self)
+                super_scope._ast._check_cyclic_inheritance(sup_symbol, self)
+                super_scope._ast._check_conflicting_use_statements(cls_symbol, self)
+                super_scope._ast._check_conflicting_cmp_statements(cls_symbol, self)
+
             scope._direct_sup_scopes.append(new_sup_scope)
             if new_cls_scope:
                 scope._direct_sup_scopes.append(new_cls_scope)
+
+            if isinstance(super_scope._ast, Asts.SupPrototypeExtensionAst):
+                super_scope._ast._check_conflicting_attributes(cls_symbol, sup_symbol, self)
 
         if progress:
             progress.next(str(scope.name))
