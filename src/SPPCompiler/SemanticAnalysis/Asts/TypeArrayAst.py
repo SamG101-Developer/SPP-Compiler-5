@@ -30,7 +30,7 @@ class TypeArrayAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
         return self.tok_r.pos_end
 
     def convert(self) -> Asts.TypeAst:
-        return CommonTypes.Arr(self.pos, self.elem_type, Asts.IntegerLiteralAst(value=self.size))
+        return CommonTypes.Arr(self.pos, self.elem_type, Asts.IntegerLiteralAst(value=self.size, type=Asts.TypeSingleAst.from_identifier(Asts.IdentifierAst(value="uz"))))
 
 
 __all__ = [
