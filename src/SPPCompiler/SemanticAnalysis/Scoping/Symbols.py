@@ -100,7 +100,7 @@ class TypeSymbol(BaseSymbol):
         # Dump the TypeSymbol as a JSON object.
         return {
             "what": "type", "name": str(self.name), "type": str(self.type), "scope": str(self.scope.name) if self.scope else "",
-            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else ""}
+            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else "", "id": id(self)}
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -115,10 +115,13 @@ class TypeSymbol(BaseSymbol):
 
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the TypeSymbol, but link the scope.
-        return TypeSymbol(
-            name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
-            generic_impl=self.generic_impl, scope_defined_in=self.scope_defined_in)
+        if self.is_generic:
+            return TypeSymbol(
+                name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
+                is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
+                generic_impl=self.generic_impl, scope_defined_in=self.scope_defined_in)
+        else:
+            return self
 
     @property
     def fq_name(self) -> Asts.TypeAst:
