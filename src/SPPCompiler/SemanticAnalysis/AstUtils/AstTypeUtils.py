@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 import difflib
 from typing import Generator, List, Optional, TYPE_CHECKING, Tuple
 
@@ -9,7 +8,6 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceS
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.FunctionCache import FunctionCache
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 if TYPE_CHECKING:
@@ -183,7 +181,6 @@ class AstTypeUtils:
         new_scope = Scope(new_scope_name, old_sup_scope.parent, ast=old_sup_scope._ast)
         new_scope._children = old_sup_scope._children
         new_scope._symbol_table = fast_deepcopy(old_sup_scope._symbol_table)
-        new_scope._non_generic_scope = old_sup_scope
         new_scope.parent = old_sup_scope.parent
         new_scope.parent.children.append(new_scope)
 
@@ -307,7 +304,7 @@ class AstTypeUtils:
         return out
 
     @staticmethod
-    @FunctionCache.cache
+    # @FunctionCache.cache
     def symbolic_eq(lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope, check_variant: bool = True, lhs_ignore_alias: bool = False, debug: bool = False) -> bool:
         """
         Compare the two types for symbolic equality. This ensures that they are teh exact same type, and not just
