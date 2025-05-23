@@ -22,9 +22,9 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     name: Asts.GenericIdentifierAst = field(default=None)
 
     def __eq__(self, other: TypeSingleAst | Asts.IdentifierAst) -> bool:
-        if isinstance(other, Asts.TypeSingleAst):
+        if other.__class__ is Asts.TypeSingleAst:
             return self.name == other.name
-        elif isinstance(other, Asts.IdentifierAst):
+        elif other.__class__ is Asts.IdentifierAst:
             return self.name.value == other.value
         return False
 

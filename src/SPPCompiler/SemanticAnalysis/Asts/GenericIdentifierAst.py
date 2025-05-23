@@ -17,11 +17,11 @@ class GenericIdentifierAst(Asts.Ast):
         self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=0)
 
     def __eq__(self, other: GenericIdentifierAst) -> bool:
-        if isinstance(other, GenericIdentifierAst):
+        if other.__class__ is GenericIdentifierAst:
             return self.value == other.value and self.generic_argument_group == other.generic_argument_group
-        elif isinstance(other, Asts.IdentifierAst):
+        elif other.__class__ is Asts.IdentifierAst:
             return self.value == other.value
-        elif isinstance(other, Asts.TypeSingleAst):
+        elif other.__class__ is Asts.TypeSingleAst:
             return self.value == other.name.value
         return False
 

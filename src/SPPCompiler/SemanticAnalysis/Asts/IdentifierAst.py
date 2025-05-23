@@ -20,9 +20,9 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return IdentifierAst(pos=self.pos, value=self.value)
 
     def __eq__(self, other: IdentifierAst) -> bool:
-        if isinstance(other, (IdentifierAst, Asts.GenericIdentifierAst)):
+        if other.__class__ is IdentifierAst or other.__class__ is Asts.GenericIdentifierAst:
             return self.value == other.value
-        elif isinstance(other, Asts.TypeSingleAst):
+        elif other.__class__ is Asts.TypeSingleAst:
             return self.value == other.name.value
         else:
             return False
