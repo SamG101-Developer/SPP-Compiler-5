@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Iterator, Optional, TYPE_CHECKING
+from typing import Any, DefaultDict, Dict, Iterator, List, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
@@ -17,14 +17,16 @@ class ScopeManager:
     _global_scope: Scope
     _current_scope: Scope
     _iterator: Iterator[Scope]
-    _all_super_scopes: Seq[Scope]
+    normal_sup_blocks: DefaultDict[TypeSymbol, List[Scope]]
+    generic_sup_blocks: Dict[TypeSymbol, Scope]
 
-    def __init__(self, global_scope, current_scope: Optional[Scope] = None, all_sup_scopes: Seq[Scope] = None) -> None:
+    def __init__(self, global_scope, current_scope: Optional[Scope] = None, nsbs=None, gsbs=None) -> None:
         # Create the default global and current scopes if they are not provided.
         self._global_scope = global_scope
         self._current_scope = current_scope or self._global_scope
         self._iterator = iter(self)
-        self._all_super_scopes = all_sup_scopes or []
+        self.normal_sup_blocks = nsbs or DefaultDict(list)
+        self.generic_sup_blocks = gsbs or DefaultDict(list)
 
     def __iter__(self) -> Iterator[Scope]:
         # Iterate over the scope manager's scopes, starting from the global scope.
@@ -104,7 +106,6 @@ class ScopeManager:
 
         # Ensure the scope manager is in the global scope for scope-searching.
         self.reset()
-        self._all_super_scopes = self._get_all_super_scopes()
         iterator = [*iter(self)]
         for scope in iterator:
             if isinstance(scope.type_symbol, AliasSymbol):
@@ -118,18 +119,20 @@ class ScopeManager:
 
     def attach_super_scope_to_target_scope(self, scope: Scope, custom_scopes: list[Scope] = None, progress: Optional[Progress] = None) -> None:
         from SPPCompiler.SemanticAnalysis import Asts
+        if str(scope.name)[0] == "$":
+            return
 
         scope._direct_sup_scopes = []
-        super_scopes = custom_scopes if custom_scopes is not None else self._all_super_scopes
+        super_scopes = custom_scopes if custom_scopes is not None else self.normal_sup_blocks[scope._non_generic_scope.type_symbol] + list(self.generic_sup_blocks.values())
 
         # Iterate through all the super scopes and check if the name matches.
         for super_scope in super_scopes:
             scope_generics_dict = {}
-            if not AstTypeUtils.relaxed_symbolic_eq(scope.name, super_scope._ast.name, scope, super_scope, scope_generics_dict):  # .get_symbol(super_scope._ast.name.without_generics, ignore_alias=True).scope):
+            if not AstTypeUtils.relaxed_symbolic_eq(scope.name, super_scope._ast.name, scope, super_scope, scope_generics_dict):
                 continue
             scope_generics = Asts.GenericArgumentGroupAst.from_dict(scope_generics_dict)
 
-            tm = ScopeManager(self.global_scope, scope.type_symbol.scope_defined_in, self._all_super_scopes)
+            tm = ScopeManager(self.global_scope, scope.type_symbol.scope_defined_in, self.normal_sup_blocks, self.generic_sup_blocks)
             new_sup_scope, new_cls_scope = AstTypeUtils.create_generic_sup_scope(tm, super_scope, scope, scope_generics)
             scope._direct_sup_scopes.append(new_sup_scope)
             if new_cls_scope:
@@ -138,23 +141,6 @@ class ScopeManager:
         if progress:
             progress.next(str(scope.name))
 
-    def _get_all_super_scopes(self) -> Seq[Scope]:
-
-        """
-        Get all the super scopes in the scope manager (from the global scope).
-        """
-        from SPPCompiler.SemanticAnalysis import Asts
-
-        temp_scope_manager = ScopeManager(self.global_scope, self._global_scope, self._all_super_scopes)
-        super_scopes = []
-        for scope in temp_scope_manager:
-            if scope._ast.__class__ in [Asts.SupPrototypeExtensionAst, Asts.SupPrototypeFunctionsAst]:
-                if scope._ast.__class__ is Asts.SupPrototypeExtensionAst and str(scope._ast.name)[0] == "$":
-                    continue
-                if scope.parent is scope.parent_module:
-                    super_scopes.append(scope)
-        return super_scopes
-
     @property
     def global_scope(self) -> Scope:
         return self._global_scope
@@ -162,10 +148,6 @@ class ScopeManager:
     @property
     def current_scope(self) -> Scope:
         return self._current_scope
-
-    @property
-    def all_super_scopes(self) -> Seq[Scope]:
-        return self._all_super_scopes
 
 
 __all__ = [

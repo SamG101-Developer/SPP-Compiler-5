@@ -166,6 +166,13 @@ class SupPrototypeExtensionAst(Asts.Ast):
         self.name.analyse_semantics(sm, **kwargs)
         self.name = sm.current_scope.get_symbol(self.name).fq_name
 
+        if sm.current_scope.parent is sm.current_scope.parent_module:
+            cls_symbol = sm.current_scope.get_symbol(self.name.without_generics)
+            if not cls_symbol.is_generic:
+                sm.normal_sup_blocks[cls_symbol].append(sm.current_scope)
+            else:
+                sm.generic_sup_blocks[cls_symbol] = sm.current_scope
+
         self.super_class.analyse_semantics(sm, **kwargs)
         self.super_class = sm.current_scope.get_symbol(self.super_class).fq_name
 

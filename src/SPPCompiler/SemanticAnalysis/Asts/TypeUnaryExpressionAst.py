@@ -68,7 +68,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
 
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
-            temp_manager = ScopeManager(sm.global_scope, type_scope or sm.current_scope, sm.all_super_scopes)
+            temp_manager = ScopeManager(sm.global_scope, type_scope or sm.current_scope)
             type_scope = AstTypeUtils.get_namespaced_scope_with_error(temp_manager, [self.op.name])
         self.rhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
 
