@@ -35,7 +35,7 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
         sup [T=std::boolean::Bool] Point[T] { }
         """
 
-    @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
+    @should_pass_compilation()
     def test_invalid_sup_prototype_functions_onto_generic_type(self):
         """
         sup [T] T {

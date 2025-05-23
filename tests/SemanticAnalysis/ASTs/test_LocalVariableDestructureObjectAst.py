@@ -218,7 +218,7 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_nested_array(self):
         """
         cls TestType {
-            a: std::array::Arr[std::boolean::Bool, 2]
+            a: std::array::Arr[std::boolean::Bool, 2_uz]
         }
 
         fun f(t: TestType) -> std::void::Void {

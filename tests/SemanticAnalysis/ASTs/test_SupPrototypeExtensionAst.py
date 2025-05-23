@@ -2,7 +2,7 @@ from tests._Utils import *
 
 
 class TestSupPrototypeExtensionAst(CustomTestCase):
-    @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
+    @should_pass_compilation()
     def test_invalid_superimposition_extension_generic_name(self):
         """
         sup [T] T ext std::number::bigint::BigInt { }

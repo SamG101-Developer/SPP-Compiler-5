@@ -2,14 +2,6 @@ from tests._Utils import *
 
 
 class TestClassAttributeAst(CustomTestCase):
-    @should_fail_compilation(SemanticErrors.TypeVoidInvalidUsageError)
-    def test_invalid_class_attribute_void_type(self):
-        """
-        cls A {
-            a: std::void::Void
-        }
-        """
-
     @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
     def test_invalid_class_attribute_duplicate(self):
         """

@@ -117,7 +117,7 @@ class TestAstMemoryPinsLoops(CustomTestCase):
 
         fun f(mut v: Vec[Str]) -> Void {
             loop x in v.clone().iter_mut() {
-                v.push(x)
+                v.push("hello world")
             }
         }
         """
