@@ -59,7 +59,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     @property
     def pos_end(self) -> int:
-        return self.body.pos_end
+        return self.name.pos_end
 
     def _generate_symbols(self, sm: ScopeManager) -> TypeSymbol:
         SymbolType: Type[TypeSymbol] = TypeSymbol if not self._is_alias else AliasSymbol
