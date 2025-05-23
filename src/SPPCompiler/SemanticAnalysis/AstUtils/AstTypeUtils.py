@@ -159,6 +159,12 @@ class AstTypeUtils:
             if isinstance(scoped_sym, VariableSymbol):
                 scoped_sym.type = scoped_sym.type.substituted_generics(type_part.generic_argument_group.arguments)
 
+        # Duplicate the ast to validate the type substituted attributes (no borrows etc).
+        new_ast = fast_deepcopy(new_scope._ast)
+        for attribute in new_ast.body.members:
+            attribute.type = attribute.type.substituted_generics(type_part.generic_argument_group.arguments)
+            attribute.analyse_semantics(sm)
+
         # Return the new scope.
         return new_scope
 
@@ -323,6 +329,11 @@ class AstTypeUtils:
         # Handle generic comp arguments (simple value comparison).
         if not isinstance(lhs_type, Asts.TypeAst):
             return lhs_type == rhs_type
+
+        # Do a convention-match check.
+        if lhs_type.convention.__class__ is not rhs_type.convention.__class__:
+            if not (lhs_type.convention.__class__ is Asts.ConventionRefAst and rhs_type.convention.__class__ is Asts.ConventionMutAst):
+                return False
 
         # Strip the generics from the types.
         stripped_lhs = lhs_type.without_generics
