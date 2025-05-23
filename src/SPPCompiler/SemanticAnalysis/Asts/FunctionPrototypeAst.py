@@ -115,7 +115,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         function_ast._orig = self.name
         mock_superimposition_body = Asts.SupImplementationAst(members=[function_ast])
         mock_superimposition = Asts.SupPrototypeExtensionAst(
-            pos=self.pos, generic_parameter_group=self.generic_parameter_group, name=mock_class_name,
+            pos=self.pos, generic_parameter_group=self.generic_parameter_group.without_defaults(), name=mock_class_name,
             super_class=function_type, where_block=self.where_block, body=mock_superimposition_body, _ctx=self._ctx)
         ctx.body.members.insert(0, mock_superimposition)
         ctx.body.members.remove(self)
