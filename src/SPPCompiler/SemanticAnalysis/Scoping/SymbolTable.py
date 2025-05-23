@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, TYPE_CHECKING
-
-from SPPCompiler.Utils.Sequence import Seq
+from typing import Dict, Iterator, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis import Asts
@@ -35,13 +33,14 @@ class SymbolTable:
         # Check if a symbol is in the table.
         return name in self._table
 
-    def all(self) -> Seq[Symbol]:
+    def all(self) -> Iterator[Symbol]:
         # Get all symbols in the table.
-        return list(self._table.values())
+        for v in self._table.values():
+            yield v
 
     def __json__(self) -> Dict:
         # Dump the SymbolTable as a JSON object.
-        return {"symbols": self.all()}
+        return {"symbols": [*self.all()]}
 
     def __copy__(self) -> SymbolTable:
         # Copy the symbol table.
