@@ -35,6 +35,10 @@ class NamespaceSymbol(BaseSymbol):
         # Dump the NamespaceSymbol as a JSON string.
         return json.dumps(self)
 
+    def __eq__(self, other: NamespaceSymbol) -> bool:
+        # Check if two NamespaceSymbols are equal.
+        return self is other
+
     def __deepcopy__(self, memodict=None):
         # Copy the name into a new AST, but link the scope.
         return NamespaceSymbol(name=fast_deepcopy(self.name), scope=self.scope)
@@ -59,6 +63,10 @@ class VariableSymbol(BaseSymbol):
     def __str__(self) -> str:
         # Dump the VariableSymbol as a JSON string.
         return json.dumps(self)
+
+    def __eq__(self, other: VariableSymbol) -> bool:
+        # Check if two VariableSymbols are equal.
+        return self is other
 
     def __deepcopy__(self, memodict=None):
         # Copy the all the attributes of the VariableSymbol.
@@ -100,6 +108,10 @@ class TypeSymbol(BaseSymbol):
     def __str__(self) -> str:
         # Dump the TypeSymbol as a JSON string.
         return json.dumps(self)
+
+    def __eq__(self, other: TypeSymbol) -> bool:
+        # Check if two TypeSymbols are equal.
+        return self is other
 
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the TypeSymbol, but link the scope.
@@ -144,6 +156,14 @@ class AliasSymbol(TypeSymbol):
 
     def __hash__(self) -> int:
         return hash(self.name)
+
+    def __str__(self) -> str:
+        # Dump the AliasSymbol as a JSON string.
+        return json.dumps(self)
+
+    def __eq__(self, other: AliasSymbol) -> bool:
+        # Check if two AliasSymbols are equal.
+        return self is other
 
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the AliasSymbol, but link the old scope.
