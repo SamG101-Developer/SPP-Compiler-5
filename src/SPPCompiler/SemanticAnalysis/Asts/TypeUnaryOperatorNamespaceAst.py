@@ -31,7 +31,7 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
     def print(self, printer: AstPrinter) -> str:
         return f"{self.name.print(printer)}{self.tok_dbl_colon.print(printer)}"
 
-    @FunctionCache.cache_property
+    @property
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return [self.name]
 

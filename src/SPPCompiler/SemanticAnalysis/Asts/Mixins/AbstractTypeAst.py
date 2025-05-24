@@ -57,11 +57,11 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
     def convention(self) -> Optional[Asts.ConventionAst]:
         ...
 
-    @FunctionCache.cache_property
+    @property
     def namespace_parts(self) -> List[Asts.IdentifierAst]:
         return [p for p in self.fq_type_parts if p.__class__ is Asts.IdentifierAst]
 
-    @FunctionCache.cache_property
+    @property
     def type_parts(self) -> List[Asts.GenericIdentifierAst | Asts.TokenAst]:
         return [p for p in self.fq_type_parts if p.__class__ is Asts.GenericIdentifierAst or p.__class__ is Asts.TokenAst]
 

@@ -43,7 +43,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def print(self, printer: AstPrinter) -> str:
         return f"{self.op.print(printer)}{self.rhs.print(printer)}"
 
-    @FunctionCache.cache_property
+    @property
     def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return self.op.fq_type_parts + self.rhs.fq_type_parts if self.op.__class__ is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.fq_type_parts
 

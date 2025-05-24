@@ -35,11 +35,11 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def print(self, printer: AstPrinter) -> str:
         return f"{self.lhs}{self.op}"
 
-    @FunctionCache.cache_property
+    @property
     def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return CommonTypes.Opt(self.pos, self.lhs).fq_type_parts if isinstance(self.op, Asts.TypePostfixOperatorOptionalTypeAst) else self.lhs.fq_type_parts + self.op.fq_type_parts
 
-    @FunctionCache.cache_property
+    @property
     def without_generics(self) -> Optional[Asts.TypeAst]:
         return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs, op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.without_generics))
 
