@@ -344,7 +344,7 @@ class AstTypeUtils:
         stripped_rhs_symbol = rhs_scope.get_symbol(stripped_rhs)
 
         # If the left-hand-side is a Variant type, then check the composite types first.
-        if check_variant and lhs_type.type_parts[-1].generic_argument_group.arguments and AstTypeUtils.symbolic_eq(stripped_lhs_symbol.fq_name.without_generics, CommonTypesPrecompiled.EMPTY_VARIANT, lhs_scope, lhs_scope, check_variant=False, debug=debug):
+        if check_variant and AstTypeUtils.symbolic_eq(stripped_lhs_symbol.fq_name.without_generics, CommonTypesPrecompiled.EMPTY_VARIANT, lhs_scope, lhs_scope, check_variant=False, debug=debug):
             lhs_composite_types = AstTypeUtils.deduplicate_composite_types(lhs_scope.get_symbol(lhs_type).fq_name, lhs_scope)
 
             # Check each composite type against the other.
