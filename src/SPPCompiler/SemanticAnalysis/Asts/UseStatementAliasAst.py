@@ -118,7 +118,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         # Move into the type-alias scope.
         sm.move_to_next_scope()
 
-        # Todo: Analyse the old type without generics beforehand? Because of fq-typing the generic comp arg types.
+        # Todo: Analyse the old type without generics beforehand? Because of fq-typing the generic cmp arg types.
 
         # Ensure the validity of the old type, with its generic arguments set.
         for generic_parameter in self.generic_parameter_group.get_type_params():
@@ -134,13 +134,13 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
 
         # Register the old type against the new alias symbol.
         self.old_type.analyse_semantics(sm)
-        self._alias_symbol.old_sym = old_sym or sm.current_scope.get_symbol(self.old_type, ignore_alias=False)
+        self._alias_symbol.old_sym = old_sym or sm.current_scope.get_symbol(self.old_type)
         self._alias_symbol.generic_impl.old_sym = self._alias_symbol.old_sym
 
         # Create a sup ast to allow the attribute and method access.
         sup_ast = Asts.SupPrototypeExtensionAst(
             pos=self.pos,
-            generic_parameter_group=self.generic_parameter_group.without_defaults(),
+            generic_parameter_group=self.generic_parameter_group.opt_to_req(),
             name=self.new_type,
             super_class=self.old_type)
 
