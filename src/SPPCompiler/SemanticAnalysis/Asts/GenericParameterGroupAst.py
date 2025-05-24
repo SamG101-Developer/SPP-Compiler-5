@@ -68,7 +68,7 @@ class GenericParameterGroupAst(Asts.Ast):
         # Get all the type generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericTypeParameterAst)]
 
-    def without_defaults(self) -> GenericParameterGroupAst:
+    def opt_to_req(self) -> GenericParameterGroupAst:
         # Create a new group where optional parameters become required.
         new_params = []
         for p in self.parameters:
