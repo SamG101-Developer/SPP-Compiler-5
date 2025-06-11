@@ -185,11 +185,13 @@ class Scope:
             self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False,
             ignore_alias: bool = False) -> Optional[Symbol]:
 
-        # Namespace adjust, and get the symbol from the symbol table if it exists.
+        # Adjust the namespace and symbol name for namespaced typ symbols.
         scope = self
         if isinstance(name, Asts.TypeAst):
             name = name.without_conventions
             scope, name = shift_scope_for_namespaced_type(self, name)
+
+        # Get the symbol from the symbol table if it exists, and ignore it if it is in the exclusion list.
         symbol = scope._symbol_table.get(name)
 
         # If this is not an exclusive search, search the parent scope.
@@ -203,6 +205,7 @@ class Scope:
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         if symbol.__class__ is AliasSymbol and symbol.old_sym and not ignore_alias:
             return symbol.old_sym
+
         return symbol
 
     @FunctionCache.cache
@@ -229,12 +232,6 @@ class Scope:
             symbol = scope.get_namespace_symbol(name := name.op.field, exclusive=exclusive)
             scope = symbol.scope
         return symbol
-
-    def get_multiple_symbols(self, name: Asts.IdentifierAst, original_scope: Scope = None) -> List[Tuple[Symbol, Scope, int]]:
-        # Get all the symbols with the given name (ambiguity checks, function overloads etc), and their "depth".
-        symbols = [(self._symbol_table.get(name), self, self.depth_difference(original_scope or self))]
-        symbols.extend(search_super_scopes_multiple(original_scope or self, self, name))
-        return symbols
 
     def get_variable_symbol_outermost_part(self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst) -> Optional[VariableSymbol]:
         # Define a helper lambda that validates a postfix expression.
@@ -368,17 +365,6 @@ def search_super_scopes(
         symbol = super_scope.get_symbol(name, exclusive=True, ignore_alias=ignore_alias)
         if symbol: break
     return symbol
-
-
-def search_super_scopes_multiple(
-        original_scope: Scope, scope: Scope, name: Asts.IdentifierAst) -> List[Tuple[VariableSymbol, Scope, int]]:
-
-    # Recursively search the super scopes for variable symbols with the given name.
-    symbols = []
-    for super_scope in scope._direct_sup_scopes:
-        new_symbols = super_scope.get_multiple_symbols(name, original_scope)
-        symbols.extend(new_symbols)
-    return symbols
 
 
 __all__ = [
