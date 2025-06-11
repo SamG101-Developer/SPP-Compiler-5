@@ -166,6 +166,8 @@ class Scope:
         self._symbol_table.rem(symbol_name)
 
     def all_symbols(self, exclusive: bool = False, match_type: type = None) -> Iterator[Symbol]:
+        # todo: when to also include the sup scopes?
+
         # Get all the symbols in the scope.
         for sym in self._symbol_table.all():
             yield sym
@@ -173,11 +175,16 @@ class Scope:
         if not exclusive and self._parent:
             yield from self._parent.all_symbols(exclusive=exclusive, match_type=match_type)
 
-    def has_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False) -> bool:
+    def has_symbol(
+            self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False) -> bool:
+
         # Get the symbol and check if it is None or not (None => not found).
         return self.get_symbol(name, exclusive, ignore_alias=True) is not None
 
-    def get_symbol(self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False, ignore_alias: bool = False) -> Optional[Symbol]:
+    def get_symbol(
+            self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False,
+            ignore_alias: bool = False) -> Optional[Symbol]:
+
         # Namespace adjust, and get the symbol from the symbol table if it exists.
         scope = self
         if isinstance(name, Asts.TypeAst):
@@ -351,7 +358,10 @@ def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[S
     return scope, type
 
 
-def search_super_scopes(scope: Scope, name: Asts.IdentifierAst | Asts.GenericIdentifierAst, ignore_alias: bool) -> Optional[VariableSymbol]:
+def search_super_scopes(
+        scope: Scope, name: Asts.IdentifierAst | Asts.GenericIdentifierAst,
+        ignore_alias: bool) -> Optional[VariableSymbol]:
+
     # Recursively search the super scopes for a variable symbol.
     symbol = None
     for super_scope in scope._direct_sup_scopes:
@@ -360,7 +370,9 @@ def search_super_scopes(scope: Scope, name: Asts.IdentifierAst | Asts.GenericIde
     return symbol
 
 
-def search_super_scopes_multiple(original_scope: Scope, scope: Scope, name: Asts.IdentifierAst) -> List[Tuple[VariableSymbol, Scope, int]]:
+def search_super_scopes_multiple(
+        original_scope: Scope, scope: Scope, name: Asts.IdentifierAst) -> List[Tuple[VariableSymbol, Scope, int]]:
+
     # Recursively search the super scopes for variable symbols with the given name.
     symbols = []
     for super_scope in scope._direct_sup_scopes:

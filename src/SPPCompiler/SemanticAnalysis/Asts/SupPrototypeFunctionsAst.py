@@ -79,11 +79,12 @@ class SupPrototypeFunctionsAst(Asts.Ast):
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         sm.move_to_next_scope()
-        self.body.generate_top_level_aliases(sm)
+        self.body.generate_top_level_aliases(sm, **kwargs)
         sm.move_out_of_current_scope()
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
+        self.generic_parameter_group.qualify_types(sm, **kwargs)
         self.body.qualify_types(sm, **kwargs)
         sm.move_out_of_current_scope()
 
