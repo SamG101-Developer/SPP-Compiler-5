@@ -36,7 +36,10 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_invalid_sup_prototype_functions_onto_generic_type(self):
+    def test_valid_sup_prototype_functions_onto_generic_type(self):
+        # This crashes, because say we have A->B, both A and B will have BigInt superimposed over them, causing
+        # duplication.
+
         """
         sup [T] T {
             fun f(&self) -> std::void::Void { }
@@ -62,12 +65,12 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
         """
         cls Base1 { }
         sup Base1 {
-            use X = std::string::Str
+            type X = std::string::Str
         }
 
         cls Base2 { }
         sup Base2 {
-            use X = std::number::bigint::BigInt
+            type X = std::number::bigint::BigInt
         }
 
         cls A { }
@@ -80,12 +83,12 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
         """
         cls Base1 { }
         sup Base1 {
-            use X = std::string::Str
+            type X = std::string::Str
         }
 
         cls Base2 { }
         sup Base2 {
-            use X = std::number::bigint::BigInt
+            type X = std::number::bigint::BigInt
         }
 
         sup Base2 ext Base1 { }
@@ -184,12 +187,12 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
         """
         cls Base1 { }
         sup Base1 {
-            use X = std::string::Str
+            type X = std::string::Str
         }
 
         cls Base2 { }
         sup Base2 {
-            use Y = std::number::bigint::BigInt
+            type Y = std::number::bigint::BigInt
         }
 
         cls A { }
@@ -202,12 +205,12 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
         """
         cls Base1 { }
         sup Base1 {
-            use X = std::string::Str
+            type X = std::string::Str
         }
 
         cls Base2 { }
         sup Base2 ext Base1 {
-            use X = std::number::bigint::BigInt
+            type X = std::number::bigint::BigInt
         }
         """
 

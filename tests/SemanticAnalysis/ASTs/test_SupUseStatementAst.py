@@ -7,7 +7,7 @@ class TestSupUseStatementAst(CustomTestCase):
         """
         cls MyType { }
         sup MyType {
-            use X = std::string::Str
+            type X = std::string::Str
         }
 
         fun f() -> std::void::Void {
@@ -21,17 +21,17 @@ class TestSupUseStatementAst(CustomTestCase):
         """
         cls MyType1 { }
         sup MyType1 {
-            use Z = std::string::Str
+            type Z = std::string::Str
         }
 
         cls MyType2 { }
         sup MyType2 {
-            use Y = MyType1
+            type Y = MyType1
         }
 
         cls MyType3 { }
         sup MyType3 {
-            use X = MyType2
+            type X = MyType2
         }
 
         fun f() -> std::void::Void {
@@ -45,7 +45,7 @@ class TestSupUseStatementAst(CustomTestCase):
         """
         cls MyType[T] { }
         sup [T] MyType[T] {
-            use X = T
+            type X = T
         }
 
         fun f() -> std::void::Void {
@@ -59,7 +59,7 @@ class TestSupUseStatementAst(CustomTestCase):
         """
         cls MyType { }
         sup MyType {
-            use X = std::string::Str
+            type X = std::string::Str
         }
 
         fun f() -> std::void::Void {
@@ -73,17 +73,17 @@ class TestSupUseStatementAst(CustomTestCase):
         """
         cls MyType1 { }
         sup MyType1 {
-            use Z = std::string::Str
+            type Z = std::string::Str
         }
 
         cls MyType2 { }
         sup MyType2 {
-            use Y = MyType1
+            type Y = MyType1
         }
 
         cls MyType3 { }
         sup MyType3 {
-            use X = MyType2
+            type X = MyType2
         }
 
         fun f() -> std::void::Void {
@@ -97,7 +97,7 @@ class TestSupUseStatementAst(CustomTestCase):
         """
         cls MyType[T] { }
         sup [T] MyType[T] {
-            use X = T
+            type X = T
         }
 
         fun f() -> std::void::Void {

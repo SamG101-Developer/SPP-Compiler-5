@@ -66,8 +66,8 @@ class TestCaseExpressionAst(CustomTestCase):
         }
         """
 
-    @should_pass_compilation()
-    def test_valid_case_expression_4(self):
+    @should_fail_compilation(SemanticErrors.MemoryPartiallyInitializedUsageError)
+    def test_invalid_case_expression_partial_move_in_condition(self):
         """
         cls Point {
             x: std::number::bigint::BigInt
@@ -84,5 +84,21 @@ class TestCaseExpressionAst(CustomTestCase):
             else {
                 0
             }
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_case_expression_partial_move_in_pattern(self):
+        """
+        cls Point {
+            x: std::number::bigint::BigInt
+            y: std::number::bigint::BigInt
+        }
+
+        fun f(p: Point) -> std::void::Void {
+            let x = case p of
+                is Point(x, y=10) { x }
+                is Point(x=10, y) { y }
+                else { 0 }
         }
         """

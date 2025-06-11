@@ -3,7 +3,10 @@ from tests._Utils import *
 
 class TestSupPrototypeExtensionAst(CustomTestCase):
     @should_pass_compilation()
-    def test_invalid_superimposition_extension_generic_name(self):
+    def test_valid_superimposition_extension_generic_name(self):
+        # This crashes, because say we have A->B, both A and B will have BigInt superimposed over them, causing
+        # attribute duplication.
+
         """
         sup [T] T ext std::number::bigint::BigInt { }
         """
@@ -215,12 +218,12 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         """
         cls A { }
         sup A {
-            use X = std::number::bigint::BigInt
+            type X = std::number::bigint::BigInt
         }
 
         cls B { }
         sup B ext A {
-            use X = std::string::Str
+            type X = std::string::Str
         }
         """
 

@@ -115,7 +115,7 @@ class TestTypeAst(CustomTestCase):
         """
         cls MyType { }
         sup MyType {
-            use X = std::string::Str
+            type X = std::string::Str
         }
 
         fun f() -> std::void::Void {
@@ -132,11 +132,11 @@ class TestTypeAst(CustomTestCase):
         cls MyTypeC { }
 
         sup MyTypeA {
-            use X = MyTypeB
+            type X = MyTypeB
         }
 
         sup MyTypeB {
-            use Y = MyTypeC
+            type Y = MyTypeC
         }
 
         fun f() -> std::void::Void {
@@ -150,7 +150,7 @@ class TestTypeAst(CustomTestCase):
         """
         cls MyType[T] { }
         sup [T] MyType[T] {
-            use X = T
+            type X = T
         }
 
         fun f() -> std::void::Void {
@@ -167,15 +167,15 @@ class TestTypeAst(CustomTestCase):
         cls TypeC[V] { }
 
         sup [V] TypeC[V] {
-            use InnerC[P] = TypeB[V, P]
+            type InnerC[P] = TypeB[V, P]
         }
 
         sup [U, B] TypeB[U, B] {
-            use InnerB[Q] = TypeA[U, Q, B]
+            type InnerB[Q] = TypeA[U, Q, B]
         }
 
         sup [T, A, B] TypeA[T, A, B] {
-            use InnerA[R] = (T, B, A, R)
+            type InnerA[R] = (T, B, A, R)
         }
 
         fun f() -> std::void::Void {
@@ -189,7 +189,7 @@ class TestTypeAst(CustomTestCase):
         """
         cls TypeA { }
         sup TypeA {
-            use X = std::string::Str
+            type X = std::string::Str
         }
 
         fun f(a: TypeA::X) -> TypeA::X {
