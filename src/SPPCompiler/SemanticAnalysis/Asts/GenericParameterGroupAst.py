@@ -80,6 +80,11 @@ class GenericParameterGroupAst(Asts.Ast):
                 new_params.append(p)
         return GenericParameterGroupAst(self.pos, self.tok_l, new_params, self.tok_r)
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        # Qualify the types of the generic parameters.
+        for p in self.parameters:
+            p.qualify_types(sm, **kwargs)
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate generic parameter names.
         generic_parameter_names = [p.name for p in self.parameters]

@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
@@ -65,15 +65,19 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         SymbolType: Type[TypeSymbol] = TypeSymbol if not self._is_alias else AliasSymbol
 
         symbol_name = fast_deepcopy(self.name.type_parts[0])
-        symbol_name.generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group.parameters)
+        symbol_name.generic_argument_group = Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group)
 
-        symbol_1 = SymbolType(name=symbol_name, type=self, scope=sm.current_scope, visibility=self._visibility[0], scope_defined_in=sm.current_scope)
+        symbol_1 = SymbolType(
+            name=symbol_name, type=self, scope=sm.current_scope, visibility=self._visibility[0],
+            scope_defined_in=sm.current_scope)
         sm.current_scope.parent.add_symbol(symbol_1)
         sm.current_scope._type_symbol = symbol_1
         self._cls_sym = symbol_1
 
         if self.generic_parameter_group.parameters:
-            symbol_2 = SymbolType(name=self.name.type_parts[0], type=self, scope=sm.current_scope, visibility=self._visibility[0], scope_defined_in=sm.current_scope)
+            symbol_2 = SymbolType(
+                name=self.name.type_parts[0], type=self, scope=sm.current_scope, visibility=self._visibility[0],
+                scope_defined_in=sm.current_scope)
             symbol_2.generic_impl = symbol_1
             sm.current_scope.parent.add_symbol(symbol_2)
             return symbol_2
@@ -117,20 +121,14 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         # Qualify the types in the class implementation.
         sm.move_to_next_scope()
-
-        for g in self._cls_sym.type.generic_parameter_group.get_optional_params():
-            x = sm.current_scope.get_symbol(g.default.without_generics)
-            if x.is_generic: continue
-            g.default.analyse_semantics(sm, type_scope=x.scope.parent_module)
-            g.default = x.scope.get_symbol(g.default).fq_name
-
+        self.generic_parameter_group.qualify_types(sm, **kwargs)
         self.body.qualify_types(sm)
         sm.move_out_of_current_scope()
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         sm.move_to_next_scope()
-        self.body.load_super_scopes(sm)
+        self.body.load_super_scopes(sm, **kwargs)
         sm.move_out_of_current_scope()
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:

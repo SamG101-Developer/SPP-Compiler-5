@@ -57,6 +57,10 @@ class GenericCompParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
         symbol.memory_info.initialized_by(self)
         sm.current_scope.add_symbol(symbol)
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        self.type.analyse_semantics(sm, **kwargs)
+        self.type = sm.current_scope.get_symbol(self.type).fq_name
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the type of the default expression.
         self.type.analyse_semantics(sm, **kwargs)
