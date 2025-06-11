@@ -159,6 +159,7 @@ class SppParser:
             self.parse_sup_prototype_extension,
             self.parse_sup_prototype_functions,
             self.parse_global_use_statement,
+            self.parse_global_type_statement,
             self.parse_global_cmp_statement])
         return p1
 
@@ -246,7 +247,7 @@ class SppParser:
     def parse_sup_member(self) -> Optional[Asts.SupMemberAst]:
         p1 = self.parse_alternate([
             self.parse_sup_method_prototype,
-            self.parse_sup_use_statement,
+            self.parse_sup_type_statement,
             self.parse_sup_cmp_statement])
         return p1
 
@@ -255,9 +256,9 @@ class SppParser:
         if p1 is None: return None
         return p1
 
-    def parse_sup_use_statement(self) -> Optional[Asts.SupUseStatementAst]:
+    def parse_sup_type_statement(self) -> Optional[Asts.SupTypeStatementAst]:
         p1 = self.parse_zero_or_more(self.parse_annotation, self.parse_newline)
-        p2 = self.parse_once(self.parse_use_alias_statement)
+        p2 = self.parse_once(self.parse_type_statement)
         if p2 is None: return None
         p2.annotations = p1
         return p2
@@ -813,6 +814,7 @@ class SppParser:
     def parse_statement(self) -> Optional[Asts.StatementAst]:
         p1 = self.parse_alternate([
             self.parse_use_statement,
+            self.parse_type_statement,
             self.parse_let_statement,
             self.parse_ret_statement,
             self.parse_exit_statement,
@@ -823,6 +825,13 @@ class SppParser:
 
     # ===== TYPEDEFS =====
 
+    def parse_global_type_statement(self) -> Optional[Asts.TypeStatementAst]:
+        p1 = self.parse_zero_or_more(self.parse_annotation, self.parse_newline)
+        p2 = self.parse_once(self.parse_type_statement)
+        if p2 is None: return None
+        p2.annotations = p1
+        return p2
+
     def parse_global_use_statement(self) -> Optional[Asts.UseStatementAst]:
         p1 = self.parse_zero_or_more(self.parse_annotation, self.parse_newline)
         p2 = self.parse_once(self.parse_use_statement)
@@ -830,14 +839,8 @@ class SppParser:
         p2.annotations = p1
         return p2
 
-    def parse_use_statement(self) -> Optional[Asts.UseStatementAst]:
-        p1 = self.parse_alternate([
-            self.parse_use_alias_statement,
-            self.parse_use_redux_statement])
-        return p1
-
-    def parse_use_alias_statement(self) -> Optional[Asts.UseStatementAliasAst]:
-        p1 = self.parse_once(self.parse_keyword_use)
+    def parse_type_statement(self) -> Optional[Asts.TypeStatementAst]:
+        p1 = self.parse_once(self.parse_keyword_type)
         if p1 is None: return None
         p2 = self.parse_once(self.parse_upper_identifier)
         if p2 is None: return None
@@ -846,14 +849,14 @@ class SppParser:
         if p4 is None: return None
         p5 = self.parse_once(self.parse_type)
         if p5 is None: return None
-        return Asts.UseStatementAliasAst(p1.pos, [], p1, Asts.TypeSingleAst.from_identifier(p2), p3, p4, p5)
+        return Asts.TypeStatementAst(p1.pos, [], p1, Asts.TypeSingleAst.from_identifier(p2), p3, p4, p5)
 
-    def parse_use_redux_statement(self) -> Optional[Asts.UseStatementReduxAst]:
+    def parse_use_statement(self) -> Optional[Asts.UseStatementAst]:
         p1 = self.parse_once(self.parse_keyword_use)
         if p1 is None: return None
         p2 = self.parse_once(self.parse_type_simple)
         if p2 is None: return None
-        return Asts.UseStatementReduxAst(p1.pos, [], p1, p2)
+        return Asts.UseStatementAst(p1.pos, [], p1, p2)
 
     # ===== CMP-DECLARATIONS =====
 
@@ -1422,7 +1425,7 @@ class SppParser:
         p1 = self.parse_once(self.parse_token_vertical_bar)
         if p1 is None: return None
         p2 = self.parse_zero_or_more(self.parse_lambda_expression_parameter, self.parse_token_comma)
-        p3 = self.parse_once(self.parse_lambda_expression_capture_group)
+        p3 = self.parse_optional(self.parse_lambda_expression_capture_group)
         p4 = self.parse_once(self.parse_token_vertical_bar)
         if p4 is None: return None
         return Asts.LambdaExpressionParameterAndCaptureGroupAst(p1.pos, p1, p2, p3, p4)
@@ -2113,6 +2116,9 @@ class SppParser:
 
     def parse_keyword_let(self) -> Optional[Asts.TokenAst]:
         return self.parse_keyword_raw(RawKeywordType.Let, SppTokenType.KwLet, True)
+
+    def parse_keyword_type(self) -> Optional[Asts.TokenAst]:
+        return self.parse_keyword_raw(RawKeywordType.Type, SppTokenType.KwType, True)
 
     def parse_keyword_as(self) -> Optional[Asts.TokenAst]:
         return self.parse_keyword_raw(RawKeywordType.As, SppTokenType.KwAs, True)
