@@ -403,25 +403,32 @@ class AstTypeUtils:
         :return: Whether the two types are equal.
         """
 
+        from SPPCompiler.SemanticAnalysis.Asts import TypeSingleAst
+
         generics = generics if generics is not None else {}
-
-        # Handle generic comp arguments (simple value comparison).
-        if not isinstance(lhs_type, Asts.TypeAst):
-            return lhs_type == rhs_type
-
-        # Strip the generics from the types.
-        stripped_lhs = lhs_type.without_generics
-        stripped_rhs = rhs_type.without_generics
 
         # If the rhs scope is None, then the scope itself is generic, so auto match it.
         if rhs_scope is None:
             return True
 
-        # If the right hand side is generic, then return a match: "sup [T] T" matches all types.
+        # Handle generic comp arguments (simple value comparison).
+        if not isinstance(lhs_type, Asts.TypeAst):
+            if isinstance(rhs_type, Asts.IdentifierAst):
+                generics[TypeSingleAst.from_identifier(rhs_type)] = lhs_type
+                return True
+            return lhs_type == rhs_type
+
+        # Strip the generics from the rhs type (possibly generic).
+        stripped_rhs = rhs_type.without_generics
+
+        # If the right hand side is generic, then return a match: "sup [T] T { ... }" matches all types.
         stripped_rhs_symbol = rhs_scope.get_symbol(stripped_rhs)
         if stripped_rhs_symbol.is_generic:
             generics[stripped_rhs] = lhs_type
             return True
+
+        # Strip the generics from the lhs type.
+        stripped_lhs = lhs_type.without_generics
 
         # If the stripped types are not equal, return false.
         stripped_lhs_symbol = lhs_scope.get_symbol(stripped_lhs)
