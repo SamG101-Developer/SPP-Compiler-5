@@ -16,6 +16,7 @@ type PreProcessingContext = Union[
     Asts.SupPrototypeFunctionsAst,
     Asts.SupPrototypeExtensionAst,
     Asts.UseStatementAst,
+    Asts.TypeStatementAst,
     None]
 
 
