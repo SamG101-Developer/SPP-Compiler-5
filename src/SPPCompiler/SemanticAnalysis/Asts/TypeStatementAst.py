@@ -9,10 +9,11 @@ from llvmlite import ir
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol, AliasSymbol, VariableSymbol
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -20,9 +21,9 @@ from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass(slots=True)
-class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.TypeInferrable):
+class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.TypeInferrable):
     annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
-    kw_use: Asts.TokenAst = field(default=None)
+    kw_type: Asts.TokenAst = field(default=None)
     new_type: Asts.TypeAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default=None)
@@ -31,9 +32,10 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
     _generated: bool = field(default=False, init=False, repr=False)
     _alias_symbol: Optional[AliasSymbol] = field(default=None, init=False, repr=False)
     _cls_ast: Optional[Asts.ClassPrototypeAst] = field(default=None, init=False, repr=False)
+    _sup_ast: Optional[Asts.SupPrototypeExtensionAst] = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self.kw_use = self.kw_use or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwUse)
+        self.kw_type = self.kw_type or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwUse)
         self.generic_parameter_group = self.generic_parameter_group or Asts.GenericParameterGroupAst(pos=self.pos)
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
         self.new_type = self.new_type or Asts.TypeSingleAst(self.old_type.pos, self.old_type.type_parts[-1])
@@ -43,7 +45,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         # Print the AST with auto-formatting.
         string = [
             *[a.print(printer) + "\n" for a in self.annotations],
-            self.kw_use.print(printer) + " ",
+            self.kw_type.print(printer) + " ",
             self.new_type.print(printer),
             self.generic_parameter_group.print(printer) or " ",
             self.tok_assign.print(printer) + " ",
@@ -54,20 +56,12 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
     def pos_end(self) -> int:
         return self.old_type.pos_end
 
-    def _skip_all_use_statement_scopes(self, sm: ScopeManager, **kwargs) -> None:
-        # Move into the scope for the class prototype.
-        sm.move_to_next_scope()
-
-        # Move into the scope for the type-alias (sibling to class prototype).
-        sm.move_to_next_scope()
-
-        # Move into the superimposition scope (nested in the type-alias scope).
-        sm.move_to_next_scope()
-
-        # Move out the superimposition scope.
+    def _skip_all_type_statement_scopes(self, sm: ScopeManager, **kwargs) -> None:
+        # Skip all scopes related to this type statement.
+        sm.move_to_next_scope()  # cls scope
+        sm.move_to_next_scope()  # type alias scope (+generics)
+        sm.move_to_next_scope()  # sup scope
         sm.move_out_of_current_scope()
-
-        # Move out the type-alias scope.
         sm.move_out_of_current_scope()
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
@@ -103,69 +97,66 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
         self._alias_symbol = cls_ast.generate_top_level_scopes(sm)
         self._cls_ast = cls_ast
 
-        # Create a scope for the alias' generics, so analysing can be done with the generics, without them leaking.
-        sm.create_and_move_into_new_scope(f"<type-alias#{self.new_type}#{self.pos}>", self)
+        # Create a new scope for the new type.
+        sm.create_and_move_into_new_scope(f"<type-alias#{self.new_type}#{self.pos}>")
         sm.move_out_of_current_scope()
 
         # Mark this AST as generated, so it is not generated in the analysis phase.
         self._generated = True
 
-    def generate_top_level_aliases(self, sm: ScopeManager, old_sym: Optional[TypeSymbol] = None, **kwargs) -> None:
-        # Skip the class scope.
-        sm.move_to_next_scope()
-        cls_scope = sm.current_scope
+    def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
+        sm.move_to_next_scope()  # cls scope
+        sm.move_to_next_scope()  # type alias scope (+generics)
 
-        # Move into the type-alias scope.
-        sm.move_to_next_scope()
+        # Load the generics into the type-alias and class scopes.
+        tm = ScopeManager(sm.global_scope, sm.current_scope.get_symbol(self.old_type.without_generics).scope)
+        for generic_argument in Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group).arguments:
+            generic_symbol = AstTypeUtils.create_generic_symbol(sm, generic_argument, tm)
+            sm.current_scope.add_symbol(generic_symbol)
+            self._cls_ast._scope.add_symbol(generic_symbol)
 
-        # Todo: Analyse the old type without generics beforehand? Because of fq-typing the generic cmp arg types.
-
-        # Ensure the validity of the old type, with its generic arguments set.
-        for generic_parameter in self.generic_parameter_group.get_type_params():
-            type_symbol = TypeSymbol(name=generic_parameter.name.type_parts[0], type=None, is_generic=True, scope_defined_in=sm.current_scope)
-            sm.current_scope.add_symbol(type_symbol)
-            cls_scope.add_symbol(type_symbol)
-
-        for generic_parameter in self.generic_parameter_group.get_comp_params():
-            sym_type = sm.current_scope.get_symbol(self.old_type).scope.get_symbol(generic_parameter.type).fq_name
-            var_symbol = VariableSymbol(name=Asts.IdentifierAst.from_type(generic_parameter.name), type=sym_type, is_generic=True)
-            sm.current_scope.add_symbol(var_symbol)
-            cls_scope.add_symbol(var_symbol)
-
-        # Register the old type against the new alias symbol.
-        self.old_type.analyse_semantics(sm)
-        self._alias_symbol.old_sym = old_sym or sm.current_scope.get_symbol(self.old_type)
-        self._alias_symbol.generic_impl.old_sym = self._alias_symbol.old_sym
+        # Check the old type is valid, and get the new symbol.
+        self.old_type.analyse_semantics(sm, **kwargs)
+        self._alias_symbol.old_sym = sm.current_scope.get_symbol(self.old_type)
+        self._alias_symbol.generic_impl.old_sym = sm.current_scope.get_symbol(self.old_type)
 
         # Create a sup ast to allow the attribute and method access.
-        sup_ast = Asts.SupPrototypeExtensionAst(
+        self._sup_ast = Asts.SupPrototypeExtensionAst(
             pos=self.pos,
             generic_parameter_group=self.generic_parameter_group.opt_to_req(),
             name=self.new_type,
             super_class=self.old_type)
+        self._sup_ast.generate_top_level_scopes(sm)
 
-        sup_ast.generate_top_level_scopes(sm)
-
-        # Move out of the type-alias scope.
+        # Move out of the type alias scope.
         sm.move_out_of_current_scope()
 
-    def qualify_types(self, sm: ScopeManager, old_sym: Optional[TypeSymbol] = None, **kwargs) -> None:
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
         sm.move_to_next_scope()
 
-        if old_sym is not None:
-            self._alias_symbol.old_sym = old_sym
-            self._alias_symbol.generic_impl.old_sym = self._alias_symbol.old_sym
+        stripped_old_type_symbol = sm.current_scope.get_symbol(self.old_type.without_generics, ignore_alias=True)
+        if not stripped_old_type_symbol.is_generic:
+            tm = ScopeManager(sm.global_scope, sm.current_scope.get_symbol(self.old_type.without_generics, ignore_alias=True).scope)
+
+            self.generic_parameter_group.qualify_types(tm, **kwargs)
+            self.old_type.qualify_types(tm, **kwargs)
+            self.old_type.analyse_semantics(sm, **kwargs)
+
+            self._cls_ast.generic_parameter_group = copy.copy(self.generic_parameter_group)
+            self._sup_ast.generic_parameter_group = self.generic_parameter_group.opt_to_req()
+            self._alias_symbol.old_sym = sm.current_scope.get_symbol(self.old_type)
+            self._alias_symbol.generic_impl.old_sym = sm.current_scope.get_symbol(self.old_type)
 
         sm.move_to_next_scope()
         sm.move_out_of_current_scope()
         sm.move_out_of_current_scope()
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
-        self._skip_all_use_statement_scopes(sm, **kwargs)
+        self._skip_all_type_statement_scopes(sm, **kwargs)
 
     def pre_analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        self._skip_all_use_statement_scopes(sm, **kwargs)
+        self._skip_all_type_statement_scopes(sm, **kwargs)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the annotations.
@@ -174,7 +165,7 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
 
         # If the symbol has already been generated (module/sup level, skip the scopes).
         if self._generated:
-            self._skip_all_use_statement_scopes(sm)
+            self._skip_all_type_statement_scopes(sm)
 
         # Otherwise, run all the generation and analysis stages, resetting the scope each time.
         else:
@@ -186,11 +177,15 @@ class UseStatementAliasAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixi
             sm._iterator, new_iterator = itertools.tee(sm._iterator)
             self.generate_top_level_aliases(sm, **kwargs)
 
+            sm.reset(current_scope, new_iterator)
+            sm._iterator, new_iterator = itertools.tee(sm._iterator)
+            self.qualify_types(sm, **kwargs)
+
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
-        self._skip_all_use_statement_scopes(sm, **kwargs)
+        self._skip_all_type_statement_scopes(sm, **kwargs)
 
     def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
-        self._skip_all_use_statement_scopes(sm, **kwargs)
+        self._skip_all_type_statement_scopes(sm, **kwargs)
 
 
-__all__ = ["UseStatementAliasAst"]
+__all__ = ["TypeStatementAst"]
