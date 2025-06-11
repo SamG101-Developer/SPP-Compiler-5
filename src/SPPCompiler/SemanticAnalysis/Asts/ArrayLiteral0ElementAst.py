@@ -105,7 +105,7 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 c, self.elem_type, "array element type").scopes(sm.current_scope)
 
         # Analyse the inferred array type to generate the generic implementation.
-        self.infer_type(sm).analyse_semantics(sm, **kwargs)
+        self.infer_type(sm, **kwargs).analyse_semantics(sm, **kwargs)
 
 
 __all__ = [

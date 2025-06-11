@@ -80,12 +80,6 @@ class AstTypeUtils:
         if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope, sm.current_scope):
             return type.type_parts[0].generic_argument_group.arguments[0].value
 
-        # Array type: get the first generic argument as an "Opt[T]" type (safety check).
-        # if type.without_generics.symbolic_eq(CommonTypesPrecompiled.EMPTY_ARRAY, sm.current_scope):
-        #     safe_type = CommonTypes.Opt(type.pos, type.type_parts[0].generic_argument_group.arguments[0].value)
-        #     safe_type.analyse_semantics(sm)
-        #     return safe_type
-
         raise NotImplementedError("Only tuple and array types are indexable.")
 
     @staticmethod
@@ -110,8 +104,8 @@ class AstTypeUtils:
 
     @staticmethod
     def get_type_part_symbol_with_error(
-            scope: Scope, sm: ScopeManager, type_part: Asts.GenericIdentifierAst, ignore_alias: bool = False, **kwargs)\
-            -> TypeSymbol | AliasSymbol:
+            scope: Scope, sm: ScopeManager, type_part: Asts.GenericIdentifierAst, ignore_alias: bool = False,
+            **kwargs) -> TypeSymbol | AliasSymbol:
 
         # Get the type part's symbol, and raise an error if it does not exist.
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
@@ -127,15 +121,19 @@ class AstTypeUtils:
 
     @staticmethod
     def create_generic_scope(
-            sm: ScopeManager, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol, is_tuple: bool) -> Scope:
+            sm: ScopeManager, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol, is_tuple: bool,
+            **kwargs) -> Scope:
 
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         # Create a new scope & symbol for the generic substituted type.
-        new_scope = Scope(name=Asts.TypeSingleAst.from_generic_identifier(type_part), parent=base_symbol.scope.parent, ast=base_symbol.scope._ast)
+        new_scope = Scope(
+            name=Asts.TypeSingleAst.from_generic_identifier(type_part), parent=base_symbol.scope.parent,
+            ast=base_symbol.scope._ast)
+
         new_symbol = TypeSymbol(
             name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
-            visibility=base_symbol.visibility, scope_defined_in=sm.current_scope)
+            is_generic=base_symbol.is_generic, visibility=base_symbol.visibility, scope_defined_in=sm.current_scope)
 
         # Configure the new scope based on the base scope, register non-generic scope as the base scope.
         new_scope.parent.add_symbol(new_symbol)
@@ -144,7 +142,7 @@ class AstTypeUtils:
         new_scope._non_generic_scope = base_symbol.scope
         if not isinstance(new_scope.parent.name, str):
             new_scope.parent.children.append(new_scope)
-        sm.attach_super_scope_to_target_scope(new_scope)
+        sm.attach_super_scope_to_target_scope(new_scope, **kwargs)
 
         # No more checks for the tuple type (avoid recursion, is textual because it is to do with generics).
         if is_tuple: return new_scope
@@ -163,14 +161,15 @@ class AstTypeUtils:
         new_ast = fast_deepcopy(new_scope._ast)
         for attribute in new_ast.body.members:
             attribute.type = attribute.type.substituted_generics(type_part.generic_argument_group.arguments)
-            attribute.analyse_semantics(sm)
+            attribute.analyse_semantics(sm, **kwargs)
 
         # Return the new scope.
         return new_scope
 
     @staticmethod
     def create_generic_sup_scope(
-            sm: ScopeManager, old_sup_scope: Scope, true_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst) -> Tuple[Scope, Scope]:
+            sm: ScopeManager, old_sup_scope: Scope, true_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst,
+            **kwargs) -> Tuple[Scope, Scope]:
 
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
@@ -179,7 +178,7 @@ class AstTypeUtils:
         if isinstance(old_sup_scope._ast, Asts.SupPrototypeExtensionAst):
             new_fq_super_type = fast_deepcopy(old_sup_scope._ast.super_class)
             new_fq_super_type = new_fq_super_type.substituted_generics(generic_arguments.arguments)
-            new_fq_super_type.analyse_semantics(sm)
+            new_fq_super_type.analyse_semantics(sm, **kwargs)
             new_cls_scope = true_scope.get_symbol(new_fq_super_type).scope
 
         # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
@@ -203,18 +202,22 @@ class AstTypeUtils:
         return new_scope, new_cls_scope
 
     @staticmethod
-    def create_generic_symbol(sm: ScopeManager, generic_argument: Asts.GenericArgumentAst) -> TypeSymbol | VariableSymbol:
+    def create_generic_symbol(sm: ScopeManager, generic_argument: Asts.GenericArgumentAst, tm: Optional[ScopeManager] = None) -> TypeSymbol | VariableSymbol:
         true_value_symbol = sm.current_scope.get_symbol(generic_argument.value)
 
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
             return TypeSymbol(
-                name=generic_argument.name.type_parts[0], type=true_value_symbol.type if true_value_symbol else None,
-                scope=true_value_symbol.scope if true_value_symbol else None, is_generic=True,
-                convention=generic_argument.value.convention, scope_defined_in=sm.current_scope)
+                name=generic_argument.name.type_parts[0],
+                type=true_value_symbol.type if true_value_symbol else None,
+                scope=true_value_symbol.scope if true_value_symbol else None,
+                is_generic=True,
+                convention=generic_argument.value.convention,
+                scope_defined_in=sm.current_scope)
 
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
             return VariableSymbol(
-                name=Asts.IdentifierAst.from_type(generic_argument.name), type=generic_argument.value.infer_type(sm),
+                name=Asts.IdentifierAst.from_type(generic_argument.name),
+                type=(tm or sm).current_scope.get_symbol(generic_argument.value.infer_type(tm or sm)).fq_name,
                 is_generic=True)
 
         raise Exception(f"Unknown generic argument type '{type(generic_argument).__name__}': {generic_argument}")
@@ -311,7 +314,10 @@ class AstTypeUtils:
 
     @staticmethod
     # @FunctionCache.cache
-    def symbolic_eq(lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope, check_variant: bool = True, lhs_ignore_alias: bool = False, debug: bool = False) -> bool:
+    def symbolic_eq(
+            lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope,
+            check_variant: bool = True, lhs_ignore_alias: bool = False, debug: bool = False) -> bool:
+
         """
         Compare the two types for symbolic equality. This ensures that they are teh exact same type, and not just
         textually the same.
