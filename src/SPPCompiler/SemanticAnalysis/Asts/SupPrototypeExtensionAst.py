@@ -77,17 +77,6 @@ class SupPrototypeExtensionAst(Asts.Ast):
             raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
                 existing_sup_scope[0]._ast.super_class, self.name).scopes(sm.current_scope)
 
-    def _check_conflicting_attributes(self, cls_symbol: TypeSymbol, sup_symbol: TypeSymbol, sm: ScopeManager) -> None:
-        # Prevent duplicate attributes by checking if the attributes appear in any super class.
-        existing_attr_names = SequenceUtils.flatten([
-            [m.name for m in s._ast.body.members]
-            for s in cls_symbol.scope.sup_scopes + [cls_symbol.scope]
-            if s._ast.__class__ is Asts.ClassPrototypeAst])
-
-        if duplicates := SequenceUtils.duplicates(existing_attr_names):
-            raise SemanticErrors.IdentifierDuplicationError().add(
-                duplicates[0], duplicates[1], "attribute").scopes(sm.current_scope)
-
     def pre_process(self, ctx: PreProcessingContext) -> None:
         if self.name.type_parts[0].value[0] == "$": return
         Asts.Ast.pre_process(self, ctx)

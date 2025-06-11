@@ -153,9 +153,6 @@ class ScopeManager:
                 check_conflicting_type_statements(cls_symbol, self)
                 check_conflicting_cmp_statements(cls_symbol, self)
 
-            if isinstance(super_scope._ast, Asts.SupPrototypeExtensionAst):
-                super_scope._ast._check_conflicting_attributes(cls_symbol, sup_symbol, self)
-
         if progress:
             progress.next(str(scope.name))
 
@@ -174,7 +171,7 @@ def check_conflicting_type_statements(cls_symbol: TypeSymbol, sm: ScopeManager) 
     # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
     existing_type_names = SequenceUtils.flatten([
         [m.new_type for m in s._ast.body.members if isinstance(m, Asts.SupTypeStatementAst)]
-        for s in cls_symbol.scope.sup_scopes
+        for s in cls_symbol.scope._direct_sup_scopes
         if isinstance(s._ast, Asts.SupPrototypeAst)])
 
     if duplicates := SequenceUtils.duplicates(existing_type_names):
@@ -188,7 +185,7 @@ def check_conflicting_cmp_statements(cls_symbol: TypeSymbol, sm: ScopeManager) -
     # Prevent duplicate cmp declarations by checking if the cmp statements appear in any super class.
     existing_cmp_names = SequenceUtils.flatten([
         [m.name for m in s._ast.body.members if isinstance(m, Asts.SupCmpStatementAst) and m.type.type_parts[-1].value[0] != "$"]
-        for s in cls_symbol.scope.sup_scopes
+        for s in cls_symbol.scope._direct_sup_scopes
         if isinstance(s._ast, Asts.SupPrototypeAst)])
 
     if duplicates := SequenceUtils.duplicates(existing_cmp_names):

@@ -9,6 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.FunctionCache import FunctionCache
 
@@ -60,6 +61,18 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         lhs_type = self.lhs.infer_type(sm, **kwargs)
         lhs_type_symbol = sm.current_scope.get_symbol(lhs_type)
         lhs_type_scope = lhs_type_symbol.scope
+
+        # Check there is only 1 target field on the type at the highest level.
+        if isinstance(self.op, Asts.TypePostfixOperatorNestedTypeAst):
+            sss = []
+            for scope in [lhs_type_symbol.scope] + lhs_type_symbol.scope.sup_scopes:
+                sss.append((scope, scope._symbol_table.get(self.op.name.name)))
+            depths = [(lhs_type_symbol.scope.depth_difference(s[0]), s) for s in sss if s[1] is not None]
+            closest = [s[1] for s in depths if s[0] == min(depths, key=lambda x: x[0])[0]]
+            if len(closest) > 1:
+                raise SemanticErrors.AmbiguousMemberAccessError().add(
+                    self.op.name.name, closest[0][1].name, closest[1][1].name).scopes(
+                    sm.current_scope, closest[0][0], closest[1][0])
 
         self.op.name.analyse_semantics(sm, type_scope=lhs_type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
 
