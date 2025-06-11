@@ -154,6 +154,10 @@ class AstFunctionUtils:
         target_function_name = target_function_name.to_function_identifier()
         overload_scopes_and_info = []
 
+        # If target scope is None, then teh functions are being superimposed over a generic type.
+        if target_scope is None:
+            return overload_scopes_and_info
+
         # Check for namespaced (module-level) functions. They will have no "inheritable generics".
         if target_scope.type_symbol is not None and target_scope.type_symbol.__class__ == NamespaceSymbol:
             for ancestor_scope in target_scope.ancestors:
