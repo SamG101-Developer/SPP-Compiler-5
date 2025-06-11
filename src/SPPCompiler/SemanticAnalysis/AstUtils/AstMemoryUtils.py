@@ -255,7 +255,9 @@ class AstMemoryUtils:
 
         # Check the symbol being moved is not pinned. This prevents pinned objects from moving memory location. Pinned
         # objects must not move location, because they might be being borrowed into a coroutine or asynchronous function
-        # call. Todo: partial_copies with pins?
+        # call.
+        # Todo: partial_copies with pins?
+        # Todo: at some point, "copies" will be usable as  generic constraint (not a just a concrete type)
         if check_pins and sym.memory_info.ast_pins and not copies:
             raise SemanticErrors.MemoryMovedWhilstPinnedError().add(
                 value_ast, sym.memory_info.ast_pins[0]).scopes(sm.current_scope)

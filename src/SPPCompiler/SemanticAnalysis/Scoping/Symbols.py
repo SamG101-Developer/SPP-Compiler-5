@@ -89,7 +89,6 @@ class TypeSymbol(BaseSymbol):
     scope_defined_in: Optional[Scope] = field(default=None)
 
     def __post_init__(self) -> None:
-
         # Link the type symbol to the associated scope.
         if self.scope and not self.is_generic and not self.name.value == "Self":
             self.scope._type_symbol = self

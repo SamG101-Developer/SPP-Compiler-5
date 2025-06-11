@@ -66,6 +66,9 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def convert(self) -> Asts.TypeAst:
         return self
 
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        self.rhs.qualify_types(sm, **kwargs)
+
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             temp_manager = ScopeManager(sm.global_scope, type_scope or sm.current_scope)
