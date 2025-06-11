@@ -1474,10 +1474,7 @@ class SppParser:
         return p1
 
     def parse_type_simple(self) -> Optional[Asts.TypeAst]:
-        p1 = self.parse_zero_or_more(self.parse_type_unary_op_namespace, self.parse_nothing)
-        p2 = self.parse_once(self.parse_type_single)
-        if p2 is None: return None
-        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(x.pos, x, acc), p1[::-1], p2)
+        return self.parse_type_postfix_expression_no_borrow()
 
     def parse_type_binary_expression_precedence_level_1(self) -> Optional[Asts.TypeAst]:
         return self.parse_binary_type_expression_precedence_level_n(self.parse_type_binary_expression_precedence_level_2, self.parse_type_binary_op_precedence_level_1, self.parse_type_binary_expression_precedence_level_1)
@@ -1508,6 +1505,18 @@ class SppParser:
         p3 = self.parse_once(self.parse_type_single)
         if p3 is None: return None
         p2.insert(0, p1) if p1 else None
+        return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(x.pos, x, acc), p2[::-1], p3).convert()
+
+    def parse_type_postfix_expression_no_borrow(self) -> Optional[Asts.TypeAst]:
+        p1 = self.parse_once(self.parse_type_unary_expression_no_borrow)
+        if p1 is None: return None
+        p2 = self.parse_zero_or_more(self.parse_type_postfix_op, self.parse_nothing)
+        return reduce(lambda acc, x: Asts.TypePostfixExpressionAst(acc.pos, acc, x), p2, p1).convert()
+
+    def parse_type_unary_expression_no_borrow(self) -> Optional[Asts.TypeAst]:
+        p2 = self.parse_zero_or_more(self.parse_type_unary_op_namespace, self.parse_nothing)
+        p3 = self.parse_once(self.parse_type_single)
+        if p3 is None: return None
         return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(x.pos, x, acc), p2[::-1], p3).convert()
 
     def parse_type_parenthesized(self) -> Optional[Asts.TypeSingleAst]:
