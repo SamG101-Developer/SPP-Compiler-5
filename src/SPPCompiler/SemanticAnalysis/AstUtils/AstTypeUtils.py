@@ -196,8 +196,14 @@ class AstTypeUtils:
 
         # Run generic substitution on the aliases in the new scope.
         for scoped_sym in new_scope.all_symbols(exclusive=True):
+
+            # Defined as "type X = Y"
             if isinstance(scoped_sym, AliasSymbol):
                 scoped_sym.old_sym = old_sup_scope.get_symbol(scoped_sym.old_sym.fq_name.substituted_generics(generic_arguments.arguments))
+
+            # Defined as "cmp var = n"
+            if isinstance(scoped_sym, VariableSymbol):
+                scoped_sym.type = scoped_sym.type.substituted_generics(generic_arguments.arguments)
 
         return new_scope, new_cls_scope
 
