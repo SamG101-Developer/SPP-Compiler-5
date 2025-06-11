@@ -50,7 +50,7 @@ class GenericArgumentGroupAst(Asts.Ast):
         return ""
 
     @staticmethod
-    def from_parameter_group(parameters: Seq[Asts.GenericParameterAst]) -> GenericArgumentGroupAst:
+    def from_parameter_group(param_group: Asts.GenericParameterGroupAst) -> GenericArgumentGroupAst:
 
         GenericArgumentCTor = {
             **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__args__},
@@ -58,7 +58,7 @@ class GenericArgumentGroupAst(Asts.Ast):
 
         val = lambda p: p.name if isinstance(p, Asts.GenericTypeParameterAst) else Asts.IdentifierAst.from_type(p.name)
 
-        arguments = [GenericArgumentCTor[type(p)](name=p.name, value=val(p)) for p in parameters]
+        arguments = [GenericArgumentCTor[type(p)](name=p.name, value=val(p)) for p in param_group.parameters]
         return GenericArgumentGroupAst(arguments=arguments)
 
     @staticmethod
