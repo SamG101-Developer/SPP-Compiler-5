@@ -140,13 +140,15 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     lhs, lhs_type, "member access").scopes(sm.current_scope)
 
             # Check the attribute exists on the lhs.
-            if not lhs_symbol.scope.has_symbol(self.field):
+            if not lhs_symbol.scope.has_symbol(self.field, sym_type=VariableSymbol):
                 alternatives = []  # todo: lhs_symbol.scope.all_symbols().map_attr("name")
                 closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "runtime member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
 
             # Check there is only 1 target field on the type at the highest level.
+            if lhs_symbol.scope.get_symbol(self.field, sym_type=VariableSymbol).type.type_parts[-1].value.startswith("$"):
+                return
             sss = []
             for scope in [lhs_symbol.scope] + lhs_symbol.scope.sup_scopes:
                 sss.append((scope, scope._symbol_table.get(self.field)))
