@@ -123,7 +123,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     infer_source={a.name: a.infer_type(sm, **kwargs) for a in arguments},
                     infer_target={p.extract_name: p.type for p in parameters},
                     sm=sm, owner=lhs.infer_type(sm, **kwargs),
-                    variadic_parameter_identifier=fn_proto.function_parameter_group.get_variadic_param().extract_name if is_variadic_fn else None)
+                    variadic_parameter_identifier=fn_proto.function_parameter_group.get_variadic_param().extract_name if is_variadic_fn else None,
+                    **kwargs)
 
                 # For function folding, identify all tuple arguments that have non-tuple parameters.
                 if self.fold_token is not None:

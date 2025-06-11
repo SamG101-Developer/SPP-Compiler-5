@@ -10,6 +10,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.FunctionCache import FunctionCache
 
@@ -156,7 +157,19 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     def get_symbol(self, scope: Scope) -> TypeSymbol:
         return scope.get_symbol(self.name.without_generics, exclusive=True)
 
-    def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        for g in self.name.generic_argument_group.get_type_args():
+            g.value.qualify_types(sm, **kwargs)
+            try:
+                g.value.analyse_semantics(sm, skip_generic_check=True, **kwargs)
+            except SemanticErrors.IdentifierUnknownError:
+                continue
+            g.value = sm.current_scope.get_symbol(g.value.without_generics).fq_name.set_generics(g.value.type_parts[-1].generic_argument_group).with_convention(g.value.convention)
+
+    def analyse_semantics(
+            self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None,
+            generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
+
         type_scope = type_scope or sm.current_scope
         original_scope = type_scope
 
@@ -176,6 +189,9 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         if "skip_generic_check" in kwargs:
             return
 
+        # Analyse the semantics of the generic arguments.
+        self.name.generic_argument_group.analyse_semantics(sm, **kwargs)
+
         # Infer generic arguments from information given from object initialization.
         self.name.generic_argument_group.arguments = AstFunctionUtils.infer_generic_arguments(
             generic_parameters=type_symbol.type.generic_parameter_group.parameters,
@@ -183,21 +199,20 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             explicit_generic_arguments=self.name.generic_argument_group.arguments,
             infer_source=generic_infer_source or {},
             infer_target=generic_infer_target or {},
-            sm=sm, owner=type_symbol.fq_name)
-
-        # Analyse the semantics of the generic arguments.
-        self.name.generic_argument_group.analyse_semantics(sm, **kwargs)
+            sm=sm,
+            owner=AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.name.without_generics).fq_name,
+            **kwargs)
 
         # For variant types, collapse any duplicate generic arguments.
         if AstTypeUtils.symbolic_eq(self.without_generics, CommonTypesPrecompiled.EMPTY_VARIANT, type_scope, sm.current_scope, check_variant=False, lhs_ignore_alias=True):
             composite_types = AstTypeUtils.deduplicate_composite_types(self, sm.current_scope)
             composite_types = CommonTypes.Tup(self.pos, composite_types)
-            composite_types.analyse_semantics(sm, type_scope=type_scope)
+            composite_types.analyse_semantics(sm, type_scope=type_scope, **kwargs)
             self.name.generic_argument_group.arguments[0].value = composite_types
 
         # If the generically filled type doesn't exist (Vec[Str]), but the base does (Vec[T]), create it.
         if not type_scope.parent.has_symbol(self.name):
-            new_scope = AstTypeUtils.create_generic_scope(sm, self.name, type_symbol, is_tuple=is_tuple)
+            new_scope = AstTypeUtils.create_generic_scope(sm, self.name, type_symbol, is_tuple=is_tuple, **kwargs)
 
             # Handle type aliasing (providing generics to the original type).
             if type_symbol.__class__ is AliasSymbol:

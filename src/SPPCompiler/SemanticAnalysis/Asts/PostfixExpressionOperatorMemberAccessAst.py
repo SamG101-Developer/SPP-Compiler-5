@@ -52,7 +52,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
 
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # The NamespaceSymbol type check seems dumb but check hack in "elif" block beneath.
-        lhs_type = lhs.infer_type(sm)
+        lhs_type = lhs.infer_type(sm, **kwargs)
         lhs_symbol = sm.current_scope.get_symbol(lhs_type) if not isinstance(lhs_type, NamespaceSymbol) else lhs_type
 
         # Todo: wrap with Opt[T] for array access => Index operator to this is only for tuples anyways?
@@ -96,7 +96,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         
         # Numerical access to a tuple, such as "tuple.0".
         elif isinstance(self.field, Asts.TokenAst):
-            lhs_type = lhs.infer_type(sm)
+            lhs_type = lhs.infer_type(sm, **kwargs)
             lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
             # Check the lhs isn't a generic type.

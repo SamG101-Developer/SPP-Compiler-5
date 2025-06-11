@@ -63,7 +63,7 @@ class TupleLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                         element, borrow_ast).scopes(sm.current_scope)
 
         # Analyse the inferred tuple type to generate the generic implementation.
-        self.infer_type(sm).analyse_semantics(sm, **kwargs)
+        self.infer_type(sm, **kwargs).analyse_semantics(sm, **kwargs)
 
 
 __all__ = [

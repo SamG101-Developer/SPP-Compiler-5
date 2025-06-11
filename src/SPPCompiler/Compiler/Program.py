@@ -104,7 +104,7 @@ class Program(CompilerStages):
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
-            module.generate_top_level_aliases(sm)
+            module.generate_top_level_aliases(sm, stage=5)
             sm.reset()
         progress_bar.finish()
 
@@ -116,7 +116,7 @@ class Program(CompilerStages):
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
-            module.qualify_types(sm)
+            module.qualify_types(sm, stage=6)
             sm.reset()
         progress_bar.finish()
 
@@ -125,17 +125,17 @@ class Program(CompilerStages):
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
-            module.load_super_scopes(sm)
+            module.load_super_scopes(sm, stage=7)
             sm.reset()
         progress_bar.finish()
-        sm.attach_super_scopes(attachment_progress_bar)
+        sm.attach_super_scopes(attachment_progress_bar, stage=7.5)
 
     def pre_analyse_semantics(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Pre analyse all the top level constructs.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
-            module.pre_analyse_semantics(sm)
+            module.pre_analyse_semantics(sm, stage=8)
             sm.reset()
         progress_bar.finish()
 
@@ -144,17 +144,17 @@ class Program(CompilerStages):
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
-            module.analyse_semantics(sm)
+            module.analyse_semantics(sm, stage=9)
             sm.reset()
         progress_bar.finish()
-        self._validate_entry_point(sm)
+        self._validate_entry_point(sm, stage=9.5)
 
     def check_memory(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
         # Check the memory for all the modules.
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
-            module.check_memory(sm)
+            module.check_memory(sm, stage=10)
             sm.reset()
         progress_bar.finish()
 
@@ -165,13 +165,13 @@ class Program(CompilerStages):
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
             progress_bar.next(module.name.value)
             llvm_module = ir.Module(module.name.value)
-            module.code_gen(sm, llvm_module, **{"root_path": module_tree._root})
+            module.code_gen(sm, llvm_module, root_path=module_tree._root, stage=11)
             llvm_modules.append(llvm_module)
             sm.reset()
         progress_bar.finish()
         return llvm_modules
 
-    def _validate_entry_point(self, sm: ScopeManager) -> None:
+    def _validate_entry_point(self, sm: ScopeManager, **kwargs) -> None:
         """
         Check there is a "main" function inside the "main" module, with the matching signature of a "Vec[Str]",
         returning the "Void" type.
@@ -187,7 +187,7 @@ class Program(CompilerStages):
         dummy_main_call = CodeInjection.inject_code(dummy_main_call, SppParser.parse_expression, pos_adjust=0)
         sm.reset(sm.global_scope)
         try:
-            dummy_main_call.analyse_semantics(sm)
+            dummy_main_call.analyse_semantics(sm, **kwargs)
         except (SemanticErrors.FunctionCallNoValidSignaturesError, SemanticErrors.IdentifierUnknownError):
             raise SemanticErrors.MissingMainFunctionError().add(main_module).scopes(sm.global_scope)
 
