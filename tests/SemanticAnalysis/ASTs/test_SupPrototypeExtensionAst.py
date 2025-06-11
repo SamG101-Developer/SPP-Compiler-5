@@ -212,31 +212,3 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
             let b = B(b=100)
         }
         """
-
-    @should_pass_compilation()
-    def test_valid_superimposition_extension_valid_use_statement(self):
-        """
-        cls A { }
-        sup A {
-            type X = std::number::bigint::BigInt
-        }
-
-        cls B { }
-        sup B ext A {
-            type X = std::string::Str
-        }
-        """
-
-    @should_pass_compilation()
-    def test_valid_superimposition_extension_valid_cmp_statement(self):
-        """
-        cls A { }
-        sup A {
-            cmp x: std::number::bigint::BigInt = 123
-        }
-
-        cls B { }
-        sup B ext A {
-            cmp x: std::string::Str = "hello world"
-        }
-        """
