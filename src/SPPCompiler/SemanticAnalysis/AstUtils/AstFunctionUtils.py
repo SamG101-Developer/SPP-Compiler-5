@@ -418,7 +418,8 @@ class AstFunctionUtils:
             infer_target: Dict[Asts.IdentifierAst, Asts.TypeAst],
             sm: ScopeManager,
             owner: Asts.TypeAst | Asts.ExpressionAst = None,
-            variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None)\
+            variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None,
+            **kwargs)\
             -> Seq[Asts.GenericArgumentAst]:
 
         """
@@ -521,12 +522,14 @@ class AstFunctionUtils:
                     inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].type_parts[0].generic_argument_group.arguments[0].value
 
         # Add any default generic arguments in that were missing.
-        for optional_generic_parameter in optional_generic_parameters:
-            if optional_generic_parameter.name not in inferred_generic_arguments:
-                default = optional_generic_parameter.default
-                if isinstance(owner, Asts.TypeAst):
-                    default = sm.current_scope.get_symbol(owner).scope.get_symbol(default).fq_name
-                inferred_generic_arguments[optional_generic_parameter.name].append(default)
+        if sm.current_scope.get_symbol(owner):
+            tm = ScopeManager(sm.global_scope, sm.current_scope.get_symbol(owner).scope)
+            for optional_generic_parameter in optional_generic_parameters:
+                if optional_generic_parameter.name not in inferred_generic_arguments:
+                    default = optional_generic_parameter.default
+                    if isinstance(owner, Asts.TypeAst) and tm.current_scope.get_symbol(default):
+                        default = tm.current_scope.get_symbol(default).fq_name
+                    inferred_generic_arguments[optional_generic_parameter.name].append(default)
 
         # Check each generic argument name only has one unique inferred type. This is to prevent conflicts for a generic
         # type. For example, "T" can't be inferred as a "Str" and then a "BigInt". All instances must match the first
@@ -578,16 +581,19 @@ class AstFunctionUtils:
         # Re-order the arguments to match the parameter order.
         final_args.sort(key=lambda arg: generic_parameter_names.index(arg.name))
 
-        # For the "comp" args, type-check them.
+        # For the "comp" args, type-check them. Don't do this pre-analysis stage (types haven't been setup correctly
+        # yet)
         # Todo: add to test suite
-        for comp_arg, comp_param in zip(final_args, generic_parameters):
-            if isinstance(comp_arg, Asts.GenericCompArgumentNamedAst):
-                a_type = comp_arg.value.infer_type(sm)
-                p_type = comp_param.type
 
-                if not AstTypeUtils.symbolic_eq(p_type, a_type, sm.current_scope.get_symbol(owner).scope, sm.current_scope):
-                    raise SemanticErrors.TypeMismatchError().add(
-                        comp_param, p_type, comp_arg, a_type).scopes(sm.current_scope)
+        if kwargs["stage"] > 5:
+            for comp_arg, comp_param in zip(final_args, generic_parameters):
+                if isinstance(comp_arg, Asts.GenericCompArgumentNamedAst):
+                    a_type = comp_arg.value.infer_type(sm)
+                    p_type = comp_param.type.substituted_generics(final_args)
+
+                    if not AstTypeUtils.symbolic_eq(p_type, a_type, sm.current_scope.get_symbol(owner).scope, sm.current_scope):
+                        raise SemanticErrors.TypeMismatchError().add(
+                            comp_param, p_type, comp_arg, a_type).scopes(sm.current_scope)
 
         # Finally, re-order the arguments to match the parameter order.
         return final_args
