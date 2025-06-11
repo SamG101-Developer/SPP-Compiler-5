@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import copy
 from abc import abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional, TYPE_CHECKING, final
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
-from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -106,6 +106,12 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         :param scope: The scope to get the symbol from.
         :return: The type symbol for this type.
         """
+
+    @final
+    def set_generics(self, generics_argument_group: Asts.GenericArgumentGroupAst) -> Asts.TypeAst:
+        new = copy.deepcopy(self)
+        new.type_parts[-1].generic_argument_group = generics_argument_group
+        return new
 
     @final
     def with_convention(self, convention: Optional[Asts.ConventionAst]) -> Asts.TypeAst:
