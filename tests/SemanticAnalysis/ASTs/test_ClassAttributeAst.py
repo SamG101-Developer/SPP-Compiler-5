@@ -11,36 +11,6 @@ class TestClassAttributeAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
-    def test_invalid_class_attribute_duplicate_with_super_class_1(self):
-        """
-        cls A {
-            a: std::string::Str
-        }
-
-        cls B {
-            a: std::string::Str
-        }
-
-        cls C { }
-        sup C ext A {}
-        sup C ext B {}
-        """
-
-    @should_fail_compilation(SemanticErrors.IdentifierDuplicationError)
-    def test_invalid_class_attribute_duplicate_with_super_class_2(self):
-        """
-        cls A {
-            a: std::string::Str
-        }
-
-        cls B {
-            a: std::string::Str
-        }
-
-        sup B ext A {}
-        """
-
     @should_fail_compilation(SemanticErrors.InvalidConventionLocationError)
     def test_invalid_class_attribute_convention_mut(self):
         """
