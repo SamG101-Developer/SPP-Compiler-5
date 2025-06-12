@@ -154,7 +154,7 @@ class AstFunctionUtils:
         target_function_name = target_function_name.to_function_identifier()
         overload_scopes_and_info = []
 
-        # If target scope is None, then teh functions are being superimposed over a generic type.
+        # If target scope is None, then the functions are being superimposed over a generic type.
         if target_scope is None:
             return overload_scopes_and_info
 
