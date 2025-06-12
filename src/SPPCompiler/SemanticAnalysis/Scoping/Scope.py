@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from typing import Any, Iterator, List, Optional, Tuple
 
 from SPPCompiler.Compiler.ModuleTree import Module
@@ -135,7 +136,7 @@ class Scope:
     def __json__(self) -> dict:
         return {
             "scope_name": self._name, "id": id(self), "parent": self._parent.name if self._parent else "", "children": self._children,
-            "symbol_table": self._symbol_table, "sup_scopes": [s.name for s in self._direct_sup_scopes],
+            "symbol_table": self._symbol_table, "sup_scopes": [s.name for s in self._direct_sup_scopes], "sup_scopes_ids": [id(s) for s in self._direct_sup_scopes],
             "sub_scopes": [s.name for s in self._direct_sub_scopes], "type_symbol": self._type_symbol.name if self._type_symbol else "",
         }
 
@@ -147,6 +148,17 @@ class Scope:
 
     def __eq__(self, other: Scope) -> bool:
         return self is other
+
+    def __copy__(self) -> Scope:
+        # Create a shallow copy of the scope.
+        new_scope = Scope(name=self._name, parent=self._parent, ast=self._ast, error_formatter=self._error_formatter)
+        new_scope._symbol_table = self._symbol_table
+        new_scope._direct_sup_scopes = self._direct_sup_scopes
+        new_scope._direct_sub_scopes = self._direct_sub_scopes
+        new_scope._type_symbol = self._type_symbol
+        new_scope._children = self._children
+        new_scope._non_generic_scope = self._non_generic_scope
+        return new_scope
 
     @property
     def generics(self) -> List[Asts.GenericArgumentAst]:
