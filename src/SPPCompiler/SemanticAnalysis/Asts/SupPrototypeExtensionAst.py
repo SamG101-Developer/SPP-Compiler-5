@@ -77,8 +77,13 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
         if existing_sup_scope:
             raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
-                existing_sup_scope[0]._ast.super_class, self.name).scopes(sm.current_scope)
                 existing_sup_scope[0]._ast.super_class, self.name).scopes(check_scope)
+
+    def _check_self_extension(self, cls_symbol: TypeSymbol, sup_symbol: TypeSymbol, check_scope: Scope) -> None:
+        # Prevent self-inheritance by checking if the superimposition type is the same as the super type.
+        if AstTypeUtils.symbolic_eq(self.name, self.super_class, check_scope, check_scope):
+            raise SemanticErrors.SuperimpositionExtensionSelfExtensionError().add(
+                self.tok_ext).scopes(check_scope)
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         if self.name.type_parts[0].value[0] == "$": return

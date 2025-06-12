@@ -141,11 +141,11 @@ class ScopeManager:
             sup_symbol = new_cls_scope.type_symbol if new_cls_scope else None
             cls_symbol = scope.type_symbol
 
+            # Prevent double inheritance, cyclic inheritance, and self inheritance.
             if isinstance(super_scope._ast, Asts.SupPrototypeExtensionAst):
-                super_scope._ast._check_double_inheritance(cls_symbol, sup_symbol, self)
-                super_scope._ast._check_cyclic_inheritance(sup_symbol, self)
                 super_scope._ast._check_double_extension(cls_symbol, sup_symbol, super_scope)
                 super_scope._ast._check_cyclic_extension(sup_symbol, super_scope)
+                super_scope._ast._check_self_extension(cls_symbol, sup_symbol, super_scope)
 
             # Register the super scope against the current scope.
             scope._direct_sup_scopes.append(new_sup_scope)
