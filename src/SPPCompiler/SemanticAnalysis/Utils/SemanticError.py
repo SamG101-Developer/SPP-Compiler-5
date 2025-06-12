@@ -1178,6 +1178,21 @@ class SemanticErrors:
 
             return self
 
+    class SuperimpositionExtensionSelfExtensionError(SemanticError):
+        """
+        The SuperimpositionExtensionSelfExtensionError is raised if a type extends itself. This is not allowed, as it
+        would create an infinite loop in the extension tree.
+        """
+
+        def add(self, extension: Asts.TokenAst) -> SemanticError:
+            self.add_error(
+                ast=extension,
+                tag="Self extension.",
+                msg="A type cannot extend itself.",
+                tip="Remove the self extension.")
+
+            return self
+
     class SuperimpositionUnconstrainedGenericParameterError(SemanticError):
         """
         The SuperimpositionUnconstrainedGenericParameterError is raised if a generic parameter is unconstrained in a
