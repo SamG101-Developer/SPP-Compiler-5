@@ -98,7 +98,7 @@ class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.T
         self._cls_ast = cls_ast
 
         # Create a new scope for the new type.
-        sm.create_and_move_into_new_scope(f"<type-alias#{self.new_type}#{self.pos}>")
+        sm.create_and_move_into_new_scope(f"<type-alias#{self.new_type}#{self.pos}>", ast=self)
         sm.move_out_of_current_scope()
 
         # Mark this AST as generated, so it is not generated in the analysis phase.
