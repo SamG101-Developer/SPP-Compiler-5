@@ -144,9 +144,15 @@ class ScopeManager:
             if isinstance(super_scope._ast, Asts.SupPrototypeExtensionAst):
                 super_scope._ast._check_double_inheritance(cls_symbol, sup_symbol, self)
                 super_scope._ast._check_cyclic_inheritance(sup_symbol, self)
+                super_scope._ast._check_double_extension(cls_symbol, sup_symbol, super_scope)
+                super_scope._ast._check_cyclic_extension(sup_symbol, super_scope)
 
+            # Register the super scope against the current scope.
             scope._direct_sup_scopes.append(new_sup_scope)
-            if new_cls_scope:
+
+            # Register the super scope's class scope against the current scope, if it is different. The difference check
+            # is to prevent generic superimpositions ie "sup [T] T ext A" from causing "sup A ext A" from happening.
+            if new_cls_scope and scope.type_symbol is not new_cls_scope.type_symbol:
                 scope._direct_sup_scopes.append(new_cls_scope)
 
             if isinstance(super_scope._ast, Asts.SupPrototypeAst):

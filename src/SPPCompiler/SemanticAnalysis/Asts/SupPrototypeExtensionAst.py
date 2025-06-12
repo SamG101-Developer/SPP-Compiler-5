@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from llvmlite import ir
 
@@ -15,6 +15,9 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+
+if TYPE_CHECKING:
+    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
 # Todo
@@ -56,25 +59,26 @@ class SupPrototypeExtensionAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.body.pos_end
 
-    def _check_double_inheritance(self, cls_symbol: TypeSymbol, sup_symbol: TypeSymbol, sm: ScopeManager) -> None:
+    def _check_double_extension(self, cls_symbol: TypeSymbol, sup_symbol: TypeSymbol, check_scope: Scope) -> None:
         # Prevent cyclic inheritance by checking if the sup scope is already in the list.
         existing_sup_scope = [
             s for s in cls_symbol.scope.sup_scopes
-            if (s._ast.__class__ is SupPrototypeExtensionAst) and s._ast is not self and AstTypeUtils.symbolic_eq(s._ast.super_class, self.super_class, s, sm.current_scope)]
+            if (s._ast.__class__ is SupPrototypeExtensionAst) and s._ast is not self and AstTypeUtils.symbolic_eq(s._ast.super_class, self.super_class, s, check_scope)]
 
         if existing_sup_scope and cls_symbol.name.value[0] != "$":
             raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
-                existing_sup_scope[0]._ast.super_class, self.super_class).scopes(sm.current_scope)
+                existing_sup_scope[0]._ast.super_class, self.super_class).scopes(check_scope)
 
-    def _check_cyclic_inheritance(self, sup_symbol: TypeSymbol, sm: ScopeManager) -> None:
+    def _check_cyclic_extension(self, sup_symbol: TypeSymbol, check_scope: Scope) -> None:
         # Prevent double inheritance by checking if the scopes are already registered the other way around.
         existing_sup_scope = [
             s for s in sup_symbol.scope.sup_scopes
-            if (s._ast.__class__ is SupPrototypeExtensionAst) and AstTypeUtils.symbolic_eq(s._ast.super_class, self.name, s, sm.current_scope)]
+            if (s._ast.__class__ is SupPrototypeExtensionAst) and AstTypeUtils.symbolic_eq(s._ast.super_class, self.name, s, check_scope)]
 
         if existing_sup_scope:
             raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
                 existing_sup_scope[0]._ast.super_class, self.name).scopes(sm.current_scope)
+                existing_sup_scope[0]._ast.super_class, self.name).scopes(check_scope)
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         if self.name.type_parts[0].value[0] == "$": return
