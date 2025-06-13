@@ -103,7 +103,7 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         AstMemoryUtils.enforce_memory_integrity(
             self.value, self.value, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=True)
+            check_pins=True, mark_moves=True, **kwargs)
 
 
 __all__ = ["CmpStatementAst"]

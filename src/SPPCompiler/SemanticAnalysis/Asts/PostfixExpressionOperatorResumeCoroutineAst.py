@@ -41,7 +41,11 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        return " ".join([self.kw_res.print(printer), self.function_argument_group.print(printer)])
+        return "".join([
+            self.tk_dot.print(printer),
+            self.kw_res.print(printer),
+            self.function_argument_group.print(printer)
+        ])
 
     @property
     def pos_end(self) -> int:

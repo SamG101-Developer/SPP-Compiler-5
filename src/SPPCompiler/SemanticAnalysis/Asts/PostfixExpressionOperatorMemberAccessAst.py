@@ -126,7 +126,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
 
         # Accessing a regular attribute/method, such as "class.attribute".
         elif isinstance(self.field, Asts.IdentifierAst) and self.is_runtime_access():
-            lhs_type = lhs.infer_type(sm)
+            lhs_type = lhs.infer_type(sm, **kwargs)
             lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
             # Check the lhs is a variable and not a namespace.

@@ -239,8 +239,8 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                     # Check the function exists. No check for Bool return type as it is enforced by comparison methods.
                     # Dummy values as otherwise memory rules create conflicts - just need to test the existence of the
                     # function.
-                    binary_lhs_ast = Asts.ObjectInitializerAst(class_type=self.cond.infer_type(sm))
-                    binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expr.infer_type(sm))
+                    binary_lhs_ast = Asts.ObjectInitializerAst(class_type=self.cond.infer_type(sm, **kwargs))
+                    binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expr.infer_type(sm, **kwargs))
                     binary_ast = Asts.BinaryExpressionAst(self.pos, binary_lhs_ast, branch.op, binary_rhs_ast)
                     binary_ast.analyse_semantics(sm, **kwargs)
 
@@ -254,7 +254,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.cond.check_memory(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(
             self.cond, self.cond, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=False)
+            check_pins=True, mark_moves=False, **kwargs)
 
         sm.move_to_next_scope()
 

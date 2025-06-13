@@ -72,7 +72,7 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self.default.analyse_semantics(sm, **kwargs)
 
         # Make sure the default expression is of the correct type.
-        default_type = self.default.infer_type(sm)
+        default_type = self.default.infer_type(sm, **kwargs)
         target_type = self.type
         if not AstTypeUtils.symbolic_eq(target_type, default_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
@@ -98,7 +98,7 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
         AstMemoryUtils.enforce_memory_integrity(
             self.default, self.default, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=True)
+            check_pins=True, mark_moves=True, **kwargs)
 
 
 __all__ = [

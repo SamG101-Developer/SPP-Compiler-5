@@ -76,7 +76,7 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.expr.check_memory(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(
                 self.expr, self.kw_ret, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-                check_pins=True, mark_moves=True)
+                check_pins=True, mark_moves=True, **kwargs)
 
     # def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
     #     # Create a return instruction with the expression if it exists.

@@ -21,8 +21,7 @@ if TYPE_CHECKING:
 
 
 # Todo
-#  - Only allow 1 Gen[T] superimposition
-#  - Error if the type doesn't exist
+#  - Only allow 1 Gen[T] superimposition?
 
 
 @dataclass(slots=True)

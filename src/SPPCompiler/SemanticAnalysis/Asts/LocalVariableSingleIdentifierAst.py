@@ -59,10 +59,10 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             sym.memory_info.initialization_counter = 1
 
             # Set any borrow asts based on the potentially symbolic value being set to this variable.
-            if val_symbol := sm.current_scope.get_symbol(value):
+            if convention := inferred_type.convention:
                 sym.memory_info.ast_borrowed = value
-                sym.memory_info.is_borrow_mut = val_symbol.memory_info.is_borrow_mut
-                sym.memory_info.is_borrow_ref = val_symbol.memory_info.is_borrow_ref
+                sym.memory_info.is_borrow_mut = convention if isinstance(convention, Asts.ConventionMutAst) else False
+                sym.memory_info.is_borrow_ref = convention if isinstance(convention, Asts.ConventionRefAst) else False
         else:
             sym.memory_info.ast_moved = self
 
@@ -74,7 +74,7 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             value.check_memory(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(
                 value, self, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-                check_pins=True, mark_moves=True)
+                check_pins=True, mark_moves=True, **kwargs)
             sym.memory_info.initialized_by(self.name)
 
 

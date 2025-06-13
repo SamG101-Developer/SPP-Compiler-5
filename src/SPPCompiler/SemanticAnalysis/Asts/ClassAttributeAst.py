@@ -98,7 +98,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         # Todo: prevent generic attributes from having defaults + test
         if self.default is not None:
             self.default.analyse_semantics(sm, **kwargs)
-            default_type = self.default.infer_type(sm)
+            default_type = self.default.infer_type(sm, **kwargs)
 
             if not AstTypeUtils.symbolic_eq(self.type, default_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
@@ -115,7 +115,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Check the default's memory state (cmp value, so no need to iterate deeper).
         if self.default is not None:
-            AstMemoryUtils.enforce_memory_integrity(self.default, self.default, sm)
+            AstMemoryUtils.enforce_memory_integrity(self.default, self.default, sm, **kwargs)
 
 
 __all__ = [

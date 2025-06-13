@@ -26,8 +26,9 @@ class AstFunctionUtils:
     """
 
     @staticmethod
-    def get_function_owner_type_and_function_name(sm: ScopeManager, lhs: Asts.ExpressionAst)\
-            -> Tuple[Asts.Ast, Optional[Scope], Asts.IdentifierAst]:
+    def get_function_owner_type_and_function_name(
+            sm: ScopeManager, lhs: Asts.ExpressionAst,
+            **kwargs) -> Tuple[Asts.Ast, Optional[Scope], Asts.IdentifierAst]:
 
         """!
         Get the function owner type, scope and name from an expression AST. This is used to determine information
@@ -52,7 +53,7 @@ class AstFunctionUtils:
 
         # Runtime access into an object: "object.method()".
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
-            function_owner_type = lhs.lhs.infer_type(sm)
+            function_owner_type = lhs.lhs.infer_type(sm, **kwargs)
             function_name = lhs.op.field
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
 
@@ -86,8 +87,8 @@ class AstFunctionUtils:
     @staticmethod
     def convert_method_to_function_form(
             sm: ScopeManager, function_owner_type: Asts.Ast, function_name: Asts.IdentifierAst,
-            lhs: Asts.ExpressionAst, fn: Asts.PostfixExpressionOperatorFunctionCallAst)\
-            -> Tuple[Asts.PostfixExpressionAst, Asts.PostfixExpressionOperatorFunctionCallAst]:
+            lhs: Asts.ExpressionAst, fn: Asts.PostfixExpressionOperatorFunctionCallAst,
+            **kwargs) -> Tuple[Asts.PostfixExpressionAst, Asts.PostfixExpressionOperatorFunctionCallAst]:
 
         """
         This conversion function is used to normalize all different function calls, such as converting runtime function
@@ -122,7 +123,7 @@ class AstFunctionUtils:
 
         # Tell the "self" argument what type it is (keyword "self" inference requires outer AST knowledge).
         new_function_call.function_argument_group.arguments = function_arguments
-        new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(sm)
+        new_function_call.function_argument_group.arguments[0]._type_from_self = lhs.lhs.infer_type(sm, **kwargs)
         new_function_call.function_argument_group.arguments[0].value.pos = lhs.lhs.pos
 
         # Get the overload from the uniform function call.
@@ -194,10 +195,10 @@ class AstFunctionUtils:
                     if function_1 is not function_2 and target_scope.depth_difference(scope_1) < target_scope.depth_difference(scope_2):
                         conflict = AstFunctionUtils.check_for_conflicting_override(scope_1, scope_2, function_1)
                         if conflict:
-                            SequenceUtils.remove_if(overload_scopes_and_info, lambda info: info[1] is conflict)
+                            SequenceUtils.remove_if(overload_scopes_and_info, lambda info, c=conflict: info[1] is c)
 
-            # Adjust the scope in the tuple to the inner function scope, now that the superimposition base classes have
-            # been removed.
+            # Adjust the scope in the tuple to the inner function scope, now the superimposition base classes have been
+            # removed.
             if not for_override:
                 for i, (scope, function, generics) in enumerate(overload_scopes_and_info):
                     overload_scopes_and_info[i] = (scope.children[0], function, generics)
@@ -239,8 +240,8 @@ class AstFunctionUtils:
             # Remove all required parameters on the first parameter list off the other parameter list.
             for p, q in zip(new_func.function_parameter_group.params, old_func.function_parameter_group.params):
                 if AstTypeUtils.symbolic_eq(p.type, q.type, this_scope, old_scope):
-                    SequenceUtils.remove_if(params_new.params, lambda x: x.extract_names == p.extract_names)
-                    SequenceUtils.remove_if(params_old.params, lambda x: x.extract_names == q.extract_names)
+                    SequenceUtils.remove_if(params_new.params, lambda x, p1=p: x.extract_names == p1.extract_names)
+                    SequenceUtils.remove_if(params_old.params, lambda x, q1=q: x.extract_names == q1.extract_names)
 
             # If neither parameter list contains a required parameter, throw an error.
             if Asts.FunctionParameterRequiredAst not in [type(p) for p in params_new.params + params_old.params]:
@@ -585,14 +586,12 @@ class AstFunctionUtils:
         # Re-order the arguments to match the parameter order.
         final_args.sort(key=lambda arg: generic_parameter_names.index(arg.name))
 
-        # For the "comp" args, type-check them. Don't do this pre-analysis stage (types haven't been setup correctly
-        # yet)
-        # Todo: add to test suite
-
+        # For the "comp" args, type-check them. Don't do this before the semantic analysis stage (types haven't been
+        # setup correctly yet)
         if kwargs["stage"] > 5:
             for comp_arg, comp_param in zip(final_args, generic_parameters):
                 if isinstance(comp_arg, Asts.GenericCompArgumentNamedAst):
-                    a_type = comp_arg.value.infer_type(sm)
+                    a_type = comp_arg.value.infer_type(sm, **kwargs)
                     p_type = comp_param.type.substituted_generics(final_args)
 
                     if not AstTypeUtils.symbolic_eq(p_type, a_type, sm.current_scope.get_symbol(owner).scope, sm.current_scope):

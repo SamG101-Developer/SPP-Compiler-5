@@ -25,7 +25,7 @@ class UnaryExpressionOperatorAsyncAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def infer_type(self, sm: ScopeManager, rhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # Async calls wrap the return type in a future type.
-        inner_type = rhs.infer_type(sm)
+        inner_type = rhs.infer_type(sm, **kwargs)
         future_type = CommonTypes.Fut(self.tok_async.pos, inner_type)
         future_type.analyse_semantics(sm, **kwargs)
         return future_type

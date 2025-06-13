@@ -54,7 +54,7 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.default.analyse_semantics(sm, **kwargs)
 
         # Make sure the default expression is of the correct type.
-        default_type = self.default.infer_type(sm)
+        default_type = self.default.infer_type(sm, **kwargs)
         if not AstTypeUtils.symbolic_eq(self.type, default_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
                 self.extract_name, self.type, self.default, default_type).scopes(sm.current_scope)
@@ -86,7 +86,7 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.default.check_memory(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(
             self.default, self.default, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=True)
+            check_pins=True, mark_moves=True, **kwargs)
 
 
 __all__ = [

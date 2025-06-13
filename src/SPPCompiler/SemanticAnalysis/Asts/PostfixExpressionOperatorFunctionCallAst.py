@@ -58,12 +58,12 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
         # 3 types of function calling: function_call(), obj.method_call(), Type::static_method_call(). Determine the
         # function's name and its owner type/namespace.
-        function_owner_type, function_owner_scope, function_name = AstFunctionUtils.get_function_owner_type_and_function_name(sm, lhs)
+        function_owner_type, function_owner_scope, function_name = AstFunctionUtils.get_function_owner_type_and_function_name(sm, lhs, **kwargs)
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
         if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
             transformed_lhs, transformed_function_call = AstFunctionUtils.convert_method_to_function_form(
-                sm, function_owner_type, function_name, lhs, self)
+                sm, function_owner_type, function_name, lhs, self, **kwargs)
             transformed_function_call.determine_overload(sm, transformed_lhs, expected_return_type=expected_return_type, **kwargs)
             self._overload = transformed_function_call._overload
             self.function_argument_group = transformed_function_call.function_argument_group

@@ -93,7 +93,8 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             missing_attributes = [a for a in attributes if a.name not in assigned_attributes]
             if missing_attributes:
                 raise SemanticErrors.ArgumentRequiredNameMissingError().add(
-                    self, missing_attributes[0], "attribute", "destructure argument").scopes(sm.current_scope.get_symbol(self.class_type).scope, sm.current_scope)
+                    self, missing_attributes[0], "attribute", "destructure argument").scopes(
+                    sm.current_scope.get_symbol(self.class_type).scope, sm.current_scope)
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         for new_ast in self._new_asts:

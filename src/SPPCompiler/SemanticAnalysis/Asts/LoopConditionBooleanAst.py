@@ -38,7 +38,7 @@ class LoopConditionBooleanAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.condition.analyse_semantics(sm, **kwargs)
 
         # Check the loop condition is boolean.
-        return_type = self.condition.infer_type(sm)
+        return_type = self.condition.infer_type(sm, **kwargs)
         target_type = CommonTypes.Bool(self.pos)
         if not AstTypeUtils.symbolic_eq(target_type, return_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.ExpressionNotBooleanError().add(
@@ -46,7 +46,7 @@ class LoopConditionBooleanAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self.condition.check_memory(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.condition, self.condition, sm, mark_moves=False)
+        AstMemoryUtils.enforce_memory_integrity(self.condition, self.condition, sm, mark_moves=False, **kwargs)
 
 
 __all__ = [

@@ -142,7 +142,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
             argument.check_memory(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(
                 argument.value, argument, sm, check_move=True, check_partial_move=True,
-                check_move_from_borrowed_ctx=False, check_pins=False, mark_moves=False)
+                check_move_from_borrowed_ctx=False, check_pins=False, mark_moves=False, **kwargs)
 
             if argument.convention is None:
                 # Don't bother rechecking the moves or partial moves, but ensure that attributes aren't being moved off
@@ -150,7 +150,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 argument.check_memory(sm, **kwargs)
                 AstMemoryUtils.enforce_memory_integrity(
                     argument.value, argument, sm, check_move=False, check_partial_move=False,
-                    check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=True)
+                    check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=True, **kwargs)
 
                 # Check the move doesn't overlap with any borrows. This is to ensure that "f(&x, x)" can never happen,
                 # because the first argument requires the owned object to outlive the function call, and moving it as

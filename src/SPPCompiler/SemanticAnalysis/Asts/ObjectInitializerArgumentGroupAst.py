@@ -133,7 +133,7 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
             val.check_memory(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(
                 val, argument, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-                check_pins=True, mark_moves=True)
+                check_pins=True, mark_moves=True, **kwargs)
 
 
 __all__ = ["ObjectInitializerArgumentGroupAst"]

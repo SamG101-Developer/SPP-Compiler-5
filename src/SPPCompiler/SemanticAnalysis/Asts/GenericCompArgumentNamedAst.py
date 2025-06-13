@@ -80,7 +80,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
         AstMemoryUtils.enforce_memory_integrity(
             self.value, self.value, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=True)
+            check_pins=True, mark_moves=True, **kwargs)
 
 
 __all__ = [
