@@ -51,7 +51,6 @@ class SppLexer:
                     tokens.append(RawToken(RawTokenType.TkDigit, c))
                 case "#":
                     in_single_line_comment = True
-                    continue
                 case "=":
                     tokens.append(RawToken(RawTokenType.TkEqualsSign, c))
                 case "+":
