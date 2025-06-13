@@ -365,7 +365,8 @@ class AstTypeUtils:
 
         if debug:
             print("#" * 100)
-            print(f"Comparing types: {stripped_lhs} vs {stripped_rhs}")
+            print(f"Comparing types: {lhs_type} vs {rhs_type}")
+            print(f"Comparing stripped types: {stripped_lhs} vs {stripped_rhs}")
             print(f"Scopes: {lhs_scope.name} vs {rhs_scope.name}")
 
         # First step is to get the symbols for the non-generic versions of both types.
@@ -401,6 +402,8 @@ class AstTypeUtils:
         rhs_generics = rhs_type_fq.type_parts[-1].generic_argument_group.arguments
 
         # Ensure each generic argument is symbolically equal to the other.
+        if len(rhs_generics) > len(lhs_generics):
+            return False
         for lhs_generic, rhs_generic in zip(lhs_generics, rhs_generics):
             if not AstTypeUtils.symbolic_eq(lhs_generic.value, rhs_generic.value, lhs_scope, rhs_scope, debug=debug):
                 return False
