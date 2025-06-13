@@ -2,6 +2,22 @@ from tests._Utils import *
 
 
 class TestSupPrototypeExtensionAst(CustomTestCase):
+    @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
+    def test_invalid_sup_prototype_functions_unknown_type(self):
+        """
+        sup A {
+            fun f(&self) -> std::void::Void { }
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
+    def test_invalid_sup_prototype_functions_unknown_supertype(self):
+        """
+        sup std::boolean::Bool ext A {
+            fun f(&self) -> std::void::Void { }
+        }
+        """
+
     @should_pass_compilation()
     def test_valid_superimposition_extension_generic_name(self):
         """
