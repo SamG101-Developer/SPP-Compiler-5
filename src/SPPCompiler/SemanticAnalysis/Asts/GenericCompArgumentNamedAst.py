@@ -20,11 +20,14 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def __post_init__(self) -> None:
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
+        self.value = self.value or Asts.IdentifierAst.from_type(self.name)
         self._variant = "Named"
-        self.value = self.value or self.name
 
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
         return isinstance(other, GenericCompArgumentNamedAst) and self.name == other.name and self.value == other.value
+
+    def __hash__(self) -> int:
+        return hash(self.name)
 
     def __deepcopy__(self, memodict=None) -> GenericCompArgumentNamedAst:
         # Create a deep copy of the AST.
@@ -36,7 +39,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
             str(self.name),
             str(self.tok_assign),
             str(self.value)]
-        return " ".join(string)
+        return "".join(string)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -45,7 +48,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
             self.name.print(printer),
             self.tok_assign.print(printer),
             self.value.print(printer)]  # todo ?
-        return " ".join(string)
+        return "".join(string)
 
     @property
     def pos_end(self) -> int:
@@ -55,7 +58,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
         return GenericCompArgumentNamedAst(
             name=Asts.TypeSingleAst.from_identifier(symbol.name),
-            value=symbol.memory_info.ast_comptime_const)
+            value=Asts.IdentifierAst.from_type(symbol.memory_info.ast_comptime_const.name))
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.

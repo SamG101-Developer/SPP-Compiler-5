@@ -531,6 +531,31 @@ class SemanticErrors:
 
             return self
 
+    class AmbiguousMemberAccessError(SemanticError):
+        """
+        The AmbiguousMemberAccessError is raised if a member access is ambiguous, meaning that there are multiple
+        members with the same name at the highest level. For example, if A inherits from B and C, and both B and C
+        define the attribute "x", then accessing "A.x" would be ambiguous, as it is not clear which "x" is being
+        accessed. But if A also has an "x" attribute, then it is clear that "A.x" refers to A's own "x" attribute.
+        """
+
+        def add(self, field: Asts.IdentifierAst, first: Asts.IdentifierAst, second: Asts.IdentifierAst) -> SemanticError:
+            self.add_info(
+                ast=first,
+                tag=f"Member '{first}' defined here")
+
+            self.add_info(
+                ast=second,
+                tag=f"Member '{second}' defined here")
+
+            self.add_error(
+                ast=field,
+                tag=f"Ambiguous member access for '{field}'.",
+                msg="The member access is ambiguous.",
+                tip=f"Use 'std::upcast[T](...) to access ambiguous attributes of specific classes.")
+
+            return self
+
     class TypeVoidInvalidUsageError(SemanticError):
         """
         The TypeVoidInvalidUsageError is raised if the void type is used in an invalid context. The void type cannot be
@@ -753,7 +778,7 @@ class SemanticErrors:
                 ast=ast,
                 tag="Uninitialized memory used here.",
                 msg="The memory has not been initialized or has been moved.",
-                tip=f"Ensure the memory is initialized before use\n\n\tlet {ast} = {ast.infer_type(sm).type_parts()[-1]}().")
+                tip=f"Ensure the memory is initialized before use\n\n\tlet {ast} = {ast.infer_type(sm).type_parts[-1]}().")
 
             return self
 
@@ -1064,7 +1089,7 @@ class SemanticErrors:
         the superclass. Any associated type on an extension must belong to the superclass as-well.
         """
 
-        def add(self, new_use_statement: Asts.UseStatementAliasAst, super_class: Asts.TypeAst) -> SemanticError:
+        def add(self, new_use_statement: Asts.TypeStatementAst, super_class: Asts.TypeAst) -> SemanticError:
             self.add_info(
                 ast=super_class,
                 tag=f"Super class '{super_class}' extended here")
@@ -1150,6 +1175,21 @@ class SemanticErrors:
                 tag=f"Cyclic superimposition here",
                 msg="Two types cannot superimpose each other",
                 tip="Remove the second superimposition definition")
+
+            return self
+
+    class SuperimpositionExtensionSelfExtensionError(SemanticError):
+        """
+        The SuperimpositionExtensionSelfExtensionError is raised if a type extends itself. This is not allowed, as it
+        would create an infinite loop in the extension tree.
+        """
+
+        def add(self, extension: Asts.TokenAst) -> SemanticError:
+            self.add_error(
+                ast=extension,
+                tag="Self extension.",
+                msg="A type cannot extend itself.",
+                tip="Remove the self extension.")
 
             return self
 
@@ -1568,7 +1608,7 @@ class SemanticErrors:
         Instead, it should just be "use std::vector" or "use vector[T] = std::vector[T]".
         """
 
-        def add(self, use_statement: Asts.UseStatementReduxAst, generic_argument: Asts.GenericArgumentAst) -> SemanticError:
+        def add(self, use_statement: Asts.UseStatementAst, generic_argument: Asts.GenericArgumentAst) -> SemanticError:
             self.add_info(
                 ast=use_statement,
                 tag="Use statement defined here")

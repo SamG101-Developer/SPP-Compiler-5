@@ -6,6 +6,7 @@ from typing import Dict, Optional
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -59,7 +60,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Ensure the attribute type does not have a convention.
-        if c := self.type.get_convention():
+        if c := self.type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.type, "attribute type").scopes(sm.current_scope)
 
@@ -70,19 +71,13 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
         self.type.analyse_semantics(sm, **kwargs)
 
-        # Ensure the attribute type is not void.
-        # Todo: Check the order of comparison (variants).
-        if self.type.symbolic_eq(CommonTypesPrecompiled.VOID, sm.current_scope, sm.current_scope):
-            raise SemanticErrors.TypeVoidInvalidUsageError().add(
-                self.type).scopes(sm.current_scope)
-
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the semantics of the annotations and the type of the attribute.
         for a in self.annotations:
             a.analyse_semantics(sm, **kwargs)
 
         # Repeat the check here for generic substitution attribute types.
-        if c := self.type.get_convention():
+        if c := self.type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.type, "attribute type").scopes(sm.current_scope)
 
@@ -105,7 +100,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             self.default.analyse_semantics(sm, **kwargs)
             default_type = self.default.infer_type(sm)
 
-            if not self.type.symbolic_eq(default_type, sm.current_scope, sm.current_scope):
+            if not AstTypeUtils.symbolic_eq(self.type, default_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     self, self.type, self.default, default_type).scopes(sm.current_scope)
 

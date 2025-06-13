@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Tuple
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.Utils.Sequence import Seq
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
+    from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
 
 @dataclass(slots=True, kw_only=True)
@@ -37,7 +37,6 @@ class MemoryInfo:
         ast_initialization_old: Tracks most recent initialization despite moves (for errors).
         ast_moved: The AST where the memory is consumed (function argument, binary expression, etc).
         ast_borrowed: The AST where the memory is marked as borrowed (from parameter convention).
-        ast_borrowed_persistent: Extended borrows like a variable being iterated over: ".iter_mut()".
         ast_partial_moves: A list of partial moves (attributes).
         ast_pins: A list of pinned attributes (or the entire object).
 
@@ -54,7 +53,6 @@ class MemoryInfo:
     ast_initialization_old: Optional[Asts.Ast] = field(default=None)
     ast_moved: Optional[Asts.Ast] = field(default=None)
     ast_borrowed: Optional[Asts.Ast] = field(default=None)
-    # ast_borrowed_persistent: Optional[Asts.Ast] = field(default=None)
     ast_partial_moves: Seq[Asts.Ast] = field(default_factory=list)
     ast_pins: Seq[Asts.Ast] = field(default_factory=list)
     ast_comptime_const: Optional[Asts.ExpressionAst] = field(default=None)
@@ -169,8 +167,7 @@ class AstMemoryUtils:
         """
 
         # Todo: coroutine returns can be borrows - check moving logic here, as the outermost part may not be symbolic.
-
-        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
+        from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
         # For tuple and array literals, analyse each element (recursively). This ensures that all elements are
         # memory-integral such that the entire tuple or array is memory-integral.
@@ -190,7 +187,7 @@ class AstMemoryUtils:
 
         # An identifier that is a namespace cannot be used as an expression. As all expressions are analysed in this
         # function, the check is performed here.
-        if sym.symbol_type is SymbolType.NamespaceSymbol:
+        if sym.__class__ is NamespaceSymbol:
             raise SemanticErrors.ExpressionTypeInvalidError().add(
                 value_ast).scopes(sm.current_scope)
 
@@ -258,7 +255,9 @@ class AstMemoryUtils:
 
         # Check the symbol being moved is not pinned. This prevents pinned objects from moving memory location. Pinned
         # objects must not move location, because they might be being borrowed into a coroutine or asynchronous function
-        # call. Todo: partial_copies with pins?
+        # call.
+        # Todo: partial_copies with pins?
+        # Todo: at some point, "copies" will be usable as  generic constraint (not a just a concrete type)
         if check_pins and sym.memory_info.ast_pins and not copies:
             raise SemanticErrors.MemoryMovedWhilstPinnedError().add(
                 value_ast, sym.memory_info.ast_pins[0]).scopes(sm.current_scope)

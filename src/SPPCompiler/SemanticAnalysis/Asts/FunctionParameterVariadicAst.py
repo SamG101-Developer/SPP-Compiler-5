@@ -52,7 +52,7 @@ class FunctionParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         ast.analyse_semantics(sm, **kwargs)
 
         # Mark the symbol as initialized.
-        conv = self.type.get_convention()
+        conv = self.type.convention
         for name in self.variable.extract_names:
             sym = sm.current_scope.get_symbol(name)
             sym.memory_info.initialized_by(self)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -21,9 +22,9 @@ class CoroutinePrototypeAst(Asts.FunctionPrototypeAst):
 
         # Check the return type superimposes the generator type.
         # Todo: use AstUtils.get_generator_and_yield_type here (+ try/except for error mod).
-        superimposed_types = [t.without_generics() for t in return_type_symbol.scope.sup_types]
-        superimposed_types.append(return_type_symbol.fq_name.without_generics())
-        if not any(t.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope, sm.current_scope) for t in superimposed_types):
+        superimposed_types = [t.without_generics for t in return_type_symbol.scope.sup_types]
+        superimposed_types.append(return_type_symbol.fq_name.without_generics)
+        if not any(AstTypeUtils.symbolic_eq(t.without_generics, CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope, sm.current_scope) for t in superimposed_types):
             raise SemanticErrors.FunctionCoroutineInvalidReturnTypeError().add(
                 self.return_type).scopes(sm.current_scope)
 

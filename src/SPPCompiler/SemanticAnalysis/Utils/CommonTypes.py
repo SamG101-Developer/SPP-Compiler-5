@@ -298,40 +298,40 @@ class CommonTypesPrecompiled:
 
     @staticmethod
     def initialize():
-        CommonTypesPrecompiled.EMPTY_TUPLE = CommonTypes.Tup(pos=0).without_generics()
-        CommonTypesPrecompiled.EMPTY_ARRAY = CommonTypes.Arr(pos=0, elem_type=Asts.Ast(), size=Asts.Ast()).without_generics()
-        CommonTypesPrecompiled.EMPTY_ARRAY_DYNAMIC = CommonTypes.ArrDynamic(pos=0, elem_type=Asts.Ast()).without_generics()
-        CommonTypesPrecompiled.EMPTY_GENERATOR = CommonTypes.Gen(pos=0, yield_type=Asts.Ast(), send_type=Asts.Ast()).without_generics()
-        CommonTypesPrecompiled.EMPTY_VARIANT = CommonTypes.Var(pos=0).without_generics()
-        CommonTypesPrecompiled.EMPTY_FUN_MOV = CommonTypes.FunMov(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
-        CommonTypesPrecompiled.EMPTY_FUN_MUT = CommonTypes.FunMut(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
-        CommonTypesPrecompiled.EMPTY_FUN_REF = CommonTypes.FunRef(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics()
-        CommonTypesPrecompiled.EMPTY_SINGLE = CommonTypes.Single(pos=0, internal_type=Asts.Ast()).without_generics()
-        CommonTypesPrecompiled.VOID = CommonTypes.Void(pos=0).without_generics()
-        CommonTypesPrecompiled.COPY = CommonTypes.Copy(pos=0).without_generics()
-        CommonTypesPrecompiled.BIGINT = CommonTypes.BigInt(pos=0).without_generics()
-        CommonTypesPrecompiled.BIGDEC = CommonTypes.BigDec(pos=0).without_generics()
-        CommonTypesPrecompiled.F8 = CommonTypes.F8(pos=0).without_generics()
-        CommonTypesPrecompiled.F16 = CommonTypes.F16(pos=0).without_generics()
-        CommonTypesPrecompiled.F32 = CommonTypes.F32(pos=0).without_generics()
-        CommonTypesPrecompiled.F64 = CommonTypes.F64(pos=0).without_generics()
-        CommonTypesPrecompiled.F128 = CommonTypes.F128(pos=0).without_generics()
-        CommonTypesPrecompiled.F256 = CommonTypes.F256(pos=0).without_generics()
-        CommonTypesPrecompiled.U8 = CommonTypes.U8(pos=0).without_generics()
-        CommonTypesPrecompiled.U16 = CommonTypes.U16(pos=0).without_generics()
-        CommonTypesPrecompiled.U32 = CommonTypes.U32(pos=0).without_generics()
-        CommonTypesPrecompiled.U64 = CommonTypes.U64(pos=0).without_generics()
-        CommonTypesPrecompiled.U128 = CommonTypes.U128(pos=0).without_generics()
-        CommonTypesPrecompiled.U256 = CommonTypes.U256(pos=0).without_generics()
-        CommonTypesPrecompiled.I8 = CommonTypes.I8(pos=0).without_generics()
-        CommonTypesPrecompiled.I16 = CommonTypes.I16(pos=0).without_generics()
-        CommonTypesPrecompiled.I32 = CommonTypes.I32(pos=0).without_generics()
-        CommonTypesPrecompiled.I64 = CommonTypes.I64(pos=0).without_generics()
-        CommonTypesPrecompiled.I128 = CommonTypes.I128(pos=0).without_generics()
-        CommonTypesPrecompiled.I256 = CommonTypes.I256(pos=0).without_generics()
-        CommonTypesPrecompiled.USIZE = CommonTypes.USize(pos=0).without_generics()
-        CommonTypesPrecompiled.BOOL = CommonTypes.Bool(pos=0).without_generics()
-        CommonTypesPrecompiled.STR = CommonTypes.Str(pos=0).without_generics()
+        CommonTypesPrecompiled.EMPTY_TUPLE = CommonTypes.Tup(pos=0).without_generics
+        CommonTypesPrecompiled.EMPTY_ARRAY = CommonTypes.Arr(pos=0, elem_type=Asts.Ast(), size=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_ARRAY_DYNAMIC = CommonTypes.ArrDynamic(pos=0, elem_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_GENERATOR = CommonTypes.Gen(pos=0, yield_type=Asts.Ast(), send_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_VARIANT = CommonTypes.Var(pos=0).without_generics
+        CommonTypesPrecompiled.EMPTY_FUN_MOV = CommonTypes.FunMov(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_FUN_MUT = CommonTypes.FunMut(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_FUN_REF = CommonTypes.FunRef(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_SINGLE = CommonTypes.Single(pos=0, internal_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.VOID = CommonTypes.Void(pos=0).without_generics
+        CommonTypesPrecompiled.COPY = CommonTypes.Copy(pos=0).without_generics
+        CommonTypesPrecompiled.BIGINT = CommonTypes.BigInt(pos=0).without_generics
+        CommonTypesPrecompiled.BIGDEC = CommonTypes.BigDec(pos=0).without_generics
+        CommonTypesPrecompiled.F8 = CommonTypes.F8(pos=0).without_generics
+        CommonTypesPrecompiled.F16 = CommonTypes.F16(pos=0).without_generics
+        CommonTypesPrecompiled.F32 = CommonTypes.F32(pos=0).without_generics
+        CommonTypesPrecompiled.F64 = CommonTypes.F64(pos=0).without_generics
+        CommonTypesPrecompiled.F128 = CommonTypes.F128(pos=0).without_generics
+        CommonTypesPrecompiled.F256 = CommonTypes.F256(pos=0).without_generics
+        CommonTypesPrecompiled.U8 = CommonTypes.U8(pos=0).without_generics
+        CommonTypesPrecompiled.U16 = CommonTypes.U16(pos=0).without_generics
+        CommonTypesPrecompiled.U32 = CommonTypes.U32(pos=0).without_generics
+        CommonTypesPrecompiled.U64 = CommonTypes.U64(pos=0).without_generics
+        CommonTypesPrecompiled.U128 = CommonTypes.U128(pos=0).without_generics
+        CommonTypesPrecompiled.U256 = CommonTypes.U256(pos=0).without_generics
+        CommonTypesPrecompiled.I8 = CommonTypes.I8(pos=0).without_generics
+        CommonTypesPrecompiled.I16 = CommonTypes.I16(pos=0).without_generics
+        CommonTypesPrecompiled.I32 = CommonTypes.I32(pos=0).without_generics
+        CommonTypesPrecompiled.I64 = CommonTypes.I64(pos=0).without_generics
+        CommonTypesPrecompiled.I128 = CommonTypes.I128(pos=0).without_generics
+        CommonTypesPrecompiled.I256 = CommonTypes.I256(pos=0).without_generics
+        CommonTypesPrecompiled.USIZE = CommonTypes.USize(pos=0).without_generics
+        CommonTypesPrecompiled.BOOL = CommonTypes.Bool(pos=0).without_generics
+        CommonTypesPrecompiled.STR = CommonTypes.Str(pos=0).without_generics
 
 
 __all__ = [

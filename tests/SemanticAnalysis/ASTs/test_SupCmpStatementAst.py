@@ -59,8 +59,7 @@ class TestSupCmpStatementAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
-    def test_valid_sup_use_statement_with_generic(self):
-        # T is assumed to be non-Copy (until constraints support are supported: "T: Copy")
+    def test_invalid_sup_use_statement_with_generic_move(self):
         """
         cls MyType[T, cmp m: T] { }
         sup [T, cmp m: T] MyType[T, m] {
@@ -68,7 +67,19 @@ class TestSupCmpStatementAst(CustomTestCase):
         }
 
         fun f() -> std::void::Void {
-            let mut x = MyType[std::number::usize::USize, 123]::n
-            x = 456_uz
+            let mut x = MyType[std::number::bigint::BigInt, 123]::n
+        }
+        """
+
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    def test_invalid_sup_use_statement_with_generic_copy(self):
+        # This fails because T isn't constrained to be a copy type (USize just happens to be).
+        """
+        cls MyType[T, cmp m: T] { }
+        sup [T, cmp m: T] MyType[T, m] {
+            cmp n: T = m
+        }
+
+        fun f() -> std::void::Void {
         }
         """

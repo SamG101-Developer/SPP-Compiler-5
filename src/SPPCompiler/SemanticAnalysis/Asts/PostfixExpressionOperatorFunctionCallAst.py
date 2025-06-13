@@ -2,17 +2,15 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Tuple
 
 from ordered_set import OrderedSet
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
-from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
@@ -125,7 +123,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     infer_source={a.name: a.infer_type(sm, **kwargs) for a in arguments},
                     infer_target={p.extract_name: p.type for p in parameters},
                     sm=sm, owner=lhs.infer_type(sm, **kwargs),
-                    variadic_parameter_identifier=fn_proto.function_parameter_group.get_variadic_param().extract_name if is_variadic_fn else None)
+                    variadic_parameter_identifier=fn_proto.function_parameter_group.get_variadic_param().extract_name if is_variadic_fn else None,
+                    **kwargs)
 
                 # For function folding, identify all tuple arguments that have non-tuple parameters.
                 if self.fold_token is not None:
@@ -137,15 +136,15 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                     # Tuples being folded must all have the same element types (per tuple).
                     for argument in self._folded_args:
-                        first_elem_type = argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[0].value
-                        if mismatch := [t.value for t in argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments[1:] if not t.value.symbolic_eq(first_elem_type, sm.current_scope, sm.current_scope)]:
+                        first_elem_type = argument.infer_type(sm, **kwargs).type_parts[0].generic_argument_group.arguments[0].value
+                        if mismatch := [t.value for t in argument.infer_type(sm, **kwargs).type_parts[0].generic_argument_group.arguments[1:] if not AstTypeUtils.symbolic_eq(t.value, first_elem_type, sm.current_scope, sm.current_scope)]:
                             raise SemanticErrors.FunctionFoldTupleElementTypeMismatchError().add(
                                 first_elem_type, mismatch[0]).scopes(sm.current_scope)  # todo: scopes
 
                     # Ensure all the tuples are of equal length.
-                    first_tuple_length = len(self._folded_args[0].infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments)
+                    first_tuple_length = len(self._folded_args[0].infer_type(sm, **kwargs).type_parts[0].generic_argument_group.arguments)
                     for argument in self._folded_args[1:]:
-                        tuple_length = len(argument.infer_type(sm, **kwargs).type_parts()[0].generic_argument_group.arguments)
+                        tuple_length = len(argument.infer_type(sm, **kwargs).type_parts[0].generic_argument_group.arguments)
                         if tuple_length != first_tuple_length:
                             raise SemanticErrors.FunctionFoldTupleLengthMismatchError().add(
                                 self._folded_args[0].value, first_tuple_length, argument.value, tuple_length).scopes(sm.current_scope)
@@ -153,7 +152,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
                     new_fn_proto = fast_deepcopy(fn_proto)
-                    tm = ScopeManager(sm.global_scope, fn_scope)
+                    tm = ScopeManager(sm.global_scope, fn_scope, sm.normal_sup_blocks, sm.generic_sup_blocks)
 
                     new_fn_proto.generic_parameter_group.parameters = []
                     for p in new_fn_proto.function_parameter_group.params.copy():
@@ -163,14 +162,14 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                         # Remove a parameter if it is substituted with a "Void" type.
                         # Todo: this should be done outside generic substitution, because what if f(x: Void)
                         #  Maybe make the "if generic_arguments" include "or any(p.type.symbolic_eq(CommonTypesPrecompiled.VOID, tm.current_scope, tm.current_scope) for p in parameters)"
-                        if p.type.symbolic_eq(CommonTypesPrecompiled.VOID, tm.current_scope, tm.current_scope):
+                        if AstTypeUtils.symbolic_eq(p.type, CommonTypesPrecompiled.VOID, tm.current_scope, tm.current_scope):
                             new_fn_proto.function_parameter_group.params.remove(p)
 
                     new_fn_proto.return_type = new_fn_proto.return_type.substituted_generics(generic_arguments)
                     new_fn_proto.return_type.analyse_semantics(tm, **kwargs)
 
                     # Todo: I don't want this here
-                    if c := new_fn_proto.return_type.get_convention():
+                    if c := new_fn_proto.return_type.convention:
                         raise SemanticErrors.InvalidConventionLocationError().add(
                             c, new_fn_proto.return_type, "function return type").scopes(sm.current_scope)
 
@@ -199,25 +198,25 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                     # Special case for variadic parameters.
                     if isinstance(parameter, Asts.FunctionParameterVariadicAst):
-                        parameter_type = CommonTypes.Tup(parameter.pos, [parameter_type] * len(argument_type.type_parts()[0].generic_argument_group.arguments))
+                        parameter_type = CommonTypes.Tup(parameter.pos, [parameter_type] * len(argument_type.type_parts[0].generic_argument_group.arguments))
                         parameter_type.analyse_semantics(sm, **kwargs)
 
                     # Special case for self parameters.
                     if isinstance(parameter, Asts.FunctionParameterSelfAst):
                         argument.convention = parameter.convention
-                        argument_type = argument_type.without_generics()
+                        argument_type = argument_type.without_generics
 
-                        if fn_proto.function_parameter_group.get_self_param()._arbitrary and not parameter_type.symbolic_eq(argument_type, fn_scope, sm.current_scope):
+                        if fn_proto.function_parameter_group.get_self_param()._arbitrary and not AstTypeUtils.symbolic_eq(parameter_type, argument_type, fn_scope, sm.current_scope):
                             raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
                     # Regular parameters (with a folding argument check too).
                     else:
                         if argument in self._folded_args:
-                            if not parameter_type.symbolic_eq(argument_type.type_parts()[0].generic_argument_group.arguments[0].value, fn_scope, sm.current_scope):
-                                raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type.type_parts()[0].generic_argument_group.arguments[0].value)
+                            if not AstTypeUtils.symbolic_eq(parameter_type, argument_type.type_parts[0].generic_argument_group.arguments[0].value, fn_scope, sm.current_scope):
+                                raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type.type_parts[0].generic_argument_group.arguments[0].value)
 
                         else:
-                            if not parameter_type.symbolic_eq(argument_type, fn_scope, sm.current_scope):
+                            if not AstTypeUtils.symbolic_eq(parameter_type, argument_type, fn_scope, sm.current_scope):
                                 raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
                 # Mark the overload as a pass.
@@ -242,7 +241,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         return_matches = []
         if expected_return_type:
             for fn_scope, fn_proto in pass_overloads:
-                if fn_proto.return_type.symbolic_eq(expected_return_type, fn_scope, sm.current_scope):
+                if AstTypeUtils.symbolic_eq(fn_proto.return_type, expected_return_type, fn_scope, sm.current_scope):
                     return_matches.append((fn_scope, fn_proto))
             if len(return_matches) == 1:
                 pass_overloads = return_matches
@@ -263,9 +262,9 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         # Special case for closures: apply the convention to the closure name to ensure it is movable or mutable etc.
         if is_closure:
             dummy_self_argument = Asts.FunctionCallArgumentUnnamedAst(pos=lhs.pos, value=lhs)
-            if lhs_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_MUT, sm.current_scope, sm.current_scope):
+            if AstTypeUtils.symbolic_eq(lhs_type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_MUT, sm.current_scope, sm.current_scope):
                 dummy_self_argument.convention = Asts.ConventionMutAst(pos=lhs.pos)
-            elif lhs_type.without_generics().symbolic_eq(CommonTypesPrecompiled.EMPTY_FUN_REF, sm.current_scope, sm.current_scope):
+            elif AstTypeUtils.symbolic_eq(lhs_type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_REF, sm.current_scope, sm.current_scope):
                 dummy_self_argument.convention = Asts.ConventionRefAst(pos=lhs.pos)
             self._closure_arg = dummy_self_argument
 
@@ -319,14 +318,14 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         #         coro_return_type, sm, coro_return_type, "coroutine call")
         #
         #     # Immutable references invalidate all mutable references.
-        #     if yield_type.get_convention().__class__ is Asts.ConventionRefAst:
+        #     if yield_type.convention.__class__ is Asts.ConventionRefAst:
         #         outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
         #         for yielded_borrow, is_mutable in outermost.memory_info.yielded_borrows_linked:
         #             if is_mutable: AstMemoryUtils.invalidate_yielded_borrow(sm, yielded_borrow, self)
         #         outermost.memory_info.yielded_borrows_linked = [(ast, False) for ast in kwargs.get("assignment", [])]
         #
         #     # Mutable references invalidate all mutable and immutable references.
-        #     elif yield_type.get_convention().__class__ is Asts.ConventionMutAst:
+        #     elif yield_type.convention.__class__ is Asts.ConventionMutAst:
         #         outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
         #         for yielded_borrow, _ in outermost.memory_info.yielded_borrows_linked:
         #             AstMemoryUtils.invalidate_yielded_borrow(sm, yielded_borrow, self)

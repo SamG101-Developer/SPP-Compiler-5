@@ -42,7 +42,7 @@ def main() -> None:
         graph.render(f"{profile_path}/profile", format="svg")
 
     else:
-        handle_build(Namespace(mode="rel"))
+        handle_build(Namespace(mode="dev"))
 
 
 if __name__ == "__main__":

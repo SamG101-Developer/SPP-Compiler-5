@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import List
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 from SPPCompiler.Utils.Sequence import Seq
 
 
@@ -30,14 +32,16 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
         return f"{self.name.print(printer)}{self.tok_dbl_colon.print(printer)}"
 
     @property
-    def pos_end(self) -> int:
-        return self.tok_dbl_colon.pos_end
-
     def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return [self.name]
 
-    def type_parts(self) -> Seq[Asts.GenericIdentifierAst]:
+    @property
+    def type_parts(self) -> List[Asts.GenericIdentifierAst]:
         return []
+
+    @property
+    def pos_end(self) -> int:
+        return self.tok_dbl_colon.pos_end
 
 
 __all__ = [

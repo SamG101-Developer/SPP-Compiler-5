@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 
 @dataclass(slots=True)
@@ -14,18 +15,19 @@ class GenericIdentifierAst(Asts.Ast):
 
     def __post_init__(self) -> None:
         self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=0)
-        # if not self.generic_argument_group.pos:
-        #     self.generic_argument_group.pos = self.pos + len(self.value)
-        #     self.generic_argument_group.tok_l.pos = self.pos
-        #     self.generic_argument_group.tok_r.pos = self.pos + len(self.value)
 
     def __eq__(self, other: GenericIdentifierAst) -> bool:
-        # Check both ASTs are the same type and have the same value and generic argument group.
-        return self.value == other.value and self.generic_argument_group == other.generic_argument_group
+        if other.__class__ is GenericIdentifierAst:
+            return self.value == other.value and self.generic_argument_group == other.generic_argument_group
+        elif other.__class__ is Asts.IdentifierAst:
+            return self.value == other.value
+        elif other.__class__ is Asts.TypeSingleAst:
+            return self.value == other.name.value
+        return False
 
     def __hash__(self) -> int:
         # Convert the value into an integer
-        return int.from_bytes(self.value.encode())
+        return hash(self.value)
 
     def __deepcopy__(self, memodict=None) -> GenericIdentifierAst:
         # Create a deep copy of the AST.
@@ -49,6 +51,10 @@ class GenericIdentifierAst(Asts.Ast):
             self.generic_argument_group.print(printer)]
         return "".join(string)
 
+    @FunctionCache.cache_property
+    def without_generics(self) -> GenericIdentifierAst:
+        return GenericIdentifierAst(pos=self.pos, value=self.value)
+
     @property
     def pos_end(self) -> int:
         return self.generic_argument_group.pos_end if self.generic_argument_group.arguments else self.pos + len(self.value)
@@ -59,10 +65,7 @@ class GenericIdentifierAst(Asts.Ast):
 
     @staticmethod
     def from_type(type: Asts.TypeAst) -> GenericIdentifierAst:
-        return type.type_parts()[0]
-
-    def without_generics(self) -> GenericIdentifierAst:
-        return GenericIdentifierAst(self.pos, self.value)
+        return type.type_parts[0]
 
 
 __all__ = [

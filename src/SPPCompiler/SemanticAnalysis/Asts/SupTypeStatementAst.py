@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from SPPCompiler.SemanticAnalysis import Asts
 
-SupUseStatementAst = Asts.UseStatementAliasAst
+SupTypeStatementAst = Asts.TypeStatementAst
 
 __all__ = [
-    "SupUseStatementAst"]
+    "SupTypeStatementAst"]

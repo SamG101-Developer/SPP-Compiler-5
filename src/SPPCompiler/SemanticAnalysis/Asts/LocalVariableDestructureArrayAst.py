@@ -60,7 +60,7 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # Determine the number of elements in the lhs and rhs arrays.
         num_lhs_array_elements = len(self.elems)
-        num_rhs_array_elements = int(value_type.type_parts()[0].generic_argument_group.arguments[1].value.value.token_data)
+        num_rhs_array_elements = int(value_type.type_parts[0].generic_argument_group.arguments[1].value.value.token_data)
 
         # Ensure the lhs and rhs arrays have the same number of elements unless a multi-skip is present.
         if (num_lhs_array_elements < num_rhs_array_elements and not multi_arg_skips) or num_lhs_array_elements > num_rhs_array_elements:

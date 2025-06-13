@@ -10,6 +10,12 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 class TypePostfixOperatorOptionalTypeAst(Asts.Ast):
     tok_qst: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst())
 
+    def __hash__(self) -> int:
+        return hash(str(self))
+
+    def __str__(self) -> str:
+        return f"{self.tok_qst}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return f"{self.tok_qst}"

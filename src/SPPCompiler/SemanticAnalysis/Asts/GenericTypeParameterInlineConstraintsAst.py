@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -37,7 +38,7 @@ class GenericTypeParameterInlineConstraintsAst(Asts.Ast):
         # Check there are duplicate constraints types.
         for i, t in enumerate(self.constraints):
             for j, u in enumerate(self.constraints[i + 1:]):
-                if t.symbolic_eq(u, sm.current_scope, sm.current_scope):
+                if AstTypeUtils.symbolic_eq(t, u, sm.current_scope, sm.current_scope):
                     raise SemanticErrors.IdentifierDuplicationError().add(
                         t, u, "constraint").scopes(sm.current_scope)
 

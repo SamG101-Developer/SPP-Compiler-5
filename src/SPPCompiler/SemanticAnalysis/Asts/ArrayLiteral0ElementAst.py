@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
@@ -80,7 +80,7 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Create the standard "std::array::Arr" type, with generic arguments.
-        size = Asts.IntegerLiteralAst.from_token(self.size, self.size.pos)
+        size = Asts.IntegerLiteralAst(pos=self.size.pos, value=self.size, type=Asts.TypeSingleAst.from_identifier(Asts.IdentifierAst(value="uz")))
         array_type = CommonTypes.Arr(self.pos, self.elem_type, size)
         array_type.analyse_semantics(sm, **kwargs)
         return array_type
@@ -100,12 +100,12 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.elem_type.analyse_semantics(sm, **kwargs)
 
         # Ensure there is no convention on the array literal.
-        if c := self.elem_type.get_convention():
+        if c := self.elem_type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.elem_type, "array element type").scopes(sm.current_scope)
 
         # Analyse the inferred array type to generate the generic implementation.
-        self.infer_type(sm).analyse_semantics(sm, **kwargs)
+        self.infer_type(sm, **kwargs).analyse_semantics(sm, **kwargs)
 
 
 __all__ = [

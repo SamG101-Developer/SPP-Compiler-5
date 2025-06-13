@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
@@ -55,13 +56,13 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
         if self._arbitrary:
 
             # The convention is taken from the arbitrary type.
-            self.convention = self.type.get_convention()
+            self.convention = self.type.convention
 
             deref_type = CommonTypes.DerefRef(self.pos, self._true_self_type)
             deref_type.analyse_semantics(sm, **kwargs)
 
             self_type_super_types = sm.current_scope.get_symbol(self.type).scope.direct_sup_types
-            if not any([t.symbolic_eq(deref_type, sm.current_scope, sm.current_scope) for t in self_type_super_types]):
+            if not any(AstTypeUtils.symbolic_eq(t, deref_type, sm.current_scope, sm.current_scope) for t in self_type_super_types):
                 raise SemanticErrors.InvalidSelfTypeError().add(
                     self.type).scopes(sm.current_scope)
 

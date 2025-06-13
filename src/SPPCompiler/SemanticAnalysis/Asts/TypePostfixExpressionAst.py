@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, TYPE_CHECKING, Self, Tuple
+from typing import Dict, List, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -24,9 +26,31 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         # Create a deep copy of the AST.
         return TypePostfixExpressionAst(pos=self.pos, lhs=fast_deepcopy(self.lhs), op=fast_deepcopy(self.op))
 
+    def __hash__(self) -> int:
+        return hash((self.lhs, self.op))
+
+    def __json__(self) -> str:
+        return f"{self.lhs}{self.op}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return f"{self.lhs}{self.op}"
+
+    @property
+    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+        return CommonTypes.Opt(self.pos, self.lhs).fq_type_parts if isinstance(self.op, Asts.TypePostfixOperatorOptionalTypeAst) else self.lhs.fq_type_parts + self.op.fq_type_parts
+
+    @property
+    def without_generics(self) -> Optional[Asts.TypeAst]:
+        return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs, op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.without_generics))
+
+    @property
+    def without_conventions(self) -> Optional[Asts.TypeAst]:
+        return self
+
+    @property
+    def convention(self) -> Optional[Asts.TypeAst]:
+        return None
 
     @property
     def pos_end(self) -> int:
@@ -38,6 +62,18 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         lhs_type_symbol = sm.current_scope.get_symbol(lhs_type)
         lhs_type_scope = lhs_type_symbol.scope
 
+        # Check there is only 1 target field on the type at the highest level.
+        if isinstance(self.op, Asts.TypePostfixOperatorNestedTypeAst) and lhs_type_scope:
+            sss = []
+            for scope in [lhs_type_scope] + lhs_type_scope.sup_scopes:
+                sss.append((scope, scope._symbol_table.get(self.op.name.name)))
+            depths = [(lhs_type_scope.depth_difference(s[0]), s) for s in sss if s[1] is not None]
+            closest = [s[1] for s in depths if s[0] == min(depths, key=lambda x: x[0])[0]]
+            if len(closest) > 1:
+                raise SemanticErrors.AmbiguousMemberAccessError().add(
+                    self.op.name.name, closest[0][1].name, closest[1][1].name).scopes(
+                    sm.current_scope, closest[0][0], closest[1][0])
+
         self.op.name.analyse_semantics(sm, type_scope=lhs_type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
 
     def convert(self) -> Asts.TypeAst:
@@ -45,15 +81,7 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
             return CommonTypes.Opt(self.pos, self.lhs.convert())
         return self
 
-    def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        if isinstance(self.op, Asts.TypePostfixOperatorOptionalTypeAst):
-            return CommonTypes.Opt(self.pos, self.lhs).fq_type_parts()
-        return self.lhs.fq_type_parts() + self.op.fq_type_parts()
-
-    def without_generics(self) -> Self:
-        return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs, op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.without_generics()))
-
-    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+    def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs.substituted_generics(generic_arguments), op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.substituted_generics(generic_arguments)))
 
     def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
@@ -62,24 +90,9 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def contains_generic(self, generic_type: Asts.TypeSingleAst) -> bool:
         return self.op.name.contains_generic(generic_type)
 
-    def symbolic_eq(
-            self, that: Asts.TypeAst, self_scope: Scope, that_scope: Scope, check_variant: bool = True,
-            debug: bool = False) -> bool:
-        self_scope = self_scope.get_symbol(self.lhs.infer_type(ScopeManager(self_scope, self_scope))).scope
-        return self.op.name.symbolic_eq(that, self_scope, that_scope, check_variant, debug)
-
-    def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
-        if isinstance(self.op, Asts.TypePostfixOperatorNestedTypeAst):
-            scope = scope.get_symbol(self.lhs).scope
-            return self.op.name.split_to_scope_and_type(scope)
-
-        raise NotImplementedError(f"Cannot split {self.op} to scope and type.")
-
-    def get_convention(self) -> Optional[Asts.ConventionAst]:
-        return None
-
-    def without_conventions(self) -> Asts.TypeAst:
-        return self
+    def get_symbol(self, scope: Scope) -> TypeSymbol:
+        self_scope = scope.get_symbol(self.lhs.infer_type(ScopeManager(scope, scope))).scope
+        return self_scope.get_symbol(self.op.name)
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         self.lhs.analyse_semantics(sm, **kwargs)

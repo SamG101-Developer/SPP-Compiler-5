@@ -7,6 +7,7 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
+   SPPCompiler.Utils.ErrorFormatter
    SPPCompiler.Utils.FastDeepcopy
    SPPCompiler.Utils.Functools
    SPPCompiler.Utils.Progress

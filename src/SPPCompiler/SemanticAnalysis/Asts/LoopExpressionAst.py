@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import LightweightMemoryInfo
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -42,7 +40,7 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     @property
     def pos_end(self) -> int:
-        return self.else_block.pos_end if self.else_block else self.body.pos_end
+        return self.cond.pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Get the loop type set by exit expressions inside the loop.
@@ -53,7 +51,7 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Check the else block's type if it exists and match it against the loop type.
         if self.else_block:
             else_type = self.else_block.infer_type(sm, **kwargs)
-            if not loop_type.symbolic_eq(else_type, sm.current_scope, sm.current_scope):
+            if not AstTypeUtils.symbolic_eq(loop_type, else_type, sm.current_scope, sm.current_scope):
                 final_member = self.body.members[-1] if self.body.members else self.body.tok_r
                 raise SemanticErrors.TypeMismatchError().add(self, loop_type, final_member, else_type).scopes(sm.current_scope)
 
@@ -61,7 +59,7 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Create a new scope for the loop body.
-        sm.create_and_move_into_new_scope(f"<loop:{self.pos}>")
+        sm.create_and_move_into_new_scope(f"<loop#{self.pos}>")
         self.cond.analyse_semantics(sm, **kwargs)
 
         # For the top level loop, set the count to 0, and create empty dictionaries for the loop types and ASTs.

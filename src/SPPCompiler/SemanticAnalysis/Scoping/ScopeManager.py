@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Iterator, Optional, TYPE_CHECKING
+from typing import Any, DefaultDict, Dict, Iterator, List, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType, VariableSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.Utils.Progress import Progress
+from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis import Asts
@@ -16,14 +18,16 @@ class ScopeManager:
     _global_scope: Scope
     _current_scope: Scope
     _iterator: Iterator[Scope]
-    _borrows_to_release: Seq[VariableSymbol]
+    normal_sup_blocks: DefaultDict[TypeSymbol, List[Scope]]
+    generic_sup_blocks: Dict[TypeSymbol, Scope]
 
-    def __init__(self, global_scope, current_scop: Optional[Scope] = None) -> None:
+    def __init__(self, global_scope, current_scope: Optional[Scope] = None, nsbs=None, gsbs=None) -> None:
         # Create the default global and current scopes if they are not provided.
         self._global_scope = global_scope
-        self._current_scope = current_scop or self._global_scope
+        self._current_scope = current_scope or self._global_scope
         self._iterator = iter(self)
-        self._borrows_to_release = []
+        self.normal_sup_blocks = nsbs or DefaultDict(list)
+        self.generic_sup_blocks = gsbs or DefaultDict(list)
 
     def __iter__(self) -> Iterator[Scope]:
         # Iterate over the scope manager's scopes, starting from the global scope.
@@ -82,25 +86,81 @@ class ScopeManager:
             return scope
         return None
 
-    def relink_generics(self) -> None:
-        # Check every scope in the symbol table.
-        for scope in self:
+    def attach_super_scopes(self, progress: Progress, **kwargs) -> None:
+        """
+        The first thing to do is to identify every single "super scope". These are scopes whose "ast" is either a
+        SupPrototypeExtensionAst or a SupPrototypeFunctionsAst. Store them in a dictionary, with the key being their
+        "name" attribute.
 
-            # Only check type and alias symbols that are not generic (ie not the T type for Vec[T]).
-            non_generic_type_symbols = [s for s in scope._symbol_table.all() if s.symbol_type is SymbolType.TypeSymbol and not s.is_generic]
-            for symbol in non_generic_type_symbols:
+        Iterate through every "top-level" scope, and identify each type scope. This is a scope whose "ast" is a
+        ClassPrototypeAst. Only look inside module scopes for these (they will never be in more nested scopes). Once a
+        type scope is found, compare its name against the dictionary of super scopes, using the relaxed symbolic
+        comparison.
 
-                # Check the type is a generic implementation (ie Vec[Str]), and remove the symbol.
-                if symbol.scope._non_generic_scope is not symbol.scope:
-                    self.reset(symbol.scope_defined_in)
+        For every match found, attach the super scope to the class scope's "_direct_up_scopes". For sup-ext blocks, also
+        add the class scope for the super-class, by using "get_symbol(super_class).scope". This is required to use the
+        attributes (state) of superclasses. Only add unique superclasses once.
+        """
 
-                    # Get the base symbol (Vec), to pull the super scopes from.
-                    base_symbol = scope.get_symbol(symbol.name.without_generics(), ignore_alias=True)
+        progress.set_max(1)
+        progress.next("-")
 
-                    # Add the substituted super scopes to the substituted symbol.
-                    symbol.scope._direct_sup_scopes = AstTypeUtils.create_generic_sup_scopes(self, base_symbol.scope, symbol.scope, symbol.name.generic_argument_group)
-
+        # Ensure the scope manager is in the global scope for scope-searching.
         self.reset()
+        iterator = [*iter(self)]
+        for scope in iterator:
+            if isinstance(scope.type_symbol, AliasSymbol):
+                if scope.type_symbol.old_sym.scope:
+                    self.attach_super_scope_to_target_scope(scope, scope.type_symbol.old_sym.scope._direct_sup_scopes, **kwargs)
+            elif isinstance(scope.type_symbol, TypeSymbol):
+                self.attach_super_scope_to_target_scope(scope, **kwargs)
+
+        progress.finish()
+        self.reset()
+
+    def attach_super_scope_to_target_scope(
+            self, scope: Scope, custom_scopes: list[Scope] = None, progress: Optional[Progress] = None,
+            **kwargs) -> None:
+
+        from SPPCompiler.SemanticAnalysis import Asts
+        if str(scope.name)[0] == "$":
+            return
+
+        scope._direct_sup_scopes = []
+        super_scopes = custom_scopes if custom_scopes is not None else self.normal_sup_blocks[scope._non_generic_scope.type_symbol] + list(self.generic_sup_blocks.values())
+
+        # Iterate through all the super scopes and check if the name matches.
+        for super_scope in super_scopes:
+            scope_generics_dict = {}
+            if not AstTypeUtils.relaxed_symbolic_eq(scope.name, super_scope._ast.name, scope, super_scope, scope_generics_dict):
+                continue
+            scope_generics = Asts.GenericArgumentGroupAst.from_dict(scope_generics_dict)
+
+            tm = ScopeManager(self.global_scope, scope.type_symbol.scope_defined_in, self.normal_sup_blocks, self.generic_sup_blocks)
+            new_sup_scope, new_cls_scope = AstTypeUtils.create_generic_sup_scope(tm, super_scope, scope, scope_generics, **kwargs)
+            sup_symbol = new_cls_scope.type_symbol if new_cls_scope else None
+            cls_symbol = scope.type_symbol
+
+            # Prevent double inheritance, cyclic inheritance, and self inheritance.
+            if isinstance(super_scope._ast, Asts.SupPrototypeExtensionAst):
+                super_scope._ast._check_double_extension(cls_symbol, sup_symbol, super_scope)
+                super_scope._ast._check_cyclic_extension(sup_symbol, super_scope)
+                super_scope._ast._check_self_extension(cls_symbol, sup_symbol, super_scope)
+
+            # Register the super scope against the current scope.
+            scope._direct_sup_scopes.append(new_sup_scope)
+
+            # Register the super scope's class scope against the current scope, if it is different. The difference check
+            # is to prevent generic superimpositions ie "sup [T] T ext A" from causing "sup A ext A" from happening.
+            if new_cls_scope and scope.type_symbol is not new_cls_scope.type_symbol:
+                scope._direct_sup_scopes.append(new_cls_scope)
+
+            if isinstance(super_scope._ast, Asts.SupPrototypeAst):
+                check_conflicting_type_statements(cls_symbol, self)
+                check_conflicting_cmp_statements(cls_symbol, self)
+
+        if progress:
+            progress.next(str(scope.name))
 
     @property
     def global_scope(self) -> Scope:
@@ -109,6 +169,34 @@ class ScopeManager:
     @property
     def current_scope(self) -> Scope:
         return self._current_scope
+
+
+def check_conflicting_type_statements(cls_symbol: TypeSymbol, sm: ScopeManager) -> None:
+    from SPPCompiler.SemanticAnalysis import Asts
+
+    # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
+    existing_type_names = SequenceUtils.flatten([
+        [m.new_type for m in s._ast.body.members if isinstance(m, Asts.SupTypeStatementAst)]
+        for s in cls_symbol.scope._direct_sup_scopes
+        if isinstance(s._ast, Asts.SupPrototypeAst)])
+
+    if duplicates := SequenceUtils.duplicates(existing_type_names):
+        raise SemanticErrors.IdentifierDuplicationError().add(
+            duplicates[0], duplicates[1], "associated type").scopes(sm.current_scope)
+
+
+def check_conflicting_cmp_statements(cls_symbol: TypeSymbol, sm: ScopeManager) -> None:
+    from SPPCompiler.SemanticAnalysis import Asts
+
+    # Prevent duplicate cmp declarations by checking if the cmp statements appear in any super class.
+    existing_cmp_names = SequenceUtils.flatten([
+        [m.name for m in s._ast.body.members if isinstance(m, Asts.SupCmpStatementAst) and m.type.type_parts[-1].value[0] != "$"]
+        for s in cls_symbol.scope._direct_sup_scopes
+        if isinstance(s._ast, Asts.SupPrototypeAst)])
+
+    if duplicates := SequenceUtils.duplicates(existing_cmp_names):
+        raise SemanticErrors.IdentifierDuplicationError().add(
+            duplicates[0], duplicates[1], "associated const").scopes(sm.current_scope)
 
 
 __all__ = [

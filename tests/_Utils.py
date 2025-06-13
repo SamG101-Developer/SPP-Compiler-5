@@ -6,11 +6,13 @@ import json_fix
 
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticError, SemanticErrors
 from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 from spp_cli import handle_build, handle_init, handle_vcs
 
 
 class CustomTestCase(TestCase):
-    ...
+    def setUp(self):
+        FunctionCache.clear_all_caches()
 
 
 def _build_temp_project_v3(code, add_main: bool = True):
@@ -31,7 +33,7 @@ def _build_temp_project_v3(code, add_main: bool = True):
         f.write(code)
 
     os.chdir(fp)
-    handle_build(Namespace(mode="rel"), skip_vcs=True)
+    handle_build(Namespace(mode="dev"), skip_vcs=True)
     os.chdir(cwd)
 
 

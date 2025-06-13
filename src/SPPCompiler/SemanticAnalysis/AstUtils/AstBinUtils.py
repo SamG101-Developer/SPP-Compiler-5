@@ -111,8 +111,12 @@ class AstBinUtils:
         function_call_ast = CodeInjection.inject_code(
             f"{ast.lhs}.{method_name}()", SppParser.parse_postfix_expression, pos_adjust=ast.pos)
 
+        convention = None
+        if ast.op.token_type in BINARY_COMPARISON_OPERATORS:
+            convention = Asts.ConventionRefAst(pos=ast.rhs.pos)
+
         function_call_ast.op.function_argument_group.arguments = [
-            Asts.FunctionCallArgumentUnnamedAst(pos=ast.rhs.pos, convention=Asts.ConventionRefAst(pos=ast.rhs.pos), value=ast.rhs)]
+            Asts.FunctionCallArgumentUnnamedAst(pos=ast.rhs.pos, convention=convention, value=ast.rhs)]
 
         return function_call_ast
 

@@ -102,7 +102,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         function_call = Asts.IdentifierAst(self.name.pos, "call")
 
         # If this is the first overload being converted, then the class needs to be made for the type.
-        if not [m for m in ctx.body.members if isinstance(m, Asts.ClassPrototypeAst) and m.name.without_generics() == mock_class_name.without_generics()]:
+        if not [m for m in ctx.body.members if isinstance(m, Asts.ClassPrototypeAst) and m.name.without_generics == mock_class_name.without_generics]:
             mock_class_ast = Asts.ClassPrototypeAst(
                 name=mock_class_name)
             mock_constant_ast = Asts.CmpStatementAst(
@@ -115,14 +115,14 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         function_ast._orig = self.name
         mock_superimposition_body = Asts.SupImplementationAst(members=[function_ast])
         mock_superimposition = Asts.SupPrototypeExtensionAst(
-            pos=self.pos, generic_parameter_group=self.generic_parameter_group, name=mock_class_name,
+            pos=self.pos, generic_parameter_group=self.generic_parameter_group.opt_to_req(), name=mock_class_name,
             super_class=function_type, where_block=self.where_block, body=mock_superimposition_body, _ctx=self._ctx)
         ctx.body.members.insert(0, mock_superimposition)
         ctx.body.members.remove(self)
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         # Create a new scope for the function.
-        sm.create_and_move_into_new_scope(f"<function:{self._orig}:{self.pos}>", self)
+        sm.create_and_move_into_new_scope(f"<function#{self._orig}#{self.pos}>", self)
         Asts.Ast.generate_top_level_scopes(self, sm)
 
         # If there is a self parameter in a free function, throw an error.
@@ -135,7 +135,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Ensure the function return type does not have a convention.
-        if c := self.return_type.get_convention():
+        if c := self.return_type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.return_type, "function return type").scopes(sm.current_scope)
 
@@ -153,6 +153,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
+        self.generic_parameter_group.qualify_types(sm, **kwargs)
         sm.move_out_of_current_scope()
 
     def load_super_scopes(self, sm: ScopeManager, **kwargs) -> None:
@@ -170,7 +171,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         # Get the owner scope for function conflict checking.
         match self._ctx:
             case Asts.ModulePrototypeAst(): type_scope = sm.current_scope.parent_module
-            case _: type_scope = self._ctx._scope_cls
+            case _: type_scope = self._ctx._scope.get_symbol(self._ctx.name).scope
 
         # Check for function conflicts.
         if conflict := AstFunctionUtils.check_for_conflicting_overload(sm.current_scope, type_scope, self):
@@ -191,7 +192,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Repeat the check here for generic substitution return types.
         self.return_type.analyse_semantics(sm, **kwargs)
-        if c := self.return_type.get_convention():
+        if c := self.return_type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.return_type, "function return type").scopes(sm.current_scope)
 

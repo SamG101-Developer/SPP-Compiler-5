@@ -74,7 +74,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
                 # Replace the tuple-expansion argument with the expanded arguments
                 self.arguments.pop(i)
-                for j in range(len(tuple_argument_type.type_parts()[0].generic_argument_group.arguments) - 1, -1, -1):
+                for j in range(len(tuple_argument_type.type_parts[0].generic_argument_group.arguments) - 1, -1, -1):
                     new_argument = CodeInjection.inject_code(
                         f"{argument.value}.{j}", SppParser.parse_function_call_argument_unnamed,
                         pos_adjust=self.arguments[i].pos)

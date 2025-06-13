@@ -2,10 +2,11 @@ from tests._Utils import *
 
 
 class TestSupPrototypeExtensionAst(CustomTestCase):
-    @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
-    def test_invalid_superimposition_extension_generic_name(self):
+    @should_pass_compilation()
+    def test_valid_superimposition_extension_generic_name(self):
         """
-        sup [T] T ext std::number::bigint::BigInt { }
+        cls A { }
+        sup [T] T ext A { }
         """
 
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
@@ -32,6 +33,13 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         """
         sup std::boolean::Bool ext std::string::Str { }
         sup std::string::Str ext std::boolean::Bool { }
+        """
+
+    @should_fail_compilation(SemanticErrors.SuperimpositionExtensionSelfExtensionError)
+    def test_invalid_superimposition_extension_self_extension(self):
+        """
+        cls A { }
+        sup A ext A { }
         """
 
     @should_fail_compilation(SemanticErrors.SuperimpositionExtensionMethodInvalidError)
@@ -207,33 +215,5 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
 
         fun f() -> std::void::Void {
             let b = B(b=100)
-        }
-        """
-
-    @should_pass_compilation()
-    def test_valid_superimposition_extension_valid_use_statement(self):
-        """
-        cls A { }
-        sup A {
-            use X = std::number::bigint::BigInt
-        }
-
-        cls B { }
-        sup B ext A {
-            use X = std::string::Str
-        }
-        """
-
-    @should_pass_compilation()
-    def test_valid_superimposition_extension_valid_cmp_statement(self):
-        """
-        cls A { }
-        sup A {
-            cmp x: std::number::bigint::BigInt = 123
-        }
-
-        cls B { }
-        sup B ext A {
-            cmp x: std::string::Str = "hello world"
         }
         """

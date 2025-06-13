@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 from collections import defaultdict
-from typing import Dict, Optional, Tuple, TYPE_CHECKING, Type
+from typing import Dict, Optional, TYPE_CHECKING, Tuple, Type
 
 from ordered_set import OrderedSet
 
@@ -10,8 +10,8 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import SymbolType
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled, CommonTypes
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 
@@ -154,8 +154,12 @@ class AstFunctionUtils:
         target_function_name = target_function_name.to_function_identifier()
         overload_scopes_and_info = []
 
+        # If target scope is None, then the functions are being superimposed over a generic type.
+        if target_scope is None:
+            return overload_scopes_and_info
+
         # Check for namespaced (module-level) functions. They will have no "inheritable generics".
-        if target_scope.type_symbol is not None and target_scope.type_symbol.symbol_type == SymbolType.NamespaceSymbol:
+        if target_scope.type_symbol is not None and target_scope.type_symbol.__class__ == NamespaceSymbol:
             for ancestor_scope in target_scope.ancestors:
 
                 # Find all the scopes at the module level superimposing a function type over the function.
@@ -221,7 +225,7 @@ class AstFunctionUtils:
                 continue
 
             # Ignore if the return types are different.
-            if not new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
+            if not AstTypeUtils.symbolic_eq(new_func.return_type, old_func.return_type, this_scope, old_scope):
                 continue
 
             # Ignore if there are a different number of required generic parameters.
@@ -234,7 +238,7 @@ class AstFunctionUtils:
 
             # Remove all required parameters on the first parameter list off the other parameter list.
             for p, q in zip(new_func.function_parameter_group.params, old_func.function_parameter_group.params):
-                if p.type.symbolic_eq(q.type, this_scope, old_scope):
+                if AstTypeUtils.symbolic_eq(p.type, q.type, this_scope, old_scope):
                     SequenceUtils.remove_if(params_new.params, lambda x: x.extract_names == p.extract_names)
                     SequenceUtils.remove_if(params_old.params, lambda x: x.extract_names == q.extract_names)
 
@@ -248,8 +252,6 @@ class AstFunctionUtils:
     def check_for_conflicting_override(
             this_scope: Scope, target_scope: Scope, new_func: Asts.FunctionPrototypeAst, *,
             exclude: Optional[Scope] = None) -> Optional[Asts.FunctionPrototypeAst]:
-
-        exclude = exclude or []
 
         # Helper function to get the type of the convention AST applied to the "self" parameter.
         def sc(f: Asts.FunctionPrototypeAst) -> Type[Asts.ConventionAst]:
@@ -277,9 +279,9 @@ class AstFunctionUtils:
 
             # Check a list of conditions to check for conflicting functions.
             if len(params_new.params) == len(params_old.params):
-                if all(p.extract_names == q.extract_names and p.type.symbolic_eq(q.type, this_scope, old_scope, check_variant=False) for p, q in zip(params_new.get_non_self_params(), params_old.get_non_self_params())):
+                if all(p.extract_names == q.extract_names and AstTypeUtils.symbolic_eq(p.type, q.type, this_scope, old_scope, check_variant=False) for p, q in zip(params_new.get_non_self_params(), params_old.get_non_self_params())):
                     if new_func.tok_fun == old_func.tok_fun:
-                        if new_func.return_type.symbolic_eq(old_func.return_type, this_scope, old_scope):
+                        if AstTypeUtils.symbolic_eq(new_func.return_type, old_func.return_type, this_scope, old_scope):
                             if hs(new_func) == hs(old_func) and sc(new_func) is sc(old_func):
                                 return old_func
 
@@ -420,7 +422,8 @@ class AstFunctionUtils:
             infer_target: Dict[Asts.IdentifierAst, Asts.TypeAst],
             sm: ScopeManager,
             owner: Asts.TypeAst | Asts.ExpressionAst = None,
-            variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None)\
+            variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None,
+            **kwargs)\
             -> Seq[Asts.GenericArgumentAst]:
 
         """
@@ -479,7 +482,7 @@ class AstFunctionUtils:
         # print("owner", owner, sm.current_scope)
 
         # Special case for tuples to prevent infinite-recursion.
-        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and owner.symbolic_eq(CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope, sm.current_scope):
+        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and AstTypeUtils.symbolic_eq(owner, CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope, sm.current_scope):
             return explicit_generic_arguments
 
         # If there are no generic parameters then skip any inference checks.
@@ -520,21 +523,23 @@ class AstFunctionUtils:
 
                 # Handle the variadic parameter if it exists.
                 if variadic_parameter_identifier and infer_target_name == variadic_parameter_identifier:
-                    inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].type_parts()[0].generic_argument_group.arguments[0].value
+                    inferred_generic_arguments[generic_parameter_name][-1] = inferred_generic_arguments[generic_parameter_name][-1].type_parts[0].generic_argument_group.arguments[0].value
 
         # Add any default generic arguments in that were missing.
-        for optional_generic_parameter in optional_generic_parameters:
-            if optional_generic_parameter.name not in inferred_generic_arguments:
-                default = optional_generic_parameter.default
-                if isinstance(owner, Asts.TypeAst):
-                    default = sm.current_scope.get_symbol(owner).scope.get_symbol(default).fq_name
-                inferred_generic_arguments[optional_generic_parameter.name].append(default)
+        if sm.current_scope.get_symbol(owner):
+            tm = ScopeManager(sm.global_scope, sm.current_scope.get_symbol(owner).scope)
+            for optional_generic_parameter in optional_generic_parameters:
+                if optional_generic_parameter.name not in inferred_generic_arguments:
+                    default = optional_generic_parameter.default
+                    if isinstance(owner, Asts.TypeAst) and tm.current_scope.get_symbol(default):
+                        default = tm.current_scope.get_symbol(default).fq_name
+                    inferred_generic_arguments[optional_generic_parameter.name].append(default)
 
         # Check each generic argument name only has one unique inferred type. This is to prevent conflicts for a generic
         # type. For example, "T" can't be inferred as a "Str" and then a "BigInt". All instances must match the first
         # inference, in this case "Str".
         for inferred_generic_argument_name, inferred_generic_argument_value in inferred_generic_arguments.items():
-            if mismatch := [t for t in inferred_generic_argument_value[1:] if not t.symbolic_eq(inferred_generic_argument_value[0], sm.current_scope, sm.current_scope)]:
+            if mismatch := [t for t in inferred_generic_argument_value[1:] if not AstTypeUtils.symbolic_eq(t, inferred_generic_argument_value[0], sm.current_scope, sm.current_scope)]:
                 raise SemanticErrors.GenericParameterInferredConflictInferredError().add(
                     inferred_generic_argument_name, inferred_generic_argument_value[0], mismatch[0]).scopes(sm.current_scope)
 
@@ -565,7 +570,8 @@ class AstFunctionUtils:
                 args_excluding_this_one = formatted_generic_arguments.copy()
                 del args_excluding_this_one[generic_parameter_name]
 
-                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(Asts.GenericArgumentGroupAst.from_dict(args_excluding_this_one).arguments)
+                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(
+                    Asts.GenericArgumentGroupAst.from_dict(args_excluding_this_one).arguments)
 
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
         # GenericXXXArgumentASTs. Todo: pos_adjust?
@@ -576,8 +582,25 @@ class AstFunctionUtils:
             value = Asts.IdentifierAst.from_type(v) if isinstance(v, Asts.TypeAst) and ctor is Asts.GenericCompArgumentNamedAst else v
             final_args.append(ctor(pos=pos_adjust, name=k, value=value))
 
+        # Re-order the arguments to match the parameter order.
+        final_args.sort(key=lambda arg: generic_parameter_names.index(arg.name))
+
+        # For the "comp" args, type-check them. Don't do this pre-analysis stage (types haven't been setup correctly
+        # yet)
+        # Todo: add to test suite
+
+        if kwargs["stage"] > 5:
+            for comp_arg, comp_param in zip(final_args, generic_parameters):
+                if isinstance(comp_arg, Asts.GenericCompArgumentNamedAst):
+                    a_type = comp_arg.value.infer_type(sm)
+                    p_type = comp_param.type.substituted_generics(final_args)
+
+                    if not AstTypeUtils.symbolic_eq(p_type, a_type, sm.current_scope.get_symbol(owner).scope, sm.current_scope):
+                        raise SemanticErrors.TypeMismatchError().add(
+                            comp_param, p_type, comp_arg, a_type).scopes(sm.current_scope)
+
         # Finally, re-order the arguments to match the parameter order.
-        return sorted(final_args, key=lambda arg: generic_parameter_names.index(arg.name))
+        return final_args
 
     @staticmethod
     def is_target_callable(expr: Asts.ExpressionAst, sm: ScopeManager, **kwargs) -> Optional[Asts.TypeAst]:
@@ -607,8 +630,8 @@ class AstFunctionUtils:
         """
 
         # Extract the parameter and return types from the expression type.
-        dummy_params_types = [t.value for t in expr_type.type_parts()[-1].generic_argument_group["Args"].value.type_parts()[-1].generic_argument_group.arguments]
-        dummy_return_type = expr_type.type_parts()[-1].generic_argument_group["Out"].value
+        dummy_params_types = [t.value for t in expr_type.type_parts[-1].generic_argument_group["Args"].value.type_parts[-1].generic_argument_group.arguments]
+        dummy_return_type = expr_type.type_parts[-1].generic_argument_group["Out"].value
 
         # Create a function prototype based off of the parameter and return types.
         dummy_params = Asts.FunctionParameterGroupAst(params=[Asts.FunctionParameterRequiredAst(type=t) for t in dummy_params_types])

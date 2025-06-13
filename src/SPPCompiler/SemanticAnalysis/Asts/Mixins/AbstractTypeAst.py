@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+import copy
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Self, Optional, Tuple, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING, final
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.Utils.Sequence import Seq
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass(slots=True)
 class AbstractTypeTemporaryAst:
     """
     The AbstractTypeTemporaryAst is a temporary type ast that is used or instant-conversion purposes. The ast that it is
@@ -29,7 +29,7 @@ class AbstractTypeTemporaryAst:
         """
 
 
-@dataclass(slots=True)
+@dataclass()
 class AbstractTypeAst(AbstractTypeTemporaryAst):
     """
     The AbstractTypeAst contains a number of methods required to be implemented by all the different TypeAst classes.
@@ -37,46 +37,36 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
     all utility methods.
     """
 
-    def type_parts(self) -> Seq[Asts.GenericIdentifierAst]:
-        """
-        The type parts of a TypeAst are all the parts of the type asts that are not namespaces. For example, given
-        "ns1::ns2::Type1::Type2", the type parts are "Type1" and "Type2".
+    @property
+    @abstractmethod
+    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+        ...
 
-        :return: The type parts of the type ast.
-        """
+    @property
+    @abstractmethod
+    def without_generics(self) -> Optional[Asts.TypeAst]:
+        ...
 
-        return [p for p in self.fq_type_parts() if p.__class__ is Asts.GenericIdentifierAst]
+    @property
+    @abstractmethod
+    def without_conventions(self) -> Optional[Asts.TypeAst]:
+        ...
 
-    def namespace_parts(self) -> Seq[Asts.IdentifierAst]:
-        """
-        The namespace parts of a TypeAst are all the parts of the type asts that are namespaces. For example, given
-        "ns1::ns2::Type1::Type2", the namespace parts are "ns1" and "ns2".
+    @property
+    @abstractmethod
+    def convention(self) -> Optional[Asts.ConventionAst]:
+        ...
 
-        :return: The namespace parts of the type ast.
-        """
+    @property
+    def namespace_parts(self) -> List[Asts.IdentifierAst]:
+        return [p for p in self.fq_type_parts if p.__class__ is Asts.IdentifierAst]
 
-        return [p for p in self.fq_type_parts() if p.__class__ is Asts.IdentifierAst]
+    @property
+    def type_parts(self) -> List[Asts.GenericIdentifierAst | Asts.TokenAst]:
+        return [p for p in self.fq_type_parts if p.__class__ is Asts.GenericIdentifierAst or p.__class__ is Asts.TokenAst]
 
     @abstractmethod
-    def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        """
-        The fully qualified type parts of a TypeAst are all the parts of the type asts that are namespace or type parts.
-        For example, given "ns1::ns2::Type1::Type2", the fq type parts are "ns1", "ns2", "Type1" and "Type2".
-
-        :return: The fully qualified type parts of the type ast.
-        """
-
-    @abstractmethod
-    def without_generics(self) -> Self:
-        """
-        Create a new instance of ehte type asts that has had its generics removed. This is used especially for checking
-        if types exist or need to be specialised. For example, "Vec[T]" becomes "Vec" when the generics are removed.
-
-        :return: The type ast without generics.
-        """
-
-    @abstractmethod
-    def substituted_generics(self, generic_arguments: Seq[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+    def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         """
         Substitute the generic arguments in a type. This allows "Vec[T]" to become "Vec[Str]" when it is known that "T"
         is a "Str". This is used in the type inference process. This creates a new type ast with the generics
@@ -108,41 +98,22 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @abstractmethod
-    def symbolic_eq(
-            self, that: Asts.TypeAst, self_scope: Scope, that_scope: Scope, check_variant: bool = True,
-            debug: bool = False) -> bool:
+    def get_symbol(self, scope: Scope) -> TypeSymbol:
         """
-        Symbolic equality is the core of the type checking utility. It gets two given types, and two scopes, and gets
-        the symbols representing the types from the respective scopes. If the two symbol's types match, then the types
-        are a match.
+        Get the symbol for this type. This is used to get the symbol for the type in the current scope. Type unary
+        expressions use their namespace to move into the type, and postfix types use the lhs types.
 
-        :param that: The type (ast) to compare against.
-        :param self_scope: The scope to get the symbol for this type.
-        :param that_scope: The scope to get the symbol for the other type.
-        :param check_variant: Check the internal types (if this type is a std::Var[..]).
-        :param debug: Flag to optionally print debug information.
-        :return: True if the types are equal, False otherwise.
+        :param scope: The scope to get the symbol from.
+        :return: The type symbol for this type.
         """
 
-    @abstractmethod
-    def split_to_scope_and_type(self, scope: Scope) -> Tuple[Scope, Asts.TypeSingleAst]:
-        """
-        Split a type ast, and a given scope into a new scope and type ast. This allows for "number::BigInt", in the
-        scope "std", to be split into "std::number" and "BigInt".
+    @final
+    def set_generics(self, generics_argument_group: Asts.GenericArgumentGroupAst) -> Asts.TypeAst:
+        new = copy.deepcopy(self)
+        new.type_parts[-1].generic_argument_group = generics_argument_group
+        return new
 
-        :param scope: The scope to split the type ast into.
-        :return: A tuple containing the new scope and the type ast.
-        """
-
-    @abstractmethod
-    def get_convention(self) -> Optional[Asts.ConventionAst]:
-        """
-        Get the convention attached to a type. This will either be "&" or "&mut", and the AST will only ever be part of
-        a TypeUnaryExpressionAst.
-
-        :return: The convention attached to the type, or None if no convention is attached.
-        """
-
+    @final
     def with_convention(self, convention: Optional[Asts.ConventionAst]) -> Asts.TypeAst:
         """
         Create a new instance of a type (that contains this original type), which acts as a unary type wrapper, with the
@@ -161,15 +132,6 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
         else:
             return Asts.TypeUnaryExpressionAst(pos=self.pos, op=Asts.TypeUnaryOperatorBorrowAst(pos=self.pos, convention=convention), rhs=self)
-
-    @abstractmethod
-    def without_conventions(self) -> Asts.TypeAst:
-        """
-        Get this type without its associated convention, if it exists. This is used to remove the convention from a type
-        when it is no longer needed.
-
-        :return: The type ast without the convention.
-        """
 
 
 __all__ = [

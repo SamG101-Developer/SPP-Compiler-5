@@ -126,8 +126,8 @@ from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorResumeCoroutineA
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.RetStatementAst import *
-from SPPCompiler.SemanticAnalysis.Asts.UseStatementAliasAst import *
-from SPPCompiler.SemanticAnalysis.Asts.UseStatementReduxAst import *
+from SPPCompiler.SemanticAnalysis.Asts.TypeStatementAst import *
+from SPPCompiler.SemanticAnalysis.Asts.UseStatementAst import *
 from SPPCompiler.SemanticAnalysis.Asts.UseStatementAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.SupImplementationAst import *
@@ -135,7 +135,7 @@ from SPPCompiler.SemanticAnalysis.Asts.SupPrototypeExtensionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.SupPrototypeFunctionsAst import *
 from SPPCompiler.SemanticAnalysis.Asts.SupPrototypeAst import *
 from SPPCompiler.SemanticAnalysis.Asts.SupCmpStatementAst import *
-from SPPCompiler.SemanticAnalysis.Asts.SupUseStatementAst import *
+from SPPCompiler.SemanticAnalysis.Asts.SupTypeStatementAst import *
 from SPPCompiler.SemanticAnalysis.Asts.SupMemberAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.TokenAst import *

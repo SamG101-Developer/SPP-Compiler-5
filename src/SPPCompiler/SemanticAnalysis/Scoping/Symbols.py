@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import json
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Dict, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
@@ -15,16 +14,9 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-class SymbolType(Enum):
-    NamespaceSymbol = "namespace"
-    VariableSymbol = "variable"
-    TypeSymbol = "type"
-    AliasSymbol = "alias"
-
-
 @dataclass(slots=True, kw_only=True)
 class BaseSymbol:
-    symbol_type: SymbolType = field(default=None)
+    ...
 
 
 @dataclass(slots=True, kw_only=True)
@@ -32,17 +24,20 @@ class NamespaceSymbol(BaseSymbol):
     name: Asts.IdentifierAst
     scope: Optional[Scope] = field(default=None)
 
-    def __post_init__(self) -> None:
-        # Ensure the name is an IdentifierAst.
-        self.symbol_type = SymbolType.NamespaceSymbol
-
     def __json__(self) -> Dict:
         # Dump the NamespaceSymbol as a JSON object.
         return {"what": "ns", "name": self.name, "scope": self.scope.name if self.scope else None}
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
     def __str__(self) -> str:
         # Dump the NamespaceSymbol as a JSON string.
         return json.dumps(self)
+
+    def __eq__(self, other: NamespaceSymbol) -> bool:
+        # Check if two NamespaceSymbols are equal.
+        return self is other
 
     def __deepcopy__(self, memodict=None):
         # Copy the name into a new AST, but link the scope.
@@ -58,12 +53,6 @@ class VariableSymbol(BaseSymbol):
     memory_info: MemoryInfo = field(default_factory=MemoryInfo)
     visibility: Visibility = field(default=Visibility.Public)
 
-    def __post_init__(self) -> None:
-        # Ensure the name is an IdentifierAst, and the type is a TypeAst.
-        self.symbol_type = SymbolType.VariableSymbol
-        # assert isinstance(self.name, Asts.IdentifierAst)
-        # assert isinstance(self.type, Asts.TypeAst)
-
     def __json__(self) -> Dict:
         # Dump the VariableSymbol as a JSON object.
         return {"what": "var", "name": self.name, "type": self.type}
@@ -74,6 +63,10 @@ class VariableSymbol(BaseSymbol):
     def __str__(self) -> str:
         # Dump the VariableSymbol as a JSON string.
         return json.dumps(self)
+
+    def __eq__(self, other: VariableSymbol) -> bool:
+        # Check if two VariableSymbols are equal.
+        return self is other
 
     def __deepcopy__(self, memodict=None):
         # Copy the all the attributes of the VariableSymbol.
@@ -96,11 +89,6 @@ class TypeSymbol(BaseSymbol):
     scope_defined_in: Optional[Scope] = field(default=None)
 
     def __post_init__(self) -> None:
-        # Ensure the name is a GenericIdentifierAst, and the type is a ClassPrototypeAst or None.
-        self.symbol_type = SymbolType.TypeSymbol
-        # assert isinstance(self.name, Asts.GenericIdentifierAst)
-        # assert isinstance(self.type, Asts.ClassPrototypeAst) or self.type is None
-
         # Link the type symbol to the associated scope.
         if self.scope and not self.is_generic and not self.name.value == "Self":
             self.scope._type_symbol = self
@@ -110,19 +98,29 @@ class TypeSymbol(BaseSymbol):
     def __json__(self) -> Dict:
         # Dump the TypeSymbol as a JSON object.
         return {
-            "what": "type", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
-            "parent": self.scope.parent.name if self.scope and self.scope.parent else ""}
+            "what": "type", "name": str(self.name), "type": str(self.type), "scope": str(self.scope.name) if self.scope else "",
+            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else "", "id": id(self)}
+
+    def __hash__(self) -> int:
+        return hash(self.name)
 
     def __str__(self) -> str:
         # Dump the TypeSymbol as a JSON string.
         return json.dumps(self)
 
+    def __eq__(self, other: TypeSymbol) -> bool:
+        # Check if two TypeSymbols are equal.
+        return self is other
+
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the TypeSymbol, but link the scope.
-        return TypeSymbol(
-            name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
-            generic_impl=self.generic_impl, scope_defined_in=self.scope_defined_in)
+        if self.is_generic:
+            return TypeSymbol(
+                name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
+                is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
+                generic_impl=self.generic_impl, scope_defined_in=self.scope_defined_in)
+        else:
+            return self
 
     @property
     def fq_name(self) -> Asts.TypeAst:
@@ -131,7 +129,7 @@ class TypeSymbol(BaseSymbol):
         if self.is_generic:
             return fq_name
 
-        if self.symbol_type is SymbolType.AliasSymbol:
+        if self.__class__ is AliasSymbol:
             return fq_name
 
         if self.name.value[0] == "$":
@@ -151,20 +149,28 @@ class TypeSymbol(BaseSymbol):
 class AliasSymbol(TypeSymbol):
     old_sym: TypeSymbol = field(default=None)
 
-    def __post_init__(self) -> None:
-        TypeSymbol.__post_init__(self)
-        self.symbol_type = SymbolType.AliasSymbol
-
     def __json__(self) -> Dict:
         # Dump the AliasSymbol as a JSON object.
         return {
             "what": "alias", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
-            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym}
+            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym,
+            "id": id(self)}
+
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+    def __str__(self) -> str:
+        # Dump the AliasSymbol as a JSON string.
+        return json.dumps(self)
+
+    def __eq__(self, other: AliasSymbol) -> bool:
+        # Check if two AliasSymbols are equal.
+        return self is other
 
     def __deepcopy__(self, memodict=None):
         # Copy all the attributes of the AliasSymbol, but link the old scope.
         return AliasSymbol(
-            name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), scope=self.scope, is_generic=self.is_generic,
+            name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
             is_copyable=self.is_copyable, visibility=self.visibility, old_sym=fast_deepcopy(self.old_sym))
 
 

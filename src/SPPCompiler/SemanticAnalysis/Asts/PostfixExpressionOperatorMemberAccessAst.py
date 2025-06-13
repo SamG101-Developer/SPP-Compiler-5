@@ -7,8 +7,8 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, SymbolType
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol, VariableSymbol
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
@@ -52,7 +52,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
 
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # The NamespaceSymbol type check seems dumb but check hack in "elif" block beneath.
-        lhs_type = lhs.infer_type(sm)
+        lhs_type = lhs.infer_type(sm, **kwargs)
         lhs_symbol = sm.current_scope.get_symbol(lhs_type) if not isinstance(lhs_type, NamespaceSymbol) else lhs_type
 
         # Todo: wrap with Opt[T] for array access => Index operator to this is only for tuples anyways?
@@ -65,62 +65,72 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         field_symbol = lhs_symbol.scope.get_symbol(self.field, exclusive=True)
 
         # Accessing a member from the scope by the identifier.
-        if isinstance(self.field, Asts.IdentifierAst) and field_symbol.symbol_type is SymbolType.VariableSymbol:
+        if isinstance(self.field, Asts.IdentifierAst) and field_symbol.__class__ is VariableSymbol:
             attribute_type = field_symbol.type
             attribute_type = lhs_symbol.scope.get_symbol(attribute_type).fq_name
             return attribute_type
 
-        elif isinstance(self.field, Asts.IdentifierAst) and field_symbol.symbol_type is SymbolType.NamespaceSymbol:
+        elif isinstance(self.field, Asts.IdentifierAst) and field_symbol.__class__ is NamespaceSymbol:
             attribute_type = field_symbol
             return attribute_type
 
         raise NotImplementedError(f"Unknown member access type: {self.field} {type(self.field)}")
 
     def analyse_semantics(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
-
         # Accessing static methods off of a type, such as "Str::new()".
         if isinstance(lhs, Asts.TypeAst):
             lhs_symbol = sm.current_scope.get_symbol(lhs)
 
-            # Check static member access "::" is being used.
+            # Check static member access "::" is being used for a type access.
             if self.is_runtime_access():
                 raise SemanticErrors.MemberAccessStaticOperatorExpectedError().add(
                     lhs, self.tok_access).scopes(sm.current_scope)
-        
+
             # Check the target field exists on the type.
             if not lhs_symbol.scope.has_symbol(self.field, exclusive=True):
                 alternatives = [s.name.value for s in sm.current_scope.get_symbol(lhs).scope.all_symbols()]
                 closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "static member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
-        
+
+            # Check there is only 1 target field on the type at the highest level.
+            sss = []
+            for scope in [lhs_symbol.scope] + lhs_symbol.scope.sup_scopes:
+                sss.append((scope, scope._symbol_table.get(self.field)))
+            depths = [(lhs_symbol.scope.depth_difference(s[0]), s) for s in sss if s[1] is not None]
+            closest = [s[1] for s in depths if s[0] == min(depths, key=lambda x: x[0])[0]]
+            if len(closest) > 1:
+                raise SemanticErrors.AmbiguousMemberAccessError().add(
+                    self.field, closest[0][1].name, closest[1][1].name).scopes(
+                    sm.current_scope, closest[0][0], closest[1][0])
+
         # Numerical access to a tuple, such as "tuple.0".
         elif isinstance(self.field, Asts.TokenAst):
-            lhs_type = lhs.infer_type(sm)
+            lhs_type = lhs.infer_type(sm, **kwargs)
             lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
             # Check the lhs isn't a generic type.
             if lhs_symbol.is_generic:
                 raise SemanticErrors.GenericTypeInvalidUsageError().add(
                     lhs, lhs_type, "member access").scopes(sm.current_scope)
-        
+
             # Check the lhs is a tuple/array (the only indexable types).
             if not AstTypeUtils.is_type_indexable(lhs_type, sm.current_scope):
                 raise SemanticErrors.MemberAccessNonIndexableError().add(
                     lhs, lhs_type, self.tok_access).scopes(sm.current_scope)
-        
+
             # Check the index is within the bounds of the tuple/array.
             if not AstTypeUtils.is_index_within_type_bound(int(self.field.token_data), lhs_type, sm.current_scope):
                 raise SemanticErrors.MemberAccessIndexOutOfBoundsError().add(
                     lhs, lhs_type, self.field).scopes(sm.current_scope)
-        
+
         # Accessing a regular attribute/method, such as "class.attribute".
         elif isinstance(self.field, Asts.IdentifierAst) and self.is_runtime_access():
             lhs_type = lhs.infer_type(sm)
             lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
             # Check the lhs is a variable and not a namespace.
-            if lhs_symbol.symbol_type is SymbolType.NamespaceSymbol:
+            if lhs_symbol.__class__ is NamespaceSymbol:
                 raise SemanticErrors.MemberAccessStaticOperatorExpectedError().add(
                     lhs, self.tok_access).scopes(sm.current_scope)
 
@@ -128,24 +138,37 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
             if lhs_symbol.is_generic:
                 raise SemanticErrors.GenericTypeInvalidUsageError().add(
                     lhs, lhs_type, "member access").scopes(sm.current_scope)
-        
-            # Check the attribute exists on the lhs. todo
-            if not lhs_symbol.scope.has_symbol(self.field):
-                alternatives = []  # lhs_symbol.scope.all_symbols().map_attr("name")
+
+            # Check the attribute exists on the lhs.
+            if not lhs_symbol.scope.has_symbol(self.field, sym_type=VariableSymbol):
+                alternatives = []  # todo: lhs_symbol.scope.all_symbols().map_attr("name")
                 closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "runtime member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
-        
+
+            # Check there is only 1 target field on the type at the highest level.
+            if lhs_symbol.scope.get_symbol(self.field, sym_type=VariableSymbol).type.type_parts[-1].value.startswith("$"):
+                return
+            sss = []
+            for scope in [lhs_symbol.scope] + lhs_symbol.scope.sup_scopes:
+                sss.append((scope, scope._symbol_table.get(self.field)))
+            depths = [(lhs_symbol.scope.depth_difference(s[0]), s) for s in sss if s[1] is not None]
+            closest = [s[1] for s in depths if s[0] == min(depths, key=lambda x: x[0])[0]]
+            if len(closest) > 1:
+                raise SemanticErrors.AmbiguousMemberAccessError().add(
+                    self.field, closest[0][1].name, closest[1][1].name).scopes(
+                    sm.current_scope, closest[0][0], closest[1][0])
+
         # Accessing a namespaced constant, such as "std::pi".
         elif isinstance(self.field, Asts.IdentifierAst) and self.is_static_access():
             lhs_symbol = sm.current_scope.get_symbol(lhs)
             lhs_ns_symbol = sm.current_scope.get_namespace_symbol(lhs)
 
             # Check the lhs is a namespace and not a variable.
-            if lhs_symbol is not None and lhs_symbol.symbol_type is SymbolType.VariableSymbol:
+            if lhs_symbol is not None and lhs_symbol.__class__ is VariableSymbol:
                 raise SemanticErrors.MemberAccessRuntimeOperatorExpectedError().add(
                     lhs, self.tok_access).scopes(sm.current_scope)
-        
+
             # Check the variable exists on the lhs.
             if not lhs_ns_symbol.scope.has_symbol(self.field, exclusive=True):
                 alternatives = [s.name.value for s in lhs_ns_symbol.scope.all_symbols()]

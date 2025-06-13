@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
@@ -60,7 +61,7 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.generate_top_level_scopes(sm)
 
         # Ensure the old type does not have a convention.
-        if c := self.type.get_convention():
+        if c := self.type.convention:
             raise SemanticErrors.InvalidConventionLocationError().add(
                 c, self.type, "global constant type").scopes(sm.current_scope)
 
@@ -87,7 +88,7 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         expected_type = self.type
         given_type = self.value.infer_type(sm, **kwargs)
 
-        if not expected_type.symbolic_eq(given_type, sm.current_scope, sm.current_scope):
+        if not AstTypeUtils.symbolic_eq(expected_type, given_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
                 self.type, expected_type, self.value, given_type).scopes(sm.current_scope)
 

@@ -43,7 +43,6 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return self.iterable.infer_type(sm, **kwargs)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # Todo: iteration should be optional values? how this work with conventions? maybe like "&T | None"?
 
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
         if isinstance(self.iterable, (Asts.TokenAst, Asts.TypeAst)):
@@ -65,9 +64,9 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         syms = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]
         for sym in syms:
             sym.memory_info.initialized_by(self)
-            sym.memory_info.ast_borrowed = self if yield_type.get_convention() else None
-            sym.memory_info.is_borrow_mut = type(yield_type.get_convention()) is Asts.ConventionMutAst is not None
-            sym.memory_info.is_borrow_ref = type(yield_type.get_convention()) is Asts.ConventionRefAst is not None
+            sym.memory_info.ast_borrowed = self if yield_type.convention else None
+            sym.memory_info.is_borrow_mut = type(yield_type.convention) is Asts.ConventionMutAst is not None
+            sym.memory_info.is_borrow_ref = type(yield_type.convention) is Asts.ConventionRefAst is not None
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self.iterable.check_memory(sm, **kwargs)

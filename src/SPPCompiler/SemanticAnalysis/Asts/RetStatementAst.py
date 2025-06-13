@@ -6,6 +6,7 @@ from typing import Optional
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
+from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
@@ -65,7 +66,7 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Do a type check on the return expression vs the expected returning type.
         expected_type = kwargs["function_ret_type"][0]
         if kwargs["function_type"].token_type == SppTokenType.KwFun:
-            if not expected_type.symbolic_eq(expression_type, kwargs["function_scope"], sm.current_scope):
+            if not AstTypeUtils.symbolic_eq(expected_type, expression_type, kwargs["function_scope"], sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     expression_type, expected_type, self.expr, expected_type).scopes(kwargs["function_scope"], sm.current_scope)
 

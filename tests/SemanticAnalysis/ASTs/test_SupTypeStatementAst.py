@@ -1,13 +1,13 @@
 from tests._Utils import *
 
 
-class TestSupUseStatementAst(CustomTestCase):
+class TestSupTypeStatementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_sup_use_statement_type_mismatch(self):
+    def test_invalid_sup_type_statement_type_mismatch(self):
         """
         cls MyType { }
         sup MyType {
-            use X = std::string::Str
+            type X = std::string::Str
         }
 
         fun f() -> std::void::Void {
@@ -17,21 +17,21 @@ class TestSupUseStatementAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_sup_use_statement_nested(self):
+    def test_invalid_sup_type_statement_nested(self):
         """
         cls MyType1 { }
         sup MyType1 {
-            use Z = std::string::Str
+            type Z = std::string::Str
         }
 
         cls MyType2 { }
         sup MyType2 {
-            use Y = MyType1
+            type Y = MyType1
         }
 
         cls MyType3 { }
         sup MyType3 {
-            use X = MyType2
+            type X = MyType2
         }
 
         fun f() -> std::void::Void {
@@ -41,11 +41,11 @@ class TestSupUseStatementAst(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
-    def test_invalid_sup_use_statement_with_generic(self):
+    def test_invalid_sup_type_statement_with_generic(self):
         """
         cls MyType[T] { }
         sup [T] MyType[T] {
-            use X = T
+            type X = T
         }
 
         fun f() -> std::void::Void {
@@ -55,11 +55,11 @@ class TestSupUseStatementAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_sup_use_statement(self):
+    def test_valid_sup_type_statement(self):
         """
         cls MyType { }
         sup MyType {
-            use X = std::string::Str
+            type X = std::string::Str
         }
 
         fun f() -> std::void::Void {
@@ -69,21 +69,21 @@ class TestSupUseStatementAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_sup_use_statement_nested(self):
+    def test_valid_sup_type_statement_nested(self):
         """
         cls MyType1 { }
         sup MyType1 {
-            use Z = std::string::Str
+            type Z = std::string::Str
         }
 
         cls MyType2 { }
         sup MyType2 {
-            use Y = MyType1
+            type Y = MyType1
         }
 
         cls MyType3 { }
         sup MyType3 {
-            use X = MyType2
+            type X = MyType2
         }
 
         fun f() -> std::void::Void {
@@ -93,11 +93,11 @@ class TestSupUseStatementAst(CustomTestCase):
         """
 
     @should_pass_compilation()
-    def test_valid_sup_use_statement_with_generic(self):
+    def test_valid_sup_type_statement_with_generic(self):
         """
         cls MyType[T] { }
         sup [T] MyType[T] {
-            use X = T
+            type X = T
         }
 
         fun f() -> std::void::Void {

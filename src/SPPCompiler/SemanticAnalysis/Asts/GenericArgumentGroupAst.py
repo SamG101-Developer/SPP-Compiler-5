@@ -32,6 +32,9 @@ class GenericArgumentGroupAst(Asts.Ast):
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         return self.arguments == other.arguments
 
+    def __hash__(self) -> int:
+        return id(self)
+
     def __getitem__(self, item: str) -> Optional[Asts.GenericArgumentAst]:
         # assert isinstance(item, str), type(item)
         args = [a for a in self.arguments if Asts.IdentifierAst.from_type(a.name).value == item]
@@ -47,13 +50,15 @@ class GenericArgumentGroupAst(Asts.Ast):
         return ""
 
     @staticmethod
-    def from_parameter_group(parameters: Seq[Asts.GenericParameterAst]) -> GenericArgumentGroupAst:
+    def from_parameter_group(param_group: Asts.GenericParameterGroupAst) -> GenericArgumentGroupAst:
 
         GenericArgumentCTor = {
             **{g: Asts.GenericCompArgumentNamedAst for g in Asts.GenericCompParameterAst.__args__},
             **{g: Asts.GenericTypeArgumentNamedAst for g in Asts.GenericTypeParameterAst.__args__}}
 
-        arguments = [GenericArgumentCTor[type(p)](name=p.name, value=p.name) for p in parameters]
+        val = lambda p: p.name if isinstance(p, Asts.GenericTypeParameterAst) else Asts.IdentifierAst.from_type(p.name)
+
+        arguments = [GenericArgumentCTor[type(p)](name=p.name, value=val(p)) for p in param_group.parameters]
         return GenericArgumentGroupAst(arguments=arguments)
 
     @staticmethod

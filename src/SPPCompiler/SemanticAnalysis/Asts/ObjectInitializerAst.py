@@ -20,6 +20,10 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __post_init__(self) -> None:
         self.object_argument_group = self.object_argument_group or Asts.ObjectInitializerArgumentGroupAst(pos=self.pos)
 
+    def __eq__(self, other: ObjectInitializerAst) -> bool:
+        # Check there are the same attribute keys on both objects, then compare the expressions on them (might be in a different order). Todo
+        return False
+
     def __hash__(self) -> int:
         return id(self)
 
@@ -41,7 +45,7 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Get the base symbol.
-        base_symbol = sm.current_scope.get_symbol(self.class_type.without_generics())
+        base_symbol = sm.current_scope.get_symbol(self.class_type.without_generics)
         if not base_symbol:
             raise SemanticErrors.IdentifierUnknownError().add(
                 self.class_type, "type", None).scopes(sm.current_scope)
@@ -51,7 +55,7 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.GenericTypeInvalidUsageError().add(
                 self.class_type, self.class_type, "object initializer").scopes(sm.current_scope)
 
-        self.object_argument_group.pre_analyse_semantics(sm, class_type=self.class_type.without_generics(), **kwargs)
+        self.object_argument_group.pre_analyse_semantics(sm, class_type=self.class_type.without_generics, **kwargs)
 
         # Determine the generic inference source and target.
         generic_infer_source = {
