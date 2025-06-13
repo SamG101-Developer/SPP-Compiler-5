@@ -125,7 +125,6 @@ def handle_vcs() -> None:
         if ffi_repo_folder.exists():
             for lib in ffi_repo_folder.iterdir():
                 print(f"Linking ffi library '{lib.name}' from '{repo_name}'")
-                # (ffi_folder / lib.name).symlink_to(lib.name)
                 shutil.copytree(lib, ffi_folder / lib.name, dirs_exist_ok=True)
 
     # Reset the working directory.

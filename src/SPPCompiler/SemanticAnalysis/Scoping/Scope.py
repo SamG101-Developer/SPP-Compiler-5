@@ -248,7 +248,9 @@ class Scope:
             scope = symbol.scope
         return symbol
 
-    def get_variable_symbol_outermost_part(self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst) -> Optional[VariableSymbol]:
+    def get_variable_symbol_outermost_part(
+            self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst) -> Optional[VariableSymbol]:
+
         # Define a helper lambda that validates a postfix expression.
         is_valid_postfix = lambda p: \
             isinstance(p, Asts.PostfixExpressionAst) and \
