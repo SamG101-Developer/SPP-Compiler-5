@@ -483,7 +483,7 @@ class AstFunctionUtils:
         # print("owner", owner, sm.current_scope)
 
         # Special case for tuples to prevent infinite-recursion.
-        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and AstTypeUtils.symbolic_eq(owner, CommonTypesPrecompiled.EMPTY_TUPLE, sm.current_scope, sm.current_scope):
+        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and AstTypeUtils.is_type_tuple(owner, sm.current_scope):
             return explicit_generic_arguments
 
         # If there are no generic parameters then skip any inference checks.

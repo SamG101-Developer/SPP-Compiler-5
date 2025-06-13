@@ -166,9 +166,6 @@ class AstMemoryUtils:
         :raise SemanticErrors.MemoryInconsistentlyPinnedError: If a symbol gets inconsistently pinned in branches.
         """
 
-        print("-" * 100)
-        print(value_ast)
-
         # Todo: coroutine returns can be borrows - check moving logic here, as the outermost part may not be symbolic.
         #  Partial moves from borrowed contexts won't be checked, as the outermost part is not symbolic, but they need
         #  to be checked.
@@ -254,7 +251,6 @@ class AstMemoryUtils:
         # object, because the current context doesn't have ownership of the object. This guarantees that when control is
         # returned to the original context, the object is still in the same (fully-initialized) memory state as before
         # the borrow took place. todo: add "partial_copies" to tests
-        print(value_ast, check_move_from_borrowed_ctx, sym.memory_info.ast_borrowed, type(value_ast), partial_copies)
         if check_move_from_borrowed_ctx and sym.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
             raise SemanticErrors.MemoryMovedFromBorrowedContextError().add(
                 value_ast, sym.memory_info.ast_borrowed).scopes(sm.current_scope)
