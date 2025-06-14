@@ -616,7 +616,15 @@ class AstFunctionUtils:
                     a_type = comp_arg.value.infer_type(sm, **kwargs)
                     p_type = comp_param.type.substituted_generics(final_args)
 
-                    if not AstTypeUtils.symbolic_eq(p_type, a_type, sm.current_scope.get_symbol(owner).scope, sm.current_scope):
+                    # For a variadic comp argument, check every element of the args tuple.
+                    if isinstance(comp_param, Asts.GenericCompParameterVariadicAst):
+                        for a_type_inner in a_type.type_parts[0].generic_argument_group.arguments:
+                            if not AstTypeUtils.symbolic_eq(p_type, a_type_inner.value, sm.current_scope.get_symbol(owner).scope, sm.current_scope):
+                                raise SemanticErrors.TypeMismatchError().add(
+                                    comp_param, p_type, comp_arg, a_type_inner.value).scopes(sm.current_scope)
+
+                    # Otherwise, just check the argument type against the parameter type.
+                    elif not AstTypeUtils.symbolic_eq(p_type, a_type, sm.current_scope.get_symbol(owner).scope, sm.current_scope):
                         raise SemanticErrors.TypeMismatchError().add(
                             comp_param, p_type, comp_arg, a_type).scopes(sm.current_scope)
 
