@@ -15,9 +15,6 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 # from llvmlite import ir as llvm
 
 
-# TODO: test destructuring a borrow
-
-
 @dataclass(slots=True)
 class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_let: Asts.TokenAst = field(default=None)

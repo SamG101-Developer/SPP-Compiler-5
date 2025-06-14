@@ -3,13 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-
-
-# TODO
-#  - Prevent abstract types being initialized (types with an abstract method)?
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
 @dataclass(slots=True)

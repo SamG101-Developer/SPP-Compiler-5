@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
+import sys, math
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
@@ -19,7 +20,6 @@ def _signed_integer_limits(n: int) -> Tuple[int, int]:
     return -pow(2, n - 1), pow(2, n - 1) - 1
 
 
-# todo: add usize to tests
 SIZE_MAPPING = {
     "i8": _signed_integer_limits(8),
     "u8": _unsigned_integer_limits(8),
