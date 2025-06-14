@@ -170,3 +170,22 @@ class TestVariantTypes(CustomTestCase):
             ret a
         }
         """
+
+    @should_pass_compilation()
+    def test_variant_and_tuple_combination(self):
+        """
+        use std::option::Opt
+        use std::option::Some
+        use std::number::u64::U64
+        use std::string::Str
+        use std::void::Void
+
+        fun g(a: (Opt[Str], U64)) -> Str {
+            ret "hello world"
+        }
+
+        fun f() -> Void {
+            let t = (Some(val="hello world"), 123_u64)
+            let a = g(t)
+        }
+        """
