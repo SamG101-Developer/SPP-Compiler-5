@@ -140,8 +140,8 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     lhs, lhs_type, "member access").scopes(sm.current_scope)
 
             # Check the attribute exists on the lhs.
-            if not lhs_symbol.scope.has_symbol(self.field, sym_type=VariableSymbol):
-                alternatives = []  # todo: lhs_symbol.scope.all_symbols().map_attr("name")
+            if not lhs_symbol.scope.has_symbol(self.field, exclusive=True, sym_type=VariableSymbol):
+                alternatives = [s.name.value for s in lhs_symbol.scope.all_symbols(exclusive=True, sup_scope_search=True) if s.__class__ is VariableSymbol]
                 closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "runtime member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
@@ -171,7 +171,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
 
             # Check the variable exists on the lhs.
             if not lhs_ns_symbol.scope.has_symbol(self.field, exclusive=True):
-                alternatives = [s.name.value for s in lhs_ns_symbol.scope.all_symbols(sup_scope_search=True)]
+                alternatives = [s.name.value for s in lhs_ns_symbol.scope.all_symbols(sup_scope_search=True) if s.__class__ is VariableSymbol]
                 closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "namespace member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
