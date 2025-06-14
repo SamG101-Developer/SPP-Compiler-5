@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
 from typing import Optional, Tuple
-import sys, math
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
@@ -33,7 +33,7 @@ SIZE_MAPPING = {
     "u128": _unsigned_integer_limits(128),
     "i256": _signed_integer_limits(256),
     "u256": _unsigned_integer_limits(256),
-    "uz": _unsigned_integer_limits(64)}
+    "uz": _unsigned_integer_limits(sys.maxsize.bit_length() + 1)}
 
 
 @dataclass(slots=True)
