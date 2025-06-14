@@ -421,6 +421,28 @@ class SemanticErrors:
 
             return self
 
+    class GenericArgumentIncorrectVariationError(SemanticError):
+        """
+        The GenericParameterIncorrectVariationError is raised if a generic type argument is used to match a generic comp
+        parameter or vice versa.
+        """
+
+        def add(
+                self, generic_parameter: Asts.GenericParameterAst, generic_argument: Asts.GenericArgumentAst,
+                owner: Asts.Ast) -> SemanticError:
+
+            self.add_info(
+                ast=generic_parameter,
+                tag=f"Generic parameter defined here for '{owner}'")
+
+            self.add_error(
+                ast=generic_argument,
+                tag="Generic argument does not match generic parameter.",
+                msg="The generic argument is not compatible with the generic parameter.",
+                tip="Use a compatible generic argument.")
+
+            return self
+
     class FunctionCallAmbiguousSignaturesError(SemanticError):
         """
         The FunctionCallAmbiguousSignaturesError is raised if a function call has multiple valid signatures that match

@@ -366,6 +366,9 @@ class AstFunctionUtils:
         :raise SemanticErrors.GenericArgumentTooManyError: If too many generic arguments are passed.
         """
 
+        # Special case for tuples to prevent infinite-recursion.
+        if is_tuple_owner: return
+
         GEN_MAPPING = {
             Asts.GenericTypeParameterRequiredAst: Asts.GenericTypeArgumentNamedAst,
             Asts.GenericTypeParameterOptionalAst: Asts.GenericTypeArgumentNamedAst,
@@ -374,9 +377,6 @@ class AstFunctionUtils:
             Asts.GenericCompParameterOptionalAst: Asts.GenericCompArgumentNamedAst,
             Asts.GenericCompParameterVariadicAst: Asts.GenericCompArgumentNamedAst,
         }
-
-        # Special case for tuples to prevent infinite-recursion.
-        if is_tuple_owner: return
 
         # Get the argument names and parameter names, and check for the existence of a variadic parameter.
         argument_names = [a.name.name for a in arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
@@ -399,20 +399,41 @@ class AstFunctionUtils:
 
             # Name the argument based on the parameter names available.
             parameter_name = parameter_names.pop(0)
+            parameter = [p for p in parameters if p.name.name == parameter_name][0]
             ctor: type = GEN_MAPPING[type([p for p in parameters if p.name.name == parameter_name][0])]
             named_argument = ctor(pos=unnamed_argument.pos, name=Asts.TypeSingleAst.from_generic_identifier(parameter_name))
 
             # The variadic parameter requires a tuple of the remaining arguments.
             if len(parameter_names) == 0 and is_variadic:
-                named_argument.value = CommonTypes.Tup(pos=unnamed_argument.pos, inner_types=[a.value for a in arguments[i:]])
+                if isinstance(parameter, Asts.GenericTypeParameterVariadicAst):
+                    named_argument.value = CommonTypes.Tup(pos=unnamed_argument.pos, inner_types=[a.value for a in arguments[i:]])
+                elif isinstance(parameter, Asts.GenericCompParameterVariadicAst):
+                    named_argument.value = Asts.TupleLiteralAst(pos=unnamed_argument.pos, elems=[a.value for a in arguments[i:]])
+
+                if isinstance(parameter, Asts.GenericTypeParameterVariadicAst) and not all(isinstance(a, Asts.GenericTypeArgumentAst) for a in arguments[i:]):
+                    raise SemanticErrors.GenericArgumentIncorrectVariationError().add(
+                        parameter, [a for a in arguments[i:] if not isinstance(a, Asts.GenericTypeArgumentAst)][0], owner).scopes(sm.current_scope)
+                elif isinstance(parameter, Asts.GenericCompParameterVariadicAst) and not all(isinstance(a, Asts.GenericCompArgumentAst) for a in arguments[i:]):
+                    raise SemanticErrors.GenericArgumentIncorrectVariationError().add(
+                        parameter, [a for a in arguments[i:] if not isinstance(a, Asts.GenericCompArgumentAst)][0], owner).scopes(sm.current_scope)
+
                 arguments[i] = named_argument
                 arguments[:] = arguments[:i + 1]
+
                 break
 
             # Set the value of the named argument to the unnamed argument's value.
             else:
                 named_argument.value = unnamed_argument.value
                 arguments[i] = named_argument
+
+                if isinstance(parameter, Asts.GenericTypeParameterAst) and not isinstance(unnamed_argument, Asts.GenericTypeArgumentAst):
+                    raise SemanticErrors.GenericArgumentIncorrectVariationError().add(
+                        parameter, unnamed_argument, owner).scopes(sm.current_scope)
+
+                elif isinstance(parameter, Asts.GenericCompParameterAst) and not isinstance(unnamed_argument, Asts.GenericCompArgumentAst):
+                    raise SemanticErrors.GenericArgumentIncorrectVariationError().add(
+                        parameter, unnamed_argument, owner).scopes(sm.current_scope)
 
     @staticmethod
     def infer_generic_arguments(
@@ -424,6 +445,7 @@ class AstFunctionUtils:
             sm: ScopeManager,
             owner: Asts.TypeAst | Asts.ExpressionAst = None,
             variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None,
+            is_tuple_owner: bool = False,
             **kwargs)\
             -> Seq[Asts.GenericArgumentAst]:
 
@@ -457,6 +479,7 @@ class AstFunctionUtils:
         :param sm: The scope manager to access the current scope.
         :param owner: An optional "owner" type (exclusive to types rather than function calls).
         :param variadic_parameter_identifier: An optional parameter name that is known to be variadic.
+        :param is_tuple_owner: If the owner is a tuple type, which prevents creating Tup[Tup[...]] infinitely.
         :return: A list of generic arguments with inferred values.
 
         :raise SemanticErrors.GenericParameterInferredConflictInferredError: If the inferred generic arguments conflict.
@@ -464,6 +487,12 @@ class AstFunctionUtils:
             with explicit generic arguments.
         :raise SemanticErrors.GenericParameterNotInferredError: If a generic parameter has not been inferred.
         """
+
+        # Special case for tuples to prevent infinite-recursion.
+        if is_tuple_owner: return explicit_generic_arguments
+
+        # If there are no generic parameters then skip any inference checks.
+        if not generic_parameters: return explicit_generic_arguments
 
         GEN_MAPPING = {
             Asts.GenericTypeParameterRequiredAst: Asts.GenericTypeArgumentNamedAst,
@@ -482,19 +511,12 @@ class AstFunctionUtils:
         # print("infer_target", Seq([f"{k}={v}" for k, v in infer_target.items()]))
         # print("owner", owner, sm.current_scope)
 
-        # Special case for tuples to prevent infinite-recursion.
-        if isinstance(owner, Asts.TypeAst) and sm.current_scope.get_symbol(owner) and AstTypeUtils.is_type_tuple(owner, sm.current_scope):
-            return explicit_generic_arguments
-
-        # If there are no generic parameters then skip any inference checks.
-        if not generic_parameters:
-            return explicit_generic_arguments
         generic_parameter_names = [p.name for p in generic_parameters]
 
         # The inferred generics map is: {TypeAst: [TypeAst]}. This represents all the types that have been inferred per
         # generic parameter. For example, two "T" parameters with "Str" arguments would be: {"T": [Str, Str]}. This is
         # used to check for conflicts and to ensure each generic parameter has been inferred.
-        inferred_generic_arguments = defaultdict(Seq)
+        inferred_generic_arguments = defaultdict(list)
 
         # Add the explicit generic arguments to the inferred generic arguments. These are inserted here, because the
         # inferred generic arguments map requires all instances of arguments to be present.
@@ -587,7 +609,7 @@ class AstFunctionUtils:
         final_args.sort(key=lambda arg: generic_parameter_names.index(arg.name))
 
         # For the "comp" args, type-check them. Don't do this before the semantic analysis stage (types haven't been
-        # setup correctly yet)
+        # setup correctly yet, and will be analysed anyway later).
         if kwargs["stage"] > 5:
             for comp_arg, comp_param in zip(final_args, generic_parameters):
                 if isinstance(comp_arg, Asts.GenericCompArgumentNamedAst):
