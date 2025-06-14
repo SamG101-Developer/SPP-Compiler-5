@@ -25,3 +25,7 @@
 **Files**
 
 - `spp_cli.py`: S++ tool for building and running code.
+
+## Notes
+
+- Entire test suite hasn't ran on this branch yet.
