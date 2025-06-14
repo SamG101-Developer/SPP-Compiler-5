@@ -179,7 +179,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         if type_symbol.is_generic: return
 
         # Name all the generic arguments.
-        is_tuple = type_symbol.fq_name.without_generics == CommonTypesPrecompiled.EMPTY_TUPLE  # Think this is ok...
+        is_tuple = type_symbol.fq_name.without_generics == CommonTypesPrecompiled.EMPTY_TUPLE
         AstFunctionUtils.name_generic_arguments(
             self.name.generic_argument_group.arguments,
             type_symbol.type.generic_parameter_group.parameters,
@@ -201,6 +201,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             infer_target=generic_infer_target or {},
             sm=sm,
             owner=AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.name.without_generics).fq_name,
+            is_tuple_owner=is_tuple,
             **kwargs)
 
         # For variant types, collapse any duplicate generic arguments.
