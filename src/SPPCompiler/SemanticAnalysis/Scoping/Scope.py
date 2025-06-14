@@ -192,14 +192,14 @@ class Scope:
 
     def has_symbol(
             self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False,
-            sym_type: Optional[type] = None) -> bool:
+            sym_type: Optional[type] = None, debug: bool = False) -> bool:
 
         # Get the symbol and check if it is None or not (None => not found).
-        return self.get_symbol(name, exclusive, ignore_alias=True, sym_type=sym_type) is not None
+        return self.get_symbol(name, exclusive, ignore_alias=True, sym_type=sym_type, debug=debug) is not None
 
     def get_symbol(
             self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False,
-            ignore_alias: bool = False, sym_type: Optional[type] = None) -> Optional[Symbol]:
+            ignore_alias: bool = False, sym_type: Optional[type] = None, debug: bool = False) -> Optional[Symbol]:
 
         # Adjust the namespace and symbol name for namespaced typ symbols.
         scope = self
@@ -211,14 +211,16 @@ class Scope:
         symbol = scope._symbol_table.get(name)
         if sym_type is not None and not isinstance(symbol, sym_type):
             symbol = None
+        if debug and symbol is not None:
+            print(f"Found symbol: {symbol.name} in {scope.name} ({symbol.__class__.__name__})")
 
         # If this is not an exclusive search, search the parent scope.
         if symbol is None and scope._parent and not exclusive:
-            symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias, sym_type=sym_type)
+            symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias, sym_type=sym_type, debug=debug)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
         if symbol is None:
-            symbol = search_super_scopes(scope, name, ignore_alias=ignore_alias, sym_type=sym_type)
+            symbol = search_super_scopes(scope, name, ignore_alias=ignore_alias, sym_type=sym_type, debug=debug)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         if symbol.__class__ is AliasSymbol and symbol.old_sym and not ignore_alias:
@@ -377,12 +379,12 @@ def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[S
 
 def search_super_scopes(
         scope: Scope, name: Asts.IdentifierAst | Asts.GenericIdentifierAst,
-        ignore_alias: bool, sym_type: Optional[type] = None) -> Optional[Symbol]:
+        ignore_alias: bool, sym_type: Optional[type] = None, debug: bool = False) -> Optional[Symbol]:
 
     # Recursively search the super scopes for a variable symbol.
     symbol = None
     for super_scope in scope._direct_sup_scopes:
-        symbol = super_scope.get_symbol(name, exclusive=True, ignore_alias=ignore_alias, sym_type=sym_type)
+        symbol = super_scope.get_symbol(name, exclusive=True, ignore_alias=ignore_alias, sym_type=sym_type, debug=debug)
         if symbol: break
     return symbol
 
