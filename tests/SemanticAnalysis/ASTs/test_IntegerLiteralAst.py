@@ -1,4 +1,8 @@
 from tests._Utils import *
+import sys
+
+
+BIT_LEN = sys.maxsize.bit_length() + 1
 
 
 class TestIntegerLiteralAst(CustomTestCase):
@@ -113,6 +117,32 @@ class TestIntegerLiteralAst(CustomTestCase):
             let x = 18446744073709551616_u64
         }
         """
+
+    @should_fail_compilation(SemanticErrors.NumberOutOfBoundsError)
+    def test_invalid_usize_lower_bound(self):
+        """
+        fun f() -> std::void::Void {
+            let x = -1_uz
+        }
+        """
+
+    if BIT_LEN == 64:
+        @should_fail_compilation(SemanticErrors.NumberOutOfBoundsError)
+        def test_invalid_usize_upper_bound(self):
+            """
+            fun f() -> std::void::Void {{
+                let x = 18446744073709551616_uz
+            }}
+            """
+
+    elif BIT_LEN == 32:
+        @should_fail_compilation(SemanticErrors.NumberOutOfBoundsError)
+        def test_invalid_usize_upper_bound(self):
+            """
+            fun f() -> std::void::Void {
+                let x = 4294967296_uz
+            }
+            """
         
     @should_fail_compilation(SemanticErrors.NumberOutOfBoundsError)
     def test_invalid_i64_lower_bound(self):
@@ -249,6 +279,24 @@ class TestIntegerLiteralAst(CustomTestCase):
             let x = 18446744073709551615_u64
         }
         """
+
+    if BIT_LEN == 64:
+        @should_pass_compilation()
+        def test_valid_usize(self):
+            """
+            fun f() -> std::void::Void {
+                let x = 18446744073709551615_uz
+            }
+            """
+
+    elif BIT_LEN == 32:
+        @should_pass_compilation()
+        def test_valid_usize(self):
+            """
+            fun f() -> std::void::Void {
+                let x = 4294967295_uz
+            }
+            """
         
     @should_pass_compilation()
     def test_valid_i64(self):
