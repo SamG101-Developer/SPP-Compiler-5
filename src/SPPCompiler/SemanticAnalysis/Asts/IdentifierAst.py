@@ -83,7 +83,7 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there is a symbol with the same name in the current scope.
         if not sm.current_scope.has_symbol(self):
-            alternatives = [s.name.value for s in sm.current_scope.all_symbols() if s.__class__ is VariableSymbol]
+            alternatives = [s.name.value for s in sm.current_scope.all_symbols(sup_scope_search=True) if s.__class__ is VariableSymbol]
             closest_match = difflib.get_close_matches(self.value, alternatives, n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(
                 self, "identifier", closest_match[0] if closest_match else None).scopes(sm.current_scope)

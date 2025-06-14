@@ -177,15 +177,18 @@ class Scope:
         # Remove a symbol from the scope.
         self._symbol_table.rem(symbol_name)
 
-    def all_symbols(self, exclusive: bool = False, match_type: type = None) -> Iterator[Symbol]:
-        # todo: when to also include the sup scopes?
-
+    def all_symbols(self, exclusive: bool = False, match_type: type = None, sup_scope_search: bool = False) -> Iterator[Symbol]:
         # Get all the symbols in the scope.
         for sym in self._symbol_table.all():
             yield sym
 
         if not exclusive and self._parent:
             yield from self._parent.all_symbols(exclusive=exclusive, match_type=match_type)
+
+        if sup_scope_search:
+            # Search the super scopes for symbols.
+            for sup_scope in self._direct_sup_scopes:
+                yield from sup_scope.all_symbols(exclusive=True, match_type=match_type)
 
     def has_symbol(
             self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False,
