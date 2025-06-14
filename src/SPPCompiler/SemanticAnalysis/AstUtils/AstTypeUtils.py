@@ -217,7 +217,10 @@ class AstTypeUtils:
         return new_scope, new_cls_scope
 
     @staticmethod
-    def create_generic_symbol(sm: ScopeManager, generic_argument: Asts.GenericArgumentAst, tm: Optional[ScopeManager] = None) -> TypeSymbol | VariableSymbol:
+    def create_generic_symbol(
+            sm: ScopeManager, generic_argument: Asts.GenericArgumentAst,
+            tm: Optional[ScopeManager] = None) -> TypeSymbol | VariableSymbol:
+
         true_value_symbol = sm.current_scope.get_symbol(generic_argument.value)
 
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
@@ -252,7 +255,10 @@ class AstTypeUtils:
 
     @staticmethod
     def is_type_recursive(type: Asts.ClassPrototypeAst, sm: ScopeManager) -> Optional[Asts.TypeAst]:
-        def get_attribute_types(class_prototype: Asts.ClassPrototypeAst, class_scope: Scope) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
+        def get_attribute_types(
+                class_prototype: Asts.ClassPrototypeAst,
+                class_scope: Scope) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
+
             for attribute in class_prototype.body.members:
                 raw_attribute_type = attribute.type
                 symbol = class_scope.get_symbol(raw_attribute_type)
@@ -397,9 +403,13 @@ class AstTypeUtils:
         lhs_generics = lhs_type_fq.type_parts[-1].generic_argument_group.arguments
         rhs_generics = rhs_type_fq.type_parts[-1].generic_argument_group.arguments
 
+        # Special case for variadic parameter types.
+        shared_generic_parameters = lhs_scope.get_symbol(lhs_type).type.generic_parameter_group.parameters if lhs_scope.get_symbol(lhs_type).type else []
+        if shared_generic_parameters and isinstance(shared_generic_parameters[-1], Asts.GenericParameterVariadicAst):
+            if len(lhs_generics) != len(rhs_generics):
+                return False
+
         # Ensure each generic argument is symbolically equal to the other.
-        if len(rhs_generics) > len(lhs_generics):
-            return False
         for lhs_generic, rhs_generic in zip(lhs_generics, rhs_generics):
             if not AstTypeUtils.symbolic_eq(lhs_generic.value, rhs_generic.value, lhs_scope, rhs_scope, debug=debug):
                 return False
@@ -408,7 +418,10 @@ class AstTypeUtils:
         return True
 
     @staticmethod
-    def relaxed_symbolic_eq(lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope, generics: Optional[dict] = None) -> bool:
+    def relaxed_symbolic_eq(
+            lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope,
+            generics: Optional[dict] = None) -> bool:
+
         """
         The relaxed version of the symbolic equality check is the same as normal symbolic matching, but it allows a
         generic to be matched against any type. For example, `Vec[Str]` will match `[T] Vec[T]`. This is required in
@@ -466,6 +479,12 @@ class AstTypeUtils:
         lhs_generics = lhs_type_fq.type_parts[-1].generic_argument_group.arguments
         rhs_generics = rhs_type_fq.type_parts[-1].generic_argument_group.arguments
 
+        # Special case for variadic parameter types.
+        shared_generic_parameters = lhs_scope.get_symbol(lhs_type).type.generic_parameter_group.parameters
+        if shared_generic_parameters and isinstance(shared_generic_parameters[-1], Asts.GenericParameterVariadicAst):
+            if len(lhs_generics) != len(rhs_generics):
+                return False
+
         # Ensure each generic argument is symbolically equal to the other.
         for lhs_generic, rhs_generic in zip(lhs_generics, rhs_generics):
             if not AstTypeUtils.relaxed_symbolic_eq(lhs_generic.value, rhs_generic.value, lhs_scope, rhs_scope, generics):
@@ -473,3 +492,9 @@ class AstTypeUtils:
 
         # If all the generic arguments are equal, return true.
         return True
+
+
+__all__ = [
+    "AstTypeUtils",
+    "UnmatchableType",
+]

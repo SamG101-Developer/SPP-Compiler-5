@@ -132,7 +132,7 @@ class ScopeManager:
         # Iterate through all the super scopes and check if the name matches.
         for super_scope in super_scopes:
             scope_generics_dict = {}
-            if not AstTypeUtils.relaxed_symbolic_eq(scope.name, super_scope._ast.name, scope, super_scope, scope_generics_dict):
+            if not AstTypeUtils.relaxed_symbolic_eq(scope.type_symbol.fq_name, super_scope._ast.name, scope.type_symbol.scope_defined_in, super_scope, scope_generics_dict):
                 continue
             scope_generics = Asts.GenericArgumentGroupAst.from_dict(scope_generics_dict)
 
