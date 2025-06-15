@@ -92,7 +92,6 @@ class TypeSymbol(BaseSymbol):
         # Link the type symbol to the associated scope.
         if self.scope and not self.is_generic and not self.name.value == "Self":
             self.scope._type_symbol = self
-
         self.generic_impl = self
 
     def __json__(self) -> Dict:
@@ -168,10 +167,11 @@ class AliasSymbol(TypeSymbol):
         return self is other
 
     def __deepcopy__(self, memodict=None):
-        # Copy all the attributes of the AliasSymbol, but link the old scope.
+        # Copy all the attributes of the AliasSymbol, but link the old scope. No conventions on aliases.
         return AliasSymbol(
             name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, old_sym=fast_deepcopy(self.old_sym))
+            is_copyable=self.is_copyable, visibility=self.visibility, generic_impl=self.generic_impl,
+            scope_defined_in=self.scope_defined_in, old_sym=fast_deepcopy(self.old_sym))
 
 
 type Symbol = NamespaceSymbol | VariableSymbol | TypeSymbol | AliasSymbol

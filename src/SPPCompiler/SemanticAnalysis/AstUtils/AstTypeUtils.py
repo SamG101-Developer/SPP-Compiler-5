@@ -496,5 +496,4 @@ class AstTypeUtils:
 
 __all__ = [
     "AstTypeUtils",
-    "UnmatchableType",
 ]
