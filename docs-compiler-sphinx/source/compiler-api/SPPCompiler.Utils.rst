@@ -9,6 +9,7 @@ Submodules
 
    SPPCompiler.Utils.ErrorFormatter
    SPPCompiler.Utils.FastDeepcopy
+   SPPCompiler.Utils.FunctionCache
    SPPCompiler.Utils.Functools
    SPPCompiler.Utils.Progress
    SPPCompiler.Utils.Sequence

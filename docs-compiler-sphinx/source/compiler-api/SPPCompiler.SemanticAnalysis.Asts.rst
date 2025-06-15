@@ -134,7 +134,7 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.SupPrototypeAst
    SPPCompiler.SemanticAnalysis.Asts.SupPrototypeExtensionAst
    SPPCompiler.SemanticAnalysis.Asts.SupPrototypeFunctionsAst
-   SPPCompiler.SemanticAnalysis.Asts.SupUseStatementAst
+   SPPCompiler.SemanticAnalysis.Asts.SupTypeStatementAst
    SPPCompiler.SemanticAnalysis.Asts.TokenAst
    SPPCompiler.SemanticAnalysis.Asts.TupleLiteralAst
    SPPCompiler.SemanticAnalysis.Asts.TypeArrayAst
@@ -146,6 +146,7 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorNestedTypeAst
    SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorOptionalTypeAst
    SPPCompiler.SemanticAnalysis.Asts.TypeSingleAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeStatementAst
    SPPCompiler.SemanticAnalysis.Asts.TypeTupleAst
    SPPCompiler.SemanticAnalysis.Asts.TypeUnaryExpressionAst
    SPPCompiler.SemanticAnalysis.Asts.TypeUnaryOperatorAst
@@ -154,9 +155,7 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionAst
    SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAst
    SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAsyncAst
-   SPPCompiler.SemanticAnalysis.Asts.UseStatementAliasAst
    SPPCompiler.SemanticAnalysis.Asts.UseStatementAst
-   SPPCompiler.SemanticAnalysis.Asts.UseStatementReduxAst
    SPPCompiler.SemanticAnalysis.Asts.WhereBlockAst
    SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsAst
    SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsGroupAst

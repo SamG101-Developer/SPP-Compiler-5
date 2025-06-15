@@ -17,11 +17,20 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=coverage)](https://sonarcloud.io/summary/new_code?id=SamG101-Developer_SPP-Compiler-5)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=SamG101-Developer_SPP-Compiler-5&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=SamG101-Developer_SPP-Compiler-5)
 
-**Folders**
+**Structure**
 
 - `src`: S++ compiler implementation.
 - `tests`: S++ compiler unit tests.
-
-**Files**
-
 - `spp_cli.py`: S++ tool for building and running code.
+
+**S++ Features**
+
+- Memory safe: ownership tracking, second class borrows, law of exclusivity, no raw pointers, default move semantics.
+- Type system: strong & static typing, full one-way type inference, generic types, variant types, residual types, first
+  class tuples/arrays/functions, aliases, flow typing.
+- Object-oriented: classes, superimposition based extension, separation of state and behavior, full specialization.
+- Functional: first class functions, higher order functions, lambdas with explicit environment capture.
+- Pattern matching: comparison or destructure, object/tuple/array destructure, variant/generic destructure, destructure
+  with bindings and wildcards, multiple patterns, pattern guards.
+- Concurrency and parallelism: explicit coroutine definitions, generator return types, async at function call site for
+  future type returns, standard threading primitives.
