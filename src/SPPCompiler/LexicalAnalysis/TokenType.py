@@ -77,14 +77,14 @@ class RawTokenType(TokenType):
     TkAt = 23
     TkUnderscore = 24
     TkSpeechMark = 25
-    TkWhitespace = 26
-    TkNewLine = 27
-    TkDollar = 28
-    TkUnknown = 29
-    NoToken = 30
-    Keyword = 31
-    EndOfFile = 32
-    TkExclamationMark = 33
+    TkExclamationMark = 26
+    TkWhitespace = 27
+    TkNewLine = 28
+    TkDollar = 29
+    TkUnknown = 30
+    NoToken = 31
+    Keyword = 32
+    EndOfFile = 33
 
     @staticmethod
     def newline_token() -> TokenType:
@@ -115,6 +115,7 @@ class RawKeywordType(TokenType):
     SelfVal = "self"
     SelfType = "Self"
     Case = "case"
+    Iter = "iter"
     Of = "of"
     Loop = "loop"
     In = "in"
@@ -158,6 +159,7 @@ class SppTokenType(TokenType):
     KwCase = "case"
     KwElse = "else"
     KwLoop = "loop"
+    KwIter = "iter"
     KwWith = "with"
     KwSkip = "skip"
     KwExit = "exit"
@@ -297,6 +299,12 @@ class SppTokenType(TokenType):
     TkUnderscore = "_"
     """The token for an underscore. This is a single underscore, and is used to indicate a wildcard or ignore a single value."""
 
+    TkExclamationMark = "!"
+    """The token for an exclamation mark. This is a single exclamation mark, and is used to bind a generator exception."""
+
+    TkDoubleExclamationMark = "!!"
+    """The token for a double exclamation mark. This is used to indicate an exhausted generator."""
+
     TkWhitespace = " "
     """The token for whitespace. This is a single space, and is used to separate tokens."""
 
@@ -325,7 +333,7 @@ class RawToken:
     contain a RawTokenType.TkCharacter with the data "a".
     """
 
-    token_type: RawTokenType
+    token_type: RawTokenType | RawKeywordType
     token_data: str
 
 
