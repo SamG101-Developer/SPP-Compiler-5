@@ -61,10 +61,12 @@ class TestPostfixExpressionOperatorResumeCoroutineAst(CustomTestCase):
             gen 1
         }
 
-        fun f(c: std::number::bigint::BigInt) -> std::void::Void {
+        fun f(mut c: std::number::bigint::BigInt) -> std::void::Void {
             let a = g()
             let mut b = a.res("123")
-            b = c
+            c = iter b of
+                value { value }
+                !! { c }
         }
         """
 
@@ -75,10 +77,12 @@ class TestPostfixExpressionOperatorResumeCoroutineAst(CustomTestCase):
             gen &1
         }
 
-        fun f(c: &std::number::bigint::BigInt) -> std::void::Void {
+        fun f(mut c: &std::number::bigint::BigInt) -> std::void::Void {
             let a = g()
             let mut b = a.res("123")
-            b = c
+            c = iter b of
+                value { value }
+                !! { c }
         }
         """
 
@@ -89,10 +93,12 @@ class TestPostfixExpressionOperatorResumeCoroutineAst(CustomTestCase):
             gen &mut 1
         }
 
-        fun f(c: &mut std::number::bigint::BigInt) -> std::void::Void {
+        fun f(mut c: &mut std::number::bigint::BigInt) -> std::void::Void {
             let a = g()
             let mut b = a.res("123")
-            b = c
+            c = iter b of
+                value { value }
+                !! { c }
         }
         """
 

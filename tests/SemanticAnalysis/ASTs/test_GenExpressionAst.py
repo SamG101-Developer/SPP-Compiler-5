@@ -13,7 +13,7 @@ class TestGenExpressionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    @should_fail_compilation(SemanticErrors.YieldedTypeMismatchError)
     def test_invalid_gen_expression_convention_mismatch_1a(self):
         """
         cor foo() -> std::generator::Gen[std::number::bigint::BigInt] {
@@ -21,7 +21,7 @@ class TestGenExpressionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    @should_fail_compilation(SemanticErrors.YieldedTypeMismatchError)
     def test_invalid_gen_expression_convention_mismatch_1b(self):
         """
         cor foo() -> std::generator::Gen[std::number::bigint::BigInt] {
@@ -29,7 +29,7 @@ class TestGenExpressionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    @should_fail_compilation(SemanticErrors.YieldedTypeMismatchError)
     def test_invalid_gen_expression_convention_mismatch_2a(self):
         """
         cor foo() -> std::generator::Gen[&std::number::bigint::BigInt] {
@@ -37,7 +37,7 @@ class TestGenExpressionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    @should_fail_compilation(SemanticErrors.YieldedTypeMismatchError)
     def test_invalid_gen_expression_convention_mismatch_3a(self):
         """
         cor foo() -> std::generator::Gen[&mut std::number::bigint::BigInt] {
@@ -45,7 +45,7 @@ class TestGenExpressionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    @should_fail_compilation(SemanticErrors.YieldedTypeMismatchError)
     def test_invalid_gen_expression_convention_mismatch_3b(self):
         """
         cor foo() -> std::generator::Gen[&mut std::number::bigint::BigInt] {
@@ -53,7 +53,7 @@ class TestGenExpressionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.TypeMismatchError)
+    @should_fail_compilation(SemanticErrors.YieldedTypeMismatchError)
     def test_invalid_gen_expression_type_mismatch(self):
         """
         cor foo() -> std::generator::Gen[std::number::bigint::BigInt] {

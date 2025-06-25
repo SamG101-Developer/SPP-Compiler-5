@@ -25,6 +25,32 @@ class TestSupPrototypeExtensionAst(CustomTestCase):
         sup [T] T ext A { }
         """
 
+    @should_pass_compilation()
+    def test_valid_superimposition_extension_generic_name_more_complex(self):
+        """
+        cls CanBorrowRef[T] { }
+        sup [T] CanBorrowRef[T] {
+            cor borrow_ref(&self) -> std::generator::Gen[&T] {
+                gen self
+            }
+        }
+
+        cls CanBorrowMut[T] { }
+        sup [T] CanBorrowMut[T] {
+            cor borrow_mut(&mut self) -> std::generator::Gen[&mut T] {
+                gen self
+            }
+        }
+
+        sup [T] T ext CanBorrowRef[T] { }
+        sup [T] T ext CanBorrowMut[T] { }
+
+        fun f() -> std::void::Void {
+            let x = 123
+            let y = x.borrow_ref()
+        }
+        """
+
     @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
     def test_invalid_superimposition_extension_generic_superclass(self):
         """

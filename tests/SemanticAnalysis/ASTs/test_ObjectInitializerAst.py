@@ -2,8 +2,16 @@ from tests._Utils import *
 
 
 class TestObjectInitializerAst(CustomTestCase):
-    @should_fail_compilation(SemanticErrors.GenericTypeInvalidUsageError)
+    @should_fail_compilation(SemanticErrors.ObjectInitializerGenericWithArgumentsError)
     def test_generic_type_invalid_usage(self):
+        """
+        fun f[T]() -> std::void::Void {
+            let foo = T(a=1)
+        }
+        """
+
+    @should_pass_compilation()
+    def test_generic_type_valid_usage(self):
         """
         fun f[T]() -> std::void::Void {
             let foo = T()

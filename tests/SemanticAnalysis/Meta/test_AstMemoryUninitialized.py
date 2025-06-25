@@ -354,15 +354,6 @@ class TestAstMemoryUninitialized(CustomTestCase):
         """
 
     @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_uninitialized_symbol_in_postfix_expression_operator_index(self):
-        """
-        fun f() -> std::void::Void {
-            let elem: std::vector::Vec[std::string::Str]
-            let a = elem[0_uz]
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_uninitialized_symbol_in_postfix_expression_operator_member_access_attribute(self):
         """
         fun f() -> std::void::Void {

@@ -14,7 +14,9 @@ class TestAstYieldedBorrowMove(CustomTestCase):
         fun f() -> std::void::Void {
             let generator = g()
             let a = generator.res()
-            let b = a.a
+            let b = iter a of
+                value { value.a }
+                !! { "nothing" }
         }
         """
 
@@ -29,6 +31,8 @@ class TestAstYieldedBorrowMove(CustomTestCase):
 
         fun f() -> std::void::Void {
             let generator = g()
-            let a = generator.res().a
+            let b = iter generator.res() of
+                value { value.a }
+                !! { "nothing" }
         }
         """
