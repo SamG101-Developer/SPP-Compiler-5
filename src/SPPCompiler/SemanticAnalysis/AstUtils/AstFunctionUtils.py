@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 class AstFunctionUtils:
-    """!
+    """
     This class contains static methods for ASTs that are related to functions. This includes getting function scopes,
     converting method calls to function calls, and inferring generic arguments for functions.
     """
@@ -30,7 +30,7 @@ class AstFunctionUtils:
             sm: ScopeManager, lhs: Asts.ExpressionAst,
             **kwargs) -> Tuple[Asts.Ast, Optional[Scope], Asts.IdentifierAst]:
 
-        """!
+        """
         Get the function owner type, scope and name from an expression AST. This is used to determine information
         related to getting the overloads of a function. The function owner type is the type of the class the method
         belongs to if the callable is a method rather than a free-function. The scope id for the function itself, not
@@ -41,10 +41,10 @@ class AstFunctionUtils:
             * `function()`: direct function call.
             * `<anything else>()`: lambda identifier or invalid function call.
 
-        @param sm The scope manager to access function scopes.
-        @param lhs The left-hand side of the function call.
-
-        @return A 3-tuple containing: the function owner type, the function owner scope, and the function name. Given
+        :param sm: The scope manager to access function scopes.
+        :param lhs: The left-hand side of the function call.
+        :param kwargs: Additional keyword arguments.
+        :return: A 3-tuple containing: the function owner type, the function owner scope, and the function name. Given
         the function `MyType::my_function()`:
             * The owner type is "MyType".
             * The scope is the scope of "my_function" (found inside a superimposition scope of "MyType").
@@ -197,8 +197,8 @@ class AstFunctionUtils:
                         if conflict:
                             SequenceUtils.remove_if(overload_scopes_and_info, lambda info, c=conflict: info[1] is c)
 
-            # Adjust the scope in the tuple to the inner function scope, now the superimposition base classes have been
-            # removed.
+            # Adjust the scope in the tuple to the inner function scope, now that the superimposition base classes have
+            # been removed.
             if not for_override:
                 for i, (scope, function, generics) in enumerate(overload_scopes_and_info):
                     overload_scopes_and_info[i] = (scope.children[0], function, generics)
@@ -502,14 +502,6 @@ class AstFunctionUtils:
             Asts.GenericCompParameterOptionalAst: Asts.GenericCompArgumentNamedAst,
             Asts.GenericCompParameterVariadicAst: Asts.GenericCompArgumentNamedAst,
         }
-
-        # print("-" * 100)
-        # print("generic_parameters", [str(p) for p in generic_parameters])
-        # print("optional_generic_parameters", [str(p) for p in optional_generic_parameters])
-        # print("explicit_generic_arguments", [str(e) for e in explicit_generic_arguments])
-        # print("infer_source", Seq([f"{k}={v}" for k, v in infer_source.items()]))
-        # print("infer_target", Seq([f"{k}={v}" for k, v in infer_target.items()]))
-        # print("owner", owner, sm.current_scope)
 
         generic_parameter_names = [p.name for p in generic_parameters]
 
