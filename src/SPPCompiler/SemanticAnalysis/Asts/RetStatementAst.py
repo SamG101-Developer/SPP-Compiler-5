@@ -22,6 +22,9 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     expr: Optional[Asts.ExpressionAst] = field(default=None)
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
+    def __hash__(self) -> int:
+        return id(self)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

@@ -19,6 +19,9 @@ class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_seq_exit: Seq[Asts.TokenAst] = field(default_factory=Seq)
     skip_or_expr: Optional[Asts.ExpressionAst] = field(default=None)
 
+    def __hash__(self) -> int:
+        return id(self)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
