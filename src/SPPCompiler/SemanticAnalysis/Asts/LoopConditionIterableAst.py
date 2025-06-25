@@ -53,7 +53,7 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Get the generator and yielded type from the iterable.
         iterable_type = self.iterable.infer_type(sm, **kwargs)
-        gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(
+        gen_type, yield_type, *_ = AstTypeUtils.get_generator_and_yielded_type(
             iterable_type, sm, self.iterable, "loop condition")
 
         # Create a "let" statement to introduce the loop variable into the scope.
