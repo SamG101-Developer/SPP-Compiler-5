@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Callable, List, Optional, Tuple, Union
 
-from inline.inline_runtime import inline, inline_cls
-
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType, RawToken, RawTokenType, RawKeywordType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
@@ -12,7 +10,6 @@ from SPPCompiler.Utils.Functools import reduce
 from SPPCompiler.Utils.Sequence import Seq
 
 
-@inline_cls
 class SppParser:
     _pos: int
     _tokens: List[RawToken]
@@ -53,13 +50,11 @@ class SppParser:
         self._mask_nl    = [t not in [RawTokenType.TkNewLine] for t in self._token_types]
         self._mask_ws    = [t not in [RawTokenType.TkWhitespace] for t in self._token_types]
 
-    @inline
     def current_pos(self) -> int:
         return self._pos + self._injection_adjust_pos
 
     # ===== TECHNIQUES =====
 
-    @inline
     def parse_once[T](self, method: Callable[..., T]) -> T:
         pos = self._pos
         result = method()
@@ -67,7 +62,6 @@ class SppParser:
             self._pos = pos
         return result
 
-    @inline
     def parse_optional[T](self, method: Callable[..., T]) -> Optional[T]:
         pos = self._pos
         result = method()
@@ -75,7 +69,6 @@ class SppParser:
             self._pos = pos
         return result
 
-    @inline
     def parse_zero_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Seq[T]:
         done_1_parse = False
         results = []
@@ -98,21 +91,18 @@ class SppParser:
 
         return results
 
-    @inline
     def parse_one_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Optional[Seq[T]]:
         results = self.parse_zero_or_more(method, separator)
         if len(results) < 1:
             self.store_error(self._pos, "Expected at least one element")
         return results if len(results) > 0 else None
 
-    @inline
     def parse_two_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Optional[Seq[T]]:
         results = self.parse_zero_or_more(method, separator)
         if len(results) < 2:
             self.store_error(self._pos, "Expected at least two elements")
         return results if len(results) > 1 else None
 
-    @inline
     def parse_alternate[Ts](self, methods: List[Callable[..., *Ts]]) -> Union[*Ts]:
         ast = None
         for method in methods:
