@@ -65,6 +65,7 @@ from SPPCompiler.SemanticAnalysis.Asts.TupleLiteralAst import *
 from SPPCompiler.SemanticAnalysis.Asts.LiteralAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.GenExpressionAst import *
+from SPPCompiler.SemanticAnalysis.Asts.GenWithExpressionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.CmpStatementAst import *
 from SPPCompiler.SemanticAnalysis.Asts.InnerScopeAst import *
 

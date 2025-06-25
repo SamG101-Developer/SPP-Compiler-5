@@ -12,20 +12,17 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTy
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-# Todo: test in lambdas
-# Todo: test "cor || { ... }"
-
-
 @dataclass(slots=True)
-class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
+class GenWithExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_gen: Asts.TokenAst = field(default=None)
-    convention: Optional[Asts.ConventionAst] = field(default=None)
+    kw_with: Optional[Asts.TokenAst] = field(default=None)
     expr: Optional[Asts.ExpressionAst] = field(default=None)
 
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.kw_gen = self.kw_gen or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwGen)
+        self.kw_with = self.kw_with or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwWith)
 
     def __hash__(self) -> int:
         return id(self)
@@ -35,7 +32,7 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Print the AST with auto-formatting.
         string = [
             self.kw_gen.print(printer) + " ",
-            self.convention.print(printer) if self.convention else "",
+            self.kw_with.print(printer) + " ",
             self.expr.print(printer) if self.expr else ""]
         return "".join(string)
 
@@ -55,20 +52,14 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if function_flavour.token_type != SppTokenType.KwCor:
             raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(function_flavour, self.kw_gen).scopes(sm.current_scope)
 
-        # Analyse the expression if it exists, and determine the type of the expression.
-        if self.expr:
+        # Handle the return type inference that may be required.
+        if isinstance(self.expr, Asts.PostfixExpressionAst) and isinstance(self.expr.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+            gen_type, yield_type, *_ = AstTypeUtils.get_generator_and_yielded_type(kwargs["function_ret_type"][0], sm, kwargs["function_ret_type"][0], "coroutine")
+            kwargs |= {"inferred_return_type": kwargs["function_ret_type"][0]}
 
-            # Handle the return type inference that may be required.
-            if isinstance(self.expr, Asts.PostfixExpressionAst) and isinstance(self.expr.op, Asts.PostfixExpressionOperatorFunctionCallAst):
-                gen_type, yield_type, *_ = AstTypeUtils.get_generator_and_yielded_type(kwargs["function_ret_type"][0], sm, kwargs["function_ret_type"][0], "coroutine")
-                kwargs |= {"inferred_return_type": yield_type}
-
-            # Analyse the expression and infer its type.
-            self.expr.analyse_semantics(sm, prevent_auto_res=True, **kwargs)
-            expression_type = self.expr.infer_type(sm, prevent_auto_res=True, **kwargs).with_convention(self.convention)
-        else:
-            # No value means the Void type is the expression type.
-            expression_type = CommonTypesPrecompiled.VOID
+        # Analyse the expression and infer its type.
+        self.expr.analyse_semantics(sm, prevent_auto_res=True, **kwargs)
+        expression_type = self.expr.infer_type(sm, prevent_auto_res=True, **kwargs)
 
         if kwargs["function_ret_type"]:
             # If the function return type has been given (function, method) then get and store it.
@@ -84,14 +75,9 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         gen_type, yield_type, is_once, is_optional, is_fallible, error_type = AstTypeUtils.get_generator_and_yielded_type(
             kwargs["function_ret_type"][0], sm, kwargs["function_ret_type"][0], "coroutine")
 
-        # Check the expression type matches the expected type.
-        direct_match = AstTypeUtils.symbolic_eq(yield_type, expression_type, kwargs["function_scope"], sm.current_scope)
-        optional_match = is_optional and AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.VOID, expression_type, kwargs["function_scope"], sm.current_scope)
-        fallible_match = is_fallible and AstTypeUtils.symbolic_eq(error_type, expression_type, kwargs["function_scope"], sm.current_scope)
-
-        if not (direct_match or optional_match or fallible_match):
-            raise SemanticErrors.YieldedTypeMismatchError().add(
-                yield_type, yield_type, expression_type, expression_type, is_optional, is_fallible, error_type).scopes(sm.current_scope)
+        # The expression type must be a Gen type that exactly matches the function_ret_type.
+        if not AstTypeUtils.symbolic_eq(kwargs["function_ret_type"][0], expression_type, sm.current_scope, sm.current_scope):
+            raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"][0], kwargs["function_ret_type"][0], self.expr, expression_type).scopes(kwargs["function_scope"], sm.current_scope)
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         """
@@ -103,10 +89,11 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         if self.expr:
             ast = Asts.FunctionCallArgumentGroupAst(
-                pos=(self.convention or self.expr).pos,
-                arguments=[Asts.FunctionCallArgumentUnnamedAst(pos=self.expr.pos, convention=self.convention, value=self.expr)])
+                pos=self.expr.pos,
+                arguments=[Asts.FunctionCallArgumentUnnamedAst(pos=self.expr.pos, value=self.expr)])
             ast.check_memory(sm, **kwargs)
 
 
 __all__ = [
-    "GenExpressionAst"]
+    "GenWithExpressionAst"
+]

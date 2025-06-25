@@ -759,7 +759,7 @@ class SppParser:
     def parse_gen_expression_normal_no_expression(self) -> Optional[Asts.GenExpressionAst]:
         p1 = self.parse_once(self.parse_keyword_gen)
         if p1 is None: return None
-        return Asts.GenExpressionAst(p1.pos, p1, None, None, None)
+        return Asts.GenExpressionAst(p1.pos, p1, None, None)
 
     def parse_gen_expression_normal_with_expression(self) -> Optional[Asts.GenExpressionAst]:
         p1 = self.parse_once(self.parse_keyword_gen)
@@ -767,16 +767,16 @@ class SppParser:
         p2 = self.parse_optional(self.parse_convention)
         p3 = self.parse_once(self.parse_expression)
         if p3 is None: return None
-        return Asts.GenExpressionAst(p1.pos, p1, None, p2, p3)
+        return Asts.GenExpressionAst(p1.pos, p1, p2, p3)
 
-    def parse_gen_expression_unroll(self) -> Optional[Asts.GenExpressionAst]:
+    def parse_gen_expression_unroll(self) -> Optional[Asts.GenWithExpressionAst]:
         p1 = self.parse_once(self.parse_keyword_gen)
         if p1 is None: return None
         p2 = self.parse_once(self.parse_keyword_with)
         if p2 is None: return None
         p3 = self.parse_once(self.parse_expression)
         if p3 is None: return None
-        return Asts.GenExpressionAst(p1.pos, p1, p2, None, p3)
+        return Asts.GenWithExpressionAst(p1.pos, p1, p2, p3)
 
     # ===== STATEMENTS =====
 
