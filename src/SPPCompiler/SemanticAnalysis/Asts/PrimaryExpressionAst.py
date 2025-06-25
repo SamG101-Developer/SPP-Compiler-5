@@ -9,6 +9,7 @@ PrimaryExpressionAst = Union[
     Asts.IdentifierAst,
     Asts.ParenthesizedExpressionAst,
     Asts.GenExpressionAst,
+    Asts.GenWithExpressionAst,
     Asts.ObjectInitializerAst,
     Asts.InnerScopeAst,
     Asts.CaseExpressionAst,
