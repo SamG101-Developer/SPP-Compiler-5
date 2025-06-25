@@ -9,7 +9,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 BINARY_METHODS = {
     SppTokenType.TkPlus: "add", SppTokenType.TkMinus: "sub", SppTokenType.TkMultiply: "mul",
     SppTokenType.TkDivide: "div", SppTokenType.TkRemainder: "rem", SppTokenType.TkModulo: "mod",
-    SppTokenType.TkExponent: "pow", SppTokenType.KwAnd: "and", SppTokenType.KwOr: "ior", SppTokenType.TkEq: "eq",
+    SppTokenType.TkExponent: "pow", SppTokenType.KwAnd: "and_", SppTokenType.KwOr: "ior_", SppTokenType.TkEq: "eq",
     SppTokenType.TkNe: "ne", SppTokenType.TkLt: "lt", SppTokenType.TkGt: "gt", SppTokenType.TkLe: "le",
     SppTokenType.TkGe: "ge", SppTokenType.TkPlusAssign: "add_assign", SppTokenType.TkMinusAssign: "sub_assign",
     SppTokenType.TkMultiplyAssign: "mul_assign", SppTokenType.TkDivideAssign: "div_assign",
