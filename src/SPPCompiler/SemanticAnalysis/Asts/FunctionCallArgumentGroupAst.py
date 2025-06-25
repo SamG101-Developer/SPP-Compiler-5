@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -85,7 +86,10 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         for a in self.arguments:
             a.analyse_semantics(sm, **kwargs)
 
-    def check_memory(self, sm: ScopeManager, target_proto: Asts.FunctionPrototypeAst = None, is_async: Optional[Asts.TokenAst] = None, is_coro_resume: bool = False, **kwargs) -> None:
+    def check_memory(
+            self, sm: ScopeManager, target_proto: Asts.FunctionPrototypeAst = None,
+            is_async: Optional[Asts.TokenAst] = None, **kwargs) -> None:
+
         """
         The function call argument group has some of the most complex memory analysis rules. This is the key area for
         the "law of exclusivity" to be applied. Other areas that require this, such as lambda captures, are re-modelled
@@ -110,25 +114,29 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         :param sm: The scope manager.
         :param target_proto: The target function prototype that is being called.
         :param is_async: Whether these arguments are being applied as "async f()".
-        :param is_coro_resume: Whether these arguments are being applied to a coroutine call.
         :param kwargs: Additional keyword arguments.
         """
 
         # Mark if pins are required, and the ast to mark as errored if required.
         is_target_coro = isinstance(target_proto, Asts.CoroutinePrototypeAst)
-        pins_required = is_async or (target_proto if is_target_coro and not is_coro_resume else None)
+        pins_required = is_async or (target_proto if is_target_coro else None)
 
         # Define the borrow sets to maintain the law of exclusivity.
         borrows_ref = []
         borrows_mut = []
+
+        # Create the pre-existing borrows (coroutine borrows, async borrows, etc.) that are already in the scope.
+        pre_existing_borrows_ref = defaultdict(list)
+        pre_existing_borrows_mut = defaultdict(list)
 
         # Add the extended borrows into the borrow lists.
         for argument in self.arguments:
             sym = sm.current_scope.get_symbol(argument.value)
             if sym is None: continue
             if not sym.memory_info.borrow_refers_to: continue
-            for _, b, m in sym.memory_info.borrow_refers_to:
-                (borrows_mut if m else borrows_ref).append(b.value)
+            for assignment, b, m in sym.memory_info.borrow_refers_to:
+                if assignment is not None:
+                    (pre_existing_borrows_mut if m else pre_existing_borrows_ref)[argument.value].append(assignment)
 
         for argument in self.arguments:
 
@@ -177,10 +185,16 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                     raise SemanticErrors.MutabilityInvalidMutationError().add(
                         argument.value, argument.convention, sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
+                for existing_assign in pre_existing_borrows_mut[argument.value]:
+                    sm.current_scope.get_symbol(existing_assign).memory_info.moved_by(argument.value)
+                for existing_assign in pre_existing_borrows_ref[argument.value]:
+                    sm.current_scope.get_symbol(existing_assign).memory_info.moved_by(argument.value)
+
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
                     sym.memory_info.ast_pins.append(argument.value)
                     sym.memory_info.is_borrow_mut = True
+
                     for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
                         sym.memory_info.borrow_refers_to.append((assign_target, argument, True))
@@ -198,10 +212,14 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                     raise SemanticErrors.MemoryOverlapUsageError().add(
                         overlap[0], argument.value).scopes(sm.current_scope)
 
+                for existing_assign in pre_existing_borrows_mut[argument.value]:
+                    sm.current_scope.get_symbol(existing_assign).memory_info.moved_by(argument.value)
+
                 # If the target requires pinning, pin it automatically.
                 if pins_required:
                     sym.memory_info.ast_pins.append(argument.value)
                     sym.memory_info.is_borrow_ref = True
+
                     for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
                         sym.memory_info.borrow_refers_to.append((assign_target, argument, False))
