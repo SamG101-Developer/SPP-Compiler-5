@@ -75,6 +75,7 @@ class MemoryInfo:
             ast_borrowed=self.ast_borrowed,
             ast_partial_moves=self.ast_partial_moves.copy(),
             ast_pins=self.ast_pins.copy(),
+            ast_comptime_const=self.ast_comptime_const,
             initialization_counter=self.initialization_counter,
             is_borrow_mut=self.is_borrow_mut,
             is_borrow_ref=self.is_borrow_ref,
