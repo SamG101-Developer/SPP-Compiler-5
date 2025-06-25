@@ -177,6 +177,13 @@ class CommonTypes:
         return type
 
     @staticmethod
+    def NoneType(pos: int):
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "None"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "option")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
+
+    @staticmethod
     def Tup(pos: int, inner_types: Seq[Asts.TypeAst] = None):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, v) for v in inner_types or []]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
@@ -240,6 +247,51 @@ class CommonTypes:
         return type
 
     @staticmethod
+    def GenOpt(pos: int, yield_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
+        generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type), Asts.GenericTypeArgumentUnnamedAst(pos, send_type)]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "GenOpt", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
+
+    @staticmethod
+    def GenRes(pos: int, yield_type: Asts.TypeAst = None, err_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
+        generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type), Asts.GenericTypeArgumentUnnamedAst(pos, err_type), Asts.GenericTypeArgumentUnnamedAst(pos, send_type)]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "GenRes", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
+
+    @staticmethod
+    def Generated(pos: int, yield_type: Asts.TypeAst = None) -> Asts.TypeAst:
+        generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type)]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Generated", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
+
+    @staticmethod
+    def GeneratedOpt(pos: int, yield_type: Asts.TypeAst = None) -> Asts.TypeAst:
+        generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type)]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "GeneratedOpt", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
+
+    @staticmethod
+    def GeneratedRes(pos: int, yield_type: Asts.TypeAst = None, err_type: Asts.TypeAst = None) -> Asts.TypeAst:
+        generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type), Asts.GenericTypeArgumentUnnamedAst(pos, err_type)]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "GeneratedRes", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
+
+    @staticmethod
     def DerefRef(pos: int, inner_type: Asts.TypeAst = None):
         return CodeInjection.inject_code(
             f"std::ops::deref::DerefRef[{inner_type}]", SppParser.parse_type, pos_adjust=pos)
@@ -261,11 +313,16 @@ class CommonTypes:
 
 
 class CommonTypesPrecompiled:
-    EMPTY_TUPLE: Asts.TypeAst = "Pending..."
-    EMPTY_ARRAY: Asts.TypeAst = "Pending..."
-    EMPTY_ARRAY_DYNAMIC: Asts.TypeAst = "Pending..."
-    EMPTY_GENERATOR: Asts.TypeAst = "Pending..."
-    EMPTY_VARIANT: Asts.TypeAst = "Pending..."
+    EMPTY_TUP: Asts.TypeAst = "Pending..."
+    EMPTY_ARR: Asts.TypeAst = "Pending..."
+    EMPTY_ARR_DYNAMIC: Asts.TypeAst = "Pending..."
+    EMPTY_GEN: Asts.TypeAst = "Pending..."
+    EMPTY_GEN_OPT: Asts.TypeAst = "Pending..."
+    EMPTY_GEN_RES: Asts.TypeAst = "Pending..."
+    EMPTY_GENERATED: Asts.TypeAst = "Pending..."
+    EMPTY_GENERATED_OPT: Asts.TypeAst = "Pending..."
+    EMPTY_GENERATED_RES: Asts.TypeAst = "Pending..."
+    EMPTY_VAR: Asts.TypeAst = "Pending..."
     EMPTY_FUN_MOV: Asts.TypeAst = "Pending..."
     EMPTY_FUN_MUT: Asts.TypeAst = "Pending..."
     EMPTY_FUN_REF: Asts.TypeAst = "Pending..."
@@ -298,11 +355,16 @@ class CommonTypesPrecompiled:
 
     @staticmethod
     def initialize():
-        CommonTypesPrecompiled.EMPTY_TUPLE = CommonTypes.Tup(pos=0).without_generics
-        CommonTypesPrecompiled.EMPTY_ARRAY = CommonTypes.Arr(pos=0, elem_type=Asts.Ast(), size=Asts.Ast()).without_generics
-        CommonTypesPrecompiled.EMPTY_ARRAY_DYNAMIC = CommonTypes.ArrDynamic(pos=0, elem_type=Asts.Ast()).without_generics
-        CommonTypesPrecompiled.EMPTY_GENERATOR = CommonTypes.Gen(pos=0, yield_type=Asts.Ast(), send_type=Asts.Ast()).without_generics
-        CommonTypesPrecompiled.EMPTY_VARIANT = CommonTypes.Var(pos=0).without_generics
+        CommonTypesPrecompiled.EMPTY_TUP = CommonTypes.Tup(pos=0).without_generics
+        CommonTypesPrecompiled.EMPTY_ARR = CommonTypes.Arr(pos=0, elem_type=Asts.Ast(), size=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_ARR_DYNAMIC = CommonTypes.ArrDynamic(pos=0, elem_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_GEN = CommonTypes.Gen(pos=0, yield_type=Asts.Ast(), send_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_GEN_OPT = CommonTypes.GenOpt(pos=0, yield_type=Asts.Ast(), send_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_GEN_RES = CommonTypes.GenRes(pos=0, yield_type=Asts.Ast(), err_type=Asts.Ast(), send_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_GENERATED = CommonTypes.Generated(pos=0, yield_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_GENERATED_OPT = CommonTypes.GeneratedOpt(pos=0, yield_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_GENERATED_RES = CommonTypes.GeneratedRes(pos=0, yield_type=Asts.Ast(), err_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_VAR = CommonTypes.Var(pos=0).without_generics
         CommonTypesPrecompiled.EMPTY_FUN_MOV = CommonTypes.FunMov(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics
         CommonTypesPrecompiled.EMPTY_FUN_MUT = CommonTypes.FunMut(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics
         CommonTypesPrecompiled.EMPTY_FUN_REF = CommonTypes.FunRef(pos=0, param_types=Asts.Ast(), return_type=Asts.Ast()).without_generics

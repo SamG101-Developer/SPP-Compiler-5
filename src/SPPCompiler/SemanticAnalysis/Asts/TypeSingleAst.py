@@ -179,7 +179,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         if type_symbol.is_generic: return
 
         # Name all the generic arguments.
-        is_tuple = type_symbol.fq_name.without_generics == CommonTypesPrecompiled.EMPTY_TUPLE
+        is_tuple = type_symbol.fq_name.without_generics == CommonTypesPrecompiled.EMPTY_TUP
         AstFunctionUtils.name_generic_arguments(
             self.name.generic_argument_group.arguments,
             type_symbol.type.generic_parameter_group.parameters,
@@ -205,7 +205,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             **kwargs)
 
         # For variant types, collapse any duplicate generic arguments.
-        if AstTypeUtils.symbolic_eq(self.without_generics, CommonTypesPrecompiled.EMPTY_VARIANT, type_scope, sm.current_scope, check_variant=False, lhs_ignore_alias=True):
+        if AstTypeUtils.symbolic_eq(self.without_generics, CommonTypesPrecompiled.EMPTY_VAR, type_scope, sm.current_scope, check_variant=False, lhs_ignore_alias=True):
             composite_types = AstTypeUtils.deduplicate_composite_types(self, sm.current_scope)
             composite_types = CommonTypes.Tup(self.pos, composite_types)
             composite_types.analyse_semantics(sm, type_scope=type_scope, **kwargs)
