@@ -117,10 +117,17 @@ from SPPCompiler.SemanticAnalysis.Asts.PatternVariantLiteralAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PatternVariantSingleIdentifierAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PatternVariantAst import *
 
+from SPPCompiler.SemanticAnalysis.Asts.IterPatternNoValueAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterPatternExceptionAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterPatternExhaustedAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterPatternVariableAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterPatternAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterExpressionBranchAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterExpressionAst import *
+
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorEarlyReturnAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst import *
-from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorIndexAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorResumeCoroutineAst import *

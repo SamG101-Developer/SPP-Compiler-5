@@ -646,6 +646,7 @@ class SppParser:
             self.parse_parenthesized_expression,
             self.parse_case_expression,
             self.parse_loop_expression,
+            self.parse_iter_expression,
             self.parse_gen_expression,
             self.parse_type,
             self.parse_self_keyword,
@@ -734,7 +735,18 @@ class SppParser:
         if p2 is None: return None
         return Asts.LoopElseStatementAst(p1.pos, p1, p2)
 
-    def parse_gen_expression(self) -> Optional[Asts.GenExpressionAst]:
+    def parse_iter_expression(self) -> Optional[Asts.IterExpressionAst]:
+        p1 = self.parse_once(self.parse_keyword_iter)
+        if p1 is None: return None
+        p2 = self.parse_once(self.parse_expression)
+        if p2 is None: return None
+        p3 = self.parse_once(self.parse_keyword_of)
+        if p3 is None: return None
+        p4 = self.parse_one_or_more(self.parse_iter_expression_branch, self.parse_newline)
+        if p4 is None: return None
+        return Asts.IterExpressionAst(p1.pos, p1, p2, p3, p4)
+
+    def parse_gen_expression(self) -> Optional[Asts.GenExpressionAst | Asts.GenWithExpressionAst]:
         p1 = self.parse_alternate([
             self.parse_gen_expression_unroll,
             self.parse_gen_expression_normal])
@@ -1203,6 +1215,45 @@ class SppParser:
         p2 = self.parse_once(self.parse_expression)
         if p2 is None: return None
         return Asts.PatternGuardAst(p1.pos, p1, p2)
+
+    # ===== ITER PATTERNS =====
+
+    def parse_iter_expression_branch(self) -> Optional[Asts.IterExpressionBranchAst]:
+        p1 = self.parse_once(self.parse_iter_expression_pattern)
+        if p1 is None: return None
+        p2 = self.parse_once(self.parse_inner_scope)
+        if p2 is None: return None
+        return Asts.IterExpressionBranchAst(p1.pos, p1, p2)
+
+    def parse_iter_expression_pattern(self) -> Optional[Asts.IterPatternAst]:
+        p1 = self.parse_alternate([
+            self.parse_iter_pattern_no_value,
+            self.parse_iter_pattern_exhausted,
+            self.parse_iter_pattern_exception,
+            self.parse_iter_pattern_variable])
+        return p1
+
+    def parse_iter_pattern_no_value(self) -> Optional[Asts.IterPatternNoValueAst]:
+        p1 = self.parse_once(self.parse_token_underscore)
+        if p1 is None: return None
+        return Asts.IterPatternNoValueAst(p1.pos, p1)
+
+    def parse_iter_pattern_exception(self) -> Optional[Asts.IterPatternExceptionAst]:
+        p1 = self.parse_token_exclamation_mark()
+        if p1 is None: return None
+        p2 = self.parse_local_variable()
+        if p2 is None: return None
+        return Asts.IterPatternExceptionAst(p1.pos, p1, p2)
+
+    def parse_iter_pattern_exhausted(self) -> Optional[Asts.IterPatternExhaustedAst]:
+        p1 = self.parse_token_double_exclamation_mark()
+        if p1 is None: return None
+        return Asts.IterPatternExhaustedAst(p1.pos, p1)
+
+    def parse_iter_pattern_variable(self) -> Optional[Asts.IterPatternVariableAst]:
+        p1 = self.parse_once(self.parse_local_variable)
+        if p1 is None: return None
+        return Asts.IterPatternVariableAst(p1.pos, p1)
 
     # ===== OPERATORS =====
 
