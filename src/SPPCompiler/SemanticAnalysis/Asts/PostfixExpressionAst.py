@@ -46,8 +46,9 @@ class PostfixExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the "lhs" and "op".
         inferred_return_type = kwargs.pop("inferred_return_type", None)
+        prevent_auto_res = kwargs.pop("prevent_auto_res", False)
         self.lhs.analyse_semantics(sm, **kwargs)
-        self.op.analyse_semantics(sm, lhs=self.lhs, inferred_return_type=inferred_return_type, **kwargs)
+        self.op.analyse_semantics(sm, lhs=self.lhs, prevent_auto_res=prevent_auto_res, inferred_return_type=inferred_return_type, **kwargs)
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         # Todo: what on earth does this if statement do?
