@@ -93,6 +93,13 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 elif yielded_borrow is None:
                     sym.memory_info.borrow_refers_to.remove(info)
 
+        # If the final expression of the inner scope is being used (ie assigned to outer variable), then memory check it.
+        if (move := kwargs.get("assignment", False)) and self.members:
+            last_member = self.members[-1]
+            AstMemoryUtils.enforce_memory_integrity(
+                last_member, move, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+                check_pins=True, mark_moves=True)
+
         # sm.move_out_of_current_scope()
 
 
