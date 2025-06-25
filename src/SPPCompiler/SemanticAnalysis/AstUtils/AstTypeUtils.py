@@ -312,7 +312,21 @@ class AstTypeUtils:
 
         # Extract the "Yield" generic argument's value from the generator type.
         yield_type = gen_type.type_parts[-1].generic_argument_group["Yield"].value
-        return gen_type, yield_type
+
+        # Extract the multiplicity, optionality and fallibility from the generator type.
+        is_once = gen_type.type_parts[-1].generic_argument_group["once"].value.to_python_literal()
+        is_optional = AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GEN_OPT, gen_type, sm.current_scope, sm.current_scope)
+        is_fallible = AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GEN_RES, gen_type, sm.current_scope, sm.current_scope)
+        if is_fallible:
+            error_type = gen_type.type_parts[-1].generic_argument_group["Err"].value
+        else:
+            error_type = CommonTypesPrecompiled.VOID
+
+        # If the flags are set, include their ASTs in the return.
+        once = gen_type.type_parts[-1].generic_argument_group["once"] if is_once else None
+
+        # Return all the information about the generator type.
+        return gen_type, yield_type, once, is_optional, is_fallible, error_type
 
     @staticmethod
     def deduplicate_composite_types(type: Asts.TypeSingleAst, scope: Scope) -> list[Asts.TypeAst]:
