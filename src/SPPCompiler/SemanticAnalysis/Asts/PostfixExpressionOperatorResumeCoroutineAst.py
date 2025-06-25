@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -7,6 +8,8 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
@@ -33,11 +36,10 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
     function_argument_group: Asts.FunctionCallArgumentGroupAst = field(default=None)
     """The function arguments to be passed to the coroutine."""
 
-    _as_func: Asts.PostfixExpressionAst = field(default=None, init=False, repr=False)
-    """The function representation of the resume expression."""
-
     def __post_init__(self) -> None:
+        self.tk_dot = self.tk_dot or Asts.TokenAst.raw(token_type=SppTokenType.TkDot)
         self.kw_res = self.kw_res or Asts.TokenAst.raw(token_type=SppTokenType.KwRes)
+        self.function_argument_group = self.function_argument_group or Asts.FunctionCallArgumentGroupAst(pos=self.pos)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -63,16 +65,34 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
         :return: The return type of the resume coroutine expression.
         """
 
-        func_ret_type = self._as_func.infer_type(sm, **kwargs)
-        func_ret_type.analyse_semantics(sm, **kwargs)
-        gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(func_ret_type, sm, lhs, "resume expression")
-        return yield_type
+        # Get the generator type.
+        generator_type = lhs.infer_type(sm, **kwargs)
+        generator_type, *_ = AstTypeUtils.get_generator_and_yielded_type(generator_type, sm, lhs, "resume expression")
+
+        # Convert it into a "Generated" type (container for the yielded value).
+        if AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GEN, generator_type.without_generics, sm.current_scope, sm.current_scope):
+            new = "Generated"
+        elif AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GEN_OPT, generator_type.without_generics, sm.current_scope, sm.current_scope):
+            new = "GeneratedOpt"
+        elif AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GEN_RES, generator_type.without_generics, sm.current_scope, sm.current_scope):
+            new = "GeneratedRes"
+        else:
+            raise ValueError(f"The generator type must be a Gen, GenOpt or GenRes type. Got: {generator_type}.")
+
+        generated_type = copy.deepcopy(generator_type)
+        generated_type.type_parts[-1].value = new
+
+        # Remove the "Send" parameter from the "Generated" type
+        SequenceUtils.remove_if(generated_type.type_parts[-1].generic_argument_group.arguments, lambda x: x.name.type_parts[-1].value == "Send")
+        generated_type.analyse_semantics(sm, **kwargs)
+
+        # Return the generated type.
+        return generated_type
 
     def analyse_semantics(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         """
         The key check for this AST is to ensure that the LHS is a generator type. This allows the `.resume()` to be
-        called, and to ensure that the actual `Gen::resume` coroutine is called. The function argument group is analysed
-        part of the transformed AST, not in this AST.
+        called, and to ensure that the actual `Gen::resume` coroutine is called.
 
         :param sm: The scope manager.
         :param lhs: The left-hand side expression.
@@ -83,31 +103,21 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
         lhs_type = lhs.infer_type(sm, **kwargs)
         AstTypeUtils.get_generator_and_yielded_type(lhs_type, sm, lhs, "resume expression")
 
-        # Create a transformed AST that looks like: "lhs.resume".
-        resume_identifier = Asts.IdentifierAst(pos=self.kw_res.pos, value="resume")
-        resume_field = Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(pos=self.pos, new_field=resume_identifier)
-        resume_field = Asts.PostfixExpressionAst(pos=self.pos, lhs=lhs, op=resume_field)
-
-        # Create a transformed AST that looks like: "lhs.resume(expr)".
-        resume_call = Asts.PostfixExpressionOperatorFunctionCallAst(pos=self.pos, function_argument_group=self.function_argument_group)
-        resume_call = Asts.PostfixExpressionAst(pos=self.pos, lhs=resume_field, op=resume_call)
-
-        # Analyse the semantics of the transformed AST, ensuring that the function exists.
-        resume_call.analyse_semantics(sm, **kwargs)
-        self._as_func = resume_call
+        # Check the argument (send value) is valid, by passing it into the ".send" function call.
+        member_access = Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(pos=self.tk_dot.pos, new_field=Asts.IdentifierAst(value="send"))
+        member_access = Asts.PostfixExpressionAst(pos=self.pos, lhs=lhs, op=member_access)
+        func_call = Asts.PostfixExpressionOperatorFunctionCallAst(function_argument_group=self.function_argument_group)
+        func_call = Asts.PostfixExpressionAst(pos=self.pos, lhs=member_access, op=func_call)
+        func_call.analyse_semantics(sm, **kwargs)
 
     def check_memory(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         """
-        The additional "is_coro_resume" is required because any call to a coroutine will trigger the pinning logic.
-        The exception is resuming a coroutine, because this would pin the yielded values themselves, which means they
-        aren't assignable to anything.
+        Todo: does anything need to be done here?
 
         :param sm: The scope manager.
         :param lhs: The left-hand side expression.
         :param kwargs: Additional keyword arguments.
         """
-
-        self._as_func.check_memory(sm, is_coro_resume=True, **kwargs)
 
 
 __all__ = [
