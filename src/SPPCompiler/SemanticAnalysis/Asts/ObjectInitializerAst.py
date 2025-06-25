@@ -46,10 +46,12 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.IdentifierUnknownError().add(
                 self.class_type, "type", None).scopes(sm.current_scope)
 
-        # Prevent generic types from being initialized.
+        # Generic types cannot have any attributes set (full default initialization only).
         if base_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(
-                self.class_type, self.class_type, "object initializer").scopes(sm.current_scope)
+            if self.object_argument_group.arguments:
+                raise SemanticErrors.ObjectInitializerGenericWithArgumentsError().add(
+                    self.class_type, self.object_argument_group.arguments[0]).scopes(sm.current_scope)
+            return
 
         self.object_argument_group.pre_analyse_semantics(sm, class_type=self.class_type.without_generics, **kwargs)
 

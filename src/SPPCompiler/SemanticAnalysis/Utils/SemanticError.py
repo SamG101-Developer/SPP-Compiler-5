@@ -1534,6 +1534,26 @@ class SemanticErrors:
 
             return self
 
+    class ObjectInitializerGenericWithArgumentsError(SemanticError):
+        """
+        An ObjectInitializerGenericWithArgumentsError error is raised if a generic type is being initialized (valid),
+        but with arguments. This is invalid because generic types have different attributes. So only full default
+        initialization can be used (no arguments).
+        """
+
+        def add(self, generic_type: Asts.TypeAst, argument: Asts.ObjectInitializerArgumentAst) -> SemanticError:
+            self.add_info(
+                ast=generic_type,
+                tag=f"Generic type '{generic_type}' initialized here")
+
+            self.add_error(
+                ast=argument,
+                tag="Argument defined here.",
+                msg="Generic types cannot be initialized with arguments.",
+                tip="Remove all arguments or use a concrete type.")
+
+            return self
+
     class InvalidObjectInitializerArgumentError(SemanticError):
         """
         The InvalidObjectInitializerArgumentError is raised if an object initializer argument is unnamed and not an
