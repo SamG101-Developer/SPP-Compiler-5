@@ -53,7 +53,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         string = [
             SequenceUtils.print(printer, self.annotations, sep="\n"),
             self.tok_fun.print(printer) + " ",
-            self.name.print(printer),
+            self.name.print(printer) if self.name else "",
             self.generic_parameter_group.print(printer),
             self.function_parameter_group.print(printer) + " ",
             self.tok_arrow.print(printer) + " ",
