@@ -1277,7 +1277,6 @@ class SppParser:
         p1 = self.parse_alternate([
             self.parse_postfix_op_resume_coroutine,
             self.parse_postfix_op_function_call,
-            self.parse_postfix_op_index,
             self.parse_postfix_op_not_keyword,
             self.parse_postfix_op_member_access,
             self.parse_postfix_op_early_return])
@@ -1298,16 +1297,6 @@ class SppParser:
         if p2 is None: return None
         p3 = self.parse_optional(self.parse_token_double_dot)
         return Asts.PostfixExpressionOperatorFunctionCallAst((p1 or p2).pos, p1, p2, p3)
-
-    def parse_postfix_op_index(self) -> Optional[Asts.PostfixExpressionOperatorIndexAst]:
-        p1 = self.parse_once(self.parse_token_left_square_bracket)
-        if p1 is None: return None
-        p2 = self.parse_once(self.parse_keyword_mut)
-        p3 = self.parse_once(self.parse_expression)
-        if not p3: return None
-        p4 = self.parse_once(self.parse_token_right_square_bracket)
-        if p4 is None: return None
-        return Asts.PostfixExpressionOperatorIndexAst(p1.pos, p1, p2, p3, p4)
 
     def parse_postfix_op_member_access(self) -> Optional[Asts.PostfixExpressionOperatorMemberAccessAst]:
         p1 = self.parse_alternate([
