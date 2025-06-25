@@ -53,6 +53,15 @@ class BooleanLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         token = Asts.TokenAst.raw(pos=pos, token_type=SppTokenType.KwTrue if value else SppTokenType.KwFalse)
         return BooleanLiteralAst(pos, token)
 
+    def to_python_literal(self) -> bool:
+        """
+        Converts the BooleanLiteralAst back to a Python boolean literal.
+
+        :return: The Python boolean literal represented by this AST.
+        """
+
+        return self.value.token_type == SppTokenType.KwTrue
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
