@@ -85,6 +85,9 @@ class GenericParameterGroupAst(Asts.Ast):
         for p in self.parameters:
             p.qualify_types(sm, **kwargs)
 
+            if isinstance(p, Asts.GenericCompParameterAst):
+                sm.current_scope.get_symbol(p.name).type = p.type
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate generic parameter names.
         generic_parameter_names = [p.name for p in self.parameters]
