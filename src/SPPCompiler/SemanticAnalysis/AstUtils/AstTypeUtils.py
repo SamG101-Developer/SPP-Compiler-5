@@ -39,21 +39,29 @@ class AstTypeUtils:
         return is_fun_mov or is_fun_mut or is_fun_ref
 
     @staticmethod
+    def is_type_generator(type: Asts.TypeAst, scope: Scope) -> bool:
+        # Check if a type is a generator type.
+        is_gen     = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN, scope, scope)
+        is_gen_opt = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_OPT, scope, scope)
+        is_gen_res = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_RES, scope, scope)
+        return is_gen or is_gen_opt or is_gen_res
+
+    @staticmethod
     def is_type_tuple(type: Asts.TypeAst, scope: Scope) -> bool:
         # Check if a type is a tuple type.
-        is_tuple = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_TUPLE, scope, scope, check_variant=False)
+        is_tuple = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_TUP, scope, scope, check_variant=False)
         return is_tuple
 
     @staticmethod
     def is_type_array(type: Asts.TypeAst, scope: Scope) -> bool:
         # Check if a type is an array type.
-        is_array = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_ARRAY, scope, scope, check_variant=False)
+        is_array = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_ARR, scope, scope, check_variant=False)
         return is_array
 
     @staticmethod
     def is_type_variant(type: Asts.TypeAst, scope: Scope) -> bool:
         # Check if a type is a variant type.
-        is_variant = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_VARIANT, scope, scope)
+        is_variant = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_VAR, scope, scope)
         return is_variant
 
     @staticmethod
@@ -112,7 +120,7 @@ class AstTypeUtils:
             SequenceUtils.remove_if(alternatives, lambda a: a[0] == "$")
             closest_match = difflib.get_close_matches(type_part.value, alternatives, n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(
-                type_part, "type", closest_match[0] if closest_match else None).scopes(sm.current_scope)
+                type_part.without_generics, "type", closest_match[0] if closest_match else None).scopes(sm.current_scope)
 
         # Return the type part's scope from the symbol.
         return type_symbol
@@ -176,12 +184,12 @@ class AstTypeUtils:
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         # Create the scope for the new super class type. This will handle recursive sup-scope creation.
-        new_cls_scope = None
+        super_cls_scope = None
         if isinstance(old_sup_scope._ast, Asts.SupPrototypeExtensionAst):
             new_fq_super_type = fast_deepcopy(old_sup_scope._ast.super_class)
             new_fq_super_type = new_fq_super_type.substituted_generics(generic_arguments.arguments)
             new_fq_super_type.analyse_semantics(sm, **kwargs)
-            new_cls_scope = true_scope.get_symbol(new_fq_super_type).scope
+            super_cls_scope = true_scope.get_symbol(new_fq_super_type).scope
 
         # Create the "sup" scope that will be a replacement. The children and symbol table are copied over.
         new_scope_name = AstTypeUtils.generic_convert_sup_scope_name(old_sup_scope.name, generic_arguments, old_sup_scope._ast.name.pos)
@@ -210,11 +218,13 @@ class AstTypeUtils:
                     scoped_sym.scope = new_scope.children[old_sup_scope.children.index(scoped_sym.scope)]
 
             # Defined as "cmp var = n"
+            # Todo: filter these because it is collecting non-cmp variable symbols too.
+            # Todo: iterate the generic arguments and substitute the type for the variable symbol.
             if isinstance(scoped_sym, VariableSymbol):
                 old_type_sub = scoped_sym.type.substituted_generics(generic_arguments.arguments)
                 scoped_sym.type = old_type_sub
 
-        return new_scope, new_cls_scope
+        return new_scope, super_cls_scope
 
     @staticmethod
     def create_generic_symbol(
@@ -233,10 +243,12 @@ class AstTypeUtils:
                 scope_defined_in=sm.current_scope)
 
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
-            return VariableSymbol(
+            v = VariableSymbol(
                 name=Asts.IdentifierAst.from_type(generic_argument.name),
                 type=(tm or sm).current_scope.get_symbol(generic_argument.value.infer_type(tm or sm)).fq_name,
                 is_generic=True)
+            v.memory_info.ast_comptime_const = generic_argument
+            return v
 
         raise Exception(f"Unknown generic argument type '{type(generic_argument).__name__}': {generic_argument}")
 
@@ -276,7 +288,7 @@ class AstTypeUtils:
     @staticmethod
     def get_generator_and_yielded_type(
             type: Asts.TypeAst, sm: ScopeManager, expr: Asts.ExpressionAst,
-            what: str) -> Tuple[Asts.TypeAst, Asts.TypeAst]:
+            what: str) -> Tuple[Asts.TypeAst, Asts.TypeAst, Asts.GenericCompArgumentAst, bool, bool, Asts.TypeAst]:
 
         """
         Get the generator type, and the yielded type from a type. Search the super types of the input type for a
@@ -289,7 +301,7 @@ class AstTypeUtils:
 
         # Search through the type and supertypes for a generator type.
         for sup_type in sup_types:
-            if AstTypeUtils.symbolic_eq(sup_type.without_generics, CommonTypesPrecompiled.EMPTY_GENERATOR, sm.current_scope, sm.current_scope):
+            if AstTypeUtils.is_type_generator(sup_type.without_generics, sm.current_scope):
                 gen_type = sup_type
                 break
 
@@ -333,7 +345,6 @@ class AstTypeUtils:
         return out
 
     @staticmethod
-    # @FunctionCache.cache
     def symbolic_eq(
             lhs_type: Asts.TypeAst, rhs_type: Asts.TypeAst, lhs_scope: Scope, rhs_scope: Scope,
             check_variant: bool = True, lhs_ignore_alias: bool = False, debug: bool = False) -> bool:
@@ -366,7 +377,7 @@ class AstTypeUtils:
         stripped_rhs = rhs_type.without_generics
 
         if debug:
-            print("#" * 100)
+            print("-" * 100)
             print(f"Comparing types: {lhs_type} vs {rhs_type}")
             print(f"Comparing stripped types: {stripped_lhs} vs {stripped_rhs}")
             print(f"Scopes: {lhs_scope.name} vs {rhs_scope.name}")
@@ -380,7 +391,7 @@ class AstTypeUtils:
             print(f"RHS stripped symbol: {stripped_rhs_symbol}")
 
         # If the left-hand-side is a Variant type, then check the composite types first.
-        if check_variant and AstTypeUtils.symbolic_eq(stripped_lhs_symbol.fq_name.without_generics, CommonTypesPrecompiled.EMPTY_VARIANT, lhs_scope, lhs_scope, check_variant=False, debug=debug):
+        if check_variant and AstTypeUtils.symbolic_eq(stripped_lhs_symbol.fq_name.without_generics, CommonTypesPrecompiled.EMPTY_VAR, lhs_scope, lhs_scope, check_variant=False, debug=debug):
             lhs_composite_types = AstTypeUtils.deduplicate_composite_types(lhs_scope.get_symbol(lhs_type).fq_name, lhs_scope)
 
             # Check each composite type against the other.
