@@ -616,6 +616,39 @@ class SemanticErrors:
 
             return self
 
+    class YieldedTypeMismatchError(SemanticError):
+        """
+        The YieldedTypeMismatchError is raised if 2 types are different when they should not be, in a yielding context.
+        This is a separate error from TypeMismatchError, as it contains extra information about the yielding context.
+        """
+
+        def add(
+                self, existing_ast: Asts.Ast, existing_type: Asts.TypeAst, incoming_ast: Asts.Ast,
+                incoming_type: Asts.TypeAst, is_optional: bool, is_fallible: bool,
+                error_type: Asts.TypeAst) -> SemanticError:
+
+            self.add_info(
+                ast=existing_ast,
+                tag=f"Target yield type defined as '{existing_type}' here")
+
+            if is_optional:
+                self.add_info(
+                    existing_ast,
+                    tag=f"Yielded type is optional, so `gen` is valid.")
+
+            if is_fallible:
+                self.add_info(
+                    existing_ast,
+                    tag=f"Yielded type is fallible, so `gen {error_type}()` is valid.")
+
+            self.add_error(
+                ast=incoming_ast,
+                tag=f"Type inferred as '{incoming_type}' here",
+                msg="Type mismatch.",
+                tip="Change the rhs type to match the lhs type.")
+
+            return self
+
     class GenericParameterNotInferredError(SemanticError):
         """
         The GenericParameterNotInferredError is raised if a generic parameter is not inferred from its caller context.
@@ -851,7 +884,7 @@ class SemanticErrors:
         def add(self, move_location: Asts.Ast, pin_location: Asts.Ast) -> SemanticError:
             self.add_info(
                 ast=pin_location,
-                tag=f"Symbol '{move_location}' pinned here")
+                tag=f"Symbol '{move_location}' pinned by this borrow.")
 
             self.add_error(
                 ast=move_location,
@@ -1743,5 +1776,63 @@ class SemanticErrors:
                 tag=f"Sub function defined here.",
                 msg=f"The function does not exist in the dll '{dll}'.",
                 tip="Remove the invalid stub.")
+
+            return self
+
+    class IterExpressionBranchMissingError(SemanticError):
+        """
+        The IterExpressionBranchMissingError is raised if an iter expression block is missing a branch for a specific
+        generator type, such as the "_" no-value branch got a GenOpt type.
+        """
+
+        def add(self, condition: Asts.ExpressionAst, generator_type: Asts.TypeAst, block: Asts.IterExpressionAst, missing_branch: type[Asts.IterPatternAst]) -> SemanticError:
+            self.add_info(
+                ast=condition,
+                tag=f"Generator type '{generator_type}' inferred here")
+
+            self.add_error(
+                ast=block,
+                tag=f"Iteration block missing a '{missing_branch.__name__}' branch.",
+                msg=f"When inferring the type of an iter block, all cases must be considered.",
+                tip=f"Add the missing block to the 'iter' expression.")
+
+            return self
+
+    class IterExpressionBranchTypeDuplicateError(SemanticError):
+        """
+        The IterExpressionBranchTypeDuplicateError is raised if an iter expression block has multiple branches with the
+        same pattern type. For example, two branches with the same "IterPatternVariableAst" type.
+        """
+
+        def add(self, branch: Asts.IterExpressionBranchAst, duplicate_branch: Asts.IterExpressionBranchAst) -> SemanticError:
+            self.add_info(
+                ast=branch,
+                tag="Branch defined here")
+
+            self.add_error(
+                ast=duplicate_branch,
+                tag=f"Duplicate branch of type '{type(duplicate_branch.pattern)}' found.",
+                msg="An iter expression block cannot have multiple branches with the same pattern type.",
+                tip="Remove the duplicate branch.")
+
+            return self
+
+    class IterExpressionBranchIncompatibleError(SemanticError):
+        """
+        The IterExpressionBranchIncompatibleError is raised if an iter expression block has a branch that is
+        incompatible with the condition type. For example, a branch with an "IterPatternNoValueAst" type
+        when the condition is not a GenRes type.
+        """
+
+        def add(self, cond: Asts.ExpressionAst, cond_type: Asts.TypeAst, branch_pattern: Asts.IterPatternAst, expected_type: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=cond,
+                tag=f"Condition type '{cond_type}' inferred here")
+
+            self.add_error(
+                ast=branch_pattern,
+                tag=f"Branch pattern incompatible with condition type '{cond_type}'.",
+                msg="The branch pattern is not compatible with the condition type.",
+                tip=f"Change the branch pattern to be compatible with the condition type '{expected_type}'.")
 
             return self
