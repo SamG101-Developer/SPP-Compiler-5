@@ -187,15 +187,15 @@ class AstMemoryUtils:
         # Get the symbol representing the outermost part of the expression being moved. If the outermost part is
         # non-symbolic, then the expression is not a variable or attribute access to a variable. No further checks are
         # required, because the expression is guaranteed to be an initialized value (function return value or literal).
-        sym = sm.current_scope.get_variable_symbol_outermost_part(value_ast)
-        if not sym:
+        var_scope, var_sym = sm.current_scope.get_variable_symbol_outermost_part(value_ast, get_scope=True)
+        if not var_sym:
             return
-        copies = sm.current_scope.get_symbol(sym.type).is_copyable
+        copies = sm.current_scope.get_symbol(var_sym.type).is_copyable
         partial_copies = sm.current_scope.get_symbol(value_ast.infer_type(sm, **kwargs)).is_copyable
 
         # An identifier that is a namespace cannot be used as an expression. As all expressions are analysed in this
         # function, the check is performed here.
-        if sym.__class__ is NamespaceSymbol:
+        if var_sym.__class__ is NamespaceSymbol:
             raise SemanticErrors.ExpressionTypeInvalidError().add(
                 value_ast).scopes(sm.current_scope)
 
@@ -203,7 +203,7 @@ class AstMemoryUtils:
         # but not in another branch. This means the memory status of the symbol cannot be guaranteed, which could cause
         # memory runtime-errors: if a symbol is used, and the branch that executed moved the value. Mitigate by raising
         # a compile-time error.
-        if check_move and (m := sym.memory_info.is_inconsistently_moved):
+        if check_move and (m := var_sym.memory_info.is_inconsistently_moved):
             raise SemanticErrors.MemoryInconsistentlyInitializedError().add(
                 value_ast, m[0], m[1], "moved").scopes(sm.current_scope)
 
@@ -211,7 +211,7 @@ class AstMemoryUtils:
         # above, but for initialization. This is when a symbol is non-initialized before the branching, and only
         # initialized in some of the branches. Using the symbol after the branching could cause a memory runtime-error,
         # if the symbol is still non-initialized.
-        if check_move and (m := sym.memory_info.is_inconsistently_initialized):
+        if check_move and (m := var_sym.memory_info.is_inconsistently_initialized):
             raise SemanticErrors.MemoryInconsistentlyInitializedError().add(
                 value_ast, m[0], m[1], "initialized").scopes(sm.current_scope)
 
@@ -219,14 +219,14 @@ class AstMemoryUtils:
         # check, but just for partial moves. Because partial moves affect the memory status of the entire object, and
         # restrict the operations performable on it, the partial move status must also be the same across all the
         # branches.
-        if check_move and (m := sym.memory_info.is_inconsistently_partially_moved):
+        if check_move and (m := var_sym.memory_info.is_inconsistently_partially_moved):
             raise SemanticErrors.MemoryInconsistentlyInitializedError().add(
                 value_ast, m[0], m[1], "partially moved").scopes(sm.current_scope)
 
         # Check for "inconsistent" memory pin status, from branches. The final consistency check is for the "pin" status
         # of objects. This is required, because if a borrow is subsequently used, say in a coroutine call, then the pin
         # status of the object must be guaranteed. As such, it must be consistent across all branches.
-        if check_pins and (m := sym.memory_info.is_inconsistently_pinned):
+        if check_pins and (m := var_sym.memory_info.is_inconsistently_pinned):
             raise SemanticErrors.MemoryInconsistentlyPinnedError().add(
                 value_ast, m[0], m[1]).scopes(sm.current_scope)
 
@@ -234,52 +234,52 @@ class AstMemoryUtils:
         # ever occurring in the code. If a value is marked as moved, then that value, nor its attributes, can be used
         # against until the outermost symbol is marked as fully initialized, (and the attribute symbol isn't marked as a
         # partial move, if it is an attribute access taking place).
-        if check_move and sym.memory_info.ast_moved:
+        if check_move and var_sym.memory_info.ast_moved:
             raise SemanticErrors.MemoryNotInitializedUsageError().add(
-                sym.memory_info.ast_initialization_old, value_ast, sym.memory_info.ast_moved, sm).scopes(sm.current_scope)
+                var_sym.memory_info.ast_initialization_old, value_ast, var_sym.memory_info.ast_moved, sm).scopes(sm.current_scope)
 
         # Check the symbol doesn't have any outstanding partial moves, in the case that the entire symbol itself is
         # being used. This means that "a" cannot be moved, or borrowed from etc, if "a.b has been moved. This guarantees
         # the fully-initialized status of symbols for memory operations involving the entire symbol.
-        if check_partial_move and sym.memory_info.ast_partial_moves and isinstance(value_ast, Asts.IdentifierAst):
+        if check_partial_move and var_sym.memory_info.ast_partial_moves and isinstance(value_ast, Asts.IdentifierAst):
             raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(
-                value_ast, sym.memory_info.ast_partial_moves[0]).scopes(sm.current_scope)
+                value_ast, var_sym.memory_info.ast_partial_moves[0]).scopes(sm.current_scope)
 
         # Check there are overlapping partial moves, for a new partial move. This means that for "a.b.c" to be moved off
         # of "a", both "a.b" and "a.b.c.d" must not be partially moved off of "a". This guarantees that "a.b" is
         # fully-initialized when it is moved off of "a".
-        if check_partial_move and sym.memory_info.ast_partial_moves and not isinstance(value_ast, Asts.IdentifierAst):
-            if overlaps := [p for p in sym.memory_info.ast_partial_moves if AstMemoryUtils.right_overlaps(p, value_ast)]:
+        if check_partial_move and var_sym.memory_info.ast_partial_moves and not isinstance(value_ast, Asts.IdentifierAst):
+            if overlaps := [p for p in var_sym.memory_info.ast_partial_moves if AstMemoryUtils.right_overlaps(p, value_ast)]:
                 raise SemanticErrors.MemoryNotInitializedUsageError().add(
-                    sym.memory_info.ast_initialization_old, value_ast, overlaps[0], sm).scopes(sm.current_scope)
+                    var_sym.memory_info.ast_initialization_old, value_ast, overlaps[0], sm).scopes(sm.current_scope)
 
         # Check the symbol is not being moved from a borrowed context. This prevents partial moves off of borrowed
         # object, because the current context doesn't have ownership of the object. This guarantees that when control is
         # returned to the original context, the object is still in the same (fully-initialized) memory state as before
         # the borrow took place. todo: add "partial_copies" to tests
-        if check_move_from_borrowed_ctx and sym.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
+        if check_move_from_borrowed_ctx and var_sym.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
             raise SemanticErrors.MemoryMovedFromBorrowedContextError().add(
-                value_ast, sym.memory_info.ast_borrowed).scopes(sm.current_scope)
+                value_ast, var_sym.memory_info.ast_borrowed).scopes(sm.current_scope)
 
         # Check the symbol being moved is not pinned. This prevents pinned objects from moving memory location. Pinned
         # objects must not move location, because they might be being borrowed into a coroutine or asynchronous function
         # call.
         # Todo: partial_copies with pins?
         # Todo: at some point, "copies" will be usable as  generic constraint (not a just a concrete type)
-        if not copies and sym.memory_info.ast_pins and (pin := sym.memory_info.ast_pins[0]):
-            pin_sym = sm.current_scope.get_symbol(pin)
-            if check_pins_linked and sym is not pin_sym:
+        if not copies and var_sym.memory_info.ast_pins and (pin := var_sym.memory_info.ast_pins[0]):
+            pin_sym = var_scope.get_symbol(pin)
+            if check_pins_linked and var_sym is not pin_sym:
                 raise SemanticErrors.MemoryMovedWhilstLinkPinnedError().add(
-                    value_ast, sym.memory_info.ast_initialization, sym.memory_info.ast_pins[0], pin_sym.memory_info.ast_initialization_old).scopes(sm.current_scope)
+                    value_ast, var_sym.memory_info.ast_initialization, var_sym.memory_info.ast_pins[0], pin_sym.memory_info.ast_initialization_old).scopes(sm.current_scope)
 
-            elif check_pins and sym is pin_sym:
+            elif check_pins and var_sym is pin_sym:
                 raise SemanticErrors.MemoryMovedWhilstPinnedError().add(
-                    value_ast, sym.memory_info.ast_initialization, sym.memory_info.ast_pins[0]).scopes(sm.current_scope)
+                    value_ast, var_sym.memory_info.ast_initialization, var_sym.memory_info.ast_pins[0]).scopes(sm.current_scope)
 
         # Mark the symbol as either moved or partially moved (for non-copy types). Entire objects are marked as moved,
         # and attribute accesses are marked as partial moves on the symbol representing the entire object. If the type
         # is copyable, then no movements are marked.
         if mark_moves and isinstance(value_ast, Asts.IdentifierAst) and not copies:
-            sym.memory_info.moved_by(move_ast)
+            var_sym.memory_info.moved_by(move_ast)
         elif mark_moves and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
-            sym.memory_info.ast_partial_moves.append(value_ast)
+            var_sym.memory_info.ast_partial_moves.append(value_ast)
