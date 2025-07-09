@@ -87,6 +87,13 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                     SequenceUtils.remove_if(pin_sym.memory_info.borrow_refers_to, lambda x: x[0] == sym.name)
                     SequenceUtils.remove_if(pin_sym.memory_info.borrow_refers_to, lambda x: x[0] == info[0])
 
+        for sym in all_syms:
+            if sym.__class__ is not VariableSymbol: continue
+            for bor in sym.memory_info.borrow_refers_to.copy():
+                a, b, _, scope = bor
+                if scope == sm.current_scope:
+                    sym.memory_info.borrow_refers_to.remove(bor)
+
         # If the final expression of the inner scope is being used (ie assigned to outer variable), then memory check it.
         if (move := kwargs.get("assignment", False)) and self.members:
             last_member = self.members[-1]
