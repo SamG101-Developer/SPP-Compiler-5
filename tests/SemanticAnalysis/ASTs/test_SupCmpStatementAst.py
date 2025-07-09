@@ -16,7 +16,7 @@ class TestSupCmpStatementAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstLinkPinnedError)
     def test_invalid_sup_cmp_statement_moving_non_copy_cmp(self):
         """
         cls MyType { }

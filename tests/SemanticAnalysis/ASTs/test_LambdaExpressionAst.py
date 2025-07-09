@@ -36,7 +36,7 @@ class LambdaExpressionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstLinkPinnedError)
     def test_invalid_lambda_expression_move_pinned_by_ref(self):
         """
         use std::number::u32::U32
@@ -51,7 +51,7 @@ class LambdaExpressionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstLinkPinnedError)
     def test_invalid_lambda_expression_move_pinned_by_mut(self):
         """
         use std::number::u32::U32
@@ -228,7 +228,7 @@ class LambdaExpressionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstLinkPinnedError)
     def test_invalid_lambda_move_borrowed_capture(self):
         """
         fun f() -> std::void::Void {

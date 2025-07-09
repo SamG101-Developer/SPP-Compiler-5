@@ -12,7 +12,7 @@ class TestAstYieldedBorrowMove(CustomTestCase):
         cor g() -> std::generator::Gen[&A] { }
 
         fun f() -> std::void::Void {
-            let generator = g()
+            let mut generator = g()
             let a = generator.res()
             let b = iter a of
                 value { value.a }
@@ -30,7 +30,7 @@ class TestAstYieldedBorrowMove(CustomTestCase):
         cor g() -> std::generator::Gen[&A] { }
 
         fun f() -> std::void::Void {
-            let generator = g()
+            let mut generator = g()
             let b = iter generator.res() of
                 value { value.a }
                 !! { "nothing" }

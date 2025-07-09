@@ -186,7 +186,7 @@ class CoroutineYielding(CustomTestCase):
         }
 
         fun f() -> Void {
-            let generator = g()
+            let mut generator = g()
             let value = generator.res()
 
             iter value of
@@ -210,7 +210,7 @@ class CoroutineYielding(CustomTestCase):
         }
 
         fun f() -> Void {
-            let generator = g()
+            let mut generator = g()
             let value = generator.res()
 
             iter value of
@@ -231,7 +231,7 @@ class CoroutineYielding(CustomTestCase):
         }
 
         fun f() -> Void {
-            let generator = g()
+            let mut generator = g()
             let value = generator.res()
 
             iter value of
