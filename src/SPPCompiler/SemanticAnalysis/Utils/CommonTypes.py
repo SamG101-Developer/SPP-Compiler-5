@@ -247,6 +247,15 @@ class CommonTypes:
         return type
 
     @staticmethod
+    def GenOnce(pos: int, yield_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
+        generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type), Asts.GenericTypeArgumentUnnamedAst(pos, send_type)]
+        generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "GenOnce", generics))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
+
+    @staticmethod
     def GenOpt(pos: int, yield_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type), Asts.GenericTypeArgumentUnnamedAst(pos, send_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
@@ -317,6 +326,7 @@ class CommonTypesPrecompiled:
     EMPTY_ARR: Asts.TypeAst = "Pending..."
     EMPTY_ARR_DYNAMIC: Asts.TypeAst = "Pending..."
     EMPTY_GEN: Asts.TypeAst = "Pending..."
+    EMPTY_GEN_ONCE: Asts.TypeAst = "Pending..."
     EMPTY_GEN_OPT: Asts.TypeAst = "Pending..."
     EMPTY_GEN_RES: Asts.TypeAst = "Pending..."
     EMPTY_GENERATED: Asts.TypeAst = "Pending..."
@@ -359,6 +369,7 @@ class CommonTypesPrecompiled:
         CommonTypesPrecompiled.EMPTY_ARR = CommonTypes.Arr(pos=0, elem_type=Asts.Ast(), size=Asts.Ast()).without_generics
         CommonTypesPrecompiled.EMPTY_ARR_DYNAMIC = CommonTypes.ArrDynamic(pos=0, elem_type=Asts.Ast()).without_generics
         CommonTypesPrecompiled.EMPTY_GEN = CommonTypes.Gen(pos=0, yield_type=Asts.Ast(), send_type=Asts.Ast()).without_generics
+        CommonTypesPrecompiled.EMPTY_GEN_ONCE = CommonTypes.GenOnce(pos=0, yield_type=Asts.Ast(), send_type=Asts.Ast()).without_generics
         CommonTypesPrecompiled.EMPTY_GEN_OPT = CommonTypes.GenOpt(pos=0, yield_type=Asts.Ast(), send_type=Asts.Ast()).without_generics
         CommonTypesPrecompiled.EMPTY_GEN_RES = CommonTypes.GenRes(pos=0, yield_type=Asts.Ast(), err_type=Asts.Ast(), send_type=Asts.Ast()).without_generics
         CommonTypesPrecompiled.EMPTY_GENERATED = CommonTypes.Generated(pos=0, yield_type=Asts.Ast()).without_generics
