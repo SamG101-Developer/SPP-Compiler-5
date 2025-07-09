@@ -30,6 +30,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     _is_async: Optional[Asts.Ast] = field(default=None, repr=False)
     _folded_args: Seq[Asts.FunctionCallArgumentAst] = field(default_factory=Seq, repr=False)
     _closure_arg: Optional[Asts.FunctionCallArgumentUnnamedAst] = field(default=None, repr=False)
+    _is_coro_and_auto_resume: bool = field(default=False, repr=False)
 
     def __copy__(self, memodict=None) -> PostfixExpressionOperatorFunctionCallAst:
         return PostfixExpressionOperatorFunctionCallAst(
@@ -281,6 +282,11 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         # If there is a scope present (ie non-lambda), then fully qualify the return type.
         if self._overload[0] is not None:
             return_type = self._overload[0].get_symbol(return_type).fq_name
+
+        # For GenOnce coroutines, auto resume the coroutine and return the "Yield" type.
+        if self._is_coro_and_auto_resume and not kwargs.pop("prevent_auto_res", False):
+            _, return_type, *_ = AstTypeUtils.get_generator_and_yielded_type(return_type, sm, lhs, "function call")
+
         return return_type
 
     def analyse_semantics(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
@@ -294,6 +300,12 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         self.function_argument_group.analyse_semantics(sm, **kwargs)
         self.generic_argument_group.analyse_semantics(sm, **kwargs)
         self.determine_overload(sm, lhs, expected_return_type=inferred_return_type, **kwargs)
+
+        # Special case for GenOnce called as a coroutine => auto move into the yield type.
+        if self._overload[1].tok_fun.token_type == Asts.SppTokenType.KwCor and not kwargs.pop("prevent_auto_res", False):
+            return_type = self._overload[1].return_type
+            if AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GEN_ONCE, return_type.without_generics, sm.current_scope, self._overload[0]):
+                self._is_coro_and_auto_resume = True
 
     def check_memory(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # Todo: lhs.pos or self.pos for these 2 mock groups?
@@ -309,33 +321,9 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
             group = Asts.FunctionCallArgumentGroupAst(pos=lhs.pos, arguments=[self._closure_arg])
             group.check_memory(sm)
 
-        # Link references created by the function call to the overload. This is only caused by ".res()".
-        # if self._overload[1].tok_fun.token_type == SppTokenType.KwCor:
-        #     coro_return_type = self.infer_type(sm, lhs, **kwargs)
-        #
-        #     # Find the generator type superimposed over the return type.
-        #     _, yield_type = AstTypeUtils.get_generator_and_yielded_type(
-        #         coro_return_type, sm, coro_return_type, "coroutine call")
-        #
-        #     # Immutable references invalidate all mutable references.
-        #     if yield_type.convention.__class__ is Asts.ConventionRefAst:
-        #         outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
-        #         for yielded_borrow, is_mutable in outermost.memory_info.yielded_borrows_linked:
-        #             if is_mutable: AstMemoryUtils.invalidate_yielded_borrow(sm, yielded_borrow, self)
-        #         outermost.memory_info.yielded_borrows_linked = [(ast, False) for ast in kwargs.get("assignment", [])]
-        #
-        #     # Mutable references invalidate all mutable and immutable references.
-        #     elif yield_type.convention.__class__ is Asts.ConventionMutAst:
-        #         outermost = sm.current_scope.get_variable_symbol_outermost_part(lhs)
-        #         for yielded_borrow, _ in outermost.memory_info.yielded_borrows_linked:
-        #             AstMemoryUtils.invalidate_yielded_borrow(sm, yielded_borrow, self)
-        #         outermost.memory_info.yielded_borrows_linked = [(ast, True) for ast in kwargs.get("assignment", [])]
-
         # Check the argument group, now the old borrows have been invalidated.
-        is_coro_resume = kwargs.pop("is_coro_resume", False)
         self.generic_argument_group.check_memory(sm, **kwargs)
-        self.function_argument_group.check_memory(
-            sm, target_proto=self._overload[1], is_async=self._is_async, is_coro_resume=is_coro_resume, **kwargs)
+        self.function_argument_group.check_memory(sm, target_proto=self._overload[1], is_async=self._is_async, **kwargs)
 
 
 __all__ = ["PostfixExpressionOperatorFunctionCallAst"]
