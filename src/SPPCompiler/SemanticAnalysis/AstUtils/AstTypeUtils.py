@@ -378,6 +378,11 @@ class AstTypeUtils:
         :param lhs_ignore_alias: Whether to ignore alias types on the left-hand side.
         :param debug: Whether to print debug information.
         :return: Whether the two types are equal.
+
+        TODO: Need to add a function checker. So if the lhs_type is like FunRef[...], and the RHS is a collection of
+            function overloads,then as long as one overload matches, it should be accepted. Something like iterate the
+            function overloads for the $Func type, and use AstFunctionUtils to check for an overload conflict =>
+            complete match?
         """
 
         # Handle generic comp arguments (simple value comparison).
@@ -393,19 +398,9 @@ class AstTypeUtils:
         stripped_lhs = lhs_type.without_generics
         stripped_rhs = rhs_type.without_generics
 
-        if debug:
-            print("-" * 100)
-            print(f"Comparing types: {lhs_type} vs {rhs_type}")
-            print(f"Comparing stripped types: {stripped_lhs} vs {stripped_rhs}")
-            print(f"Scopes: {lhs_scope.name} vs {rhs_scope.name}")
-
         # First step is to get the symbols for the non-generic versions of both types.
         stripped_lhs_symbol = lhs_scope.get_symbol(stripped_lhs, ignore_alias=lhs_ignore_alias)
         stripped_rhs_symbol = rhs_scope.get_symbol(stripped_rhs)
-
-        if debug:
-            print(f"LHS stripped symbol: {stripped_lhs_symbol}")
-            print(f"RHS stripped symbol: {stripped_rhs_symbol}")
 
         # If the left-hand-side is a Variant type, then check the composite types first.
         if check_variant and AstTypeUtils.symbolic_eq(stripped_lhs_symbol.fq_name.without_generics, CommonTypesPrecompiled.EMPTY_VAR, lhs_scope, lhs_scope, check_variant=False, debug=debug):
@@ -423,10 +418,6 @@ class AstTypeUtils:
         # The next step is to get the generic arguments for both types.
         lhs_type_fq = lhs_scope.get_symbol(lhs_type, ignore_alias=lhs_ignore_alias).fq_name
         rhs_type_fq = rhs_scope.get_symbol(rhs_type).fq_name
-
-        if debug:
-            print(f"LHS FQ: {lhs_type_fq}")
-            print(f"RHS FQ: {rhs_type_fq}")
 
         lhs_generics = lhs_type_fq.type_parts[-1].generic_argument_group.arguments
         rhs_generics = rhs_type_fq.type_parts[-1].generic_argument_group.arguments

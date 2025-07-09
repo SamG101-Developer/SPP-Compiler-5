@@ -211,8 +211,6 @@ class Scope:
         symbol = scope._symbol_table.get(name)
         if sym_type is not None and not isinstance(symbol, sym_type):
             symbol = None
-        if debug and symbol is not None:
-            print(f"Found symbol: {symbol.name} in {scope.name} ({symbol.__class__.__name__})")
 
         # If this is not an exclusive search, search the parent scope.
         if symbol is None and scope._parent and not exclusive:
