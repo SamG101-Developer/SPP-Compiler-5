@@ -228,7 +228,7 @@ class LambdaExpressionAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstLinkPinnedError)
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
     def test_invalid_lambda_move_borrowed_capture(self):
         """
         fun f() -> std::void::Void {
