@@ -83,8 +83,7 @@ class RawTokenType(TokenType):
     TkDollar = 29
     TkUnknown = 30
     NoToken = 31
-    Keyword = 32
-    EndOfFile = 33
+    EndOfFile = 32
 
     @staticmethod
     def newline_token() -> TokenType:
