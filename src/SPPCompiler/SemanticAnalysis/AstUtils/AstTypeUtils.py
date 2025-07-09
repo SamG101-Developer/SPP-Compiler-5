@@ -41,10 +41,11 @@ class AstTypeUtils:
     @staticmethod
     def is_type_generator(type: Asts.TypeAst, scope: Scope) -> bool:
         # Check if a type is a generator type.
-        is_gen     = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN, scope, scope)
-        is_gen_opt = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_OPT, scope, scope)
-        is_gen_res = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_RES, scope, scope)
-        return is_gen or is_gen_opt or is_gen_res
+        is_gen      = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN, scope, scope)
+        is_gen_once = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_ONCE, scope, scope)
+        is_gen_opt  = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_OPT, scope, scope)
+        is_gen_res  = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_RES, scope, scope)
+        return is_gen or is_gen_once or is_gen_opt or is_gen_res
 
     @staticmethod
     def is_type_tuple(type: Asts.TypeAst, scope: Scope) -> bool:
@@ -288,12 +289,17 @@ class AstTypeUtils:
     @staticmethod
     def get_generator_and_yielded_type(
             type: Asts.TypeAst, sm: ScopeManager, expr: Asts.ExpressionAst,
-            what: str) -> Tuple[Asts.TypeAst, Asts.TypeAst, Asts.GenericCompArgumentAst, bool, bool, Asts.TypeAst]:
+            what: str) -> Tuple[Asts.TypeAst, Asts.TypeAst, bool, bool, bool, Asts.TypeAst]:
 
         """
         Get the generator type, and the yielded type from a type. Search the super types of the input type for a
         generator type, and return it along with the extracted `Yield` type.
         """
+
+        # Generic types are not generators, so raise an error.
+        if sm.current_scope.get_symbol(type).scope is None:
+            raise SemanticErrors.ExpressionNotGeneratorError().add(
+                expr, type, what).scopes(sm.current_scope)
 
         # Initialize the generic type to None, and get all the super types.
         gen_type = None
@@ -314,7 +320,7 @@ class AstTypeUtils:
         yield_type = gen_type.type_parts[-1].generic_argument_group["Yield"].value
 
         # Extract the multiplicity, optionality and fallibility from the generator type.
-        is_once = gen_type.type_parts[-1].generic_argument_group["once"].value.to_python_literal()
+        is_once     = AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GEN_ONCE, gen_type, sm.current_scope, sm.current_scope)
         is_optional = AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GEN_OPT, gen_type, sm.current_scope, sm.current_scope)
         is_fallible = AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GEN_RES, gen_type, sm.current_scope, sm.current_scope)
         if is_fallible:
@@ -322,11 +328,8 @@ class AstTypeUtils:
         else:
             error_type = CommonTypesPrecompiled.VOID
 
-        # If the flags are set, include their ASTs in the return.
-        once = gen_type.type_parts[-1].generic_argument_group["once"] if is_once else None
-
         # Return all the information about the generator type.
-        return gen_type, yield_type, once, is_optional, is_fallible, error_type
+        return gen_type, yield_type, is_once, is_optional, is_fallible, error_type
 
     @staticmethod
     def deduplicate_composite_types(type: Asts.TypeSingleAst, scope: Scope) -> list[Asts.TypeAst]:
