@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from typing import List, Optional, TYPE_CHECKING, final
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-class AbstractTypeTemporaryAst:
+class AbstractTypeTemporaryAst(ABC):
     """
     The AbstractTypeTemporaryAst is a temporary type ast that is used or instant-conversion purposes. The ast that it is
     inherited by will only be created for conversion purposes, ie shorthand type syntax.
