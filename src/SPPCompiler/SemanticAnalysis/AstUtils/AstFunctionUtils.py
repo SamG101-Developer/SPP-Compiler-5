@@ -160,7 +160,7 @@ class AstFunctionUtils:
             return overload_scopes_and_info
 
         # Check for namespaced (module-level) functions. They will have no "inheritable generics".
-        if target_scope.type_symbol is not None and target_scope.type_symbol.__class__ == NamespaceSymbol:
+        if target_scope.type_symbol is not None and type(target_scope.type_symbol) == NamespaceSymbol:
             for ancestor_scope in target_scope.ancestors:
 
                 # Find all the scopes at the module level superimposing a function type over the function.

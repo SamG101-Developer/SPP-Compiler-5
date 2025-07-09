@@ -221,7 +221,7 @@ class Scope:
             symbol = search_super_scopes(scope, name, ignore_alias=ignore_alias, sym_type=sym_type, debug=debug)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
-        if symbol.__class__ is AliasSymbol and symbol.old_sym and not ignore_alias:
+        if type(symbol) is AliasSymbol and symbol.old_sym and not ignore_alias:
             return symbol.old_sym
 
         return symbol
@@ -231,16 +231,16 @@ class Scope:
         symbol = None
 
         # For an IdentifierAst, get any identifier-named symbols from the symbol table.
-        if name.__class__ is Asts.IdentifierAst:
+        if type(name) is Asts.IdentifierAst:
             for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.IdentifierAst):
-                if symbol.__class__ is NamespaceSymbol and symbol.name.value == name.value:
+                if type(symbol) is NamespaceSymbol and symbol.name.value == name.value:
                     return symbol
             return None
 
         # For a GenericIdentifierAst, get any type-named symbols from the symbol table.
-        elif name.__class__ is Asts.GenericIdentifierAst:
+        elif type(name) is Asts.GenericIdentifierAst:
             for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.GenericIdentifierAst):
-                if symbol.__class__ is TypeSymbol and symbol.name == name:
+                if type(symbol) is TypeSymbol and symbol.name == name:
                     return symbol
             return None
 
@@ -320,7 +320,7 @@ class Scope:
     @FunctionCache.cache_property
     def parent_module(self) -> Scope:
         # Get the ancestor module scope.
-        return [s for s in self.ancestors if s.name.__class__ is Asts.IdentifierAst][0]
+        return [s for s in self.ancestors if type(s.name) is Asts.IdentifierAst][0]
 
     @property
     def children(self) -> List[Scope]:
@@ -363,16 +363,16 @@ class Scope:
         return all_sub_scopes
 
 
-def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[Scope, Asts.GenericIdentifierAst]:
+def shift_scope_for_namespaced_type(scope: Scope, fq_type: Asts.TypeAst) -> Tuple[Scope, Asts.GenericIdentifierAst]:
     # For TypeAsts, move through each namespace/type part accessing the namespace scope.
-    for part in type.fq_type_parts[:-1]:
+    for part in fq_type.fq_type_parts[:-1]:
         # Get the next type/namespace symbol from the scope.
-        inner_symbol = scope.get_namespace_symbol(part) if part.__class__ is Asts.IdentifierAst else scope.get_symbol(part)
+        inner_symbol = scope.get_namespace_symbol(part) if type(part) is Asts.IdentifierAst else scope.get_symbol(part)
         match inner_symbol:
             case None: break
             case _: scope = inner_symbol.scope
-    type = type.type_parts[-1]
-    return scope, type
+    fq_type = fq_type.type_parts[-1]
+    return scope, fq_type
 
 
 def search_super_scopes(

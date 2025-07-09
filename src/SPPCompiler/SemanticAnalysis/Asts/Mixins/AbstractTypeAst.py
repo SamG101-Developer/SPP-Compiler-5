@@ -59,11 +59,11 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
     @property
     def namespace_parts(self) -> List[Asts.IdentifierAst]:
-        return [p for p in self.fq_type_parts if p.__class__ is Asts.IdentifierAst]
+        return [p for p in self.fq_type_parts if type(p) is Asts.IdentifierAst]
 
     @property
     def type_parts(self) -> List[Asts.GenericIdentifierAst | Asts.TokenAst]:
-        return [p for p in self.fq_type_parts if p.__class__ is Asts.GenericIdentifierAst or p.__class__ is Asts.TokenAst]
+        return [p for p in self.fq_type_parts if type(p) is Asts.GenericIdentifierAst or type(p) is Asts.TokenAst]
 
     @abstractmethod
     def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:

@@ -79,7 +79,7 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Invalidate yielded borrows that are linked.
         for sym in inner_syms:
-            if sym.__class__ is not VariableSymbol: continue
+            if type(sym) is not VariableSymbol: continue
 
             for pin in sym.memory_info.ast_pins.copy():
                 pin_sym = sm.current_scope.get_symbol(pin)
@@ -88,7 +88,7 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                     SequenceUtils.remove_if(pin_sym.memory_info.borrow_refers_to, lambda x: x[0] == info[0])
 
         for sym in all_syms:
-            if sym.__class__ is not VariableSymbol: continue
+            if type(sym) is not VariableSymbol: continue
             for bor in sym.memory_info.borrow_refers_to.copy():
                 a, b, _, scope = bor
                 if scope == sm.current_scope:

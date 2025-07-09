@@ -20,9 +20,9 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return IdentifierAst(pos=self.pos, value=self.value)
 
     def __eq__(self, other: IdentifierAst) -> bool:
-        if other.__class__ is IdentifierAst or other.__class__ is Asts.GenericIdentifierAst:
+        if type(other) is IdentifierAst or type(other) is Asts.GenericIdentifierAst:
             return self.value == other.value
-        elif other.__class__ is Asts.TypeSingleAst:
+        elif type(other) is Asts.TypeSingleAst:
             return self.value == other.name.value
         else:
             return False
@@ -70,11 +70,11 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         symbol = sm.current_scope.get_symbol(self)
 
         # If the symbol is a variable, then get its type.
-        if symbol.__class__ is VariableSymbol:
+        if type(symbol) is VariableSymbol:
             return symbol.type
 
         # If the symbol is a namespace, then return "self" as the type.
-        elif symbol.__class__ is NamespaceSymbol:
+        elif type(symbol) is NamespaceSymbol:
             return self
 
         else:
@@ -83,7 +83,7 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there is a symbol with the same name in the current scope.
         if not sm.current_scope.has_symbol(self):
-            alternatives = [s.name.value for s in sm.current_scope.all_symbols(sup_scope_search=False) if s.__class__ is VariableSymbol]
+            alternatives = [s.name.value for s in sm.current_scope.all_symbols(sup_scope_search=False) if type(s) is VariableSymbol]
             closest_match = difflib.get_close_matches(self.value, alternatives, n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(
                 self, "identifier", closest_match[0] if closest_match else None).scopes(sm.current_scope)

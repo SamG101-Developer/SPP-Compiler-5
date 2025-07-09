@@ -262,7 +262,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         symbol_mem_info = defaultdict(list[tuple[Asts.CaseExpressionBranchAst, LightweightMemoryInfo]])
         for branch in self.branches:
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
-            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols(match_type=Asts.IdentifierAst) if s.__class__ is VariableSymbol]
+            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols(match_type=Asts.IdentifierAst) if type(s) is VariableSymbol]
             old_symbol_mem_info = {s: s.memory_info.snapshot() for s in var_symbols_in_scope}
             branch.check_memory(sm, cond=self.cond, **kwargs)
             new_symbol_mem_info = {s: s.memory_info.snapshot() for s in var_symbols_in_scope}

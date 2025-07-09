@@ -128,7 +128,7 @@ class TypeSymbol(BaseSymbol):
         if self.is_generic:
             return fq_name
 
-        if self.__class__ is AliasSymbol:
+        if type(self) is AliasSymbol:
             return fq_name
 
         if self.name.value[0] == "$":

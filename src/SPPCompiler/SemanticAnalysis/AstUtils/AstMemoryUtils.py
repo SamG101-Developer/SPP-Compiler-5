@@ -195,7 +195,7 @@ class AstMemoryUtils:
 
         # An identifier that is a namespace cannot be used as an expression. As all expressions are analysed in this
         # function, the check is performed here.
-        if var_sym.__class__ is NamespaceSymbol:
+        if type(var_sym) is NamespaceSymbol:
             raise SemanticErrors.ExpressionTypeInvalidError().add(
                 value_ast).scopes(sm.current_scope)
 

@@ -21,7 +21,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     rhs: Asts.TypeAst = field(default=None)
 
     def __eq__(self, other: TypeUnaryExpressionAst) -> bool:
-        return other.__class__ is TypeUnaryExpressionAst and type(self.op) is type(other.op) and self.op == other.op and self.rhs == other.rhs
+        return type(other) is TypeUnaryExpressionAst and type(self.op) is type(other.op) and self.op == other.op and self.rhs == other.rhs
 
     def __hash__(self) -> int:
         return hash((self.op, self.rhs))
@@ -45,7 +45,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
 
     @property
     def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        return self.op.fq_type_parts + self.rhs.fq_type_parts if self.op.__class__ is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.fq_type_parts
+        return self.op.fq_type_parts + self.rhs.fq_type_parts if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.fq_type_parts
 
     @FunctionCache.cache_property
     def without_generics(self) -> Optional[Asts.TypeAst]:
@@ -53,7 +53,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
 
     @property
     def without_conventions(self) -> Optional[Asts.TypeAst]:
-        return self if self.op.__class__ is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.without_conventions
+        return self if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.without_conventions
 
     @property
     def convention(self) -> Optional[Asts.TypeAst]:

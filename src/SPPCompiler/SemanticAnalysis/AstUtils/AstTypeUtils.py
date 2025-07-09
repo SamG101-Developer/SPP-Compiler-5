@@ -98,7 +98,7 @@ class AstTypeUtils:
 
             # If the namespace does not exist, raise an error.
             if not sm.get_namespaced_scope(sub_namespace):
-                alternatives = [a.name.value for a in namespace_scope.all_symbols(sup_scope_search=True) if a.__class__ is NamespaceSymbol]
+                alternatives = [a.name.value for a in namespace_scope.all_symbols(sup_scope_search=True) if type(a) is NamespaceSymbol]
                 closest_match = difflib.get_close_matches(sub_namespace[-1].value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     sub_namespace[-1], "namespace", closest_match[0] if closest_match else None).scopes(sm.current_scope)
@@ -117,7 +117,7 @@ class AstTypeUtils:
         # Get the type part's symbol, and raise an error if it does not exist.
         type_symbol = scope.get_symbol(type_part, ignore_alias=ignore_alias, **kwargs)
         if not type_symbol:
-            alternatives = [a.name.value for a in scope.all_symbols(sup_scope_search=True) if a.__class__ in [TypeSymbol, AliasSymbol]]
+            alternatives = [a.name.value for a in scope.all_symbols(sup_scope_search=True) if type(a) in [TypeSymbol, AliasSymbol]]
             SequenceUtils.remove_if(alternatives, lambda a: a[0] == "$")
             closest_match = difflib.get_close_matches(type_part.value, alternatives, n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(
@@ -390,8 +390,8 @@ class AstTypeUtils:
             return lhs_type == rhs_type
 
         # Do a convention-match check.
-        if lhs_type.convention.__class__ is not rhs_type.convention.__class__:
-            if not (lhs_type.convention.__class__ is Asts.ConventionRefAst and rhs_type.convention.__class__ is Asts.ConventionMutAst):
+        if type(lhs_type.convention) is not type(rhs_type.convention):
+            if not (type(lhs_type.convention) is Asts.ConventionRefAst and type(rhs_type.convention) is Asts.ConventionMutAst):
                 return False
 
         # Strip the generics from the types.

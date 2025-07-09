@@ -23,9 +23,9 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     name: Asts.GenericIdentifierAst = field(default=None)
 
     def __eq__(self, other: TypeSingleAst | Asts.IdentifierAst) -> bool:
-        if other.__class__ is Asts.TypeSingleAst:
+        if type(other) is Asts.TypeSingleAst:
             return self.name == other.name
-        elif other.__class__ is Asts.IdentifierAst:
+        elif type(other) is Asts.IdentifierAst:
             return self.name.value == other.value
         return False
 
@@ -216,7 +216,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             new_scope = AstTypeUtils.create_generic_scope(sm, self.name, type_symbol, is_tuple=is_tuple, **kwargs)
 
             # Handle type aliasing (providing generics to the original type).
-            if type_symbol.__class__ is AliasSymbol:
+            if type(type_symbol) is AliasSymbol:
 
                 # Substitute the old type: "Opt[Str]" => "Var[Some[Str], None]"
                 generics = self.name.generic_argument_group.arguments + original_scope.generics

@@ -62,7 +62,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         # Prevent cyclic inheritance by checking if the sup scope is already in the list.
         existing_sup_scope = [
             s for s in cls_symbol.scope.sup_scopes
-            if (s._ast.__class__ is SupPrototypeExtensionAst) and s._ast is not self and AstTypeUtils.symbolic_eq(s._ast.super_class, self.super_class, s, check_scope)]
+            if (type(s._ast) is SupPrototypeExtensionAst) and s._ast is not self and AstTypeUtils.symbolic_eq(s._ast.super_class, self.super_class, s, check_scope)]
 
         if existing_sup_scope and cls_symbol.name.value[0] != "$":
             raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
@@ -72,7 +72,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
         # Prevent double inheritance by checking if the scopes are already registered the other way around.
         existing_sup_scope = [
             s for s in sup_symbol.scope.sup_scopes
-            if (s._ast.__class__ is SupPrototypeExtensionAst) and AstTypeUtils.symbolic_eq(s._ast.super_class, self.name, s, check_scope)]
+            if (type(s._ast) is SupPrototypeExtensionAst) and AstTypeUtils.symbolic_eq(s._ast.super_class, self.name, s, check_scope)]
 
         if existing_sup_scope:
             raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
