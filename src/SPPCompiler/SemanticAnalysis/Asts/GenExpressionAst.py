@@ -64,8 +64,8 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 kwargs |= {"inferred_return_type": yield_type}
 
             # Analyse the expression and infer its type.
-            self.expr.analyse_semantics(sm, prevent_auto_res=True, **kwargs)
-            expression_type = self.expr.infer_type(sm, prevent_auto_res=True, **kwargs).with_convention(self.convention)
+            self.expr.analyse_semantics(sm, **kwargs)
+            expression_type = self.expr.infer_type(sm, **kwargs).with_convention(self.convention)
         else:
             # No value means the Void type is the expression type.
             expression_type = CommonTypesPrecompiled.VOID
@@ -95,17 +95,43 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         """
-        Check the memory integrity of the expression. This is a regular expression AST, so deeper analysis may be
-        required.
+        Check the memory integrity of the expression. Can't use the FunctionCallArgumentGroupAst here because whilst
+        some of the borrow checking is the same, there is way more in the function call that is too restrictive for a
+        gen expression.
         :param sm: The scope manager.
         :param kwargs: Additional keyword arguments.
         """
 
         if self.expr:
-            ast = Asts.FunctionCallArgumentGroupAst(
-                pos=(self.convention or self.expr).pos,
-                arguments=[Asts.FunctionCallArgumentUnnamedAst(pos=self.expr.pos, convention=self.convention, value=self.expr)])
-            ast.check_memory(sm, **kwargs)
+            # Get the outermost part of the yield as a symbol. If the yield is non-symbolic, then there is no need
+            # to track borrows to it, as it is a temporary value.
+            sym = sm.current_scope.get_variable_symbol_outermost_part(self.expr)
+            if not sym: return
+
+            # Ensure the argument isn't moved or partially moved (applies to all conventions). For non-symbolic
+            # arguments, nested checking is done via the argument itself.
+            self.expr.check_memory(sm, **kwargs)
+            AstMemoryUtils.enforce_memory_integrity(
+                self.expr, self.kw_gen, sm, check_move=True, check_partial_move=True,
+                check_move_from_borrowed_ctx=False, check_pins=False, check_pins_linked=False, mark_moves=False,
+                **kwargs)
+
+            if self.convention is None:
+                # Don't bother rechecking the moves or partial moves, but ensure that attributes aren't being moved off
+                # of a borrowed value and that pins are maintained. Mark the move or partial move of the argument.
+                AstMemoryUtils.enforce_memory_integrity(
+                    self.expr, self.expr, sm, check_move=False, check_partial_move=False,
+                    check_move_from_borrowed_ctx=True, check_pins_linked=False, check_pins=True, mark_moves=True,
+                    **kwargs)
+
+            elif isinstance(self.convention, Asts.ConventionMutAst):
+                # Check the argument's value is mutable.
+                if not sym.is_mutable:
+                    raise SemanticErrors.MutabilityInvalidMutationError().add(
+                        self.expr, self.convention, sym.memory_info.ast_initialization).scopes(sm.current_scope)
+
+            elif isinstance(self.convention, Asts.ConventionRefAst):
+                ...
 
 
 __all__ = [
