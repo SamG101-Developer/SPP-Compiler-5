@@ -254,7 +254,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.cond.check_memory(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(
             self.cond, self.cond, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=False, mark_moves=False, **kwargs)
+            check_pins=False, check_pins_linked=False, mark_moves=False, **kwargs)
 
         sm.move_to_next_scope()
 

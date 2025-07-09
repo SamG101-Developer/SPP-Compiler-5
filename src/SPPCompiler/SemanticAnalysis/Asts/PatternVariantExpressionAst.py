@@ -34,7 +34,7 @@ class PatternVariantExpressionAst(Asts.Ast):
         self.expr.check_memory(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(
             self.expr, self.expr, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=True, **kwargs)
+            check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
 
 
 __all__ = [

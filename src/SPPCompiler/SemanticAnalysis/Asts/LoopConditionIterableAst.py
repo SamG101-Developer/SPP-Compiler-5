@@ -70,7 +70,9 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self.iterable.check_memory(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.iterable, self.iterable, sm, mark_moves=False, **kwargs)
+        AstMemoryUtils.enforce_memory_integrity(
+            self.iterable, self.iterable, sm, check_move=True, check_partial_move=True,
+            check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, mark_moves=False, **kwargs)
 
         # Re-initialize for the double-loop analysis.
         syms = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]

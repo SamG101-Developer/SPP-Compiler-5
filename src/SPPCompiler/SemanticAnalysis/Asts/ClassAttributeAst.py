@@ -114,7 +114,9 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Check the default's memory state (cmp value, so no need to iterate deeper).
         if self.default is not None:
-            AstMemoryUtils.enforce_memory_integrity(self.default, self.default, sm, **kwargs)
+            AstMemoryUtils.enforce_memory_integrity(
+                self.default, self.default, sm, check_move=True, check_partial_move=True,
+                check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, **kwargs)
 
 
 __all__ = [

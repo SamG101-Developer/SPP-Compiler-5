@@ -133,9 +133,9 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         for argument in self.arguments:
             sym = sm.current_scope.get_symbol(argument.value)
             if sym is None: continue
-            if not sym.memory_info.borrow_refers_to: continue
-            for assignment, b, m in sym.memory_info.borrow_refers_to:
+            for assignment, b, m, _ in sym.memory_info.borrow_refers_to:
                 if assignment is not None:
+                    (borrows_mut if m else borrows_ref).append(assignment)
                     (pre_existing_borrows_mut if m else pre_existing_borrows_ref)[argument.value].append(assignment)
 
         for argument in self.arguments:
@@ -150,15 +150,17 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
             argument.check_memory(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(
                 argument.value, argument, sm, check_move=True, check_partial_move=True,
-                check_move_from_borrowed_ctx=False, check_pins=False, mark_moves=False, **kwargs)
+                check_move_from_borrowed_ctx=False, check_pins=False, check_pins_linked=False, mark_moves=False,
+                **kwargs)
 
             if argument.convention is None:
                 # Don't bother rechecking the moves or partial moves, but ensure that attributes aren't being moved off
                 # of a borrowed value and that pins are maintained. Mark the move or partial move of the argument.
-                argument.check_memory(sm, **kwargs)
+                # argument.check_memory(sm, **kwargs)
                 AstMemoryUtils.enforce_memory_integrity(
                     argument.value, argument, sm, check_move=False, check_partial_move=False,
-                    check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=True, **kwargs)
+                    check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, mark_moves=True,
+                    **kwargs)
 
                 # Check the move doesn't overlap with any borrows. This is to ensure that "f(&x, x)" can never happen,
                 # because the first argument requires the owned object to outlive the function call, and moving it as
@@ -168,8 +170,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                         overlap[0], argument.value).scopes(sm.current_scope)
 
             elif isinstance(argument.convention, Asts.ConventionMutAst):
-                argument.check_memory(sm, **kwargs)
-
                 # Check the mutable borrow doesn't overlap with any other borrow in the same scope.
                 if overlap := [b for b in (borrows_ref + borrows_mut) if AstMemoryUtils.overlaps(b, argument.value)]:
                     raise SemanticErrors.MemoryOverlapUsageError().add(
@@ -194,19 +194,18 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 if pins_required:
                     sym.memory_info.ast_pins.append(argument.value)
                     sym.memory_info.is_borrow_mut = True
+                    sym.memory_info.borrow_refers_to.append((argument.value, argument, True, sm.current_scope))
 
                     for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
-                        sym.memory_info.borrow_refers_to.append((assign_target, argument, True))
-                    else:
-                        sym.memory_info.borrow_refers_to.append((None, argument, True))
+                        sym.memory_info.borrow_refers_to.append((assign_target, argument, True, sm.current_scope))
+                    # else:
+                    #     sym.memory_info.borrow_refers_to.append((None, argument, True, sm.current_scope))
 
                 # Add the mutable borrow to the mutable borrow set.
                 borrows_mut.append(argument.value)
 
             elif isinstance(argument.convention, Asts.ConventionRefAst):
-                argument.check_memory(sm, **kwargs)
-
                 # Check the immutable borrow doesn't overlap with any other mutable borrow in the same scope.
                 if overlap := [b for b in borrows_mut if AstMemoryUtils.overlaps(b, argument.value)]:
                     raise SemanticErrors.MemoryOverlapUsageError().add(
@@ -219,12 +218,13 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 if pins_required:
                     sym.memory_info.ast_pins.append(argument.value)
                     sym.memory_info.is_borrow_ref = True
+                    sym.memory_info.borrow_refers_to.append((argument.value, argument, False, sm.current_scope))
 
                     for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
-                        sym.memory_info.borrow_refers_to.append((assign_target, argument, False))
-                    else:
-                        sym.memory_info.borrow_refers_to.append((None, argument, False))
+                        sym.memory_info.borrow_refers_to.append((assign_target, argument, False, sm.current_scope))
+                    # else:
+                    #     sym.memory_info.borrow_refers_to.append((None, argument, False, sm.current_scope))
 
                 # Add the immutable borrow to the immutable borrow set.
                 borrows_ref.append(argument.value)

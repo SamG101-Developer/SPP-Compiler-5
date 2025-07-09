@@ -74,7 +74,7 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             value.check_memory(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(
                 value, self, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-                check_pins=True, mark_moves=True, **kwargs)
+                check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
             sym.memory_info.initialized_by(self.name)
 
 

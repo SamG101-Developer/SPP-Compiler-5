@@ -833,7 +833,7 @@ class SemanticErrors:
                 ast=ast,
                 tag="Uninitialized memory used here.",
                 msg="The memory has not been initialized or has been moved.",
-                tip=f"Ensure the memory is initialized before use\n\n\tlet {ast} = {ast.infer_type(sm).type_parts[-1]}().")
+                tip=f"Ensure the memory is initialized before use.")
 
             return self
 
@@ -875,21 +875,52 @@ class SemanticErrors:
 
             return self
 
-    class MemoryMovedWhilstPinnedError(SemanticError):
+    class MemoryMovedWhilstLinkPinnedError(SemanticError):
         """
-        The MemoryMovedWhilstPinnedError is raised if a memory symbol is moved whilst it is pinned. This occurs when a
-        pinned memory is moved.
+        The MemoryMovedWhilstLinkPinnedError is raised if a memory symbol is moved whilst it is pinned by another
+        symbol. This occurs when for example a coroutine is moved, but is pinned by a borrow passed into it.
         """
 
-        def add(self, move_location: Asts.Ast, pin_location: Asts.Ast) -> SemanticError:
+        def add(self, move_location: Asts.Ast, symbol_initialization: Asts.Ast, pin_location: Asts.Ast, pin_initialization: Asts.Ast) -> SemanticError:
+            self.add_info(
+                ast=pin_initialization,
+                tag="Pinned borrow initialized here.")
+
+            self.add_info(
+                ast=symbol_initialization,
+                tag="Pinned object defined here.")
+
             self.add_info(
                 ast=pin_location,
-                tag=f"Symbol '{move_location}' pinned by this borrow.")
+                tag=f"Borrow here causes '{move_location}' to be pinned.")
 
             self.add_error(
                 ast=move_location,
-                tag="Moving pinned memory.",
-                msg="The memory is pinned and cannot be moved.",
+                tag=f"Extending lifetime of borrow '{pin_location}'.",
+                msg="Cannot move a value into an outer scope that would extend a borrow lifetime.",
+                tip="Remove the move operation.")
+
+            return self
+
+    class MemoryMovedWhilstPinnedError(SemanticError):
+        """
+        The MemoryMovedWhilstPinnedError is raised if a memory symbol is moved whilst it is pinned. This occurs when for
+        example an owned object is moved, but is pinned as a borrow into a coroutine.
+        """
+
+        def add(self, move_location: Asts.Ast, symbol_initialization: Asts.Ast, pin_location: Asts.Ast) -> SemanticError:
+            self.add_info(
+                ast=symbol_initialization,
+                tag=f"Symbol '{symbol_initialization}' defined here.")
+
+            self.add_info(
+                ast=pin_location,
+                tag=f"Symbol '{move_location}' pinned here as a borrow.")
+
+            self.add_error(
+                ast=move_location,
+                tag=f"Moving pinned borrow '{pin_location}'.",
+                msg="Cannot move a value that is pinned.",
                 tip="Remove the move operation.")
 
             return self

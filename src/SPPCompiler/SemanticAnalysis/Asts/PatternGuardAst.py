@@ -50,8 +50,8 @@ class PatternGuardAst(Asts.Ast):
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self.expression.check_memory(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(
-            self.expression, self.tok_guard, sm, check_move=True, check_partial_move=True, check_pins=True,
-            check_move_from_borrowed_ctx=True, mark_moves=True, **kwargs)
+            self.expression, self.tok_guard, sm, check_move=True, check_partial_move=True, check_pins=False,
+            check_pins_linked=False, check_move_from_borrowed_ctx=True, mark_moves=True, **kwargs)
 
 
 __all__ = [

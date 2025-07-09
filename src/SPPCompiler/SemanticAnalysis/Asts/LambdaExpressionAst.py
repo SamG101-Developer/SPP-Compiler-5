@@ -149,4 +149,4 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for cap in self.pc_group.captures:
             if cap.convention is not None:
                 cap_sym = sm.current_scope.get_symbol(cap.value)
-                cap_sym.memory_info.ast_pins.append(cap)
+                cap_sym.memory_info.ast_pins.append(cap.value)

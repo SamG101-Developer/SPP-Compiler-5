@@ -112,7 +112,8 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         # Type check the regular arguments against the class attributes.
         for argument in self.get_regular_args():
             attribute, sup_scope = [a for a in all_attributes if a[0].name == argument.name][0]
-            attribute_type = class_symbol.scope.get_symbol(attribute.name).type
+            attribute_sym = class_symbol.scope.get_symbol(attribute.name)
+            attribute_type = attribute_sym.type
             argument_type = argument.infer_type(sm, **kwargs)
 
             if not AstTypeUtils.symbolic_eq(attribute_type, argument_type, sup_scope, sm.current_scope):
@@ -133,7 +134,14 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
             val.check_memory(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(
                 val, argument, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-                check_pins=True, mark_moves=True, **kwargs)
+                check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
+
+        # Todo: what is this even doing?
+        for argument in self.get_regular_args():
+            for assign_target in kwargs.get("assignment", []):
+                val = self.get_arg_val(argument)
+                if sm.current_scope.get_symbol(val):
+                    sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(val)
 
 
 __all__ = ["ObjectInitializerArgumentGroupAst"]

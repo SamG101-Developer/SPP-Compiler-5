@@ -82,7 +82,7 @@ class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if self.skip_or_expr:
             AstMemoryUtils.enforce_memory_integrity(
                 self.skip_or_expr, self.skip_or_expr, sm, check_move=True, check_partial_move=True,
-                check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=True, **kwargs)
+                check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
 
 
 __all__ = [

@@ -56,7 +56,7 @@ class PostfixExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if isinstance(self.lhs, Asts.IdentifierAst) and isinstance(lhs_type, Asts.TypeAst) and lhs_type.type_parts[0].value[0] != "$":
             AstMemoryUtils.enforce_memory_integrity(
                 self.lhs, self.op, sm, check_move=True, check_partial_move=False, check_move_from_borrowed_ctx=False,
-                check_pins=False, mark_moves=False, **kwargs)
+                check_pins=False, check_pins_linked=False, mark_moves=False, **kwargs)
 
         self.lhs.check_memory(sm, **kwargs)
         self.op.check_memory(sm, lhs=self.lhs, **kwargs)

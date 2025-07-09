@@ -9,6 +9,7 @@ from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
     from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
 
@@ -66,7 +67,7 @@ class MemoryInfo:
     is_inconsistently_partially_moved: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
     is_inconsistently_pinned: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
 
-    borrow_refers_to: Seq[Tuple[Optional[Asts.Ast], Asts.FunctionCallArgumentAst, bool]] = field(default_factory=list)
+    borrow_refers_to: Seq[Tuple[Optional[Asts.Ast], Asts.FunctionCallArgumentAst, bool, Scope]] = field(default_factory=list)
 
     def __copy__(self) -> MemoryInfo:
         return MemoryInfo(
@@ -135,7 +136,7 @@ class AstMemoryUtils:
     def enforce_memory_integrity(
             value_ast: Asts.ExpressionAst, move_ast: Asts.Ast, sm: ScopeManager, check_move: bool = True,
             check_partial_move: bool = True, check_move_from_borrowed_ctx: bool = True,
-            check_pins: bool = True, mark_moves: bool = True, **kwargs) -> None:
+            check_pins: bool = True, check_pins_linked: bool = True, mark_moves: bool = True, **kwargs) -> None:
 
         """
         Runs a number of checks to ensure the memory integrity of an AST is maintained. This function is responsible for
@@ -155,12 +156,14 @@ class AstMemoryUtils:
         :param check_partial_move: If a partial move is being checked for validity.
         :param check_move_from_borrowed_ctx: If moving an attribute out of a borrowed context is being checked.
         :param check_pins: If moving pinned objects is being checked.
+        :param check_pins_linked: If moving objects linked to pins is being checked.
         :param mark_moves: Whether to update the memory information in the symbol table.
 
         :raise SemanticErrors.MemoryNotInitializedUsageError: If a symbol is used before being initialized.
         :raise SemanticErrors.MemoryPartiallyInitializedUsageError: If a symbol is used before being fully initialized.
         :raise SemanticErrors.MemoryMovedFromBorrowedContextError: If a symbol gets moved from a borrowed context.
         :raise SemanticErrors.MemoryMovedWhilstPinnedError: If a symbol gets moved whilst pinned.
+        :raise SemanticErrors.MemoryMovedWhilstLinkPinnedError: If a symbol gets moved whilst linked to a pinned
         :raise SemanticErrors.MemoryInconsistentlyInitializedError: If a symbol gets inconsistently initialized in
             branches.
         :raise SemanticErrors.MemoryInconsistentlyMovedError: If a symbol gets inconsistently moved in branches.
@@ -176,7 +179,9 @@ class AstMemoryUtils:
         # memory-integral such that the entire tuple or array is memory-integral.
         if isinstance(value_ast, (Asts.TupleLiteralAst, Asts.ArrayLiteralNElementAst)):
             for e in value_ast.elems:
-                AstMemoryUtils.enforce_memory_integrity(e, move_ast, sm, mark_moves=mark_moves, **kwargs)
+                AstMemoryUtils.enforce_memory_integrity(
+                    e, move_ast, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+                    check_pins=True, check_pins_linked=True, mark_moves=mark_moves, **kwargs)
             return
 
         # Get the symbol representing the outermost part of the expression being moved. If the outermost part is
@@ -261,9 +266,15 @@ class AstMemoryUtils:
         # call.
         # Todo: partial_copies with pins?
         # Todo: at some point, "copies" will be usable as  generic constraint (not a just a concrete type)
-        if check_pins and sym.memory_info.ast_pins and not copies:
-            raise SemanticErrors.MemoryMovedWhilstPinnedError().add(
-                value_ast, sym.memory_info.ast_pins[0]).scopes(sm.current_scope)
+        if not copies and sym.memory_info.ast_pins and (pin := sym.memory_info.ast_pins[0]):
+            pin_sym = sm.current_scope.get_symbol(pin)
+            if check_pins_linked and sym is not pin_sym:
+                raise SemanticErrors.MemoryMovedWhilstLinkPinnedError().add(
+                    value_ast, sym.memory_info.ast_initialization, sym.memory_info.ast_pins[0], pin_sym.memory_info.ast_initialization_old).scopes(sm.current_scope)
+
+            elif check_pins and sym is pin_sym:
+                raise SemanticErrors.MemoryMovedWhilstPinnedError().add(
+                    value_ast, sym.memory_info.ast_initialization, sym.memory_info.ast_pins[0]).scopes(sm.current_scope)
 
         # Mark the symbol as either moved or partially moved (for non-copy types). Entire objects are marked as moved,
         # and attribute accesses are marked as partial moves on the symbol representing the entire object. If the type
@@ -272,11 +283,3 @@ class AstMemoryUtils:
             sym.memory_info.moved_by(move_ast)
         elif mark_moves and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
             sym.memory_info.ast_partial_moves.append(value_ast)
-
-    @staticmethod
-    def invalidate_yielded_borrow(sm: ScopeManager, ast: Asts.Ast, mover: Asts.Ast) -> None:
-        # Invalidate the referred borrow AST recursively.
-        sym = sm.current_scope.get_symbol(ast)
-        for target, _ in sym.memory_info.borrow_refers_to:
-            AstMemoryUtils.invalidate_yielded_borrow(sm, target, mover)
-        sym.memory_info.moved_by(mover)

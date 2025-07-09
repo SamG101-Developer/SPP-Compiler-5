@@ -5,6 +5,7 @@ from typing import Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
+from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
@@ -121,7 +122,7 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 # of a borrowed value and that pins are maintained. Mark the move or partial move of the argument.
                 AstMemoryUtils.enforce_memory_integrity(
                     self.expr, self.expr, sm, check_move=False, check_partial_move=False,
-                    check_move_from_borrowed_ctx=True, check_pins_linked=False, check_pins=True, mark_moves=True,
+                    check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=False, mark_moves=True,
                     **kwargs)
 
             elif isinstance(self.convention, Asts.ConventionMutAst):
