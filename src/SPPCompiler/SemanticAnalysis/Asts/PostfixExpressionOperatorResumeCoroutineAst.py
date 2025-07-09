@@ -36,6 +36,9 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
     function_argument_group: Asts.FunctionCallArgumentGroupAst = field(default=None)
     """The function arguments to be passed to the coroutine."""
 
+    _func_call: Asts.PostfixExpressionAst = field(default=None, init=False, repr=False)
+    """The transformed "send" function call on the generator object."""
+
     def __post_init__(self) -> None:
         self.tk_dot = self.tk_dot or Asts.TokenAst.raw(token_type=SppTokenType.TkDot)
         self.kw_res = self.kw_res or Asts.TokenAst.raw(token_type=SppTokenType.KwRes)
@@ -67,7 +70,7 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
 
         # Get the generator type.
         generator_type = lhs.infer_type(sm, **kwargs)
-        generator_type, *_ = AstTypeUtils.get_generator_and_yielded_type(generator_type, sm, lhs, "resume expression")
+        generator_type, yield_type, *_ = AstTypeUtils.get_generator_and_yielded_type(generator_type, sm, lhs, "resume expression")
 
         # Convert it into a "Generated" type (container for the yielded value).
         if AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GEN, generator_type.without_generics, sm.current_scope, sm.current_scope):
@@ -106,9 +109,10 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
         # Check the argument (send value) is valid, by passing it into the ".send" function call.
         member_access = Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(pos=self.tk_dot.pos, new_field=Asts.IdentifierAst(value="send"))
         member_access = Asts.PostfixExpressionAst(pos=self.pos, lhs=lhs, op=member_access)
-        func_call = Asts.PostfixExpressionOperatorFunctionCallAst(function_argument_group=self.function_argument_group)
+        func_call = Asts.PostfixExpressionOperatorFunctionCallAst(pos=self.pos, function_argument_group=self.function_argument_group)
         func_call = Asts.PostfixExpressionAst(pos=self.pos, lhs=member_access, op=func_call)
         func_call.analyse_semantics(sm, **kwargs)
+        self._func_call = func_call
 
     def check_memory(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         """
@@ -118,6 +122,9 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
         :param lhs: The left-hand side expression.
         :param kwargs: Additional keyword arguments.
         """
+
+        # Check the memory of the function call.
+        self._func_call.op.check_memory(sm, lhs=self._func_call.lhs, **kwargs)
 
 
 __all__ = [
