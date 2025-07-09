@@ -252,7 +252,8 @@ class Scope:
         return symbol
 
     def get_variable_symbol_outermost_part(
-            self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst) -> Optional[VariableSymbol]:
+            self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst, *, get_scope: bool = False)\
+            -> Optional[VariableSymbol] | Tuple[Scope, Optional[VariableSymbol]]:
 
         # Define a helper lambda that validates a postfix expression.
         is_valid_postfix = lambda p: \
@@ -271,18 +272,17 @@ class Scope:
                 prev_name = name
                 name = name.lhs
 
-            # Todo: not sure if this is needed here
-            if is_semi_valid_postfix(prev_name) and not is_valid_postfix(prev_name):
-                return self.get_symbol(name).scope.get_symbol(prev_name.op.field)
-
-            return self.get_symbol(name)
+            sym = self.get_symbol(name)
+            return sym if not get_scope else (self, sym)
 
         elif is_semi_valid_postfix(prev_name):
-            return self.get_symbol(name.lhs).scope.get_symbol(prev_name.op.field)
+            sym = self.get_symbol(name.lhs).scope.get_symbol(prev_name.op.field)
+            return sym if not get_scope else (self.get_symbol(name.lhs).scope, sym)
 
         # Identifiers or non-symbolic expressions can use the symbol table directly.
         else:
-            return self.get_symbol(name)
+            sym = self.get_symbol(name)
+            return sym if not get_scope else (self, sym)
 
     def depth_difference(self, scope: Scope) -> int:
         # Get the number of sup scopes between two scopes.
