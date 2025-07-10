@@ -184,7 +184,10 @@ class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.T
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self._skip_all_type_statement_scopes(sm, **kwargs)
 
-    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+    def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        self._skip_all_type_statement_scopes(sm, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
         self._skip_all_type_statement_scopes(sm, **kwargs)
 
 

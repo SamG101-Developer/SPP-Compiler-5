@@ -81,33 +81,24 @@ class CompilerStages:
         :param kwargs: Additional keyword arguments.
         """
 
-    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+    def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
         """
-        The code generation stage is the final stage of the compiler. This stage generates the LLVM IR for the module,
-        with implementations. This is to generate the actual code for the module. All the definitions will have
-        associated declarations from the previous stage.
-        todo This stage is not yet implemented.
+        The first pass of the code generation handles declarations. This includes type declarations (no memory layout
+        set), and function declarations (no body set). This is because for class attributes, the types need to have
+        already been created
         :param sm: The scope manager
         :param llvm_module: The LLVM module to generate code for.
         :param kwargs: Additional keyword arguments.
         """
 
-    # def generate_llvm_declarations(self, sm: ScopeManager, llvm_module: llvm.Module, **kwargs) -> Any:
-    #     """!
-    #     The LLVM declaration generation stage is the penultimate stage of the compiler. This stage generates the LLVM IR
-    #     declarations for the module, with no implementations. This is to load all the symbols into the LLVM context.
-    #     @todo This stage is not yet implemented.
-    #     """
-    #
-    # def generate_llvm_definitions(
-    #         self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None,
-    #         block: llvm.Block = None, **kwargs) -> Any:
-    #     """!
-    #     The LLVM definition generation stage is the final stage of the compiler. This stage generates the LLVM IR
-    #     definitions for the module, with implementations. This is to generate the actual code for the module. All the
-    #     definitions will have associated declarations from the previous stage.
-    #     @todo This stage is not yet implemented.
-    #     """
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        """
+        The second pass of the code generation handles definitions. This includes type definitions (memory layout set),
+        and function definitions (body set).
+        :param sm: The scope manager
+        :param llvm_module: The LLVM module to generate code for.
+        :param kwargs: Additional keyword arguments.
+        """
 
 
 __all__ = [

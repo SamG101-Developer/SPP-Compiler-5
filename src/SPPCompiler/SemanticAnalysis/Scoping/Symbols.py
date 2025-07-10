@@ -5,6 +5,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Dict, Optional, TYPE_CHECKING
 
+from SPPCompiler.CodeGen.LlvmTypeSymbolInfo import LlvmTypeSymbolInfo
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import MemoryInfo
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
@@ -85,6 +86,7 @@ class TypeSymbol(BaseSymbol):
     visibility: Visibility = field(default=Visibility.Private)
     convention: Optional[Asts.ConventionAst] = field(default=None)
     generic_impl: TypeSymbol = field(default=None, repr=False)
+    llvm_info: Optional[LlvmTypeSymbolInfo] = field(default=None, repr=False)
 
     scope_defined_in: Optional[Scope] = field(default=None)
 

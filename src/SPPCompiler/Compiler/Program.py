@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import os.path
 from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING, List
+from typing import List, Optional, TYPE_CHECKING
 
 from llvmlite import ir
 
+from SPPCompiler.CodeGen.Mangle import Mangler
 from SPPCompiler.LexicalAnalysis.Lexer import SppLexer
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import CompilerStages, PreProcessingContext
@@ -28,6 +29,7 @@ class Program(CompilerStages):
     """
 
     modules: List[Asts.ModulePrototypeAst] = field(default_factory=list, init=False, repr=False)
+    llvm_modules: List[ir.Module] = field(default_factory=list, init=False, repr=False)
     """The list of module prototype ASTs (from parsing)."""
 
     def lex(
@@ -158,18 +160,34 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def code_gen(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> List[ir.Module]:
-        # Generate the LLVM IR for all the modules.
-        llvm_modules = []
+    def code_gen_pass_1(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> List[ir.Module]:
+        # Generate the LLVM IR declarations for all the modules.
+        self.llvm_modules = []
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
-            progress_bar.next(module.name.value)
-            llvm_module = ir.Module(module.name.value)
-            module.code_gen(sm, llvm_module, root_path=module_tree._root, stage=11)
-            llvm_modules.append(llvm_module)
+            llvm_module = ir.Module(Mangler.mangle_module_name(sm.current_scope))
+            sm.current_scope.generate_llvm_type_mappings(llvm_module)
+            self.llvm_modules.append(llvm_module)
             sm.reset()
+
+        for module, llvm_module in zip(self.modules, self.llvm_modules):
+            self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
+            progress_bar.next(module.name.value)
+            module.code_gen_pass_1(sm, llvm_module, root_path=module_tree._root, stage=11)
+            sm.reset()
+
         progress_bar.finish()
-        return llvm_modules
+        return self.llvm_modules
+
+    def code_gen_pass_2(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> None:
+        # Generate the LLVM IR definitions for all the modules.
+        for module, llvm_module in zip(self.modules, self.llvm_modules):
+            self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
+            progress_bar.next(module.name.value)
+            module.code_gen_pass_2(sm, llvm_module, stage=12)
+            sm.reset()
+
+        progress_bar.finish()
 
     def _validate_entry_point(self, sm: ScopeManager, **kwargs) -> None:
         """

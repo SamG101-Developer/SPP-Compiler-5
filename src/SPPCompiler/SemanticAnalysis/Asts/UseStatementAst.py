@@ -95,5 +95,8 @@ class UseStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.Ty
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self._conversion.check_memory(sm, **kwargs)
 
-    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
-        self._conversion.code_gen(sm, llvm_module, **kwargs)
+    def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        self._conversion.code_gen_pass_1(sm, llvm_module, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        self._conversion.code_gen_pass_2(sm, llvm_module, **kwargs)

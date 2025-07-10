@@ -72,10 +72,13 @@ class ModulePrototypeAst(Asts.Ast):
         # Check the memory of the module implementation.
         self.body.check_memory(sm, **kwargs)
 
-    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> ir.Module:
+    def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
         # Generate the LLVM code for the module implementation.
-        self.body.code_gen(sm, llvm_module, **kwargs)
-        return llvm_module
+        self.body.code_gen_pass_1(sm, llvm_module, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        # Generate the LLVM code for the module implementation.
+        self.body.code_gen_pass_2(sm, llvm_module, **kwargs)
 
 
 __all__ = [

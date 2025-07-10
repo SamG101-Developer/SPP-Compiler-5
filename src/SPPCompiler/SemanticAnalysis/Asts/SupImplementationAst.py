@@ -64,8 +64,11 @@ class SupImplementationAst(Asts.Ast):
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         for member in self.members: member.check_memory(sm, **kwargs)
 
-    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
-        for member in self.members: member.code_gen(sm, llvm_module, **kwargs)
+    def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        for member in self.members: member.code_gen_pass_1(sm, llvm_module, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        for member in self.members: member.code_gen_pass_2(sm, llvm_module, **kwargs)
 
 
 __all__ = [

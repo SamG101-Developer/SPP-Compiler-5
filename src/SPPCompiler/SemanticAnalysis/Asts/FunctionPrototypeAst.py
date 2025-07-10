@@ -7,11 +7,12 @@ from typing import Dict, Optional
 from llvmlite import ir
 
 from SPPCompiler.CodeGen import LlvmExternalSymbolRegister
+from SPPCompiler.CodeGen.Mangle import Mangler
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -200,17 +201,6 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Subclasses will finish analysis and exit the scope.
 
-    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
-        # Generate the LLVM code for the function.
-        sm.move_to_next_scope()
-
-        if str(sm.current_scope.ancestors[-2].name) == "ffi":
-            dll_name = str(sm.current_scope.ancestors[-3].name)
-            dll_path = os.path.join(kwargs["root_path"], "ffi", dll_name, "lib", dll_name + ".dll")
-            LlvmExternalSymbolRegister.register_external_functions(self, dll_path, sm)
-        self.body.code_gen(sm, llvm_module, **kwargs)
-        sm.move_out_of_current_scope()
-
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         # Check the memory of the function body.
         sm.move_to_next_scope()
@@ -218,18 +208,31 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         self.body.check_memory(sm, **kwargs)
         sm.move_out_of_current_scope()
 
-    # def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
-    #     sm.move_to_next_scope()
-    #
-    #     # Generate the LLVM definition for the function prototype.
-    #     llvm_parameter_types = self.function_parameter_group.generate_llvm_definitions(sm, llvm_module)
-    #     llvm_return_type = self.return_type.generate_llvm_definitions(sm, llvm_module)
-    #     llvm_function_type = llvm.FunctionType(llvm_return_type, llvm_parameter_types)
-    #     llvm_function = llvm.Function(llvm_module, llvm_function_type, self.print_signature(AstPrinter()))
-    #
-    #     # Use the FunctionImplementationAst to generate the LLVM declaration.
-    #     self.body.generate_llvm_definitions(sm, llvm_module, llvm_function=llvm_function)
-    #     sm.move_out_of_current_scope()
+    def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        # Generate the LLVM code for the function.
+        sm.move_to_next_scope()
+
+        # Load ffi functions. Todo: check this.
+        if str(sm.current_scope.ancestors[-2].name) == "ffi":
+            dll_name = str(sm.current_scope.ancestors[-3].name)
+            dll_path = os.path.join(kwargs["root_path"], "ffi", dll_name, "lib", dll_name + ".dll")
+            LlvmExternalSymbolRegister.register_external_functions(self, dll_path, sm)
+
+        # Get the parameter types and return type for the function.
+        types = [p.type for p in self.function_parameter_group.params] + [self.return_type]
+        if self.function_parameter_group.get_self_param(): types.pop(0)
+        type_symbols = [sm.current_scope.get_symbol(t) for t in types]
+
+        # Any generic function is not generated; only substituted prototypes are.
+        if all([type_symbol.llvm_info for type_symbol in type_symbols]):
+            llvm_parameter_types = [sm.current_scope.get_symbol(p.type).llvm_info.llvm_type for p in self.function_parameter_group.get_non_self_params()]
+            llvm_return_type = sm.current_scope.get_symbol(self.return_type).llvm_info.llvm_type
+            llvm_function_type = ir.FunctionType(llvm_return_type, llvm_parameter_types)
+            llvm_function = ir.Function(llvm_module, llvm_function_type, Mangler.mangle_function_name(sm.current_scope.parent, self))
+
+        # Skip all function body scopes, as they are handled in the second pass.
+        while sm.current_scope is not self._scope.final_child_scope():
+            sm.move_to_next_scope()
 
     def _deduce_mock_class_type(self) -> Asts.TypeAst:
         # Module-level functions are always FunRef.

@@ -240,15 +240,21 @@ class SupPrototypeExtensionAst(Asts.Ast):
         # Move out of the current scope.
         sm.move_out_of_current_scope()
 
-    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
-        # Generate the LLVM code for the class implementation.
-        sm.move_to_next_scope()
-        self.body.code_gen(sm, llvm_module, **kwargs)
-        sm.move_out_of_current_scope()
-
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()
         self.body.check_memory(sm, **kwargs)
+        sm.move_out_of_current_scope()
+
+    def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        # Generate the LLVM code for the class implementation.
+        sm.move_to_next_scope()
+        self.body.code_gen_pass_1(sm, llvm_module, **kwargs)
+        sm.move_out_of_current_scope()
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module = None, **kwargs) -> None:
+        # Generate the LLVM code for the class implementation.
+        sm.move_to_next_scope()
+        self.body.code_gen_pass_2(sm, llvm_module, **kwargs)
         sm.move_out_of_current_scope()
 
 

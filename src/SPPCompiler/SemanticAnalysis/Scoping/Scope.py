@@ -3,6 +3,10 @@ from __future__ import annotations
 import copy
 from typing import Any, Iterator, List, Optional, Tuple
 
+from llvmlite import ir
+
+from SPPCompiler.CodeGen.LlvmTypeSymbolInfo import LlvmTypeSymbolInfo
+from SPPCompiler.CodeGen.Mangle import Mangler
 from SPPCompiler.Compiler.ModuleTree import Module
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
@@ -50,7 +54,7 @@ class Scope:
     symbols created in this scope. Symbols can be added, removed, set, got and checked for existence.
     """
 
-    _ast: Optional[Asts.FunctionPrototypeAst | Asts.ClassPrototypeAst | Asts.SupPrototypeAst]
+    _ast: Optional[Asts.ModulePrototypeAst | Asts.FunctionPrototypeAst | Asts.ClassPrototypeAst | Asts.SupPrototypeAst]
     """
     Top level scopes, representing functions, classes, superimpositions, etc, have associated ASTs (the ast that was
     analysed to create this scope). This AST is stored as there are some analysis stages that use information from the
@@ -296,6 +300,36 @@ class Scope:
             return -1
 
         return _depth_difference(self, scope, 0)
+
+    def generate_llvm_type_mappings(self, llvm_module: ir.Module) -> None:
+        """
+        Iterate every (top-level) scope whose ast is a ClassPrototypeAst, and then generate a (non-implemented) LLVM
+        type mapping for it, binding it to the symbol. This allows functions to use teh types for parameters on the
+        first codegen pass.
+        """
+
+        # Only check top level scopes (where ClassPrototypeAsts are defined).
+        for scope in self._children:
+            if isinstance(scope._ast, Asts.ClassPrototypeAst):
+                cls_symbol = scope.type_symbol
+
+                # Create the class type in the LLVM module.
+                llvm_type_name = Mangler.mangle_type_name(cls_symbol)
+                llvm_type = llvm_module.context.get_identified_type(llvm_type_name)
+                cls_symbol.llvm_info = LlvmTypeSymbolInfo(llvm_type=llvm_type, llvm_module=llvm_module)
+
+    def final_child_scope(self) -> Scope:
+        """
+        Get the final child scope in the scope tree. This is used to find the last scope in a chain of scopes, such as
+        when generating code for a function or class.
+        :return: The final child scope.
+        """
+
+        if not self._children:
+            return self
+
+        # Recursively get the last child scope.
+        return self._children[-1].final_child_scope()
 
     @property
     def name(self) -> Any:

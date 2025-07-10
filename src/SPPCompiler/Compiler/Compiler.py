@@ -7,7 +7,7 @@ from typing import Optional, TYPE_CHECKING
 
 import xxhash
 
-from SPPCompiler.CodeGen import LllvInitialization
+from SPPCompiler.CodeGen import LlvmInitialization
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter
@@ -31,7 +31,9 @@ COMPILER_STAGE_NAMES = [
     "Pre-Analysis      ",
     "Semantics analysis",
     "Memory check      ",
-    "Code generation   ",]
+    "Code generation 1 ",
+    "Code generation 2 ",
+]
 
 
 class Compiler:
@@ -121,8 +123,12 @@ class Compiler:
             self._ast.check_memory(self._scope_manager, next(progress_bar), self._module_tree)
             self.try_dump()
 
-            LllvInitialization.initialize_llvm()
-            self._ast.code_gen(self._scope_manager, next(progress_bar), self._module_tree)
+            LlvmInitialization.initialize_llvm()
+            self._ast.code_gen_pass_1(self._scope_manager, next(progress_bar), self._module_tree)
+            self._ast.code_gen_pass_2(self._scope_manager, next(progress_bar), self._module_tree)
+
+            # Save the LLVM to a file.
+            self.try_dump_llvm()
 
         except SemanticError as error:
             self.try_dump()
@@ -164,7 +170,7 @@ class Compiler:
                 ast = module.module_ast
 
                 # Create the AST output file for the module and write the AST to it.
-                out_ast_path = module.path.replace("src", "out/ast", 1).replace(".spp", ".ast")
+                out_ast_path = os.path.abspath("." + module.path).replace("src", "out/ast", 1).replace(".spp", ".ast")
                 if not os.path.exists(os.path.dirname(out_ast_path)):
                     os.makedirs(os.path.dirname(out_ast_path))
                 with open(out_ast_path, "w") as file:
@@ -176,3 +182,12 @@ class Compiler:
                 os.makedirs(out_scope_manager_path)
             with open(out_scope_manager_path + "/scope_manager.json", "w") as file:
                 file.write(json.dumps(self._scope_manager.global_scope, indent=4))
+
+    def try_dump_llvm(self) -> None:
+        if self._mode == Compiler.Mode.Dev:
+            for module, llvm_module in zip(self._module_tree.modules, self._ast.llvm_modules):
+                out_llvm_path = module.path.replace("src", "out/llvm", 1).replace(".spp", ".ll")
+                if not os.path.exists(os.path.dirname(out_llvm_path)):
+                    os.makedirs(os.path.dirname(out_llvm_path))
+                with open(out_llvm_path, "w") as file:
+                    file.write(str(llvm_module))
