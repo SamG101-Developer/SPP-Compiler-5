@@ -10,7 +10,8 @@ ModuleMemberAst = Union[
     Asts.CmpStatementAst,
     Asts.SupPrototypeFunctionsAst,
     Asts.SupPrototypeExtensionAst,
-    Asts.UseStatementAst]
+    Asts.UseStatementAst,
+    Asts.TypeStatementAst]
 
 __all__ = [
     "ModuleMemberAst"]

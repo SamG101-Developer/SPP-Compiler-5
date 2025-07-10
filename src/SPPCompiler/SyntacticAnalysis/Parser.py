@@ -26,10 +26,6 @@ class SppParser:
     _ws_characters: RawTokenType
     _stringable_characters: List[SppTokenType]
 
-    _mask_nl_ws: List[bool]
-    _mask_nl: List[bool]
-    _mask_ws: List[bool]
-
     def __init__(self, tokens: List[RawToken], file_name: str = "", error_formatter: Optional[ErrorFormatter] = None, injection_adjust_pos: int = 0) -> None:
         self._pos = 0
         self._tokens = tokens
@@ -45,10 +41,6 @@ class SppParser:
         self._nl_characters = RawTokenType.TkNewLine
         self._ws_characters = RawTokenType.TkWhitespace
         self._stringable_characters = [SppTokenType.LxNumber, SppTokenType.LxString]
-
-        self._mask_nl_ws = [t not in [RawTokenType.TkNewLine, RawTokenType.TkWhitespace] for t in self._token_types]
-        self._mask_nl    = [t not in [RawTokenType.TkNewLine] for t in self._token_types]
-        self._mask_ws    = [t not in [RawTokenType.TkWhitespace] for t in self._token_types]
 
     def current_pos(self) -> int:
         return self._pos + self._injection_adjust_pos
@@ -368,13 +360,13 @@ class SppParser:
     def parse_function_parameter_self(self) -> Optional[Asts.FunctionParameterSelfAst]:
         p1 = self.parse_optional(self.parse_keyword_mut)
         p2 = self.parse_optional(self.parse_convention)
-        p3 = self.parse_once(self.parse_self_keyword)
+        p3 = self.parse_once(self.parse_self_identifier)
         if p3 is None: return None
         return Asts.FunctionParameterSelfAst((p1 or p2 or p3).pos, p1, p2, p3)
 
     def parse_function_parameter_self_with_arbitrary_type(self) -> Optional[Asts.FunctionParameterSelfAst]:
         p1 = self.parse_optional(self.parse_keyword_mut)
-        p2 = self.parse_once(self.parse_self_keyword)
+        p2 = self.parse_once(self.parse_self_identifier)
         if p2 is None: return None
         p3 = self.parse_once(self.parse_token_colon)
         if p3 is None: return None
@@ -649,7 +641,7 @@ class SppParser:
             self.parse_iter_expression,
             self.parse_gen_expression,
             self.parse_type,
-            self.parse_self_keyword,
+            self.parse_self_identifier,
             self.parse_identifier,
             self.parse_inner_scope,
             self.parse_token_double_dot])
@@ -663,11 +655,6 @@ class SppParser:
         p3 = self.parse_once(self.parse_token_right_parenthesis)
         if p3 is None: return None
         return Asts.ParenthesizedExpressionAst(p1.pos, p1, p2, p3)
-
-    def parse_self_keyword(self) -> Optional[Asts.IdentifierAst]:
-        p1 = self.parse_once(self.parse_keyword_self_value)
-        if p1 is None: return None
-        return Asts.IdentifierAst(p1.pos, p1.token_data)
 
     # ===== EXPRESSION STATEMENTS =====
 
@@ -1023,8 +1010,7 @@ class SppParser:
         p1 = self.parse_alternate([
             self.parse_local_variable_destructure_array,
             self.parse_local_variable_destructure_tuple,
-            self.parse_local_variable_destructure_object,
-            self.parse_local_variable_single_identifier])
+            self.parse_local_variable_destructure_object])
         return p1
 
     # ===== ASSIGNMENT =====
@@ -1662,6 +1648,11 @@ class SppParser:
 
     def parse_upper_identifier(self) -> Optional[Asts.IdentifierAst]:
         p1 = self.parse_once(self.parse_lexeme_upper_identifier)
+        if p1 is None: return None
+        return Asts.IdentifierAst(p1.pos, p1.token_data)
+
+    def parse_self_identifier(self) -> Optional[Asts.IdentifierAst]:
+        p1 = self.parse_once(self.parse_keyword_self_value)
         if p1 is None: return None
         return Asts.IdentifierAst(p1.pos, p1.token_data)
 
