@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import copy
 import difflib
-from typing import Generator, List, Optional, TYPE_CHECKING, Tuple
+from typing import Generator, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol, VariableSymbol
@@ -90,7 +90,7 @@ class AstTypeUtils:
         raise NotImplementedError("Only tuple and array types are indexable.")
 
     @staticmethod
-    def get_namespaced_scope_with_error(sm: ScopeManager, namespace: List[Asts.IdentifierAst]) -> Scope:
+    def get_namespaced_scope_with_error(sm: ScopeManager, namespace: list[Asts.IdentifierAst]) -> Scope:
         # Work through each cumulative namespace, checking if the namespace exists.
         namespace_scope = sm.current_scope
         for i in range(len(namespace)):
@@ -180,7 +180,7 @@ class AstTypeUtils:
     @staticmethod
     def create_generic_sup_scope(
             sm: ScopeManager, old_sup_scope: Scope, true_scope: Scope, generic_arguments: Asts.GenericArgumentGroupAst,
-            **kwargs) -> Tuple[Scope, Scope]:
+            **kwargs) -> tuple[Scope, Scope]:
 
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
@@ -270,7 +270,7 @@ class AstTypeUtils:
     def is_type_recursive(type: Asts.ClassPrototypeAst, sm: ScopeManager) -> Optional[Asts.TypeAst]:
         def get_attribute_types(
                 class_prototype: Asts.ClassPrototypeAst,
-                class_scope: Scope) -> Generator[Tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
+                class_scope: Scope) -> Generator[tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
 
             for attribute in class_prototype.body.members:
                 raw_attribute_type = attribute.type
@@ -289,7 +289,7 @@ class AstTypeUtils:
     @staticmethod
     def get_generator_and_yielded_type(
             type: Asts.TypeAst, sm: ScopeManager, expr: Asts.ExpressionAst,
-            what: str) -> Tuple[Asts.TypeAst, Asts.TypeAst, bool, bool, bool, Asts.TypeAst]:
+            what: str) -> tuple[Asts.TypeAst, Asts.TypeAst, bool, bool, bool, Asts.TypeAst]:
 
         """
         Get the generator type, and the yielded type from a type. Search the super types of the input type for a

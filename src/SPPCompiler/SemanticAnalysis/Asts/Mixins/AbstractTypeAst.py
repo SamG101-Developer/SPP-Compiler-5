@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from abc import abstractmethod, ABC
 from dataclasses import dataclass
-from typing import List, Optional, TYPE_CHECKING, final
+from typing import final, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
@@ -39,7 +39,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
     @property
     @abstractmethod
-    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         ...
 
     @property
@@ -58,15 +58,15 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         ...
 
     @property
-    def namespace_parts(self) -> List[Asts.IdentifierAst]:
+    def namespace_parts(self) -> list[Asts.IdentifierAst]:
         return [p for p in self.fq_type_parts if type(p) is Asts.IdentifierAst]
 
     @property
-    def type_parts(self) -> List[Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def type_parts(self) -> list[Asts.GenericIdentifierAst | Asts.TokenAst]:
         return [p for p in self.fq_type_parts if type(p) is Asts.GenericIdentifierAst or type(p) is Asts.TokenAst]
 
     @abstractmethod
-    def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+    def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         """
         Substitute the generic arguments in a type. This allows "Vec[T]" to become "Vec[Str]" when it is known that "T"
         is a "Str". This is used in the type inference process. This creates a new type ast with the generics

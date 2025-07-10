@@ -27,7 +27,7 @@ def main() -> None:
     if PROFILE:
         p = cProfile.Profile()
         p.enable()
-        handle_build(Namespace(mode="rel"))
+        handle_build(Namespace(mode="dev"))
         p.disable()
 
         if not os.path.exists("profiles"):

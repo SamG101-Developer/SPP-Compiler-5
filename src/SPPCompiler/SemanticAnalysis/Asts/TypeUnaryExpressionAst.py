@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Iterator, List, Optional, TYPE_CHECKING
+from typing import Iterator, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
@@ -44,7 +44,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return f"{self.op.print(printer)}{self.rhs.print(printer)}"
 
     @property
-    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return self.op.fq_type_parts + self.rhs.fq_type_parts if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.fq_type_parts
 
     @FunctionCache.cache_property
@@ -69,13 +69,13 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         self.rhs.qualify_types(sm, **kwargs)
 
-    def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None, generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
+    def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None, generic_infer_target: Optional[dict] = None, **kwargs) -> None:
         if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
             temp_manager = ScopeManager(sm.global_scope, type_scope or sm.current_scope)
             type_scope = AstTypeUtils.get_namespaced_scope_with_error(temp_manager, [self.op.name])
         self.rhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
 
-    def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+    def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         x = self.rhs.substituted_generics(generic_arguments)
         if isinstance(x, Asts.TypeUnaryExpressionAst) and isinstance(x.op, Asts.TypeUnaryOperatorBorrowAst):
             return x

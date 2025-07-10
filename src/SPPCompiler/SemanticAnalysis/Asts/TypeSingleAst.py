@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Iterator, List, Optional, TYPE_CHECKING, Tuple
+from typing import Iterator, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
@@ -68,7 +68,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         return CodeInjection.inject_code(ast, SppParser.parse_type, pos_adjust=0)
 
     @property
-    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return [self.name]
 
     @FunctionCache.cache_property
@@ -94,7 +94,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
     def convert(self) -> Asts.TypeAst:
         return self
 
-    def substituted_generics(self, generic_arguments: List[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+    def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         name = fast_deepcopy(self.name)
         for generic_name, generic_type in [(a.name, a.value) for a in generic_arguments]:
             if self == generic_name:
@@ -123,7 +123,7 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         :return: The corresponding generic value on the other type, or None if not found.
         """
 
-        def custom_iterate(t: Asts.TypeAst, depth: int) -> Iterator[Tuple[Asts.GenericArgumentAst, int]]:
+        def custom_iterate(t: Asts.TypeAst, depth: int) -> Iterator[tuple[Asts.GenericArgumentAst, int]]:
             for g in t.type_parts[-1].generic_argument_group.get_type_args():
                 yield g, depth
                 yield from custom_iterate(g.value, depth + 1)
@@ -167,8 +167,8 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             g.value = sm.current_scope.get_symbol(g.value.without_generics).fq_name.set_generics(g.value.type_parts[-1].generic_argument_group).with_convention(g.value.convention)
 
     def analyse_semantics(
-            self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[Dict] = None,
-            generic_infer_target: Optional[Dict] = None, **kwargs) -> None:
+            self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None,
+            generic_infer_target: Optional[dict] = None, **kwargs) -> None:
 
         type_scope = type_scope or sm.current_scope
         original_scope = type_scope

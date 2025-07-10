@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os.path
 from dataclasses import dataclass, field
-from typing import List, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from llvmlite import ir
 
@@ -28,8 +28,8 @@ class Program(CompilerStages):
     from the Compiler class, and is used to abstract boilerplate code per compiler stage.
     """
 
-    modules: List[Asts.ModulePrototypeAst] = field(default_factory=list, init=False, repr=False)
-    llvm_modules: List[ir.Module] = field(default_factory=list, init=False, repr=False)
+    modules: list[Asts.ModulePrototypeAst] = field(default_factory=list, init=False, repr=False)
+    llvm_modules: list[ir.Module] = field(default_factory=list, init=False, repr=False)
     """The list of module prototype ASTs (from parsing)."""
 
     def lex(
@@ -160,7 +160,7 @@ class Program(CompilerStages):
             sm.reset()
         progress_bar.finish()
 
-    def code_gen_pass_1(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> List[ir.Module]:
+    def code_gen_pass_1(self, sm: ScopeManager, progress_bar: Optional[Progress] = None, module_tree: ModuleTree = None) -> list[ir.Module]:
         # Generate the LLVM IR declarations for all the modules.
         self.llvm_modules = []
         for module in self.modules:

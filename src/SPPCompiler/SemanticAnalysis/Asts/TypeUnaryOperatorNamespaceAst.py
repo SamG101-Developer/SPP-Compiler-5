@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
@@ -34,7 +33,7 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
         return [self.name]
 
     @property
-    def type_parts(self) -> List[Asts.GenericIdentifierAst]:
+    def type_parts(self) -> list[Asts.GenericIdentifierAst]:
         return []
 
     @property

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
@@ -24,11 +23,11 @@ class TypePostfixOperatorNestedTypeAst(Asts.Ast):
         return f"{self.tok_sep}{self.name}"
 
     @property
-    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return self.name.fq_type_parts
 
     @property
-    def type_parts(self) -> List[Asts.GenericIdentifierAst]:
+    def type_parts(self) -> list[Asts.GenericIdentifierAst]:
         return self.name.type_parts
 
     @property

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -38,7 +38,7 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     as ``case condition { ... }`` are re-modelled as ``case condition of == true { ... }``, providing the operator.
     """
 
-    patterns: List[Asts.PatternVariantAst] = field(default_factory=list)
+    patterns: list[Asts.PatternVariantAst] = field(default_factory=list)
     """
     The list of patterns to apply against the case expression. For normal comparisons, there can be any number of
     patterns, but for destructuring, only 1 pattern can be applied (otherwise different symbols could get introduced

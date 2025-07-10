@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import copy
-from typing import Any, Iterator, List, Optional, Tuple
+from typing import Any, Iterator, Optional
 
 from llvmlite import ir
 
@@ -41,7 +40,7 @@ class Scope:
     program.
     """
 
-    _children: List[Scope]
+    _children: list[Scope]
     """
     The children scopes of a scope are the scopes that are created within this scope. A function scope will contain all
     scopes created by the statements that make up the function, and module scopes will contain all the class, function
@@ -61,14 +60,14 @@ class Scope:
     AST directly.
     """
 
-    _direct_sup_scopes: List[Scope]
+    _direct_sup_scopes: list[Scope]
     """
     If this is a type scope, representing a ClassPrototypeAst, then this scope may have super scopes attached to it.
     This allows for symbol resolution from super classes when they aren't found on the current class. Recursive
     searching of superscopes is used for the actual resolution.
     """
 
-    _direct_sub_scopes: List[Scope]
+    _direct_sub_scopes: list[Scope]
     """
     The sub scopes are an inverse to the sup scope lists. So if B extends A, then A is a super scope of B, and B is a
     sub scope of A. This is used for access modifier checking, where protected symbols are accessible from sub types.
@@ -165,7 +164,7 @@ class Scope:
         return new_scope
 
     @property
-    def generics(self) -> List[Asts.GenericArgumentAst]:
+    def generics(self) -> list[Asts.GenericArgumentAst]:
         GenericArgumentCTor = {
             VariableSymbol: Asts.GenericCompArgumentNamedAst,
             TypeSymbol    : Asts.GenericTypeArgumentNamedAst,
@@ -257,7 +256,7 @@ class Scope:
 
     def get_variable_symbol_outermost_part(
             self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst, *, get_scope: bool = False)\
-            -> Optional[VariableSymbol] | Tuple[Scope, Optional[VariableSymbol]]:
+            -> Optional[VariableSymbol] | tuple[Scope, Optional[VariableSymbol]]:
 
         # Define a helper lambda that validates a postfix expression.
         is_valid_postfix = lambda p: \
@@ -347,7 +346,7 @@ class Scope:
         self._parent = parent
 
     @FunctionCache.cache_property
-    def ancestors(self) -> List[Scope]:
+    def ancestors(self) -> list[Scope]:
         # Get all the ancestors, including this scope and the global scope.
         return [node := self] + [node for _ in iter(lambda: node.parent, None) if (node := node.parent)]
 
@@ -357,7 +356,7 @@ class Scope:
         return [s for s in self.ancestors if type(s.name) is Asts.IdentifierAst][0]
 
     @property
-    def children(self) -> List[Scope]:
+    def children(self) -> list[Scope]:
         # Get the children scopes.
         return self._children
 
@@ -371,7 +370,7 @@ class Scope:
         self._type_symbol = symbol
 
     @property
-    def sup_scopes(self) -> List[Scope]:
+    def sup_scopes(self) -> list[Scope]:
         # Get all the super scopes recursively.
         all_sup_scopes = []
         for sup_scope in self._direct_sup_scopes:
@@ -380,15 +379,15 @@ class Scope:
         return all_sup_scopes
 
     @property
-    def direct_sup_types(self) -> List[Asts.TypeAst]:
+    def direct_sup_types(self) -> list[Asts.TypeAst]:
         return [s.type_symbol.fq_name for s in self._direct_sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
 
     @property
-    def sup_types(self) -> List[Asts.TypeAst]:
+    def sup_types(self) -> list[Asts.TypeAst]:
         return [s.type_symbol.fq_name for s in self.sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
 
     @property
-    def sub_scopes(self) -> List[Scope]:
+    def sub_scopes(self) -> list[Scope]:
         # Get all the sub scopes recursively.
         all_sub_scopes = []
         for sub_scope in self._direct_sub_scopes:
@@ -397,7 +396,7 @@ class Scope:
         return all_sub_scopes
 
 
-def shift_scope_for_namespaced_type(scope: Scope, fq_type: Asts.TypeAst) -> Tuple[Scope, Asts.GenericIdentifierAst]:
+def shift_scope_for_namespaced_type(scope: Scope, fq_type: Asts.TypeAst) -> tuple[Scope, Asts.GenericIdentifierAst]:
     # For TypeAsts, move through each namespace/type part accessing the namespace scope.
     for part in fq_type.fq_type_parts[:-1]:
         # Get the next type/namespace symbol from the scope.

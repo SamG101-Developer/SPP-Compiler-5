@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List
-
 from SPPCompiler.LexicalAnalysis.TokenType import RawKeywordType, RawToken, RawTokenType
 
 
@@ -31,7 +29,7 @@ class SppLexer:
         # Add a newline to the start, so error-formatters can get the start of the 1st line of code if necessary.
         self._code = "\n" + code
 
-    def lex(self) -> List[RawToken]:
+    def lex(self) -> list[RawToken]:
         """
         Lex the code with single-character comparisons. Track strings and comments to skip and add characters as
         necessary.

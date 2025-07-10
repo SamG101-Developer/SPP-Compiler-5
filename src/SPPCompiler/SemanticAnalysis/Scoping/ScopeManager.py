@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, DefaultDict, Dict, Iterator, List, Optional, TYPE_CHECKING
+from typing import Any, DefaultDict, Iterator, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
@@ -18,8 +18,8 @@ class ScopeManager:
     _global_scope: Scope
     _current_scope: Scope
     _iterator: Iterator[Scope]
-    normal_sup_blocks: DefaultDict[TypeSymbol, List[Scope]]
-    generic_sup_blocks: Dict[TypeSymbol, Scope]
+    normal_sup_blocks: DefaultDict[TypeSymbol, list[Scope]]
+    generic_sup_blocks: dict[TypeSymbol, Scope]
 
     def __init__(self, global_scope, current_scope: Optional[Scope] = None, nsbs=None, gsbs=None) -> None:
         # Create the default global and current scopes if they are not provided.
