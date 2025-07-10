@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 # from llvmlite import ir as llvm
@@ -16,7 +16,7 @@ from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 @dataclass(slots=True)
 class FunctionImplementationAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
-    members: Seq[Asts.FunctionMemberAst] = field(default_factory=Seq)
+    members: list[Asts.FunctionMemberAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:

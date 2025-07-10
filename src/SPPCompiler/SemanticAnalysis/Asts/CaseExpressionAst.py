@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 # Todo: re consistency, unless there is an "else" block, then even 1 branch will could create inconsistencies: add to
@@ -64,7 +64,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_of: Optional[Asts.TokenAst] = field(default=None)
     """The optional ``of`` keyword indicating a subsequent list of patterns."""
 
-    branches: Seq[Asts.CaseExpressionBranchAst] = field(default_factory=Seq)
+    branches: list[Asts.CaseExpressionBranchAst] = field(default_factory=list)
     """The branches that the condition can be matched against."""
 
     def __post_init__(self) -> None:
@@ -77,7 +77,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     @staticmethod
     def from_simple(
             p1: Asts.TokenAst, p2: Asts.ExpressionAst, p3: Asts.InnerScopeAst,
-            p4: Seq[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
+            p4: list[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
 
         """
         The "from_simple" static method acts as a pseudo-constructor to create a case expression from the singular

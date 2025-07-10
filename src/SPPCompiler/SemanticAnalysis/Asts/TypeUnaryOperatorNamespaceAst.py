@@ -6,7 +6,6 @@ from typing import List
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
-from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass(slots=True)
@@ -31,7 +30,7 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
         return f"{self.name.print(printer)}{self.tok_dbl_colon.print(printer)}"
 
     @property
-    def fq_type_parts(self) -> Seq[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
         return [self.name]
 
     @property

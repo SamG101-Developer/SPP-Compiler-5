@@ -11,12 +11,12 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
 class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
-    tok_seq_exit: Seq[Asts.TokenAst] = field(default_factory=Seq)
+    tok_seq_exit: list[Asts.TokenAst] = field(default_factory=list)
     skip_or_expr: Optional[Asts.ExpressionAst] = field(default=None)
 
     def __hash__(self) -> int:

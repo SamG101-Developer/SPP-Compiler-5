@@ -10,13 +10,13 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
 class GenericArgumentGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
-    arguments: Seq[Asts.GenericArgumentAst] = field(default_factory=Seq)
+    arguments: list[Asts.GenericArgumentAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -86,16 +86,16 @@ class GenericArgumentGroupAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.tok_r.pos_end if self.arguments else self.tok_l.pos_end
 
-    def get_type_args(self) -> Seq[Asts.GenericTypeArgumentAst]:
+    def get_type_args(self) -> list[Asts.GenericTypeArgumentAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericTypeArgumentAst)]
 
-    def get_comp_args(self) -> Seq[Asts.GenericCompArgumentAst]:
+    def get_comp_args(self) -> list[Asts.GenericCompArgumentAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericCompArgumentAst)]
 
-    def get_named_args(self) -> Seq[Asts.GenericArgumentNamedAst]:
+    def get_named_args(self) -> list[Asts.GenericArgumentNamedAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
 
-    def get_unnamed_args(self) -> Seq[Asts.GenericArgumentUnnamedAst]:
+    def get_unnamed_args(self) -> list[Asts.GenericArgumentUnnamedAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericArgumentUnnamedAst)]
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:

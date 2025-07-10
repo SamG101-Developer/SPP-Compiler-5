@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Progress import Progress
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis import Asts
@@ -70,7 +70,7 @@ class ScopeManager:
         self._current_scope = next(self._iterator)
         return self._current_scope
 
-    def get_namespaced_scope(self, namespace: Seq[Asts.IdentifierAst]) -> Optional[Scope]:
+    def get_namespaced_scope(self, namespace: list[Asts.IdentifierAst]) -> Optional[Scope]:
         # Find the first scope that matches the first part of the namespace.
         namespace_symbol = None
         namespace_symbol = self._current_scope.get_namespace_symbol(namespace[0])

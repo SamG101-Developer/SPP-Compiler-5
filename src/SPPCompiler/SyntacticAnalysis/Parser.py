@@ -1,32 +1,31 @@
 from __future__ import annotations
 
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, Optional, Union
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType, RawToken, RawTokenType, RawKeywordType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Functools import reduce
-from SPPCompiler.Utils.Sequence import Seq
 
 
 class SppParser:
     _pos: int
-    _tokens: List[RawToken]
-    _token_types: List[RawTokenType]
+    _tokens: list[RawToken]
+    _token_types: list[RawTokenType]
     _tokens_len: int
     _error: ParserErrors.SyntaxError
     _error_formatter: ErrorFormatter
     _injection_adjust_pos: int
 
-    _identifier_characters: List[RawTokenType]
-    _upper_identifier_characters: List[RawTokenType]
-    _nl_ws_characters: List[RawTokenType]
+    _identifier_characters: list[RawTokenType]
+    _upper_identifier_characters: list[RawTokenType]
+    _nl_ws_characters: list[RawTokenType]
     _nl_characters: RawTokenType
     _ws_characters: RawTokenType
-    _stringable_characters: List[SppTokenType]
+    _stringable_characters: list[SppTokenType]
 
-    def __init__(self, tokens: List[RawToken], file_name: str = "", error_formatter: Optional[ErrorFormatter] = None, injection_adjust_pos: int = 0) -> None:
+    def __init__(self, tokens: list[RawToken], file_name: str = "", error_formatter: Optional[ErrorFormatter] = None, injection_adjust_pos: int = 0) -> None:
         self._pos = 0
         self._tokens = tokens
         self._token_types = [token.token_type for token in tokens]
@@ -61,7 +60,7 @@ class SppParser:
             self._pos = pos
         return result
 
-    def parse_zero_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Seq[T]:
+    def parse_zero_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> list[T]:
         done_1_parse = False
         results = []
         temp_pos = self._pos
@@ -83,19 +82,19 @@ class SppParser:
 
         return results
 
-    def parse_one_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Optional[Seq[T]]:
+    def parse_one_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Optional[list[T]]:
         results = self.parse_zero_or_more(method, separator)
         if len(results) < 1:
             self.store_error(self._pos, "Expected at least one element")
         return results if len(results) > 0 else None
 
-    def parse_two_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Optional[Seq[T]]:
+    def parse_two_or_more[T, S](self, method: Callable[..., T], separator: Callable[..., S]) -> Optional[list[T]]:
         results = self.parse_zero_or_more(method, separator)
         if len(results) < 2:
             self.store_error(self._pos, "Expected at least two elements")
         return results if len(results) > 1 else None
 
-    def parse_alternate[Ts](self, methods: List[Callable[..., *Ts]]) -> Union[*Ts]:
+    def parse_alternate[Ts](self, methods: list[Callable[..., *Ts]]) -> Union[*Ts]:
         ast = None
         for method in methods:
             ast = self.parse_optional(method)
@@ -585,7 +584,7 @@ class SppParser:
         if p1 is None: return None
         return p1
 
-    def parse_binary_expression_precedence_level_n_rhs(self, op, rhs) -> Optional[Tuple[Asts.TokenAst, Asts.ExpressionAst]]:
+    def parse_binary_expression_precedence_level_n_rhs(self, op, rhs) -> Optional[tuple[Asts.TokenAst, Asts.ExpressionAst]]:
         p1 = self.parse_once(op)
         if p1 is None: return None
         p2 = self.parse_once(rhs)
@@ -1452,7 +1451,7 @@ class SppParser:
         if p2 is None: return None
         return Asts.LambdaExpressionCaptureItemAst((p1 or p2).pos, p1, p2)
 
-    def parse_lambda_expression_capture_group(self) -> Seq[Asts.LambdaExpressionCaptureItemAst]:
+    def parse_lambda_expression_capture_group(self) -> list[Asts.LambdaExpressionCaptureItemAst]:
         p1 = self.parse_once(self.parse_keyword_caps)
         if p1 is None: return []
         p2 = self.parse_zero_or_more(self.parse_lambda_expression_capture_item, self.parse_token_comma)
@@ -1467,7 +1466,7 @@ class SppParser:
 
     # ===== TYPES =====
 
-    def parse_binary_type_expression_precedence_level_n_rhs(self, op, rhs) -> Optional[Tuple[Asts.TokenAst, Asts.TypeSingleAst]]:
+    def parse_binary_type_expression_precedence_level_n_rhs(self, op, rhs) -> Optional[tuple[Asts.TokenAst, Asts.TypeSingleAst]]:
         p1 = self.parse_once(op)
         if p1 is None: return None
         p2 = self.parse_once(rhs)

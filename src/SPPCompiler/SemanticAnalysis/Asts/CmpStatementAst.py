@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
@@ -20,7 +20,7 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     Unlike the UseStatementAst, this AST can not be used in local scopes; only at the module or superimposition level.
     """
 
-    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    annotations: list[Asts.AnnotationAst] = field(default_factory=list)
     kw_cmp: Asts.TokenAst = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default=None)

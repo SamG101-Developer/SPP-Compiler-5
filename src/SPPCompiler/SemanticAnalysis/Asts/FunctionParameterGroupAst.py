@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUt
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 # from llvmlite import ir as llvm
@@ -18,7 +18,7 @@ from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
 @dataclass(slots=True)
 class FunctionParameterGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
-    params: Seq[Asts.FunctionParameterAst] = field(default_factory=Seq)
+    params: list[Asts.FunctionParameterAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -46,12 +46,12 @@ class FunctionParameterGroupAst(Asts.Ast):
         ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterSelfAst)]
         return ps[0] if ps else None
 
-    def get_required_params(self) -> Seq[Asts.FunctionParameterRequiredAst]:
+    def get_required_params(self) -> list[Asts.FunctionParameterRequiredAst]:
         # Get all the required function parameters.
         ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterRequiredAst)]
         return ps
 
-    def get_optional_params(self) -> Seq[Asts.FunctionParameterOptionalAst]:
+    def get_optional_params(self) -> list[Asts.FunctionParameterOptionalAst]:
         # Get all the optional function parameters.
         ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterOptionalAst)]
         return ps
@@ -61,7 +61,7 @@ class FunctionParameterGroupAst(Asts.Ast):
         ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterVariadicAst)]
         return ps[0] if ps else None
 
-    def get_non_self_params(self) -> Seq[Asts.FunctionParameterAst]:
+    def get_non_self_params(self) -> list[Asts.FunctionParameterAst]:
         # Get all the function parameters that are not "self".
         ps = [p for p in self.params if not isinstance(p, Asts.FunctionParameterSelfAst)]
         return ps

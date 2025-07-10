@@ -14,7 +14,6 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -28,7 +27,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
     _overload: Optional[Tuple[Scope, Asts.FunctionPrototypeAst]] = field(default=None, repr=False)
     _is_async: Optional[Asts.Ast] = field(default=None, repr=False)
-    _folded_args: Seq[Asts.FunctionCallArgumentAst] = field(default_factory=Seq, repr=False)
+    _folded_args: list[Asts.FunctionCallArgumentAst] = field(default_factory=list, repr=False)
     _closure_arg: Optional[Asts.FunctionCallArgumentUnnamedAst] = field(default=None, repr=False)
     _is_coro_and_auto_resume: bool = field(default=False, repr=False)
 

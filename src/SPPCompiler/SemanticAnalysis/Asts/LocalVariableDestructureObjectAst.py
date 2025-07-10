@@ -8,14 +8,14 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
 class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     class_type: Asts.TypeAst = field(default=None)
     tok_l: Asts.TokenAst = field(default=None)
-    elems: Seq[Asts.LocalVariableNestedForDestructureObjectAst] = field(default_factory=Seq)
+    elems: list[Asts.LocalVariableNestedForDestructureObjectAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     _new_asts: list[Asts.LetStatementAst] = field(default_factory=list, init=False)
@@ -39,7 +39,7 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         return self.tok_r.pos_end
 
     @property
-    def extract_names(self) -> Seq[Asts.IdentifierAst]:
+    def extract_names(self) -> list[Asts.IdentifierAst]:
         return SequenceUtils.flatten([e.extract_name for e in self.elems])
 
     @property

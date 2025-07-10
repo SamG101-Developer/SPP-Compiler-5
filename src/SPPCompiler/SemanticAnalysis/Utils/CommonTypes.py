@@ -3,7 +3,6 @@ from __future__ import annotations
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-from SPPCompiler.Utils.Sequence import Seq
 
 
 class CommonTypes:
@@ -184,7 +183,7 @@ class CommonTypes:
         return type
 
     @staticmethod
-    def Tup(pos: int, inner_types: Seq[Asts.TypeAst] = None):
+    def Tup(pos: int, inner_types: list[Asts.TypeAst] = None):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, v) for v in inner_types or []]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
         type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Tup", generics))
@@ -193,7 +192,7 @@ class CommonTypes:
         return type
 
     @staticmethod
-    def Var(pos: int, inner_types: Seq[Asts.TypeAst] = None):
+    def Var(pos: int, inner_types: list[Asts.TypeAst] = None):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, v) for v in inner_types or []]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
         type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Var", generics))

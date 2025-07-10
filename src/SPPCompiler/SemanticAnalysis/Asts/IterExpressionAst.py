@@ -10,7 +10,6 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass(slots=True)
@@ -29,7 +28,7 @@ class IterExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_of: Asts.TokenAst = field(default=None)
     """The optional ``of`` keyword indicating a subsequent list of patterns."""
 
-    branches: Seq[Asts.IterExpressionBranchAst] = field(default_factory=Seq)
+    branches: list[Asts.IterExpressionBranchAst] = field(default_factory=list)
     """The branches that the condition can be matched against."""
 
     def __post_init__(self) -> None:

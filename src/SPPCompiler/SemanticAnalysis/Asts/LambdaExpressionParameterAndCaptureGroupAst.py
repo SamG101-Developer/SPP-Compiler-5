@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
@@ -21,10 +21,10 @@ class LambdaExpressionParameterAndCaptureGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     """The opening vertical bar token of the lambda expression parameter and capture group."""
 
-    params: Seq[Asts.LambdaExpressionParameterAst] = field(default_factory=Seq)
+    params: list[Asts.LambdaExpressionParameterAst] = field(default_factory=list)
     """The list of parameters in the lambda expression."""
 
-    captures: Seq[Asts.LambdaExpressionCaptureItemAst] = field(default_factory=Seq)
+    captures: list[Asts.LambdaExpressionCaptureItemAst] = field(default_factory=list)
     """The list of captured variables in the lambda expression."""
 
     tok_r: Asts.TokenAst = field(default=None)

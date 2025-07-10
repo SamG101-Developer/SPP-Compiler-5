@@ -3,13 +3,12 @@ from __future__ import annotations
 import itertools
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import NoReturn, Optional, Tuple, TYPE_CHECKING
+from enum import Enum
+from typing import NoReturn, Optional, TYPE_CHECKING, Tuple
 
 from colorama import Fore, Style
-from enum import Enum
 
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
-from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis import Asts
@@ -30,8 +29,8 @@ class SemanticError(BaseException):
         tip: str
         fmt: SemanticError.Format
 
-    error_info: Seq[ErrorInfo]
-    error_formatters: Seq[ErrorFormatter]
+    error_info: list[ErrorInfo]
+    error_formatters: list[ErrorFormatter]
 
     def __init__(self, *args) -> None:
         super().__init__(args)
@@ -407,7 +406,7 @@ class SemanticErrors:
         """
 
         def add(
-                self, generic_parameters: Seq[Asts.GenericParameterAst], owner: Asts.Ast,
+                self, generic_parameters: list[Asts.GenericParameterAst], owner: Asts.Ast,
                 extra_generic_argument: Asts.GenericArgumentAst) -> SemanticError:
             self.add_info(
                 ast=generic_parameters[0] if generic_parameters else owner,

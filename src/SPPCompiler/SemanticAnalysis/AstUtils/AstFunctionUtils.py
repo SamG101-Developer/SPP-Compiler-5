@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -132,7 +132,7 @@ class AstFunctionUtils:
     @staticmethod
     def get_all_function_scopes(
             target_function_name: Asts.IdentifierAst, target_scope: Scope, *, for_override: bool = False)\
-            -> Seq[Tuple[Optional[Scope], Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]]:
+            -> list[Tuple[Optional[Scope], Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]]:
 
         """
         Get all the function scopes, and their generic argument groups for a function name in a scope. This is used to

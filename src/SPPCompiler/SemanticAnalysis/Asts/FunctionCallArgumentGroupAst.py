@@ -10,17 +10,17 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
 class FunctionCallArgumentGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
-    arguments: Seq[Asts.FunctionCallArgumentAst] = field(default_factory=Seq)
+    arguments: list[Asts.FunctionCallArgumentAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -43,11 +43,11 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.tok_r.pos_end
 
-    def get_named_args(self) -> Seq[Asts.FunctionCallArgumentNamedAst]:
+    def get_named_args(self) -> list[Asts.FunctionCallArgumentNamedAst]:
         # Get all the named function call arguments.
         return [a for a in self.arguments if isinstance(a, Asts.FunctionCallArgumentNamedAst)]
 
-    def get_unnamed_args(self) -> Seq[Asts.FunctionCallArgumentUnnamedAst]:
+    def get_unnamed_args(self) -> list[Asts.FunctionCallArgumentUnnamedAst]:
         # Get all the unnamed function call arguments.
         return [a for a in self.arguments if isinstance(a, Asts.FunctionCallArgumentUnnamedAst)]
 

@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 # Todo: a lot of kwargs["assignment"][0] is sen for getting symbols; check this because there can be > 1 in the
@@ -31,13 +31,13 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         x, y = y, 100
     """
     
-    lhs: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
+    lhs: list[Asts.ExpressionAst] = field(default_factory=list)
     """The sequence of lhs targets."""
 
     op: Asts.TokenAst = field(default=None)
     """The ``=`` operator."""
 
-    rhs: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
+    rhs: list[Asts.ExpressionAst] = field(default_factory=list)
     """The sequence of rhs values to assign to the targets."""
 
     def __post_init__(self) -> None:

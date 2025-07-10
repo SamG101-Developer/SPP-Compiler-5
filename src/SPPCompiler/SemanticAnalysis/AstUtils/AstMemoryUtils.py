@@ -5,7 +5,6 @@ from typing import Optional, TYPE_CHECKING, Tuple
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -17,8 +16,8 @@ if TYPE_CHECKING:
 class LightweightMemoryInfo:
     ast_initialization: Optional[Asts.Ast]
     ast_moved: Optional[Asts.Ast]
-    ast_partial_moves: Seq[Asts.Ast]
-    ast_pins: Seq[Asts.Ast]
+    ast_partial_moves: list[Asts.Ast]
+    ast_pins: list[Asts.Ast]
     initialization_counter: int
 
 
@@ -54,8 +53,8 @@ class MemoryInfo:
     ast_initialization_old: Optional[Asts.Ast] = field(default=None)
     ast_moved: Optional[Asts.Ast] = field(default=None)
     ast_borrowed: Optional[Asts.Ast] = field(default=None)
-    ast_partial_moves: Seq[Asts.Ast] = field(default_factory=list)
-    ast_pins: Seq[Asts.Ast] = field(default_factory=list)
+    ast_partial_moves: list[Asts.Ast] = field(default_factory=list)
+    ast_pins: list[Asts.Ast] = field(default_factory=list)
     ast_comptime_const: Optional[Asts.ExpressionAst] = field(default=None)
 
     initialization_counter: int = field(default=0)
@@ -67,7 +66,7 @@ class MemoryInfo:
     is_inconsistently_partially_moved: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
     is_inconsistently_pinned: Tuple[Tuple[Asts.CaseExpressionBranchAst, bool], Tuple[Asts.CaseExpressionBranchAst, bool]] = field(default=None)
 
-    borrow_refers_to: Seq[Tuple[Optional[Asts.Ast], Asts.FunctionCallArgumentAst, bool, Scope]] = field(default_factory=list)
+    borrow_refers_to: list[Tuple[Optional[Asts.Ast], Asts.FunctionCallArgumentAst, bool, Scope]] = field(default_factory=list)
 
     def __copy__(self) -> MemoryInfo:
         return MemoryInfo(

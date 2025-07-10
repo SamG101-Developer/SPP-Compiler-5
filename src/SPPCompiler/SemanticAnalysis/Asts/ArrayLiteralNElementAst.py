@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
@@ -33,7 +33,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_l: Asts.TokenAst = field(default=None)
     """The opening ``[`` token marking an array literal."""
 
-    elems: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
+    elems: list[Asts.ExpressionAst] = field(default_factory=list)
     """The expressions representing the elements in the array literal."""
 
     tok_r: Asts.TokenAst = field(default=None)

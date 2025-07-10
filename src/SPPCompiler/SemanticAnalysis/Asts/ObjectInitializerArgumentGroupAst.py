@@ -12,13 +12,13 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
 class ObjectInitializerArgumentGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
-    arguments: Seq[Asts.ObjectInitializerArgumentAst] = field(default_factory=Seq)
+    arguments: list[Asts.ObjectInitializerArgumentAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -49,13 +49,13 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         args = [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst) and a.is_default]
         return args[0] if args else None
 
-    def get_regular_args(self) -> Seq[Asts.ObjectInitializerArgumentAst]:
+    def get_regular_args(self) -> list[Asts.ObjectInitializerArgumentAst]:
         return [a for a in self.arguments if not isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst) or a.is_default is None]
 
-    def get_named_args(self) -> Seq[Asts.ObjectInitializerArgumentNamedAst]:
+    def get_named_args(self) -> list[Asts.ObjectInitializerArgumentNamedAst]:
         return [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentNamedAst)]
 
-    def get_unnamed_args(self) -> Seq[Asts.ObjectInitializerArgumentUnnamedAst]:
+    def get_unnamed_args(self) -> list[Asts.ObjectInitializerArgumentUnnamedAst]:
         return [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst)]
 
     def pre_analyse_semantics(self, sm: ScopeManager, class_type: Asts.TypeAst = None, **kwargs) -> None:

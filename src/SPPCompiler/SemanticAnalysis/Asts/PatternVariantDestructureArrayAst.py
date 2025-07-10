@@ -6,13 +6,13 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
 class PatternVariantDestructureArrayAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     tok_l: Asts.TokenAst = field(default=None)
-    elems: Seq[Asts.PatternVariantNestedForDestructureArrayAst] = field(default_factory=Seq)
+    elems: list[Asts.PatternVariantNestedForDestructureArrayAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     _new_ast: Asts.LetStatementInitializedAst = field(default=None, init=False)

@@ -8,12 +8,12 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True)
 class ModuleImplementationAst(Asts.Ast):
-    members: Seq[Asts.ModuleMemberAst] = field(default_factory=Seq)
+    members: list[Asts.ModuleMemberAst] = field(default_factory=list)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
