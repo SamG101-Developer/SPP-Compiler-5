@@ -291,7 +291,7 @@ class AstFunctionUtils:
 
     @staticmethod
     def name_function_arguments(
-            arguments: Seq[Asts.FunctionCallArgumentAst], parameters: Seq[Asts.FunctionParameterAst],
+            arguments: list[Asts.FunctionCallArgumentAst], parameters: list[Asts.FunctionParameterAst],
             sm: ScopeManager)\
             -> None:
 
@@ -437,9 +437,9 @@ class AstFunctionUtils:
 
     @staticmethod
     def infer_generic_arguments(
-            generic_parameters: Seq[Asts.GenericParameterAst],
-            optional_generic_parameters: Seq[Asts.GenericParameterAst],
-            explicit_generic_arguments: Seq[Asts.GenericArgumentAst],
+            generic_parameters: list[Asts.GenericParameterAst],
+            optional_generic_parameters: list[Asts.GenericParameterAst],
+            explicit_generic_arguments: list[Asts.GenericArgumentAst],
             infer_source: Dict[Asts.IdentifierAst, Asts.TypeAst],
             infer_target: Dict[Asts.IdentifierAst, Asts.TypeAst],
             sm: ScopeManager,
@@ -447,7 +447,7 @@ class AstFunctionUtils:
             variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None,
             is_tuple_owner: bool = False,
             **kwargs)\
-            -> Seq[Asts.GenericArgumentAst]:
+            -> list[Asts.GenericArgumentAst]:
 
         """
         This function infers the generic parameters' values based not only on explicit generic arguments, but on other
