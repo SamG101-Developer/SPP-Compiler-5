@@ -560,7 +560,9 @@ class SemanticErrors:
         accessed. But if A also has an "x" attribute, then it is clear that "A.x" refers to A's own "x" attribute.
         """
 
-        def add(self, field: Asts.IdentifierAst, first: Asts.IdentifierAst, second: Asts.IdentifierAst) -> SemanticError:
+        def add(
+                self, field: Asts.IdentifierAst | Asts.TypeIdentifierAst, first: Asts.IdentifierAst,
+                second: Asts.IdentifierAst) -> SemanticError:
             self.add_info(
                 ast=first,
                 tag=f"Member '{first}' defined here")
