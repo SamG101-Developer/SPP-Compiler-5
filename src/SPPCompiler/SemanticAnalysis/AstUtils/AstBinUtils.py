@@ -107,21 +107,24 @@ class AstBinUtils:
 
     @staticmethod
     def _convert_binary_expression_to_function_call(ast: Asts.BinaryExpressionAst, sm: ScopeManager) -> Asts.PostfixExpressionAst:
+        # Get the method named based on the operator token type ("+" => "add"), and create a function call.
         method_name = BINARY_METHODS.get(ast.op.token_type, None)
         function_call_ast = CodeInjection.inject_code(
             f"{ast.lhs}.{method_name}()", SppParser.parse_postfix_expression, pos_adjust=ast.pos)
 
+        # Apply the correct "self" convention based on comparison vs mathematical operators.
         convention = None
         if ast.op.token_type in BINARY_COMPARISON_OPERATORS:
             convention = Asts.ConventionRefAst(pos=ast.rhs.pos)
 
+        # Set the arguments for the function call, and return the AST.
         function_call_ast.op.function_argument_group.arguments = [
             Asts.FunctionCallArgumentUnnamedAst(pos=ast.rhs.pos, convention=convention, value=ast.rhs)]
-
         return function_call_ast
 
     @staticmethod
     def _convert_is_expression_to_function_call(ast: Asts.IsExpressionAst) -> Asts.CaseExpressionAst:
+        # The "is" expression is a special case that needs to be converted into a case expression.
         case_ast = CodeInjection.inject_code(
             f"case {ast.lhs} of is {ast.rhs} {{}}", SppParser.parse_case_expression, pos_adjust=ast.pos)
         return case_ast
