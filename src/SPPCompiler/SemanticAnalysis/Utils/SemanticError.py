@@ -1081,7 +1081,7 @@ class SemanticErrors:
         example, "let x = 5" followed by "x.4" would raise this error.
         """
 
-        def add(self, lhs: Asts.Ast, lhs_type: Asts.TypeAst, access_token: Asts.TokenAst) -> SemanticError:
+        def add(self, lhs: Asts.Ast, lhs_type: Asts.TypeAst, access_token: Asts.Ast) -> SemanticError:
             self.add_info(
                 ast=lhs,
                 tag=f"Type '{lhs_type}' inferred here")
