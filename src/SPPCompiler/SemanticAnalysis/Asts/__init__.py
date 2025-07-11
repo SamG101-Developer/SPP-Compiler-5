@@ -55,7 +55,6 @@ from SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentUnnamedAst import *
 from SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterInlineConstraintsAst import *
 from SPPCompiler.SemanticAnalysis.Asts.GenericArgumentAst import *
 
-from SPPCompiler.SemanticAnalysis.Asts.GenericIdentifierAst import *
 from SPPCompiler.SemanticAnalysis.Asts.IdentifierAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.FloatLiteralAst import *
@@ -150,7 +149,7 @@ from SPPCompiler.SemanticAnalysis.Asts.TokenAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.TypeArrayAst import *
 from SPPCompiler.SemanticAnalysis.Asts.TypeTupleAst import *
-from SPPCompiler.SemanticAnalysis.Asts.TypeSingleAst import *
+from SPPCompiler.SemanticAnalysis.Asts.TypeIdentifierAst import *
 from SPPCompiler.SemanticAnalysis.Asts.TypeBinaryExpressionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.TypeParenthesizedAst import *
 from SPPCompiler.SemanticAnalysis.Asts.TypePostfixExpressionAst import *

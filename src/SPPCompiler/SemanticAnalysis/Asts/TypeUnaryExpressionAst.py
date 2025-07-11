@@ -9,7 +9,6 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -26,7 +25,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def __hash__(self) -> int:
         return hash((self.op, self.rhs))
 
-    def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
+    def __iter__(self) -> Iterator[Asts.TypeIdentifierAst]:
         yield from self.rhs
 
     def __deepcopy__(self, memodict=None) -> TypeUnaryExpressionAst:
@@ -44,10 +43,10 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return f"{self.op.print(printer)}{self.rhs.print(printer)}"
 
     @property
-    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return self.op.fq_type_parts + self.rhs.fq_type_parts if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.fq_type_parts
 
-    @FunctionCache.cache_property
+    @property
     def without_generics(self) -> Optional[Asts.TypeAst]:
         return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics)
 
@@ -56,7 +55,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return self if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.without_conventions
 
     @property
-    def convention(self) -> Optional[Asts.TypeAst]:
+    def convention(self) -> Optional[Asts.ConventionAst]:
         return self.op.convention if isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst) else None
 
     @property
@@ -81,10 +80,10 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
             return x
         return TypeUnaryExpressionAst(self.pos, self.op, x)
 
-    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
+    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
         return self.rhs.get_corresponding_generic(that, generic_name)
 
-    def contains_generic(self, generic_type: Asts.TypeSingleAst) -> bool:
+    def contains_generic(self, generic_type: Asts.TypeIdentifierAst) -> bool:
         return self.rhs.contains_generic(generic_type)
 
     def get_symbol(self, scope: Scope) -> TypeSymbol:

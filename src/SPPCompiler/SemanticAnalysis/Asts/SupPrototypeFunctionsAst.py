@@ -111,7 +111,7 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         # Add the "Self" symbol into the scope.
         if self.name.type_parts[0].value[0] != "$":
             self_symbol = TypeSymbol(
-                name=Asts.GenericIdentifierAst.from_type(CommonTypes.Self(self.name.pos)), type=cls_symbol.type,
+                name=CommonTypes.Self(self.name.pos), type=cls_symbol.type,
                 scope=cls_symbol.scope, scope_defined_in=sm.current_scope)
             sm.current_scope.add_symbol(self_symbol)
 

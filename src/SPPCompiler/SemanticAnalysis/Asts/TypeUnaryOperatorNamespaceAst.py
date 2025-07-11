@@ -29,11 +29,11 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
         return f"{self.name.print(printer)}{self.tok_dbl_colon.print(printer)}"
 
     @property
-    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return [self.name]
 
     @property
-    def type_parts(self) -> list[Asts.GenericIdentifierAst]:
+    def type_parts(self) -> list[Asts.TypeIdentifierAst]:
         return []
 
     @property

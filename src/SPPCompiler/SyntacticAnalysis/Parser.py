@@ -156,7 +156,7 @@ class SppParser:
         p5 = self.parse_optional(self.parse_where_block)
         p6 = self.parse_once(self.parse_class_implementation)
         if p6 is None: return None
-        return Asts.ClassPrototypeAst((p1[0] if p1 else p2).pos, p1, p2, Asts.TypeSingleAst.from_identifier(p3), p4, p5, p6)
+        return Asts.ClassPrototypeAst((p1[0] if p1 else p2).pos, p1, p2, Asts.TypeIdentifierAst.from_identifier(p3), p4, p5, p6)
 
     def parse_class_implementation(self) -> Optional[Asts.ClassImplementationAst]:
         p1 = self.parse_once(self.parse_token_left_curly_brace)
@@ -431,7 +431,7 @@ class SppParser:
         if p2 is None: return None
         p3 = self.parse_once(self.parse_type)
         if p3 is None: return None
-        return Asts.GenericTypeArgumentNamedAst(p1.pos, Asts.TypeSingleAst.from_identifier(p1), p2, p3)
+        return Asts.GenericTypeArgumentNamedAst(p1.pos, Asts.TypeIdentifierAst.from_identifier(p1), p2, p3)
 
     def parse_generic_type_argument_unnamed(self) -> Optional[Asts.GenericTypeArgumentUnnamedAst]:
         p1 = self.parse_once(self.parse_type)
@@ -445,7 +445,7 @@ class SppParser:
         if p2 is None: return None
         p3 = self.parse_once(self.parse_cmp_value)
         if p3 is None: return None
-        return Asts.GenericCompArgumentNamedAst(p1.pos, Asts.TypeSingleAst.from_identifier(p1), p2, p3)
+        return Asts.GenericCompArgumentNamedAst(p1.pos, Asts.TypeIdentifierAst.from_identifier(p1), p2, p3)
 
     def parse_generic_comp_argument_unnamed(self) -> Optional[Asts.GenericCompArgumentUnnamedAst]:
         p1 = self.parse_once(self.parse_cmp_value)
@@ -475,7 +475,7 @@ class SppParser:
         p1 = self.parse_once(self.parse_upper_identifier)
         if p1 is None: return None
         p2 = self.parse_optional(self.parse_generic_inline_constraints)
-        return Asts.GenericTypeParameterRequiredAst(p1.pos, Asts.TypeSingleAst.from_identifier(p1), p2)
+        return Asts.GenericTypeParameterRequiredAst(p1.pos, Asts.TypeIdentifierAst.from_identifier(p1), p2)
 
     def parse_generic_type_parameter_optional(self) -> Optional[Asts.GenericTypeParameterOptionalAst]:
         p1 = self.parse_once(self.parse_upper_identifier)
@@ -485,7 +485,7 @@ class SppParser:
         if p3 is None: return None
         p4 = self.parse_once(self.parse_type)
         if p4 is None: return None
-        return Asts.GenericTypeParameterOptionalAst(p1.pos, Asts.TypeSingleAst.from_identifier(p1), p2, p3, p4)
+        return Asts.GenericTypeParameterOptionalAst(p1.pos, Asts.TypeIdentifierAst.from_identifier(p1), p2, p3, p4)
 
     def parse_generic_type_parameter_variadic(self) -> Optional[Asts.GenericTypeParameterVariadicAst]:
         p1 = self.parse_once(self.parse_token_double_dot)
@@ -493,7 +493,7 @@ class SppParser:
         p2 = self.parse_once(self.parse_upper_identifier)
         if p2 is None: return None
         p3 = self.parse_optional(self.parse_generic_inline_constraints)
-        return Asts.GenericTypeParameterVariadicAst(p1.pos, p1, Asts.TypeSingleAst.from_identifier(p2), p3)
+        return Asts.GenericTypeParameterVariadicAst(p1.pos, p1, Asts.TypeIdentifierAst.from_identifier(p2), p3)
 
     def parse_generic_comp_parameter_required(self) -> Optional[Asts.GenericCompParameterRequiredAst]:
         p1 = self.parse_once(self.parse_keyword_cmp)
@@ -504,7 +504,7 @@ class SppParser:
         if p3 is None: return None
         p4 = self.parse_once(self.parse_type)
         if p4 is None: return None
-        return Asts.GenericCompParameterRequiredAst(p1.pos, p1, Asts.TypeSingleAst.from_identifier(p2), p3, p4)
+        return Asts.GenericCompParameterRequiredAst(p1.pos, p1, Asts.TypeIdentifierAst.from_identifier(p2), p3, p4)
 
     def parse_generic_comp_parameter_optional(self) -> Optional[Asts.GenericCompParameterOptionalAst]:
         p1 = self.parse_once(self.parse_keyword_cmp)
@@ -519,7 +519,7 @@ class SppParser:
         if p5 is None: return None
         p6 = self.parse_once(self.parse_cmp_value)
         if p6 is None: return None
-        return Asts.GenericCompParameterOptionalAst(p1.pos, p1, Asts.TypeSingleAst.from_identifier(p2), p3, p4, p5, p6)
+        return Asts.GenericCompParameterOptionalAst(p1.pos, p1, Asts.TypeIdentifierAst.from_identifier(p2), p3, p4, p5, p6)
 
     def parse_generic_comp_parameter_variadic(self) -> Optional[Asts.GenericCompParameterVariadicAst]:
         p1 = self.parse_once(self.parse_keyword_cmp)
@@ -532,7 +532,7 @@ class SppParser:
         if p4 is None: return None
         p5 = self.parse_once(self.parse_type)
         if p5 is None: return None
-        return Asts.GenericCompParameterVariadicAst(p1.pos, p1, p2, Asts.TypeSingleAst.from_identifier(p3), p4, p5)
+        return Asts.GenericCompParameterVariadicAst(p1.pos, p1, p2, Asts.TypeIdentifierAst.from_identifier(p3), p4, p5)
 
     def parse_generic_inline_constraints(self) -> Optional[Asts.GenericTypeParameterInlineConstraintsAst]:
         p1 = self.parse_once(self.parse_token_colon)
@@ -837,7 +837,7 @@ class SppParser:
         if p4 is None: return None
         p5 = self.parse_once(self.parse_type)
         if p5 is None: return None
-        return Asts.TypeStatementAst(p1.pos, [], p1, Asts.TypeSingleAst.from_identifier(p2), p3, p4, p5)
+        return Asts.TypeStatementAst(p1.pos, [], p1, Asts.TypeIdentifierAst.from_identifier(p2), p3, p4, p5)
 
     def parse_use_statement(self) -> Optional[Asts.UseStatementAst]:
         p1 = self.parse_once(self.parse_keyword_use)
@@ -1466,14 +1466,14 @@ class SppParser:
 
     # ===== TYPES =====
 
-    def parse_binary_type_expression_precedence_level_n_rhs(self, op, rhs) -> Optional[tuple[Asts.TokenAst, Asts.TypeSingleAst]]:
+    def parse_binary_type_expression_precedence_level_n_rhs(self, op, rhs) -> Optional[tuple[Asts.TokenAst, Asts.TypeIdentifierAst]]:
         p1 = self.parse_once(op)
         if p1 is None: return None
         p2 = self.parse_once(rhs)
         if p2 is None: return None
         return p1, p2
 
-    def parse_binary_type_expression_precedence_level_n(self, lhs, op, rhs) -> Optional[Asts.TypeSingleAst]:
+    def parse_binary_type_expression_precedence_level_n(self, lhs, op, rhs) -> Optional[Asts.TypeIdentifierAst]:
         p1 = self.parse_once(lhs)
         if p1 is None: return None
         p2 = self.parse_optional(lambda: self.parse_binary_type_expression_precedence_level_n_rhs(op, rhs))
@@ -1517,7 +1517,7 @@ class SppParser:
         # Todo: this doesn't allow for &[T, n], has to be &std::Arr[T, n] atm.
         p1 = self.parse_optional(self.parse_type_unary_op_borrow)
         p2 = self.parse_zero_or_more(self.parse_type_unary_op_namespace, self.parse_nothing)
-        p3 = self.parse_once(self.parse_type_single)
+        p3 = self.parse_once(self.parse_type_identifier)
         if p3 is None: return None
         p2.insert(0, p1) if p1 else None
         return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(x.pos, x, acc), p2[::-1], p3).convert()
@@ -1530,11 +1530,11 @@ class SppParser:
 
     def parse_type_unary_expression_no_borrow(self) -> Optional[Asts.TypeAst]:
         p2 = self.parse_zero_or_more(self.parse_type_unary_op_namespace, self.parse_nothing)
-        p3 = self.parse_once(self.parse_type_single)
+        p3 = self.parse_once(self.parse_type_identifier)
         if p3 is None: return None
         return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(x.pos, x, acc), p2[::-1], p3).convert()
 
-    def parse_type_parenthesized(self) -> Optional[Asts.TypeSingleAst]:
+    def parse_type_parenthesized(self) -> Optional[Asts.TypeIdentifierAst]:
         p1 = self.parse_once(self.parse_token_left_parenthesis)
         if p1 is None: return None
         p2 = self.parse_once(self.parse_type)
@@ -1543,14 +1543,14 @@ class SppParser:
         if p3 is None: return None
         return Asts.TypeParenthesizedAst(p1.pos, p1, p2, p3).convert()
 
-    def parse_type_tuple(self) -> Optional[Asts.TypeSingleAst]:
+    def parse_type_tuple(self) -> Optional[Asts.TypeIdentifierAst]:
         p1 = self.parse_alternate([
             self.parse_type_tuple_0_items,
             self.parse_type_tuple_1_items,
             self.parse_type_tuple_n_items])
         return p1
 
-    def parse_type_array(self) -> Optional[Asts.TypeSingleAst]:
+    def parse_type_array(self) -> Optional[Asts.TypeIdentifierAst]:
         p1 = self.parse_once(self.parse_token_left_square_bracket)
         if p1 is None: return None
         p2 = self.parse_once(self.parse_type)
@@ -1563,17 +1563,23 @@ class SppParser:
         if p5 is None: return None
         return Asts.TypeArrayAst(p1.pos, p1, p2, p3, p4, p5).convert()
 
-    def parse_type_single(self) -> Optional[Asts.TypeSingleAst]:
+    def parse_type_identifier(self) -> Optional[Asts.TypeIdentifierAst]:
         p1 = self.parse_alternate([
-            self.parse_generic_identifier,
+            self.parse_type_identifier_inner,
             self.parse_type_self])
         if p1 is None: return None
-        return Asts.TypeSingleAst(p1.pos, p1)
+        return p1
 
-    def parse_type_self(self) -> Optional[Asts.GenericIdentifierAst]:
+    def parse_type_identifier_inner(self) -> Optional[Asts.TypeIdentifierAst]:
+        p1 = self.parse_once(self.parse_upper_identifier)
+        if p1 is None: return None
+        p2 = self.parse_optional(self.parse_generic_arguments)
+        return Asts.TypeIdentifierAst(p1.pos, p1.value, p2)
+
+    def parse_type_self(self) -> Optional[Asts.TypeIdentifierAst]:
         p1 = self.parse_once(self.parse_keyword_self_type)
         if p1 is None: return None
-        return Asts.GenericIdentifierAst(p1.pos, p1.token_data, Asts.GenericArgumentGroupAst(pos=p1.pos))
+        return Asts.TypeIdentifierAst(p1.pos, p1.token_data)
 
     def parse_type_unary_op(self) -> Optional[Asts.TypeUnaryOperatorAst]:
         p1 = self.parse_alternate([
@@ -1602,7 +1608,7 @@ class SppParser:
     def parse_type_postfix_op_nested_type(self) -> Optional[Asts.TypePostfixOperatorNestedTypeAst]:
         p1 = self.parse_once(self.parse_token_double_colon)
         if p1 is None: return None
-        p2 = self.parse_once(self.parse_type_single)
+        p2 = self.parse_once(self.parse_type_identifier)
         if p2 is None: return None
         return Asts.TypePostfixOperatorNestedTypeAst(p1.pos, p1, p2)
 
@@ -1611,14 +1617,14 @@ class SppParser:
         if p1 is None: return None
         return Asts.TypePostfixOperatorOptionalTypeAst(p1.pos, p1)
 
-    def parse_type_tuple_0_items(self) -> Optional[Asts.TypeSingleAst]:
+    def parse_type_tuple_0_items(self) -> Optional[Asts.TypeIdentifierAst]:
         p1 = self.parse_once(self.parse_token_left_parenthesis)
         if p1 is None: return None
         p2 = self.parse_once(self.parse_token_right_parenthesis)
         if p2 is None: return None
         return Asts.TypeTupleAst(p1.pos, p1, [], p2).convert()
 
-    def parse_type_tuple_1_items(self) -> Optional[Asts.TypeSingleAst]:
+    def parse_type_tuple_1_items(self) -> Optional[Asts.TypeIdentifierAst]:
         p1 = self.parse_once(self.parse_token_left_parenthesis)
         if p1 is None: return None
         p2 = self.parse_once(self.parse_type)
@@ -1629,7 +1635,7 @@ class SppParser:
         if p4 is None: return None
         return Asts.TypeTupleAst(p1.pos, p1, [p2], p4).convert()
 
-    def parse_type_tuple_n_items(self) -> Optional[Asts.TypeSingleAst]:
+    def parse_type_tuple_n_items(self) -> Optional[Asts.TypeIdentifierAst]:
         p1 = self.parse_once(self.parse_token_left_parenthesis)
         if p1 is None: return None
         p2 = self.parse_two_or_more(self.parse_type, self.parse_token_comma)
@@ -1654,12 +1660,6 @@ class SppParser:
         p1 = self.parse_once(self.parse_keyword_self_value)
         if p1 is None: return None
         return Asts.IdentifierAst(p1.pos, p1.token_data)
-
-    def parse_generic_identifier(self) -> Optional[Asts.GenericIdentifierAst]:
-        p1 = self.parse_once(self.parse_upper_identifier)
-        if p1 is None: return None
-        p2 = self.parse_optional(self.parse_generic_arguments)
-        return Asts.GenericIdentifierAst(p1.pos, p1.value, p2)
 
     # ===== LITERALS =====
 
@@ -1767,7 +1767,7 @@ class SppParser:
             lambda: self.parse_characters("u256"),
             lambda: self.parse_characters("uz")])
         if p2 is None: return None
-        return Asts.TypeSingleAst.from_token(p2)
+        return Asts.TypeIdentifierAst.from_token(p2)
 
     def parse_float_postfix_type(self) -> Optional[Asts.TypeAst]:
         p1 = self.parse_once(self.parse_token_underscore)
@@ -1780,7 +1780,7 @@ class SppParser:
             lambda: self.parse_characters("f128"),
             lambda: self.parse_characters("f256")])
         if p2 is None: return None
-        return Asts.TypeSingleAst.from_token(p2)
+        return Asts.TypeIdentifierAst.from_token(p2)
 
     # ===== TUPLES =====
 

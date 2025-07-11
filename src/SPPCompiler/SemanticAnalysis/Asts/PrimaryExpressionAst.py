@@ -14,7 +14,7 @@ PrimaryExpressionAst = Union[
     Asts.InnerScopeAst,
     Asts.CaseExpressionAst,
     Asts.LoopExpressionAst,
-    Asts.TypeSingleAst,
+    Asts.TypeIdentifierAst,
     Asts.TokenAst,
 ]
 

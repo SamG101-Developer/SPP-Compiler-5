@@ -12,88 +12,94 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
 @dataclass(slots=True)
-class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
-    name: Asts.GenericIdentifierAst = field(default=None)
+class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
+    value: str = field(default="")
+    generic_argument_group: Asts.GenericArgumentGroupAst = field(default=None)
 
-    def __eq__(self, other: TypeSingleAst | Asts.IdentifierAst) -> bool:
-        if type(other) is Asts.TypeSingleAst:
-            return self.name == other.name
+    def __post_init__(self) -> None:
+        self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=0)
+
+    def __eq__(self, other: TypeIdentifierAst | Asts.IdentifierAst) -> bool:
+        if type(other) is TypeIdentifierAst:
+            return self.value == other.value and self.generic_argument_group == other.generic_argument_group
         elif type(other) is Asts.IdentifierAst:
-            return self.name.value == other.value
+            return self.value == other.value
         return False
 
     def __hash__(self) -> int:
-        return hash(self.name)
+        return hash(self.value)
 
-    def __iter__(self) -> Iterator[Asts.GenericIdentifierAst]:
-        yield self.name
-        for g in self.name.generic_argument_group.arguments:
+    def __iter__(self) -> Iterator[Asts.TypeIdentifierAst]:
+        yield self
+        for g in self.generic_argument_group.arguments:
             if isinstance(g.value, Asts.IdentifierAst):
-                yield Asts.GenericIdentifierAst.from_identifier(g.value)
+                yield Asts.TypeIdentifierAst.from_identifier(g.value)
             else:
                 yield from g.value
 
-    def __deepcopy__(self, memodict=None) -> TypeSingleAst:
-        return TypeSingleAst(pos=self.pos, name=fast_deepcopy(self.name))
+    def __deepcopy__(self, memodict=None) -> TypeIdentifierAst:
+        return TypeIdentifierAst(pos=self.pos, value=self.value, generic_argument_group=fast_deepcopy(self.generic_argument_group))
 
     def __json__(self) -> str:
-        return self.name.value
+        return self.value
 
     def __str__(self) -> str:
-        return f"{self.name}"
+        string = [
+            self.value,
+            str(self.generic_argument_group)]
+        return "".join(string)
 
     @staticmethod
-    def from_identifier(ast: Asts.IdentifierAst) -> TypeSingleAst:
-        return TypeSingleAst(pos=ast.pos, name=Asts.GenericIdentifierAst.from_identifier(ast))
+    def from_identifier(ast: Asts.IdentifierAst) -> TypeIdentifierAst:
+        return TypeIdentifierAst(pos=ast.pos, value=ast.value)
 
     @staticmethod
-    def from_generic_identifier(ast: Asts.GenericIdentifierAst) -> TypeSingleAst:
-        return TypeSingleAst(pos=ast.pos, name=ast)
+    def from_token(ast: Asts.TokenAst) -> TypeIdentifierAst:
+        return TypeIdentifierAst(pos=ast.pos, value=ast.token_data)
 
     @staticmethod
-    def from_token(ast: Asts.TokenAst) -> TypeSingleAst:
-        return TypeSingleAst.from_generic_identifier(ast=Asts.GenericIdentifierAst(pos=ast.pos, value=ast.token_data))
-
-    @staticmethod
-    def from_string(ast: str) -> TypeSingleAst:
-        return TypeSingleAst.from_identifier(Asts.IdentifierAst(pos=0, value=ast))
+    def from_string(value: str) -> TypeIdentifierAst:
+        return TypeIdentifierAst(pos=0, value=value)
 
     @property
-    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
-        return [self.name]
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
+        return [self]
 
-    @FunctionCache.cache_property
+    @property
     def without_generics(self) -> Optional[Asts.TypeAst]:
-        return TypeSingleAst(self.pos, self.name.without_generics)
+        return TypeIdentifierAst(self.pos, self.value)
 
     @property
     def without_conventions(self) -> Optional[Asts.TypeAst]:
         return self
 
     @property
-    def convention(self) -> Optional[Asts.TypeAst]:
+    def convention(self) -> Optional[Asts.ConventionAst]:
         return None
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        return f"{self.name.print(printer)}"
+        # Print the AST with auto-formatting.
+        string = [
+            self.value,
+            self.generic_argument_group.print(printer)]
+        return "".join(string)
 
     @property
     def pos_end(self) -> int:
-        return self.name.pos_end
+        return self.generic_argument_group.pos_end if self.generic_argument_group.arguments else self.pos + len(self.value)
 
     def convert(self) -> Asts.TypeAst:
         return self
 
     def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
-        name = fast_deepcopy(self.name)
+        name = fast_deepcopy(self)
         for generic_name, generic_type in [(a.name, a.value) for a in generic_arguments]:
             if self == generic_name:
                 return generic_type
@@ -106,9 +112,9 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         for g in name.generic_argument_group.get_type_args():
             g.value = g.value.substituted_generics(generic_arguments)
 
-        return TypeSingleAst(pos=self.pos, name=name)
+        return name
 
-    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
+    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
         """
         GenericAttrClass[AA=testing::nested_generic_attr::GenericAttrClass[P=BB, AA=std::array::Arr[T=CC, n = 3, A=std::allocator::GlobalAlloc[E=CC]]]]
         GenericAttrClass[AA=testing::nested_generic_attr::GenericAttrClass[P=std::vector::Vec[T=std::string::Str], AA=std::array::Arr[T=std::number::bigint::BigInt, n = 3, A=std::allocator::GlobalAlloc[E=std::number::bigint::BigInt]]]]
@@ -148,15 +154,15 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
 
         return None
 
-    def contains_generic(self, generic_type: Asts.TypeSingleAst) -> bool:
-        # todo: change this to use a custom iterator as-well.
-        return any(g == Asts.GenericIdentifierAst.from_type(generic_type) for g in self)
+    def contains_generic(self, generic_type: Asts.TypeIdentifierAst) -> bool:
+        # todo: change this to use a custom iterator as-well?
+        return generic_type in self
 
     def get_symbol(self, scope: Scope) -> TypeSymbol:
-        return scope.get_symbol(self.name.without_generics, exclusive=True)
+        return scope.get_symbol(self.without_generics, exclusive=True)
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
-        for g in self.name.generic_argument_group.get_type_args():
+        for g in self.generic_argument_group.get_type_args():
             g.value.qualify_types(sm, **kwargs)
             try:
                 g.value.analyse_semantics(sm, skip_generic_check=True, **kwargs)
@@ -172,14 +178,14 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
         original_scope = type_scope
 
         # Determine the type scope and type symbol.
-        type_symbol = AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.name.without_generics, ignore_alias=True)
+        type_symbol = AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.without_generics, ignore_alias=True)
         type_scope = type_symbol.scope
         if type_symbol.is_generic: return
 
         # Name all the generic arguments.
         is_tuple = type_symbol.fq_name.without_generics == CommonTypesPrecompiled.EMPTY_TUP
         AstFunctionUtils.name_generic_arguments(
-            self.name.generic_argument_group.arguments,
+            self.generic_argument_group.arguments,
             type_symbol.type.generic_parameter_group.parameters,
             sm, self, is_tuple_owner=is_tuple)
 
@@ -188,17 +194,17 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             return
 
         # Analyse the semantics of the generic arguments.
-        self.name.generic_argument_group.analyse_semantics(sm, **kwargs)
+        self.generic_argument_group.analyse_semantics(sm, **kwargs)
 
         # Infer generic arguments from information given from object initialization.
-        self.name.generic_argument_group.arguments = AstFunctionUtils.infer_generic_arguments(
+        self.generic_argument_group.arguments = AstFunctionUtils.infer_generic_arguments(
             generic_parameters=type_symbol.type.generic_parameter_group.parameters,
             optional_generic_parameters=type_symbol.type.generic_parameter_group.get_optional_params(),
-            explicit_generic_arguments=self.name.generic_argument_group.arguments,
+            explicit_generic_arguments=self.generic_argument_group.arguments,
             infer_source=generic_infer_source or {},
             infer_target=generic_infer_target or {},
             sm=sm,
-            owner=AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.name.without_generics).fq_name,
+            owner=AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.without_generics).fq_name,
             is_tuple_owner=is_tuple,
             **kwargs)
 
@@ -207,17 +213,17 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             composite_types = AstTypeUtils.deduplicate_composite_types(self, sm.current_scope)
             composite_types = CommonTypes.Tup(self.pos, composite_types)
             composite_types.analyse_semantics(sm, type_scope=type_scope, **kwargs)
-            self.name.generic_argument_group.arguments[0].value = composite_types
+            self.generic_argument_group.arguments[0].value = composite_types
 
         # If the generically filled type doesn't exist (Vec[Str]), but the base does (Vec[T]), create it.
-        if not type_scope.parent.has_symbol(self.name):
-            new_scope = AstTypeUtils.create_generic_scope(sm, self.name, type_symbol, is_tuple=is_tuple, **kwargs)
+        if not type_scope.parent.has_symbol(self):
+            new_scope = AstTypeUtils.create_generic_scope(sm, self, type_symbol, is_tuple=is_tuple, **kwargs)
 
             # Handle type aliasing (providing generics to the original type).
             if type(type_symbol) is AliasSymbol:
 
                 # Substitute the old type: "Opt[Str]" => "Var[Some[Str], None]"
-                generics = self.name.generic_argument_group.arguments + original_scope.generics
+                generics = self.generic_argument_group.arguments + original_scope.generics
                 old_type = type_symbol.old_sym.fq_name.substituted_generics(generics)
                 old_type.analyse_semantics(sm, type_scope=type_scope.parent, **kwargs)
 
@@ -235,13 +241,13 @@ class TypeSingleAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInfer
             type_symbol = new_scope.type_symbol
 
         else:
-            type_symbol = type_scope.parent.get_symbol(self.name)
+            type_symbol = type_scope.parent.get_symbol(self)
 
     def infer_type(self, sm: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or sm.current_scope
-        type_symbol = type_scope.get_symbol(self.name)
+        type_symbol = type_scope.get_symbol(self)
         return type_symbol.fq_name
 
 
 __all__ = [
-    "TypeSingleAst"]
+    "TypeIdentifierAst"]

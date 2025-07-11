@@ -57,7 +57,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
         return GenericCompArgumentNamedAst(
-            name=Asts.TypeSingleAst.from_identifier(symbol.name),
+            name=Asts.TypeIdentifierAst.from_identifier(symbol.name),
             value=Asts.IdentifierAst.from_type(symbol.memory_info.ast_comptime_const.name))
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:

@@ -78,7 +78,7 @@ class VariableSymbol(BaseSymbol):
 
 @dataclass(slots=True, kw_only=True)
 class TypeSymbol(BaseSymbol):
-    name: Asts.GenericIdentifierAst
+    name: Asts.TypeIdentifierAst
     type: Optional[Asts.ClassPrototypeAst]
     scope: Optional[Scope] = field(default=None)
     is_generic: bool = field(default=False)
@@ -125,7 +125,7 @@ class TypeSymbol(BaseSymbol):
 
     @property
     def fq_name(self) -> Asts.TypeAst:
-        fq_name = Asts.TypeSingleAst.from_generic_identifier(self.name)
+        fq_name = self.name
 
         if self.is_generic:
             return fq_name

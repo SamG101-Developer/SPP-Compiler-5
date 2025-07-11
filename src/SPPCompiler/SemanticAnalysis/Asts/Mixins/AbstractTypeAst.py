@@ -39,7 +39,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
     @property
     @abstractmethod
-    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         ...
 
     @property
@@ -62,8 +62,8 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         return [p for p in self.fq_type_parts if type(p) is Asts.IdentifierAst]
 
     @property
-    def type_parts(self) -> list[Asts.GenericIdentifierAst | Asts.TokenAst]:
-        return [p for p in self.fq_type_parts if type(p) is Asts.GenericIdentifierAst or type(p) is Asts.TokenAst]
+    def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
+        return [p for p in self.fq_type_parts if type(p) is Asts.TypeIdentifierAst or type(p) is Asts.TokenAst]
 
     @abstractmethod
     def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
@@ -76,8 +76,9 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         :return: The new type ast with the generic arguments substituted.
         """
 
+    # todo: work on removing this, use relaxed_symbolic_eq instead
     @abstractmethod
-    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeSingleAst) -> Optional[Asts.TypeAst]:
+    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
         """
         Given this type is Vec[Opt[T]], getting the T type from Vec[Opt[Str]] will get T=Str.
 
@@ -87,7 +88,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @abstractmethod
-    def contains_generic(self, generic_type: Asts.TypeSingleAst) -> bool:
+    def contains_generic(self, generic_type: Asts.TypeIdentifierAst) -> bool:
         """
         Check recursively in this type, and its generic arguments, if the generic target type exists as a generic
         argument to a generic parameter. This is used to check that superimposition generics are constrained, and

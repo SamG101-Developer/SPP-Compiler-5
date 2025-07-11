@@ -98,7 +98,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.pre_process(self)
 
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
-        mock_class_name = Asts.TypeSingleAst.from_identifier(self.name.to_function_identifier())
+        mock_class_name = Asts.TypeIdentifierAst.from_identifier(self.name.to_function_identifier())
         function_type = self._deduce_mock_class_type()
         function_call = Asts.IdentifierAst(self.name.pos, "call")
 

@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 @dataclass(slots=True)
 class TypePostfixOperatorNestedTypeAst(Asts.Ast):
     tok_sep: Asts.TokenAst = field(default=None)
-    name: Asts.TypeSingleAst = field(default=None)
+    name: Asts.TypeIdentifierAst = field(default=None)
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -23,11 +23,11 @@ class TypePostfixOperatorNestedTypeAst(Asts.Ast):
         return f"{self.tok_sep}{self.name}"
 
     @property
-    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return self.name.fq_type_parts
 
     @property
-    def type_parts(self) -> list[Asts.GenericIdentifierAst]:
+    def type_parts(self) -> list[Asts.TypeIdentifierAst]:
         return self.name.type_parts
 
     @property

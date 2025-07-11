@@ -59,7 +59,7 @@ class UseStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.Ty
         self._conversion = Asts.TypeStatementAst(
             pos=self.pos,
             annotations=self.annotations,
-            new_type=Asts.TypeSingleAst.from_generic_identifier(self.old_type.type_parts[-1].without_generics),
+            new_type=self.old_type.type_parts[-1].without_generics,
             old_type=self.old_type)
         self._conversion.generate_top_level_scopes(sm)
 

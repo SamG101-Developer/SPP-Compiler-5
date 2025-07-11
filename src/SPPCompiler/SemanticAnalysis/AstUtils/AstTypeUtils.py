@@ -111,7 +111,7 @@ class AstTypeUtils:
 
     @staticmethod
     def get_type_part_symbol_with_error(
-            scope: Scope, sm: ScopeManager, type_part: Asts.GenericIdentifierAst, ignore_alias: bool = False,
+            scope: Scope, sm: ScopeManager, type_part: Asts.TypeIdentifierAst, ignore_alias: bool = False,
             **kwargs) -> TypeSymbol | AliasSymbol:
 
         # Get the type part's symbol, and raise an error if it does not exist.
@@ -128,7 +128,7 @@ class AstTypeUtils:
 
     @staticmethod
     def create_generic_scope(
-            sm: ScopeManager, type_part: Asts.GenericIdentifierAst, base_symbol: TypeSymbol, is_tuple: bool,
+            sm: ScopeManager, type_part: Asts.TypeIdentifierAst, base_symbol: TypeSymbol, is_tuple: bool,
             **kwargs) -> Scope:
 
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -138,8 +138,7 @@ class AstTypeUtils:
         #  be defined in a different block to where the specialization is being used, so it adds the specialization in
         #  the wrong sup scope, and it can't be accessed from where it needs to be accessed.
         new_scope = Scope(
-            name=Asts.TypeSingleAst.from_generic_identifier(type_part), parent=base_symbol.scope.parent,
-            ast=base_symbol.scope._ast)
+            name=fast_deepcopy(type_part), parent=base_symbol.scope.parent, ast=base_symbol.scope._ast)
 
         new_symbol = TypeSymbol(
             name=type_part, type=new_scope._ast, scope=new_scope, is_copyable=base_symbol.is_copyable,
@@ -258,12 +257,12 @@ class AstTypeUtils:
         parts = name.split("#")
 
         if " ext " not in parts:
-            t = Asts.TypeSingleAst.from_string(parts[1]).substituted_generics(generics.arguments)
+            t = Asts.TypeIdentifierAst.from_string(parts[1]).substituted_generics(generics.arguments)
             return f"{parts[0]}#{t}#{parts[2]}"
 
         else:
-            t = Asts.TypeSingleAst.from_string(parts[1].split(" ext ")[0]).substituted_generics(generics.arguments)
-            u = Asts.TypeSingleAst.from_string(parts[1].split(" ext ")[1]).substituted_generics(generics.arguments)
+            t = Asts.TypeIdentifierAst.from_string(parts[1].split(" ext ")[0]).substituted_generics(generics.arguments)
+            u = Asts.TypeIdentifierAst.from_string(parts[1].split(" ext ")[1]).substituted_generics(generics.arguments)
             return f"{parts[0]}#{t} ext {u}#{parts[2]}"
 
     @staticmethod
@@ -332,7 +331,7 @@ class AstTypeUtils:
         return gen_type, yield_type, is_once, is_optional, is_fallible, error_type
 
     @staticmethod
-    def deduplicate_composite_types(type: Asts.TypeSingleAst, scope: Scope) -> list[Asts.TypeAst]:
+    def deduplicate_composite_types(type: Asts.TypeIdentifierAst, scope: Scope) -> list[Asts.TypeAst]:
         """
         Given a variant type, such as "Str or Bool or Bool or U32", create a list of the composite types, including
         nested variants. This example will return [Str, Bool, Bool, U32]. Semantic analysis will collapse any
@@ -459,7 +458,7 @@ class AstTypeUtils:
         :return: Whether the two types are equal.
         """
 
-        from SPPCompiler.SemanticAnalysis.Asts import TypeSingleAst
+        from SPPCompiler.SemanticAnalysis.Asts import TypeIdentifierAst
 
         generics = generics if generics is not None else {}
 
@@ -470,7 +469,7 @@ class AstTypeUtils:
         # Handle generic comp arguments (simple value comparison).
         if not isinstance(lhs_type, Asts.TypeAst):
             if isinstance(rhs_type, Asts.IdentifierAst):
-                generics[TypeSingleAst.from_identifier(rhs_type)] = lhs_type
+                generics[TypeIdentifierAst.from_identifier(rhs_type)] = lhs_type
                 return True
             return lhs_type == rhs_type
 

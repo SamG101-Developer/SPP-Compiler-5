@@ -8,7 +8,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 class CommonTypes:
     @staticmethod
     def U8(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U8"))
+        type = Asts.TypeIdentifierAst(pos, "U8")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u8")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -16,7 +16,7 @@ class CommonTypes:
 
     @staticmethod
     def U16(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U16"))
+        type = Asts.TypeIdentifierAst(pos, "U16")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u16")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -24,7 +24,7 @@ class CommonTypes:
 
     @staticmethod
     def U32(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U32"))
+        type = Asts.TypeIdentifierAst(pos, "U32")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u32")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -32,7 +32,7 @@ class CommonTypes:
 
     @staticmethod
     def U64(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U64"))
+        type = Asts.TypeIdentifierAst(pos, "U64")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u64")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -40,7 +40,7 @@ class CommonTypes:
 
     @staticmethod
     def U128(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U128"))
+        type = Asts.TypeIdentifierAst(pos, "U128")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u128")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -48,7 +48,7 @@ class CommonTypes:
 
     @staticmethod
     def U256(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U256"))
+        type = Asts.TypeIdentifierAst(pos, "U256")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u256")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -56,7 +56,7 @@ class CommonTypes:
 
     @staticmethod
     def USize(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "USize"))
+        type = Asts.TypeIdentifierAst(pos, "USize")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "usize")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -64,7 +64,7 @@ class CommonTypes:
 
     @staticmethod
     def I8(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I8"))
+        type = Asts.TypeIdentifierAst(pos, "I8")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i8")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -72,7 +72,7 @@ class CommonTypes:
 
     @staticmethod
     def I16(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I16"))
+        type = Asts.TypeIdentifierAst(pos, "I16")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i16")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -80,7 +80,7 @@ class CommonTypes:
 
     @staticmethod
     def I32(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I32"))
+        type = Asts.TypeIdentifierAst(pos, "I32")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i32")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -88,7 +88,7 @@ class CommonTypes:
 
     @staticmethod
     def I64(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I64"))
+        type = Asts.TypeIdentifierAst(pos, "I64")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i64")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -96,7 +96,7 @@ class CommonTypes:
 
     @staticmethod
     def I128(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I128"))
+        type = Asts.TypeIdentifierAst(pos, "I128")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i128")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -104,7 +104,7 @@ class CommonTypes:
 
     @staticmethod
     def I256(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I256"))
+        type = Asts.TypeIdentifierAst(pos, "I256")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i256")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -112,7 +112,7 @@ class CommonTypes:
 
     @staticmethod
     def F8(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F8"))
+        type = Asts.TypeIdentifierAst(pos, "F8")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f8")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -120,7 +120,7 @@ class CommonTypes:
 
     @staticmethod
     def F16(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F16"))
+        type = Asts.TypeIdentifierAst(pos, "F16")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f16")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -128,7 +128,7 @@ class CommonTypes:
 
     @staticmethod
     def F32(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F32"))
+        type = Asts.TypeIdentifierAst(pos, "F32")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f32")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -136,7 +136,7 @@ class CommonTypes:
 
     @staticmethod
     def F64(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F64"))
+        type = Asts.TypeIdentifierAst(pos, "F64")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f64")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -144,7 +144,7 @@ class CommonTypes:
 
     @staticmethod
     def F128(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F128"))
+        type = Asts.TypeIdentifierAst(pos, "F128")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f128")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -152,7 +152,7 @@ class CommonTypes:
 
     @staticmethod
     def F256(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F256"))
+        type = Asts.TypeIdentifierAst(pos, "F256")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f256")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -160,7 +160,7 @@ class CommonTypes:
 
     @staticmethod
     def BigInt(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "BigInt"))
+        type = Asts.TypeIdentifierAst(pos, "BigInt")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "bigint")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -168,7 +168,7 @@ class CommonTypes:
 
     @staticmethod
     def BigDec(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "BigDec"))
+        type = Asts.TypeIdentifierAst(pos, "BigDec")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "bigdec")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
@@ -176,28 +176,28 @@ class CommonTypes:
 
     @staticmethod
     def Void(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Void"))
+        type = Asts.TypeIdentifierAst(pos, "Void")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "void")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
 
     @staticmethod
     def Bool(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Bool"))
+        type = Asts.TypeIdentifierAst(pos, "Bool")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "boolean")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
 
     @staticmethod
     def Str(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Str"))
+        type = Asts.TypeIdentifierAst(pos, "Str")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "string")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
 
     @staticmethod
     def Copy(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Copy"))
+        type = Asts.TypeIdentifierAst(pos, "Copy")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "copy")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -206,7 +206,7 @@ class CommonTypes:
     def Fut(pos: int, inner_type: Asts.TypeAst):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, inner_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Fut", generics))
+        type = Asts.TypeIdentifierAst(pos, "Fut", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "future")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -215,7 +215,7 @@ class CommonTypes:
     def Arr(pos: int, elem_type: Asts.TypeAst, size: Asts.IntegerLiteralAst):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, elem_type), Asts.GenericCompArgumentUnnamedAst(pos, size)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Arr", generics))
+        type = Asts.TypeIdentifierAst(pos, "Arr", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "array")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -224,7 +224,7 @@ class CommonTypes:
     def ArrDynamic(pos: int, elem_type: Asts.TypeAst) -> Asts.TypeAst:
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, elem_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "ArrDynamic", generics))
+        type = Asts.TypeIdentifierAst(pos, "ArrDynamic", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "array")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -233,14 +233,14 @@ class CommonTypes:
     def Opt(pos: int, inner_type: Asts.TypeAst):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, inner_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Opt", generics))
+        type = Asts.TypeIdentifierAst(pos, "Opt", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "option")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
 
     @staticmethod
     def NoneType(pos: int):
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "None"))
+        type = Asts.TypeIdentifierAst(pos, "None")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "option")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -249,7 +249,7 @@ class CommonTypes:
     def Tup(pos: int, inner_types: list[Asts.TypeAst] = None):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, v) for v in inner_types or []]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Tup", generics))
+        type = Asts.TypeIdentifierAst(pos, "Tup", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "tuple")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -258,7 +258,7 @@ class CommonTypes:
     def Var(pos: int, inner_types: list[Asts.TypeAst] = None):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, v) for v in inner_types or []]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Var", generics))
+        type = Asts.TypeIdentifierAst(pos, "Var", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "variant")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -267,7 +267,7 @@ class CommonTypes:
     def FunMov(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, param_types), Asts.GenericTypeArgumentUnnamedAst(pos, return_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "FunMov", generics))
+        type = Asts.TypeIdentifierAst(pos, "FunMov", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "function")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -276,7 +276,7 @@ class CommonTypes:
     def FunMut(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, param_types), Asts.GenericTypeArgumentUnnamedAst(pos, return_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "FunMut", generics))
+        type = Asts.TypeIdentifierAst(pos, "FunMut", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "function")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -285,7 +285,7 @@ class CommonTypes:
     def FunRef(pos: int, param_types: Asts.TypeAst, return_type: Asts.TypeAst):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, param_types), Asts.GenericTypeArgumentUnnamedAst(pos, return_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "FunRef", generics))
+        type = Asts.TypeIdentifierAst(pos, "FunRef", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "function")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -294,7 +294,7 @@ class CommonTypes:
     def Single(pos: int, internal_type: Asts.TypeAst):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, internal_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Single", generics))
+        type = Asts.TypeIdentifierAst(pos, "Single", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "single")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -303,7 +303,7 @@ class CommonTypes:
     def Gen(pos: int, yield_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type), Asts.GenericTypeArgumentUnnamedAst(pos, send_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Gen", generics))
+        type = Asts.TypeIdentifierAst(pos, "Gen", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -312,7 +312,7 @@ class CommonTypes:
     def GenOnce(pos: int, yield_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type), Asts.GenericTypeArgumentUnnamedAst(pos, send_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "GenOnce", generics))
+        type = Asts.TypeIdentifierAst(pos, "GenOnce", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -321,7 +321,7 @@ class CommonTypes:
     def GenOpt(pos: int, yield_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type), Asts.GenericTypeArgumentUnnamedAst(pos, send_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "GenOpt", generics))
+        type = Asts.TypeIdentifierAst(pos, "GenOpt", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -330,7 +330,7 @@ class CommonTypes:
     def GenRes(pos: int, yield_type: Asts.TypeAst = None, err_type: Asts.TypeAst = None, send_type: Asts.TypeAst = None):
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type), Asts.GenericTypeArgumentUnnamedAst(pos, err_type), Asts.GenericTypeArgumentUnnamedAst(pos, send_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "GenRes", generics))
+        type = Asts.TypeIdentifierAst(pos, "GenRes", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -339,7 +339,7 @@ class CommonTypes:
     def Generated(pos: int, yield_type: Asts.TypeAst = None) -> Asts.TypeAst:
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "Generated", generics))
+        type = Asts.TypeIdentifierAst(pos, "Generated", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -348,7 +348,7 @@ class CommonTypes:
     def GeneratedOpt(pos: int, yield_type: Asts.TypeAst = None) -> Asts.TypeAst:
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "GeneratedOpt", generics))
+        type = Asts.TypeIdentifierAst(pos, "GeneratedOpt", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -357,7 +357,7 @@ class CommonTypes:
     def GeneratedRes(pos: int, yield_type: Asts.TypeAst = None, err_type: Asts.TypeAst = None) -> Asts.TypeAst:
         generics = [Asts.GenericTypeArgumentUnnamedAst(pos, yield_type), Asts.GenericTypeArgumentUnnamedAst(pos, err_type)]
         generics = Asts.GenericArgumentGroupAst(pos, arguments=generics)
-        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "GeneratedRes", generics))
+        type = Asts.TypeIdentifierAst(pos, "GeneratedRes", generics)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "generator")), type)
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
         return type
@@ -374,13 +374,7 @@ class CommonTypes:
 
     @staticmethod
     def Self(pos: int):
-        return Asts.TypeSingleAst(
-            pos=pos,
-            name=Asts.GenericIdentifierAst(
-                pos=pos,
-                value="Self"
-            )
-        )
+        return Asts.TypeIdentifierAst(pos=pos, value="Self")
 
 
 class CommonTypesPrecompiled:

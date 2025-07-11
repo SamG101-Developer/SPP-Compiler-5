@@ -176,7 +176,7 @@ class Scope:
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
 
-    def rem_symbol(self, symbol_name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst) -> None:
+    def rem_symbol(self, symbol_name: Asts.IdentifierAst | Asts.TypeAst) -> None:
         # Remove a symbol from the scope.
         self._symbol_table.rem(symbol_name)
 
@@ -194,14 +194,14 @@ class Scope:
                 yield from sup_scope.all_symbols(exclusive=True)
 
     def has_symbol(
-            self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False,
+            self, name: Asts.IdentifierAst | Asts.TypeAst, exclusive: bool = False,
             sym_type: Optional[type] = None, debug: bool = False) -> bool:
 
         # Get the symbol and check if it is None or not (None => not found).
         return self.get_symbol(name, exclusive, ignore_alias=True, sym_type=sym_type, debug=debug) is not None
 
     def get_symbol(
-            self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False,
+            self, name: Asts.IdentifierAst | Asts.TypeAst, exclusive: bool = False,
             ignore_alias: bool = False, sym_type: Optional[type] = None, debug: bool = False) -> Optional[Symbol]:
 
         # Adjust the namespace and symbol name for namespaced typ symbols.
@@ -230,7 +230,7 @@ class Scope:
         return symbol
 
     @FunctionCache.cache
-    def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
+    def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
         symbol = None
 
         # For an IdentifierAst, get any identifier-named symbols from the symbol table.
@@ -345,12 +345,12 @@ class Scope:
         # Set the parent scope.
         self._parent = parent
 
-    @FunctionCache.cache_property
+    @property
     def ancestors(self) -> list[Scope]:
         # Get all the ancestors, including this scope and the global scope.
         return [node := self] + [node for _ in iter(lambda: node.parent, None) if (node := node.parent)]
 
-    @FunctionCache.cache_property
+    @property
     def parent_module(self) -> Scope:
         # Get the ancestor module scope.
         return [s for s in self.ancestors if type(s.name) is Asts.IdentifierAst][0]
@@ -396,7 +396,7 @@ class Scope:
         return all_sub_scopes
 
 
-def shift_scope_for_namespaced_type(scope: Scope, fq_type: Asts.TypeAst) -> tuple[Scope, Asts.GenericIdentifierAst]:
+def shift_scope_for_namespaced_type(scope: Scope, fq_type: Asts.TypeAst) -> tuple[Scope, Asts.TypeIdentifierAst]:
     # For TypeAsts, move through each namespace/type part accessing the namespace scope.
     for part in fq_type.fq_type_parts[:-1]:
         # Get the next type/namespace symbol from the scope.
@@ -409,7 +409,7 @@ def shift_scope_for_namespaced_type(scope: Scope, fq_type: Asts.TypeAst) -> tupl
 
 
 def search_super_scopes(
-        scope: Scope, name: Asts.IdentifierAst | Asts.GenericIdentifierAst,
+        scope: Scope, name: Asts.IdentifierAst | Asts.TypeIdentifierAst,
         ignore_alias: bool, sym_type: Optional[type] = None, debug: bool = False) -> Optional[Symbol]:
 
     # Recursively search the super scopes for a variable symbol.

@@ -20,12 +20,9 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return IdentifierAst(pos=self.pos, value=self.value)
 
     def __eq__(self, other: IdentifierAst) -> bool:
-        if type(other) is IdentifierAst or type(other) is Asts.GenericIdentifierAst:
+        if type(other) is IdentifierAst or type(other) is Asts.TypeIdentifierAst:
             return self.value == other.value
-        elif type(other) is Asts.TypeSingleAst:
-            return self.value == other.name.value
-        else:
-            return False
+        return False
 
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
@@ -56,11 +53,7 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     @staticmethod
     def from_type(type: Asts.TypeAst) -> Asts.IdentifierAst:
-        return IdentifierAst.from_generic_identifier(type.type_parts[0])
-
-    @staticmethod
-    def from_generic_identifier(identifier: Asts.GenericIdentifierAst) -> IdentifierAst:
-        return IdentifierAst(identifier.pos, identifier.value)
+        return IdentifierAst(pos=type.pos, value=type.fq_type_parts[-1].value)
 
     def to_function_identifier(self) -> IdentifierAst:
         return IdentifierAst(pos=self.pos, value=f"${pascal_case(self.value.replace("_", " "))}")

@@ -80,7 +80,7 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Create the standard "std::array::Arr" type, with generic arguments.
-        size = Asts.IntegerLiteralAst(pos=self.size.pos, value=self.size, type=Asts.TypeSingleAst.from_identifier(Asts.IdentifierAst(value="uz")))
+        size = Asts.IntegerLiteralAst(pos=self.size.pos, value=self.size, type=Asts.TypeIdentifierAst.from_identifier(Asts.IdentifierAst(value="uz")))
         array_type = CommonTypes.Arr(self.pos, self.elem_type, size)
         array_type.analyse_semantics(sm, **kwargs)
         return array_type
