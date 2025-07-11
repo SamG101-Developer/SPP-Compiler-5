@@ -27,7 +27,7 @@ def main() -> None:
     if PROFILE:
         p = cProfile.Profile()
         p.enable()
-        handle_build(Namespace(mode="dev"))
+        handle_build(Namespace(mode="rel"))
         p.disable()
 
         if not os.path.exists("profiles"):
@@ -42,7 +42,7 @@ def main() -> None:
         graph.render(f"{profile_path}/profile", format="svg")
 
     else:
-        handle_build(Namespace(mode="dev"))
+        handle_build(Namespace(mode="rel"))
 
 
 if __name__ == "__main__":
