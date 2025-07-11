@@ -98,8 +98,8 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
     def convert(self) -> Asts.TypeAst:
         return self
 
-    def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
-        name = fast_deepcopy(self)
+    def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst], copy: bool = True) -> Asts.TypeAst:
+        name = fast_deepcopy(self) if copy else self
         for generic_name, generic_type in [(a.name, a.value) for a in generic_arguments]:
             if self == generic_name:
                 return generic_type

@@ -231,8 +231,10 @@ class AstTypeUtils:
             sm: ScopeManager, generic_argument: Asts.GenericArgumentAst,
             tm: Optional[ScopeManager] = None) -> TypeSymbol | VariableSymbol:
 
+        # Get the type symbol of the generic argument's value.
         true_value_symbol = sm.current_scope.get_symbol(generic_argument.value)
 
+        # For type generic arguments, create a new type symbol with the generic argument's name and value.
         if isinstance(generic_argument, Asts.GenericTypeArgumentNamedAst):
             return TypeSymbol(
                 name=generic_argument.name.type_parts[0],
@@ -242,11 +244,14 @@ class AstTypeUtils:
                 convention=generic_argument.value.convention,
                 scope_defined_in=sm.current_scope)
 
+        # For comp generic arguments, create a new variable symbol with the generic argument's name and value.
         elif isinstance(generic_argument, Asts.GenericCompArgumentNamedAst):
             v = VariableSymbol(
                 name=Asts.IdentifierAst.from_type(generic_argument.name),
                 type=(tm or sm).current_scope.get_symbol(generic_argument.value.infer_type(tm or sm)).fq_name,
                 is_generic=True)
+
+            # Mark the memory info as a compile-time constant.
             v.memory_info.ast_comptime_const = generic_argument
             return v
 
@@ -256,33 +261,39 @@ class AstTypeUtils:
     def generic_convert_sup_scope_name(name: str, generics: Asts.GenericArgumentGroupAst, pos: int) -> str:
         parts = name.split("#")
 
+        # Replace the generics in the "sup Here" part of the name.
         if " ext " not in parts:
-            t = Asts.TypeIdentifierAst.from_string(parts[1]).substituted_generics(generics.arguments)
+            t = Asts.TypeIdentifierAst.from_string(parts[1]).substituted_generics(generics.arguments, copy=False)
             return f"{parts[0]}#{t}#{parts[2]}"
 
+        # Replace the generics in the "sup Here1 ext Here2" parts of the name.
         else:
-            t = Asts.TypeIdentifierAst.from_string(parts[1].split(" ext ")[0]).substituted_generics(generics.arguments)
-            u = Asts.TypeIdentifierAst.from_string(parts[1].split(" ext ")[1]).substituted_generics(generics.arguments)
+            t = Asts.TypeIdentifierAst.from_string(parts[1].split(" ext ")[0]).substituted_generics(generics.arguments, copy=False)
+            u = Asts.TypeIdentifierAst.from_string(parts[1].split(" ext ")[1]).substituted_generics(generics.arguments, copy=False)
             return f"{parts[0]}#{t} ext {u}#{parts[2]}"
 
     @staticmethod
     def is_type_recursive(type: Asts.ClassPrototypeAst, sm: ScopeManager) -> Optional[Asts.TypeAst]:
+
+        # Define the internal function to recursively search for attribute types.
         def get_attribute_types(
                 class_prototype: Asts.ClassPrototypeAst,
                 class_scope: Scope) -> Generator[tuple[Asts.ClassPrototypeAst, Asts.TypeAst]]:
 
             for attribute in class_prototype.body.members:
-                raw_attribute_type = attribute.type
-                symbol = class_scope.get_symbol(raw_attribute_type)
+                symbol = class_scope.get_symbol(attribute.type)
 
                 # Skip generics (can never be a "recursive" type). Todo: this is a hack that works
                 if symbol and symbol.type:
                     yield symbol.type, attribute.type
                     yield from get_attribute_types(symbol.type, symbol.scope)
 
+        # Get the attribute types recursively from the class prototype, and check for a match with the class prototype.
         for attribute_cls_prototype, attribute_ast in get_attribute_types(type, sm.current_scope):
             if attribute_cls_prototype is type:
                 return attribute_ast
+
+        # If the type isn't recursive, return None.
         return None
 
     @staticmethod

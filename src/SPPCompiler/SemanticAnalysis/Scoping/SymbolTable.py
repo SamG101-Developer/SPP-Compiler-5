@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Iterator, Optional, TYPE_CHECKING
+from typing import Iterator, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis import Asts
@@ -8,9 +8,9 @@ if TYPE_CHECKING:
 
 
 class SymbolTable:
-    _table: Dict[Asts.IdentifierAst | Asts.TypeIdentifierAst, Symbol]
+    _table: dict[Asts.IdentifierAst | Asts.TypeIdentifierAst, Symbol]
 
-    def __init__(self, table: Optional[Dict[Asts.IdentifierAst | Asts.TypeIdentifierAst, Symbol]] = None):
+    def __init__(self, table: Optional[dict[Asts.IdentifierAst | Asts.TypeIdentifierAst, Symbol]] = None):
         self._table = table or {}
 
     def add(self, symbol: Symbol) -> None:
@@ -38,7 +38,7 @@ class SymbolTable:
         for v in self._table.values():
             yield v
 
-    def __json__(self) -> Dict:
+    def __json__(self) -> dict:
         # Dump the SymbolTable as a JSON object.
         return {"symbols": [*self.all()]}
 
