@@ -108,7 +108,7 @@ class GenericArgumentGroupAst(Asts.Ast):
         """
 
         # Check there are no duplicate argument names.
-        generic_argument_names = [a.name.name for a in self.arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
+        generic_argument_names = [a.name for a in self.get_named_args()]
         if duplicates := SequenceUtils.duplicates(generic_argument_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
                 duplicates[0], duplicates[0], "named generic argument").scopes(sm.current_scope)

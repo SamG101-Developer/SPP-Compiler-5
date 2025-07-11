@@ -11,8 +11,9 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 if TYPE_CHECKING:
@@ -160,7 +161,7 @@ class AstFunctionUtils:
             return overload_scopes_and_info
 
         # Check for namespaced (module-level) functions. They will have no "inheritable generics".
-        if target_scope.type_symbol is not None and type(target_scope.type_symbol) == NamespaceSymbol:
+        if target_scope.type_symbol is not None and type(target_scope.type_symbol) is NamespaceSymbol:
             for ancestor_scope in target_scope.ancestors:
 
                 # Find all the scopes at the module level superimposing a function type over the function.
@@ -379,8 +380,8 @@ class AstFunctionUtils:
         }
 
         # Get the argument names and parameter names, and check for the existence of a variadic parameter.
-        argument_names = [a.name.name for a in arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
-        parameter_names = [p.name.name for p in parameters]
+        argument_names = [a.name for a in arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
+        parameter_names = [p.name for p in parameters]
         is_variadic = parameters and isinstance(parameters[-1], Asts.GenericParameterVariadicAst)
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
@@ -399,9 +400,9 @@ class AstFunctionUtils:
 
             # Name the argument based on the parameter names available.
             parameter_name = parameter_names.pop(0)
-            parameter = [p for p in parameters if p.name.name == parameter_name][0]
-            ctor: type = GEN_MAPPING[type([p for p in parameters if p.name.name == parameter_name][0])]
-            named_argument = ctor(pos=unnamed_argument.pos, name=Asts.TypeSingleAst.from_generic_identifier(parameter_name))
+            parameter = [p for p in parameters if p.name is parameter_name][0]
+            ctor: type = GEN_MAPPING[type(parameter)]
+            named_argument = ctor(pos=unnamed_argument.pos, name=fast_deepcopy(parameter_name))
 
             # The variadic parameter requires a tuple of the remaining arguments.
             if len(parameter_names) == 0 and is_variadic:
