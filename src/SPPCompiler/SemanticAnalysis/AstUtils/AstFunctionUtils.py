@@ -344,7 +344,7 @@ class AstFunctionUtils:
 
     @staticmethod
     def name_generic_arguments(
-            arguments: Seq[Asts.GenericArgumentAst], parameters: Seq[Asts.GenericParameterAst], sm: ScopeManager,
+            arguments: list[Asts.GenericArgumentAst], parameters: list[Asts.GenericParameterAst], sm: ScopeManager,
             owner: Asts.TypeAst | Asts.IdentifierAst, is_tuple_owner: bool = False) -> None:
 
         """
