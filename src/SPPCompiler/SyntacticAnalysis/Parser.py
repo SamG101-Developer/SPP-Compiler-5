@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, Optional, Union
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType, RawToken, RawTokenType, RawKeywordType
+from SPPCompiler.LexicalAnalysis.TokenType import RawKeywordType, RawToken, RawTokenType, SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SyntacticAnalysis.ParserErrors import ParserErrors
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
