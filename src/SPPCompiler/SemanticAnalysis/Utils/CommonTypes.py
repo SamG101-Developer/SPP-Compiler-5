@@ -8,108 +8,171 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 class CommonTypes:
     @staticmethod
     def U8(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::u8::U8", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U8"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u8")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def U16(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::u16::U16", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U16"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u16")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def U32(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::u32::U32", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U32"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u32")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def U64(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::u64::U64", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U64"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u64")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def U128(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::u128::U128", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U128"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u128")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def U256(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::u256::U256", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "U256"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "u256")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def USize(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::usize::USize", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "USize"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "usize")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def I8(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::i8::I8", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I8"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i8")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def I16(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::i16::I16", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I16"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i16")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def I32(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::i32::I32", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I32"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i32")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def I64(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::i64::I64", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I64"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i64")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def I128(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::i128::I128", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I128"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i128")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def I256(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::i256::I256", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "I256"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "i256")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def F8(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::f8::F8", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F8"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f8")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def F16(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::f16::F16", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F16"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f16")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def F32(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::f32::F32", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F32"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f32")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def F64(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::f64::F64", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F64"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f64")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def F128(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::f128::F128", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F128"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f128")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def F256(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::f256::F256", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "F256"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "f256")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def BigInt(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::bigint::BigInt", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "BigInt"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "bigint")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def BigDec(pos: int):
-        return CodeInjection.inject_code(
-            f"std::number::bigdec::BigDec", SppParser.parse_type, pos_adjust=pos)
+        type = Asts.TypeSingleAst(pos, Asts.GenericIdentifierAst(pos, "BigDec"))
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "bigdec")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
 
     @staticmethod
     def Void(pos: int):
