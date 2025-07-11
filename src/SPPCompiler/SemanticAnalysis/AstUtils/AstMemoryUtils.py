@@ -55,7 +55,7 @@ class MemoryInfo:
     ast_borrowed: Optional[Asts.Ast] = field(default=None)
     ast_partial_moves: list[Asts.Ast] = field(default_factory=list)
     ast_pins: list[Asts.Ast] = field(default_factory=list)
-    ast_comptime_const: Optional[Asts.ExpressionAst] = field(default=None)
+    ast_comptime_const: Optional[Asts.Ast] = field(default=None)
 
     initialization_counter: int = field(default=0)
     is_borrow_mut: bool = field(default=False)
