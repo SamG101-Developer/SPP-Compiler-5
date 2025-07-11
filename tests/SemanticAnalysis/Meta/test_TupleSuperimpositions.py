@@ -108,3 +108,30 @@ class TestTupleSuperimpositions(CustomTestCase):
             t.f()
         }
         """
+
+    @should_pass_compilation()
+    def test_tuple_superimposition_variadic_generics(self):
+        """
+        use std::number::u16::U16
+        use std::number::u32::U32
+        use std::number::u64::U64
+        use std::void::Void
+
+        sup [..T] std::tuple::Tup[T] {
+            fun f(&self) -> Void { }
+        }
+
+        fun f() -> Void {
+            let t1 = (1_u64, 2_u32, 3_u16)
+            t1.f()
+
+            let t2 = (1_u64, 2_u32, 3_u16, "hello", false)
+            t2.f()
+
+            let t3 = (1_u64, 2_u32, 3_u16, "hello", false, 10.5)
+            t3.f()
+
+            let t4 = (false,)
+            t4.f()
+        }
+        """
