@@ -74,8 +74,8 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for m in self.members:
             m.check_memory(sm, **kwargs)
 
-        all_syms = sm.current_scope.all_symbols(exclusive=False, match_type=Asts.IdentifierAst)
-        inner_syms = sm.current_scope.all_symbols(exclusive=True, match_type=Asts.IdentifierAst)
+        all_syms = sm.current_scope.all_symbols(exclusive=False)
+        inner_syms = sm.current_scope.all_symbols(exclusive=True)
 
         # Invalidate yielded borrows that are linked.
         for sym in inner_syms:

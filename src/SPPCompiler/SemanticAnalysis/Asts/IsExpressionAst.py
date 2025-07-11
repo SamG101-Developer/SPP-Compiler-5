@@ -62,7 +62,7 @@ class IsExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         n = len(sm.current_scope.children)
         self._as_func = AstBinUtils._convert_is_expression_to_function_call(self)
         self._as_func.analyse_semantics(sm, **kwargs)
-        destructures_symbols = sm.current_scope.children[n].children[0].all_symbols(exclusive=True, match_type=Asts.IdentifierAst)
+        destructures_symbols = sm.current_scope.children[n].children[0].all_symbols(exclusive=True, sup_scope_search=True)
         for sym in destructures_symbols:
             sm.current_scope.add_symbol(sym)
 

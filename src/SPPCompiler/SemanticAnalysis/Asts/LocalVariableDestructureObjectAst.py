@@ -40,7 +40,7 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
     @property
     def extract_names(self) -> list[Asts.IdentifierAst]:
-        return SequenceUtils.flatten([e.extract_name for e in self.elems])
+        return SequenceUtils.flatten([e.extract_names for e in self.elems])
 
     @property
     def extract_name(self) -> Asts.IdentifierAst:
