@@ -19,6 +19,9 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.variable = self.variable or Asts.LocalVariableSingleIdentifierAst(pos=self.pos, name=Asts.IdentifierAst(pos=self.pos, value=f"$_{id(self)}"))
         self._variant = "Required"
 
+    def __str__(self):
+        return f"{self.variable}{self.tok_colon} {self.type}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -46,7 +49,7 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
 
         # Create the variable for the parameter.
         ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=self.type)
-        ast.analyse_semantics(sm, **kwargs)
+        ast.analyse_semantics(sm, explicit_type=self.type, **kwargs)
 
         # Mark the symbol as initialized.
         conv = self.type.convention

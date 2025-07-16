@@ -58,7 +58,7 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Create a "let" statement to introduce the loop variable into the scope.
         let_ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=yield_type)
-        let_ast.analyse_semantics(sm, **kwargs)
+        let_ast.analyse_semantics(sm, explicit_type=yield_type, **kwargs)
 
         # Set the memory information of the symbol based on the type of iteration.
         syms = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]

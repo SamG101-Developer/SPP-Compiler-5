@@ -48,7 +48,7 @@ class FunctionParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
 
         # Create the variable for the parameter.
         ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=self.type)
-        ast.analyse_semantics(sm, **kwargs)
+        ast.analyse_semantics(sm, explicit_type=self.type, **kwargs)
 
         # Mark the symbol as initialized.
         conv = self.type.convention
