@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
@@ -9,6 +8,7 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
@@ -82,7 +82,7 @@ class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInfe
         else:
             raise ValueError(f"The generator type must be a Gen, GenOpt or GenRes type. Got: {generator_type}.")
 
-        generated_type = copy.deepcopy(generator_type)
+        generated_type = fast_deepcopy(generator_type)
         generated_type.type_parts[-1].value = new
 
         # Remove the "Send" parameter from the "Generated" type
