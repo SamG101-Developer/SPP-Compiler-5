@@ -70,7 +70,6 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         expected_type = kwargs["function_ret_type"][0]
         if kwargs["function_type"].token_type == SppTokenType.KwFun:
             if not AstTypeUtils.symbolic_eq(expected_type, expression_type, kwargs["function_scope"], sm.current_scope):
-                print(expected_type, expression_type)
                 raise SemanticErrors.TypeMismatchError().add(
                     expression_type, expression_type, self.expr, expected_type).scopes(
                     kwargs["function_scope"], sm.current_scope)
