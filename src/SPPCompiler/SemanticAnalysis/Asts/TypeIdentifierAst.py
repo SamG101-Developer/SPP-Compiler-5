@@ -12,6 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -168,7 +169,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
                 g.value.analyse_semantics(sm, skip_generic_check=True, **kwargs)
             except SemanticErrors.IdentifierUnknownError:
                 continue
-            g.value = sm.current_scope.get_symbol(g.value.without_generics).fq_name.set_generics(g.value.type_parts[-1].generic_argument_group).with_convention(g.value.convention)
+            g.value = sm.current_scope.get_symbol(g.value.without_generics).fq_name.with_generics(g.value.type_parts[-1].generic_argument_group).with_convention(g.value.convention)
 
     def analyse_semantics(
             self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None,
@@ -217,7 +218,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
         # If the generically filled type doesn't exist (Vec[Str]), but the base does (Vec[T]), create it.
         if not type_scope.parent.has_symbol(self):
-            new_scope = AstTypeUtils.create_generic_scope(sm, self, type_symbol, is_tuple=is_tuple, **kwargs)
+            new_scope = AstTypeUtils.create_generic_cls_scope(sm, self, type_symbol, is_tuple=is_tuple, **kwargs)
 
             # Handle type aliasing (providing generics to the original type).
             if type(type_symbol) is AliasSymbol:

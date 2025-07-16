@@ -127,7 +127,7 @@ class AstTypeUtils:
         return type_symbol
 
     @staticmethod
-    def create_generic_scope(
+    def create_generic_cls_scope(
             sm: ScopeManager, type_part: Asts.TypeIdentifierAst, base_symbol: TypeSymbol, is_tuple: bool,
             **kwargs) -> Scope:
 
