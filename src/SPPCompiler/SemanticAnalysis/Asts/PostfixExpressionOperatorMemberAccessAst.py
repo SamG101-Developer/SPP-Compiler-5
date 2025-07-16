@@ -64,10 +64,17 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         # Get the field symbol
         field_symbol = lhs_symbol.scope.get_symbol(self.field, exclusive=True)
 
+        # Find the actual class (possibly superclass) that contains the field.
+        lhs_master_scope = None
+        for scope in [lhs_symbol.scope] + lhs_symbol.scope.sup_scopes:
+            if scope._symbol_table.has(self.field):
+                lhs_master_scope = scope
+                break
+
         # Accessing a member from the scope by the identifier.
         if isinstance(self.field, Asts.IdentifierAst) and type(field_symbol) is VariableSymbol:
             attribute_type = field_symbol.type
-            attribute_type = lhs_symbol.scope.get_symbol(attribute_type).fq_name
+            attribute_type = lhs_master_scope.get_symbol(attribute_type).fq_name
             return attribute_type
 
         elif isinstance(self.field, Asts.IdentifierAst) and type(field_symbol) is NamespaceSymbol:
