@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import copy
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import final, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, final
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -42,7 +43,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         ...
 
-    @property
+    @FunctionCache.cache_property
     @abstractmethod
     def without_generics(self) -> Optional[Asts.TypeAst]:
         ...
@@ -109,8 +110,8 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
     @final
-    def set_generics(self, generics_argument_group: Asts.GenericArgumentGroupAst) -> Asts.TypeAst:
-        new = copy.deepcopy(self)
+    def with_generics(self, generics_argument_group: Asts.GenericArgumentGroupAst) -> Asts.TypeAst:
+        new = fast_deepcopy(self)
         new.type_parts[-1].generic_argument_group = generics_argument_group
         return new
 
