@@ -42,7 +42,7 @@ class SupPrototypeFunctionsAst(Asts.Ast):
 
     @property
     def pos_end(self) -> int:
-        return self.body.pos_end
+        return self.name.pos_end
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         # Pre-process the members of this superimposition.
@@ -93,12 +93,19 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         self.name.analyse_semantics(sm, **kwargs)
         self.name = sm.current_scope.get_symbol(self.name).fq_name
 
+        cls_symbol = sm.current_scope.get_symbol(self.name.without_generics)
         if sm.current_scope.parent is sm.current_scope.parent_module:
-            cls_symbol = sm.current_scope.get_symbol(self.name.without_generics)
             if not cls_symbol.is_generic:
                 sm.normal_sup_blocks[cls_symbol].append(sm.current_scope)
             else:
                 sm.generic_sup_blocks[cls_symbol] = sm.current_scope
+
+        # Add the "Self" symbol into the scope.
+        if self.name.type_parts[0].value[0] != "$":
+            self_symbol = TypeSymbol(
+                name=CommonTypes.Self(self.name.pos), type=cls_symbol.type,
+                scope=cls_symbol.scope, scope_defined_in=sm.current_scope)
+            sm.current_scope.add_symbol(self_symbol)
 
         self.body.load_super_scopes(sm, **kwargs)
         sm.move_out_of_current_scope()
@@ -107,13 +114,6 @@ class SupPrototypeFunctionsAst(Asts.Ast):
         sm.move_to_next_scope()
         self.name.analyse_semantics(sm, **kwargs)
         cls_symbol = sm.current_scope.get_symbol(self.name)
-
-        # Add the "Self" symbol into the scope.
-        if self.name.type_parts[0].value[0] != "$":
-            self_symbol = TypeSymbol(
-                name=CommonTypes.Self(self.name.pos), type=cls_symbol.type,
-                scope=cls_symbol.scope, scope_defined_in=sm.current_scope)
-            sm.current_scope.add_symbol(self_symbol)
 
         # Pre-analyse all the members.
         self.body.pre_analyse_semantics(sm, **kwargs)
