@@ -580,7 +580,7 @@ class AstFunctionUtils:
             formatted_generic_arguments[generic_parameter_name] = generic_parameter_value
 
         # Cross apply all generics. This allows generics from previous arguments to be used in future arguments. For
-        # example, Cls[T, Vec[T]] when T.
+        # example, "Cls[T, Vec[T]]" when "T=Str", creates "Vec[Str]".
         for generic_parameter_name, generic_parameter_value in formatted_generic_arguments.copy().items():
             if isinstance(generic_parameter_value, Asts.TypeAst):
                 args_excluding_this_one = formatted_generic_arguments.copy()
@@ -591,12 +591,12 @@ class AstFunctionUtils:
 
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
         # GenericXXXArgumentASTs. Todo: pos_adjust?
-        pos_adjust = owner.pos if owner else 0
         final_args = []
         for k, v in formatted_generic_arguments.items():
+            if k not in generic_parameter_names: continue
             ctor: type = GEN_MAPPING[type([p for p in generic_parameters if p.name == k][0])]
             value = Asts.IdentifierAst.from_type(v) if isinstance(v, Asts.TypeAst) and ctor is Asts.GenericCompArgumentNamedAst else v
-            final_args.append(ctor(pos=pos_adjust, name=k, value=value))
+            final_args.append(ctor(pos=owner.pos if owner else 0, name=k, value=value))
 
         # Re-order the arguments to match the parameter order.
         final_args.sort(key=lambda arg: generic_parameter_names.index(arg.name))
@@ -607,7 +607,7 @@ class AstFunctionUtils:
             for comp_arg, comp_param in zip(final_args, generic_parameters):
                 if isinstance(comp_arg, Asts.GenericCompArgumentNamedAst):
                     a_type = comp_arg.value.infer_type(sm, **kwargs)
-                    p_type = comp_param.type.substituted_generics(final_args)
+                    p_type = comp_param.type.substituted_generics(final_args)  # todo: analyse the p_type here?
 
                     # For a variadic comp argument, check every element of the args tuple.
                     if isinstance(comp_param, Asts.GenericCompParameterVariadicAst):
@@ -621,7 +621,7 @@ class AstFunctionUtils:
                         raise SemanticErrors.TypeMismatchError().add(
                             comp_param, p_type, comp_arg, a_type).scopes(sm.current_scope)
 
-        # Finally, re-order the arguments to match the parameter order.
+        # Return the fully inferred generic arguments, which are now named and ordered correctly.
         return final_args
 
     @staticmethod
