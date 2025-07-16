@@ -4,7 +4,7 @@ from typing import Any, Iterator, Optional
 
 from llvmlite import ir
 
-from SPPCompiler.CodeGen.LlvmTypeSymbolInfo import LlvmTypeSymbolInfo
+from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmTypeSymbolInfo
 from SPPCompiler.CodeGen.Mangle import Mangler
 from SPPCompiler.Compiler.ModuleTree import Module
 from SPPCompiler.SemanticAnalysis import Asts
@@ -212,7 +212,7 @@ class Scope:
 
         # Get the symbol from the symbol table if it exists, and ignore it if it is in the exclusion list.
         symbol = scope._symbol_table.get(name)
-        if sym_type is not None and not isinstance(symbol, sym_type):
+        if sym_type is not None and type(symbol) is not sym_type:
             symbol = None
 
         # If this is not an exclusive search, search the parent scope.
@@ -235,17 +235,11 @@ class Scope:
 
         # For an IdentifierAst, get any identifier-named symbols from the symbol table.
         if type(name) is Asts.IdentifierAst:
-            for symbol in self.all_symbols(exclusive=exclusive):
-                if type(symbol) is NamespaceSymbol and symbol.name.value == name.value:
-                    return symbol
-            return None
+            return self.get_symbol(name, exclusive=exclusive, sym_type=NamespaceSymbol)
 
         # For a GenericIdentifierAst, get any type-named symbols from the symbol table.
         elif type(name) is Asts.TypeIdentifierAst:
-            for symbol in self.all_symbols(exclusive=exclusive):
-                if type(symbol) is TypeSymbol and symbol.name == name:
-                    return symbol
-            return None
+            return self.get_symbol(name, exclusive=exclusive, sym_type=TypeSymbol)
 
         # For a PostfixExpressionAst iterate the parts.
         scope = self.get_namespace_symbol(name.lhs, exclusive=exclusive).scope
@@ -303,7 +297,7 @@ class Scope:
     def generate_llvm_type_mappings(self, llvm_module: ir.Module) -> None:
         """
         Iterate every (top-level) scope whose ast is a ClassPrototypeAst, and then generate a (non-implemented) LLVM
-        type mapping for it, binding it to the symbol. This allows functions to use teh types for parameters on the
+        type mapping for it, binding it to the symbol. This allows functions to use the types for parameters on the
         first codegen pass.
         """
 
