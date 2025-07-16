@@ -38,6 +38,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     _non_implemented: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
     _cold: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
     _hot: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _inline: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
 
     def __post_init__(self) -> None:
         self.tok_fun = self.tok_fun or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwFun)
@@ -84,8 +85,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         Asts.Ast.pre_process(self, ctx)
 
         # Substitute the "Self" parameter's type with the name of the method.
-        generic_substitution = Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(pos=0), value=ctx.name)
-        generic_substitution = [generic_substitution]
+        generic_substitution = [Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(pos=0), value=ctx.name)]
         if not isinstance(ctx, Asts.ModulePrototypeAst) and self.function_parameter_group.get_self_param():
             self.function_parameter_group.get_self_param()._true_self_type = ctx.name
             self.function_parameter_group.get_self_param().type = self.function_parameter_group.get_self_param().type.substituted_generics(generic_substitution)
