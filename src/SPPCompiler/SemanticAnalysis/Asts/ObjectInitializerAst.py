@@ -37,7 +37,7 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Use the type of the object initializer.
-        return self.class_type
+        return sm.current_scope.get_symbol(self.class_type).fq_name
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Get the base symbol.
