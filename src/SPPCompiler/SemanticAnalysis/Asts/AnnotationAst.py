@@ -37,7 +37,9 @@ class _Annotations(Enum):
     Private = "private"
     Cold = "cold"
     Hot = "hot"
-    CompilerBuiltin = "compiler_builtin"  # temporary
+    CompilerBuiltin = "compiler_builtin"
+    AlwaysInline = "always_inline"  # test
+    Inline = "inline"  # test
 
 
 @dataclass(slots=True)
@@ -132,6 +134,8 @@ class AnnotationAst(Asts.Ast):
         # Mark a function context as hot.
         elif self.name.value == _Annotations.Hot.value:
             ctx._hot = self
+
+        # Todo: LLVM attributes (@always_inline, @inline) and other compiler specific annotations.
 
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         """
@@ -238,6 +242,17 @@ class AnnotationAst(Asts.Ast):
             if (c := self._ctx._cold or self._ctx._hot) and c is not self:
                 raise SemanticErrors.AnnotationConflictError().add(
                     self.name, (self._ctx._cold or self._ctx._hot).name).scopes(self._scope)
+
+        elif self.name.value in [_Annotations.AlwaysInline.value, _Annotations.Inline.value]:
+            # The "always_inline" and "inline" annotations can only be applied to functions.
+            if not isinstance(self._ctx, Asts.FunctionPrototypeAst):
+                raise SemanticErrors.AnnotationInvalidLocationError().add(
+                    self.name, self._ctx.name, "non-function").scopes(self._scope)
+
+            # There cannot be any other inline annotations applied to the object.
+            if (c := self._ctx._inline) and c is not self:
+                raise SemanticErrors.AnnotationConflictError().add(
+                    self.name, self._ctx._inline.name).scopes(self._scope)
 
         else:
             # Unknown annotations are not allowed.
