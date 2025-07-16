@@ -9,6 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -46,7 +47,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return self.op.fq_type_parts + self.rhs.fq_type_parts if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.fq_type_parts
 
-    @property
+    @FunctionCache.cache_property
     def without_generics(self) -> Optional[Asts.TypeAst]:
         return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics)
 

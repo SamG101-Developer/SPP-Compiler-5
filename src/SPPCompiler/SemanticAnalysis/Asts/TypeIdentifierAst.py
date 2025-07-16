@@ -72,7 +72,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return [self]
 
-    @property
+    @FunctionCache.cache_property
     def without_generics(self) -> Optional[Asts.TypeAst]:
         return TypeIdentifierAst(self.pos, self.value)
 
