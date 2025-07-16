@@ -580,7 +580,7 @@ class SppParser:
     # ===== EXPRESSIONS =====
 
     def parse_expression(self) -> Optional[Asts.ExpressionAst]:
-        p1 = self.parse_once(self.parse_binary_expression_precedence_level_1)
+        p1 = self.parse_once(self.parse_binary_expression_precedence_level_0)
         if p1 is None: return None
         return p1
 
@@ -599,6 +599,9 @@ class SppParser:
         Constructor: type = Asts.BinaryExpressionAst if not is_ else Asts.IsExpressionAst
         return Constructor(p1.pos, p1, p2[0], p2[1])
 
+    def parse_binary_expression_precedence_level_0(self) -> Optional[Asts.ExpressionAst]:
+        return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_1, self.parse_binary_op_precedence_level_0, self.parse_binary_expression_precedence_level_0)
+
     def parse_binary_expression_precedence_level_1(self) -> Optional[Asts.ExpressionAst]:
         return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_2, self.parse_binary_op_precedence_level_1, self.parse_binary_expression_precedence_level_1)
 
@@ -615,7 +618,19 @@ class SppParser:
         return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_6, self.parse_binary_op_precedence_level_5, self.parse_binary_expression_precedence_level_5)
 
     def parse_binary_expression_precedence_level_6(self) -> Optional[Asts.ExpressionAst]:
-        return self.parse_binary_expression_precedence_level_n(self.parse_unary_expression, self.parse_binary_op_precedence_level_6, self.parse_binary_expression_precedence_level_6)
+        return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_7, self.parse_binary_op_precedence_level_6, self.parse_binary_expression_precedence_level_6)
+
+    def parse_binary_expression_precedence_level_7(self) -> Optional[Asts.ExpressionAst]:
+        return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_8, self.parse_binary_op_precedence_level_7, self.parse_binary_expression_precedence_level_7)
+
+    def parse_binary_expression_precedence_level_8(self) -> Optional[Asts.ExpressionAst]:
+        return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_9, self.parse_binary_op_precedence_level_8, self.parse_binary_expression_precedence_level_8)
+
+    def parse_binary_expression_precedence_level_9(self) -> Optional[Asts.ExpressionAst]:
+        return self.parse_binary_expression_precedence_level_n(self.parse_binary_expression_precedence_level_10, self.parse_binary_op_precedence_level_9, self.parse_binary_expression_precedence_level_9)
+
+    def parse_binary_expression_precedence_level_10(self) -> Optional[Asts.ExpressionAst]:
+        return self.parse_binary_expression_precedence_level_n(self.parse_unary_expression, self.parse_binary_op_precedence_level_10, self.parse_binary_expression_precedence_level_10)
 
     def parse_unary_expression(self) -> Optional[Asts.ExpressionAst]:
         p1 = self.parse_zero_or_more(self.parse_unary_op, self.parse_nothing)
@@ -1242,6 +1257,22 @@ class SppParser:
 
     # ===== OPERATORS =====
 
+    def parse_binary_op_precedence_level_0(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_alternate([
+            self.parse_token_bit_ior_equals,
+            self.parse_token_bit_xor_equals,
+            self.parse_token_bit_and_equals,
+            self.parse_token_left_shift_assign,
+            self.parse_token_right_shift_assign,
+            self.parse_token_plus_assign,
+            self.parse_token_minus_assign,
+            self.parse_token_multiply_assign,
+            self.parse_token_divide_assign,
+            self.parse_token_remainder_assign,
+            self.parse_token_exponent_assign])
+        if p1 is None: return None
+        return p1
+
     def parse_binary_op_precedence_level_1(self) -> Optional[Asts.TokenAst]:
         p1 = self.parse_once(self.parse_keyword_or)
         if p1 is None: return None
@@ -1268,23 +1299,36 @@ class SppParser:
         return p1
 
     def parse_binary_op_precedence_level_5(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_once(self.parse_token_bit_ior)
+        if p1 is None: return None
+        return p1
+
+    def parse_binary_op_precedence_level_6(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_once(self.parse_token_bit_xor)
+        if p1 is None: return None
+        return p1
+
+    def parse_binary_op_precedence_level_7(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_once(self.parse_token_bit_and)
+        if p1 is None: return None
+        return p1
+
+    def parse_binary_op_precedence_level_8(self) -> Optional[Asts.TokenAst]:
         p1 = self.parse_alternate([
-            self.parse_token_plus_assign,
-            self.parse_token_minus_assign,
+            self.parse_token_left_shift,
+            self.parse_token_right_shift])
+        return p1
+
+    def parse_binary_op_precedence_level_9(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_alternate([
             self.parse_token_plus,
             self.parse_token_minus])
         return p1
 
-    def parse_binary_op_precedence_level_6(self) -> Optional[Asts.TokenAst]:
+    def parse_binary_op_precedence_level_10(self) -> Optional[Asts.TokenAst]:
         p1 = self.parse_alternate([
-            self.parse_token_multiply_assign,
-            self.parse_token_divide_assign,
-            self.parse_token_modulo_assign,
-            self.parse_token_remainder_assign,
-            self.parse_token_exponent_assign,
             self.parse_token_multiply,
             self.parse_token_divide,
-            self.parse_token_modulo,
             self.parse_token_remainder,
             self.parse_token_exponent])
         return p1
@@ -1949,6 +1993,15 @@ class SppParser:
     def parse_token_exclamation_mark(self) -> Optional[Asts.TokenAst]:
         return self.parse_token_raw(RawTokenType.TkExclamationMark, SppTokenType.TkExclamationMark)
 
+    def parse_token_bit_ior(self) -> Optional[Asts.TokenAst]:
+        return self.parse_token_raw(RawTokenType.TkVerticalBar, SppTokenType.TkBitIor)
+
+    def parse_token_bit_and(self) -> Optional[Asts.TokenAst]:
+        return self.parse_token_raw(RawTokenType.TkAmpersand, SppTokenType.TkBitAnd)
+
+    def parse_token_bit_xor(self) -> Optional[Asts.TokenAst]:
+        return self.parse_token_raw(RawTokenType.TkCaret, SppTokenType.TkBitXor)
+
     def parse_token_arrow_right(self) -> Optional[Asts.TokenAst]:
         p1 = self.parse_token_raw(RawTokenType.TkMinusSign, SppTokenType.TkArrowR)
         if p1 is None: return None
@@ -2037,14 +2090,6 @@ class SppParser:
         p2.pos = p1.pos
         return p2
 
-    def parse_token_modulo(self) -> Optional[Asts.TokenAst]:
-        p1 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkModulo)
-        if p1 is None: return None
-        p2 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkModulo)
-        if p2 is None: return None
-        p2.pos = p1.pos
-        return p2
-
     def parse_token_exponent(self) -> Optional[Asts.TokenAst]:
         p1 = self.parse_token_raw(RawTokenType.TkAsterisk, SppTokenType.TkExponent)
         if p1 is None: return None
@@ -2069,15 +2114,45 @@ class SppParser:
         p2.pos = p1.pos
         return p2
 
-    def parse_token_modulo_assign(self) -> Optional[Asts.TokenAst]:
-        p1 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkModuloAssign)
+    def parse_token_bit_ior_equals(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_token_raw(RawTokenType.TkVerticalBar, SppTokenType.TkBitIorAssign)
         if p1 is None: return None
-        p2 = self.parse_token_raw(RawTokenType.TkPercentSign, SppTokenType.TkModuloAssign)
+        p2 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkBitIorAssign)
         if p2 is None: return None
-        p3 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkModuloAssign)
-        if p3 is None: return None
-        p3.pos = p1.pos
-        return p3
+        p2.pos = p1.pos
+        return p2
+
+    def parse_token_bit_and_equals(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_token_raw(RawTokenType.TkAmpersand, SppTokenType.TkBitAndAssign)
+        if p1 is None: return None
+        p2 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkBitAndAssign)
+        if p2 is None: return None
+        p2.pos = p1.pos
+        return p2
+
+    def parse_token_bit_xor_equals(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_token_raw(RawTokenType.TkCaret, SppTokenType.TkBitXorAssign)
+        if p1 is None: return None
+        p2 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkBitXorAssign)
+        if p2 is None: return None
+        p2.pos = p1.pos
+        return p2
+
+    def parse_token_left_shift(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_token_raw(RawTokenType.TkLessThanSign, SppTokenType.TkLeftShift)
+        if p1 is None: return None
+        p2 = self.parse_token_raw(RawTokenType.TkLessThanSign, SppTokenType.TkLeftShift)
+        if p2 is None: return None
+        p2.pos = p1.pos
+        return p2
+
+    def parse_token_right_shift(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_token_raw(RawTokenType.TkGreaterThanSign, SppTokenType.TkRightShift)
+        if p1 is None: return None
+        p2 = self.parse_token_raw(RawTokenType.TkGreaterThanSign, SppTokenType.TkRightShift)
+        if p2 is None: return None
+        p2.pos = p1.pos
+        return p2
 
     def parse_token_exponent_assign(self) -> Optional[Asts.TokenAst]:
         p1 = self.parse_token_raw(RawTokenType.TkAsterisk, SppTokenType.TkExponentAssign)
@@ -2085,6 +2160,26 @@ class SppParser:
         p2 = self.parse_token_raw(RawTokenType.TkAsterisk, SppTokenType.TkExponentAssign)
         if p2 is None: return None
         p3 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkExponentAssign)
+        if p3 is None: return None
+        p3.pos = p1.pos
+        return p3
+
+    def parse_token_left_shift_assign(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_token_raw(RawTokenType.TkLessThanSign, SppTokenType.TkLeftShiftAssign)
+        if p1 is None: return None
+        p2 = self.parse_token_raw(RawTokenType.TkLessThanSign, SppTokenType.TkLeftShiftAssign)
+        if p2 is None: return None
+        p3 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkLeftShiftAssign)
+        if p3 is None: return None
+        p3.pos = p1.pos
+        return p3
+
+    def parse_token_right_shift_assign(self) -> Optional[Asts.TokenAst]:
+        p1 = self.parse_token_raw(RawTokenType.TkGreaterThanSign, SppTokenType.TkRightShiftAssign)
+        if p1 is None: return None
+        p2 = self.parse_token_raw(RawTokenType.TkGreaterThanSign, SppTokenType.TkRightShiftAssign)
+        if p2 is None: return None
+        p3 = self.parse_token_raw(RawTokenType.TkEqualsSign, SppTokenType.TkRightShiftAssign)
         if p3 is None: return None
         p3.pos = p1.pos
         return p3

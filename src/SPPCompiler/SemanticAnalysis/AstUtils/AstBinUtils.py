@@ -6,16 +6,22 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
+
 BINARY_METHODS = {
     SppTokenType.TkPlus: "add", SppTokenType.TkMinus: "sub", SppTokenType.TkMultiply: "mul",
-    SppTokenType.TkDivide: "div", SppTokenType.TkRemainder: "rem", SppTokenType.TkModulo: "mod",
-    SppTokenType.TkExponent: "pow", SppTokenType.KwAnd: "and_", SppTokenType.KwOr: "ior_", SppTokenType.TkEq: "eq",
-    SppTokenType.TkNe: "ne", SppTokenType.TkLt: "lt", SppTokenType.TkGt: "gt", SppTokenType.TkLe: "le",
-    SppTokenType.TkGe: "ge", SppTokenType.TkPlusAssign: "add_assign", SppTokenType.TkMinusAssign: "sub_assign",
+    SppTokenType.TkDivide: "div", SppTokenType.TkRemainder: "rem", SppTokenType.TkExponent: "pow",
+    SppTokenType.KwAnd: "and_", SppTokenType.KwOr: "ior_", SppTokenType.TkEq: "eq", SppTokenType.TkNe: "ne",
+    SppTokenType.TkLt: "lt", SppTokenType.TkGt: "gt", SppTokenType.TkLe: "le", SppTokenType.TkGe: "ge",
+    SppTokenType.TkBitIor: "bit_ior", SppTokenType.TkBitXor: "bit_xor", SppTokenType.TkBitAnd: "bit_and",
+    SppTokenType.TkLeftShift: "bit_shl", SppTokenType.TkRightShift: "bit_shr",
+    SppTokenType.TkPlusAssign: "add_assign", SppTokenType.TkMinusAssign: "sub_assign",
     SppTokenType.TkMultiplyAssign: "mul_assign", SppTokenType.TkDivideAssign: "div_assign",
-    SppTokenType.TkRemainderAssign: "rem_assign", SppTokenType.TkModuloAssign: "mod_assign",
-    SppTokenType.TkExponentAssign: "pow_assign",
+    SppTokenType.TkRemainderAssign: "rem_assign", SppTokenType.TkExponentAssign: "pow_assign",
+    SppTokenType.TkBitAndAssign: "bit_and_assign", SppTokenType.TkBitIorAssign: "bit_ior_assign",
+    SppTokenType.TkBitXorAssign: "bit_xor_assign", SppTokenType.TkLeftShiftAssign: "bit_shl_assign",
+    SppTokenType.TkRightShiftAssign: "bit_shr_assign"
 }
+
 
 BINARY_OPERATOR_PRECEDENCE = {
     SppTokenType.KwOr: 1,
@@ -23,31 +29,38 @@ BINARY_OPERATOR_PRECEDENCE = {
     SppTokenType.TkEq: 3,
     SppTokenType.TkNe: 3,
     SppTokenType.TkLt: 3,
-    SppTokenType.TkGt: 4,
-    SppTokenType.TkLe: 4,
-    SppTokenType.TkGe: 4,
-    SppTokenType.TkPlus: 5,
-    SppTokenType.TkMinus: 5,
-    SppTokenType.TkMultiply: 6,
-    SppTokenType.TkDivide: 6,
-    SppTokenType.TkRemainder: 6,
-    SppTokenType.TkModulo: 6,
-    SppTokenType.TkExponent: 6,
+    SppTokenType.TkGt: 3,
+    SppTokenType.TkLe: 3,
+    SppTokenType.TkGe: 3,
+    SppTokenType.TkBitIor: 4,
+    SppTokenType.TkBitXor: 5,
+    SppTokenType.TkBitAnd: 6,
+    SppTokenType.TkLeftShift: 7,
+    SppTokenType.TkRightShift: 7,
+    SppTokenType.TkPlus: 8,
+    SppTokenType.TkMinus: 8,
+    SppTokenType.TkMultiply: 9,
+    SppTokenType.TkDivide: 9,
+    SppTokenType.TkRemainder: 9,
+    SppTokenType.TkExponent: 9,
 }
+
 
 BINARY_COMPARISON_OPERATORS = {
     SppTokenType.TkEq, SppTokenType.TkNe, SppTokenType.TkLt, SppTokenType.TkGt, SppTokenType.TkLe, SppTokenType.TkGe,
 }
 
+
 BINARY_COMPOUND_ASSIGNMENT_OPERATORS = {
     SppTokenType.TkPlusAssign, SppTokenType.TkMinusAssign, SppTokenType.TkMultiplyAssign,
-    SppTokenType.TkDivideAssign, SppTokenType.TkRemainderAssign, SppTokenType.TkModuloAssign,
-    SppTokenType.TkExponentAssign,
+    SppTokenType.TkDivideAssign, SppTokenType.TkRemainderAssign, SppTokenType.TkExponentAssign,
+    SppTokenType.TkBitAndAssign, SppTokenType.TkBitIorAssign, SppTokenType.TkBitXorAssign,
+    SppTokenType.TkLeftShiftAssign, SppTokenType.TkRightShiftAssign
 }
 
 
 class AstBinUtils:
-    """!
+    """
     AstBinUtils contains a number of utility functions for working with binary expressions in the AST. There are
     functions to map binary expressions into postfix function calls (x + y => x.add(y)), to fix the associativity, and
     restructure comparison operators to support the Pythonic "0 < x < 1" syntax.

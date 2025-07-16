@@ -214,9 +214,6 @@ class SppTokenType(TokenType):
     TkRemainder = "%"
     """The token for remainder. This is a single percent sign, and is used to get the remainder of two values."""
 
-    TkModulo = "%%"
-    """The token for modulo. This is a double percent sign, and is used to get the modulo of two values."""
-
     TkExponent = "**"
     """The token for exponentiation. This is a double asterisk, and is used to raise a value to the power of another value."""
 
@@ -234,9 +231,6 @@ class SppTokenType(TokenType):
 
     TkRemainderAssign = "%="
     """The token for remainder assignment. This is a percent sign followed by an equals sign, and is used to get the remainder of a variable and a value."""
-
-    TkModuloAssign = "%%="
-    """The token for modulo assignment. This is a double percent sign followed by an equals sign, and is used to get the modulo of a variable and a value."""
 
     TkExponentAssign = "**="
     """The token for exponentiation assignment. This is a double asterisk followed by an equals sign, and is used to raise a variable to the power of a value."""
@@ -273,6 +267,36 @@ class SppTokenType(TokenType):
 
     TkVerticalBar = "|"
     """The token for a vertical bar. This is a single vertical bar, and is used to mark a lambda expression."""
+
+    TkLeftShift = "<<"
+    """The token for a left shift. This is a double less than sign, and is used to shift bits to the left."""
+
+    TkRightShift = ">>"
+    """The token for a right shift. This is a double greater than sign, and is used to shift bits to the right."""
+
+    TkLeftShiftAssign = "<<="
+    """The token for a left shift assignment. This is a double less than sign followed by an equals sign, and is used to shift bits to the left and assign the result to a variable."""
+
+    TkRightShiftAssign = ">>="
+    """The token for a right shift assignment. This is a double greater than sign followed by an equals sign, and is used to shift bits to the right and assign the result to a variable."""
+
+    TkBitAnd = "&"
+    """The token for a bitwise AND. This is a single ampersand, and is used to perform a bitwise AND operation."""
+
+    TkBitIor = "|"
+    """The token for a bitwise OR. This is a single vertical bar, and is used to perform a bitwise OR operation."""
+
+    TkBitXor = "^"
+    """The token for a bitwise XOR. This is a single caret, and is used to perform a bitwise XOR operation."""
+
+    TkBitAndAssign = "&="
+    """The token for a bitwise AND assignment. This is a single ampersand followed by an equals sign, and is used to perform a bitwise AND operation and assign the result to a variable."""
+
+    TkBitIorAssign = "|="
+    """The token for a bitwise OR assignment. This is a single vertical bar followed by an equals sign, and is used to perform a bitwise OR operation and assign the result to a variable."""
+
+    TkBitXorAssign = "^="
+    """The token for a bitwise XOR assignment. This is a single caret followed by an equals sign, and is used to perform a bitwise XOR operation and assign the result to a variable."""
 
     TkDot = "."
     """The token for a dot. This is a single dot, and is used to access members of a class or module."""
