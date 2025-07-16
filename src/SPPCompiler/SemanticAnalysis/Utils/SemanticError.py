@@ -1868,3 +1868,22 @@ class SemanticErrors:
                 tip=f"Change the branch pattern to be compatible with the condition type '{expected_type}'.")
 
             return self
+
+    class EarlyReturnRequiresTryTypeError(SemanticError):
+        """
+        The EarlyReturnRequiresTryTypeError is raised if an early return is used with an expression whose type doesn't
+        superimpose the Try type. The Try type is needed to get the output argument (early return type).
+        """
+
+        def add(self, op: Asts.PostfixExpressionOperatorEarlyReturnAst, expr: Asts.ExpressionAst, expr_type: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=op,
+                tag="Early return operator used here")
+
+            self.add_error(
+                ast=expr,
+                tag=f"Type inferred as '{expr_type}'",
+                msg="The early return expression must superimpose the Try type.",
+                tip="Change the expression type to superimpose the Try type.")
+
+            return self
