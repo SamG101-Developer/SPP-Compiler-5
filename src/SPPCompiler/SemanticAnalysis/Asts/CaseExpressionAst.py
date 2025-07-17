@@ -131,7 +131,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Convert condition into an "== true" comparison.
         first_pattern = Asts.PatternVariantExpressionAst(p1.pos, expr=Asts.BooleanLiteralAst.from_python_literal(p1.pos, True))
-        first_branch = Asts.CaseExpressionBranchAst(p1.pos, patterns=[first_pattern], body=p3)  # todo: "op" need setting?
+        first_branch = Asts.CaseExpressionBranchAst(p1.pos, op=Asts.TokenAst.raw(token_type=SppTokenType.TkEq), patterns=[first_pattern], body=p3)
         branches = [first_branch] + p4
 
         # Return the case expression.
@@ -174,22 +174,35 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # The checks here only apply when assigning from this expression.
-        branch_inferred_types = [b.infer_type(sm, **kwargs) for b in self.branches]
+        branch_types = [b.infer_type(sm, **kwargs) for b in self.branches]
 
-        # All branches must return the same type.
-        zeroth_branch_type = branch_inferred_types[0]
-        if mismatch := [x for x in branch_inferred_types[1:] if not AstTypeUtils.symbolic_eq(x, zeroth_branch_type, sm.current_scope, sm.current_scope)]:
+        # Branches will typically have their return type compared against the 0th branch.
+        master_branch_type = branch_types[0]
+
+        # To handle variants, select the master type as the variant with the most internal types (if there is one).
+        variant_branch_types = [b for b in branch_types if AstTypeUtils.is_type_variant(b, sm.current_scope)]
+        if variant_branch_types:
+            most_inner_types = 0
+            for variant_type in variant_branch_types:
+                internal_types = variant_type.type_parts[-1].generic_argument_group["Variants"].value.type_parts[-1].generic_argument_group.arguments
+                if len(internal_types) > most_inner_types:
+                    master_branch_type, most_inner_types = variant_type, len(internal_types)
+
+        # All branches must return the same type (variant comparison will now work).
+        branch_types.remove(master_branch_type)
+        if mismatch := [b for b in branch_types if not AstTypeUtils.symbolic_eq(master_branch_type, b, sm.current_scope, sm.current_scope)]:
             raise SemanticErrors.CaseBranchesConflictingTypesError().add(
-                zeroth_branch_type, mismatch[0]).scopes(sm.current_scope)
+                master_branch_type, mismatch[0]).scopes(sm.current_scope)
 
         # Ensure there is an "else" branch if the branches are not exhaustive.
+        # Todo: exhaustion can be done with non-guarded variant patterns.
         if not isinstance(self.branches[-1].patterns[0], Asts.PatternVariantElseAst):
             raise SemanticErrors.CaseBranchesMissingElseBranchError().add(
                 self.cond, self.branches[-1]).scopes(sm.current_scope)
 
         # Return the branches' return type, if there are any branches, otherwise Void.
         if len(self.branches) > 0:
-            return branch_inferred_types[0]
+            return branch_types[0]
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
