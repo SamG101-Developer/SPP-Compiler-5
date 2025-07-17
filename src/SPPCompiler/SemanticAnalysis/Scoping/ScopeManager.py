@@ -131,6 +131,8 @@ class ScopeManager:
 
         # Iterate through all the super scopes and check if the name matches.
         for super_scope in super_scopes:
+
+            # Relaxed comparison between the two types, capturing the generics if they exist.
             scope_generics_dict = {}
             if not AstTypeUtils.relaxed_symbolic_eq(scope.type_symbol.fq_name, super_scope._ast.name, scope.type_symbol.scope_defined_in, super_scope, scope_generics_dict):
                 continue
@@ -143,8 +145,8 @@ class ScopeManager:
 
             # Prevent double inheritance, cyclic inheritance, and self inheritance.
             if isinstance(super_scope._ast, Asts.SupPrototypeExtensionAst):
-                super_scope._ast._check_double_extension(cls_symbol, sup_symbol, super_scope)
                 super_scope._ast._check_cyclic_extension(sup_symbol, super_scope)
+                super_scope._ast._check_double_extension(cls_symbol, sup_symbol, super_scope)
                 super_scope._ast._check_self_extension(cls_symbol, sup_symbol, super_scope)
 
             # Register the super scope against the current scope.
@@ -156,8 +158,8 @@ class ScopeManager:
                 scope._direct_sup_scopes.append(new_cls_scope)
 
             if isinstance(super_scope._ast, Asts.SupPrototypeAst):
-                check_conflicting_type_statements(cls_symbol, self)
-                check_conflicting_cmp_statements(cls_symbol, self)
+                check_conflicting_type_statements(cls_symbol, super_scope, self)
+                check_conflicting_cmp_statements(cls_symbol, super_scope, self)
 
         if progress:
             progress.next(str(scope.name))
@@ -171,28 +173,30 @@ class ScopeManager:
         return self._current_scope
 
 
-def check_conflicting_type_statements(cls_symbol: TypeSymbol, sm: ScopeManager) -> None:
+def check_conflicting_type_statements(cls_symbol: TypeSymbol, super_scope: Scope, sm: ScopeManager) -> None:
     from SPPCompiler.SemanticAnalysis import Asts
 
     # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
     existing_type_names = SequenceUtils.flatten([
         [m.new_type for m in s._ast.body.members if isinstance(m, Asts.SupTypeStatementAst)]
         for s in cls_symbol.scope._direct_sup_scopes
-        if isinstance(s._ast, Asts.SupPrototypeAst)])
+        if isinstance(s._ast, Asts.SupPrototypeAst)
+           and AstTypeUtils.relaxed_symbolic_eq(super_scope._ast.name, s._ast.name, super_scope, s._ast._scope)])
 
     if duplicates := SequenceUtils.duplicates(existing_type_names):
         raise SemanticErrors.IdentifierDuplicationError().add(
             duplicates[0], duplicates[1], "associated type").scopes(sm.current_scope)
 
 
-def check_conflicting_cmp_statements(cls_symbol: TypeSymbol, sm: ScopeManager) -> None:
+def check_conflicting_cmp_statements(cls_symbol: TypeSymbol, super_scope: Scope, sm: ScopeManager) -> None:
     from SPPCompiler.SemanticAnalysis import Asts
 
     # Prevent duplicate cmp declarations by checking if the cmp statements appear in any super class.
     existing_cmp_names = SequenceUtils.flatten([
         [m.name for m in s._ast.body.members if isinstance(m, Asts.SupCmpStatementAst) and m.type.type_parts[-1].value[0] != "$"]
         for s in cls_symbol.scope._direct_sup_scopes
-        if isinstance(s._ast, Asts.SupPrototypeAst)])
+        if isinstance(s._ast, Asts.SupPrototypeAst)
+           and AstTypeUtils.relaxed_symbolic_eq(super_scope._ast.name, s._ast.name, super_scope, s._ast._scope)])
 
     if duplicates := SequenceUtils.duplicates(existing_cmp_names):
         raise SemanticErrors.IdentifierDuplicationError().add(
