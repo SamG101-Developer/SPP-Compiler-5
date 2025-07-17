@@ -169,8 +169,7 @@ class Scope:
             VariableSymbol: Asts.GenericCompArgumentNamedAst,
             TypeSymbol    : Asts.GenericTypeArgumentNamedAst,
             AliasSymbol   : Asts.GenericTypeArgumentNamedAst}
-
-        return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self._symbol_table.all() if s.is_generic]
+        return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self.all_symbols(exclusive=True) if s.is_generic]
 
     def add_symbol(self, symbol: Symbol) -> None:
         # Add a symbol to the scope.
