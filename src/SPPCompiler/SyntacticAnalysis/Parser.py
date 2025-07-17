@@ -1797,19 +1797,20 @@ class SppParser:
         p1 = self.parse_once(self.parse_token_underscore)
         if p1 is None: return None
         p2 = self.parse_alternate([
-            lambda: self.parse_characters("i8"),
-            lambda: self.parse_characters("i16"),
-            lambda: self.parse_characters("i32"),
-            lambda: self.parse_characters("i64"),
-            lambda: self.parse_characters("i128"),
-            lambda: self.parse_characters("i256"),
             lambda: self.parse_characters("u8"),
             lambda: self.parse_characters("u16"),
             lambda: self.parse_characters("u32"),
             lambda: self.parse_characters("u64"),
             lambda: self.parse_characters("u128"),
             lambda: self.parse_characters("u256"),
-            lambda: self.parse_characters("uz")])
+            lambda: self.parse_characters("uz"),
+            lambda: self.parse_characters("s8"),
+            lambda: self.parse_characters("s16"),
+            lambda: self.parse_characters("s32"),
+            lambda: self.parse_characters("s64"),
+            lambda: self.parse_characters("s128"),
+            lambda: self.parse_characters("s256"),
+            lambda: self.parse_characters("sz")])
         if p2 is None: return None
         return Asts.TypeIdentifierAst.from_token(p2)
 
