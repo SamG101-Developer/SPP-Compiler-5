@@ -73,7 +73,7 @@ class VariableSymbol(BaseSymbol):
         # Copy the all the attributes of the VariableSymbol.
         return VariableSymbol(
             name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), is_mutable=self.is_mutable,
-            memory_info=copy.copy(self.memory_info), visibility=self.visibility)
+            is_generic=self.is_generic, memory_info=copy.copy(self.memory_info), visibility=self.visibility)
 
 
 @dataclass(slots=True, kw_only=True)
