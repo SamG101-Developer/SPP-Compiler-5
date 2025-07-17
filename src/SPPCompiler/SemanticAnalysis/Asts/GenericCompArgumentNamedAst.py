@@ -56,9 +56,13 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
+        c = symbol.memory_info.ast_comptime_const
+        value = c.name if isinstance(c, Asts.GenericCompParameterAst) else c.value
+        if isinstance(value, Asts.TypeAst): value = Asts.IdentifierAst.from_type(value)
+
         return GenericCompArgumentNamedAst(
             name=Asts.TypeIdentifierAst.from_identifier(symbol.name),
-            value=Asts.IdentifierAst.from_type(symbol.memory_info.ast_comptime_const.name))
+            value=value)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
