@@ -9,8 +9,10 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.FunctionCache import FunctionCache
 
@@ -66,7 +68,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
     @staticmethod
     def from_string(value: str) -> TypeIdentifierAst:
-        return TypeIdentifierAst(pos=0, value=value)
+        return CodeInjection.inject_code(value, SppParser.parse_type, pos_adjust=0)
 
     @property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
@@ -99,17 +101,18 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
     def convert(self) -> Asts.TypeAst:
         return self
 
-    def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst], copy: bool = True) -> Asts.TypeAst:
-        name = fast_deepcopy(self) if copy else self
-        for generic_name, generic_type in [(a.name, a.value) for a in generic_arguments]:
-            if self == generic_name:
-                return generic_type
+    def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        name = fast_deepcopy(self)
+        for generic_arg_name, generic_arg_value in [(a.name, a.value) for a in generic_arguments]:
+            if self == generic_arg_name:
+                return generic_arg_value
 
             for g in name.generic_argument_group.get_comp_args():
                 if isinstance(g.value, Asts.IdentifierAst):
-                    if g.value == Asts.IdentifierAst.from_type(generic_name):
-                        g.value = generic_type
+                    if g.value == Asts.IdentifierAst.from_type(generic_arg_name):
+                        g.value = generic_arg_value
 
+        # Recursively substitute the type args. Todo: types on comp args?
         for g in name.generic_argument_group.get_type_args():
             g.value = g.value.substituted_generics(generic_arguments)
 
@@ -128,6 +131,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
         :return: The corresponding generic value on the other type, or None if not found.
         """
 
+        # Todo: comp args will probably fail here?
         def custom_iterate(t: Asts.TypeAst, depth: int) -> Iterator[tuple[Asts.GenericArgumentAst, int]]:
             for g in t.type_parts[-1].generic_argument_group.get_type_args():
                 yield g, depth
@@ -163,6 +167,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
         return scope.get_symbol(self.without_generics, exclusive=True)
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        # todo: qualify the types on the comp args? like "cmp a: X"
         for g in self.generic_argument_group.get_type_args():
             g.value.qualify_types(sm, **kwargs)
             try:
