@@ -50,6 +50,7 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the type.
         self.type.analyse_semantics(sm, **kwargs)
+        self.type = sm.current_scope.get_symbol(self.type).fq_name
 
         # Check the "type" is either "Self" or superimposes "Deref[Self]". If not, raise an error.
         if self._arbitrary:
