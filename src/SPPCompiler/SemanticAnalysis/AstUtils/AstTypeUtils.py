@@ -152,7 +152,8 @@ class AstTypeUtils:
         if not isinstance(new_scope.parent.name, str):
             new_scope.parent.children.append(new_scope)
 
-        sm.attach_super_scope_to_target_scope(new_scope, **kwargs)
+        if kwargs["stage"] > 7:
+            sm.attach_super_scopes_helper(new_scope, **kwargs)
 
         # No more checks for the tuple type (avoid recursion).
         if is_tuple: return new_scope

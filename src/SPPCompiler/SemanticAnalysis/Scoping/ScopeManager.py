@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, DefaultDict, Iterator, Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 from SPPCompiler.Utils.Progress import Progress
@@ -102,32 +102,38 @@ class ScopeManager:
         attributes (state) of superclasses. Only add unique superclasses once.
         """
 
-        progress.set_max(1)
-        progress.next("-")
-
         # Ensure the scope manager is in the global scope for scope-searching.
         self.reset()
-        iterator = [*iter(self)]
+        iterator = [x for x in iter(self) if isinstance(x.type_symbol, TypeSymbol)]
+        progress.set_max(len(iterator))
+
         for scope in iterator:
-            if isinstance(scope.type_symbol, AliasSymbol):
-                if scope.type_symbol.old_sym.scope:
-                    self.attach_super_scope_to_target_scope(scope, scope.type_symbol.old_sym.scope._direct_sup_scopes, **kwargs)
-            elif isinstance(scope.type_symbol, TypeSymbol):
-                self.attach_super_scope_to_target_scope(scope, **kwargs)
+            self.attach_super_scopes_helper(scope, **kwargs)
+            progress.next(str(scope.parent_module.name))
 
         progress.finish()
         self.reset()
 
-    def attach_super_scope_to_target_scope(
-            self, scope: Scope, custom_scopes: list[Scope] = None, progress: Optional[Progress] = None,
-            **kwargs) -> None:
+    def attach_super_scopes_helper(self, scope: Scope, **kwargs) -> None:
+        if isinstance(scope.type_symbol, AliasSymbol):
+            if scope.type_symbol.old_sym.scope:
+                old_scope = scope.type_symbol.old_sym.scope
+                scopes = self.normal_sup_blocks[old_scope.type_symbol] + list(self.generic_sup_blocks.values())
+                self.attach_super_scopes_to_target_scope(scope, scopes, **kwargs)
+
+        elif isinstance(scope.type_symbol, TypeSymbol):
+            non_generic_scope = scope._non_generic_scope
+            scopes = self.normal_sup_blocks[non_generic_scope.type_symbol] + list(self.generic_sup_blocks.values())
+            self.attach_super_scopes_to_target_scope(scope, scopes, **kwargs)
+
+    def attach_super_scopes_to_target_scope(
+            self, scope: Scope, super_scopes: list[Scope], progress: Optional[Progress] = None, **kwargs) -> None:
 
         from SPPCompiler.SemanticAnalysis import Asts
         if str(scope.name)[0] == "$":
             return
 
         scope._direct_sup_scopes = []
-        super_scopes = custom_scopes if custom_scopes is not None else self.normal_sup_blocks[scope._non_generic_scope.type_symbol] + list(self.generic_sup_blocks.values())
 
         # Iterate through all the super scopes and check if the name matches.
         for super_scope in super_scopes:
