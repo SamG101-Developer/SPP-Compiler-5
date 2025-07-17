@@ -49,16 +49,18 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
 
     def analyse_semantics(self, sm: ScopeManager, cond: Asts.ExpressionAst = None, **kwargs) -> None:
         self.class_type.analyse_semantics(sm, **kwargs)
+        self.class_type = sm.current_scope.get_symbol(self.class_type).fq_name
 
         # Flow type the condition symbol if necessary.
-        condition_symbol: VariableSymbol = sm.current_scope.get_symbol(cond)
-        is_condition_symbol_variant = condition_symbol and AstTypeUtils.is_type_variant(condition_symbol.type, sm.current_scope)
-        if condition_symbol and is_condition_symbol_variant:
-            if not AstTypeUtils.symbolic_eq(condition_symbol.type, self.class_type, sm.current_scope, sm.current_scope):
-                raise SemanticErrors.TypeMismatchError().add(
-                    cond, condition_symbol.type, self.class_type, self.class_type).scopes(sm.current_scope)
+        cond_sym = sm.current_scope.get_symbol(cond, sym_type=VariableSymbol)
+        is_cond_type_variant = cond_sym and AstTypeUtils.is_type_variant(cond_sym.type, sm.current_scope)
 
-            flow_symbol = fast_deepcopy(condition_symbol)
+        if cond_sym and is_cond_type_variant:
+            if not AstTypeUtils.symbolic_eq(cond_sym.type, self.class_type, sm.current_scope, sm.current_scope):
+                raise SemanticErrors.TypeMismatchError().add(
+                    cond, cond_sym.type, self.class_type, self.class_type).scopes(sm.current_scope)
+
+            flow_symbol = fast_deepcopy(cond_sym)
             flow_symbol.type = self.class_type
             sm.current_scope.add_symbol(flow_symbol)
 
