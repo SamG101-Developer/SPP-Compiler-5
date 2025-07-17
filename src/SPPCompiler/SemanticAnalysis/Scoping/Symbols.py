@@ -100,7 +100,7 @@ class TypeSymbol(BaseSymbol):
         # Dump the TypeSymbol as a JSON object.
         return {
             "what": "type", "name": str(self.name), "type": str(self.type), "scope": str(self.scope.name) if self.scope else "",
-            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else "", "id": id(self)}
+            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else ""}
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -154,8 +154,7 @@ class AliasSymbol(TypeSymbol):
         # Dump the AliasSymbol as a JSON object.
         return {
             "what": "alias", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
-            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym,
-            "id": id(self)}
+            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym}
 
     def __hash__(self) -> int:
         return hash(self.name)
