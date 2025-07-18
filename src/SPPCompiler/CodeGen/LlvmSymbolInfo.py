@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from llvmlite import ir
 
@@ -7,3 +8,8 @@ from llvmlite import ir
 class LlvmTypeSymbolInfo:
     llvm_type: ir.IdentifiedStructType
     llvm_module: ir.Module
+
+
+@dataclass(slots=True, kw_only=True)
+class LlvmVariableSymbolInfo:
+    ptr: Optional[ir.AllocaInstr]

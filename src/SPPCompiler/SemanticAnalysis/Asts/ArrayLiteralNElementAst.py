@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from llvmlite import ir
+
+from SPPCompiler.CodeGen.LlvmConfig import LlvmConfig
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
@@ -89,7 +92,6 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         :param sm: The scope manager.
         :param kwargs: Additional keyword arguments.
-        :return: None.
         :raise SemanticErrors.ExpressionTypeInvalidError: This exception is raised if an expression for a value is
             syntactically valid but makes no sense in this context (".." or a type).
         :raise SemanticErrors.ArrayElementsDifferentTypesError(): This exception is raised if an array element
@@ -123,6 +125,32 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the inferred array type to generate the generic implementation.
         self.infer_type(sm, **kwargs).analyse_semantics(sm, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> ir.AllocaInstr:
+        """
+        This array AST will create an array with the element all created, by recursively calling code_gen_pass_2 on each
+        element AST belonging to this array literal. The array will be created on the stack, and the elements will be
+        stored in the array.
+
+        :param sm: The scope manager.
+        :param llvm_module: The LLVM module to generate code into.
+        :param kwargs: Additional keyword arguments.
+        :return: The LLVM array object that can be used in the expression context.
+        """
+
+        # Use the 0-element generator to create the array (shared code).
+        array_ptr = Asts.ArrayLiteral0ElementAst.code_gen_pass_2(self, sm, llvm_module, **kwargs)
+
+        # For each element, covert it to LLVM and store it in the array.
+        zero = ir.Constant(ir.IntType(LlvmConfig.LLVM_USIZE), 0)
+        for i in range(len(self.elems)):
+            index = ir.Constant(ir.IntType(LlvmConfig.LLVM_USIZE), i)
+            elem_ptr = kwargs["builder"].gep(array_ptr, [zero, index])
+            elem = self.elems[i].code_gen_pass_2(sm, llvm_module, **kwargs)
+            kwargs["builder"].store(elem, elem_ptr)
+
+        # Return the array pointer to be used in the expression context.
+        return array_ptr
 
 
 __all__ = [

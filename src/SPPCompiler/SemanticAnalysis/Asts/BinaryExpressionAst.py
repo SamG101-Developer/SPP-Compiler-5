@@ -3,12 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
+from llvmlite import ir
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstBinUtils import AstBinUtils, BINARY_COMPOUND_ASSIGNMENT_OPERATORS
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
@@ -181,6 +183,17 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         self._as_func.check_memory(sm, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        """
+        Forward all code generation to the function equivalent of the binary expression.
+
+        :param sm: The scope manager.
+        :param llvm_module: The LLVM module to generate code into.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        self._as_func.code_gen_pass_2(sm, llvm_module, **kwargs)
 
 
 __all__ = [

@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from llvmlite import ir
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 
 
@@ -82,6 +84,20 @@ class BooleanLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Create the standard "std::boolean::Bool" type.
         return CommonTypes.Bool(self.pos)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> ir.Constant:
+        """
+        Generates the LLVM IR for this boolean literal. The literal is converted to an LLVM constant of type i1. The
+        true/false state depends on the value of the literal.
+
+        :param sm: The scope manager.
+        :param llvm_module: The LLVM module to generate code into.
+        :param kwargs: Additional keyword arguments.
+        :return: The LLVM constant representing the boolean literal.
+        """
+
+        # Create the LLVM constant for the boolean literal.
+        return ir.Constant(ir.IntType(1), 1 if self.to_python_literal() else 0)
 
 
 __all__ = [

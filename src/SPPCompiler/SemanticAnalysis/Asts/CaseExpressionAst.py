@@ -4,6 +4,9 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 
+from llvmlite import ir
+from SPPCompiler.Utils.Functools import reduce
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils, LightweightMemoryInfo
@@ -66,6 +69,8 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     branches: list[Asts.CaseExpressionBranchAst] = field(default_factory=list)
     """The branches that the condition can be matched against."""
+
+    _binary_pattern_conversions: dict[int, list] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.kw_case = self.kw_case or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwCase)
@@ -181,6 +186,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # To handle variants, select the master type as the variant with the most internal types (if there is one).
         variant_branch_types = [b for b in branch_types if AstTypeUtils.is_type_variant(b, sm.current_scope)]
+
         if variant_branch_types:
             most_inner_types = 0
             for variant_type in variant_branch_types:
@@ -247,6 +253,8 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
             # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
             if branch.op and branch.op.token_type != SppTokenType.KwIs:
+                self._binary_pattern_conversions[id(branch)] = []
+
                 for pattern in branch.patterns:
 
                     # Check the function exists. No check for Bool return type as it is enforced by comparison methods.
@@ -256,6 +264,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                     binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expr.infer_type(sm, **kwargs))
                     binary_ast = Asts.BinaryExpressionAst(self.pos, binary_lhs_ast, branch.op, binary_rhs_ast)
                     binary_ast.analyse_semantics(sm, **kwargs)
+                    self._binary_pattern_conversions[id(branch)].append(binary_ast)
 
             branch.analyse_semantics(sm, cond=self.cond, **kwargs)
 
@@ -331,6 +340,61 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Move out of the case expression scope.
         sm.move_out_of_current_scope()
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        """
+        The conditional branching is implemented as a series of LLVM conditional jumps. HTe condition is an LLVM
+        translation of the AST's condition, and the branches are translated and then inserted, with fragment combination
+        for the pattern matching.
+
+        :param sm: The scope manager.
+        :param llvm_module: The LLVM module to generate code into.
+        :param kwargs: Additional keyword arguments.
+        :return: The LLVM code for the case expression.
+        """
+
+        # Create the blocks (1 for each branch).
+        llvm_blocks = []
+        for i, branch in enumerate(self.branches):
+            # Generate the LLVM code for the branch.
+            llvm_blocks.append(kwargs["func"].append_basic_block(name=f"case_{id(self)}_branch_{i}"))
+
+        # Add the "exit" block at the end of the case expression.
+        llvm_blocks.append(kwargs["func"].append_basic_block(name=f"case_{id(self)}_exit"))
+
+        for branch in self.branches:
+            # Any "is" branches will only have 1 pattern, so no need to combine.
+            if branch.op.token_type == SppTokenType.KwIs:
+                # TODO
+                continue
+
+            # Otherwise, combine all the pattern conversions with binary "OR" operations (reduction).
+            combined_condition = reduce(
+                lambda x, y: Asts.BinaryExpressionAst(self.pos, x, Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwOr), y),
+                self._binary_pattern_conversions[id(branch)][1:], self._binary_pattern_conversions[id(branch)][0])
+            llvm_condition = combined_condition.code_gen_pass_2(sm, llvm_module, **kwargs)
+
+            # Add the condition to the first block.
+            # Todo
+
+            # Create the LLVM code for the branch.
+            this_branch = llvm_blocks[self.branches.index(branch)]
+            if branch is not self.branches[-1]:
+                next_branch = llvm_blocks[self.branches.index(branch) + 1]
+                kwargs["builder"].cbranch(llvm_condition, this_branch, next_branch)
+
+            # Position the builder in the branch block.
+            kwargs["builder"].position_at_end(this_branch)
+
+            # Add the body of the branch, then unconditionally branch to the exit block.
+            llvm_body = branch.code_gen_pass_2(sm, llvm_module, **kwargs)
+            kwargs["builder"].branch(llvm_blocks[-1])
+
+        # Position the builder at the exit block.
+        kwargs["builder"].position_at_end(llvm_blocks[-1])
+
+        # Handle assignments where this is the RHS of the expression. Use "phi" to select a result.
+        # Todo
 
 
 __all__ = [

@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from llvmlite import ir
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import SequenceUtils
@@ -191,6 +194,24 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             # Remove partial moves from their outermost symbol.
             elif is_attr(lhs_expr):
                 lhs_sym.memory_info.remove_partial_move(lhs_expr)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        """
+        The assignment statement AST generates code to assign the right-hand side values to the left-hand side targets.
+        As llvm only supports single-value assignments, the code generation will generate a sequence of assignments,
+        one for each left-hand side target. The right-hand side values are evaluated first, and then assigned to the
+        left-hand side targets in order.
+
+        :param sm: The scope manager.
+        :param llvm_module: The LLVM module to generate code into.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        # For each left-hand side target, get the symbol and assign the right-hand side value to it.
+        for lhs, rhs in zip(self.lhs, self.rhs):
+            lhs_ptr = sm.current_scope.get_symbol(lhs, sym_type=VariableSymbol).llvm_info.ptr
+            rhs_val = rhs.code_gen_pass_2(sm, llvm_module, **kwargs)
+            kwargs["builder"].store(rhs_val, lhs_ptr)
 
 
 __all__ = [
