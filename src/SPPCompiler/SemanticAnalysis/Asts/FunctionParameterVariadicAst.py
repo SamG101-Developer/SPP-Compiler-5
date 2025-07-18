@@ -45,6 +45,7 @@ class FunctionParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the type.
         self.type.analyse_semantics(sm, **kwargs)
+        self.type = sm.current_scope.get_symbol(self.type).fq_name.with_convention(self.type.convention)
 
         # Create the variable for the parameter.
         ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=self.type)

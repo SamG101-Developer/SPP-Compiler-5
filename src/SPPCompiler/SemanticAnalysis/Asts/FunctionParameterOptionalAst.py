@@ -50,6 +50,8 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the type of the default expression.
         self.type.analyse_semantics(sm, **kwargs)
+        self.type = sm.current_scope.get_symbol(self.type).fq_name.with_convention(self.type.convention)
+
         self.default.analyse_semantics(sm, **kwargs)
 
         # Make sure the default expression is of the correct type.
