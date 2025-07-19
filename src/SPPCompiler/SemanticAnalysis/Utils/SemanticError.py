@@ -561,8 +561,8 @@ class SemanticErrors:
         """
 
         def add(
-                self, field: Asts.IdentifierAst | Asts.TypeIdentifierAst, first: Asts.IdentifierAst,
-                second: Asts.IdentifierAst) -> SemanticError:
+                self, first: Asts.IdentifierAst, second: Asts.IdentifierAst,
+                field: Asts.IdentifierAst | Asts.TypeIdentifierAst) -> SemanticError:
             self.add_info(
                 ast=first,
                 tag=f"Member '{first}' defined here")
