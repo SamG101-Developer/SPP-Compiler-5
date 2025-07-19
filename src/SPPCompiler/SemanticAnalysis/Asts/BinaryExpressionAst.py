@@ -111,8 +111,8 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs).scopes(sm.current_scope)
 
         # Analyse the parts of the binary expression.
-        self.rhs.analyse_semantics(sm, **kwargs)
-        self.lhs.analyse_semantics(sm, **kwargs)
+        # self.rhs.analyse_semantics(sm, **kwargs)
+        # self.lhs.analyse_semantics(sm, **kwargs)
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
         if self.op.token_type in BINARY_COMPOUND_ASSIGNMENT_OPERATORS and not sm.current_scope.get_variable_symbol_outermost_part(self.lhs):
