@@ -207,7 +207,6 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
         self.generic_argument_group.analyse_semantics(sm, **kwargs)
 
         # Infer generic arguments from information given from object initialization.
-        # print("TYPE", self, [str(s) for s in sm.current_scope.ancestors])
         owner = AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.without_generics).fq_name
         self.generic_argument_group.arguments = AstFunctionUtils.infer_generic_arguments(
             generic_parameters=type_symbol.type.generic_parameter_group.parameters,
