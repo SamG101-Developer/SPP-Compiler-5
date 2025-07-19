@@ -1822,8 +1822,7 @@ class SppParser:
             lambda: self.parse_characters("f16"),
             lambda: self.parse_characters("f32"),
             lambda: self.parse_characters("f64"),
-            lambda: self.parse_characters("f128"),
-            lambda: self.parse_characters("f256")])
+            lambda: self.parse_characters("f128")])
         if p2 is None: return None
         return Asts.TypeIdentifierAst.from_token(p2)
 
