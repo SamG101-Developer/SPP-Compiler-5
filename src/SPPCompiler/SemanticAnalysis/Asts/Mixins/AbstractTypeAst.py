@@ -79,7 +79,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
     # todo: work on removing this, use relaxed_symbolic_eq instead
     @abstractmethod
-    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
+    def match_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
         """
         Given this type is Vec[Opt[T]], getting the T type from Vec[Opt[Str]] will get T=Str.
 

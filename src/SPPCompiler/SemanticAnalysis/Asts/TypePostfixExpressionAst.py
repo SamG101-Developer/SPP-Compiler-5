@@ -84,8 +84,9 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs.substituted_generics(generic_arguments), op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.substituted_generics(generic_arguments)))
 
-    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
-        return self.op.name.get_corresponding_generic(that, generic_name)
+    def match_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
+        if str(that) == str(generic_name): return self
+        return self.op.name.match_generic(that, generic_name)
 
     def contains_generic(self, generic_type: Asts.TypeIdentifierAst) -> bool:
         return self.op.name.contains_generic(generic_type)

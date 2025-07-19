@@ -118,7 +118,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
         return name
 
-    def get_corresponding_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
+    def match_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
         """
         GenericAttrClass[AA=testing::nested_generic_attr::GenericAttrClass[P=BB, AA=std::array::Arr[T=CC, n = 3, A=std::allocator::GlobalAlloc[E=CC]]]]
         GenericAttrClass[AA=testing::nested_generic_attr::GenericAttrClass[P=std::vector::Vec[T=std::string::Str], AA=std::array::Arr[T=std::number::bigint::BigInt, n = 3, A=std::allocator::GlobalAlloc[E=std::number::bigint::BigInt]]]]
@@ -130,6 +130,10 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
         :param generic_name: The target generic name to find.
         :return: The corresponding generic value on the other type, or None if not found.
         """
+
+        # Early return if this type is the generic directly.
+        if str(that) == str(generic_name):
+            return self
 
         # Todo: comp args will probably fail here?
         def custom_iterate(t: Asts.TypeAst, depth: int) -> Iterator[tuple[Asts.GenericArgumentAst, int]]:
