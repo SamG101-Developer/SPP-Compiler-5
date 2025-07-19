@@ -74,6 +74,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
         # Accessing a member from the scope by the identifier.
         if isinstance(self.field, Asts.IdentifierAst) and type(field_symbol) is VariableSymbol:
             attribute_type = field_symbol.type
+            attribute_type.analyse_semantics(ScopeManager(sm.global_scope, lhs_master_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks), **kwargs)
             attribute_type = lhs_master_scope.get_symbol(attribute_type).fq_name
             return attribute_type
 
@@ -101,6 +102,8 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     self.field, "static member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
 
             # Check there is only 1 target field on the type at the highest level.
+            if lhs_symbol.scope.get_symbol(self.field, sym_type=VariableSymbol).type.type_parts[-1].value.startswith("$"):
+                return
             sss = []
             for scope in [lhs_symbol.scope] + lhs_symbol.scope.sup_scopes:
                 sss.append((scope, scope._symbol_table.get(self.field)))
@@ -108,8 +111,8 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
             closest = [s[1] for s in depths if s[0] == min(depths, key=lambda x: x[0])[0]]
             if len(closest) > 1:
                 raise SemanticErrors.AmbiguousMemberAccessError().add(
-                    self.field, closest[0][1].name, closest[1][1].name).scopes(
-                    sm.current_scope, closest[0][0], closest[1][0])
+                    closest[0][1].name, closest[1][1].name, self.field).scopes(
+                    closest[0][0], closest[1][0], sm.current_scope)
 
         # Numerical access to a tuple, such as "tuple.0".
         elif isinstance(self.field, Asts.TokenAst):
