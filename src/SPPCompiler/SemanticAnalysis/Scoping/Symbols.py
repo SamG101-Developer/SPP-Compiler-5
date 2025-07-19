@@ -5,7 +5,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Dict, Optional, TYPE_CHECKING
 
-from SPPCompiler.CodeGen.LlvmTypeSymbolInfo import LlvmTypeSymbolInfo
+from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmTypeSymbolInfo, LlvmVariableSymbolInfo
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import MemoryInfo
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
@@ -53,6 +53,7 @@ class VariableSymbol(BaseSymbol):
     is_generic: bool = field(default=False)
     memory_info: MemoryInfo = field(default_factory=MemoryInfo)
     visibility: Visibility = field(default=Visibility.Public)
+    llvm_info: Optional[LlvmVariableSymbolInfo] = field(default=None, repr=False)
 
     def __json__(self) -> Dict:
         # Dump the VariableSymbol as a JSON object.
@@ -154,7 +155,7 @@ class AliasSymbol(TypeSymbol):
         # Dump the AliasSymbol as a JSON object.
         return {
             "what": "alias", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
-            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym}
+            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else "", "old_sym": self.old_sym}
 
     def __hash__(self) -> int:
         return hash(self.name)
