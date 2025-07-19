@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, TypeSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
@@ -79,7 +79,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
         return TypeIdentifierAst(self.pos, self.value)
 
     @property
-    def without_conventions(self) -> Optional[Asts.TypeAst]:
+    def without_convention(self) -> Optional[Asts.TypeAst]:
         return self
 
     @property
@@ -203,6 +203,8 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
         self.generic_argument_group.analyse_semantics(sm, **kwargs)
 
         # Infer generic arguments from information given from object initialization.
+        # print("TYPE", self, [str(s) for s in sm.current_scope.ancestors])
+        owner = AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.without_generics).fq_name
         self.generic_argument_group.arguments = AstFunctionUtils.infer_generic_arguments(
             generic_parameters=type_symbol.type.generic_parameter_group.parameters,
             optional_generic_parameters=type_symbol.type.generic_parameter_group.get_optional_params(),
@@ -210,7 +212,8 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
             infer_source=generic_infer_source or {},
             infer_target=generic_infer_target or {},
             sm=sm,
-            owner=AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.without_generics).fq_name,
+            owner=owner,
+            owner_scope=x.scope if (x := sm.current_scope.get_symbol(owner)) else None,
             is_tuple_owner=is_tuple,
             **kwargs)
 
@@ -223,7 +226,8 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
         # If the generically filled type doesn't exist (Vec[Str]), but the base does (Vec[T]), create it.
         if not type_scope.parent.has_symbol(self):
-            new_scope = AstTypeUtils.create_generic_cls_scope(sm, self, type_symbol, is_tuple=is_tuple, **kwargs)
+            external_generics = [x for x in sm.current_scope.all_symbols() if type(x) is not NamespaceSymbol and x.is_generic]
+            new_scope = AstTypeUtils.create_generic_cls_scope(sm, self, type_symbol, external_generics, is_tuple=is_tuple, **kwargs)
 
             # Handle type aliasing (providing generics to the original type).
             if type(type_symbol) is AliasSymbol:

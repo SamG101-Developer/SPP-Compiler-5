@@ -52,8 +52,8 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics)
 
     @property
-    def without_conventions(self) -> Optional[Asts.TypeAst]:
-        return self if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.without_conventions
+    def without_convention(self) -> Optional[Asts.TypeAst]:
+        return self if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.without_convention
 
     @property
     def convention(self) -> Optional[Asts.ConventionAst]:

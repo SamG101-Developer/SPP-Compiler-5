@@ -45,7 +45,7 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs, op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.without_generics))
 
     @property
-    def without_conventions(self) -> Optional[Asts.TypeAst]:
+    def without_convention(self) -> Optional[Asts.TypeAst]:
         return self
 
     @property

@@ -50,7 +50,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
 
     @property
     @abstractmethod
-    def without_conventions(self) -> Optional[Asts.TypeAst]:
+    def without_convention(self) -> Optional[Asts.TypeAst]:
         ...
 
     @property
