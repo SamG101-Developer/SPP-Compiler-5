@@ -70,8 +70,8 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
         ast = Asts.LetStatementUninitializedAst(
             pos=self.pos,
             assign_to=Asts.LocalVariableSingleIdentifierAst(self.pos, self.tok_mut, self.name, None),
-            type=self.type)
-        ast.analyse_semantics(sm, explicit_type=self.type, **kwargs)
+            type=self.type.with_convention(self.convention))
+        ast.analyse_semantics(sm, explicit_type=ast.type, **kwargs)
 
         # Mark the symbol as initialized. The "mut" being also set from the "&mut" is because "&mut self" implies symbol
         # mutability as-well.
