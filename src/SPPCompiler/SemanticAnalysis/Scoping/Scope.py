@@ -138,10 +138,12 @@ class Scope:
 
     def __json__(self) -> dict:
         return {
-            "scope_name": self._name, "id": id(self), "parent": self._parent.name if self._parent else "", "children": self._children,
-            "symbol_table": self._symbol_table, "sup_scopes": [s.name for s in self._direct_sup_scopes], "sup_scopes_ids": [id(s) for s in self._direct_sup_scopes],
-            "sub_scopes": [s.name for s in self._direct_sub_scopes], "type_symbol": self._type_symbol.name if self._type_symbol else "",
-        }
+            "scope_name": self._name, "parent": self._parent.name if self._parent else "",
+            "children": self._children, "symbol_table": self._symbol_table,
+            "sup_scopes": [s.name for s in self._direct_sup_scopes],
+            "sup_scopes_ids": [id(s) for s in self._direct_sup_scopes],
+            "sub_scopes": [s.name for s in self._direct_sub_scopes],
+            "type_symbol": self._type_symbol.name if self._type_symbol else ""}
 
     def __str__(self) -> str:
         return str(self._name)
@@ -169,7 +171,7 @@ class Scope:
             VariableSymbol: Asts.GenericCompArgumentNamedAst,
             TypeSymbol    : Asts.GenericTypeArgumentNamedAst,
             AliasSymbol   : Asts.GenericTypeArgumentNamedAst}
-        return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self.all_symbols(exclusive=True) if s.is_generic]
+        return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self.all_symbols() if type(s) is not NamespaceSymbol and s.is_generic and (s.scope if isinstance(s, TypeSymbol) else True)]
 
     def add_symbol(self, symbol: Symbol) -> None:
         # Add a symbol to the scope.
@@ -206,7 +208,7 @@ class Scope:
         # Adjust the namespace and symbol name for namespaced typ symbols.
         scope = self
         if isinstance(name, Asts.TypeAst):
-            name = name.without_conventions
+            name = name.without_convention
             scope, name = shift_scope_for_namespaced_type(self, name)
 
         # Get the symbol from the symbol table if it exists, and ignore it if it is in the exclusion list.
