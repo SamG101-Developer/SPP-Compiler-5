@@ -111,12 +111,13 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
 
         # Type check the regular arguments against the class attributes.
         for argument in self.get_regular_args():
+
+            # Todo: some sort of ambiguity check here? check if there is > 1 attribute with the same name.
             attribute, sup_scope = [a for a in all_attributes if a[0].name == argument.name][0]
-            attribute_sym = class_symbol.scope.get_symbol(attribute.name)
-            attribute_type = attribute_sym.type
+            attribute_type = sup_scope.get_symbol(class_symbol.scope.get_symbol(attribute.name).type).fq_name
             argument_type = argument.infer_type(sm, **kwargs)
 
-            if not AstTypeUtils.symbolic_eq(attribute_type, argument_type, sup_scope, sm.current_scope):
+            if not AstTypeUtils.symbolic_eq(attribute_type, argument_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     attribute, attribute_type, argument, argument_type).scopes(sm.current_scope)
 
