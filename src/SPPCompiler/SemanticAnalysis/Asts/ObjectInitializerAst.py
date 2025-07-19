@@ -59,14 +59,14 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         generic_infer_source = {
             a.name: self.object_argument_group.get_arg_val(a).infer_type(sm, **kwargs)
             for a in self.object_argument_group.arguments
-            if isinstance(a.name, Asts.IdentifierAst)}
+            if isinstance(a.name, Asts.IdentifierAst)}  # todo: why constrain to IdentifierAst?
 
         generic_infer_target = {
-            a.name: a.type
+            a.name: base_symbol.scope.get_symbol(a.type).fq_name
             for a in base_symbol.type.body.members}
 
         # Analyse the type and object argument group.
-        base_symbol.type.body.analyse_semantics(ScopeManager(sm.current_scope, base_symbol.scope), **kwargs)
+        base_symbol.type.body.analyse_semantics(ScopeManager(sm.current_scope, base_symbol.scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks), **kwargs)
         self.class_type.analyse_semantics(sm, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
         self.object_argument_group.analyse_semantics(sm, class_type=self.class_type, **kwargs)
 
