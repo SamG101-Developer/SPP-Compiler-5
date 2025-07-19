@@ -178,6 +178,11 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             doesn't have an "else" block.
         """
 
+        # TODO:
+        #  Check the logic for "let" statements, allowing "let VariableType = inner_type", and do teh same thing for an
+        #  assignment; if there is an assignment, then set the master type to the lhs's type, and check all types match
+        #  the lhs type. This includes returning a value.
+
         # The checks here only apply when assigning from this expression.
         branch_types = [b.infer_type(sm, **kwargs) for b in self.branches]
 

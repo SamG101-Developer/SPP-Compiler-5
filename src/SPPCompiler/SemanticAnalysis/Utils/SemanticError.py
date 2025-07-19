@@ -656,14 +656,14 @@ class SemanticErrors:
         Inference comes from arguments.
         """
 
-        def add(self, generic_parameter: Asts.GenericParameterAst, caller_context: Asts.ExpressionAst) -> SemanticError:
+        def add(self, generic_parameter_name: Asts.TypeAst, caller_context: Asts.ExpressionAst) -> SemanticError:
             self.add_info(
                 ast=caller_context,
                 tag=f"Type '{caller_context}' created here")
 
             self.add_error(
-                ast=generic_parameter,
-                tag=f"Non-inferred generic parameter '{generic_parameter}'.",
+                ast=generic_parameter_name,
+                tag=f"Non-inferred generic parameter '{generic_parameter_name}'.",
                 msg="Non-inferred generic parameters must be passed explicitly.",
                 tip="Pass the missing generic argument into the call.")
 
@@ -675,7 +675,7 @@ class SemanticErrors:
         with different types. For example, "f[T](a: T, b: T)" called as "f(1, true)" would infer T as both BigInt and Bool.
         """
 
-        def add(self, generic_parameter: Asts.GenericParameterAst, inferred_1: Asts.Ast, inferred_2: Asts.Ast) -> SemanticError:
+        def add(self, generic_parameter_name: Asts.TypeAst, inferred_1: Asts.Ast, inferred_2: Asts.Ast) -> SemanticError:
             self.add_info(
                 ast=inferred_1,
                 tag=f"Generic inferred as '{inferred_1}' here")
@@ -695,10 +695,10 @@ class SemanticErrors:
         called as "f[Bool](true)" contains the redundant explicit generic argument, even if the type is correct.
         """
 
-        def add(self, generic_parameter: Asts.GenericParameterAst, explicit: Asts.Ast, inferred: Asts.Ast) -> SemanticError:
+        def add(self, generic_parameter_name: Asts.TypeAst, explicit: Asts.Ast, inferred: Asts.Ast) -> SemanticError:
             self.add_info(
                 ast=inferred,
-                tag=f"Generic parameter {generic_parameter} inferred from here")
+                tag=f"Generic parameter {generic_parameter_name} inferred from here")
 
             self.add_error(
                 ast=explicit,

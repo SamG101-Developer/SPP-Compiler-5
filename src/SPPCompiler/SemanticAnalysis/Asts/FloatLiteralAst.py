@@ -20,8 +20,7 @@ SIZE_MAPPING = {
     "f16": _signed_integer_limits(e=5, m=10),
     "f32": _signed_integer_limits(e=8, m=23),
     "f64": _signed_integer_limits(e=11, m=52),
-    "f128": _signed_integer_limits(e=14, m=113),
-    "f256": _signed_integer_limits(e=18, m=237)}
+    "f128": _signed_integer_limits(e=14, m=113)}
 
 
 @dataclass(slots=True)
@@ -71,8 +70,6 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 return CommonTypes.F64(self.pos)
             case type if type.type_parts[0].value == "f128":
                 return CommonTypes.F128(self.pos)
-            case type if type.type_parts[0].value == "f256":
-                return CommonTypes.F256(self.pos)
             case _:
                 raise
 
