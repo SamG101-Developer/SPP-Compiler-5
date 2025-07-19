@@ -445,6 +445,7 @@ class AstFunctionUtils:
             infer_target: Dict[Asts.IdentifierAst, Asts.TypeAst],
             sm: ScopeManager,
             owner: Asts.TypeAst | Asts.ExpressionAst = None,
+            owner_scope: Optional[Scope] = None,
             variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None,
             is_tuple_owner: bool = False,
             **kwargs)\
@@ -518,6 +519,9 @@ class AstFunctionUtils:
 
         # Infer the generic arguments from the source to the target. This maps arguments to parameters, or object
         # arguments to attributes etc.
+        # Todo: I think there is an optimization here? Instead of going through each generic parameter and then every
+        #  inferrable source/target, go through every inferrable source/target, and check if it matches any of the
+        #  generic parameters. This would reduce the number of iterations.
         for generic_parameter_name in generic_parameter_names:
 
             # Check every generic argument on the infer target (function parameters or attributes; these are the generic
@@ -525,13 +529,9 @@ class AstFunctionUtils:
             for infer_target_name, infer_target_type in infer_target.items():
                 inferred_generic_argument = None
 
-                # Check for direct match (a: T vs a: BigInt).
-                if infer_target_type == generic_parameter_name and infer_target_name in infer_source:
-                    inferred_generic_argument = infer_source[infer_target_name]
-
-                # Check for inner match (a: Vec[T] vs a: Vec[BigInt]).
-                elif infer_target_name in infer_source:
-                    inferred_generic_argument = infer_source[infer_target_name].get_corresponding_generic(infer_target_type, generic_parameter_name)
+                # Check for a direct match (a: T vs a: Str) or an inner match (a: Vec[T] vs a: Vec[BigInt]).
+                if infer_target_name in infer_source:
+                    inferred_generic_argument = infer_source[infer_target_name].without_convention.match_generic(infer_target_type.without_convention, generic_parameter_name)
 
                 # Handle the match if it exists.
                 if inferred_generic_argument:
@@ -543,7 +543,7 @@ class AstFunctionUtils:
 
         # Add any default generic arguments in that were missing.
         if sm.current_scope.get_symbol(owner):
-            tm = ScopeManager(sm.global_scope, sm.current_scope.get_symbol(owner).scope)
+            tm = ScopeManager(sm.global_scope, owner_scope)
             for optional_generic_parameter in optional_generic_parameters:
                 if optional_generic_parameter.name not in inferred_generic_arguments:
                     default = optional_generic_parameter.default
@@ -580,14 +580,18 @@ class AstFunctionUtils:
             formatted_generic_arguments[generic_parameter_name] = generic_parameter_value
 
         # Cross apply all generics. This allows generics from previous arguments to be used in future arguments. For
-        # example, "Cls[T, Vec[T]]" when "T=Str", creates "Vec[Str]".
+        # example, "type MyVec[T] = Vec[T, A=Alloc[T]]" would allow the "A" generic's "T" to also be substituted with
+        # whatever "T" is.
         for generic_parameter_name, generic_parameter_value in formatted_generic_arguments.copy().items():
+
+            # Can only cross-apply into NON-EXPLICIT generics
+            if generic_parameter_name in [g.name for g in explicit_generic_arguments]:
+                continue
+
             if isinstance(generic_parameter_value, Asts.TypeAst):
                 args_excluding_this_one = formatted_generic_arguments.copy()
                 del args_excluding_this_one[generic_parameter_name]
-
-                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(
-                    Asts.GenericArgumentGroupAst.from_dict(args_excluding_this_one).arguments)
+                formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(Asts.GenericArgumentGroupAst.from_dict(args_excluding_this_one).arguments)
 
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
         # GenericXXXArgumentASTs. Todo: pos_adjust?
@@ -612,16 +616,17 @@ class AstFunctionUtils:
                     # For a variadic comp argument, check every element of the args tuple.
                     if isinstance(comp_param, Asts.GenericCompParameterVariadicAst):
                         for a_type_inner in a_type.type_parts[0].generic_argument_group.arguments:
-                            if not AstTypeUtils.symbolic_eq(p_type, a_type_inner.value, sm.current_scope.get_symbol(owner).scope, sm.current_scope):
+                            if not AstTypeUtils.symbolic_eq(p_type, a_type_inner.value, owner_scope, sm.current_scope):
                                 raise SemanticErrors.TypeMismatchError().add(
                                     comp_param, p_type, comp_arg, a_type_inner.value).scopes(sm.current_scope)
 
                     # Otherwise, just check the argument type against the parameter type.
-                    elif not AstTypeUtils.symbolic_eq(p_type, a_type, sm.current_scope.get_symbol(owner).scope, sm.current_scope):
+                    elif not AstTypeUtils.symbolic_eq(p_type, a_type, owner_scope, sm.current_scope):
                         raise SemanticErrors.TypeMismatchError().add(
                             comp_param, p_type, comp_arg, a_type).scopes(sm.current_scope)
 
         # Return the fully inferred generic arguments, which are now named and ordered correctly.
+        # print(f"Final inferred generic arguments: {[str(a) for a in final_args]}")
         return final_args
 
     @staticmethod
