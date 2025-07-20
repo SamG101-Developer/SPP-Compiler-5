@@ -49,14 +49,11 @@ class IsExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return CommonTypes.Bool(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # The TypeAst cannot be used as an expression for a binary operation.
+        # The TypeAst cannot be used as an expression for a binary operation. todo: TokenAst check?
         if isinstance(self.lhs, Asts.TypeAst):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs).scopes(sm.current_scope)
         if isinstance(self.rhs, Asts.TypeAst):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs).scopes(sm.current_scope)
-
-        # Analyse the LHS of the binary expression.
-        self.lhs.analyse_semantics(sm, **kwargs)
 
         # Convert to a "case" destructure and analyse it.
         n = len(sm.current_scope.children)
