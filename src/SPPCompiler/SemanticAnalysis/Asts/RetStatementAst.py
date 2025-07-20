@@ -42,6 +42,11 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
+        if isinstance(self.expr, (Asts.TokenAst, Asts.TypeAst)):
+            raise SemanticErrors.ExpressionTypeInvalidError().add(
+                self.expr).scopes(sm.current_scope)
+
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token_type != SppTokenType.KwFun and self.expr:
             raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(

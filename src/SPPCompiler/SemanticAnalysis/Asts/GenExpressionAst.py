@@ -51,6 +51,11 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return send_type
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
+        if isinstance(self.expr, (Asts.TokenAst, Asts.TypeAst)):
+            raise SemanticErrors.ExpressionTypeInvalidError().add(
+                self.expr).scopes(sm.current_scope)
+
         # Check the enclosing function is a coroutine and not a subroutine.
         function_flavour = kwargs["function_type"]
         if function_flavour.token_type != SppTokenType.KwCor:
