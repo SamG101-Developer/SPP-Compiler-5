@@ -51,11 +51,27 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
         self.class_type.analyse_semantics(sm, **kwargs)
         self.class_type = sm.current_scope.get_symbol(self.class_type).fq_name
 
-        # Flow type the condition symbol if necessary.
+        # Get the symbol for the condition, if it exists.
         cond_sym = sm.current_scope.get_symbol(cond, sym_type=VariableSymbol)
-        is_cond_type_variant = cond_sym and AstTypeUtils.is_type_variant(cond_sym.type, sm.current_scope)
 
-        if cond_sym and is_cond_type_variant:
+        # Dummy let statement, to hold the condition if it is non-symbolic.
+        if cond_sym is None:
+            cond_type = cond.infer_type(sm, **kwargs)
+
+            # Create a variable and let statement ast for the condition.
+            var_ast = Asts.LocalVariableSingleIdentifierAst(pos=cond.pos, name=Asts.IdentifierAst(self.pos, f"$_{id(self)}"))
+            let_ast = Asts.LetStatementUninitializedAst(pos=cond.pos, assign_to=var_ast, type=cond_type)
+            let_ast.analyse_semantics(sm, explicit_type=cond_type, **kwargs)
+
+            # Set the memory information of the symbol based on the type of iteration.
+            cond = var_ast.name
+            cond_sym = sm.current_scope.get_symbol(cond)
+            cond_sym.memory_info.initialized_by(self)
+
+        # Flow type the condition symbol if necessary.
+        is_cond_type_variant = AstTypeUtils.is_type_variant(cond_sym.type, sm.current_scope)
+
+        if is_cond_type_variant:
             if not AstTypeUtils.symbolic_eq(cond_sym.type, self.class_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     cond, cond_sym.type, self.class_type, self.class_type).scopes(sm.current_scope)
