@@ -537,7 +537,7 @@ class SppParser:
     def parse_generic_inline_constraints(self) -> Optional[Asts.GenericTypeParameterInlineConstraintsAst]:
         p1 = self.parse_once(self.parse_token_colon)
         if p1 is None: return None
-        p2 = self.parse_one_or_more(self.parse_type, self.parse_token_comma)
+        p2 = self.parse_one_or_more(self.parse_type, self.parse_token_ampersand)
         if p2 is None: return None
         return Asts.GenericTypeParameterInlineConstraintsAst(p1.pos, p1, p2)
 
