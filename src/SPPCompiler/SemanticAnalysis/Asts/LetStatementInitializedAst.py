@@ -64,20 +64,21 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if isinstance(self.value, Asts.PostfixExpressionAst) and isinstance(self.value.op, Asts.PostfixExpressionOperatorFunctionCallAst):
             kwargs |= {"inferred_return_type": self.explicit_type}
 
-        self.value.analyse_semantics(sm, **(kwargs | {"assignment": self.assign_to.extract_names}))
-
-        # If an explicit type has been given, analyse it and then check it against the value type.
+        # If an explicit type has been given, analyse it before value analysis.
         if self.explicit_type is not None:
             self.explicit_type.analyse_semantics(sm, **kwargs)
 
-            # This allows a variant type as the annotation with a composite-type value.
-            if not AstTypeUtils.symbolic_eq(self.explicit_type, val_type := self.value.infer_type(sm, **kwargs), sm.current_scope, sm.current_scope):
+        self.value.analyse_semantics(sm, **(kwargs | {"assignment": self.assign_to.extract_names}))
+
+        # This allows a variant type as the annotation with a composite-type value.
+        if self.explicit_type is not None:
+            if not AstTypeUtils.symbolic_eq(self.explicit_type, val_type := self.value.infer_type(sm, **(kwargs | {"assignment_type": self.explicit_type})), sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     self.explicit_type, self.explicit_type, self.value, val_type).scopes(sm.current_scope)
 
         # Ensure each destructuring part is valid.
         kwargs.pop("explicit_type", None)
-        self.assign_to.analyse_semantics(sm, value=self.value, explicit_type=self.explicit_type, **kwargs)
+        self.assign_to.analyse_semantics(sm, value=self.value, explicit_type=self.explicit_type, **(kwargs | {"assignment_type": self.explicit_type}))
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         kwargs.pop("value", None)
