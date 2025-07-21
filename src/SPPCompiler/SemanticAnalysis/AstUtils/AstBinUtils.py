@@ -122,8 +122,11 @@ class AstBinUtils:
     def _convert_binary_expression_to_function_call(ast: Asts.BinaryExpressionAst, sm: ScopeManager) -> Asts.PostfixExpressionAst:
         # Get the method named based on the operator token type ("+" => "add"), and create a function call.
         method_name = BINARY_METHODS.get(ast.op.token_type, None)
-        function_call_ast = CodeInjection.inject_code(
-            f"{ast.lhs}.{method_name}()", SppParser.parse_postfix_expression, pos_adjust=ast.pos)
+
+        new_ast = Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(pos=ast.lhs.pos, new_field=Asts.IdentifierAst(value=method_name))
+        new_ast = Asts.PostfixExpressionAst(pos=ast.lhs.pos, lhs=ast.lhs, op=new_ast)
+        function_call_ast = Asts.PostfixExpressionOperatorFunctionCallAst(pos=ast.pos)
+        function_call_ast = Asts.PostfixExpressionAst(pos=ast.pos, lhs=new_ast, op=function_call_ast)
 
         # Apply the correct "self" convention based on comparison vs mathematical operators.
         convention = None
