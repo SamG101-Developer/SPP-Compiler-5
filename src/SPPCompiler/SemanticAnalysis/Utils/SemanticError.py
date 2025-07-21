@@ -1887,3 +1887,41 @@ class SemanticErrors:
                 tip="Change the expression type to superimpose the Try type.")
 
             return self
+
+    class InvalidDereferenceExpressionConvention(SemanticError):
+        """
+        The InvalidDereferenceExpressionConvention error is raised if a dereference expression has an invalid expression
+        convention; a dereference operation can only occur on borrow-convention types.
+        """
+
+        def add(self, deref_tok: Asts.UnaryExpressionOperatorDerefAst, rhs: Asts.ExpressionAst, rhs_type: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=deref_tok,
+                tag="Dereference expression defined here")
+
+            self.add_error(
+                ast=rhs,
+                tag=f"Type inferred as '{rhs_type}'",
+                msg="Dereference expressions can only occur on borrow-convention types.",
+                tip="Change the expression type to a borrow-convention type, or remove the dereference operator.")
+
+            return self
+
+    class InvalidDereferenceExpressionType(SemanticError):
+        """
+        The InvalidDereferenceExpressionType error is raised if a dereference expression has an invalid type; a
+        dereference operation can only occur on a type that superimposes "Copy".
+        """
+
+        def add(self, deref_tok: Asts.UnaryExpressionOperatorDerefAst, rhs: Asts.ExpressionAst, rhs_type: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=deref_tok,
+                tag="Dereference expression defined here")
+
+            self.add_error(
+                ast=rhs,
+                tag=f"Type inferred as '{rhs_type}'",
+                msg="Dereference expressions can only occur on copyable types.",
+                tip="Change the expression type to a copyable type.")
+
+            return self
