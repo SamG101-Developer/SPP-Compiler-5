@@ -189,8 +189,8 @@ class AstMemoryUtils:
         var_scope, var_sym = sm.current_scope.get_variable_symbol_outermost_part(value_ast, get_scope=True)
         if not var_sym:
             return
-        copies = sm.current_scope.get_symbol(var_sym.type).is_copyable
-        partial_copies = sm.current_scope.get_symbol(value_ast.infer_type(sm, **kwargs)).is_copyable
+        copies = var_scope.get_symbol(var_sym.type).is_copyable()
+        partial_copies = var_scope.get_symbol(value_ast.infer_type(sm, **kwargs)).is_copyable()
 
         # An identifier that is a namespace cannot be used as an expression. As all expressions are analysed in this
         # function, the check is performed here.
