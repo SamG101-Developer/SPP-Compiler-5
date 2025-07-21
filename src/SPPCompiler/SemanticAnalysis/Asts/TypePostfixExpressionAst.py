@@ -41,7 +41,7 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
 
     @property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
-        return CommonTypes.Opt(self.pos, self.lhs).fq_type_parts if isinstance(self.op, Asts.TypePostfixOperatorOptionalTypeAst) else self.lhs.fq_type_parts + self.op.fq_type_parts
+        return CommonTypes.Opt(self.pos, self.lhs).fq_type_parts if type(self.op) is Asts.TypePostfixOperatorOptionalTypeAst else self.lhs.fq_type_parts + self.op.fq_type_parts
 
     @FunctionCache.cache_property
     def without_generics(self) -> Optional[Asts.TypeAst]:
@@ -83,6 +83,14 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         if type(self.op) is Asts.TypePostfixOperatorOptionalTypeAst:
             return CommonTypes.Opt(self.pos, self.lhs.convert())
         return self
+
+    @FunctionCache.cache_property
+    def namespace_parts(self) -> list[Asts.IdentifierAst]:
+        return self.lhs.namespace_parts + self.op.name.namespace_parts
+
+    @FunctionCache.cache_property
+    def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
+        return self.lhs.type_parts + self.op.name.type_parts
 
     def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs.substituted_generics(generic_arguments), op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.substituted_generics(generic_arguments)))

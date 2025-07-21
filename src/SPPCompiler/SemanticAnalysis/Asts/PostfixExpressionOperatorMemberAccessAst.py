@@ -107,7 +107,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     self.field, "static member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
 
             # Check there is only 1 target field on the type at the highest level.
-            if lhs_symbol.scope.get_symbol(self.field, sym_type=VariableSymbol).type.type_parts[-1].value.startswith("$"):
+            if lhs_symbol.scope.get_symbol(self.field, sym_type=VariableSymbol).type.type_parts[-1].value[0] == "$":
                 return
             sss = []
             for scope in [lhs_symbol.scope] + lhs_symbol.scope.sup_scopes:
@@ -162,7 +162,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     self.field, "runtime member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
 
             # Check there is only 1 target field on the type at the highest level.
-            if lhs_symbol.scope.get_symbol(self.field, sym_type=VariableSymbol).type.type_parts[-1].value.startswith("$"):
+            if lhs_symbol.scope.get_symbol(self.field, sym_type=VariableSymbol).type.type_parts[-1].value[0] == "$":
                 return
             sss = []
             for scope in [lhs_symbol.scope] + lhs_symbol.scope.sup_scopes:

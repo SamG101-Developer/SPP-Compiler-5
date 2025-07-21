@@ -192,7 +192,7 @@ def check_conflicting_type_statements(cls_symbol: TypeSymbol, super_scope: Scope
     existing_type_names = SequenceUtils.flatten([
         [m.new_type for m in s._ast.body.members if type(m) is Asts.SupTypeStatementAst]
         for s in cls_symbol.scope._direct_sup_scopes
-        if isinstance(s._ast, Asts.SupPrototypeAst)
+        if type(s._ast) is Asts.SupPrototypeExtensionAst or type(s._ast) is Asts.SupPrototypeFunctionsAst
            and AstTypeUtils.relaxed_symbolic_eq(super_scope._ast.name, s._ast.name, super_scope, s._ast._scope)])
 
     if duplicates := SequenceUtils.duplicates(existing_type_names):
@@ -207,7 +207,7 @@ def check_conflicting_cmp_statements(cls_symbol: TypeSymbol, super_scope: Scope,
     existing_cmp_names = SequenceUtils.flatten([
         [m.name for m in s._ast.body.members if type(m) is Asts.SupCmpStatementAst and m.type.type_parts[-1].value[0] != "$"]
         for s in cls_symbol.scope._direct_sup_scopes
-        if isinstance(s._ast, Asts.SupPrototypeAst)
+        if type(s._ast) is Asts.SupPrototypeExtensionAst or type(s._ast) is Asts.SupPrototypeFunctionsAst
            and AstTypeUtils.relaxed_symbolic_eq(super_scope._ast.name, s._ast.name, super_scope, s._ast._scope)])
 
     if duplicates := SequenceUtils.duplicates(existing_cmp_names):

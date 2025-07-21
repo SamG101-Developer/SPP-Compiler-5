@@ -199,11 +199,11 @@ class Scope:
             sym_type: Optional[type] = None, debug: bool = False) -> bool:
 
         # Get the symbol and check if it is None or not (None => not found).
-        return self.get_symbol(name, exclusive, ignore_alias=True, sym_type=sym_type, debug=debug) is not None
+        return self.get_symbol(name, exclusive, ignore_alias=True, sym_type=sym_type) is not None
 
     def get_symbol(
             self, name: Asts.IdentifierAst | Asts.TypeAst, exclusive: bool = False,
-            ignore_alias: bool = False, sym_type: Optional[type] = None, debug: bool = False) -> Optional[Symbol]:
+            ignore_alias: bool = False, sym_type: Optional[type] = None) -> Optional[Symbol]:
 
         # Adjust the namespace and symbol name for namespaced typ symbols.
         scope = self
@@ -218,11 +218,11 @@ class Scope:
 
         # If this is not an exclusive search, search the parent scope.
         if symbol is None and scope._parent and not exclusive:
-            symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias, sym_type=sym_type, debug=debug)
+            symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias, sym_type=sym_type)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
         if symbol is None:
-            symbol = search_super_scopes(scope, name, ignore_alias=ignore_alias, sym_type=sym_type, debug=debug)
+            symbol = search_super_scopes(scope, name, ignore_alias=ignore_alias, sym_type=sym_type)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
         if type(symbol) is AliasSymbol and symbol.old_sym and not ignore_alias:
@@ -411,7 +411,7 @@ def search_super_scopes(
     # Recursively search the super scopes for a variable symbol.
     symbol = None
     for super_scope in scope._direct_sup_scopes:
-        symbol = super_scope.get_symbol(name, exclusive=True, ignore_alias=ignore_alias, sym_type=sym_type, debug=debug)
+        symbol = super_scope.get_symbol(name, exclusive=True, ignore_alias=ignore_alias, sym_type=sym_type)
         if symbol: break
     return symbol
 
