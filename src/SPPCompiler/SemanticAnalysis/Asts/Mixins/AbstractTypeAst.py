@@ -38,6 +38,10 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
     all utility methods.
     """
 
+    @abstractmethod
+    def is_never_type(self) -> bool:
+        ...
+
     @property
     @abstractmethod
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:

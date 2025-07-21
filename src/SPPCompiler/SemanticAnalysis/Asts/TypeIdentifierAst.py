@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     value: str = field(default="")
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default=None)
+    is_never: bool = field(default=False, repr=False)
 
     def __post_init__(self) -> None:
         self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=0)
@@ -47,7 +48,9 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
                 yield from g.value
 
     def __deepcopy__(self, memodict=None) -> TypeIdentifierAst:
-        return TypeIdentifierAst(pos=self.pos, value=self.value, generic_argument_group=fast_deepcopy(self.generic_argument_group))
+        return TypeIdentifierAst(
+            pos=self.pos, value=self.value, generic_argument_group=fast_deepcopy(self.generic_argument_group),
+            is_never=self.is_never)
 
     def __json__(self) -> str:
         return self.value
@@ -69,6 +72,13 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
     @staticmethod
     def from_string(value: str) -> TypeIdentifierAst:
         return CodeInjection.inject_code(value, SppParser.parse_type, pos_adjust=0)
+
+    @staticmethod
+    def never_type(pos: int = 0) -> TypeIdentifierAst:
+        return TypeIdentifierAst(pos=pos, value="Never", is_never=True)
+
+    def is_never_type(self) -> bool:
+        return self.is_never
 
     @property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
@@ -96,7 +106,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
     @property
     def pos_end(self) -> int:
-        return self.generic_argument_group.pos_end if self.generic_argument_group.arguments else self.pos + len(self.value)
+        return self.pos + len(self.value)
 
     def convert(self) -> Asts.TypeAst:
         return self
@@ -137,9 +147,10 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
         # Todo: comp args will probably fail here?
         def custom_iterate(t: Asts.TypeAst, depth: int) -> Iterator[tuple[Asts.GenericArgumentAst, int]]:
-            for g in t.type_parts[-1].generic_argument_group.get_type_args():
+            for g in t.type_parts[-1].generic_argument_group.arguments:
                 yield g, depth
-                yield from custom_iterate(g.value, depth + 1)
+                if isinstance(g, Asts.GenericTypeArgumentAst):
+                    yield from custom_iterate(g.value, depth + 1)
 
         self_parts = custom_iterate(self, 0)
         that_parts = custom_iterate(that, 0)
@@ -178,7 +189,12 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
                 g.value.analyse_semantics(sm, skip_generic_check=True, **kwargs)
             except SemanticErrors.IdentifierUnknownError:
                 continue
-            g.value = sm.current_scope.get_symbol(g.value.without_generics).fq_name.with_generics(g.value.type_parts[-1].generic_argument_group).with_convention(g.value.convention)
+
+            try:
+                generics = sm.current_scope.get_symbol(g.value).fq_name.type_parts[-1].generic_argument_group
+            except AttributeError:
+                generics = g.value.type_parts[-1].generic_argument_group
+            g.value = sm.current_scope.get_symbol(g.value.without_generics).fq_name.with_generics(generics).with_convention(g.value.convention)
 
     def analyse_semantics(
             self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None,
@@ -191,6 +207,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
         type_symbol = AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.without_generics, ignore_alias=True)
         type_scope = type_symbol.scope
         if type_symbol.is_generic: return
+        if self.value == "Self": return
 
         # Name all the generic arguments.
         is_tuple = type_symbol.fq_name.without_generics == CommonTypesPrecompiled.EMPTY_TUP
@@ -212,12 +229,9 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
             generic_parameters=type_symbol.type.generic_parameter_group.parameters,
             optional_generic_parameters=type_symbol.type.generic_parameter_group.get_optional_params(),
             explicit_generic_arguments=self.generic_argument_group.arguments,
-            infer_source=generic_infer_source or {},
-            infer_target=generic_infer_target or {},
-            sm=sm,
-            owner=owner,
-            owner_scope=x.scope if (x := sm.current_scope.get_symbol(owner)) else None,
-            is_tuple_owner=is_tuple,
+            infer_source=generic_infer_source or {}, infer_target=generic_infer_target or {},
+            sm=sm, owner=owner, owner_scope=x.scope if (x := sm.current_scope.get_symbol(owner)) else None,
+            owner_ast=self, is_tuple_owner=is_tuple,
             **kwargs)
 
         # For variant types, collapse any duplicate generic arguments.
@@ -244,7 +258,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
                 new_alias_symbol = AliasSymbol(
                     name=new_scope.type_symbol.name, type=new_scope.type_symbol.type, scope=new_scope,
                     scope_defined_in=new_scope.type_symbol.scope_defined_in,
-                    is_generic=new_scope.type_symbol.is_generic, is_copyable=new_scope.type_symbol.is_copyable,
+                    is_generic=new_scope.type_symbol.is_generic, is_direct_copyable=new_scope.type_symbol.is_copyable(),
                     old_sym=sm.current_scope.get_symbol(old_type))
 
                 new_scope.parent.rem_symbol(new_scope.type_symbol.name)

@@ -400,6 +400,12 @@ class AstTypeUtils:
         if not isinstance(lhs_type, Asts.TypeAst):
             return lhs_type == rhs_type
 
+        # Handle the "!" never type.
+        if rhs_type.is_never_type():
+            return True
+        if lhs_type.is_never_type():
+            return rhs_type.is_never_type()
+
         # Do a convention-match check.
         if type(lhs_type.convention) is not type(rhs_type.convention):
             if not (type(lhs_type.convention) is Asts.ConventionRefAst and type(rhs_type.convention) is Asts.ConventionMutAst):

@@ -7,6 +7,13 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 class CommonTypes:
     @staticmethod
+    def Never(pos: int):
+        type = Asts.TypeIdentifierAst.never_type(pos)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "never")), type)
+        type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "std")), type)
+        return type
+
+    @staticmethod
     def U8(pos: int):
         type = Asts.TypeIdentifierAst(pos, "U8")
         type = Asts.TypeUnaryExpressionAst(pos, Asts.TypeUnaryOperatorNamespaceAst(pos, Asts.IdentifierAst(pos, "number")), type)
@@ -413,6 +420,7 @@ class CommonTypesPrecompiled:
     BOOL: Asts.TypeAst = "Pending..."
     STR: Asts.TypeAst = "Pending..."
     TRY: Asts.TypeAst = "Pending..."
+    NEVER: Asts.TypeAst = "Pending..."
 
     @staticmethod
     def initialize():
@@ -458,6 +466,7 @@ class CommonTypesPrecompiled:
         CommonTypesPrecompiled.BOOL = CommonTypes.Bool(pos=0).without_generics
         CommonTypesPrecompiled.STR = CommonTypes.Str(pos=0).without_generics
         CommonTypesPrecompiled.TRY = CommonTypes.Try(pos=0).without_generics
+        CommonTypesPrecompiled.NEVER = CommonTypes.Never(pos=0).without_generics
 
 
 __all__ = [
