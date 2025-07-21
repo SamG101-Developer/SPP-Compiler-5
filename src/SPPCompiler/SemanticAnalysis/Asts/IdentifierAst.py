@@ -29,9 +29,9 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return hash(self.value)
 
     def __add__(self, other: IdentifierAst | str) -> IdentifierAst:
-        if isinstance(other, str):
+        if type(other) is str:
             self.value += other
-        elif isinstance(other, IdentifierAst):
+        elif type(other) is IdentifierAst:
             self.value += other.value
         else:
             raise TypeError(f"Unsupported type for concatenation: {type(other)}")

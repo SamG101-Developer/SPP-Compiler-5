@@ -52,7 +52,7 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightSquareBracket)
 
     def __eq__(self, other: ArrayLiteral0ElementAst) -> bool:
-        return isinstance(other, ArrayLiteral0ElementAst)
+        return type(other) is ArrayLiteral0ElementAst
 
     def __hash__(self) -> int:
         return id(self)

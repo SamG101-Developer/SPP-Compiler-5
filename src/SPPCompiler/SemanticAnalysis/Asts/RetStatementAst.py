@@ -54,7 +54,7 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expr:
-            if isinstance(self.expr, Asts.PostfixExpressionAst) and isinstance(self.expr.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+            if type(self.expr) is Asts.PostfixExpressionAst and type(self.expr.op) is Asts.PostfixExpressionOperatorFunctionCallAst:
                 kwargs |= {"inferred_return_type": kwargs["function_ret_type"][0]}
 
             self.expr.analyse_semantics(sm, **kwargs)

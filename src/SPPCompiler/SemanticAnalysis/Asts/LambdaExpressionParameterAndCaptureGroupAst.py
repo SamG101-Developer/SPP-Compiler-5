@@ -63,8 +63,8 @@ class LambdaExpressionParameterAndCaptureGroupAst(Asts.Ast):
             # Apply the borrow to the symbol.
             sym: VariableSymbol = sm.current_scope.get_symbol(cap.value)
             sym.memory_info.ast_borrowed = cap.convention
-            sym.memory_info.is_borrow_mut = isinstance(cap.convention, Asts.ConventionMutAst)
-            sym.memory_info.is_borrow_ref = isinstance(cap.convention, Asts.ConventionRefAst)
+            sym.memory_info.is_borrow_mut = type(cap.convention) is Asts.ConventionMutAst
+            sym.memory_info.is_borrow_ref = type(cap.convention) is Asts.ConventionRefAst
 
             # Apply the borrow to the type.
             sym.type = sym.type.with_convention(cap.convention)

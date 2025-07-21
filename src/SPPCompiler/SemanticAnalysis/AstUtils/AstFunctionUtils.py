@@ -53,25 +53,25 @@ class AstFunctionUtils:
         """
 
         # Runtime access into an object: "object.method()".
-        if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
+        if type(lhs) is Asts.PostfixExpressionAst and lhs.op.is_runtime_access():
             function_owner_type = lhs.lhs.infer_type(sm, **kwargs)
             function_name = lhs.op.field
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
 
         # Static access into a type: "Type::method()" or "ns::Type::method()".
-        elif isinstance(lhs, Asts.PostfixExpressionAst) and isinstance(lhs.lhs, Asts.TypeAst) and lhs.op.is_static_access():
+        elif type(lhs) is Asts.PostfixExpressionAst and isinstance(lhs.lhs, Asts.TypeAst) and lhs.op.is_static_access():
             function_owner_type = lhs.lhs
             function_name = lhs.op.field
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
 
         # Direct access into a namespaced free function: "std::console::print("hello")".
-        elif isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_static_access():
+        elif type(lhs) is Asts.PostfixExpressionAst and lhs.op.is_static_access():
             function_owner_scope = sm.current_scope.get_namespace_symbol(lhs.lhs).scope
             function_name = lhs.op.field
             function_owner_type = function_owner_scope.get_symbol(function_name).type
 
         # Direct access into a non-namespaced function: "function()".
-        elif isinstance(lhs, Asts.IdentifierAst):
+        elif type(lhs) is Asts.IdentifierAst:
             function_owner_type = None
             function_name = lhs
             function_owner_scope = sm.current_scope.parent_module
@@ -149,7 +149,7 @@ class AstFunctionUtils:
             be inherited into the function signature.
         """
 
-        if not isinstance(target_function_name, Asts.IdentifierAst):
+        if type(target_function_name) is not Asts.IdentifierAst:
             return []
 
         # Get the function-type name from the function: "$Func" from "func()".
@@ -175,7 +175,7 @@ class AstFunctionUtils:
         else:
 
             # If a class scope was provided as the function owner scope, then check all associated super scopes.
-            if isinstance(target_scope._ast, Asts.ClassPrototypeAst):
+            if type(target_scope._ast) is Asts.ClassPrototypeAst:
                 sup_scopes = target_scope.sup_scopes
 
             # Otherwise, just use the super scope that was provided, as this isa more "refined" search.
@@ -184,7 +184,7 @@ class AstFunctionUtils:
 
             # From the super scopes, check each one for "sup $Func ext FunXXX { ... }" superimpositions.
             for sup_scope in sup_scopes:
-                for sup_ast in [m for m in sup_scope._ast.body.members if isinstance(m, Asts.SupPrototypeExtensionAst) and m.name == target_function_name]:
+                for sup_ast in [m for m in sup_scope._ast.body.members if type(m) is Asts.SupPrototypeExtensionAst and m.name == target_function_name]:
                     generics = Asts.GenericArgumentGroupAst(arguments=sup_scope.generics)
                     overload_scopes_and_info.append((sup_scope, sup_ast._scope._ast.body.members[0], generics))
 
@@ -311,9 +311,9 @@ class AstFunctionUtils:
         """
 
         # Get the argument names and parameter names, and check for the existence of a variadic parameter.
-        argument_names = [a.name for a in arguments if isinstance(a, Asts.FunctionCallArgumentNamedAst)]
+        argument_names = [a.name for a in arguments if type(a) is Asts.FunctionCallArgumentNamedAst]
         parameter_names = [parameter.extract_name for parameter in parameters]
-        is_variadic = parameters and isinstance(parameters[-1], Asts.FunctionParameterVariadicAst)
+        is_variadic = parameters and type(parameters[-1]) is Asts.FunctionParameterVariadicAst
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
         if invalid_argument_names := OrderedSet(argument_names) - OrderedSet(parameter_names):
@@ -322,7 +322,7 @@ class AstFunctionUtils:
         parameter_names = OrderedSet(parameter_names) - OrderedSet(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
-        for i, unnamed_argument in enumerate([a for a in arguments if isinstance(a, Asts.FunctionCallArgumentUnnamedAst)]):
+        for i, unnamed_argument in enumerate([a for a in arguments if type(a) is Asts.FunctionCallArgumentUnnamedAst]):
 
             parameter_name = parameter_names.pop(0)
             named_argument = Asts.FunctionCallArgumentNamedAst(pos=unnamed_argument.pos, name=parameter_name)
@@ -626,7 +626,6 @@ class AstFunctionUtils:
                             comp_param, p_type, comp_arg, a_type).scopes(sm.current_scope)
 
         # Return the fully inferred generic arguments, which are now named and ordered correctly.
-        # print(f"Final inferred generic arguments: {[str(a) for a in final_args]}")
         return final_args
 
     @staticmethod

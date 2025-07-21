@@ -52,7 +52,7 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 self.value).scopes(sm.current_scope)
 
         # An explicit type can only be applied if the LHS is a single identifier.
-        if self.explicit_type is not None and not isinstance(self.assign_to, Asts.LocalVariableSingleIdentifierAst):
+        if self.explicit_type is not None and type(self.assign_to) is not Asts.LocalVariableSingleIdentifierAst:
             raise SemanticErrors.InvalidTypeAnnotationError().add(
                 self.explicit_type, self.assign_to).scopes(sm.current_scope)
 
@@ -61,7 +61,7 @@ class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.explicit_type.analyse_semantics(sm, **kwargs)
 
         # Analyse the value to ensure its valid before any destructuring takes place.
-        if isinstance(self.value, Asts.PostfixExpressionAst) and isinstance(self.value.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+        if type(self.value) is Asts.PostfixExpressionAst and type(self.value.op) is Asts.PostfixExpressionOperatorFunctionCallAst:
             kwargs |= {"inferred_return_type": self.explicit_type}
 
         # If an explicit type has been given, analyse it before value analysis.

@@ -102,7 +102,7 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             e.analyse_semantics(sm, **kwargs)
 
         for i, e in enumerate(self.rhs):
-            if isinstance(e, Asts.PostfixExpressionAst) and isinstance(e.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+            if type(e) is Asts.PostfixExpressionAst and type(e.op) is Asts.PostfixExpressionOperatorFunctionCallAst:
                 kwargs |= {"inferred_return_type": self.lhs[i].infer_type(sm, **kwargs)}
             e.analyse_semantics(sm, **(kwargs | {"assignment": [self.lhs[i]]}))
 
@@ -115,17 +115,17 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for (lhs_expr, rhs_expr), lhs_sym in zip(zip(self.lhs, self.rhs), lhs_syms):
 
             # Full assignment (ie "x = y") requires the "x" symbol to be marked as "mut".
-            if isinstance(lhs_expr, Asts.IdentifierAst) and not (lhs_sym.is_mutable or lhs_sym.memory_info.initialization_counter == 0):
+            if type(lhs_expr) is Asts.IdentifierAst and not (lhs_sym.is_mutable or lhs_sym.memory_info.initialization_counter == 0):
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
                     lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
             # Attribute assignment (ie "x.y = z"), for a non-borrowed symbol, requires an outermost "mut" symbol.
-            elif isinstance(lhs_expr, Asts.PostfixExpressionAst) and (not lhs_sym.memory_info.ast_borrowed and not lhs_sym.is_mutable):
+            elif type(lhs_expr) is Asts.PostfixExpressionAst and (not lhs_sym.memory_info.ast_borrowed and not lhs_sym.is_mutable):
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
                     lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
             # Attribute assignment (ie "x.y = z"), for a borrowed symbol, cannot contain an immutable borrow.
-            elif isinstance(lhs_expr, Asts.PostfixExpressionAst) and lhs_sym.memory_info.is_borrow_ref:
+            elif type(lhs_expr) is Asts.PostfixExpressionAst and lhs_sym.memory_info.is_borrow_ref:
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
                     lhs_sym.name, self.op, lhs_sym.memory_info.ast_borrowed).scopes(sm.current_scope)
 
@@ -183,7 +183,7 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                     **kwargs)
 
             # Extra check to prevent "let: Type" being assigned more than once (bypasses lack of "mut").
-            if isinstance(lhs_expr, Asts.IdentifierAst) and not lhs_sym.is_mutable and lhs_sym.memory_info.initialization_counter == 1:
+            if type(lhs_expr) is Asts.IdentifierAst and not lhs_sym.is_mutable and lhs_sym.memory_info.initialization_counter == 1:
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
                     lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(sm.current_scope)
 

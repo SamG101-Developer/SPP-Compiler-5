@@ -29,7 +29,7 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Optional"
 
     def __eq__(self, other: GenericCompParameterOptionalAst) -> bool:
-        return isinstance(other, GenericCompParameterOptionalAst) and self.name == other.name
+        return type(other) is GenericCompParameterOptionalAst and self.name == other.name
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

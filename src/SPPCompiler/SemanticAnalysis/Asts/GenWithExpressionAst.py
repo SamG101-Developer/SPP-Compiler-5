@@ -58,7 +58,7 @@ class GenWithExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.FunctionSubroutineContainsGenExpressionError().add(function_flavour, self.kw_gen).scopes(sm.current_scope)
 
         # Handle the return type inference that may be required.
-        if isinstance(self.expr, Asts.PostfixExpressionAst) and isinstance(self.expr.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+        if type(self.expr) is Asts.PostfixExpressionAst and type(self.expr.op) is Asts.PostfixExpressionOperatorFunctionCallAst:
             gen_type, yield_type, *_ = AstTypeUtils.get_generator_and_yielded_type(kwargs["function_ret_type"][0], sm, kwargs["function_ret_type"][0], "coroutine")
             kwargs |= {"inferred_return_type": kwargs["function_ret_type"][0]}
 

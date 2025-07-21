@@ -59,7 +59,7 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         generic_infer_source = {
             a.name: self.object_argument_group.get_arg_val(a).infer_type(sm, **kwargs)
             for a in self.object_argument_group.arguments
-            if isinstance(a.name, Asts.IdentifierAst)}  # todo: why constrain to IdentifierAst?
+            if type(a.name) is Asts.IdentifierAst}  # todo: why constrain to IdentifierAst?
 
         generic_infer_target = {
             a.name: base_symbol.scope.get_symbol(a.type).fq_name

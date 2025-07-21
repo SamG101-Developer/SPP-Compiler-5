@@ -184,7 +184,7 @@ def check_conflicting_type_statements(cls_symbol: TypeSymbol, super_scope: Scope
 
     # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
     existing_type_names = SequenceUtils.flatten([
-        [m.new_type for m in s._ast.body.members if isinstance(m, Asts.SupTypeStatementAst)]
+        [m.new_type for m in s._ast.body.members if type(m) is Asts.SupTypeStatementAst]
         for s in cls_symbol.scope._direct_sup_scopes
         if isinstance(s._ast, Asts.SupPrototypeAst)
            and AstTypeUtils.relaxed_symbolic_eq(super_scope._ast.name, s._ast.name, super_scope, s._ast._scope)])
@@ -199,7 +199,7 @@ def check_conflicting_cmp_statements(cls_symbol: TypeSymbol, super_scope: Scope,
 
     # Prevent duplicate cmp declarations by checking if the cmp statements appear in any super class.
     existing_cmp_names = SequenceUtils.flatten([
-        [m.name for m in s._ast.body.members if isinstance(m, Asts.SupCmpStatementAst) and m.type.type_parts[-1].value[0] != "$"]
+        [m.name for m in s._ast.body.members if type(m) is Asts.SupCmpStatementAst and m.type.type_parts[-1].value[0] != "$"]
         for s in cls_symbol.scope._direct_sup_scopes
         if isinstance(s._ast, Asts.SupPrototypeAst)
            and AstTypeUtils.relaxed_symbolic_eq(super_scope._ast.name, s._ast.name, super_scope, s._ast._scope)])

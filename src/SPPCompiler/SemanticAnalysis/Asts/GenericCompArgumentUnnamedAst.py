@@ -20,7 +20,7 @@ class GenericCompArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def __eq__(self, other: GenericCompArgumentUnnamedAst) -> bool:
         # Check both ASTs are the same type and have the same value.
-        return isinstance(other, GenericCompArgumentUnnamedAst) and self.value == other.value
+        return type(other) is GenericCompArgumentUnnamedAst and self.value == other.value
 
     def __hash__(self) -> int:
         return hash(self.value)

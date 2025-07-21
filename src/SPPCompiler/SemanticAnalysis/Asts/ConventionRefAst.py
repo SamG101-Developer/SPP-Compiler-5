@@ -16,7 +16,7 @@ class ConventionRefAst(Asts.Ast):
 
     def __eq__(self, other: ConventionRefAst) -> bool:
         # Check both ASTs are the same type.
-        return isinstance(other, ConventionRefAst)
+        return type(other) is ConventionRefAst
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

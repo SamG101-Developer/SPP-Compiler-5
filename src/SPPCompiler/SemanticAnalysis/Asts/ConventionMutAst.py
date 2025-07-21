@@ -18,7 +18,7 @@ class ConventionMutAst(Asts.Ast):
 
     def __eq__(self, other: ConventionMutAst) -> bool:
         # Check both ASTs are the same type.
-        return isinstance(other, ConventionMutAst)
+        return type(other) is ConventionMutAst
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

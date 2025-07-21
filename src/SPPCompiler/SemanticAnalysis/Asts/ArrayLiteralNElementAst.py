@@ -48,7 +48,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __eq__(self, other: ArrayLiteralNElementAst) -> bool:
         # Needed for cmp-generic arg checking
-        return isinstance(other, ArrayLiteralNElementAst) and self.elems == other.elems
+        return type(other) is ArrayLiteralNElementAst and self.elems == other.elems
 
     def __hash__(self) -> int:
         return id(self)

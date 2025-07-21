@@ -240,14 +240,14 @@ class AstMemoryUtils:
         # Check the symbol doesn't have any outstanding partial moves, in the case that the entire symbol itself is
         # being used. This means that "a" cannot be moved, or borrowed from etc, if "a.b has been moved. This guarantees
         # the fully-initialized status of symbols for memory operations involving the entire symbol.
-        if check_partial_move and var_sym.memory_info.ast_partial_moves and isinstance(value_ast, Asts.IdentifierAst):
+        if check_partial_move and var_sym.memory_info.ast_partial_moves and type(value_ast) is Asts.IdentifierAst:
             raise SemanticErrors.MemoryPartiallyInitializedUsageError().add(
                 value_ast, var_sym.memory_info.ast_partial_moves[0]).scopes(sm.current_scope)
 
         # Check there are overlapping partial moves, for a new partial move. This means that for "a.b.c" to be moved off
         # of "a", both "a.b" and "a.b.c.d" must not be partially moved off of "a". This guarantees that "a.b" is
         # fully-initialized when it is moved off of "a".
-        if check_partial_move and var_sym.memory_info.ast_partial_moves and not isinstance(value_ast, Asts.IdentifierAst):
+        if check_partial_move and var_sym.memory_info.ast_partial_moves and type(value_ast) is not Asts.IdentifierAst:
             if overlaps := [p for p in var_sym.memory_info.ast_partial_moves if AstMemoryUtils.right_overlaps(p, value_ast)]:
                 raise SemanticErrors.MemoryNotInitializedUsageError().add(
                     var_sym.memory_info.ast_initialization_old, value_ast, overlaps[0], sm).scopes(sm.current_scope)
@@ -256,7 +256,7 @@ class AstMemoryUtils:
         # object, because the current context doesn't have ownership of the object. This guarantees that when control is
         # returned to the original context, the object is still in the same (fully-initialized) memory state as before
         # the borrow took place. todo: add "partial_copies" to tests
-        if check_move_from_borrowed_ctx and var_sym.memory_info.ast_borrowed and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
+        if check_move_from_borrowed_ctx and var_sym.memory_info.ast_borrowed and type(value_ast) is not Asts.IdentifierAst and not partial_copies:
             raise SemanticErrors.MemoryMovedFromBorrowedContextError().add(
                 value_ast, var_sym.memory_info.ast_borrowed).scopes(sm.current_scope)
 
@@ -278,7 +278,7 @@ class AstMemoryUtils:
         # Mark the symbol as either moved or partially moved (for non-copy types). Entire objects are marked as moved,
         # and attribute accesses are marked as partial moves on the symbol representing the entire object. If the type
         # is copyable, then no movements are marked.
-        if mark_moves and isinstance(value_ast, Asts.IdentifierAst) and not copies:
+        if mark_moves and type(value_ast) is Asts.IdentifierAst and not copies:
             var_sym.memory_info.moved_by(move_ast)
-        elif mark_moves and not isinstance(value_ast, Asts.IdentifierAst) and not partial_copies:
+        elif mark_moves and type(value_ast) is not Asts.IdentifierAst and not partial_copies:
             var_sym.memory_info.ast_partial_moves.append(value_ast)

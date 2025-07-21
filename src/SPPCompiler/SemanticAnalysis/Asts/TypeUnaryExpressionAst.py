@@ -73,14 +73,14 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         self.rhs.qualify_types(sm, **kwargs)
 
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None, generic_infer_target: Optional[dict] = None, **kwargs) -> None:
-        if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
+        if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst:
             temp_manager = ScopeManager(sm.global_scope, type_scope or sm.current_scope)
             type_scope = AstTypeUtils.get_namespaced_scope_with_error(temp_manager, [self.op.name])
         self.rhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
 
     def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         x = self.rhs.substituted_generics(generic_arguments)
-        if isinstance(x, Asts.TypeUnaryExpressionAst) and isinstance(x.op, Asts.TypeUnaryOperatorBorrowAst):
+        if type(x) is Asts.TypeUnaryExpressionAst and type(x.op) is Asts.TypeUnaryOperatorBorrowAst:
             return x
         return TypeUnaryExpressionAst(self.pos, self.op, x)
 
@@ -92,7 +92,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return self.rhs.contains_generic(generic_type)
 
     def get_symbol(self, scope: Scope) -> TypeSymbol:
-        if isinstance(self.op, Asts.TypeUnaryOperatorNamespaceAst):
+        if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst:
             scope = scope.get_namespace_symbol(self.op.name).scope
         return self.rhs.get_symbol(scope)
 

@@ -18,7 +18,7 @@ class GenericTypeParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Required"
 
     def __eq__(self, other: GenericTypeParameterRequiredAst) -> bool:
-        return isinstance(other, GenericTypeParameterRequiredAst) and self.name == other.name
+        return type(other) is GenericTypeParameterRequiredAst and self.name == other.name
 
     def __str__(self) -> str:
         # Print the AST with auto-formatting.

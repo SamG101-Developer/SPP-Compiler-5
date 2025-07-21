@@ -45,15 +45,15 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
     def get_named_args(self) -> list[Asts.FunctionCallArgumentNamedAst]:
         # Get all the named function call arguments.
-        return [a for a in self.arguments if isinstance(a, Asts.FunctionCallArgumentNamedAst)]
+        return [a for a in self.arguments if type(a) is Asts.FunctionCallArgumentNamedAst]
 
     def get_unnamed_args(self) -> list[Asts.FunctionCallArgumentUnnamedAst]:
         # Get all the unnamed function call arguments.
-        return [a for a in self.arguments if isinstance(a, Asts.FunctionCallArgumentUnnamedAst)]
+        return [a for a in self.arguments if type(a) is Asts.FunctionCallArgumentUnnamedAst]
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate argument names.
-        argument_names = [a.name for a in self.arguments if isinstance(a, Asts.FunctionCallArgumentNamedAst)]
+        argument_names = [a.name for a in self.get_named_args()]
         if duplicates := SequenceUtils.duplicates(argument_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
                 duplicates[0], duplicates[1], "named arguments").scopes(sm.current_scope)
@@ -65,7 +65,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
         # Expand tuple-expansion arguments ("..tuple" => "tuple.0, tuple.1, ...").
         for i, argument in enumerate(self.arguments):
-            if isinstance(argument, Asts.FunctionCallArgumentUnnamedAst) and argument.tok_unpack is not None:
+            if type(argument) is Asts.FunctionCallArgumentUnnamedAst and argument.tok_unpack is not None:
 
                 # Check the argument type is a tuple
                 tuple_argument_type = argument.infer_type(sm, **kwargs)
@@ -118,7 +118,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         """
 
         # Mark if pins are required, and the ast to mark as errored if required.
-        is_target_coro = isinstance(target_proto, Asts.CoroutinePrototypeAst)
+        is_target_coro = type(target_proto) is Asts.CoroutinePrototypeAst
         pins_required = is_async or (target_proto if is_target_coro else None)
 
         # Define the borrow sets to maintain the law of exclusivity.
@@ -164,12 +164,13 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
                 # Check the move doesn't overlap with any borrows. This is to ensure that "f(&x, x)" can never happen,
                 # because the first argument requires the owned object to outlive the function call, and moving it as
-                # the second argument breaks this.
-                if overlap := [b for b in (borrows_ref + borrows_mut) if AstMemoryUtils.overlaps(b, argument.value)]:
-                    raise SemanticErrors.MemoryOverlapUsageError().add(
-                        overlap[0], argument.value).scopes(sm.current_scope)
+                # the second argument breaks this. Doesn't apply to copyable types.
+                if not sm.current_scope.get_symbol(argument.value.infer_type(sm, **kwargs)).is_copyable():
+                    if overlap := [b for b in (borrows_ref + borrows_mut) if AstMemoryUtils.overlaps(b, argument.value)]:
+                        raise SemanticErrors.MemoryOverlapUsageError().add(
+                            overlap[0], argument.value).scopes(sm.current_scope)
 
-            elif isinstance(argument.convention, Asts.ConventionMutAst):
+            elif type(argument.convention) is Asts.ConventionMutAst:
                 # Check the mutable borrow doesn't overlap with any other borrow in the same scope.
                 if overlap := [b for b in (borrows_ref + borrows_mut) if AstMemoryUtils.overlaps(b, argument.value)]:
                     raise SemanticErrors.MemoryOverlapUsageError().add(
@@ -205,7 +206,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 # Add the mutable borrow to the mutable borrow set.
                 borrows_mut.append(argument.value)
 
-            elif isinstance(argument.convention, Asts.ConventionRefAst):
+            elif type(argument.convention) is Asts.ConventionRefAst:
                 # Check the immutable borrow doesn't overlap with any other mutable borrow in the same scope.
                 if overlap := [b for b in borrows_mut if AstMemoryUtils.overlaps(b, argument.value)]:
                     raise SemanticErrors.MemoryOverlapUsageError().add(

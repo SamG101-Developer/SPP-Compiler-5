@@ -169,7 +169,7 @@ class AnnotationAst(Asts.Ast):
                     self.name, self._ctx.name, "non-function").scopes(self._scope)
 
             # The function ast must be a class method, not a free function.
-            if isinstance(self._ctx._ctx, Asts.ModulePrototypeAst):
+            if type(self._ctx._ctx) is Asts.ModulePrototypeAst:
                 raise SemanticErrors.AnnotationInvalidLocationError().add(
                     self.name, self._ctx.name, "non-class-method").scopes(self._scope)
 
@@ -185,7 +185,7 @@ class AnnotationAst(Asts.Ast):
                     self.name, self._ctx.name, "non-function").scopes(self._scope)
 
             # The function ast must be a class method, not a free function.
-            if isinstance(self._ctx._ctx, Asts.ModulePrototypeAst):
+            if type(self._ctx._ctx) is Asts.ModulePrototypeAst:
                 raise SemanticErrors.AnnotationInvalidLocationError().add(
                     self.name, self._ctx.name, "non-class-method").scopes(self._scope)
 
@@ -212,7 +212,7 @@ class AnnotationAst(Asts.Ast):
                     self.name, self._ctx.name, "non-visibility-enabled").scopes(self._scope)
 
             # Access modifiers cannot be applied to methods in sup-ext blocks (only in module or sup).
-            if isinstance(self._ctx._ctx, Asts.SupPrototypeExtensionAst) and not self._ctx.name.value.startswith("$"):
+            if type(self._ctx._ctx) is Asts.SupPrototypeExtensionAst and not self._ctx.name.value.startswith("$"):
                 raise SemanticErrors.AnnotationInvalidLocationError().add(
                     self.name, self._ctx._ctx.name, "extension").scopes(self._scope)
 

@@ -86,7 +86,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Substitute the "Self" parameter's type with the name of the method.
         generic_substitution = [Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(pos=0), value=ctx.name)]
-        if not isinstance(ctx, Asts.ModulePrototypeAst) and self.function_parameter_group.get_self_param():
+        if type(ctx) is not Asts.ModulePrototypeAst and self.function_parameter_group.get_self_param():
             self.function_parameter_group.get_self_param()._true_self_type = ctx.name
             self.function_parameter_group.get_self_param().type = self.function_parameter_group.get_self_param().type.substituted_generics(generic_substitution)
         for p in self.function_parameter_group.params:
@@ -127,7 +127,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         Asts.Ast.generate_top_level_scopes(self, sm)
 
         # If there is a self parameter in a free function, throw an error.
-        if self.function_parameter_group.get_self_param() and isinstance(self._ctx, Asts.ModulePrototypeAst):
+        if self.function_parameter_group.get_self_param() and type(self._ctx) is Asts.ModulePrototypeAst:
             raise SemanticErrors.ParameterSelfOutsideSuperimpositionError().add(
                 self.function_parameter_group.get_self_param(), self).scopes(sm.current_scope)
 
@@ -236,7 +236,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def _deduce_mock_class_type(self) -> Asts.TypeAst:
         # Module-level functions are always FunRef.
-        if isinstance(self._ctx, Asts.ModulePrototypeAst) or not self.function_parameter_group.get_self_param():
+        if type(self._ctx) is Asts.ModulePrototypeAst or not self.function_parameter_group.get_self_param():
             return CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         # Class methods with "self" are the FunMov type.
@@ -244,11 +244,11 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             return CommonTypes.FunMov(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         # Class methods with "&mut self" are the FunMut type.
-        if isinstance(self.function_parameter_group.get_self_param().convention, Asts.ConventionMutAst):
+        if type(self.function_parameter_group.get_self_param().convention) is Asts.ConventionMutAst:
             return CommonTypes.FunMut(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         # Class methods with "&self" are the FunRef type.
-        if isinstance(self.function_parameter_group.get_self_param().convention, Asts.ConventionRefAst):
+        if type(self.function_parameter_group.get_self_param().convention) is Asts.ConventionRefAst:
             return CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         raise NotImplementedError(f"Unknown convention for function {self.name}")

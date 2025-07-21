@@ -56,7 +56,7 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         attributes = sm.current_scope.get_symbol(self.class_type).type.body.members
 
         # Only 1 "multi-skip" allowed in a destructure.
-        multi_arg_skips = [e for e in self.elems if isinstance(e, Asts.LocalVariableDestructureSkipNArgumentsAst)]
+        multi_arg_skips = [e for e in self.elems if type(e) is Asts.LocalVariableDestructureSkipNArgumentsAst]
         if len(multi_arg_skips) > 1:
             raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(
                 multi_arg_skips[0], multi_arg_skips[1]).scopes(sm.current_scope)
@@ -68,19 +68,19 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # Create expanded "let" statements for each part of the destructure.
         for element in self.elems:
-            if isinstance(element, Asts.LocalVariableDestructureSkipNArgumentsAst):
+            if type(element) is Asts.LocalVariableDestructureSkipNArgumentsAst:
                 continue
 
-            elif isinstance(element, Asts.LocalVariableSingleIdentifierAst):
+            elif type(element) is Asts.LocalVariableSingleIdentifierAst:
                 postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(element.name.pos, element.name))
                 new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
                 self._new_asts.append(new_ast)
 
-            elif isinstance(element, Asts.LocalVariableAttributeBindingAst) and isinstance(element.value, Asts.LocalVariableSingleIdentifierAst):
+            elif type(element) is Asts.LocalVariableAttributeBindingAst and type(element.value) is Asts.LocalVariableSingleIdentifierAst:
                 continue
 
-            elif isinstance(element, Asts.LocalVariableAttributeBindingAst):
+            elif type(element) is Asts.LocalVariableAttributeBindingAst:
                 postfix = Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(element.name.pos, element.name))
                 new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element.value, value=postfix)
                 new_ast.analyse_semantics(sm, **kwargs)
@@ -89,7 +89,7 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         # Check for any missing attributes in the destructure, unless a multi-skip is present.
         # Todo: connect correct scope for the class type. sm.current_scope.get_symbol(self.class_type).scope.parent_module?
         if not multi_arg_skips:
-            assigned_attributes = [e.name for e in self.elems if not isinstance(e, Asts.LocalVariableDestructureSkipNArgumentsAst)]
+            assigned_attributes = [e.name for e in self.elems if type(e) is not Asts.LocalVariableDestructureSkipNArgumentsAst]
             missing_attributes = [a for a in attributes if a.name not in assigned_attributes]
             if missing_attributes:
                 raise SemanticErrors.ArgumentRequiredNameMissingError().add(

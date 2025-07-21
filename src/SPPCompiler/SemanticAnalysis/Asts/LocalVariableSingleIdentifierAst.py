@@ -61,8 +61,8 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             # Set any borrow asts based on the potentially symbolic value being set to this variable.
             if convention := inferred_type.convention:
                 sym.memory_info.ast_borrowed = value
-                sym.memory_info.is_borrow_mut = convention if isinstance(convention, Asts.ConventionMutAst) else False
-                sym.memory_info.is_borrow_ref = convention if isinstance(convention, Asts.ConventionRefAst) else False
+                sym.memory_info.is_borrow_mut = convention if type(convention) is Asts.ConventionMutAst else False
+                sym.memory_info.is_borrow_ref = convention if type(convention) is Asts.ConventionRefAst else False
         else:
             sym.memory_info.ast_moved = self
 

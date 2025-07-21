@@ -43,20 +43,20 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         return self.tok_r.pos_end
 
     def get_arg_val(self, arg: Asts.ObjectInitializerArgumentAst) -> Asts.ExpressionAst:
-        return arg.value if isinstance(arg, Asts.ObjectInitializerArgumentNamedAst) else arg.name
+        return arg.value if type(arg) is Asts.ObjectInitializerArgumentNamedAst else arg.name
 
     def get_default_arg(self) -> Optional[Asts.ObjectInitializerArgumentNamedAst]:
-        args = [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst) and a.is_default]
+        args = [a for a in self.arguments if type(a) is Asts.ObjectInitializerArgumentUnnamedAst and a.is_default]
         return args[0] if args else None
 
     def get_regular_args(self) -> list[Asts.ObjectInitializerArgumentAst]:
-        return [a for a in self.arguments if not isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst) or a.is_default is None]
+        return [a for a in self.arguments if type(a) is not Asts.ObjectInitializerArgumentUnnamedAst or a.is_default is None]
 
     def get_named_args(self) -> list[Asts.ObjectInitializerArgumentNamedAst]:
-        return [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentNamedAst)]
+        return [a for a in self.arguments if type(a) is Asts.ObjectInitializerArgumentNamedAst]
 
     def get_unnamed_args(self) -> list[Asts.ObjectInitializerArgumentUnnamedAst]:
-        return [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst)]
+        return [a for a in self.arguments if type(a) is Asts.ObjectInitializerArgumentUnnamedAst]
 
     def pre_analyse_semantics(self, sm: ScopeManager, class_type: Asts.TypeAst = None, **kwargs) -> None:
         # Get the symbol of the class type.
@@ -65,14 +65,14 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         # Get the attribute information from the class type.
         all_attributes = [(c, class_symbol.scope) for c in class_symbol.type.body.members]
         for sup_scope in class_symbol.scope.sup_scopes:
-            if isinstance(sup_scope._ast, Asts.ClassPrototypeAst):
+            if type(sup_scope._ast) is Asts.ClassPrototypeAst:
                 all_attributes += [(c, sup_scope) for c in sup_scope._ast.body.members]
 
         for argument in self.arguments:
 
             # Return-type-overloading helper code.
-            if isinstance(argument, Asts.ObjectInitializerArgumentNamedAst):
-                if isinstance(argument.value, Asts.PostfixExpressionAst) and isinstance(argument.value.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+            if type(argument) is Asts.ObjectInitializerArgumentNamedAst:
+                if type(argument.value) is Asts.PostfixExpressionAst and type(argument.value.op) is Asts.PostfixExpressionOperatorFunctionCallAst:
                     attr = [(a, s) for a, s in all_attributes if a.name == argument.name]
                     attr_sym = attr[0][1].get_symbol(attr[0][0].type)
                     attr_type = attr_sym.fq_name if attr else None
@@ -88,7 +88,7 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         # Get the attribute information from the class type.
         all_attributes = [(c, class_symbol.scope) for c in class_symbol.type.body.members]
         for sup_scope in class_symbol.scope.sup_scopes:
-            if isinstance(sup_scope._ast, Asts.ClassPrototypeAst):
+            if type(sup_scope._ast) is Asts.ClassPrototypeAst:
                 all_attributes += [(c, sup_scope) for c in sup_scope._ast.body.members]
         all_attribute_names = [a[0].name for a in all_attributes]
 
@@ -99,7 +99,7 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
                 duplicates[0], duplicates[1], "named object arguments").scopes(sm.current_scope)
 
         # Check there is at most 1 default argument.
-        def_args = [a for a in self.arguments if isinstance(a, Asts.ObjectInitializerArgumentUnnamedAst) and a.is_default]
+        def_args = [a for a in self.arguments if type(a) is Asts.ObjectInitializerArgumentUnnamedAst and a.is_default]
         if len(def_args) > 1:
             raise SemanticErrors.ObjectInitializerMultipleDefArgumentsError().add(
                 def_args[0], def_args[1]).scopes(sm.current_scope)

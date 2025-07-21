@@ -21,7 +21,7 @@ class GenericTypeParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Variadic"
 
     def __eq__(self, other: GenericTypeParameterVariadicAst) -> bool:
-        return isinstance(other, GenericTypeParameterVariadicAst) and self.name == other.name
+        return type(other) is GenericTypeParameterVariadicAst and self.name == other.name
 
     def __str__(self) -> str:
         string = [

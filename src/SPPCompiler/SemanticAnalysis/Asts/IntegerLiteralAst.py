@@ -48,7 +48,7 @@ class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __eq__(self, other: IntegerLiteralAst) -> bool:
         # Needed for cmp-generic arg checking.
-        return isinstance(other, IntegerLiteralAst) and self.tok_sign == other.tok_sign and self.value.token_data == other.value.token_data
+        return type(other) is IntegerLiteralAst and self.tok_sign == other.tok_sign and self.value.token_data == other.value.token_data
 
     @staticmethod
     def from_python_literal(value: int) -> IntegerLiteralAst:

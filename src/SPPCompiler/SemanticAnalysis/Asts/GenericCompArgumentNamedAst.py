@@ -24,7 +24,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Named"
 
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
-        return isinstance(other, GenericCompArgumentNamedAst) and self.name == other.name and self.value == other.value
+        return type(other) is GenericCompArgumentNamedAst and self.name == other.name and self.value == other.value
 
     def __hash__(self) -> int:
         return hash(self.name)

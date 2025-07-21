@@ -22,7 +22,7 @@ class GenericTypeParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Optional"
 
     def __eq__(self, other: GenericTypeParameterOptionalAst) -> bool:
-        return isinstance(other, GenericTypeParameterOptionalAst) and self.name == other.name
+        return type(other) is GenericTypeParameterOptionalAst and self.name == other.name
 
     def __str__(self) -> str:
         # Print the AST with auto-formatting.

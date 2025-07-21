@@ -42,7 +42,7 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __eq__(self, other: FloatLiteralAst) -> bool:
         # Needed for cmp-generic arg checking.
-        return isinstance(other, FloatLiteralAst) and self.tok_sign == other.tok_sign and self.integer_value.token_data == other.integer_value.token_data and self.decimal_value.token_data == other.decimal_value.token_data
+        return type(other) is FloatLiteralAst and self.tok_sign == other.tok_sign and self.integer_value.token_data == other.integer_value.token_data and self.decimal_value.token_data == other.decimal_value.token_data
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

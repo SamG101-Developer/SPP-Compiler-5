@@ -72,9 +72,9 @@ class GenericParameterGroupAst(Asts.Ast):
         # Create a new group where optional parameters become required.
         new_params = []
         for p in self.parameters:
-            if isinstance(p, Asts.GenericTypeParameterOptionalAst):
+            if type(p) is Asts.GenericTypeParameterOptionalAst:
                 new_params.append(Asts.GenericTypeParameterRequiredAst(p.pos, name=p.name, constraints=p.constraints))
-            elif isinstance(p, Asts.GenericCompParameterOptionalAst):
+            elif type(p) is Asts.GenericCompParameterOptionalAst:
                 new_params.append(Asts.GenericCompParameterRequiredAst(p.pos, name=p.name, type=p.type))
             else:
                 new_params.append(p)

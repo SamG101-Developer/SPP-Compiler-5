@@ -53,11 +53,11 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # The NamespaceSymbol type check seems dumb but check hack in "elif" block beneath.
         lhs_type = lhs.infer_type(sm, **kwargs)
-        lhs_symbol = sm.current_scope.get_symbol(lhs_type) if not isinstance(lhs_type, NamespaceSymbol) else lhs_type
+        lhs_symbol = sm.current_scope.get_symbol(lhs_type) if type(lhs_type) is not NamespaceSymbol else lhs_type
 
         # Todo: wrap with Opt[T] for array access => Index operator to this is only for tuples anyways?
         # Numerical access -> get the nth generic argument of the tuple.
-        if isinstance(self.field, Asts.TokenAst):
+        if type(self.field) is Asts.TokenAst:
             element_type = AstTypeUtils.get_nth_type_of_indexable_type(sm, int(self.field.token_data), lhs_type)
             return element_type
 
@@ -72,13 +72,13 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                 break
 
         # Accessing a member from the scope by the identifier.
-        if isinstance(self.field, Asts.IdentifierAst) and type(field_symbol) is VariableSymbol:
+        if type(self.field) is Asts.IdentifierAst and type(field_symbol) is VariableSymbol:
             attribute_type = field_symbol.type
             attribute_type.analyse_semantics(ScopeManager(sm.global_scope, lhs_master_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks), **kwargs)
             attribute_type = lhs_master_scope.get_symbol(attribute_type).fq_name
             return attribute_type
 
-        elif isinstance(self.field, Asts.IdentifierAst) and type(field_symbol) is NamespaceSymbol:
+        elif type(self.field) is Asts.IdentifierAst and type(field_symbol) is NamespaceSymbol:
             attribute_type = field_symbol
             return attribute_type
 
@@ -120,7 +120,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     closest[0][0], closest[1][0], sm.current_scope)
 
         # Numerical access to a tuple, such as "tuple.0".
-        elif isinstance(self.field, Asts.TokenAst):
+        elif type(self.field) is Asts.TokenAst:
             lhs_type = lhs.infer_type(sm, **kwargs)
             lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
@@ -140,7 +140,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     lhs, lhs_type, self.field).scopes(sm.current_scope)
 
         # Accessing a regular attribute/method, such as "class.attribute".
-        elif isinstance(self.field, Asts.IdentifierAst) and self.is_runtime_access():
+        elif type(self.field) is Asts.IdentifierAst and self.is_runtime_access():
             lhs_type = lhs.infer_type(sm, **kwargs)
             lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
@@ -175,7 +175,7 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     sm.current_scope, closest[0][0], closest[1][0])
 
         # Accessing a namespaced constant, such as "std::pi".
-        elif isinstance(self.field, Asts.IdentifierAst) and self.is_static_access():
+        elif type(self.field) is Asts.IdentifierAst and self.is_static_access():
             lhs_symbol = sm.current_scope.get_symbol(lhs)
             lhs_ns_symbol = sm.current_scope.get_namespace_symbol(lhs)
 

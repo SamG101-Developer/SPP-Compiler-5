@@ -66,7 +66,7 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         lhs_type_scope = lhs_type_symbol.scope
 
         # Check there is only 1 target field on the type at the highest level.
-        if isinstance(self.op, Asts.TypePostfixOperatorNestedTypeAst) and lhs_type_scope:
+        if type(self.op) is Asts.TypePostfixOperatorNestedTypeAst and lhs_type_scope:
             sss = []
             for scope in [lhs_type_scope] + lhs_type_scope.sup_scopes:
                 sss.append((scope, scope._symbol_table.get(self.op.name)))
@@ -80,7 +80,7 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         self.op.name.analyse_semantics(sm, type_scope=lhs_type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
 
     def convert(self) -> Asts.TypeAst:
-        if isinstance(self.op, Asts.TypePostfixOperatorOptionalTypeAst):
+        if type(self.op) is Asts.TypePostfixOperatorOptionalTypeAst:
             return CommonTypes.Opt(self.pos, self.lhs.convert())
         return self
 

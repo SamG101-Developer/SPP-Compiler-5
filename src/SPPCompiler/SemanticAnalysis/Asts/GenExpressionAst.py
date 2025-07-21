@@ -65,7 +65,7 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if self.expr:
 
             # Handle the return type inference that may be required.
-            if isinstance(self.expr, Asts.PostfixExpressionAst) and isinstance(self.expr.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+            if type(self.expr) is Asts.PostfixExpressionAst and type(self.expr.op) is Asts.PostfixExpressionOperatorFunctionCallAst:
                 gen_type, yield_type, *_ = AstTypeUtils.get_generator_and_yielded_type(kwargs["function_ret_type"][0], sm, kwargs["function_ret_type"][0], "coroutine")
                 kwargs |= {"inferred_return_type": yield_type}
 
@@ -130,13 +130,13 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                     check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=False, mark_moves=True,
                     **kwargs)
 
-            elif isinstance(self.convention, Asts.ConventionMutAst):
+            elif type(self.convention) is Asts.ConventionMutAst:
                 # Check the argument's value is mutable.
                 if not sym.is_mutable:
                     raise SemanticErrors.MutabilityInvalidMutationError().add(
                         self.expr, self.convention, sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
-            elif isinstance(self.convention, Asts.ConventionRefAst):
+            elif type(self.convention) is Asts.ConventionRefAst:
                 ...
 
 

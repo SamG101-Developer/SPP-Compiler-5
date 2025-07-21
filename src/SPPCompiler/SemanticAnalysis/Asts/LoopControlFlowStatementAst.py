@@ -40,7 +40,7 @@ class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Get the number of control flow statement, and the loop's nesting level.
-        has_skip = isinstance(self.skip_or_expr, Asts.TokenAst) and self.skip_or_expr.token_type == SppTokenType.KwSkip
+        has_skip = type(self.skip_or_expr) is Asts.TokenAst and self.skip_or_expr.token_type == SppTokenType.KwSkip
         number_of_controls = len(self.tok_seq_exit) + (has_skip is True)
         nested_loop_depth  = kwargs["loop_level"]
 

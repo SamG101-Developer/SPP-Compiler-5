@@ -81,7 +81,7 @@ class AstBinUtils:
         """
 
         # If the rhs isn't a binary expression, then there is no handling needed.
-        if not isinstance(ast.rhs, Asts.BinaryExpressionAst):
+        if type(ast.rhs) is not Asts.BinaryExpressionAst:
             return ast
 
         # If the ast precedence > the rhs operator's expression precedence, re-arrange the ast.
@@ -106,7 +106,7 @@ class AstBinUtils:
         """
 
         # Check the lhs is a binary expression with a comparison operator.
-        if not isinstance(ast.lhs, Asts.BinaryExpressionAst) or ast.op.token_type not in BINARY_COMPARISON_OPERATORS or ast.lhs.op.token_type not in BINARY_COMPARISON_OPERATORS:
+        if type(ast.lhs) is not Asts.BinaryExpressionAst or ast.op.token_type not in BINARY_COMPARISON_OPERATORS or ast.lhs.op.token_type not in BINARY_COMPARISON_OPERATORS:
             return ast
 
         # Otherwise, split the lhs into two binary expressions recursively.

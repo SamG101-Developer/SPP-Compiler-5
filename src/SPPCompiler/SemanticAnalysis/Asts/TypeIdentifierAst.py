@@ -42,7 +42,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
     def __iter__(self) -> Iterator[Asts.TypeIdentifierAst]:
         yield self
         for g in self.generic_argument_group.arguments:
-            if isinstance(g.value, Asts.IdentifierAst):
+            if type(g.value) is Asts.IdentifierAst:
                 yield Asts.TypeIdentifierAst.from_identifier(g.value)
             else:
                 yield from g.value
@@ -118,7 +118,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
                 return generic_arg_value
 
             for g in name.generic_argument_group.get_comp_args():
-                if isinstance(g.value, Asts.IdentifierAst):
+                if type(g.value) is Asts.IdentifierAst:
                     if g.value == Asts.IdentifierAst.from_type(generic_arg_name):
                         g.value = generic_arg_value
 

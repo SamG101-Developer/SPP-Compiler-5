@@ -28,7 +28,7 @@ class GenericCompParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Variadic"
 
     def __eq__(self, other: GenericCompParameterVariadicAst) -> bool:
-        return isinstance(other, GenericCompParameterVariadicAst) and self.name == other.name
+        return type(other) is GenericCompParameterVariadicAst and self.name == other.name
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

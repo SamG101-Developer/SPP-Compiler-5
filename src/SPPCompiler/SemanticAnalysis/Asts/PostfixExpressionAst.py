@@ -15,7 +15,7 @@ class PostfixExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     op: Asts.PostfixExpressionOperatorAst = field(default=None)
 
     def __eq__(self, other: PostfixExpressionAst) -> bool:
-        return isinstance(other, PostfixExpressionAst) and self.lhs == other.lhs and self.op == other.op
+        return type(other) is PostfixExpressionAst and self.lhs == other.lhs and self.op == other.op
 
     def __hash__(self) -> int:
         return id(self)
@@ -53,7 +53,7 @@ class PostfixExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         # Todo: what on earth does this if statement do?
         lhs_type = self.lhs.infer_type(sm, **kwargs)
-        if isinstance(self.lhs, Asts.IdentifierAst) and isinstance(lhs_type, Asts.TypeAst) and lhs_type.type_parts[0].value[0] != "$":
+        if type(self.lhs) is Asts.IdentifierAst and isinstance(lhs_type, Asts.TypeAst) and lhs_type.type_parts[0].value[0] != "$":
             AstMemoryUtils.enforce_memory_integrity(
                 self.lhs, self.op, sm, check_move=True, check_partial_move=False, check_move_from_borrowed_ctx=False,
                 check_pins=False, check_pins_linked=False, mark_moves=False, **kwargs)

@@ -57,8 +57,8 @@ class FunctionParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
             sym = sm.current_scope.get_symbol(name)
             sym.memory_info.initialized_by(self)
             sym.memory_info.ast_borrowed = conv
-            sym.memory_info.is_borrow_mut = isinstance(conv, Asts.ConventionMutAst)
-            sym.memory_info.is_borrow_ref = isinstance(conv, Asts.ConventionRefAst)
+            sym.memory_info.is_borrow_mut = type(conv) is Asts.ConventionMutAst
+            sym.memory_info.is_borrow_ref = type(conv) is Asts.ConventionRefAst
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         for name in self.variable.extract_names:

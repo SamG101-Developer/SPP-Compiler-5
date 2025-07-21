@@ -197,12 +197,12 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     argument_type = argument.infer_type(sm, **kwargs)
 
                     # Special case for variadic parameters.
-                    if isinstance(parameter, Asts.FunctionParameterVariadicAst):
+                    if type(parameter) is Asts.FunctionParameterVariadicAst:
                         parameter_type = CommonTypes.Tup(parameter.pos, [parameter_type] * len(argument_type.type_parts[0].generic_argument_group.arguments))
                         parameter_type.analyse_semantics(sm, **kwargs)
 
                     # Special case for self parameters.
-                    if isinstance(parameter, Asts.FunctionParameterSelfAst):
+                    if type(parameter) is Asts.FunctionParameterSelfAst:
                         argument.convention = parameter.convention
                         argument_type = argument_type.without_generics
 

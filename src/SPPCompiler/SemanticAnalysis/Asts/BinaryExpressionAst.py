@@ -121,7 +121,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Todo: Check on the tuple size to be > 1 ?
         # Todo: Instead of tuple checks, do the "indexable" check - allow folding arrays too?
         # Handle lhs-folding
-        if isinstance(self.lhs, Asts.TokenAst):
+        if type(self.lhs) is Asts.TokenAst:
             # Check the rhs is a tuple.
             rhs_tuple_type = self.rhs.infer_type(sm, **kwargs)
             if not AstTypeUtils.is_type_tuple(rhs_tuple_type, sm.current_scope):
@@ -145,7 +145,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self._as_func.analyse_semantics(sm, **kwargs)
 
         # Handle rhs-folding
-        elif isinstance(self.rhs, Asts.TokenAst):
+        elif type(self.rhs) is Asts.TokenAst:
             # Check the rhs is a tuple.
             lhs_tuple_type = self.lhs.infer_type(sm, **kwargs)
             if not AstTypeUtils.is_type_tuple(lhs_tuple_type, sm.current_scope):

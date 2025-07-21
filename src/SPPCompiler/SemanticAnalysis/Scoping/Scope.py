@@ -375,11 +375,11 @@ class Scope:
 
     @property
     def direct_sup_types(self) -> list[Asts.TypeAst]:
-        return [s.type_symbol.fq_name for s in self._direct_sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
+        return [s.type_symbol.fq_name for s in self._direct_sup_scopes if type(s._ast) is Asts.ClassPrototypeAst]
 
     @property
     def sup_types(self) -> list[Asts.TypeAst]:
-        return [s.type_symbol.fq_name for s in self.sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
+        return [s.type_symbol.fq_name for s in self.sup_scopes if type(s._ast) is Asts.ClassPrototypeAst]
 
     @property
     def sub_scopes(self) -> list[Scope]:
