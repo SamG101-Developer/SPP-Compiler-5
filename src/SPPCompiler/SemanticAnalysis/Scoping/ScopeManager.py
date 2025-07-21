@@ -130,7 +130,9 @@ class ScopeManager:
             self, scope: Scope, super_scopes: list[Scope], progress: Optional[Progress] = None, **kwargs) -> None:
 
         from SPPCompiler.SemanticAnalysis import Asts
-        if str(scope.name)[0] == "$":
+        if scope.name.type_parts[-1].value[0] == "$":
+            return
+        if AstTypeUtils.is_type_functional(scope.name, scope):
             return
 
         scope._direct_sup_scopes = []
@@ -156,10 +158,10 @@ class ScopeManager:
             cls_symbol = scope.type_symbol
 
             # Prevent double inheritance, cyclic inheritance, and self inheritance.
-            # if type(sup_scope._ast) is Asts.SupPrototypeExtensionAst:
-            #     sup_scope._ast._check_cyclic_extension(sup_symbol, sup_scope)
-            #     sup_scope._ast._check_double_extension(cls_symbol, sup_symbol, sup_scope)
-            #     sup_scope._ast._check_self_extension(cls_symbol, sup_symbol, sup_scope)
+            if type(sup_scope._ast) is Asts.SupPrototypeExtensionAst:
+                sup_scope._ast._check_cyclic_extension(sup_symbol, sup_scope)
+                sup_scope._ast._check_double_extension(cls_symbol, sup_symbol, sup_scope)
+                sup_scope._ast._check_self_extension(cls_symbol, sup_symbol, sup_scope)
 
             # Register the super scope against the current scope.
             scope._direct_sup_scopes.append(new_sup_scope)
@@ -169,9 +171,9 @@ class ScopeManager:
             if new_cls_scope and scope.type_symbol is not new_cls_scope.type_symbol:
                 scope._direct_sup_scopes.append(new_cls_scope)
 
-            # if isinstance(sup_scope._ast, Asts.SupPrototypeAst):
-            #     check_conflicting_type_statements(cls_symbol, sup_scope, self)
-            #     check_conflicting_cmp_statements(cls_symbol, sup_scope, self)
+            if isinstance(sup_scope._ast, Asts.SupPrototypeAst):
+                check_conflicting_type_statements(cls_symbol, sup_scope, self)
+                check_conflicting_cmp_statements(cls_symbol, sup_scope, self)
 
         if progress:
             progress.next(str(scope.name))
