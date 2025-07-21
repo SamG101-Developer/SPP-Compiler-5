@@ -647,9 +647,9 @@ class SppParser:
     def parse_primary_expression(self) -> Optional[Asts.ExpressionAst]:
         p1 = self.parse_alternate([
             self.parse_lambda_expression,
+            self.parse_parenthesized_expression,
             self.parse_literal,
             self.parse_object_initializer,
-            self.parse_parenthesized_expression,
             self.parse_case_expression,
             self.parse_loop_expression,
             self.parse_iter_expression,
@@ -1344,7 +1344,9 @@ class SppParser:
         return p1
 
     def parse_unary_op(self) -> Optional[Asts.UnaryExpressionOperatorAsyncAst]:
-        p1 = self.parse_once(self.parse_unary_op_async_call)
+        p1 = self.parse_alternate([
+            self.parse_unary_op_async_call,
+            self.parse_unary_op_deref])
         if p1 is not None: return p1
         return p1
 
@@ -1352,6 +1354,11 @@ class SppParser:
         p1 = self.parse_once(self.parse_keyword_async)
         if p1 is None: return None
         return Asts.UnaryExpressionOperatorAsyncAst(p1.pos, p1)
+
+    def parse_unary_op_deref(self) -> Optional[Asts.UnaryExpressionOperatorDerefAst]:
+        p1 = self.parse_once(self.parse_token_multiply)
+        if p1 is None: return None
+        return Asts.UnaryExpressionOperatorDerefAst(p1.pos, p1)
 
     def parse_postfix_op(self) -> Optional[Asts.PostfixExpressionOperatorAst]:
         p1 = self.parse_alternate([
@@ -1526,6 +1533,7 @@ class SppParser:
 
     def parse_type(self) -> Optional[Asts.TypeAst]:
         p1 = self.parse_alternate([
+            self.parse_type_never,
             self.parse_type_parenthesized,
             self.parse_type_array,
             self.parse_type_tuple,
@@ -1577,6 +1585,12 @@ class SppParser:
         p3 = self.parse_once(self.parse_type_identifier)
         if p3 is None: return None
         return reduce(lambda acc, x: Asts.TypeUnaryExpressionAst(x.pos, x, acc), p2[::-1], p3).convert()
+
+    def parse_type_never(self) -> Optional[Asts.TypeIdentifierAst]:
+        from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+        p1 = self.parse_once(self.parse_token_exclamation_mark)
+        if p1 is None: return None
+        return CommonTypes.Never(pos=p1.pos)
 
     def parse_type_parenthesized(self) -> Optional[Asts.TypeIdentifierAst]:
         p1 = self.parse_once(self.parse_token_left_parenthesis)
@@ -2290,6 +2304,9 @@ class SppParser:
 
     def parse_keyword_caps(self) -> Optional[Asts.TokenAst]:
         return self.parse_token_raw(RawKeywordType.Caps, SppTokenType.KwCaps)
+
+    def parse_keyword_die(self) -> Optional[Asts.TokenAst]:
+        return self.parse_token_raw(RawKeywordType.Die, SppTokenType.KwDie)
 
     # ===== LEXEMES =====
 
