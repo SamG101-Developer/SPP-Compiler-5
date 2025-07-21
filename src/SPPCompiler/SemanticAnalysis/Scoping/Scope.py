@@ -244,7 +244,7 @@ class Scope:
 
         # For a PostfixExpressionAst iterate the parts.
         scope = self.get_namespace_symbol(name.lhs, exclusive=exclusive).scope
-        while isinstance(name, Asts.PostfixExpressionAst) and isinstance(name.op, Asts.PostfixExpressionOperatorMemberAccessAst):
+        while type(name) is Asts.PostfixExpressionAst and type(name.op) is Asts.PostfixExpressionOperatorMemberAccessAst:
             symbol = scope.get_namespace_symbol(name := name.op.field, exclusive=exclusive)
             scope = symbol.scope
         return symbol
@@ -274,8 +274,9 @@ class Scope:
             return sym if not get_scope else (self, sym)
 
         elif is_semi_valid_postfix(prev_name):
-            sym = self.get_symbol(name.lhs).scope.get_symbol(prev_name.op.field)
-            return sym if not get_scope else (self.get_symbol(name.lhs).scope, sym)
+            scope = self.get_namespace_symbol(name.lhs).scope
+            sym = scope.get_symbol(prev_name.op.field)
+            return sym if not get_scope else (scope, sym)
 
         # Identifiers or non-symbolic expressions can use the symbol table directly.
         else:
