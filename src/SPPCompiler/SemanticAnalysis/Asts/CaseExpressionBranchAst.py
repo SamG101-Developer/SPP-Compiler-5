@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
@@ -128,6 +129,18 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the patterns, guard and body.
         for p in self.patterns:
             p.analyse_semantics(sm, cond, **kwargs)
+
+        if self.op and self.op.token_type != SppTokenType.KwIs:
+            for pattern in self.patterns:
+
+                # Check the function exists. No check for Bool return type as it is enforced by comparison methods.
+                # Dummy values as otherwise memory rules create conflicts - just need to test the existence of the
+                # function.
+                binary_lhs_ast = Asts.ObjectInitializerAst(class_type=cond.infer_type(sm, **kwargs))
+                binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expr.infer_type(sm, **kwargs))
+                binary_ast = Asts.BinaryExpressionAst(self.pos, binary_lhs_ast, self.op, binary_rhs_ast)
+                binary_ast.analyse_semantics(sm, **kwargs)
+
         if self.guard:
             self.guard.analyse_semantics(sm, **kwargs)
         self.body.analyse_semantics(sm, **kwargs)
