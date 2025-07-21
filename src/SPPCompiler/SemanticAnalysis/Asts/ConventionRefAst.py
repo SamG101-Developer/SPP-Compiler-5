@@ -18,6 +18,10 @@ class ConventionRefAst(Asts.Ast):
         # Check both ASTs are the same type.
         return type(other) is ConventionRefAst
 
+    def __hash__(self) -> int:
+        # Hash the AST.
+        return 2
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

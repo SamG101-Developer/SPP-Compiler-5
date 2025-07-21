@@ -48,7 +48,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
 
     @property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
-        return self.op.fq_type_parts + self.rhs.fq_type_parts if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.fq_type_parts
+        return self.op.fq_type_parts + self.rhs.fq_type_parts
 
     @FunctionCache.cache_property
     def without_generics(self) -> Optional[Asts.TypeAst]:
@@ -60,7 +60,15 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
 
     @property
     def convention(self) -> Optional[Asts.ConventionAst]:
-        return self.op.convention if isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst) else None
+        return self.op.convention if type(self.op) is Asts.TypeUnaryOperatorBorrowAst else None
+
+    @property
+    def namespace_parts(self) -> list[Asts.IdentifierAst]:
+        return self.op.namespace_parts + self.rhs.namespace_parts
+
+    @property
+    def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
+        return self.op.type_parts + self.rhs.type_parts
 
     @property
     def pos_end(self) -> int:

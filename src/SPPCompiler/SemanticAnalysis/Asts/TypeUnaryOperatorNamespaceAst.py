@@ -19,7 +19,7 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
         return self.name.value == other.name.value
 
     def __hash__(self) -> int:
-        return hash(self.name)
+        return hash(self.name.value)
 
     def __str__(self) -> str:
         return f"{self.name}::"
@@ -33,7 +33,11 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
         return [self.name]
 
     @property
-    def type_parts(self) -> list[Asts.TypeIdentifierAst]:
+    def namespace_parts(self) -> list[Asts.IdentifierAst]:
+        return [self.name]
+
+    @property
+    def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
         return []
 
     @property

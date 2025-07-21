@@ -63,12 +63,14 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         ...
 
     @property
+    @abstractmethod
     def namespace_parts(self) -> list[Asts.IdentifierAst]:
-        return [p for p in self.fq_type_parts if type(p) is Asts.IdentifierAst]
+        ...
 
     @property
+    @abstractmethod
     def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
-        return [p for p in self.fq_type_parts if type(p) is Asts.TypeIdentifierAst or type(p) is Asts.TokenAst]
+        ...
 
     @abstractmethod
     def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
@@ -132,7 +134,7 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         if convention is None:
             return self
 
-        if isinstance(self, Asts.TypeUnaryExpressionAst) and isinstance(self.op, Asts.TypeUnaryOperatorBorrowAst):
+        if type(self) is Asts.TypeUnaryExpressionAst and type(self.op) is Asts.TypeUnaryOperatorBorrowAst:
             self.op.convention = convention
             return self
 

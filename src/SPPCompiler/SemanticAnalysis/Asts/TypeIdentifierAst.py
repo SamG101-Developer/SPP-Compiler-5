@@ -96,6 +96,14 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
     def convention(self) -> Optional[Asts.ConventionAst]:
         return None
 
+    @property
+    def namespace_parts(self) -> list[Asts.IdentifierAst]:
+        return []
+
+    @property
+    def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
+        return [self]
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

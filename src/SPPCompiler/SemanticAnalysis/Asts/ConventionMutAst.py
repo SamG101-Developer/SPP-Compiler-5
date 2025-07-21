@@ -20,6 +20,10 @@ class ConventionMutAst(Asts.Ast):
         # Check both ASTs are the same type.
         return type(other) is ConventionMutAst
 
+    def __hash__(self) -> int:
+        # Hash the AST.
+        return 1
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
