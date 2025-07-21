@@ -83,8 +83,15 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                     self.arguments.insert(i, new_argument)
 
         # Analyse the arguments.
-        for a in self.arguments:
-            a.analyse_semantics(sm, **kwargs)
+        for argument in self.arguments:
+            argument.analyse_semantics(sm, **kwargs)
+            sym = sm.current_scope.get_variable_symbol_outermost_part(argument.value)
+            if not sym: continue
+
+            # A mutable borrow requires a mutable symbol.
+            if type(argument.convention) is Asts.ConventionMutAst and not sym.is_mutable:
+                raise SemanticErrors.MutabilityInvalidMutationError().add(
+                    argument.value, argument.convention, sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
     def check_memory(
             self, sm: ScopeManager, target_proto: Asts.FunctionPrototypeAst = None,
@@ -180,11 +187,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 if sym.memory_info.ast_borrowed and sym.memory_info.is_borrow_ref:
                     raise SemanticErrors.MutabilityInvalidMutationError().add(
                         argument.value, argument.convention, sym.memory_info.ast_borrowed).scopes(sm.current_scope)
-
-                # Check the argument's value is mutable.
-                if not sym.is_mutable:
-                    raise SemanticErrors.MutabilityInvalidMutationError().add(
-                        argument.value, argument.convention, sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
                 for existing_assign in pre_existing_borrows_mut[argument.value]:
                     sm.current_scope.get_symbol(existing_assign).memory_info.moved_by(argument.value)
