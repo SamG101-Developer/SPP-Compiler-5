@@ -8,6 +8,9 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
+# Todo: prevent constructing variant types?
+
+
 @dataclass(slots=True)
 class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     class_type: Asts.TypeAst = field(default=None)
