@@ -71,7 +71,7 @@ class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
             # Analyse the expression and infer its type.
             self.expr.analyse_semantics(sm, **kwargs)
-            expression_type = self.expr.infer_type(sm, **kwargs).with_convention(self.convention)
+            expression_type = self.expr.infer_type(sm, **(kwargs | {"assignment_type": kwargs["function_ret_type"][0] if kwargs["function_ret_type"] else None})).with_convention(self.convention)
         else:
             # No value means the Void type is the expression type.
             expression_type = CommonTypesPrecompiled.VOID

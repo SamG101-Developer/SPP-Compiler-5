@@ -178,42 +178,41 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             doesn't have an "else" block.
         """
 
-        # TODO:
-        #  Check the logic for "let" statements, allowing "let VariableType = inner_type", and do teh same thing for an
-        #  assignment; if there is an assignment, then set the master type to the lhs's type, and check all types match
-        #  the lhs type. This includes returning a value.
-
         # The checks here only apply when assigning from this expression.
         branch_types = [b.infer_type(sm, **kwargs) for b in self.branches]
-
-        # Branches will typically have their return type compared against the 0th branch.
         master_branch_type = branch_types[0]
 
-        # To handle variants, select the master type as the variant with the most internal types (if there is one).
-        variant_branch_types = [b for b in branch_types if AstTypeUtils.is_type_variant(b, sm.current_scope)]
+        # Pre-provided type for assignment (like a variant type).
+        if lhs_type := kwargs.get("assignment_type", None):
+            master_branch_type = lhs_type
 
-        if variant_branch_types:
+        # If there is a variant branch, use the most variant type as the master branch type.
+        elif variant_branch_types := [b for b in branch_types if AstTypeUtils.is_type_variant(b, sm.current_scope)]:
             most_inner_types = 0
             for variant_type in variant_branch_types:
                 internal_types = variant_type.type_parts[-1].generic_argument_group["Variants"].value.type_parts[-1].generic_argument_group.arguments
                 if len(internal_types) > most_inner_types:
                     master_branch_type, most_inner_types = variant_type, len(internal_types)
+            branch_types.remove(master_branch_type)
 
-        # All branches must return the same type (variant comparison will now work).
-        branch_types.remove(master_branch_type)
+        # Otherwise, if there are no variants, then the first branch type is the master branch type.
+        else:
+            branch_types.remove(master_branch_type)
+
+        # Check all branches match the master branch type.
         if mismatch := [b for b in branch_types if not AstTypeUtils.symbolic_eq(master_branch_type, b, sm.current_scope, sm.current_scope)]:
             raise SemanticErrors.CaseBranchesConflictingTypesError().add(
                 master_branch_type, mismatch[0]).scopes(sm.current_scope)
 
         # Ensure there is an "else" branch if the branches are not exhaustive.
-        # Todo: exhaustion can be done with non-guarded variant patterns.
-        if not isinstance(self.branches[-1].patterns[0], Asts.PatternVariantElseAst):
+        # Todo: need to investigate how to detect exhaustion.
+        if type(self.branches[-1].patterns[0]) is not Asts.PatternVariantElseAst and not kwargs.pop("ignore_else", False):
             raise SemanticErrors.CaseBranchesMissingElseBranchError().add(
                 self.cond, self.branches[-1]).scopes(sm.current_scope)
 
         # Return the branches' return type, if there are any branches, otherwise Void.
         if len(self.branches) > 0:
-            return branch_types[0]
+            return master_branch_type
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
@@ -253,23 +252,8 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1]).scopes(sm.current_scope)
 
             # Check the "else" branch is the final branch (also ensures there is only 1).
-            if isinstance(branch.patterns[0], Asts.PatternVariantElseAst) and branch != self.branches[-1]:
+            if type(branch.patterns[0]) is Asts.PatternVariantElseAst and branch != self.branches[-1]:
                 raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch.patterns[0].kw_else, self.branches[-1]).scopes(sm.current_scope)
-
-            # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
-            if branch.op and branch.op.token_type != SppTokenType.KwIs:
-                self._binary_pattern_conversions[id(branch)] = []
-
-                for pattern in branch.patterns:
-
-                    # Check the function exists. No check for Bool return type as it is enforced by comparison methods.
-                    # Dummy values as otherwise memory rules create conflicts - just need to test the existence of the
-                    # function.
-                    binary_lhs_ast = Asts.ObjectInitializerAst(class_type=self.cond.infer_type(sm, **kwargs))
-                    binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expr.infer_type(sm, **kwargs))
-                    binary_ast = Asts.BinaryExpressionAst(self.pos, binary_lhs_ast, branch.op, binary_rhs_ast)
-                    binary_ast.analyse_semantics(sm, **kwargs)
-                    self._binary_pattern_conversions[id(branch)].append(binary_ast)
 
             branch.analyse_semantics(sm, cond=self.cond, **kwargs)
 

@@ -115,7 +115,7 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
             # Todo: some sort of ambiguity check here? check if there is > 1 attribute with the same name.
             attribute, sup_scope = [a for a in all_attributes if a[0].name == argument.name][0]
             attribute_type = sup_scope.get_symbol(class_symbol.scope.get_symbol(attribute.name).type).fq_name
-            argument_type = argument.infer_type(sm, **kwargs)
+            argument_type = argument.infer_type(sm, **(kwargs | {"assignment_type": attribute_type}))
 
             if not AstTypeUtils.symbolic_eq(attribute_type, argument_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(

@@ -58,7 +58,7 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 kwargs |= {"inferred_return_type": kwargs["function_ret_type"][0]}
 
             self.expr.analyse_semantics(sm, **kwargs)
-            expression_type = self.expr.infer_type(sm, **kwargs)
+            expression_type = self.expr.infer_type(sm, **(kwargs | {"assignment_type": kwargs["function_ret_type"][0] if kwargs["function_ret_type"] else None}))
         else:
             expression_type = CommonTypesPrecompiled.VOID
 

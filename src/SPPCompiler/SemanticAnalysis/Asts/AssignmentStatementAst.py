@@ -131,7 +131,7 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
             # Ensure the lhs and rhs have the same type.
             lhs_type = lhs_expr.infer_type(sm, **kwargs)
-            rhs_type = rhs_expr.infer_type(sm, **kwargs)
+            rhs_type = rhs_expr.infer_type(sm, **(kwargs | {"assignment_type": lhs_type}))
             if not AstTypeUtils.symbolic_eq(lhs_type, rhs_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     lhs_sym.memory_info.ast_initialization, lhs_type, rhs_expr, rhs_type).scopes(sm.current_scope)
@@ -162,9 +162,10 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # For each assignment, check the memory status and resolve any (partial-)moves.
         lhs_syms = [sm.current_scope.get_variable_symbol_outermost_part(expr) for expr in self.lhs]
-        is_attr = lambda ast: not isinstance(ast, Asts.IdentifierAst)
+        is_attr = lambda ast: type(ast) is not Asts.IdentifierAst
         for (lhs_expr, rhs_expr), lhs_sym in zip(zip(self.lhs, self.rhs), lhs_syms):
 
+            # Todo: for "a.b.c", if "a.b" is moved, i think "a.b.c = 1" still works, but it should not.
             # Ensure the memory status of the left and right hand side.
             AstMemoryUtils.enforce_memory_integrity(
                 lhs_sym.name.clone_at(lhs_expr.pos), self.op, sm, check_move=is_attr(lhs_expr),
@@ -179,7 +180,7 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             if is_attr(lhs_expr):
                 AstMemoryUtils.enforce_memory_integrity(
                     lhs_expr.lhs, self.op, sm, check_move=True, check_partial_move=is_attr(lhs_expr.lhs),
-                    check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, mark_moves=False,
+                    check_move_from_borrowed_ctx=False, check_pins=True, check_pins_linked=True, mark_moves=False,
                     **kwargs)
 
             # Extra check to prevent "let: Type" being assigned more than once (bypasses lack of "mut").

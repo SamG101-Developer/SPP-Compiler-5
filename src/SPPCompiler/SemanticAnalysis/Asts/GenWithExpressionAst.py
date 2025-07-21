@@ -64,7 +64,7 @@ class GenWithExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the expression and infer its type.
         self.expr.analyse_semantics(sm, prevent_auto_res=True, **kwargs)
-        expression_type = self.expr.infer_type(sm, prevent_auto_res=True, **kwargs)
+        expression_type = self.expr.infer_type(sm, prevent_auto_res=True, **(kwargs | {"assignment_type": kwargs["function_ret_type"][0] if kwargs["function_ret_type"] else None}))
 
         if kwargs["function_ret_type"]:
             # If the function return type has been given (function, method) then get and store it.
@@ -81,7 +81,7 @@ class GenWithExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             kwargs["function_ret_type"][0], sm, kwargs["function_ret_type"][0], "coroutine")
 
         # The expression type must be a Gen type that exactly matches the function_ret_type.
-        if not AstTypeUtils.symbolic_eq(kwargs["function_ret_type"][0], expression_type, sm.current_scope, sm.current_scope):
+        if not AstTypeUtils.symbolic_eq(kwargs["function_ret_type"][0], expression_type, kwargs["function_scope"], sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(kwargs["function_ret_type"][0], kwargs["function_ret_type"][0], self.expr, expression_type).scopes(kwargs["function_scope"], sm.current_scope)
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
