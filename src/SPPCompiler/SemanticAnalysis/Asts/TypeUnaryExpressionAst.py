@@ -43,24 +43,19 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def print(self, printer: AstPrinter) -> str:
         return f"{self.op.print(printer)}{self.rhs.print(printer)}"
 
+    @property
+    def pos_end(self) -> int:
+        return self.rhs.pos_end
+
+    def convert(self) -> Asts.TypeAst:
+        return self
+
     def is_never_type(self) -> bool:
         return False
 
     @property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return self.op.fq_type_parts + self.rhs.fq_type_parts
-
-    @FunctionCache.cache_property
-    def without_generics(self) -> Optional[Asts.TypeAst]:
-        return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics)
-
-    @property
-    def without_convention(self) -> Optional[Asts.TypeAst]:
-        return self if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.without_convention
-
-    @property
-    def convention(self) -> Optional[Asts.ConventionAst]:
-        return self.op.convention if type(self.op) is Asts.TypeUnaryOperatorBorrowAst else None
 
     @property
     def namespace_parts(self) -> list[Asts.IdentifierAst]:
@@ -71,20 +66,16 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return self.op.type_parts + self.rhs.type_parts
 
     @property
-    def pos_end(self) -> int:
-        return self.rhs.pos_end
+    def without_convention(self) -> Optional[Asts.TypeAst]:
+        return self if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.without_convention
 
-    def convert(self) -> Asts.TypeAst:
-        return self
+    @property
+    def convention(self) -> Optional[Asts.ConventionAst]:
+        return self.op.convention if type(self.op) is Asts.TypeUnaryOperatorBorrowAst else None
 
-    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
-        self.rhs.qualify_types(sm, **kwargs)
-
-    def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None, generic_infer_target: Optional[dict] = None, **kwargs) -> None:
-        if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst:
-            temp_manager = ScopeManager(sm.global_scope, type_scope or sm.current_scope)
-            type_scope = AstTypeUtils.get_namespaced_scope_with_error(temp_manager, [self.op.name])
-        self.rhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
+    @FunctionCache.cache_property
+    def without_generics(self) -> Optional[Asts.TypeAst]:
+        return TypeUnaryExpressionAst(self.pos, self.op, self.rhs.without_generics)
 
     def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         x = self.rhs.substituted_generics(generic_arguments)
@@ -103,6 +94,15 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst:
             scope = scope.get_namespace_symbol(self.op.name).scope
         return self.rhs.get_symbol(scope)
+
+    def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
+        self.rhs.qualify_types(sm, **kwargs)
+
+    def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None, generic_infer_target: Optional[dict] = None, **kwargs) -> None:
+        if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst:
+            temp_manager = ScopeManager(sm.global_scope, type_scope or sm.current_scope)
+            type_scope = AstTypeUtils.get_namespaced_scope_with_error(temp_manager, [self.op.name])
+        self.rhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
 
     def infer_type(self, sm: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or sm.current_scope

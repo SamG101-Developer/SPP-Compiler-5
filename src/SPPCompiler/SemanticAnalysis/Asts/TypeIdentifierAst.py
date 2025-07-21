@@ -61,6 +61,18 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
             str(self.generic_argument_group)]
         return "".join(string)
 
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        string = [
+            self.value,
+            self.generic_argument_group.print(printer)]
+        return "".join(string)
+
+    @property
+    def pos_end(self) -> int:
+        return self.pos + len(self.value)
+
     @staticmethod
     def from_identifier(ast: Asts.IdentifierAst) -> TypeIdentifierAst:
         return TypeIdentifierAst(pos=ast.pos, value=ast.value)
@@ -77,24 +89,15 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
     def never_type(pos: int = 0) -> TypeIdentifierAst:
         return TypeIdentifierAst(pos=pos, value="Never", is_never=True)
 
+    def convert(self) -> Asts.TypeAst:
+        return self
+
     def is_never_type(self) -> bool:
         return self.is_never
 
     @property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return [self]
-
-    @FunctionCache.cache_property
-    def without_generics(self) -> Optional[Asts.TypeAst]:
-        return TypeIdentifierAst(self.pos, self.value)
-
-    @property
-    def without_convention(self) -> Optional[Asts.TypeAst]:
-        return self
-
-    @property
-    def convention(self) -> Optional[Asts.ConventionAst]:
-        return None
 
     @property
     def namespace_parts(self) -> list[Asts.IdentifierAst]:
@@ -104,20 +107,17 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
     def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
         return [self]
 
-    @ast_printer_method
-    def print(self, printer: AstPrinter) -> str:
-        # Print the AST with auto-formatting.
-        string = [
-            self.value,
-            self.generic_argument_group.print(printer)]
-        return "".join(string)
+    @property
+    def without_convention(self) -> Optional[Asts.TypeAst]:
+        return self
 
     @property
-    def pos_end(self) -> int:
-        return self.pos + len(self.value)
+    def convention(self) -> Optional[Asts.ConventionAst]:
+        return None
 
-    def convert(self) -> Asts.TypeAst:
-        return self
+    @FunctionCache.cache_property
+    def without_generics(self) -> Optional[Asts.TypeAst]:
+        return TypeIdentifierAst(self.pos, self.value)
 
     def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
         name = fast_deepcopy(self)
@@ -183,7 +183,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
         return None
 
     def contains_generic(self, generic_type: Asts.TypeIdentifierAst) -> bool:
-        # todo: change this to use a custom iterator as-well?
+        # Todo: change this to use a custom iterator as-well?
         return generic_type in self
 
     def get_symbol(self, scope: Scope) -> TypeSymbol:

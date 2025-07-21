@@ -36,6 +36,15 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def print(self, printer: AstPrinter) -> str:
         return f"{self.lhs}{self.op}"
 
+    @property
+    def pos_end(self) -> int:
+        return self.op.pos_end
+
+    def convert(self) -> Asts.TypeAst:
+        if type(self.op) is Asts.TypePostfixOperatorOptionalTypeAst:
+            return CommonTypes.Opt(self.pos, self.lhs.convert())
+        return self
+
     def is_never_type(self) -> bool:
         return False
 
@@ -44,8 +53,12 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         return CommonTypes.Opt(self.pos, self.lhs).fq_type_parts if type(self.op) is Asts.TypePostfixOperatorOptionalTypeAst else self.lhs.fq_type_parts + self.op.fq_type_parts
 
     @FunctionCache.cache_property
-    def without_generics(self) -> Optional[Asts.TypeAst]:
-        return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs, op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.without_generics))
+    def namespace_parts(self) -> list[Asts.IdentifierAst]:
+        return self.lhs.namespace_parts + self.op.name.namespace_parts
+
+    @FunctionCache.cache_property
+    def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
+        return self.lhs.type_parts + self.op.name.type_parts
 
     @property
     def without_convention(self) -> Optional[Asts.TypeAst]:
@@ -55,9 +68,23 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def convention(self) -> Optional[Asts.ConventionAst]:
         return None
 
-    @property
-    def pos_end(self) -> int:
-        return self.op.pos_end
+    @FunctionCache.cache_property
+    def without_generics(self) -> Optional[Asts.TypeAst]:
+        return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs, op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.without_generics))
+
+    def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
+        return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs.substituted_generics(generic_arguments), op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.substituted_generics(generic_arguments)))
+
+    def match_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
+        if str(that) == str(generic_name): return self
+        return self.op.name.match_generic(that, generic_name)
+
+    def contains_generic(self, generic_type: Asts.TypeIdentifierAst) -> bool:
+        return self.op.name.contains_generic(generic_type)
+
+    def get_symbol(self, scope: Scope) -> TypeSymbol:
+        self_scope = scope.get_symbol(self.lhs.infer_type(ScopeManager(scope, scope))).scope
+        return self_scope.get_symbol(self.op.name)
 
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None, generic_infer_target: Optional[dict] = None, **kwargs) -> None:
         self.lhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
@@ -78,33 +105,6 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
                     sm.current_scope, closest[0][0], closest[1][0])
 
         self.op.name.analyse_semantics(sm, type_scope=lhs_type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
-
-    def convert(self) -> Asts.TypeAst:
-        if type(self.op) is Asts.TypePostfixOperatorOptionalTypeAst:
-            return CommonTypes.Opt(self.pos, self.lhs.convert())
-        return self
-
-    @FunctionCache.cache_property
-    def namespace_parts(self) -> list[Asts.IdentifierAst]:
-        return self.lhs.namespace_parts + self.op.name.namespace_parts
-
-    @FunctionCache.cache_property
-    def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
-        return self.lhs.type_parts + self.op.name.type_parts
-
-    def substituted_generics(self, generic_arguments: list[Asts.GenericArgumentAst]) -> Asts.TypeAst:
-        return Asts.TypePostfixExpressionAst(pos=self.pos, lhs=self.lhs.substituted_generics(generic_arguments), op=Asts.TypePostfixOperatorNestedTypeAst(pos=self.pos, name=self.op.name.substituted_generics(generic_arguments)))
-
-    def match_generic(self, that: Asts.TypeAst, generic_name: Asts.TypeIdentifierAst) -> Optional[Asts.TypeAst]:
-        if str(that) == str(generic_name): return self
-        return self.op.name.match_generic(that, generic_name)
-
-    def contains_generic(self, generic_type: Asts.TypeIdentifierAst) -> bool:
-        return self.op.name.contains_generic(generic_type)
-
-    def get_symbol(self, scope: Scope) -> TypeSymbol:
-        self_scope = scope.get_symbol(self.lhs.infer_type(ScopeManager(scope, scope))).scope
-        return self_scope.get_symbol(self.op.name)
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         self.lhs.analyse_semantics(sm, **kwargs)
