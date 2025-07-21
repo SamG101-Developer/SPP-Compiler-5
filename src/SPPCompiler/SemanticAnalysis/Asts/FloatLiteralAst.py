@@ -36,6 +36,10 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.tok_dot = self.tok_dot or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDot)
         self.decimal_value = self.decimal_value or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.LxNumber)
 
+    def __hash__(self) -> int:
+        # Hash the AST by its ID.
+        return id(self)
+
     def __eq__(self, other: FloatLiteralAst) -> bool:
         # Needed for cmp-generic arg checking.
         return isinstance(other, FloatLiteralAst) and self.tok_sign == other.tok_sign and self.integer_value.token_data == other.integer_value.token_data and self.decimal_value.token_data == other.decimal_value.token_data
