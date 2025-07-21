@@ -28,27 +28,54 @@ class AstTypeUtils:
 
     @staticmethod
     def is_type_indexable(type: Asts.TypeAst, scope: Scope) -> bool:
-        # Only tuple and array types are indexable.
-        is_tuple = AstTypeUtils.is_type_tuple(type.without_generics, scope)
-        is_array = AstTypeUtils.is_type_array(type.without_generics, scope)
-        return is_tuple or is_array
+        # Test for "Tup" type.
+        if AstTypeUtils.is_type_tuple(type.without_generics, scope):
+            return True
+
+        # Test for "Arr" type.
+        if AstTypeUtils.is_type_array(type.without_generics, scope):
+            return True
+
+        # No match for indexable types.
+        return False
 
     @staticmethod
     def is_type_functional(type: Asts.TypeAst, scope: Scope) -> bool:
-        # Check if a type is one of the three function types.
-        is_fun_mov = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_MOV, scope, scope)
-        is_fun_mut = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_MUT, scope, scope)
-        is_fun_ref = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_REF, scope, scope)
-        return is_fun_mov or is_fun_mut or is_fun_ref
+        # Test for "FunMov" type.
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_MOV, scope, scope):
+            return True
+
+        # Test for "FunMut" type.
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_MUT, scope, scope):
+            return True
+
+        # Test for "FunRef" type.
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_FUN_REF, scope, scope):
+            return True
+
+        # No match for functional types.
+        return False
 
     @staticmethod
     def is_type_generator(type: Asts.TypeAst, scope: Scope) -> bool:
-        # Check if a type is a generator type.
-        is_gen      = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN, scope, scope)
-        is_gen_once = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_ONCE, scope, scope)
-        is_gen_opt  = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_OPT, scope, scope)
-        is_gen_res  = AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_RES, scope, scope)
-        return is_gen or is_gen_once or is_gen_opt or is_gen_res
+        # Test for "Gen" type.
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN, scope, scope):
+            return True
+
+        # Test for "GenOnce" type.
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_ONCE, scope, scope):
+            return True
+
+        # Test for "GenOpt" type.
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_OPT, scope, scope):
+            return True
+
+        # Test for "GenRes" type.
+        if AstTypeUtils.symbolic_eq(type.without_generics, CommonTypesPrecompiled.EMPTY_GEN_RES, scope, scope):
+            return True
+
+        # No match for generator types.
+        return False
 
     @staticmethod
     def is_type_tuple(type: Asts.TypeAst, scope: Scope) -> bool:
