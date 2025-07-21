@@ -10,6 +10,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -25,7 +26,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     function_argument_group: Asts.FunctionCallArgumentGroupAst = field(default=None)
     fold_token: Optional[Asts.TokenAst] = field(default=None)
 
-    _overload: Optional[Tuple[Scope, Asts.FunctionPrototypeAst]] = field(default=None, repr=False)
+    _overload: Optional[Tuple[Scope, Asts.FunctionPrototypeAst, Asts.GenericArgumentGroupAst]] = field(default=None, repr=False)
     _is_async: Optional[Asts.Ast] = field(default=None, repr=False)
     _folded_args: list[Asts.FunctionCallArgumentAst] = field(default_factory=list, repr=False)
     _closure_arg: Optional[Asts.FunctionCallArgumentUnnamedAst] = field(default=None, repr=False)
@@ -61,7 +62,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         function_owner_type, function_owner_scope, function_name = AstFunctionUtils.get_function_owner_type_and_function_name(sm, lhs, **kwargs)
 
         # Convert the obj.method_call(...args) into Type::method_call(obj, ...args).
-        if isinstance(lhs, Asts.PostfixExpressionAst) and lhs.op.is_runtime_access():
+        if type(lhs) is Asts.PostfixExpressionAst and lhs.op.is_runtime_access():
             transformed_lhs, transformed_function_call = AstFunctionUtils.convert_method_to_function_form(
                 sm, function_owner_type, function_name, lhs, self, **kwargs)
             transformed_function_call.determine_overload(sm, transformed_lhs, expected_return_type=expected_return_type, **kwargs)
@@ -93,7 +94,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
             # Extract the parameter names and argument names.
             parameter_names     = [p.extract_name for p in fn_proto.function_parameter_group.params]
             parameter_names_req = [p.extract_name for p in fn_proto.function_parameter_group.get_required_params()]
-            argument_names      = [a.name for a in arguments if isinstance(a, Asts.FunctionCallArgumentNamedAst)]
+            argument_names      = [a.name for a in arguments if type(a) is Asts.FunctionCallArgumentNamedAst]
             is_variadic_fn      = fn_proto.function_parameter_group.get_variadic_param() is not None
 
             # Use a try-except block to catch any errors as a following overload could still be valid.
@@ -102,7 +103,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                 if fn_proto._abstract:
                     raise SemanticErrors.FunctionCallAbstractFunctionError().add(fn_proto.name, self).scopes(sm.current_scope)
 
-                # Can't call non-implemented functions (dummy functions).
+                # Can't call non-implemented functions (dummy functions, will be removed at some point).
                 if fn_proto._non_implemented:
                     ...
 
@@ -122,7 +123,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     explicit_generic_arguments=generic_arguments + ctx_generic_args,
                     infer_source={a.name: a.infer_type(sm, **kwargs) for a in arguments},
                     infer_target={p.extract_name: p.type for p in parameters},
-                    sm=sm, owner=lhs.infer_type(sm, **kwargs),
+                    sm=sm, owner=lhs.infer_type(sm, **kwargs), owner_scope=fn_scope, owner_ast=self,
                     variadic_parameter_identifier=fn_proto.function_parameter_group.get_variadic_param().extract_name if is_variadic_fn else None,
                     **kwargs)
 
@@ -152,7 +153,9 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
                     new_fn_proto = fast_deepcopy(fn_proto)
-                    tm = ScopeManager(sm.global_scope, fn_scope, sm.normal_sup_blocks, sm.generic_sup_blocks)
+                    external_generics = [x for x in sm.current_scope.all_symbols() if type(x) is not NamespaceSymbol and x.is_generic]
+                    new_fn_scope = AstTypeUtils.create_generic_fun_scope(sm, fn_scope, Asts.GenericArgumentGroupAst(arguments=generic_arguments), external_generics, **kwargs)
+                    tm = ScopeManager(sm.global_scope, new_fn_scope, sm.normal_sup_blocks, sm.generic_sup_blocks)
 
                     new_fn_proto.generic_parameter_group.parameters = []
                     for p in new_fn_proto.function_parameter_group.params.copy():
@@ -162,6 +165,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                         # Remove a parameter if it is substituted with a "Void" type.
                         # Todo: this should be done outside generic substitution, because what if f(x: Void)
                         #  Maybe make the "if generic_arguments" include "or any(p.type.symbolic_eq(CommonTypesPrecompiled.VOID, tm.current_scope, tm.current_scope) for p in parameters)"
+                        #  Also remove from parameter names etc?
                         if AstTypeUtils.symbolic_eq(p.type, CommonTypesPrecompiled.VOID, tm.current_scope, tm.current_scope):
                             new_fn_proto.function_parameter_group.params.remove(p)
 
@@ -180,20 +184,22 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
                     # Overwrite the function prototype and scope.
                     fn_proto = new_fn_proto
-                    fn_scope = tm.current_scope
+                    fn_scope = new_fn_scope
 
                 # Check for any named arguments without a corresponding parameter.
                 if invalid_arguments := OrderedSet(argument_names) - OrderedSet(parameter_names):
-                    raise SemanticErrors.ArgumentNameInvalidError().add(parameters[0], "parameter", invalid_arguments.pop(0), "argument").scopes(sm.current_scope)
+                    raise SemanticErrors.ArgumentNameInvalidError().add(
+                        parameters[0], "parameter", invalid_arguments.pop(0), "argument").scopes(sm.current_scope)
 
                 # Check if there are too few arguments for the function (by missing names).
                 if missing_parameters := OrderedSet(parameter_names_req) - OrderedSet(argument_names):
-                    raise SemanticErrors.ArgumentRequiredNameMissingError().add(self, missing_parameters.pop(0), "parameter", "argument")
+                    raise SemanticErrors.ArgumentRequiredNameMissingError().add(
+                        self, missing_parameters.pop(0), "parameter", "argument").scopes(sm.current_scope)
 
                 # Type check the arguments against the parameters.
                 sorted_arguments = sorted(arguments, key=lambda a: parameter_names.index(a.name))
                 for argument, parameter in zip(sorted_arguments, parameters):
-                    parameter_type = parameter.type
+                    parameter_type = fn_scope.get_symbol(parameter.type).fq_name.with_convention(parameter.type.convention)
                     argument_type = argument.infer_type(sm, **kwargs)
 
                     # Special case for variadic parameters.
@@ -220,7 +226,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                                 raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
                 # Mark the overload as a pass.
-                pass_overloads.append((fn_scope, fn_proto))
+                pass_overloads.append((fn_scope, fn_proto, Asts.GenericArgumentGroupAst(arguments=generic_arguments)))
 
             except (
                     SemanticErrors.FunctionCallAbstractFunctionError,
@@ -240,9 +246,9 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         # Perform the return type overload selection separately here, for error reasons.
         return_matches = []
         if expected_return_type:
-            for fn_scope, fn_proto in pass_overloads:
+            for fn_scope, fn_proto, fn_generics in pass_overloads:
                 if AstTypeUtils.symbolic_eq(fn_proto.return_type, expected_return_type, fn_scope, sm.current_scope):
-                    return_matches.append((fn_scope, fn_proto))
+                    return_matches.append((fn_scope, fn_proto, fn_generics))
             if len(return_matches) == 1:
                 pass_overloads = return_matches
 
@@ -280,7 +286,20 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
 
         # If there is a scope present (ie non-lambda), then fully qualify the return type.
         if self._overload[0] is not None:
+
+            other_generics = []
+            try:
+                lhs_lhs_scope = sm.current_scope.get_symbol(lhs.lhs.infer_type(sm, **kwargs)).scope
+                other_generics = lhs_lhs_scope.name.type_parts[-1].generic_argument_group.arguments
+            except AttributeError:
+                pass
+
             return_type = self._overload[0].get_symbol(return_type).fq_name
+            return_type = return_type.substituted_generics(other_generics)
+            return_type = return_type.substituted_generics(self._overload[0].generics)
+
+            tm = ScopeManager(sm.global_scope, self._overload[0], sm.normal_sup_blocks, sm.generic_sup_blocks)
+            return_type.analyse_semantics(tm, **kwargs)
 
         # For GenOnce coroutines, auto resume the coroutine and return the "Yield" type.
         if self._is_coro_and_auto_resume and not kwargs.pop("prevent_auto_res", False):
