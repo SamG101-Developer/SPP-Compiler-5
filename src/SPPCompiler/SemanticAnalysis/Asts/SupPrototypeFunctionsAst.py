@@ -8,9 +8,8 @@ from llvmlite import ir
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
@@ -102,10 +101,13 @@ class SupPrototypeFunctionsAst(Asts.Ast):
 
         # Add the "Self" symbol into the scope.
         if self.name.type_parts[0].value[0] != "$":
-            self_symbol = TypeSymbol(
-                name=CommonTypes.Self(self.name.pos), type=cls_symbol.type,
-                scope=cls_symbol.scope, scope_defined_in=sm.current_scope)
-            sm.current_scope.add_symbol(self_symbol)
+            cls_symbol = sm.current_scope.get_symbol(self.name)
+            sm.current_scope.add_symbol(AliasSymbol(
+                name=Asts.TypeIdentifierAst(value="Self"),
+                type=None,
+                scope=cls_symbol.scope,
+                scope_defined_in=sm.current_scope,
+                old_sym=cls_symbol))
 
         self.body.load_super_scopes(sm, **kwargs)
         sm.move_out_of_current_scope()

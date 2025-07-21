@@ -131,7 +131,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
         # Skip the class scope (no sup-scope work to do).
         sm.move_to_next_scope()
-        self.body.generate_top_level_aliases(sm)
+        self.body.generate_top_level_aliases(sm, **kwargs)
         sm.move_out_of_current_scope()
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
@@ -157,10 +157,13 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
         # Add the "Self" symbol into the scope.
         if self.name.type_parts[0].value[0] != "$":
-            self_symbol = TypeSymbol(
-                name=CommonTypes.Self(self.name.pos), type=cls_symbol.type,
-                scope=cls_symbol.scope, scope_defined_in=sm.current_scope)
-            sm.current_scope.add_symbol(self_symbol)
+            cls_symbol = sm.current_scope.get_symbol(self.name)
+            sm.current_scope.add_symbol(AliasSymbol(
+                name=Asts.TypeIdentifierAst(value="Self"),
+                type=None,
+                scope=cls_symbol.scope,
+                scope_defined_in=sm.current_scope,
+                old_sym=cls_symbol))
 
         # Analyse the supertype after Self has been added (allows use in generic arguments to the superclass).
         self.super_class.analyse_semantics(sm, **kwargs)
