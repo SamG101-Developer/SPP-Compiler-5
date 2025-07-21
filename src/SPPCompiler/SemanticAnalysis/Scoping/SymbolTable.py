@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterator, Optional, TYPE_CHECKING
+from typing import Generator, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis import Asts
@@ -21,9 +21,9 @@ class SymbolTable:
         # Remove a symbol from the table by symbol name.
         del self._table[symbol_name]
 
-    def get(self, name: Asts.IdentifierAst | Asts.TypeIdentifierAst, default=None) -> Symbol:
+    def get(self, name: Asts.IdentifierAst | Asts.TypeIdentifierAst) -> Optional[Symbol]:
         # Get a symbol from the table.
-        return self._table.get(name, default)
+        return self._table.get(name, None)
 
     def set(self, name: Asts.IdentifierAst | Asts.TypeIdentifierAst, symbol: Symbol) -> None:
         # Set a symbol in the table.
@@ -33,7 +33,7 @@ class SymbolTable:
         # Check if a symbol is in the table.
         return name in self._table
 
-    def all(self) -> Iterator[Symbol]:
+    def all(self) -> Generator[Symbol]:
         # Get all symbols in the table.
         for v in self._table.values():
             yield v
