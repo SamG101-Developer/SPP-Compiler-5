@@ -445,6 +445,7 @@ class AstFunctionUtils:
             infer_target: Dict[Asts.IdentifierAst, Asts.TypeAst],
             sm: ScopeManager,
             owner: Asts.TypeAst | Asts.ExpressionAst = None,
+            owner_ast: Asts.ExpressionAst = None,
             owner_scope: Optional[Scope] = None,
             variadic_parameter_identifier: Optional[Asts.IdentifierAst] = None,
             is_tuple_owner: bool = False,
@@ -571,7 +572,7 @@ class AstFunctionUtils:
         for generic_parameter_name in generic_parameter_names:
             if generic_parameter_name not in inferred_generic_arguments:
                 raise SemanticErrors.GenericParameterNotInferredError().add(
-                    generic_parameter_name, owner).scopes(sm.current_scope)  # , sm.current_scope.get_symbol(owner).scope.parent_module)
+                    generic_parameter_name, owner_ast).scopes(owner_scope, sm.current_scope)
 
         # At this point, each inferred generic argument has been checked for conflicts, so it is safe to assume the
         # first type mapping per argument can be used. Extract these types into a new dictionary.
