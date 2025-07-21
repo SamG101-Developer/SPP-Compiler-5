@@ -164,6 +164,7 @@ from SPPCompiler.SemanticAnalysis.Asts.TypeAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAsyncAst import *
+from SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorDerefAst import *
 from SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.WhereBlockAst import *
