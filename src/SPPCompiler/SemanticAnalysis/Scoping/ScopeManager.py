@@ -136,24 +136,30 @@ class ScopeManager:
         scope._direct_sup_scopes = []
 
         # Iterate through all the super scopes and check if the name matches.
-        for super_scope in super_scopes:
+        for sup_scope in super_scopes:
 
             # Relaxed comparison between the two types, capturing the generics if they exist.
             scope_generics_dict = {}
-            if not AstTypeUtils.relaxed_symbolic_eq(scope.type_symbol.fq_name, super_scope._ast.name, scope.type_symbol.scope_defined_in, super_scope, scope_generics_dict):
+            if not AstTypeUtils.relaxed_symbolic_eq(scope.type_symbol.fq_name, sup_scope._ast.name, scope.type_symbol.scope_defined_in, sup_scope, scope_generics_dict):
                 continue
             scope_generics = Asts.GenericArgumentGroupAst.from_dict(scope_generics_dict)
 
-            tm = ScopeManager(self.global_scope, scope.type_symbol.scope_defined_in, self.normal_sup_blocks, self.generic_sup_blocks)
-            new_sup_scope, new_cls_scope = AstTypeUtils.create_generic_sup_scope(tm, super_scope, scope, scope_generics, **kwargs)
-            sup_symbol = new_cls_scope.type_symbol if new_cls_scope else None
+            # Create a generic version of the super scope if needed.
+            if len(scope_generics.arguments) > 0:
+                external_generics = [x for x in scope.type_symbol.scope_defined_in.all_symbols() if type(x) is not NamespaceSymbol and x.is_generic]
+                new_sup_scope, new_cls_scope = AstTypeUtils.create_generic_sup_scope(self, sup_scope, scope, scope_generics, external_generics, **kwargs)
+                sup_symbol = new_cls_scope.type_symbol if new_cls_scope else None
+            else:
+                new_sup_scope = sup_scope
+                new_cls_scope = scope.get_symbol(sup_scope._ast.super_class).scope if type(sup_scope._ast) is Asts.SupPrototypeExtensionAst else None
+                sup_symbol = new_cls_scope.type_symbol if new_cls_scope else None
             cls_symbol = scope.type_symbol
 
             # Prevent double inheritance, cyclic inheritance, and self inheritance.
-            if isinstance(super_scope._ast, Asts.SupPrototypeExtensionAst):
-                super_scope._ast._check_cyclic_extension(sup_symbol, super_scope)
-                super_scope._ast._check_double_extension(cls_symbol, sup_symbol, super_scope)
-                super_scope._ast._check_self_extension(cls_symbol, sup_symbol, super_scope)
+            # if type(sup_scope._ast) is Asts.SupPrototypeExtensionAst:
+            #     sup_scope._ast._check_cyclic_extension(sup_symbol, sup_scope)
+            #     sup_scope._ast._check_double_extension(cls_symbol, sup_symbol, sup_scope)
+            #     sup_scope._ast._check_self_extension(cls_symbol, sup_symbol, sup_scope)
 
             # Register the super scope against the current scope.
             scope._direct_sup_scopes.append(new_sup_scope)
@@ -163,9 +169,9 @@ class ScopeManager:
             if new_cls_scope and scope.type_symbol is not new_cls_scope.type_symbol:
                 scope._direct_sup_scopes.append(new_cls_scope)
 
-            if isinstance(super_scope._ast, Asts.SupPrototypeAst):
-                check_conflicting_type_statements(cls_symbol, super_scope, self)
-                check_conflicting_cmp_statements(cls_symbol, super_scope, self)
+            # if isinstance(sup_scope._ast, Asts.SupPrototypeAst):
+            #     check_conflicting_type_statements(cls_symbol, sup_scope, self)
+            #     check_conflicting_cmp_statements(cls_symbol, sup_scope, self)
 
         if progress:
             progress.next(str(scope.name))
