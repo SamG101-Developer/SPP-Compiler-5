@@ -30,7 +30,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         yield from self.rhs
 
     def __deepcopy__(self, memodict=None) -> TypeUnaryExpressionAst:
-        # Create a deep copy of the AST.
+        # Create a deep copy of the AST (don't need to copy the namespace asts, just the type).
         return TypeUnaryExpressionAst(pos=self.pos, op=self.op, rhs=fast_deepcopy(self.rhs))
 
     def __json__(self) -> str:
