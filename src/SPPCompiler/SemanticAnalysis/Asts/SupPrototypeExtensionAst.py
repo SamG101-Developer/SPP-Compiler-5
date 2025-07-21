@@ -181,13 +181,16 @@ class SupPrototypeExtensionAst(Asts.Ast):
         self.name.analyse_semantics(sm, **kwargs)
         self.super_class.analyse_semantics(sm, **kwargs)
         cls_symbol = sm.current_scope.get_symbol(self.name)
+        sup_symbol = sm.current_scope.get_symbol(self.super_class)
 
         # Mark the class as copyable if the "Copy" type is the super class.
-        if AstTypeUtils.symbolic_eq(self.super_class, CommonTypesPrecompiled.COPY, sm.current_scope, sm.current_scope):
-            sm.current_scope.get_symbol(self.name.without_generics).is_copyable = True
-            cls_symbol.is_copyable = True
-
-        sup_symbol = sm.current_scope.get_symbol(self.super_class)
+        for sup_scope in [sup_symbol.scope] + sm.current_scope.get_symbol(self.super_class).scope.sup_scopes:
+            if type(sup_scope._ast) is Asts.ClassPrototypeAst:
+                fq_name = sup_scope.type_symbol.fq_name
+                if AstTypeUtils.symbolic_eq(fq_name, CommonTypesPrecompiled.COPY, sup_scope, sm.current_scope):
+                    sm.current_scope.get_symbol(self.name.without_generics).is_direct_copyable = True
+                    cls_symbol.is_direct_copyable = True
+                    break
 
         # Check every member on the superimposition exists on the super class (all sup scopes must be loaded here).
         for member in self.body.members:

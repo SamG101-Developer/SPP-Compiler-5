@@ -77,13 +77,13 @@ class VariableSymbol(BaseSymbol):
             is_generic=self.is_generic, memory_info=copy.copy(self.memory_info), visibility=self.visibility)
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(kw_only=True)
 class TypeSymbol(BaseSymbol):
     name: Asts.TypeIdentifierAst
     type: Optional[Asts.ClassPrototypeAst]
     scope: Optional[Scope] = field(default=None)
     is_generic: bool = field(default=False)
-    is_copyable: bool = field(default=False)
+    is_direct_copyable: bool = field(default=False)
     visibility: Visibility = field(default=Visibility.Private)
     convention: Optional[Asts.ConventionAst] = field(default=None)
     generic_impl: TypeSymbol = field(default=None, repr=False)
@@ -119,10 +119,13 @@ class TypeSymbol(BaseSymbol):
         if self.is_generic:
             return TypeSymbol(
                 name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
-                is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
+                is_direct_copyable=self.is_direct_copyable, visibility=self.visibility, convention=self.convention,
                 generic_impl=self.generic_impl, scope_defined_in=self.scope_defined_in)
         else:
             return self
+
+    def is_copyable(self) -> bool:
+        return self.is_direct_copyable
 
     @property
     def fq_name(self) -> Asts.TypeAst:
@@ -172,7 +175,7 @@ class AliasSymbol(TypeSymbol):
         # Copy all the attributes of the AliasSymbol, but link the old scope. No conventions on aliases.
         return AliasSymbol(
             name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, generic_impl=self.generic_impl,
+            is_direct_copyable=self.is_direct_copyable, visibility=self.visibility, generic_impl=self.generic_impl,
             scope_defined_in=self.scope_defined_in, old_sym=fast_deepcopy(self.old_sym))
 
 
