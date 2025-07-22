@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ConventionRefAst(Asts.Ast):
     tok_borrow: Asts.TokenAst = field(default=None)
 
@@ -16,7 +16,11 @@ class ConventionRefAst(Asts.Ast):
 
     def __eq__(self, other: ConventionRefAst) -> bool:
         # Check both ASTs are the same type.
-        return isinstance(other, ConventionRefAst)
+        return type(other) is ConventionRefAst
+
+    def __hash__(self) -> int:
+        # Hash the AST.
+        return 2
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

@@ -5,13 +5,12 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypeParenthesizedAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
     tok_l: Asts.TokenAst = field(default=None)
-    type_expr: Asts.TypeAst = field(default_factory=Seq)
+    type_expr: Asts.TypeAst = field(default=None)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:

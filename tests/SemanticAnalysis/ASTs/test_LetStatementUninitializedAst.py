@@ -15,7 +15,7 @@ class TestLetStatementUninitializedAst(CustomTestCase):
     def test_valid_tuple(self):
         """
         fun f() -> std::void::Void {
-            let (x, y): (std::boolean::Bool, std::number::bigint::BigInt)
+            let (x, y): (std::boolean::Bool, std::bignum::bigint::BigInt)
             x = true
             y = 123
         }
@@ -35,8 +35,8 @@ class TestLetStatementUninitializedAst(CustomTestCase):
     def test_valid_object(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -59,7 +59,7 @@ class TestLetStatementUninitializedAst(CustomTestCase):
     def test_invalid_tuple_length_too_big(self):
         """
         fun f() -> std::void::Void {
-            let (x, y): (std::boolean::Bool, std::number::bigint::BigInt, std::number::bigint::BigInt)
+            let (x, y): (std::boolean::Bool, std::bignum::bigint::BigInt, std::bignum::bigint::BigInt)
         }
         """
 
@@ -75,7 +75,7 @@ class TestLetStatementUninitializedAst(CustomTestCase):
     def invalid_tuple_element_type_mismatch(self):
         """
         fun f() -> std::void::Void {
-            let (x, y): (std::boolean::Bool, std::number::bigint::BigInt)
+            let (x, y): (std::boolean::Bool, std::bignum::bigint::BigInt)
             x = "hello world"
         }
         """
@@ -109,8 +109,8 @@ class TestLetStatementUninitializedAst(CustomTestCase):
     def test_invalid_object_type_attribute(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -122,8 +122,8 @@ class TestLetStatementUninitializedAst(CustomTestCase):
     def test_invalid_object_type_missing_attributes(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -135,8 +135,8 @@ class TestLetStatementUninitializedAst(CustomTestCase):
     def test_invalid_object_type_mismatch(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {

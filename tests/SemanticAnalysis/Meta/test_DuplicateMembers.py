@@ -7,7 +7,7 @@ class TestDuplicateMembers_SupType(CustomTestCase):
         """
         cls A { }
         sup A {
-            type X = std::number::bigint::BigInt
+            type X = std::bignum::bigint::BigInt
         }
 
         cls B { }
@@ -21,7 +21,7 @@ class TestDuplicateMembers_SupType(CustomTestCase):
         """
         cls A { }
         sup A {
-            type X = std::number::bigint::BigInt
+            type X = std::bignum::bigint::BigInt
         }
 
         sup A {
@@ -34,7 +34,7 @@ class TestDuplicateMembers_SupType(CustomTestCase):
         """
         cls B { }
         sup B {
-            type X = std::number::bigint::BigInt
+            type X = std::bignum::bigint::BigInt
         }
 
         cls C { }
@@ -52,7 +52,7 @@ class TestDuplicateMembers_SupType(CustomTestCase):
         """
         cls B { }
         sup B {
-            type X = std::number::bigint::BigInt
+            type X = std::bignum::bigint::BigInt
         }
 
         cls C { }
@@ -74,7 +74,7 @@ class TestDuplicateMembers_SupType(CustomTestCase):
         """
         cls B { }
         sup B {
-            type X = std::number::bigint::BigInt
+            type X = std::bignum::bigint::BigInt
         }
 
         cls C { }
@@ -96,7 +96,7 @@ class TestDuplicateMembers_SupType(CustomTestCase):
         """
         cls B { }
         sup B {
-            type X = std::number::bigint::BigInt
+            type X = std::bignum::bigint::BigInt
         }
 
         cls C { }
@@ -123,7 +123,7 @@ class TestDuplicateMembers_SupCmp(CustomTestCase):
         """
         cls A { }
         sup A {
-            cmp x: std::number::bigint::BigInt = 123
+            cmp x: std::bignum::bigint::BigInt = 123
         }
 
         cls B { }
@@ -137,7 +137,7 @@ class TestDuplicateMembers_SupCmp(CustomTestCase):
         """
         cls A { }
         sup A {
-            cmp x: std::number::bigint::BigInt = 123
+            cmp x: std::bignum::bigint::BigInt = 123
         }
 
         sup A {
@@ -150,7 +150,7 @@ class TestDuplicateMembers_SupCmp(CustomTestCase):
         """
         cls B { }
         sup B {
-            cmp x: std::number::bigint::BigInt = 123
+            cmp x: std::bignum::bigint::BigInt = 123
         }
 
         cls C { }
@@ -168,7 +168,7 @@ class TestDuplicateMembers_SupCmp(CustomTestCase):
         """
         cls B { }
         sup B {
-            cmp x: std::number::usize::USize = 123_uz
+            cmp x: std::number::USize = 123_uz
         }
 
         cls C { }
@@ -190,7 +190,7 @@ class TestDuplicateMembers_SupCmp(CustomTestCase):
         """
         cls B { }
         sup B {
-            cmp x: std::number::usize::USize = 123_uz
+            cmp x: std::number::USize = 123_uz
         }
 
         cls C { }
@@ -202,7 +202,7 @@ class TestDuplicateMembers_SupCmp(CustomTestCase):
         sup A ext B { }
         sup A ext C { }
         sup A {
-            cmp x: std::number::u64::U64 = 123_u64
+            cmp x: std::number::U64 = 123_u64
         }
 
         fun f() -> std::void::Void {
@@ -216,7 +216,7 @@ class TestDuplicateMembers_SupClsAttr(CustomTestCase):
     def test_valid_superimposition_extension_cls_attr_statement_diff_levels(self):
         """
         cls A {
-            a: std::number::bigint::BigInt
+            a: std::bignum::bigint::BigInt
         }
 
         cls B {
@@ -230,7 +230,7 @@ class TestDuplicateMembers_SupClsAttr(CustomTestCase):
     def test_invalid_superimposition_extension_cls_attr_statement_same_levels(self):
         """
         cls A {
-            a: std::number::bigint::BigInt
+            a: std::bignum::bigint::BigInt
             a: std::string::Str
         }
         """
@@ -239,7 +239,7 @@ class TestDuplicateMembers_SupClsAttr(CustomTestCase):
     def test_valid_superimposition_extension_cls_attr_statement_same_levels_via_inheritance(self):
         """
         cls B {
-            a: std::number::bigint::BigInt
+            a: std::bignum::bigint::BigInt
         }
 
         cls C {
@@ -255,7 +255,7 @@ class TestDuplicateMembers_SupClsAttr(CustomTestCase):
     def test_invalid_superimposition_extension_cls_attr_statement_same_levels_via_inheritance_with_ambiguous_access(self):
         """
         cls B {
-            a: std::number::bigint::BigInt
+            a: std::bignum::bigint::BigInt
         }
 
         cls C {
@@ -275,7 +275,7 @@ class TestDuplicateMembers_SupClsAttr(CustomTestCase):
     def test_valid_superimposition_extension_cls_attr_statement_same_levels_via_inheritance_with_unique_override(self):
         """
         cls B {
-            a: std::number::bigint::BigInt
+            a: std::bignum::bigint::BigInt
         }
 
         cls C {

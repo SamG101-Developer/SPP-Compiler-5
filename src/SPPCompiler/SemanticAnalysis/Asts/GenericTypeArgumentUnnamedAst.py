@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericTypeArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     value: Asts.TypeAst = field(default=None)
 
@@ -16,7 +16,7 @@ class GenericTypeArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Unnamed"
 
     def __eq__(self, other: GenericTypeArgumentUnnamedAst) -> bool:
-        return other.__class__ is GenericTypeArgumentUnnamedAst and self.value == other.value
+        return type(other) is GenericTypeArgumentUnnamedAst and self.value == other.value
 
     def __hash__(self) -> int:
         return hash(self.value)

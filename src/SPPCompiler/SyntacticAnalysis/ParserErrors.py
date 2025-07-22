@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, NoReturn
+from typing import NoReturn
 
 from ordered_set import OrderedSet
 
@@ -18,7 +18,7 @@ class ParserError(BaseException):
 class ParserErrors:
     class SyntaxError(ParserError):
         pos: int
-        expected_tokens: List[str]
+        expected_tokens: list[str]
 
         def __init__(self, *args) -> None:
             super().__init__(*args)

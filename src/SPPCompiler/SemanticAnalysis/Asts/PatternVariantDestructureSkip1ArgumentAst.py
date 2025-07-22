@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PatternVariantDestructureSkip1ArgumentAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     tok_underscore: Asts.TokenAst = field(default=None)
 

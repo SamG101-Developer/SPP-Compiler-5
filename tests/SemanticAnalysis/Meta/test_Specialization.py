@@ -6,7 +6,7 @@ class TestSpecialization(CustomTestCase):
     def test_specialization_vector_string(self) -> None:
         """
         sup std::vector::Vec[std::string::Str] {
-            fun test_func(&self) -> std::number::bigint::BigInt {
+            fun test_func(&self) -> std::bignum::bigint::BigInt {
                 ret 1
             }
         }
@@ -14,7 +14,7 @@ class TestSpecialization(CustomTestCase):
         use std::vector::Vec
         use std::string::Str
 
-        sup std::number::bigint::BigInt {
+        sup std::bignum::bigint::BigInt {
             fun to_string(&self) -> std::string::Str {
                 ret ""
             }
@@ -32,7 +32,7 @@ class TestSpecialization(CustomTestCase):
     def test_specialization_failure_different_generic(self) -> None:
         """
         sup std::vector::Vec[std::string::Str] {
-            fun test_func(&self) -> std::number::bigint::BigInt {
+            fun test_func(&self) -> std::bignum::bigint::BigInt {
                 ret 1
             }
         }
@@ -65,14 +65,14 @@ class TestSpecialization(CustomTestCase):
             }
         }
 
-        sup std::number::bigint::BigInt {
+        sup std::bignum::bigint::BigInt {
             fun to_string(&self) -> std::string::Str {
                 ret ""
             }
         }
 
         fun f() -> std::void::Void {
-            let t = MyType[std::number::bigint::BigInt]()
+            let t = MyType[std::bignum::bigint::BigInt]()
             let a = t.test_func_0()
 
             let u = MyType[std::string::Str]()
@@ -86,7 +86,7 @@ class TestSpecialization(CustomTestCase):
     # def test_blanket_specialization(self) -> None:
     #     """
     #     sup [T] T {
-    #         fun test_func(&self) -> std::number::bigint::BigInt {
+    #         fun test_func(&self) -> std::bignum::bigint::BigInt {
     #             ret 1
     #         }
     #     }

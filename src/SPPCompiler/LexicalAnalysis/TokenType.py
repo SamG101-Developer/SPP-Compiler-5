@@ -77,14 +77,13 @@ class RawTokenType(TokenType):
     TkAt = 23
     TkUnderscore = 24
     TkSpeechMark = 25
-    TkWhitespace = 26
-    TkNewLine = 27
-    TkDollar = 28
-    TkUnknown = 29
-    NoToken = 30
-    Keyword = 31
+    TkExclamationMark = 26
+    TkWhitespace = 27
+    TkNewLine = 28
+    TkDollar = 29
+    TkUnknown = 30
+    NoToken = 31
     EndOfFile = 32
-    TkExclamationMark = 33
 
     @staticmethod
     def newline_token() -> TokenType:
@@ -115,6 +114,7 @@ class RawKeywordType(TokenType):
     SelfVal = "self"
     SelfType = "Self"
     Case = "case"
+    Iter = "iter"
     Of = "of"
     Loop = "loop"
     In = "in"
@@ -158,6 +158,7 @@ class SppTokenType(TokenType):
     KwCase = "case"
     KwElse = "else"
     KwLoop = "loop"
+    KwIter = "iter"
     KwWith = "with"
     KwSkip = "skip"
     KwExit = "exit"
@@ -213,9 +214,6 @@ class SppTokenType(TokenType):
     TkRemainder = "%"
     """The token for remainder. This is a single percent sign, and is used to get the remainder of two values."""
 
-    TkModulo = "%%"
-    """The token for modulo. This is a double percent sign, and is used to get the modulo of two values."""
-
     TkExponent = "**"
     """The token for exponentiation. This is a double asterisk, and is used to raise a value to the power of another value."""
 
@@ -233,9 +231,6 @@ class SppTokenType(TokenType):
 
     TkRemainderAssign = "%="
     """The token for remainder assignment. This is a percent sign followed by an equals sign, and is used to get the remainder of a variable and a value."""
-
-    TkModuloAssign = "%%="
-    """The token for modulo assignment. This is a double percent sign followed by an equals sign, and is used to get the modulo of a variable and a value."""
 
     TkExponentAssign = "**="
     """The token for exponentiation assignment. This is a double asterisk followed by an equals sign, and is used to raise a variable to the power of a value."""
@@ -273,6 +268,36 @@ class SppTokenType(TokenType):
     TkVerticalBar = "|"
     """The token for a vertical bar. This is a single vertical bar, and is used to mark a lambda expression."""
 
+    TkLeftShift = "<<"
+    """The token for a left shift. This is a double less than sign, and is used to shift bits to the left."""
+
+    TkRightShift = ">>"
+    """The token for a right shift. This is a double greater than sign, and is used to shift bits to the right."""
+
+    TkLeftShiftAssign = "<<="
+    """The token for a left shift assignment. This is a double less than sign followed by an equals sign, and is used to shift bits to the left and assign the result to a variable."""
+
+    TkRightShiftAssign = ">>="
+    """The token for a right shift assignment. This is a double greater than sign followed by an equals sign, and is used to shift bits to the right and assign the result to a variable."""
+
+    TkBitAnd = "&"
+    """The token for a bitwise AND. This is a single ampersand, and is used to perform a bitwise AND operation."""
+
+    TkBitIor = "|"
+    """The token for a bitwise OR. This is a single vertical bar, and is used to perform a bitwise OR operation."""
+
+    TkBitXor = "^"
+    """The token for a bitwise XOR. This is a single caret, and is used to perform a bitwise XOR operation."""
+
+    TkBitAndAssign = "&="
+    """The token for a bitwise AND assignment. This is a single ampersand followed by an equals sign, and is used to perform a bitwise AND operation and assign the result to a variable."""
+
+    TkBitIorAssign = "|="
+    """The token for a bitwise OR assignment. This is a single vertical bar followed by an equals sign, and is used to perform a bitwise OR operation and assign the result to a variable."""
+
+    TkBitXorAssign = "^="
+    """The token for a bitwise XOR assignment. This is a single caret followed by an equals sign, and is used to perform a bitwise XOR operation and assign the result to a variable."""
+
     TkDot = "."
     """The token for a dot. This is a single dot, and is used to access members of a class or module."""
 
@@ -297,6 +322,12 @@ class SppTokenType(TokenType):
     TkUnderscore = "_"
     """The token for an underscore. This is a single underscore, and is used to indicate a wildcard or ignore a single value."""
 
+    TkExclamationMark = "!"
+    """The token for an exclamation mark. This is a single exclamation mark, and is used to bind a generator exception."""
+
+    TkDoubleExclamationMark = "!!"
+    """The token for a double exclamation mark. This is used to indicate an exhausted generator."""
+
     TkWhitespace = " "
     """The token for whitespace. This is a single space, and is used to separate tokens."""
 
@@ -318,14 +349,14 @@ class SppTokenType(TokenType):
         return SppTokenType.TkWhitespace
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class RawToken:
     """
     A RawToken allows for pairing metadata will a RawTokenType. For example, when "a" is lexed, the RawToken will
     contain a RawTokenType.TkCharacter with the data "a".
     """
 
-    token_type: RawTokenType
+    token_type: RawTokenType | RawKeywordType
     token_data: str
 
 

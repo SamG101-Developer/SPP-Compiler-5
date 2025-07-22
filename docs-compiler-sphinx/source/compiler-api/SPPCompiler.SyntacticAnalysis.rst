@@ -9,6 +9,7 @@ Submodules
 
    SPPCompiler.SyntacticAnalysis.Parser
    SPPCompiler.SyntacticAnalysis.ParserErrors
+   SPPCompiler.SyntacticAnalysis.ParserStubs
 
 Module contents
 ---------------

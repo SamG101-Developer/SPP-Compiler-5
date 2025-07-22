@@ -20,11 +20,10 @@ SIZE_MAPPING = {
     "f16": _signed_integer_limits(e=5, m=10),
     "f32": _signed_integer_limits(e=8, m=23),
     "f64": _signed_integer_limits(e=11, m=52),
-    "f128": _signed_integer_limits(e=14, m=113),
-    "f256": _signed_integer_limits(e=18, m=237)}
+    "f128": _signed_integer_limits(e=14, m=113)}
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
     integer_value: Asts.TokenAst = field(default=None)
@@ -37,9 +36,13 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.tok_dot = self.tok_dot or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDot)
         self.decimal_value = self.decimal_value or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.LxNumber)
 
+    def __hash__(self) -> int:
+        # Hash the AST by its ID.
+        return id(self)
+
     def __eq__(self, other: FloatLiteralAst) -> bool:
         # Needed for cmp-generic arg checking.
-        return isinstance(other, FloatLiteralAst) and self.tok_sign == other.tok_sign and self.integer_value.token_data == other.integer_value.token_data and self.decimal_value.token_data == other.decimal_value.token_data
+        return type(other) is FloatLiteralAst and self.tok_sign == other.tok_sign and self.integer_value.token_data == other.integer_value.token_data and self.decimal_value.token_data == other.decimal_value.token_data
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -71,8 +74,6 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 return CommonTypes.F64(self.pos)
             case type if type.type_parts[0].value == "f128":
                 return CommonTypes.F128(self.pos)
-            case type if type.type_parts[0].value == "f256":
-                return CommonTypes.F256(self.pos)
             case _:
                 raise
 

@@ -1,20 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List
 
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypePostfixOperatorNestedTypeAst(Asts.Ast):
     tok_sep: Asts.TokenAst = field(default=None)
-    name: Asts.TypeSingleAst = field(default=None)
+    name: Asts.TypeIdentifierAst = field(default=None)
 
     def __hash__(self) -> int:
-        return hash(self.name)
+        return hash(self.name.value)
 
     def __post_init__(self) -> None:
         self.tok_sep = self.tok_sep or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDoubleColon)
@@ -24,11 +23,11 @@ class TypePostfixOperatorNestedTypeAst(Asts.Ast):
         return f"{self.tok_sep}{self.name}"
 
     @property
-    def fq_type_parts(self) -> List[Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.TokenAst]:
+    def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return self.name.fq_type_parts
 
     @property
-    def type_parts(self) -> List[Asts.GenericIdentifierAst]:
+    def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
         return self.name.type_parts
 
     @property

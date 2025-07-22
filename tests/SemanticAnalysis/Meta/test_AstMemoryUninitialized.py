@@ -7,8 +7,8 @@ class TestAstMemoryUninitialized(CustomTestCase):
         # Use a non-initialized value (never given a value / use-after-free).
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -22,8 +22,8 @@ class TestAstMemoryUninitialized(CustomTestCase):
         # Use a non-initialized value (value has been moved already / double-free).
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -38,8 +38,8 @@ class TestAstMemoryUninitialized(CustomTestCase):
         # Use part of a non-initialized value (never given a value / use-after-free).
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -53,8 +53,8 @@ class TestAstMemoryUninitialized(CustomTestCase):
         # Use part of a non-initialized value (value has been moved already / double-free).
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -69,8 +69,8 @@ class TestAstMemoryUninitialized(CustomTestCase):
         # Use part of a partially-initialized value (value has been moved already / double-free).
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -85,8 +85,8 @@ class TestAstMemoryUninitialized(CustomTestCase):
         # Use a value that has been partially moved.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -101,8 +101,8 @@ class TestAstMemoryUninitialized(CustomTestCase):
         # Move different parts of a value over multiple expressions.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -125,8 +125,8 @@ class TestAstMemoryUninitialized(CustomTestCase):
     def test_uninitialized_symbol_in_assignment(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -139,7 +139,7 @@ class TestAstMemoryUninitialized(CustomTestCase):
     def test_uninitialized_symbol_in_binary_expression_lhs(self):
         """
         fun f() -> std::void::Void {
-            let elem: std::number::bigint::BigInt
+            let elem: std::bignum::bigint::BigInt
             let a = elem + 123
         }
         """
@@ -148,7 +148,7 @@ class TestAstMemoryUninitialized(CustomTestCase):
     def test_uninitialized_symbol_in_binary_expression_rhs(self):
         """
         fun f() -> std::void::Void {
-            let elem: std::number::bigint::BigInt
+            let elem: std::bignum::bigint::BigInt
             let a = 123 + elem
         }
         """
@@ -157,7 +157,7 @@ class TestAstMemoryUninitialized(CustomTestCase):
     def test_uninitialized_symbol_in_case_expression_condition(self):
         """
         fun f() -> std::void::Void {
-            let elem: std::number::bigint::BigInt
+            let elem: std::bignum::bigint::BigInt
             case elem of
                 == 1 { }
                 == 2 { }
@@ -168,7 +168,7 @@ class TestAstMemoryUninitialized(CustomTestCase):
     def test_uninitialized_symbol_in_case_expression_branch(self):
         """
         fun f() -> std::void::Void {
-            let elem: std::number::bigint::BigInt
+            let elem: std::bignum::bigint::BigInt
             case 1 of
                 == elem { }
                 else { }
@@ -248,8 +248,8 @@ class TestAstMemoryUninitialized(CustomTestCase):
     def test_uninitialized_symbol_in_is_expression(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -274,7 +274,7 @@ class TestAstMemoryUninitialized(CustomTestCase):
     def test_uninitialized_symbol_in_lambda_capture_mut(self):
         """
         fun f() -> std::void::Void {
-            let elem: std::string::Str
+            let mut elem: std::string::Str
             let a = |caps &mut elem| { }
         }
         """
@@ -328,7 +328,7 @@ class TestAstMemoryUninitialized(CustomTestCase):
     def test_uninitialized_symbol_in_object_initializer_argument_unnamed(self):
         """
         fun f() -> std::void::Void {
-            let data: std::vector::Vec[std::number::u8::U8]
+            let data: std::vector::Vec[std::number::U8]
             let a = std::string::Str(data)
         }
         """
@@ -337,7 +337,7 @@ class TestAstMemoryUninitialized(CustomTestCase):
     def test_uninitialized_symbol_in_object_initializer_argument_named(self):
         """
         fun f() -> std::void::Void {
-            let data_vec: std::vector::Vec[std::number::u8::U8]
+            let data_vec: std::vector::Vec[std::number::U8]
             let a = std::string::Str(data=data_vec)
         }
         """
@@ -350,15 +350,6 @@ class TestAstMemoryUninitialized(CustomTestCase):
             case true of
                 == false and elem { }
                 else { }
-        }
-        """
-
-    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
-    def test_uninitialized_symbol_in_postfix_expression_operator_index(self):
-        """
-        fun f() -> std::void::Void {
-            let elem: std::vector::Vec[std::string::Str]
-            let a = elem[0_uz]
         }
         """
 

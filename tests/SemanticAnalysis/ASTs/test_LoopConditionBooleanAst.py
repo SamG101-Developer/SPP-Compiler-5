@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -24,6 +22,15 @@ class TestLoopConditionBooleanAst(CustomTestCase):
     def test_valid_loop_condition_boolean(self):
         """
         fun f() -> std::void::Void {
+            let x = false
+            loop x { }
+        }
+        """
+
+    @should_pass_compilation()
+    def test_valid_loop_condition_boolean_never_return(self):
+        """
+        fun f() -> ! {
             loop true { }
         }
         """

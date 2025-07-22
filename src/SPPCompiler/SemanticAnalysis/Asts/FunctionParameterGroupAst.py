@@ -9,16 +9,16 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUt
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 # from llvmlite import ir as llvm
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class FunctionParameterGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
-    params: Seq[Asts.FunctionParameterAst] = field(default_factory=Seq)
+    params: list[Asts.FunctionParameterAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -43,32 +43,32 @@ class FunctionParameterGroupAst(Asts.Ast):
 
     def get_self_param(self) -> Optional[Asts.FunctionParameterSelfAst]:
         # Get the "self" function parameter (if it exists).
-        ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterSelfAst)]
+        ps = [p for p in self.params if type(p) is Asts.FunctionParameterSelfAst]
         return ps[0] if ps else None
 
-    def get_required_params(self) -> Seq[Asts.FunctionParameterRequiredAst]:
+    def get_required_params(self) -> list[Asts.FunctionParameterRequiredAst]:
         # Get all the required function parameters.
-        ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterRequiredAst)]
+        ps = [p for p in self.params if type(p) is Asts.FunctionParameterRequiredAst]
         return ps
 
-    def get_optional_params(self) -> Seq[Asts.FunctionParameterOptionalAst]:
+    def get_optional_params(self) -> list[Asts.FunctionParameterOptionalAst]:
         # Get all the optional function parameters.
-        ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterOptionalAst)]
+        ps = [p for p in self.params if type(p) is Asts.FunctionParameterOptionalAst]
         return ps
 
     def get_variadic_param(self) -> Optional[Asts.FunctionParameterVariadicAst]:
         # Get the variadic function parameter (if it exists).
-        ps = [p for p in self.params if isinstance(p, Asts.FunctionParameterVariadicAst)]
+        ps = [p for p in self.params if type(p) is Asts.FunctionParameterVariadicAst]
         return ps[0] if ps else None
 
-    def get_non_self_params(self) -> Seq[Asts.FunctionParameterAst]:
+    def get_non_self_params(self) -> list[Asts.FunctionParameterAst]:
         # Get all the function parameters that are not "self".
-        ps = [p for p in self.params if not isinstance(p, Asts.FunctionParameterSelfAst)]
+        ps = [p for p in self.params if type(p) is not Asts.FunctionParameterSelfAst]
         return ps
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there is only 1 "self" parameter.
-        self_params = [p for p in self.params if isinstance(p, Asts.FunctionParameterSelfAst)]
+        self_params = [p for p in self.params if type(p) is Asts.FunctionParameterSelfAst]
         if len(self_params) > 1:
             raise SemanticErrors.ParameterMultipleSelfError().add(
                 self_params[0], self_params[1]).scopes(sm.current_scope)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from colorama import Fore, Style
 
@@ -11,10 +11,10 @@ if TYPE_CHECKING:
 
 
 class ErrorFormatter:
-    _tokens: List[RawToken]
+    _tokens: list[RawToken]
     _file_path: str
 
-    def __init__(self, tokens: List[RawToken], file_path: str) -> None:
+    def __init__(self, tokens: list[RawToken], file_path: str) -> None:
         self._tokens = tokens
         self._file_path = file_path  # [file_path.rfind("src\\") + 4:]
 

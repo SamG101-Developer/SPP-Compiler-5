@@ -3,18 +3,20 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
+from llvmlite import ir
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstBinUtils import AstBinUtils, BINARY_COMPOUND_ASSIGNMENT_OPERATORS
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The BinaryExpressionAst class is an AST node that represents a binary expression. This AST can be used to represent
@@ -109,8 +111,8 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs).scopes(sm.current_scope)
 
         # Analyse the parts of the binary expression.
-        self.rhs.analyse_semantics(sm, **kwargs)
-        self.lhs.analyse_semantics(sm, **kwargs)
+        # self.rhs.analyse_semantics(sm, **kwargs)
+        # self.lhs.analyse_semantics(sm, **kwargs)
 
         # Check for compound assignment (for example "+="), that the lhs is symbolic.
         if self.op.token_type in BINARY_COMPOUND_ASSIGNMENT_OPERATORS and not sm.current_scope.get_variable_symbol_outermost_part(self.lhs):
@@ -119,7 +121,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Todo: Check on the tuple size to be > 1 ?
         # Todo: Instead of tuple checks, do the "indexable" check - allow folding arrays too?
         # Handle lhs-folding
-        if isinstance(self.lhs, Asts.TokenAst):
+        if type(self.lhs) is Asts.TokenAst:
             # Check the rhs is a tuple.
             rhs_tuple_type = self.rhs.infer_type(sm, **kwargs)
             if not AstTypeUtils.is_type_tuple(rhs_tuple_type, sm.current_scope):
@@ -143,7 +145,7 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self._as_func.analyse_semantics(sm, **kwargs)
 
         # Handle rhs-folding
-        elif isinstance(self.rhs, Asts.TokenAst):
+        elif type(self.rhs) is Asts.TokenAst:
             # Check the rhs is a tuple.
             lhs_tuple_type = self.lhs.infer_type(sm, **kwargs)
             if not AstTypeUtils.is_type_tuple(lhs_tuple_type, sm.current_scope):
@@ -181,6 +183,17 @@ class BinaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         self._as_func.check_memory(sm, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        """
+        Forward all code generation to the function equivalent of the binary expression.
+
+        :param sm: The scope manager.
+        :param llvm_module: The LLVM module to generate code into.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        self._as_func.code_gen_pass_2(sm, llvm_module, **kwargs)
 
 
 __all__ = [

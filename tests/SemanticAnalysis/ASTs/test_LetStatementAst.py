@@ -135,7 +135,7 @@ class TestLetStatementAst(CustomTestCase):
     def test_valid_type_hint_variant_1(self):
         """
         fun f() -> std::void::Void {
-            let x: std::string::Str or std::number::bigint::BigInt = "hello world"
+            let x: std::string::Str or std::bignum::bigint::BigInt = "hello world"
         }
         """
 
@@ -143,7 +143,7 @@ class TestLetStatementAst(CustomTestCase):
     def test_valid_type_hint_variant_1(self):
         """
         fun f() -> std::void::Void {
-            let x: std::string::Str or std::number::bigint::BigInt or std::boolean::Bool = false
+            let x: std::string::Str or std::bignum::bigint::BigInt or std::boolean::Bool = false
         }
         """
 
@@ -151,6 +151,6 @@ class TestLetStatementAst(CustomTestCase):
     def test_valid_type_hint_variant_2(self):
         """
         fun f() -> std::void::Void {
-            let x: std::option::Opt[std::number::bigint::BigInt] = std::option::Some(val=123)
+            let x: std::option::Opt[std::bignum::bigint::BigInt] = std::option::Some(val=123)
         }
         """

@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
+from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     A CaseExpressionBranchAst represents a branch of a case expression. It contains an optional operator (the "else"
@@ -38,7 +39,7 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     as ``case condition { ... }`` are re-modelled as ``case condition of == true { ... }``, providing the operator.
     """
 
-    patterns: List[Asts.PatternVariantAst] = field(default_factory=list)
+    patterns: list[Asts.PatternVariantAst] = field(default_factory=list)
     """
     The list of patterns to apply against the case expression. For normal comparisons, there can be any number of
     patterns, but for destructuring, only 1 pattern can be applied (otherwise different symbols could get introduced
@@ -128,6 +129,18 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         # Analyse the patterns, guard and body.
         for p in self.patterns:
             p.analyse_semantics(sm, cond, **kwargs)
+
+        if self.op and self.op.token_type != SppTokenType.KwIs:
+            for pattern in self.patterns:
+
+                # Check the function exists. No check for Bool return type as it is enforced by comparison methods.
+                # Dummy values as otherwise memory rules create conflicts - just need to test the existence of the
+                # function.
+                binary_lhs_ast = Asts.ObjectInitializerAst(class_type=cond.infer_type(sm, **kwargs))
+                binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expr.infer_type(sm, **kwargs))
+                binary_ast = Asts.BinaryExpressionAst(self.pos, binary_lhs_ast, self.op, binary_rhs_ast)
+                binary_ast.analyse_semantics(sm, **kwargs)
+
         if self.guard:
             self.guard.analyse_semantics(sm, **kwargs)
         self.body.analyse_semantics(sm, **kwargs)

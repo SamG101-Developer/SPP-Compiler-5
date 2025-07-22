@@ -6,10 +6,9 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.VariableLikeAst):
     variable: Asts.LocalVariableAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default=None)
@@ -19,6 +18,9 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
         self.variable = self.variable or Asts.LocalVariableSingleIdentifierAst(pos=self.pos, name=Asts.IdentifierAst(pos=self.pos, value=f"$_{id(self)}"))
         self._variant = "Required"
+
+    def __str__(self):
+        return f"{self.variable}{self.tok_colon} {self.type}"
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -34,7 +36,7 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         return self.type.pos_end
 
     @property
-    def extract_names(self) -> Seq[Asts.IdentifierAst]:
+    def extract_names(self) -> list[Asts.IdentifierAst]:
         return self.variable.extract_names
 
     @property
@@ -44,10 +46,11 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the type.
         self.type.analyse_semantics(sm, **kwargs)
+        self.type = sm.current_scope.get_symbol(self.type).fq_name.with_convention(self.type.convention)
 
         # Create the variable for the parameter.
         ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=self.type)
-        ast.analyse_semantics(sm, **kwargs)
+        ast.analyse_semantics(sm, explicit_type=self.type, **kwargs)
 
         # Mark the symbol as initialized.
         conv = self.type.convention
@@ -55,8 +58,8 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
             sym = sm.current_scope.get_symbol(name)
             sym.memory_info.initialized_by(self)
             sym.memory_info.ast_borrowed = conv
-            sym.memory_info.is_borrow_mut = isinstance(conv, Asts.ConventionMutAst)
-            sym.memory_info.is_borrow_ref = isinstance(conv, Asts.ConventionRefAst)
+            sym.memory_info.is_borrow_mut = type(conv) is Asts.ConventionMutAst
+            sym.memory_info.is_borrow_ref = type(conv) is Asts.ConventionRefAst
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         for name in self.variable.extract_names:

@@ -16,11 +16,14 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 # from llvmlite import ir as llvm
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_ret: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwRet))
     expr: Optional[Asts.ExpressionAst] = field(default=None)
     _func_ret_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -39,6 +42,11 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
+        # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
+        if isinstance(self.expr, (Asts.TokenAst, Asts.TypeAst)):
+            raise SemanticErrors.ExpressionTypeInvalidError().add(
+                self.expr).scopes(sm.current_scope)
+
         # Check the enclosing function is a subroutine and not a coroutine.
         if kwargs["function_type"].token_type != SppTokenType.KwFun and self.expr:
             raise SemanticErrors.FunctionCoroutineContainsReturnStatementError().add(
@@ -46,11 +54,11 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the expression if it exists, and determine the type of the expression.
         if self.expr:
-            if isinstance(self.expr, Asts.PostfixExpressionAst) and isinstance(self.expr.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+            if type(self.expr) is Asts.PostfixExpressionAst and type(self.expr.op) is Asts.PostfixExpressionOperatorFunctionCallAst:
                 kwargs |= {"inferred_return_type": kwargs["function_ret_type"][0]}
 
             self.expr.analyse_semantics(sm, **kwargs)
-            expression_type = self.expr.infer_type(sm, **kwargs)
+            expression_type = self.expr.infer_type(sm, **(kwargs | {"assignment_type": kwargs["function_ret_type"][0] if kwargs["function_ret_type"] else None}))
         else:
             expression_type = CommonTypesPrecompiled.VOID
 
@@ -68,7 +76,8 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if kwargs["function_type"].token_type == SppTokenType.KwFun:
             if not AstTypeUtils.symbolic_eq(expected_type, expression_type, kwargs["function_scope"], sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
-                    expression_type, expected_type, self.expr, expected_type).scopes(kwargs["function_scope"], sm.current_scope)
+                    expression_type, expression_type, self.expr, expected_type).scopes(
+                    kwargs["function_scope"], sm.current_scope)
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         # Check the memory of the expression if it exists.
@@ -76,7 +85,7 @@ class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.expr.check_memory(sm, **kwargs)
             AstMemoryUtils.enforce_memory_integrity(
                 self.expr, self.kw_ret, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-                check_pins=True, mark_moves=True)
+                check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
 
     # def generate_llvm_definitions(self, scope_handler: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
     #     # Create a return instruction with the expression if it exists.

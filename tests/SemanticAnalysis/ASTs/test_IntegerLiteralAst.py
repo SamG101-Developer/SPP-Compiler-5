@@ -1,4 +1,11 @@
 from tests._Utils import *
+import sys
+
+
+BIT_LEN = sys.maxsize.bit_length() + 1
+
+
+# Todo: add test for _sz (SSize)
 
 
 class TestIntegerLiteralAst(CustomTestCase):
@@ -22,7 +29,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i8_lower_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = -129_i8
+            let x = -129_s8
         }
         """
         
@@ -30,7 +37,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i8_upper_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = 128_i8
+            let x = 128_s8
         }
         """
         
@@ -54,7 +61,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i16_lower_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = -32769_i16
+            let x = -32769_s16
         }
         """
         
@@ -62,7 +69,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i16_upper_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = 32768_i16
+            let x = 32768_s16
         }
         """
         
@@ -86,7 +93,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i32_lower_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = -2147483649_i32
+            let x = -2147483649_s32
         }
         """
         
@@ -94,7 +101,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i32_upper_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = 2147483648_i32
+            let x = 2147483648_s32
         }
         """
         
@@ -113,12 +120,38 @@ class TestIntegerLiteralAst(CustomTestCase):
             let x = 18446744073709551616_u64
         }
         """
+
+    @should_fail_compilation(SemanticErrors.NumberOutOfBoundsError)
+    def test_invalid_usize_lower_bound(self):
+        """
+        fun f() -> std::void::Void {
+            let x = -1_uz
+        }
+        """
+
+    if BIT_LEN == 64:
+        @should_fail_compilation(SemanticErrors.NumberOutOfBoundsError)
+        def test_invalid_usize_upper_bound(self):
+            """
+            fun f() -> std::void::Void {{
+                let x = 18446744073709551616_uz
+            }}
+            """
+
+    elif BIT_LEN == 32:
+        @should_fail_compilation(SemanticErrors.NumberOutOfBoundsError)
+        def test_invalid_usize_upper_bound(self):
+            """
+            fun f() -> std::void::Void {
+                let x = 4294967296_uz
+            }
+            """
         
     @should_fail_compilation(SemanticErrors.NumberOutOfBoundsError)
     def test_invalid_i64_lower_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = -9223372036854775809_i64
+            let x = -9223372036854775809_s64
         }
         """
         
@@ -126,7 +159,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i64_upper_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = 9223372036854775808_i64
+            let x = 9223372036854775808_s64
         }
         """
         
@@ -150,7 +183,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i128_lower_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = -170141183460469231731687303715884105729_i128
+            let x = -170141183460469231731687303715884105729_s128
         }
         """
         
@@ -158,7 +191,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i128_upper_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = 170141183460469231731687303715884105728_i128
+            let x = 170141183460469231731687303715884105728_s128
         }
         """
         
@@ -182,7 +215,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i256_lower_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = -57896044618658097711785492504343953926634992332820282019728792003956564819969_i256
+            let x = -57896044618658097711785492504343953926634992332820282019728792003956564819969_s256
         }
         """
         
@@ -190,7 +223,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_invalid_i256_upper_bound(self):
         """
         fun f() -> std::void::Void {
-            let x = 57896044618658097711785492504343953926634992332820282019728792003956564819968_i256
+            let x = 57896044618658097711785492504343953926634992332820282019728792003956564819968_s256
         }
         """
         
@@ -206,7 +239,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_valid_i8(self):
         """
         fun f() -> std::void::Void {
-            let x = -128_i8
+            let x = -128_s8
         }
         """
         
@@ -222,7 +255,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_valid_i16(self):
         """
         fun f() -> std::void::Void {
-            let x = -32768_i16
+            let x = -32768_s16
         }
         """
         
@@ -238,7 +271,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_valid_i32(self):
         """
         fun f() -> std::void::Void {
-            let x = -2147483648_i32
+            let x = -2147483648_s32
         }
         """
         
@@ -249,12 +282,30 @@ class TestIntegerLiteralAst(CustomTestCase):
             let x = 18446744073709551615_u64
         }
         """
+
+    if BIT_LEN == 64:
+        @should_pass_compilation()
+        def test_valid_usize(self):
+            """
+            fun f() -> std::void::Void {
+                let x = 18446744073709551615_uz
+            }
+            """
+
+    elif BIT_LEN == 32:
+        @should_pass_compilation()
+        def test_valid_usize(self):
+            """
+            fun f() -> std::void::Void {
+                let x = 4294967295_uz
+            }
+            """
         
     @should_pass_compilation()
     def test_valid_i64(self):
         """
         fun f() -> std::void::Void {
-            let x = -9223372036854775808_i64
+            let x = -9223372036854775808_s64
         }
         """
         
@@ -270,7 +321,7 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_valid_i128(self):
         """
         fun f() -> std::void::Void {
-            let x = -170141183460469231731687303715884105728_i128
+            let x = -170141183460469231731687303715884105728_s128
         }
         """
         
@@ -286,6 +337,6 @@ class TestIntegerLiteralAst(CustomTestCase):
     def test_valid_i256(self):
         """
         fun f() -> std::void::Void {
-            let x = -57896044618658097711785492504343953926634992332820282019728792003956564819968_i256
+            let x = -57896044618658097711785492504343953926634992332820282019728792003956564819968_s256
         }
         """

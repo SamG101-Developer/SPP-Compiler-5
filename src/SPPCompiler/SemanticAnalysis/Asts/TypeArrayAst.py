@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypeArrayAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
     tok_l: Asts.TokenAst = field(default=None)
     elem_type: Asts.TypeAst = field(default=None)
@@ -30,7 +30,7 @@ class TypeArrayAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
         return self.tok_r.pos_end
 
     def convert(self) -> Asts.TypeAst:
-        return CommonTypes.Arr(self.pos, self.elem_type, Asts.IntegerLiteralAst(value=self.size, type=Asts.TypeSingleAst.from_identifier(Asts.IdentifierAst(value="uz"))))
+        return CommonTypes.Arr(self.pos, self.elem_type, Asts.IntegerLiteralAst(value=self.size, type=Asts.TypeIdentifierAst.from_identifier(Asts.IdentifierAst(value="uz"))))
 
 
 __all__ = [

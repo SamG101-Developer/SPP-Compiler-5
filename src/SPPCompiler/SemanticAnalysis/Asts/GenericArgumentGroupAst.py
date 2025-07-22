@@ -3,25 +3,20 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericArgumentGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
-    arguments: Seq[Asts.GenericArgumentAst] = field(default_factory=Seq)
+    arguments: list[Asts.GenericArgumentAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
-
-    def __post_init__(self) -> None:
-        self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftSquareBracket)
-        self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.arguments[-1].pos_end if self.arguments else self.pos, token_type=SppTokenType.TkRightSquareBracket)
 
     def __copy__(self) -> GenericArgumentGroupAst:
         return GenericArgumentGroupAst(arguments=self.arguments.copy())
@@ -42,10 +37,7 @@ class GenericArgumentGroupAst(Asts.Ast):
 
     def __str__(self) -> str:
         if self.arguments:
-            string = [
-                str(self.tok_l),
-                ", ".join([str(a) for a in self.arguments]),
-                str(self.tok_r)]
+            string = ["[", ", ".join([str(a) for a in self.arguments]), "]"]
             return "".join(string)
         return ""
 
@@ -75,10 +67,7 @@ class GenericArgumentGroupAst(Asts.Ast):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         if self.arguments:
-            string = [
-                self.tok_l.print(printer),
-                SequenceUtils.print(printer, self.arguments, sep=", "),
-                self.tok_r.print(printer)]
+            string = ["[", SequenceUtils.print(printer, self.arguments, sep=", "), "]"]
             return "".join(string)
         return ""
 
@@ -86,16 +75,16 @@ class GenericArgumentGroupAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.tok_r.pos_end if self.arguments else self.tok_l.pos_end
 
-    def get_type_args(self) -> Seq[Asts.GenericTypeArgumentAst]:
+    def get_type_args(self) -> list[Asts.GenericTypeArgumentAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericTypeArgumentAst)]
 
-    def get_comp_args(self) -> Seq[Asts.GenericCompArgumentAst]:
+    def get_comp_args(self) -> list[Asts.GenericCompArgumentAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericCompArgumentAst)]
 
-    def get_named_args(self) -> Seq[Asts.GenericArgumentNamedAst]:
+    def get_named_args(self) -> list[Asts.GenericArgumentNamedAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
 
-    def get_unnamed_args(self) -> Seq[Asts.GenericArgumentUnnamedAst]:
+    def get_unnamed_args(self) -> list[Asts.GenericArgumentUnnamedAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericArgumentUnnamedAst)]
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
@@ -108,7 +97,7 @@ class GenericArgumentGroupAst(Asts.Ast):
         """
 
         # Check there are no duplicate argument names.
-        generic_argument_names = [a.name.name for a in self.arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
+        generic_argument_names = [a.name for a in self.get_named_args()]
         if duplicates := SequenceUtils.duplicates(generic_argument_names):
             raise SemanticErrors.IdentifierDuplicationError().add(
                 duplicates[0], duplicates[0], "named generic argument").scopes(sm.current_scope)

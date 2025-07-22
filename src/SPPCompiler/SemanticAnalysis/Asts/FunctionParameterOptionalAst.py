@@ -9,10 +9,9 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.VariableLikeAst):
     variable: Asts.LocalVariableAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default=None)
@@ -41,7 +40,7 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         return self.default.pos_end
 
     @property
-    def extract_names(self) -> Seq[Asts.IdentifierAst]:
+    def extract_names(self) -> list[Asts.IdentifierAst]:
         return self.variable.extract_names
 
     @property
@@ -51,17 +50,19 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the type of the default expression.
         self.type.analyse_semantics(sm, **kwargs)
+        self.type = sm.current_scope.get_symbol(self.type).fq_name.with_convention(self.type.convention)
+
         self.default.analyse_semantics(sm, **kwargs)
 
         # Make sure the default expression is of the correct type.
-        default_type = self.default.infer_type(sm)
+        default_type = self.default.infer_type(sm, **kwargs)
         if not AstTypeUtils.symbolic_eq(self.type, default_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
                 self.extract_name, self.type, self.default, default_type).scopes(sm.current_scope)
 
         # Create the variable for the parameter.
         ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=self.type)
-        ast.analyse_semantics(sm, **kwargs)
+        ast.analyse_semantics(sm, explicit_type=self.type, **kwargs)
 
         # Mark the symbol as initialized.
         conv = self.type.convention
@@ -69,8 +70,8 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
             sym = sm.current_scope.get_symbol(name)
             sym.memory_info.initialized_by(self)
             sym.memory_info.ast_borrowed = conv
-            sym.memory_info.is_borrow_mut = isinstance(conv, Asts.ConventionMutAst)
-            sym.memory_info.is_borrow_ref = isinstance(conv, Asts.ConventionRefAst)
+            sym.memory_info.is_borrow_mut = type(conv) is Asts.ConventionMutAst
+            sym.memory_info.is_borrow_ref = type(conv) is Asts.ConventionRefAst
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         """
@@ -86,7 +87,7 @@ class FunctionParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.default.check_memory(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(
             self.default, self.default, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=True)
+            check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
 
 
 __all__ = [

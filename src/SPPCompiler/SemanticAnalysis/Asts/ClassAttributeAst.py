@@ -9,17 +9,16 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
-    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    annotations: list[Asts.AnnotationAst] = field(default_factory=list)
     name: Asts.IdentifierAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default=None)
     type: Asts.TypeAst = field(default=None)
@@ -98,7 +97,7 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         # Todo: prevent generic attributes from having defaults + test
         if self.default is not None:
             self.default.analyse_semantics(sm, **kwargs)
-            default_type = self.default.infer_type(sm)
+            default_type = self.default.infer_type(sm, **kwargs)
 
             if not AstTypeUtils.symbolic_eq(self.type, default_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
@@ -115,7 +114,9 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Check the default's memory state (cmp value, so no need to iterate deeper).
         if self.default is not None:
-            AstMemoryUtils.enforce_memory_integrity(self.default, self.default, sm)
+            AstMemoryUtils.enforce_memory_integrity(
+                self.default, self.default, sm, check_move=True, check_partial_move=True,
+                check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, **kwargs)
 
 
 __all__ = [

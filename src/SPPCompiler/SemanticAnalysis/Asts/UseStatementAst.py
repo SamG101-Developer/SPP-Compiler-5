@@ -12,12 +12,12 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class UseStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.TypeInferrable):
-    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    annotations: list[Asts.AnnotationAst] = field(default_factory=list)
     kw_use: Asts.TokenAst = field(default=None)
     old_type: Asts.TypeAst = field(default=None)
 
@@ -59,7 +59,7 @@ class UseStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.Ty
         self._conversion = Asts.TypeStatementAst(
             pos=self.pos,
             annotations=self.annotations,
-            new_type=Asts.TypeSingleAst.from_generic_identifier(self.old_type.type_parts[-1].without_generics),
+            new_type=self.old_type.type_parts[-1].without_generics,
             old_type=self.old_type)
         self._conversion.generate_top_level_scopes(sm)
 
@@ -95,5 +95,8 @@ class UseStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.Ty
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self._conversion.check_memory(sm, **kwargs)
 
-    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
-        self._conversion.code_gen(sm, llvm_module, **kwargs)
+    def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        self._conversion.code_gen_pass_1(sm, llvm_module, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        self._conversion.code_gen_pass_2(sm, llvm_module, **kwargs)

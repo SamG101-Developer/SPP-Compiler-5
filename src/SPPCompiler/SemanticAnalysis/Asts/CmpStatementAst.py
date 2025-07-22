@@ -11,16 +11,16 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     """
     Unlike the UseStatementAst, this AST can not be used in local scopes; only at the module or superimposition level.
     """
 
-    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    annotations: list[Asts.AnnotationAst] = field(default_factory=list)
     kw_cmp: Asts.TokenAst = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
     tok_colon: Asts.TokenAst = field(default=None)
@@ -103,7 +103,7 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         AstMemoryUtils.enforce_memory_integrity(
             self.value, self.value, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=True)
+            check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
 
 
 __all__ = ["CmpStatementAst"]

@@ -5,7 +5,7 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_convention_of_target_object_ref(self):
         """
-        use std::number::bigint::BigInt
+        use std::bignum::bigint::BigInt
 
         cls Point {
             x: BigInt
@@ -20,7 +20,7 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TypeMismatchError)
     def test_invalid_convention_of_target_object_mut(self):
         """
-        use std::number::bigint::BigInt
+        use std::bignum::bigint::BigInt
 
         cls Point {
             x: BigInt
@@ -36,8 +36,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_invalid_local_variable_destructure_object_multiple_multi_skip(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -49,8 +49,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_invalid_local_variable_destructure_object_bound_multi_skip(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -62,8 +62,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_invalid_local_variable_destructure_object_missing_attribute(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -75,8 +75,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_invalid_local_variable_destructure_object_invalid_attribute(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -96,8 +96,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -109,8 +109,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_skip_1(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -122,8 +122,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_skip_2(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -135,8 +135,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_skip_3(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -148,8 +148,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_nested_object(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         cls Line {
@@ -166,8 +166,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_invalid_local_variable_destructure_object_check_symbols_introduced(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         cls Line {
@@ -185,8 +185,8 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_check_symbols_introduced(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         cls Line {
@@ -205,7 +205,7 @@ class TestLocalVariableDestructureObjectAst(CustomTestCase):
     def test_valid_local_variable_destructure_object_nested_tuple(self):
         """
         cls TestType {
-            a: (std::boolean::Bool, std::number::bigint::BigInt)
+            a: (std::boolean::Bool, std::bignum::bigint::BigInt)
         }
 
         fun f(t: TestType) -> std::void::Void {

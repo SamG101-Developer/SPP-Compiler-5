@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
     kw_cmp: Asts.TokenAst = field(default=None)
     name: Asts.TypeAst = field(default=None)
@@ -29,7 +29,7 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Optional"
 
     def __eq__(self, other: GenericCompParameterOptionalAst) -> bool:
-        return isinstance(other, GenericCompParameterOptionalAst) and self.name == other.name
+        return type(other) is GenericCompParameterOptionalAst and self.name == other.name
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -72,7 +72,7 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self.default.analyse_semantics(sm, **kwargs)
 
         # Make sure the default expression is of the correct type.
-        default_type = self.default.infer_type(sm)
+        default_type = self.default.infer_type(sm, **kwargs)
         target_type = self.type
         if not AstTypeUtils.symbolic_eq(target_type, default_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.TypeMismatchError().add(
@@ -81,7 +81,7 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         # Create the variable for the const parameter.
         var = Asts.LocalVariableSingleIdentifierAst(pos=self.name.pos, name=Asts.IdentifierAst.from_type(self.name))
         ast = Asts.LetStatementUninitializedAst(pos=self.pos, assign_to=var, type=self.type)
-        ast.analyse_semantics(sm, **kwargs)
+        ast.analyse_semantics(sm, explicit_type=self.type, **kwargs)
 
         # Mark the symbol as initialized.
         symbol = sm.current_scope.get_symbol(Asts.IdentifierAst.from_type(self.name))
@@ -98,7 +98,7 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
         AstMemoryUtils.enforce_memory_integrity(
             self.default, self.default, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=True)
+            check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
 
 
 __all__ = [

@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class IsExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     lhs: Asts.ExpressionAst = field(default=None)
     op: Asts.TokenAst = field(default=None)
@@ -49,20 +49,17 @@ class IsExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return CommonTypes.Bool(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        # The TypeAst cannot be used as an expression for a binary operation.
+        # The TypeAst cannot be used as an expression for a binary operation. todo: TokenAst check?
         if isinstance(self.lhs, Asts.TypeAst):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.lhs).scopes(sm.current_scope)
         if isinstance(self.rhs, Asts.TypeAst):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs).scopes(sm.current_scope)
 
-        # Analyse the LHS of the binary expression.
-        self.lhs.analyse_semantics(sm, **kwargs)
-
         # Convert to a "case" destructure and analyse it.
         n = len(sm.current_scope.children)
         self._as_func = AstBinUtils._convert_is_expression_to_function_call(self)
         self._as_func.analyse_semantics(sm, **kwargs)
-        destructures_symbols = sm.current_scope.children[n].children[0].all_symbols(exclusive=True, match_type=Asts.IdentifierAst)
+        destructures_symbols = sm.current_scope.children[n].children[0].all_symbols(exclusive=True, sup_scope_search=True)
         for sym in destructures_symbols:
             sm.current_scope.add_symbol(sym)
 

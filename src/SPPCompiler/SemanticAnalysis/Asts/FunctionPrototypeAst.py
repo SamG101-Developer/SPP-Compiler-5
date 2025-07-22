@@ -7,21 +7,22 @@ from typing import Dict, Optional
 from llvmlite import ir
 
 from SPPCompiler.CodeGen import LlvmExternalSymbolRegister
+from SPPCompiler.CodeGen.Mangle import Mangler
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
-    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    annotations: list[Asts.AnnotationAst] = field(default_factory=list)
     tok_fun: Asts.TokenAst = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default=None)
@@ -37,6 +38,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     _non_implemented: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
     _cold: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
     _hot: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
+    _inline: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
 
     def __post_init__(self) -> None:
         self.tok_fun = self.tok_fun or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwFun)
@@ -53,7 +55,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         string = [
             SequenceUtils.print(printer, self.annotations, sep="\n"),
             self.tok_fun.print(printer) + " ",
-            self.name.print(printer),
+            self.name.print(printer) if self.name else "",
             self.generic_parameter_group.print(printer),
             self.function_parameter_group.print(printer) + " ",
             self.tok_arrow.print(printer) + " ",
@@ -83,9 +85,8 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         Asts.Ast.pre_process(self, ctx)
 
         # Substitute the "Self" parameter's type with the name of the method.
-        generic_substitution = Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(pos=0), value=ctx.name)
-        generic_substitution = [generic_substitution]
-        if not isinstance(ctx, Asts.ModulePrototypeAst) and self.function_parameter_group.get_self_param():
+        generic_substitution = [Asts.GenericTypeArgumentNamedAst(pos=0, name=CommonTypes.Self(pos=0), value=ctx.name)]
+        if type(ctx) is not Asts.ModulePrototypeAst and self.function_parameter_group.get_self_param():
             self.function_parameter_group.get_self_param()._true_self_type = ctx.name
             self.function_parameter_group.get_self_param().type = self.function_parameter_group.get_self_param().type.substituted_generics(generic_substitution)
         for p in self.function_parameter_group.params:
@@ -97,7 +98,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             a.pre_process(self)
 
         # Convert the "fun" function to a "sup" superimposition of a "Fun[Mov|Mut|Ref]" type over a mock type.
-        mock_class_name = Asts.TypeSingleAst.from_identifier(self.name.to_function_identifier())
+        mock_class_name = Asts.TypeIdentifierAst.from_identifier(self.name.to_function_identifier())
         function_type = self._deduce_mock_class_type()
         function_call = Asts.IdentifierAst(self.name.pos, "call")
 
@@ -126,7 +127,7 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         Asts.Ast.generate_top_level_scopes(self, sm)
 
         # If there is a self parameter in a free function, throw an error.
-        if self.function_parameter_group.get_self_param() and isinstance(self._ctx, Asts.ModulePrototypeAst):
+        if self.function_parameter_group.get_self_param() and type(self._ctx) is Asts.ModulePrototypeAst:
             raise SemanticErrors.ParameterSelfOutsideSuperimpositionError().add(
                 self.function_parameter_group.get_self_param(), self).scopes(sm.current_scope)
 
@@ -200,17 +201,6 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
         # Subclasses will finish analysis and exit the scope.
 
-    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
-        # Generate the LLVM code for the function.
-        sm.move_to_next_scope()
-
-        if str(sm.current_scope.ancestors[-2].name) == "ffi":
-            dll_name = str(sm.current_scope.ancestors[-3].name)
-            dll_path = os.path.join(kwargs["root_path"], "ffi", dll_name, "lib", dll_name + ".dll")
-            LlvmExternalSymbolRegister.register_external_functions(self, dll_path, sm)
-        self.body.code_gen(sm, llvm_module, **kwargs)
-        sm.move_out_of_current_scope()
-
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         # Check the memory of the function body.
         sm.move_to_next_scope()
@@ -218,22 +208,35 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         self.body.check_memory(sm, **kwargs)
         sm.move_out_of_current_scope()
 
-    # def generate_llvm_definitions(self, sm: ScopeManager, llvm_module: llvm.Module = None, builder: llvm.IRBuilder = None, block: llvm.Block = None, **kwargs) -> Any:
-    #     sm.move_to_next_scope()
-    #
-    #     # Generate the LLVM definition for the function prototype.
-    #     llvm_parameter_types = self.function_parameter_group.generate_llvm_definitions(sm, llvm_module)
-    #     llvm_return_type = self.return_type.generate_llvm_definitions(sm, llvm_module)
-    #     llvm_function_type = llvm.FunctionType(llvm_return_type, llvm_parameter_types)
-    #     llvm_function = llvm.Function(llvm_module, llvm_function_type, self.print_signature(AstPrinter()))
-    #
-    #     # Use the FunctionImplementationAst to generate the LLVM declaration.
-    #     self.body.generate_llvm_definitions(sm, llvm_module, llvm_function=llvm_function)
-    #     sm.move_out_of_current_scope()
+    def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        # Generate the LLVM code for the function.
+        sm.move_to_next_scope()
+
+        # Load ffi functions. Todo: check this.
+        if str(sm.current_scope.ancestors[-2].name) == "ffi":
+            dll_name = str(sm.current_scope.ancestors[-3].name)
+            dll_path = os.path.join(kwargs["root_path"], "ffi", dll_name, "lib", dll_name + ".dll")
+            LlvmExternalSymbolRegister.register_external_functions(self, dll_path, sm)
+
+        # Get the parameter types and return type for the function.
+        types = [p.type for p in self.function_parameter_group.params] + [self.return_type]
+        if self.function_parameter_group.get_self_param(): types.pop(0)
+        type_symbols = [sm.current_scope.get_symbol(t) for t in types]
+
+        # Any generic function is not generated; only substituted prototypes are.
+        if all([type_symbol.llvm_info for type_symbol in type_symbols]):
+            llvm_parameter_types = [sm.current_scope.get_symbol(p.type).llvm_info.llvm_type for p in self.function_parameter_group.get_non_self_params()]
+            llvm_return_type = sm.current_scope.get_symbol(self.return_type).llvm_info.llvm_type
+            llvm_function_type = ir.FunctionType(llvm_return_type, llvm_parameter_types)
+            llvm_function = ir.Function(llvm_module, llvm_function_type, Mangler.mangle_function_name(sm.current_scope.parent, self))
+
+        # Skip all function body scopes, as they are handled in the second pass.
+        while sm.current_scope is not self._scope.final_child_scope():
+            sm.move_to_next_scope()
 
     def _deduce_mock_class_type(self) -> Asts.TypeAst:
         # Module-level functions are always FunRef.
-        if isinstance(self._ctx, Asts.ModulePrototypeAst) or not self.function_parameter_group.get_self_param():
+        if type(self._ctx) is Asts.ModulePrototypeAst or not self.function_parameter_group.get_self_param():
             return CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         # Class methods with "self" are the FunMov type.
@@ -241,11 +244,11 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             return CommonTypes.FunMov(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         # Class methods with "&mut self" are the FunMut type.
-        if isinstance(self.function_parameter_group.get_self_param().convention, Asts.ConventionMutAst):
+        if type(self.function_parameter_group.get_self_param().convention) is Asts.ConventionMutAst:
             return CommonTypes.FunMut(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         # Class methods with "&self" are the FunRef type.
-        if isinstance(self.function_parameter_group.get_self_param().convention, Asts.ConventionRefAst):
+        if type(self.function_parameter_group.get_self_param().convention) is Asts.ConventionRefAst:
             return CommonTypes.FunRef(self.pos, CommonTypes.Tup(self.pos, [p.type for p in self.function_parameter_group.params]), self.return_type)
 
         raise NotImplementedError(f"Unknown convention for function {self.name}")

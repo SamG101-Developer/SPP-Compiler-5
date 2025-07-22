@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     value: str = field(default="")
 
@@ -20,21 +20,18 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return IdentifierAst(pos=self.pos, value=self.value)
 
     def __eq__(self, other: IdentifierAst) -> bool:
-        if other.__class__ is IdentifierAst or other.__class__ is Asts.GenericIdentifierAst:
+        if type(other) is IdentifierAst or type(other) is Asts.TypeIdentifierAst:
             return self.value == other.value
-        elif other.__class__ is Asts.TypeSingleAst:
-            return self.value == other.name.value
-        else:
-            return False
+        return False
 
     def __hash__(self) -> int:
         # Hash the value into a fixed string and convert it into an integer.
         return hash(self.value)
 
     def __add__(self, other: IdentifierAst | str) -> IdentifierAst:
-        if isinstance(other, str):
+        if type(other) is str:
             self.value += other
-        elif isinstance(other, IdentifierAst):
+        elif type(other) is IdentifierAst:
             self.value += other.value
         else:
             raise TypeError(f"Unsupported type for concatenation: {type(other)}")
@@ -56,11 +53,7 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     @staticmethod
     def from_type(type: Asts.TypeAst) -> Asts.IdentifierAst:
-        return IdentifierAst.from_generic_identifier(type.type_parts[0])
-
-    @staticmethod
-    def from_generic_identifier(identifier: Asts.GenericIdentifierAst) -> IdentifierAst:
-        return IdentifierAst(identifier.pos, identifier.value)
+        return IdentifierAst(pos=type.pos, value=type.fq_type_parts[-1].value)
 
     def to_function_identifier(self) -> IdentifierAst:
         return IdentifierAst(pos=self.pos, value=f"${pascal_case(self.value.replace("_", " "))}")
@@ -70,20 +63,20 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         symbol = sm.current_scope.get_symbol(self)
 
         # If the symbol is a variable, then get its type.
-        if symbol.__class__ is VariableSymbol:
+        if type(symbol) is VariableSymbol:
             return symbol.type
 
         # If the symbol is a namespace, then return "self" as the type.
-        elif symbol.__class__ is NamespaceSymbol:
+        elif type(symbol) is NamespaceSymbol:
             return self
 
         else:
-            raise ValueError(f"Symbol for {self} is not a variable or namespace: {type(symbol)}.")
+            raise ValueError(f"Symbol for '{self}' is not a variable or namespace: '{type(symbol)}'.")
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there is a symbol with the same name in the current scope.
         if not sm.current_scope.has_symbol(self):
-            alternatives = [s.name.value for s in sm.current_scope.all_symbols() if s.__class__ is VariableSymbol]
+            alternatives = [s.name.value for s in sm.current_scope.all_symbols(sup_scope_search=False) if type(s) is VariableSymbol]
             closest_match = difflib.get_close_matches(self.value, alternatives, n=1, cutoff=0)
             raise SemanticErrors.IdentifierUnknownError().add(
                 self, "identifier", closest_match[0] if closest_match else None).scopes(sm.current_scope)

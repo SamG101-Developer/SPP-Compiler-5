@@ -4,12 +4,10 @@ from typing import Callable
 
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter
 
-Seq = list
-
 
 class SequenceUtils:
     @staticmethod
-    def duplicates[T](seq: Seq[T]) -> Seq[T]:
+    def duplicates[T](seq: list[T]) -> list[T]:
         """
         Create a list of elements that are duplicates of the first element that has duplicates. For example, if the
         input is [1, 1, 2, 3, 3, 1], the output will be [1, 1, 1]. Note 3 isn't included, because 1 is the first element
@@ -25,7 +23,7 @@ class SequenceUtils:
         return []
 
     @staticmethod
-    def remove_if[T](seq: Seq[T], func: Callable[[T], bool]) -> None:
+    def remove_if[T](seq: list[T], func: Callable[[T], bool]) -> None:
         """
         Remove all elements from the sequence that match the predicate function.
 
@@ -39,7 +37,7 @@ class SequenceUtils:
                 seq.remove(element)
 
     @staticmethod
-    def print[T](printer: AstPrinter, seq: Seq[T], *, sep: str) -> str:
+    def print[T](printer: AstPrinter, seq: list[T], *, sep: str) -> str:
         output = ""
         for i, item in enumerate(seq):
             output += item.print(printer)
@@ -48,7 +46,7 @@ class SequenceUtils:
         return output
 
     @staticmethod
-    def flatten[T](seq: Seq[Seq[T]]) -> Seq[T]:
+    def flatten[T](seq: list[list[T]]) -> list[T]:
         """
         Flatten a sequence of sequences into a single sequence.
 

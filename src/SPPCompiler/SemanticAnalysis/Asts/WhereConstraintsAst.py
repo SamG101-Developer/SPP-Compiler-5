@@ -5,12 +5,12 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class WhereConstraintsAst(Asts.Ast):
-    types: Seq[Asts.TypeAst] = field(default_factory=Seq)
+    types: list[Asts.TypeAst] = field(default_factory=list)
     tok_colon: Asts.TokenAst = field(default=None)
     constraints: Asts.TypeAst = field(default=None)
 

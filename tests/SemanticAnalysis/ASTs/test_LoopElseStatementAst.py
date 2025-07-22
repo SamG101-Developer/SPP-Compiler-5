@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 from tests._Utils import *
 
 
@@ -21,7 +19,8 @@ class TestLoopElseStatementAst(CustomTestCase):
     def test_invalid_loop_else_statement_return_type_not_assigned_from(self):
         """
         fun f() -> std::void::Void {
-            loop true {
+            let x = true
+            loop x {
                 exit true
             }
             else {

@@ -72,7 +72,7 @@ class TestFunctionCallArgumentAst(CustomTestCase):
         """
         fun f(a: std::boolean::Bool) -> std::void::Void { }
 
-        fun g(a: &mut std::boolean::Bool) -> std::void::Void {
+        fun g(mut a: &mut std::boolean::Bool) -> std::void::Void {
             f(&mut a)
         }
         """

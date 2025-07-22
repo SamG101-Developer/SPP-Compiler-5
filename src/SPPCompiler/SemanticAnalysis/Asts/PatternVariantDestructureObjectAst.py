@@ -7,17 +7,17 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     class_type: Asts.TypeAst = field(default=None)
     tok_l: Asts.TokenAst = field(default=None)
-    elems: Seq[Asts.PatternVariantNestedForDestructureObjectAst] = field(default_factory=Seq)
+    elems: list[Asts.PatternVariantNestedForDestructureObjectAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     _new_ast: Asts.LetStatementInitializedAst = field(default=None, init=False)
@@ -49,16 +49,34 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
 
     def analyse_semantics(self, sm: ScopeManager, cond: Asts.ExpressionAst = None, **kwargs) -> None:
         self.class_type.analyse_semantics(sm, **kwargs)
+        self.class_type = sm.current_scope.get_symbol(self.class_type).fq_name
+
+        # Get the symbol for the condition, if it exists.
+        cond_sym = sm.current_scope.get_symbol(cond, sym_type=VariableSymbol)
+
+        # Dummy let statement, to hold the condition if it is non-symbolic.
+        if cond_sym is None:
+            cond_type = cond.infer_type(sm, **kwargs)
+
+            # Create a variable and let statement ast for the condition.
+            var_ast = Asts.LocalVariableSingleIdentifierAst(pos=cond.pos, name=Asts.IdentifierAst(self.pos, f"$_{id(self)}"))
+            let_ast = Asts.LetStatementUninitializedAst(pos=cond.pos, assign_to=var_ast, type=cond_type)
+            let_ast.analyse_semantics(sm, explicit_type=cond_type, **kwargs)
+
+            # Set the memory information of the symbol based on the type of iteration.
+            cond = var_ast.name
+            cond_sym = sm.current_scope.get_symbol(cond)
+            cond_sym.memory_info.initialized_by(self)
 
         # Flow type the condition symbol if necessary.
-        condition_symbol: VariableSymbol = sm.current_scope.get_symbol(cond)
-        is_condition_symbol_variant = condition_symbol and AstTypeUtils.is_type_variant(condition_symbol.type, sm.current_scope)
-        if condition_symbol and is_condition_symbol_variant:
-            if not AstTypeUtils.symbolic_eq(condition_symbol.type, self.class_type, sm.current_scope, sm.current_scope):
-                raise SemanticErrors.TypeMismatchError().add(
-                    cond, condition_symbol.type, self.class_type, self.class_type).scopes(sm.current_scope)
+        is_cond_type_variant = AstTypeUtils.is_type_variant(cond_sym.type, sm.current_scope)
 
-            flow_symbol = fast_deepcopy(condition_symbol)
+        if is_cond_type_variant:
+            if not AstTypeUtils.symbolic_eq(cond_sym.type, self.class_type, sm.current_scope, sm.current_scope):
+                raise SemanticErrors.TypeMismatchError().add(
+                    cond, cond_sym.type, self.class_type, self.class_type).scopes(sm.current_scope)
+
+            flow_symbol = fast_deepcopy(cond_sym)
             flow_symbol.type = self.class_type
             sm.current_scope.add_symbol(flow_symbol)
 

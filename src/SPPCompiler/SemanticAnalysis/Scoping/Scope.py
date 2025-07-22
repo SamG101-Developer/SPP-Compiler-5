@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-import copy
-from typing import Any, Iterator, List, Optional, Tuple
+from typing import Any, Iterator, Optional
 
+from llvmlite import ir
+
+from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmTypeSymbolInfo
+from SPPCompiler.CodeGen.Mangle import Mangler
 from SPPCompiler.Compiler.ModuleTree import Module
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.SymbolTable import SymbolTable
@@ -37,7 +40,7 @@ class Scope:
     program.
     """
 
-    _children: List[Scope]
+    _children: list[Scope]
     """
     The children scopes of a scope are the scopes that are created within this scope. A function scope will contain all
     scopes created by the statements that make up the function, and module scopes will contain all the class, function
@@ -50,21 +53,21 @@ class Scope:
     symbols created in this scope. Symbols can be added, removed, set, got and checked for existence.
     """
 
-    _ast: Optional[Asts.FunctionPrototypeAst | Asts.ClassPrototypeAst | Asts.SupPrototypeAst]
+    _ast: Optional[Asts.ModulePrototypeAst | Asts.FunctionPrototypeAst | Asts.ClassPrototypeAst | Asts.SupPrototypeAst]
     """
     Top level scopes, representing functions, classes, superimpositions, etc, have associated ASTs (the ast that was
     analysed to create this scope). This AST is stored as there are some analysis stages that use information from the
     AST directly.
     """
 
-    _direct_sup_scopes: List[Scope]
+    _direct_sup_scopes: list[Scope]
     """
     If this is a type scope, representing a ClassPrototypeAst, then this scope may have super scopes attached to it.
     This allows for symbol resolution from super classes when they aren't found on the current class. Recursive
     searching of superscopes is used for the actual resolution.
     """
 
-    _direct_sub_scopes: List[Scope]
+    _direct_sub_scopes: list[Scope]
     """
     The sub scopes are an inverse to the sup scope lists. So if B extends A, then A is a super scope of B, and B is a
     sub scope of A. This is used for access modifier checking, where protected symbols are accessible from sub types.
@@ -135,10 +138,12 @@ class Scope:
 
     def __json__(self) -> dict:
         return {
-            "scope_name": self._name, "id": id(self), "parent": self._parent.name if self._parent else "", "children": self._children,
-            "symbol_table": self._symbol_table, "sup_scopes": [s.name for s in self._direct_sup_scopes], "sup_scopes_ids": [id(s) for s in self._direct_sup_scopes],
-            "sub_scopes": [s.name for s in self._direct_sub_scopes], "type_symbol": self._type_symbol.name if self._type_symbol else "",
-        }
+            "scope_name": self._name, "parent": self._parent.name if self._parent else "",
+            "children": self._children, "symbol_table": self._symbol_table,
+            "sup_scopes": [s.name for s in self._direct_sup_scopes],
+            "sup_scopes_ids": [id(s) for s in self._direct_sup_scopes],
+            "sub_scopes": [s.name for s in self._direct_sub_scopes],
+            "type_symbol": self._type_symbol.name if self._type_symbol else ""}
 
     def __str__(self) -> str:
         return str(self._name)
@@ -161,52 +166,60 @@ class Scope:
         return new_scope
 
     @property
-    def generics(self) -> List[Asts.GenericArgumentAst]:
+    def generics(self) -> list[Asts.GenericArgumentAst]:
         GenericArgumentCTor = {
             VariableSymbol: Asts.GenericCompArgumentNamedAst,
             TypeSymbol    : Asts.GenericTypeArgumentNamedAst,
             AliasSymbol   : Asts.GenericTypeArgumentNamedAst}
+        return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self.all_symbols() if type(s) is not NamespaceSymbol and s.is_generic and (s.scope if isinstance(s, TypeSymbol) else True)]
 
-        return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self._symbol_table.all() if s.is_generic]
+    def generics_extended_for(self, generic_argument_group: list[Asts.GenericArgumentAst]) -> list[Symbol]:
+        syms = [self.get_symbol(g.value) for g in generic_argument_group]
+        gens = [s for s in self.all_symbols() if type(s) is not NamespaceSymbol and s.is_generic]
+        syms = gens + [s for s in syms if s is not None]
+        return syms
 
     def add_symbol(self, symbol: Symbol) -> None:
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
 
-    def rem_symbol(self, symbol_name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst) -> None:
+    def rem_symbol(self, symbol_name: Asts.IdentifierAst | Asts.TypeAst) -> None:
         # Remove a symbol from the scope.
         self._symbol_table.rem(symbol_name)
 
-    def all_symbols(self, exclusive: bool = False, match_type: type = None) -> Iterator[Symbol]:
-        # todo: when to also include the sup scopes?
-
+    def all_symbols(self, exclusive: bool = False, sup_scope_search: bool = False) -> Iterator[Symbol]:
         # Get all the symbols in the scope.
         for sym in self._symbol_table.all():
             yield sym
 
         if not exclusive and self._parent:
-            yield from self._parent.all_symbols(exclusive=exclusive, match_type=match_type)
+            yield from self._parent.all_symbols(exclusive=exclusive)
+
+        if sup_scope_search:
+            # Search the super scopes for symbols.
+            for sup_scope in self._direct_sup_scopes:
+                yield from sup_scope.all_symbols(exclusive=True)
 
     def has_symbol(
-            self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False,
-            sym_type: Optional[type] = None) -> bool:
+            self, name: Asts.IdentifierAst | Asts.TypeAst, exclusive: bool = False,
+            sym_type: Optional[type] = None, debug: bool = False) -> bool:
 
         # Get the symbol and check if it is None or not (None => not found).
         return self.get_symbol(name, exclusive, ignore_alias=True, sym_type=sym_type) is not None
 
     def get_symbol(
-            self, name: Asts.IdentifierAst | Asts.TypeAst | Asts.GenericIdentifierAst, exclusive: bool = False,
+            self, name: Asts.IdentifierAst | Asts.TypeAst, exclusive: bool = False,
             ignore_alias: bool = False, sym_type: Optional[type] = None) -> Optional[Symbol]:
 
         # Adjust the namespace and symbol name for namespaced typ symbols.
         scope = self
-        if isinstance(name, Asts.TypeAst):
-            name = name.without_conventions
+        if name.is_type_ast:
+            name = name.without_convention
             scope, name = shift_scope_for_namespaced_type(self, name)
 
         # Get the symbol from the symbol table if it exists, and ignore it if it is in the exclusion list.
         symbol = scope._symbol_table.get(name)
-        if sym_type is not None and not isinstance(symbol, sym_type):
+        if sym_type is not None and type(symbol) is not sym_type:
             symbol = None
 
         # If this is not an exclusive search, search the parent scope.
@@ -218,37 +231,34 @@ class Scope:
             symbol = search_super_scopes(scope, name, ignore_alias=ignore_alias, sym_type=sym_type)
 
         # Handle any possible type aliases; sometimes the original type needs to be retrieved.
-        if symbol.__class__ is AliasSymbol and symbol.old_sym and not ignore_alias:
+        if type(symbol) is AliasSymbol and symbol.old_sym and not ignore_alias:
             return symbol.old_sym
 
         return symbol
 
     @FunctionCache.cache
-    def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.GenericIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
+    def get_namespace_symbol(self, name: Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.PostfixExpressionAst, exclusive: bool = False) -> Optional[Symbol]:
         symbol = None
 
         # For an IdentifierAst, get any identifier-named symbols from the symbol table.
-        if name.__class__ is Asts.IdentifierAst:
-            for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.IdentifierAst):
-                if symbol.__class__ is NamespaceSymbol and symbol.name.value == name.value:
-                    return symbol
-            return None
+        if type(name) is Asts.IdentifierAst:
+            return self.get_symbol(name, exclusive=exclusive, sym_type=NamespaceSymbol)
 
         # For a GenericIdentifierAst, get any type-named symbols from the symbol table.
-        elif name.__class__ is Asts.GenericIdentifierAst:
-            for symbol in self.all_symbols(exclusive=exclusive, match_type=Asts.GenericIdentifierAst):
-                if symbol.__class__ is TypeSymbol and symbol.name == name:
-                    return symbol
-            return None
+        elif type(name) is Asts.TypeIdentifierAst:
+            return self.get_symbol(name, exclusive=exclusive, sym_type=TypeSymbol)
 
         # For a PostfixExpressionAst iterate the parts.
         scope = self.get_namespace_symbol(name.lhs, exclusive=exclusive).scope
-        while isinstance(name, Asts.PostfixExpressionAst) and isinstance(name.op, Asts.PostfixExpressionOperatorMemberAccessAst):
+        while type(name) is Asts.PostfixExpressionAst and type(name.op) is Asts.PostfixExpressionOperatorMemberAccessAst:
             symbol = scope.get_namespace_symbol(name := name.op.field, exclusive=exclusive)
             scope = symbol.scope
         return symbol
 
-    def get_variable_symbol_outermost_part(self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst) -> Optional[VariableSymbol]:
+    def get_variable_symbol_outermost_part(
+            self, name: Asts.IdentifierAst | Asts.PostfixExpressionAst, *, get_scope: bool = False)\
+            -> Optional[VariableSymbol] | tuple[Scope, Optional[VariableSymbol]]:
+
         # Define a helper lambda that validates a postfix expression.
         is_valid_postfix = lambda p: \
             isinstance(p, Asts.PostfixExpressionAst) and \
@@ -266,18 +276,18 @@ class Scope:
                 prev_name = name
                 name = name.lhs
 
-            # Todo: not sure if this is needed here
-            if is_semi_valid_postfix(prev_name) and not is_valid_postfix(prev_name):
-                return self.get_symbol(name).scope.get_symbol(prev_name.op.field)
-
-            return self.get_symbol(name)
+            sym = self.get_symbol(name)
+            return sym if not get_scope else (self, sym)
 
         elif is_semi_valid_postfix(prev_name):
-            return self.get_symbol(name.lhs).scope.get_symbol(prev_name.op.field)
+            scope = self.get_namespace_symbol(name.lhs).scope
+            sym = scope.get_symbol(prev_name.op.field)
+            return sym if not get_scope else (scope, sym)
 
         # Identifiers or non-symbolic expressions can use the symbol table directly.
         else:
-            return self.get_symbol(name)
+            sym = self.get_symbol(name)
+            return sym if not get_scope else (self, sym)
 
     def depth_difference(self, scope: Scope) -> int:
         # Get the number of sup scopes between two scopes.
@@ -291,6 +301,36 @@ class Scope:
             return -1
 
         return _depth_difference(self, scope, 0)
+
+    def generate_llvm_type_mappings(self, llvm_module: ir.Module) -> None:
+        """
+        Iterate every (top-level) scope whose ast is a ClassPrototypeAst, and then generate a (non-implemented) LLVM
+        type mapping for it, binding it to the symbol. This allows functions to use the types for parameters on the
+        first codegen pass.
+        """
+
+        # Only check top level scopes (where ClassPrototypeAsts are defined).
+        for scope in self._children:
+            if isinstance(scope._ast, Asts.ClassPrototypeAst):
+                cls_symbol = scope.type_symbol
+
+                # Create the class type in the LLVM module.
+                llvm_type_name = Mangler.mangle_type_name(cls_symbol)
+                llvm_type = llvm_module.context.get_identified_type(llvm_type_name)
+                cls_symbol.llvm_info = LlvmTypeSymbolInfo(llvm_type=llvm_type, llvm_module=llvm_module)
+
+    def final_child_scope(self) -> Scope:
+        """
+        Get the final child scope in the scope tree. This is used to find the last scope in a chain of scopes, such as
+        when generating code for a function or class.
+        :return: The final child scope.
+        """
+
+        if not self._children:
+            return self
+
+        # Recursively get the last child scope.
+        return self._children[-1].final_child_scope()
 
     @property
     def name(self) -> Any:
@@ -307,18 +347,18 @@ class Scope:
         # Set the parent scope.
         self._parent = parent
 
-    @FunctionCache.cache_property
-    def ancestors(self) -> List[Scope]:
+    @property
+    def ancestors(self) -> list[Scope]:
         # Get all the ancestors, including this scope and the global scope.
         return [node := self] + [node for _ in iter(lambda: node.parent, None) if (node := node.parent)]
 
     @FunctionCache.cache_property
     def parent_module(self) -> Scope:
         # Get the ancestor module scope.
-        return [s for s in self.ancestors if s.name.__class__ is Asts.IdentifierAst][0]
+        return [s for s in self.ancestors if type(s.name) is Asts.IdentifierAst][0]
 
     @property
-    def children(self) -> List[Scope]:
+    def children(self) -> list[Scope]:
         # Get the children scopes.
         return self._children
 
@@ -332,7 +372,7 @@ class Scope:
         self._type_symbol = symbol
 
     @property
-    def sup_scopes(self) -> List[Scope]:
+    def sup_scopes(self) -> list[Scope]:
         # Get all the super scopes recursively.
         all_sup_scopes = []
         for sup_scope in self._direct_sup_scopes:
@@ -341,15 +381,15 @@ class Scope:
         return all_sup_scopes
 
     @property
-    def direct_sup_types(self) -> List[Asts.TypeAst]:
-        return [s.type_symbol.fq_name for s in self._direct_sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
+    def direct_sup_types(self) -> list[Asts.TypeAst]:
+        return [s.type_symbol.fq_name for s in self._direct_sup_scopes if type(s._ast) is Asts.ClassPrototypeAst]
 
     @property
-    def sup_types(self) -> List[Asts.TypeAst]:
-        return [s.type_symbol.fq_name for s in self.sup_scopes if isinstance(s._ast, Asts.ClassPrototypeAst)]
+    def sup_types(self) -> list[Asts.TypeAst]:
+        return [s.type_symbol.fq_name for s in self.sup_scopes if type(s._ast) is Asts.ClassPrototypeAst]
 
     @property
-    def sub_scopes(self) -> List[Scope]:
+    def sub_scopes(self) -> list[Scope]:
         # Get all the sub scopes recursively.
         all_sub_scopes = []
         for sub_scope in self._direct_sub_scopes:
@@ -358,21 +398,21 @@ class Scope:
         return all_sub_scopes
 
 
-def shift_scope_for_namespaced_type(scope: Scope, type: Asts.TypeAst) -> Tuple[Scope, Asts.GenericIdentifierAst]:
+def shift_scope_for_namespaced_type(scope: Scope, fq_type: Asts.TypeAst) -> tuple[Scope, Asts.TypeIdentifierAst]:
     # For TypeAsts, move through each namespace/type part accessing the namespace scope.
-    for part in type.fq_type_parts[:-1]:
+    for part in fq_type.fq_type_parts[:-1]:
         # Get the next type/namespace symbol from the scope.
-        inner_symbol = scope.get_namespace_symbol(part) if part.__class__ is Asts.IdentifierAst else scope.get_symbol(part)
+        inner_symbol = scope.get_namespace_symbol(part) if type(part) is Asts.IdentifierAst else scope.get_symbol(part)
         match inner_symbol:
             case None: break
             case _: scope = inner_symbol.scope
-    type = type.type_parts[-1]
-    return scope, type
+    fq_type = fq_type.type_parts[-1]
+    return scope, fq_type
 
 
 def search_super_scopes(
-        scope: Scope, name: Asts.IdentifierAst | Asts.GenericIdentifierAst,
-        ignore_alias: bool, sym_type: Optional[type] = None) -> Optional[Symbol]:
+        scope: Scope, name: Asts.IdentifierAst | Asts.TypeIdentifierAst,
+        ignore_alias: bool, sym_type: Optional[type] = None, debug: bool = False) -> Optional[Symbol]:
 
     # Recursively search the super scopes for a variable symbol.
     symbol = None

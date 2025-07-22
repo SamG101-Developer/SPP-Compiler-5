@@ -8,13 +8,13 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_l: Asts.TokenAst = field(default=None)
-    elems: Seq[Asts.LocalVariableNestedForDestructureArrayAst] = field(default_factory=Seq)
+    elems: list[Asts.LocalVariableNestedForDestructureArrayAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     _new_asts: list[Asts.LetStatementAst] = field(default_factory=list, init=False)
@@ -37,7 +37,7 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         return self.tok_r.pos_end
 
     @property
-    def extract_names(self) -> Seq[Asts.IdentifierAst]:
+    def extract_names(self) -> list[Asts.IdentifierAst]:
         return SequenceUtils.flatten([e.extract_names for e in self.elems])
 
     @property
@@ -47,7 +47,7 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     def analyse_semantics(self, sm: ScopeManager, value: Asts.ExpressionAst = None, **kwargs) -> None:
 
         # Only 1 "multi-skip" allowed in a destructure.
-        multi_arg_skips = [e for e in self.elems if isinstance(e, Asts.LocalVariableDestructureSkipNArgumentsAst)]
+        multi_arg_skips = [e for e in self.elems if type(e) is Asts.LocalVariableDestructureSkipNArgumentsAst]
         if len(multi_arg_skips) > 1:
             raise SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError().add(
                 multi_arg_skips[0], multi_arg_skips[1]).scopes(sm.current_scope)
@@ -82,15 +82,15 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # Create expanded "let" statements for each part of the destructure.
         for i, element in zip(indexes, self.elems):
-            if isinstance(element, Asts.LocalVariableDestructureSkipNArgumentsAst) and multi_arg_skips[0].binding:
+            if type(element) is Asts.LocalVariableDestructureSkipNArgumentsAst and multi_arg_skips[0].binding:
                 new_ast = Asts.LetStatementInitializedAst(pos=element.pos, assign_to=element.binding, value=bound_multi_skip)
                 new_ast.analyse_semantics(sm, **kwargs)
                 self._new_asts.append(new_ast)
 
-            elif isinstance(element, Asts.LocalVariableDestructureSkip1ArgumentAst):
+            elif type(element) is Asts.LocalVariableDestructureSkip1ArgumentAst:
                 continue
 
-            elif isinstance(element, Asts.LocalVariableDestructureSkipNArgumentsAst):
+            elif type(element) is Asts.LocalVariableDestructureSkipNArgumentsAst:
                 continue
 
             else:

@@ -2,12 +2,20 @@ from tests._Utils import *
 
 
 class TestSupPrototypeFunctionsAst(CustomTestCase):
+    @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
+    def test_invalid_sup_prototype_functions_unknown_type(self):
+        """
+        sup A {
+            fun f(&self) -> std::void::Void { }
+        }
+        """
+
     @should_fail_compilation(SemanticErrors.SuperimpositionUnconstrainedGenericParameterError)
     def test_invalid_sup_prototype_functions_unconstrained_generic_parameter_1(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         sup [T] Point { }
@@ -37,9 +45,6 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
 
     @should_pass_compilation()
     def test_valid_sup_prototype_functions_onto_generic_type(self):
-        # This crashes, because say we have A->B, both A and B will have BigInt superimposed over them, causing
-        # duplication.
-
         """
         sup [T] T {
             fun f(&self) -> std::void::Void { }

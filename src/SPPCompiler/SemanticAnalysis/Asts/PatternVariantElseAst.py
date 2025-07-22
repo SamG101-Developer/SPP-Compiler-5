@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PatternVariantElseAst(Asts.Ast):
     kw_else: Asts.TokenAst = field(default=None)
 

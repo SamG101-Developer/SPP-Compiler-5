@@ -5,11 +5,11 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LetStatementUninitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_let: Asts.TokenAst = field(default=None)
     assign_to: Asts.LocalVariableAst = field(default=None)
@@ -35,7 +35,7 @@ class LetStatementUninitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # All statements are inferred as "void".
-        return CommonTypesPrecompiled.VOID
+        return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Create a dummy object initializer for the variable.
@@ -43,7 +43,7 @@ class LetStatementUninitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the variable's type, and recursively analyse the variable.
         self.type.analyse_semantics(sm, **kwargs)
-        self.assign_to.analyse_semantics(sm, value=mock_init, **(kwargs | {"from_non_init": True}))
+        self.assign_to.analyse_semantics(sm, value=mock_init, **(kwargs | {"from_non_init": True, "explicit_type": self.type}))
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self.assign_to.check_memory(sm, **(kwargs | {"from_non_init": True}))

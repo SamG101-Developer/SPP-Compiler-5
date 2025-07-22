@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class UnaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     op: Asts.UnaryExpressionOperatorAst = field(default=None)
     rhs: Asts.ExpressionAst = field(default=None)
@@ -38,8 +38,8 @@ class UnaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.ExpressionTypeInvalidError().add(self.rhs).scopes(sm.current_scope)
 
         # Analyse the "op" and the "rhs".
-        self.op.analyse_semantics(sm, rhs=self.rhs, **kwargs)
         self.rhs.analyse_semantics(sm, **kwargs)
+        self.op.analyse_semantics(sm, rhs=self.rhs, **kwargs)
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self.rhs.check_memory(sm, **kwargs)

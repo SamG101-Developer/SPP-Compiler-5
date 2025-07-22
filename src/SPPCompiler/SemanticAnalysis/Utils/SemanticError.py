@@ -3,13 +3,12 @@ from __future__ import annotations
 import itertools
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import NoReturn, Optional, Tuple, TYPE_CHECKING
+from enum import Enum
+from typing import NoReturn, Optional, TYPE_CHECKING, Tuple
 
 from colorama import Fore, Style
-from enum import Enum
 
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
-from SPPCompiler.Utils.Sequence import Seq
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis import Asts
@@ -22,7 +21,7 @@ class SemanticError(BaseException):
         MINIMAL = 1
         NONE = 2
 
-    @dataclass(slots=True)
+    @dataclass(slots=True, repr=False)
     class ErrorInfo:
         ast: Asts.Ast
         tag: str
@@ -30,8 +29,8 @@ class SemanticError(BaseException):
         tip: str
         fmt: SemanticError.Format
 
-    error_info: Seq[ErrorInfo]
-    error_formatters: Seq[ErrorFormatter]
+    error_info: list[ErrorInfo]
+    error_formatters: list[ErrorFormatter]
 
     def __init__(self, *args) -> None:
         super().__init__(args)
@@ -407,7 +406,7 @@ class SemanticErrors:
         """
 
         def add(
-                self, generic_parameters: Seq[Asts.GenericParameterAst], owner: Asts.Ast,
+                self, generic_parameters: list[Asts.GenericParameterAst], owner: Asts.Ast,
                 extra_generic_argument: Asts.GenericArgumentAst) -> SemanticError:
             self.add_info(
                 ast=generic_parameters[0] if generic_parameters else owner,
@@ -418,6 +417,28 @@ class SemanticErrors:
                 tag="Extra generic argument provided here.",
                 msg="Too many generic arguments.",
                 tip="Remove the extra generic argument.")
+
+            return self
+
+    class GenericArgumentIncorrectVariationError(SemanticError):
+        """
+        The GenericParameterIncorrectVariationError is raised if a generic type argument is used to match a generic comp
+        parameter or vice versa.
+        """
+
+        def add(
+                self, generic_parameter: Asts.GenericParameterAst, generic_argument: Asts.GenericArgumentAst,
+                owner: Asts.Ast) -> SemanticError:
+
+            self.add_info(
+                ast=generic_parameter,
+                tag=f"Generic parameter defined here for '{owner}'")
+
+            self.add_error(
+                ast=generic_argument,
+                tag="Generic argument does not match generic parameter.",
+                msg="The generic argument is not compatible with the generic parameter.",
+                tip="Use a compatible generic argument.")
 
             return self
 
@@ -539,7 +560,9 @@ class SemanticErrors:
         accessed. But if A also has an "x" attribute, then it is clear that "A.x" refers to A's own "x" attribute.
         """
 
-        def add(self, field: Asts.IdentifierAst, first: Asts.IdentifierAst, second: Asts.IdentifierAst) -> SemanticError:
+        def add(
+                self, first: Asts.IdentifierAst, second: Asts.IdentifierAst,
+                field: Asts.IdentifierAst | Asts.TypeIdentifierAst) -> SemanticError:
             self.add_info(
                 ast=first,
                 tag=f"Member '{first}' defined here")
@@ -594,20 +617,53 @@ class SemanticErrors:
 
             return self
 
+    class YieldedTypeMismatchError(SemanticError):
+        """
+        The YieldedTypeMismatchError is raised if 2 types are different when they should not be, in a yielding context.
+        This is a separate error from TypeMismatchError, as it contains extra information about the yielding context.
+        """
+
+        def add(
+                self, existing_ast: Asts.Ast, existing_type: Asts.TypeAst, incoming_ast: Asts.Ast,
+                incoming_type: Asts.TypeAst, is_optional: bool, is_fallible: bool,
+                error_type: Asts.TypeAst) -> SemanticError:
+
+            self.add_info(
+                ast=existing_ast,
+                tag=f"Target yield type defined as '{existing_type}' here")
+
+            if is_optional:
+                self.add_info(
+                    existing_ast,
+                    tag=f"Yielded type is optional, so `gen` is valid.")
+
+            if is_fallible:
+                self.add_info(
+                    existing_ast,
+                    tag=f"Yielded type is fallible, so `gen {error_type}()` is valid.")
+
+            self.add_error(
+                ast=incoming_ast,
+                tag=f"Type inferred as '{incoming_type}' here",
+                msg="Type mismatch.",
+                tip="Change the rhs type to match the lhs type.")
+
+            return self
+
     class GenericParameterNotInferredError(SemanticError):
         """
         The GenericParameterNotInferredError is raised if a generic parameter is not inferred from its caller context.
         Inference comes from arguments.
         """
 
-        def add(self, generic_parameter: Asts.GenericParameterAst, caller_context: Asts.ExpressionAst) -> SemanticError:
+        def add(self, generic_parameter_name: Asts.TypeAst, caller_context: Asts.ExpressionAst) -> SemanticError:
             self.add_info(
                 ast=caller_context,
                 tag=f"Type '{caller_context}' created here")
 
             self.add_error(
-                ast=generic_parameter,
-                tag=f"Non-inferred generic parameter '{generic_parameter}'.",
+                ast=generic_parameter_name,
+                tag=f"Non-inferred generic parameter '{generic_parameter_name}'.",
                 msg="Non-inferred generic parameters must be passed explicitly.",
                 tip="Pass the missing generic argument into the call.")
 
@@ -619,7 +675,7 @@ class SemanticErrors:
         with different types. For example, "f[T](a: T, b: T)" called as "f(1, true)" would infer T as both BigInt and Bool.
         """
 
-        def add(self, generic_parameter: Asts.GenericParameterAst, inferred_1: Asts.Ast, inferred_2: Asts.Ast) -> SemanticError:
+        def add(self, generic_parameter_name: Asts.TypeAst, inferred_1: Asts.Ast, inferred_2: Asts.Ast) -> SemanticError:
             self.add_info(
                 ast=inferred_1,
                 tag=f"Generic inferred as '{inferred_1}' here")
@@ -639,10 +695,10 @@ class SemanticErrors:
         called as "f[Bool](true)" contains the redundant explicit generic argument, even if the type is correct.
         """
 
-        def add(self, generic_parameter: Asts.GenericParameterAst, explicit: Asts.Ast, inferred: Asts.Ast) -> SemanticError:
+        def add(self, generic_parameter_name: Asts.TypeAst, explicit: Asts.Ast, inferred: Asts.Ast) -> SemanticError:
             self.add_info(
                 ast=inferred,
-                tag=f"Generic parameter {generic_parameter} inferred from here")
+                tag=f"Generic parameter {generic_parameter_name} inferred from here")
 
             self.add_error(
                 ast=explicit,
@@ -778,7 +834,7 @@ class SemanticErrors:
                 ast=ast,
                 tag="Uninitialized memory used here.",
                 msg="The memory has not been initialized or has been moved.",
-                tip=f"Ensure the memory is initialized before use\n\n\tlet {ast} = {ast.infer_type(sm).type_parts[-1]}().")
+                tip=f"Ensure the memory is initialized before use.")
 
             return self
 
@@ -820,21 +876,52 @@ class SemanticErrors:
 
             return self
 
-    class MemoryMovedWhilstPinnedError(SemanticError):
+    class MemoryMovedWhilstLinkPinnedError(SemanticError):
         """
-        The MemoryMovedWhilstPinnedError is raised if a memory symbol is moved whilst it is pinned. This occurs when a
-        pinned memory is moved.
+        The MemoryMovedWhilstLinkPinnedError is raised if a memory symbol is moved whilst it is pinned by another
+        symbol. This occurs when for example a coroutine is moved, but is pinned by a borrow passed into it.
         """
 
-        def add(self, move_location: Asts.Ast, pin_location: Asts.Ast) -> SemanticError:
+        def add(self, move_location: Asts.Ast, symbol_initialization: Asts.Ast, pin_location: Asts.Ast, pin_initialization: Asts.Ast) -> SemanticError:
+            self.add_info(
+                ast=pin_initialization,
+                tag="Pinned borrow initialized here.")
+
+            self.add_info(
+                ast=symbol_initialization,
+                tag="Pinned object defined here.")
+
             self.add_info(
                 ast=pin_location,
-                tag=f"Symbol '{move_location}' pinned here")
+                tag=f"Borrow here causes '{move_location}' to be pinned.")
 
             self.add_error(
                 ast=move_location,
-                tag="Moving pinned memory.",
-                msg="The memory is pinned and cannot be moved.",
+                tag=f"Extending lifetime of borrow '{pin_location}'.",
+                msg="Cannot move a value into an outer scope that would extend a borrow lifetime.",
+                tip="Remove the move operation.")
+
+            return self
+
+    class MemoryMovedWhilstPinnedError(SemanticError):
+        """
+        The MemoryMovedWhilstPinnedError is raised if a memory symbol is moved whilst it is pinned. This occurs when for
+        example an owned object is moved, but is pinned as a borrow into a coroutine.
+        """
+
+        def add(self, move_location: Asts.Ast, symbol_initialization: Asts.Ast, pin_location: Asts.Ast) -> SemanticError:
+            self.add_info(
+                ast=symbol_initialization,
+                tag=f"Symbol '{symbol_initialization}' defined here.")
+
+            self.add_info(
+                ast=pin_location,
+                tag=f"Symbol '{move_location}' pinned here as a borrow.")
+
+            self.add_error(
+                ast=move_location,
+                tag=f"Moving pinned borrow '{pin_location}'.",
+                msg="Cannot move a value that is pinned.",
                 tip="Remove the move operation.")
 
             return self
@@ -996,7 +1083,7 @@ class SemanticErrors:
         example, "let x = 5" followed by "x.4" would raise this error.
         """
 
-        def add(self, lhs: Asts.Ast, lhs_type: Asts.TypeAst, access_token: Asts.TokenAst) -> SemanticError:
+        def add(self, lhs: Asts.Ast, lhs_type: Asts.TypeAst, access_token: Asts.Ast) -> SemanticError:
             self.add_info(
                 ast=lhs,
                 tag=f"Type '{lhs_type}' inferred here")
@@ -1512,6 +1599,26 @@ class SemanticErrors:
 
             return self
 
+    class ObjectInitializerGenericWithArgumentsError(SemanticError):
+        """
+        An ObjectInitializerGenericWithArgumentsError error is raised if a generic type is being initialized (valid),
+        but with arguments. This is invalid because generic types have different attributes. So only full default
+        initialization can be used (no arguments).
+        """
+
+        def add(self, generic_type: Asts.TypeAst, argument: Asts.ObjectInitializerArgumentAst) -> SemanticError:
+            self.add_info(
+                ast=generic_type,
+                tag=f"Generic type '{generic_type}' initialized here")
+
+            self.add_error(
+                ast=argument,
+                tag="Argument defined here.",
+                msg="Generic types cannot be initialized with arguments.",
+                tip="Remove all arguments or use a concrete type.")
+
+            return self
+
     class InvalidObjectInitializerArgumentError(SemanticError):
         """
         The InvalidObjectInitializerArgumentError is raised if an object initializer argument is unnamed and not an
@@ -1701,5 +1808,120 @@ class SemanticErrors:
                 tag=f"Sub function defined here.",
                 msg=f"The function does not exist in the dll '{dll}'.",
                 tip="Remove the invalid stub.")
+
+            return self
+
+    class IterExpressionBranchMissingError(SemanticError):
+        """
+        The IterExpressionBranchMissingError is raised if an iter expression block is missing a branch for a specific
+        generator type, such as the "_" no-value branch got a GenOpt type.
+        """
+
+        def add(self, condition: Asts.ExpressionAst, generator_type: Asts.TypeAst, block: Asts.IterExpressionAst, missing_branch: type[Asts.IterPatternAst]) -> SemanticError:
+            self.add_info(
+                ast=condition,
+                tag=f"Generator type '{generator_type}' inferred here")
+
+            self.add_error(
+                ast=block,
+                tag=f"Iteration block missing a '{missing_branch.__name__}' branch.",
+                msg=f"When inferring the type of an iter block, all cases must be considered.",
+                tip=f"Add the missing block to the 'iter' expression.")
+
+            return self
+
+    class IterExpressionBranchTypeDuplicateError(SemanticError):
+        """
+        The IterExpressionBranchTypeDuplicateError is raised if an iter expression block has multiple branches with the
+        same pattern type. For example, two branches with the same "IterPatternVariableAst" type.
+        """
+
+        def add(self, branch: Asts.IterExpressionBranchAst, duplicate_branch: Asts.IterExpressionBranchAst) -> SemanticError:
+            self.add_info(
+                ast=branch,
+                tag="Branch defined here")
+
+            self.add_error(
+                ast=duplicate_branch,
+                tag=f"Duplicate branch of type '{type(duplicate_branch.pattern)}' found.",
+                msg="An iter expression block cannot have multiple branches with the same pattern type.",
+                tip="Remove the duplicate branch.")
+
+            return self
+
+    class IterExpressionBranchIncompatibleError(SemanticError):
+        """
+        The IterExpressionBranchIncompatibleError is raised if an iter expression block has a branch that is
+        incompatible with the condition type. For example, a branch with an "IterPatternNoValueAst" type
+        when the condition is not a GenRes type.
+        """
+
+        def add(self, cond: Asts.ExpressionAst, cond_type: Asts.TypeAst, branch_pattern: Asts.IterPatternAst, expected_type: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=cond,
+                tag=f"Condition type '{cond_type}' inferred here")
+
+            self.add_error(
+                ast=branch_pattern,
+                tag=f"Branch pattern incompatible with condition type '{cond_type}'.",
+                msg="The branch pattern is not compatible with the condition type.",
+                tip=f"Change the branch pattern to be compatible with the condition type '{expected_type}'.")
+
+            return self
+
+    class EarlyReturnRequiresTryTypeError(SemanticError):
+        """
+        The EarlyReturnRequiresTryTypeError is raised if an early return is used with an expression whose type doesn't
+        superimpose the Try type. The Try type is needed to get the output argument (early return type).
+        """
+
+        def add(self, op: Asts.PostfixExpressionOperatorEarlyReturnAst, expr: Asts.ExpressionAst, expr_type: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=op,
+                tag="Early return operator used here")
+
+            self.add_error(
+                ast=expr,
+                tag=f"Type inferred as '{expr_type}'",
+                msg="The early return expression must superimpose the Try type.",
+                tip="Change the expression type to superimpose the Try type.")
+
+            return self
+
+    class InvalidDereferenceExpressionConvention(SemanticError):
+        """
+        The InvalidDereferenceExpressionConvention error is raised if a dereference expression has an invalid expression
+        convention; a dereference operation can only occur on borrow-convention types.
+        """
+
+        def add(self, deref_tok: Asts.UnaryExpressionOperatorDerefAst, rhs: Asts.ExpressionAst, rhs_type: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=deref_tok,
+                tag="Dereference expression defined here")
+
+            self.add_error(
+                ast=rhs,
+                tag=f"Type inferred as '{rhs_type}'",
+                msg="Dereference expressions can only occur on borrow-convention types.",
+                tip="Change the expression type to a borrow-convention type, or remove the dereference operator.")
+
+            return self
+
+    class InvalidDereferenceExpressionType(SemanticError):
+        """
+        The InvalidDereferenceExpressionType error is raised if a dereference expression has an invalid type; a
+        dereference operation can only occur on a type that superimposes "Copy".
+        """
+
+        def add(self, deref_tok: Asts.UnaryExpressionOperatorDerefAst, rhs: Asts.ExpressionAst, rhs_type: Asts.TypeAst) -> SemanticError:
+            self.add_info(
+                ast=deref_tok,
+                tag="Dereference expression defined here")
+
+            self.add_error(
+                ast=rhs,
+                tag=f"Type inferred as '{rhs_type}'",
+                msg="Dereference expressions can only occur on copyable types.",
+                tip="Change the expression type to a copyable type.")
 
             return self

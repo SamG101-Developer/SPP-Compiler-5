@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericCompArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     value: Asts.ExpressionAst = field(default=None)
 
@@ -20,7 +20,7 @@ class GenericCompArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def __eq__(self, other: GenericCompArgumentUnnamedAst) -> bool:
         # Check both ASTs are the same type and have the same value.
-        return isinstance(other, GenericCompArgumentUnnamedAst) and self.value == other.value
+        return type(other) is GenericCompArgumentUnnamedAst and self.value == other.value
 
     def __hash__(self) -> int:
         return hash(self.value)
@@ -60,7 +60,7 @@ class GenericCompArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
         AstMemoryUtils.enforce_memory_integrity(
             self.value, self.value, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=True)
+            check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
 
 
 __all__ = [

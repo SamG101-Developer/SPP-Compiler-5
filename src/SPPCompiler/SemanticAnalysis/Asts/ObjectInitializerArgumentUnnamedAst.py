@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ObjectInitializerArgumentUnnamedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     is_default: Optional[Asts.TokenAst] = field(default=None)
     name: Asts.ExpressionAst = field(default=None)
@@ -29,7 +29,7 @@ class ObjectInitializerArgumentUnnamedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check the argument is an identifier (not done in parser so error occurs here)
-        if not isinstance(self.name, Asts.IdentifierAst):
+        if type(self.name) is not Asts.IdentifierAst:
             raise SemanticErrors.InvalidObjectInitializerArgumentError().add(self.name).scopes(sm.current_scope)
 
         # Analyse the name of the argument.

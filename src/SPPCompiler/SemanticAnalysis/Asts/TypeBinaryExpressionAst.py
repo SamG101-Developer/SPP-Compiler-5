@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypeBinaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
     lhs: Asts.TypeAst = field(default=None)
     op: Asts.TokenAst = field(default=None)

@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericCompParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
     kw_cmp: Asts.TokenAst = field(default=None)
     name: Asts.TypeAst = field(default=None)
@@ -71,7 +71,6 @@ class GenericCompParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst):
         ast.analyse_semantics(sm, **kwargs)
 
         # Mark the symbol as initialized.
-        # Todo: Why again? also in other GenericCompParameterAsts?
         symbol = sm.current_scope.get_symbol(Asts.IdentifierAst.from_type(self.name))
         symbol.memory_info.initialized_by(self)
 

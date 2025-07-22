@@ -8,7 +8,7 @@ TypeAst = Union[
     Asts.TypeBinaryExpressionAst,
     Asts.TypePostfixExpressionAst,
     Asts.TypeUnaryExpressionAst,
-    Asts.TypeSingleAst
+    Asts.TypeIdentifierAst
 ]
 
 __all__ = [

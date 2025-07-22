@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericCompParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
     kw_cmp: Asts.TokenAst = field(default=None)
     tok_variadic: Asts.TokenAst = field(default=None)
@@ -28,7 +28,7 @@ class GenericCompParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Variadic"
 
     def __eq__(self, other: GenericCompParameterVariadicAst) -> bool:
-        return isinstance(other, GenericCompParameterVariadicAst) and self.name == other.name
+        return type(other) is GenericCompParameterVariadicAst and self.name == other.name
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

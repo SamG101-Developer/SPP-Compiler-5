@@ -4,6 +4,9 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 
+from llvmlite import ir
+from SPPCompiler.Utils.Functools import reduce
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils, LightweightMemoryInfo
@@ -13,14 +16,14 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 # Todo: re consistency, unless there is an "else" block, then even 1 branch will could create inconsistencies: add to
 #  test.
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The CaseExpressionAst represents a conditional jumping structure in S++. Case expressions are highly flexible, and
@@ -64,8 +67,10 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_of: Optional[Asts.TokenAst] = field(default=None)
     """The optional ``of`` keyword indicating a subsequent list of patterns."""
 
-    branches: Seq[Asts.CaseExpressionBranchAst] = field(default_factory=Seq)
+    branches: list[Asts.CaseExpressionBranchAst] = field(default_factory=list)
     """The branches that the condition can be matched against."""
+
+    _binary_pattern_conversions: dict[int, list] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.kw_case = self.kw_case or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwCase)
@@ -77,7 +82,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     @staticmethod
     def from_simple(
             p1: Asts.TokenAst, p2: Asts.ExpressionAst, p3: Asts.InnerScopeAst,
-            p4: Seq[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
+            p4: list[Asts.CaseExpressionBranchAst]) -> CaseExpressionAst:
 
         """
         The "from_simple" static method acts as a pseudo-constructor to create a case expression from the singular
@@ -131,7 +136,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Convert condition into an "== true" comparison.
         first_pattern = Asts.PatternVariantExpressionAst(p1.pos, expr=Asts.BooleanLiteralAst.from_python_literal(p1.pos, True))
-        first_branch = Asts.CaseExpressionBranchAst(p1.pos, patterns=[first_pattern], body=p3)  # todo: "op" need setting?
+        first_branch = Asts.CaseExpressionBranchAst(p1.pos, op=Asts.TokenAst.raw(token_type=SppTokenType.TkEq), patterns=[first_pattern], body=p3)
         branches = [first_branch] + p4
 
         # Return the case expression.
@@ -174,22 +179,40 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # The checks here only apply when assigning from this expression.
-        branch_inferred_types = [b.infer_type(sm, **kwargs) for b in self.branches]
+        branch_types = [b.infer_type(sm, **kwargs) for b in self.branches]
+        master_branch_type = branch_types[0]
 
-        # All branches must return the same type.
-        zeroth_branch_type = branch_inferred_types[0]
-        if mismatch := [x for x in branch_inferred_types[1:] if not AstTypeUtils.symbolic_eq(x, zeroth_branch_type, sm.current_scope, sm.current_scope)]:
+        # Pre-provided type for assignment (like a variant type).
+        if lhs_type := kwargs.get("assignment_type", None):
+            master_branch_type = lhs_type
+
+        # If there is a variant branch, use the most variant type as the master branch type.
+        elif variant_branch_types := [b for b in branch_types if AstTypeUtils.is_type_variant(b, sm.current_scope)]:
+            most_inner_types = 0
+            for variant_type in variant_branch_types:
+                internal_types = variant_type.type_parts[-1].generic_argument_group["Variants"].value.type_parts[-1].generic_argument_group.arguments
+                if len(internal_types) > most_inner_types:
+                    master_branch_type, most_inner_types = variant_type, len(internal_types)
+            branch_types.remove(master_branch_type)
+
+        # Otherwise, if there are no variants, then the first branch type is the master branch type.
+        else:
+            branch_types.remove(master_branch_type)
+
+        # Check all branches match the master branch type.
+        if mismatch := [b for b in branch_types if not AstTypeUtils.symbolic_eq(master_branch_type, b, sm.current_scope, sm.current_scope)]:
             raise SemanticErrors.CaseBranchesConflictingTypesError().add(
-                zeroth_branch_type, mismatch[0]).scopes(sm.current_scope)
+                master_branch_type, mismatch[0]).scopes(sm.current_scope)
 
         # Ensure there is an "else" branch if the branches are not exhaustive.
-        if not isinstance(self.branches[-1].patterns[0], Asts.PatternVariantElseAst):
+        # Todo: need to investigate how to detect exhaustion.
+        if type(self.branches[-1].patterns[0]) is not Asts.PatternVariantElseAst and not kwargs.pop("ignore_else", False):
             raise SemanticErrors.CaseBranchesMissingElseBranchError().add(
                 self.cond, self.branches[-1]).scopes(sm.current_scope)
 
         # Return the branches' return type, if there are any branches, otherwise Void.
         if len(self.branches) > 0:
-            return branch_inferred_types[0]
+            return master_branch_type
         return CommonTypes.Void(self.pos)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
@@ -229,20 +252,8 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 raise SemanticErrors.CaseBranchMultipleDestructurePatternsError().add(branch.patterns[0], branch.patterns[1]).scopes(sm.current_scope)
 
             # Check the "else" branch is the final branch (also ensures there is only 1).
-            if isinstance(branch.patterns[0], Asts.PatternVariantElseAst) and branch != self.branches[-1]:
+            if type(branch.patterns[0]) is Asts.PatternVariantElseAst and branch != self.branches[-1]:
                 raise SemanticErrors.CaseBranchesElseBranchNotLastError().add(branch.patterns[0].kw_else, self.branches[-1]).scopes(sm.current_scope)
-
-            # For non-destructuring branches, combine the condition and pattern to ensure functional compatibility.
-            if branch.op and branch.op.token_type != SppTokenType.KwIs:
-                for pattern in branch.patterns:
-
-                    # Check the function exists. No check for Bool return type as it is enforced by comparison methods.
-                    # Dummy values as otherwise memory rules create conflicts - just need to test the existence of the
-                    # function.
-                    binary_lhs_ast = Asts.ObjectInitializerAst(class_type=self.cond.infer_type(sm))
-                    binary_rhs_ast = Asts.ObjectInitializerAst(class_type=pattern.expr.infer_type(sm))
-                    binary_ast = Asts.BinaryExpressionAst(self.pos, binary_lhs_ast, branch.op, binary_rhs_ast)
-                    binary_ast.analyse_semantics(sm, **kwargs)
 
             branch.analyse_semantics(sm, cond=self.cond, **kwargs)
 
@@ -254,7 +265,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.cond.check_memory(sm, **kwargs)
         AstMemoryUtils.enforce_memory_integrity(
             self.cond, self.cond, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=False)
+            check_pins=False, check_pins_linked=False, mark_moves=False, **kwargs)
 
         sm.move_to_next_scope()
 
@@ -262,7 +273,7 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         symbol_mem_info = defaultdict(list[tuple[Asts.CaseExpressionBranchAst, LightweightMemoryInfo]])
         for branch in self.branches:
             # Make a record of the symbols' memory status in the scope before the branch is analysed.
-            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols(match_type=Asts.IdentifierAst) if s.__class__ is VariableSymbol]
+            var_symbols_in_scope = [s for s in sm.current_scope.all_symbols() if type(s) is VariableSymbol]
             old_symbol_mem_info = {s: s.memory_info.snapshot() for s in var_symbols_in_scope}
             branch.check_memory(sm, cond=self.cond, **kwargs)
             new_symbol_mem_info = {s: s.memory_info.snapshot() for s in var_symbols_in_scope}
@@ -318,6 +329,61 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Move out of the case expression scope.
         sm.move_out_of_current_scope()
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        """
+        The conditional branching is implemented as a series of LLVM conditional jumps. HTe condition is an LLVM
+        translation of the AST's condition, and the branches are translated and then inserted, with fragment combination
+        for the pattern matching.
+
+        :param sm: The scope manager.
+        :param llvm_module: The LLVM module to generate code into.
+        :param kwargs: Additional keyword arguments.
+        :return: The LLVM code for the case expression.
+        """
+
+        # Create the blocks (1 for each branch).
+        llvm_blocks = []
+        for i, branch in enumerate(self.branches):
+            # Generate the LLVM code for the branch.
+            llvm_blocks.append(kwargs["func"].append_basic_block(name=f"case_{id(self)}_branch_{i}"))
+
+        # Add the "exit" block at the end of the case expression.
+        llvm_blocks.append(kwargs["func"].append_basic_block(name=f"case_{id(self)}_exit"))
+
+        for branch in self.branches:
+            # Any "is" branches will only have 1 pattern, so no need to combine.
+            if branch.op.token_type == SppTokenType.KwIs:
+                # TODO
+                continue
+
+            # Otherwise, combine all the pattern conversions with binary "OR" operations (reduction).
+            combined_condition = reduce(
+                lambda x, y: Asts.BinaryExpressionAst(self.pos, x, Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwOr), y),
+                self._binary_pattern_conversions[id(branch)][1:], self._binary_pattern_conversions[id(branch)][0])
+            llvm_condition = combined_condition.code_gen_pass_2(sm, llvm_module, **kwargs)
+
+            # Add the condition to the first block.
+            # Todo
+
+            # Create the LLVM code for the branch.
+            this_branch = llvm_blocks[self.branches.index(branch)]
+            if branch is not self.branches[-1]:
+                next_branch = llvm_blocks[self.branches.index(branch) + 1]
+                kwargs["builder"].cbranch(llvm_condition, this_branch, next_branch)
+
+            # Position the builder in the branch block.
+            kwargs["builder"].position_at_end(this_branch)
+
+            # Add the body of the branch, then unconditionally branch to the exit block.
+            llvm_body = branch.code_gen_pass_2(sm, llvm_module, **kwargs)
+            kwargs["builder"].branch(llvm_blocks[-1])
+
+        # Position the builder at the exit block.
+        kwargs["builder"].position_at_end(llvm_blocks[-1])
+
+        # Handle assignments where this is the RHS of the expression. Use "phi" to select a result.
+        # Todo
 
 
 __all__ = [

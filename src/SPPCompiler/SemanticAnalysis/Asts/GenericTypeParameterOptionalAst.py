@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericTypeParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
     name: Asts.TypeAst = field(default=None)
     constraints: Asts.GenericTypeParameterInlineConstraintsAst = field(default=None)
@@ -22,7 +22,7 @@ class GenericTypeParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Optional"
 
     def __eq__(self, other: GenericTypeParameterOptionalAst) -> bool:
-        return isinstance(other, GenericTypeParameterOptionalAst) and self.name == other.name
+        return type(other) is GenericTypeParameterOptionalAst and self.name == other.name
 
     def __str__(self) -> str:
         # Print the AST with auto-formatting.

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class Ast(CompilerStages):
     """
     The Ast class is the base class of all ASTs created by the parser. Common methods and properties are defined here.
@@ -28,6 +28,9 @@ class Ast(CompilerStages):
 
     _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
     """The scope representing top-level ASTs (function/class scopes)"""
+
+    is_type_ast: bool = field(default=False, kw_only=True, repr=False)
+    """Optimization tag to check if this AST is a type. This is used to avoid unnecessary type checks in the compiler."""
 
     def clone_at(self, pos: int) -> Ast:
         """
@@ -69,7 +72,7 @@ class Ast(CompilerStages):
         return 0
 
     def __eq__(self, other: Ast) -> bool:
-        return isinstance(other, Ast)
+        return True
 
     def __str__(self) -> str:
         printer = AstPrinter()

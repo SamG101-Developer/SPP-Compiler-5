@@ -7,10 +7,10 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LambdaExpressionParameterAndCaptureGroupAst(Asts.Ast):
     """
     The LambdaExpressionParameterAndCaptureGroupAst holds the captured variables and parameters for a lambda expression.
@@ -21,10 +21,10 @@ class LambdaExpressionParameterAndCaptureGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     """The opening vertical bar token of the lambda expression parameter and capture group."""
 
-    params: Seq[Asts.LambdaExpressionParameterAst] = field(default_factory=Seq)
+    params: list[Asts.LambdaExpressionParameterAst] = field(default_factory=list)
     """The list of parameters in the lambda expression."""
 
-    captures: Seq[Asts.LambdaExpressionCaptureItemAst] = field(default_factory=Seq)
+    captures: list[Asts.LambdaExpressionCaptureItemAst] = field(default_factory=list)
     """The list of captured variables in the lambda expression."""
 
     tok_r: Asts.TokenAst = field(default=None)
@@ -63,8 +63,8 @@ class LambdaExpressionParameterAndCaptureGroupAst(Asts.Ast):
             # Apply the borrow to the symbol.
             sym: VariableSymbol = sm.current_scope.get_symbol(cap.value)
             sym.memory_info.ast_borrowed = cap.convention
-            sym.memory_info.is_borrow_mut = isinstance(cap.convention, Asts.ConventionMutAst)
-            sym.memory_info.is_borrow_ref = isinstance(cap.convention, Asts.ConventionRefAst)
+            sym.memory_info.is_borrow_mut = type(cap.convention) is Asts.ConventionMutAst
+            sym.memory_info.is_borrow_ref = type(cap.convention) is Asts.ConventionRefAst
 
             # Apply the borrow to the type.
             sym.type = sym.type.with_convention(cap.convention)

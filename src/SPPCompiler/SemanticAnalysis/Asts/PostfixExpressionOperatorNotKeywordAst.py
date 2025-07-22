@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 # todo: check memory w lhs here
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PostfixExpressionOperatorNotKeywordAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_dot: Asts.TokenAst = field(default=None)
     tok_not: Asts.TokenAst = field(default=None)
@@ -48,7 +48,7 @@ class PostfixExpressionOperatorNotKeywordAst(Asts.Ast, Asts.Mixins.TypeInferrabl
     def analyse_semantics(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # Check the loop condition is boolean.
         target_type = CommonTypes.Bool(self.pos)
-        return_type = lhs.infer_type(sm)
+        return_type = lhs.infer_type(sm, **kwargs)
         if not AstTypeUtils.symbolic_eq(target_type, return_type, sm.current_scope, sm.current_scope):
             raise SemanticErrors.ExpressionNotBooleanError().add(
                 lhs, return_type, "not expression").scopes(sm.current_scope)

@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     name: Asts.TypeAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default=None)
@@ -24,7 +24,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self._variant = "Named"
 
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
-        return isinstance(other, GenericCompArgumentNamedAst) and self.name == other.name and self.value == other.value
+        return type(other) is GenericCompArgumentNamedAst and self.name == other.name and self.value == other.value
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -56,9 +56,13 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     @staticmethod
     def from_symbol(symbol: VariableSymbol) -> GenericCompArgumentNamedAst:
+        c = symbol.memory_info.ast_comptime_const
+        value = c.name if isinstance(c, Asts.GenericCompParameterAst) else c.value
+        if isinstance(value, Asts.TypeAst): value = Asts.IdentifierAst.from_type(value)
+
         return GenericCompArgumentNamedAst(
-            name=Asts.TypeSingleAst.from_identifier(symbol.name),
-            value=Asts.IdentifierAst.from_type(symbol.memory_info.ast_comptime_const.name))
+            name=Asts.TypeIdentifierAst.from_identifier(symbol.name),
+            value=value)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # The ".." TokenAst, or TypeAst, cannot be used as an expression for the value.
@@ -80,7 +84,7 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
         AstMemoryUtils.enforce_memory_integrity(
             self.value, self.value, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-            check_pins=True, mark_moves=True)
+            check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
 
 
 __all__ = [

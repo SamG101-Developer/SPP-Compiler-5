@@ -5,7 +5,6 @@ from dataclasses import dataclass, field
 from typing import Final
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.Utils.Sequence import Seq
 
 
 @dataclass
@@ -22,7 +21,7 @@ class VariableLikeAst:
 
     @property
     @abstractmethod
-    def extract_names(self) -> Seq[Asts.IdentifierAst]:
+    def extract_names(self) -> list[Asts.IdentifierAst]:
         """!
         Extract the names represented by this AST. For "let (x, y) = 123", "(x, y)" is the local variables, and its
         names are "x" and "y". Nested destructuring is supposed, so this method will be recursive.

@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ObjectInitializerArgumentNamedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     name: Asts.IdentifierAst | Asts.TokenAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default=None)

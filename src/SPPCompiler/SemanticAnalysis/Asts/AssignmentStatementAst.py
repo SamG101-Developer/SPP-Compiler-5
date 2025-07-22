@@ -2,22 +2,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from llvmlite import ir
+
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 # Todo: a lot of kwargs["assignment"][0] is sen for getting symbols; check this because there can be > 1 in the
 #  "assignment" list. Test multi-assignment or ban it if its a problem. would like to keep it though.
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The AssignmentStatementAst class is an AST node that represents an assignment statement. This AST can be used to
@@ -31,17 +34,20 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         x, y = y, 100
     """
     
-    lhs: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
+    lhs: list[Asts.ExpressionAst] = field(default_factory=list)
     """The sequence of lhs targets."""
 
     op: Asts.TokenAst = field(default=None)
     """The ``=`` operator."""
 
-    rhs: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
+    rhs: list[Asts.ExpressionAst] = field(default_factory=list)
     """The sequence of rhs values to assign to the targets."""
 
     def __post_init__(self) -> None:
         self.op = self.op or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -96,7 +102,7 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             e.analyse_semantics(sm, **kwargs)
 
         for i, e in enumerate(self.rhs):
-            if isinstance(e, Asts.PostfixExpressionAst) and isinstance(e.op, Asts.PostfixExpressionOperatorFunctionCallAst):
+            if type(e) is Asts.PostfixExpressionAst and type(e.op) is Asts.PostfixExpressionOperatorFunctionCallAst:
                 kwargs |= {"inferred_return_type": self.lhs[i].infer_type(sm, **kwargs)}
             e.analyse_semantics(sm, **(kwargs | {"assignment": [self.lhs[i]]}))
 
@@ -109,23 +115,23 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for (lhs_expr, rhs_expr), lhs_sym in zip(zip(self.lhs, self.rhs), lhs_syms):
 
             # Full assignment (ie "x = y") requires the "x" symbol to be marked as "mut".
-            if isinstance(lhs_expr, Asts.IdentifierAst) and not (lhs_sym.is_mutable or lhs_sym.memory_info.initialization_counter == 0):
+            if type(lhs_expr) is Asts.IdentifierAst and not (lhs_sym.is_mutable or lhs_sym.memory_info.initialization_counter == 0):
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
                     lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
             # Attribute assignment (ie "x.y = z"), for a non-borrowed symbol, requires an outermost "mut" symbol.
-            elif isinstance(lhs_expr, Asts.PostfixExpressionAst) and (not lhs_sym.memory_info.ast_borrowed and not lhs_sym.is_mutable):
+            elif type(lhs_expr) is Asts.PostfixExpressionAst and (not lhs_sym.memory_info.ast_borrowed and not lhs_sym.is_mutable):
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
                     lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
             # Attribute assignment (ie "x.y = z"), for a borrowed symbol, cannot contain an immutable borrow.
-            elif isinstance(lhs_expr, Asts.PostfixExpressionAst) and lhs_sym.memory_info.is_borrow_ref:
+            elif type(lhs_expr) is Asts.PostfixExpressionAst and lhs_sym.memory_info.is_borrow_ref:
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
                     lhs_sym.name, self.op, lhs_sym.memory_info.ast_borrowed).scopes(sm.current_scope)
 
             # Ensure the lhs and rhs have the same type.
             lhs_type = lhs_expr.infer_type(sm, **kwargs)
-            rhs_type = rhs_expr.infer_type(sm, **kwargs)
+            rhs_type = rhs_expr.infer_type(sm, **(kwargs | {"assignment_type": lhs_type}))
             if not AstTypeUtils.symbolic_eq(lhs_type, rhs_type, sm.current_scope, sm.current_scope):
                 raise SemanticErrors.TypeMismatchError().add(
                     lhs_sym.memory_info.ast_initialization, lhs_type, rhs_expr, rhs_type).scopes(sm.current_scope)
@@ -156,26 +162,29 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # For each assignment, check the memory status and resolve any (partial-)moves.
         lhs_syms = [sm.current_scope.get_variable_symbol_outermost_part(expr) for expr in self.lhs]
-        is_attr = lambda ast: not isinstance(ast, Asts.IdentifierAst)
+        is_attr = lambda ast: type(ast) is not Asts.IdentifierAst
         for (lhs_expr, rhs_expr), lhs_sym in zip(zip(self.lhs, self.rhs), lhs_syms):
 
+            # Todo: for "a.b.c", if "a.b" is moved, i think "a.b.c = 1" still works, but it should not.
             # Ensure the memory status of the left and right hand side.
             AstMemoryUtils.enforce_memory_integrity(
                 lhs_sym.name.clone_at(lhs_expr.pos), self.op, sm, check_move=is_attr(lhs_expr),
-                check_partial_move=False, check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=False)
+                check_partial_move=False, check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True,
+                mark_moves=False, **kwargs)
 
             rhs_expr.check_memory(sm, **(kwargs | {"assignment": [lhs_expr]}))
             AstMemoryUtils.enforce_memory_integrity(
                 rhs_expr, self.op, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-                check_pins=True, mark_moves=True)
+                check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
 
             if is_attr(lhs_expr):
                 AstMemoryUtils.enforce_memory_integrity(
                     lhs_expr.lhs, self.op, sm, check_move=True, check_partial_move=is_attr(lhs_expr.lhs),
-                    check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=False)
+                    check_move_from_borrowed_ctx=False, check_pins=True, check_pins_linked=True, mark_moves=False,
+                    **kwargs)
 
             # Extra check to prevent "let: Type" being assigned more than once (bypasses lack of "mut").
-            if isinstance(lhs_expr, Asts.IdentifierAst) and not lhs_sym.is_mutable and lhs_sym.memory_info.initialization_counter == 1:
+            if type(lhs_expr) is Asts.IdentifierAst and not lhs_sym.is_mutable and lhs_sym.memory_info.initialization_counter == 1:
                 raise SemanticErrors.MutabilityInvalidMutationError().add(
                     lhs_sym.name, self.op, lhs_sym.memory_info.ast_initialization).scopes(sm.current_scope)
 
@@ -186,6 +195,24 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             # Remove partial moves from their outermost symbol.
             elif is_attr(lhs_expr):
                 lhs_sym.memory_info.remove_partial_move(lhs_expr)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        """
+        The assignment statement AST generates code to assign the right-hand side values to the left-hand side targets.
+        As llvm only supports single-value assignments, the code generation will generate a sequence of assignments,
+        one for each left-hand side target. The right-hand side values are evaluated first, and then assigned to the
+        left-hand side targets in order.
+
+        :param sm: The scope manager.
+        :param llvm_module: The LLVM module to generate code into.
+        :param kwargs: Additional keyword arguments.
+        """
+
+        # For each left-hand side target, get the symbol and assign the right-hand side value to it.
+        for lhs, rhs in zip(self.lhs, self.rhs):
+            lhs_ptr = sm.current_scope.get_symbol(lhs, sym_type=VariableSymbol).llvm_info.ptr
+            rhs_val = rhs.code_gen_pass_2(sm, llvm_module, **kwargs)
+            kwargs["builder"].store(rhs_val, lhs_ptr)
 
 
 __all__ = [

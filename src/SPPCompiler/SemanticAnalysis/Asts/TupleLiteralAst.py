@@ -8,13 +8,13 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TupleLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_l: Asts.TokenAst = field(default=None)
-    elems: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
+    elems: list[Asts.ExpressionAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:

@@ -5,6 +5,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Dict, Optional, TYPE_CHECKING
 
+from SPPCompiler.CodeGen.LlvmSymbolInfo import LlvmTypeSymbolInfo, LlvmVariableSymbolInfo
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import MemoryInfo
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
@@ -14,12 +15,12 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class BaseSymbol:
     ...
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class NamespaceSymbol(BaseSymbol):
     name: Asts.IdentifierAst
     scope: Optional[Scope] = field(default=None)
@@ -44,7 +45,7 @@ class NamespaceSymbol(BaseSymbol):
         return NamespaceSymbol(name=fast_deepcopy(self.name), scope=self.scope)
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class VariableSymbol(BaseSymbol):
     name: Asts.IdentifierAst
     type: Asts.TypeAst
@@ -52,6 +53,7 @@ class VariableSymbol(BaseSymbol):
     is_generic: bool = field(default=False)
     memory_info: MemoryInfo = field(default_factory=MemoryInfo)
     visibility: Visibility = field(default=Visibility.Public)
+    llvm_info: Optional[LlvmVariableSymbolInfo] = field(default=None, repr=False)
 
     def __json__(self) -> Dict:
         # Dump the VariableSymbol as a JSON object.
@@ -72,19 +74,20 @@ class VariableSymbol(BaseSymbol):
         # Copy the all the attributes of the VariableSymbol.
         return VariableSymbol(
             name=fast_deepcopy(self.name), type=fast_deepcopy(self.type), is_mutable=self.is_mutable,
-            memory_info=copy.copy(self.memory_info), visibility=self.visibility)
+            is_generic=self.is_generic, memory_info=copy.copy(self.memory_info), visibility=self.visibility)
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(kw_only=True)
 class TypeSymbol(BaseSymbol):
-    name: Asts.GenericIdentifierAst
+    name: Asts.TypeIdentifierAst
     type: Optional[Asts.ClassPrototypeAst]
     scope: Optional[Scope] = field(default=None)
     is_generic: bool = field(default=False)
-    is_copyable: bool = field(default=False)
+    is_direct_copyable: bool = field(default=False)
     visibility: Visibility = field(default=Visibility.Private)
     convention: Optional[Asts.ConventionAst] = field(default=None)
     generic_impl: TypeSymbol = field(default=None, repr=False)
+    llvm_info: Optional[LlvmTypeSymbolInfo] = field(default=None, repr=False)
 
     scope_defined_in: Optional[Scope] = field(default=None)
 
@@ -92,14 +95,13 @@ class TypeSymbol(BaseSymbol):
         # Link the type symbol to the associated scope.
         if self.scope and not self.is_generic and not self.name.value == "Self":
             self.scope._type_symbol = self
-
         self.generic_impl = self
 
     def __json__(self) -> Dict:
         # Dump the TypeSymbol as a JSON object.
         return {
             "what": "type", "name": str(self.name), "type": str(self.type), "scope": str(self.scope.name) if self.scope else "",
-            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else "", "id": id(self)}
+            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else ""}
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -117,19 +119,22 @@ class TypeSymbol(BaseSymbol):
         if self.is_generic:
             return TypeSymbol(
                 name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
-                is_copyable=self.is_copyable, visibility=self.visibility, convention=self.convention,
+                is_direct_copyable=self.is_direct_copyable, visibility=self.visibility, convention=self.convention,
                 generic_impl=self.generic_impl, scope_defined_in=self.scope_defined_in)
         else:
             return self
 
+    def is_copyable(self) -> bool:
+        return self.is_direct_copyable
+
     @property
     def fq_name(self) -> Asts.TypeAst:
-        fq_name = Asts.TypeSingleAst.from_generic_identifier(self.name)
+        fq_name = self.name
 
         if self.is_generic:
             return fq_name
 
-        if self.__class__ is AliasSymbol:
+        if type(self) is AliasSymbol:
             return fq_name
 
         if self.name.value[0] == "$":
@@ -145,7 +150,7 @@ class TypeSymbol(BaseSymbol):
         return fq_name.with_convention(self.convention)
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class AliasSymbol(TypeSymbol):
     old_sym: TypeSymbol = field(default=None)
 
@@ -153,8 +158,7 @@ class AliasSymbol(TypeSymbol):
         # Dump the AliasSymbol as a JSON object.
         return {
             "what": "alias", "name": self.name, "type": self.type, "scope": self.scope.name if self.scope else "",
-            "parent": self.scope.parent.name if self.scope and self.scope.parent else "", "old_sym": self.old_sym,
-            "id": id(self)}
+            "parent": str(self.scope.parent.name) if self.scope and self.scope.parent else "", "old_sym": self.old_sym}
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -168,10 +172,11 @@ class AliasSymbol(TypeSymbol):
         return self is other
 
     def __deepcopy__(self, memodict=None):
-        # Copy all the attributes of the AliasSymbol, but link the old scope.
+        # Copy all the attributes of the AliasSymbol, but link the old scope. No conventions on aliases.
         return AliasSymbol(
             name=fast_deepcopy(self.name), type=self.type, scope=self.scope, is_generic=self.is_generic,
-            is_copyable=self.is_copyable, visibility=self.visibility, old_sym=fast_deepcopy(self.old_sym))
+            is_direct_copyable=self.is_direct_copyable, visibility=self.visibility, generic_impl=self.generic_impl,
+            scope_defined_in=self.scope_defined_in, old_sym=fast_deepcopy(self.old_sym))
 
 
 type Symbol = NamespaceSymbol | VariableSymbol | TypeSymbol | AliasSymbol

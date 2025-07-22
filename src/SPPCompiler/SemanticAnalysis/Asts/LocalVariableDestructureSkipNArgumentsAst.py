@@ -6,10 +6,9 @@ from typing import Optional
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LocalVariableDestructureSkipNArgumentsAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_variadic: Asts.TokenAst = field(default=None)
     binding: Optional[Asts.LocalVariableSingleIdentifierAst] = field(default=None)
@@ -30,7 +29,7 @@ class LocalVariableDestructureSkipNArgumentsAst(Asts.Ast, Asts.Mixins.VariableLi
         return self.binding.pos_end if self.binding else self.tok_variadic.pos_end
 
     @property
-    def extract_names(self) -> Seq[Asts.IdentifierAst]:
+    def extract_names(self) -> list[Asts.IdentifierAst]:
         return self.binding.extract_names if self.binding else []
 
     @property

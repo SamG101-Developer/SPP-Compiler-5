@@ -1,9 +1,6 @@
-from typing import List, Tuple
-
 from type_intersections import Intersection
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.Utils.Sequence import Seq
 
 
 class AstOrderingUtils:
@@ -16,7 +13,7 @@ class AstOrderingUtils:
     ARGUMENT_ORDERING = ["Unnamed", "Named"]
 
     @staticmethod
-    def order(ordering: List[str], current: Seq[Asts.Mixins.OrderableAst]) -> Seq[Tuple[str, Intersection[Asts.Ast, Asts.Mixins.OrderableAst]]]:
+    def order(ordering: list[str], current: list[Asts.Mixins.OrderableAst]) -> list[tuple[str, Intersection[Asts.Ast, Asts.Mixins.OrderableAst]]]:
         """!
         Order the arguments in the AST by the ordering defined in the "ordering" parameter. This re-arranges ASTs in the
         sequence by sorting the values by their "_variant" attribute, which is one of the _ARGUMENT_ORDERING or
@@ -32,7 +29,7 @@ class AstOrderingUtils:
         return [o for c, o in zip(current, ordered) if c != o]
 
     @staticmethod
-    def order_args(current: Seq[Asts.Mixins.OrderableAst]) -> Seq[Tuple[str, Asts.Ast]]:
+    def order_args(current: list[Asts.Mixins.OrderableAst]) -> list[tuple[str, Asts.Ast]]:
         """!
         Order the arguments in the AST by the ordering defined in _ARGUMENT_ORDERING. This ensures that unnamed
         arguments come first, and are followed by the named arguments. The order of the arguments in their respective
@@ -47,7 +44,7 @@ class AstOrderingUtils:
         return AstOrderingUtils.order(AstOrderingUtils.ARGUMENT_ORDERING, current)
 
     @staticmethod
-    def order_params(current: Seq[Asts.Mixins.OrderableAst]) -> Seq[Tuple[str, Asts.Ast]]:
+    def order_params(current: list[Asts.Mixins.OrderableAst]) -> list[tuple[str, Asts.Ast]]:
         """
         Order the parameters in the AST by the ordering defined in _PARAM_ORDERING. This ensures that the parameters
         are ordered by their type, with the self parameter first, followed by the required parameters, then the optional

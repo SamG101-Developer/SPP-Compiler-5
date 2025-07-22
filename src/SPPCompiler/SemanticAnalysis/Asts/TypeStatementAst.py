@@ -17,12 +17,11 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.TypeInferrable):
-    annotations: Seq[Asts.AnnotationAst] = field(default_factory=Seq)
+    annotations: list[Asts.AnnotationAst] = field(default_factory=list)
     kw_type: Asts.TokenAst = field(default=None)
     new_type: Asts.TypeAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default=None)
@@ -35,10 +34,10 @@ class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.T
     _sup_ast: Optional[Asts.SupPrototypeExtensionAst] = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self.kw_type = self.kw_type or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwUse)
+        self.kw_type = self.kw_type or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwType)
         self.generic_parameter_group = self.generic_parameter_group or Asts.GenericParameterGroupAst(pos=self.pos)
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
-        self.new_type = self.new_type or Asts.TypeSingleAst(self.old_type.pos, self.old_type.type_parts[-1])
+        self.new_type = self.new_type or self.old_type.type_parts[-1]
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -107,6 +106,8 @@ class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.T
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
         sm.move_to_next_scope()  # cls scope
         sm.move_to_next_scope()  # type alias scope (+generics)
+
+        self.old_type.without_generics.analyse_semantics(sm, skip_generic_check=True, **kwargs)
 
         # Load the generics into the type-alias and class scopes.
         tm = ScopeManager(sm.global_scope, sm.current_scope.get_symbol(self.old_type.without_generics).scope)
@@ -184,7 +185,10 @@ class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.T
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self._skip_all_type_statement_scopes(sm, **kwargs)
 
-    def code_gen(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+    def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
+        self._skip_all_type_statement_scopes(sm, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
         self._skip_all_type_statement_scopes(sm, **kwargs)
 
 

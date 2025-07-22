@@ -154,7 +154,7 @@ class TestTypeAst(CustomTestCase):
         }
 
         fun f() -> std::void::Void {
-            let x: MyType[std::number::bigint::BigInt]::X
+            let x: MyType[std::bignum::bigint::BigInt]::X
             x = 10
         }
         """
@@ -179,7 +179,7 @@ class TestTypeAst(CustomTestCase):
         }
 
         fun f() -> std::void::Void {
-            let x: TypeC[std::number::bigint::BigInt]::InnerC[std::string::Str]::InnerB[std::boolean::Bool]::InnerA[std::number::u64::U64]
+            let x: TypeC[std::bignum::bigint::BigInt]::InnerC[std::string::Str]::InnerB[std::boolean::Bool]::InnerA[std::number::U64]
             x = (10, "hello", false, 10_u64)
         }
         """

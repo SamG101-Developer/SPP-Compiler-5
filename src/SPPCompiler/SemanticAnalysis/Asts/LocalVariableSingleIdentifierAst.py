@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 # Todo: check the ast_initialization (when there's aliases) - what do we want to show exactly?
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
@@ -34,7 +34,7 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         return self.alias.pos_end if self.alias else self.name.pos_end
 
     @property
-    def extract_names(self) -> List[Asts.IdentifierAst]:
+    def extract_names(self) -> list[Asts.IdentifierAst]:
         return [self.name]
 
     @property
@@ -59,10 +59,10 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
             sym.memory_info.initialization_counter = 1
 
             # Set any borrow asts based on the potentially symbolic value being set to this variable.
-            if val_symbol := sm.current_scope.get_symbol(value):
+            if convention := inferred_type.convention:
                 sym.memory_info.ast_borrowed = value
-                sym.memory_info.is_borrow_mut = val_symbol.memory_info.is_borrow_mut
-                sym.memory_info.is_borrow_ref = val_symbol.memory_info.is_borrow_ref
+                sym.memory_info.is_borrow_mut = convention if type(convention) is Asts.ConventionMutAst else False
+                sym.memory_info.is_borrow_ref = convention if type(convention) is Asts.ConventionRefAst else False
         else:
             sym.memory_info.ast_moved = self
 
@@ -72,9 +72,13 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         sym = sm.current_scope.get_symbol(self.alias.name if self.alias else self.name)
         if not kwargs.get("from_non_init", False):
             value.check_memory(sm, **kwargs)
+
+            # Note the "check_pins_linked" is set to False, as this a lifetime extension is impossible with "let x = y"
+            # statements ("let" means the new symbol must be a variable in this scope / inner to the rhs symbol, meaning
+            # the lifetime cannot grow).
             AstMemoryUtils.enforce_memory_integrity(
                 value, self, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-                check_pins=True, mark_moves=True)
+                check_pins=True, check_pins_linked=False, mark_moves=True, **kwargs)
             sym.memory_info.initialized_by(self.name)
 
 

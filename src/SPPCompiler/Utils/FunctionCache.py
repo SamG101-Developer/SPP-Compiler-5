@@ -7,7 +7,7 @@ registry is used to track all caches.
 from __future__ import annotations
 
 import functools
-from typing import Callable, List
+from typing import Callable
 
 
 class FunctionCache:
@@ -15,8 +15,8 @@ class FunctionCache:
     A class that provides a cache for functions and properties.
     """
 
-    _cache: List[Callable] = []
-    _cache_property: List[functools.cached_property] = []
+    _cache: list[Callable] = []
+    _cache_property: list[functools.cached_property] = []
 
     @staticmethod
     def cache[T](function: Callable[[...], T]) -> Callable[[...], T]:

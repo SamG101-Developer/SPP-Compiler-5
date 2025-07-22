@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PatternVariantSingleIdentifierAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
     name: Asts.IdentifierAst = field(default=None)

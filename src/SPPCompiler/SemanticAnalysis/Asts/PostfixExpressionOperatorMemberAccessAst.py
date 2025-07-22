@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_access: Asts.TokenAst = field(default=None)
     field: Asts.IdentifierAst | Asts.TokenAst = field(default=None)
@@ -53,24 +53,32 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
     def infer_type(self, sm: ScopeManager, lhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # The NamespaceSymbol type check seems dumb but check hack in "elif" block beneath.
         lhs_type = lhs.infer_type(sm, **kwargs)
-        lhs_symbol = sm.current_scope.get_symbol(lhs_type) if not isinstance(lhs_type, NamespaceSymbol) else lhs_type
+        lhs_symbol = sm.current_scope.get_symbol(lhs_type) if type(lhs_type) is not NamespaceSymbol else lhs_type
 
         # Todo: wrap with Opt[T] for array access => Index operator to this is only for tuples anyways?
         # Numerical access -> get the nth generic argument of the tuple.
-        if isinstance(self.field, Asts.TokenAst):
+        if type(self.field) is Asts.TokenAst:
             element_type = AstTypeUtils.get_nth_type_of_indexable_type(sm, int(self.field.token_data), lhs_type)
             return element_type
 
         # Get the field symbol
         field_symbol = lhs_symbol.scope.get_symbol(self.field, exclusive=True)
 
+        # Find the actual class (possibly superclass) that contains the field.
+        lhs_master_scope = None
+        for scope in [lhs_symbol.scope] + lhs_symbol.scope.sup_scopes:
+            if scope._symbol_table.has(self.field):
+                lhs_master_scope = scope
+                break
+
         # Accessing a member from the scope by the identifier.
-        if isinstance(self.field, Asts.IdentifierAst) and field_symbol.__class__ is VariableSymbol:
+        if type(self.field) is Asts.IdentifierAst and type(field_symbol) is VariableSymbol:
             attribute_type = field_symbol.type
-            attribute_type = lhs_symbol.scope.get_symbol(attribute_type).fq_name
+            attribute_type.analyse_semantics(ScopeManager(sm.global_scope, lhs_master_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks), **kwargs)
+            attribute_type = lhs_master_scope.get_symbol(attribute_type).fq_name
             return attribute_type
 
-        elif isinstance(self.field, Asts.IdentifierAst) and field_symbol.__class__ is NamespaceSymbol:
+        elif type(self.field) is Asts.IdentifierAst and type(field_symbol) is NamespaceSymbol:
             attribute_type = field_symbol
             return attribute_type
 
@@ -86,14 +94,21 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                 raise SemanticErrors.MemberAccessStaticOperatorExpectedError().add(
                     lhs, self.tok_access).scopes(sm.current_scope)
 
+            # Check the lhs isn't a generic type.
+            if lhs_symbol.is_generic:
+                raise SemanticErrors.GenericTypeInvalidUsageError().add(
+                    lhs, lhs, "member access").scopes(sm.current_scope)
+
             # Check the target field exists on the type.
             if not lhs_symbol.scope.has_symbol(self.field, exclusive=True):
-                alternatives = [s.name.value for s in sm.current_scope.get_symbol(lhs).scope.all_symbols()]
+                alternatives = [s.name.value for s in lhs_symbol.scope.all_symbols(exclusive=True, sup_scope_search=True)]
                 closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "static member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
 
             # Check there is only 1 target field on the type at the highest level.
+            if lhs_symbol.scope.get_symbol(self.field, sym_type=VariableSymbol).type.type_parts[-1].value[0] == "$":
+                return
             sss = []
             for scope in [lhs_symbol.scope] + lhs_symbol.scope.sup_scopes:
                 sss.append((scope, scope._symbol_table.get(self.field)))
@@ -101,11 +116,11 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
             closest = [s[1] for s in depths if s[0] == min(depths, key=lambda x: x[0])[0]]
             if len(closest) > 1:
                 raise SemanticErrors.AmbiguousMemberAccessError().add(
-                    self.field, closest[0][1].name, closest[1][1].name).scopes(
-                    sm.current_scope, closest[0][0], closest[1][0])
+                    closest[0][1].name, closest[1][1].name, self.field).scopes(
+                    closest[0][0], closest[1][0], sm.current_scope)
 
         # Numerical access to a tuple, such as "tuple.0".
-        elif isinstance(self.field, Asts.TokenAst):
+        elif type(self.field) is Asts.TokenAst:
             lhs_type = lhs.infer_type(sm, **kwargs)
             lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
@@ -125,12 +140,12 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     lhs, lhs_type, self.field).scopes(sm.current_scope)
 
         # Accessing a regular attribute/method, such as "class.attribute".
-        elif isinstance(self.field, Asts.IdentifierAst) and self.is_runtime_access():
-            lhs_type = lhs.infer_type(sm)
+        elif type(self.field) is Asts.IdentifierAst and self.is_runtime_access():
+            lhs_type = lhs.infer_type(sm, **kwargs)
             lhs_symbol = sm.current_scope.get_symbol(lhs_type)
 
             # Check the lhs is a variable and not a namespace.
-            if lhs_symbol.__class__ is NamespaceSymbol:
+            if type(lhs_symbol) is NamespaceSymbol:
                 raise SemanticErrors.MemberAccessStaticOperatorExpectedError().add(
                     lhs, self.tok_access).scopes(sm.current_scope)
 
@@ -140,14 +155,14 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     lhs, lhs_type, "member access").scopes(sm.current_scope)
 
             # Check the attribute exists on the lhs.
-            if not lhs_symbol.scope.has_symbol(self.field, sym_type=VariableSymbol):
-                alternatives = []  # todo: lhs_symbol.scope.all_symbols().map_attr("name")
+            if not lhs_symbol.scope.has_symbol(self.field, exclusive=True, sym_type=VariableSymbol):
+                alternatives = [s.name.value for s in lhs_symbol.scope.all_symbols(exclusive=True, sup_scope_search=True) if type(s) is VariableSymbol]
                 closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "runtime member", closest_match[0] if closest_match else None).scopes(sm.current_scope)
 
             # Check there is only 1 target field on the type at the highest level.
-            if lhs_symbol.scope.get_symbol(self.field, sym_type=VariableSymbol).type.type_parts[-1].value.startswith("$"):
+            if lhs_symbol.scope.get_symbol(self.field, sym_type=VariableSymbol).type.type_parts[-1].value[0] == "$":
                 return
             sss = []
             for scope in [lhs_symbol.scope] + lhs_symbol.scope.sup_scopes:
@@ -160,18 +175,18 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
                     sm.current_scope, closest[0][0], closest[1][0])
 
         # Accessing a namespaced constant, such as "std::pi".
-        elif isinstance(self.field, Asts.IdentifierAst) and self.is_static_access():
+        elif type(self.field) is Asts.IdentifierAst and self.is_static_access():
             lhs_symbol = sm.current_scope.get_symbol(lhs)
             lhs_ns_symbol = sm.current_scope.get_namespace_symbol(lhs)
 
             # Check the lhs is a namespace and not a variable.
-            if lhs_symbol is not None and lhs_symbol.__class__ is VariableSymbol:
+            if lhs_symbol is not None and type(lhs_symbol) is VariableSymbol:
                 raise SemanticErrors.MemberAccessRuntimeOperatorExpectedError().add(
                     lhs, self.tok_access).scopes(sm.current_scope)
 
             # Check the variable exists on the lhs.
             if not lhs_ns_symbol.scope.has_symbol(self.field, exclusive=True):
-                alternatives = [s.name.value for s in lhs_ns_symbol.scope.all_symbols()]
+                alternatives = [s.name.value for s in lhs_ns_symbol.scope.all_symbols(sup_scope_search=True) if type(s) is VariableSymbol]
                 closest_match = difflib.get_close_matches(self.field.value, alternatives, n=1, cutoff=0)
                 raise SemanticErrors.IdentifierUnknownError().add(
                     self.field, "namespace member", closest_match[0] if closest_match else None).scopes(sm.current_scope)

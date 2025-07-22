@@ -10,13 +10,13 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_l: Asts.TokenAst = field(default=None)
-    members: Seq[Asts.StatementAst] = field(default_factory=Seq)
+    members: list[Asts.StatementAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -74,24 +74,32 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         for m in self.members:
             m.check_memory(sm, **kwargs)
 
-        all_syms = sm.current_scope.all_symbols(exclusive=False, match_type=Asts.IdentifierAst)
-        inner_sym_names = [m.name for m in sm.current_scope.all_symbols(exclusive=True, match_type=Asts.IdentifierAst)]
+        all_syms = sm.current_scope.all_symbols(exclusive=False)
+        inner_syms = sm.current_scope.all_symbols(exclusive=True)
 
         # Invalidate yielded borrows that are linked.
+        for sym in inner_syms:
+            if type(sym) is not VariableSymbol: continue
+
+            for pin in sym.memory_info.ast_pins.copy():
+                pin_sym = sm.current_scope.get_symbol(pin)
+                for info in pin_sym.memory_info.borrow_refers_to.copy():
+                    SequenceUtils.remove_if(pin_sym.memory_info.borrow_refers_to, lambda x: x[0] == sym.name)
+                    SequenceUtils.remove_if(pin_sym.memory_info.borrow_refers_to, lambda x: x[0] == info[0])
+
         for sym in all_syms:
-            if sym.__class__ is not VariableSymbol:
-                continue
+            if type(sym) is not VariableSymbol: continue
+            for bor in sym.memory_info.borrow_refers_to.copy():
+                a, b, _, scope = bor
+                if scope == sm.current_scope:
+                    sym.memory_info.borrow_refers_to.remove(bor)
 
-            for info in sym.memory_info.borrow_refers_to.copy():
-                yielded_borrow, this_borrow, is_mutable = info
-
-                # Check if the borrow that was yielded was created in this scope.
-                if yielded_borrow in inner_sym_names:
-                    AstMemoryUtils.invalidate_yielded_borrow(sm, yielded_borrow, self.tok_r)
-                    sym.memory_info.borrow_refers_to.remove(info)
-
-                elif yielded_borrow is None:
-                    sym.memory_info.borrow_refers_to.remove(info)
+        # If the final expression of the inner scope is being used (ie assigned to outer variable), then memory check it.
+        if (move := kwargs.get("assignment", False)) and self.members:
+            last_member = self.members[-1]
+            AstMemoryUtils.enforce_memory_integrity(
+                last_member, move, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
+                check_pins=True, check_pins_linked=True, mark_moves=True)
 
         # sm.move_out_of_current_scope()
 

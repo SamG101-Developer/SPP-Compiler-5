@@ -8,13 +8,13 @@ from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericTypeParameterInlineConstraintsAst(Asts.Ast):
     tok_colon: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.TkColon))
-    constraints: Seq[Asts.TypeAst] = field(default_factory=Seq)
+    constraints: list[Asts.TypeAst] = field(default_factory=list)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

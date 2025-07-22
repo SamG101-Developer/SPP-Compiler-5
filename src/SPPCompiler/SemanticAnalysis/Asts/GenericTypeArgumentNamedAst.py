@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     name: Asts.TypeAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default=None)
@@ -22,7 +22,7 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
         self.value = self.value or self.name
 
     def __eq__(self, other: GenericTypeArgumentNamedAst) -> bool:
-        return other.__class__ is GenericTypeArgumentNamedAst and self.name == other.name and self.value == other.value
+        return type(other) is GenericTypeArgumentNamedAst and self.name == other.name and self.value == other.value
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -51,7 +51,7 @@ class GenericTypeArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     @staticmethod
     def from_symbol(symbol: TypeSymbol) -> GenericTypeArgumentNamedAst:
         value = symbol.scope.type_symbol.fq_name.with_convention(symbol.convention) if symbol.scope else symbol.scope
-        return GenericTypeArgumentNamedAst(name=Asts.TypeSingleAst.from_generic_identifier(symbol.name), value=value)
+        return GenericTypeArgumentNamedAst(name=fast_deepcopy(symbol.name), value=value)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Analyse the name and value of the generic type argument.

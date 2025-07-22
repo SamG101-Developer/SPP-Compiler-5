@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from llvmlite import ir
+
+from SPPCompiler.CodeGen.LlvmConfig import LlvmConfig
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -10,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The ArrayLiteral0ElementAst class is an AST node that represents an array literal with no elements. Because types
@@ -49,7 +52,7 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightSquareBracket)
 
     def __eq__(self, other: ArrayLiteral0ElementAst) -> bool:
-        return isinstance(other, ArrayLiteral0ElementAst)
+        return type(other) is ArrayLiteral0ElementAst
 
     def __hash__(self) -> int:
         return id(self)
@@ -80,7 +83,7 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Create the standard "std::array::Arr" type, with generic arguments.
-        size = Asts.IntegerLiteralAst(pos=self.size.pos, value=self.size, type=Asts.TypeSingleAst.from_identifier(Asts.IdentifierAst(value="uz")))
+        size = Asts.IntegerLiteralAst(pos=self.size.pos, value=self.size, type=Asts.TypeIdentifierAst.from_identifier(Asts.IdentifierAst(value="uz")))
         array_type = CommonTypes.Arr(self.pos, self.elem_type, size)
         array_type.analyse_semantics(sm, **kwargs)
         return array_type
@@ -93,7 +96,6 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         :param sm: The scope manager.
         :param kwargs: Additional keyword arguments.
-        :return: None.
         """
 
         # Analyse the type of the element.
@@ -106,6 +108,33 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the inferred array type to generate the generic implementation.
         self.infer_type(sm, **kwargs).analyse_semantics(sm, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> ir.AllocaInstr:
+        """
+        The array type is std::array::Arr[T, n], which maps to the llvm array type. This AST means that there are no
+        elements in each slot of the array, but the array itself is initialized. The code generation will create an
+        array type object, on the stack, to be used in expression contexts.
+
+        :param sm: The scope manager.
+        :param llvm_module: The LLVM module to generate code into.
+        :param kwargs: Additional keyword arguments.
+        :return: The LLVM array object that can be used in the expression context.
+        """
+
+        # Get the element's symbol and LLVM mapped type.
+        elem_sym = sm.current_scope.get_symbol(self.elem_type)
+        elem_llvm_type = elem_sym.llvm_info.llvm_type
+
+        # Create the LLVM array type with the element type and size.
+        array_llvm_type = ir.ArrayType(elem_llvm_type, int(self.size.token_data))
+
+        # Create the array object on the stack for use in this scope only.
+        builder = kwargs["builder"]
+        array_ptr: ir.AllocaInstr = builder.alloca(array_llvm_type)
+        array_ptr.align = LlvmConfig.LLVM_MEM_ALIGNMENT
+
+        # Return the array object to be used in the expression context.
+        return array_ptr
 
 
 __all__ = [

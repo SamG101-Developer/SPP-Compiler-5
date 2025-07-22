@@ -4,13 +4,12 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class FunctionCallArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.TypeInferrable):
     convention: Asts.ConventionAst = field(default=None)
     tok_unpack: Optional[Asts.TokenAst] = field(default=None)

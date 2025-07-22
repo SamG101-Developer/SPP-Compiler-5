@@ -9,13 +9,14 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.FunctionCache import FunctionCache
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericParameterGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
-    parameters: Seq[Asts.GenericParameterAst] = field(default_factory=Seq)
+    parameters: list[Asts.GenericParameterAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
@@ -31,6 +32,10 @@ class GenericParameterGroupAst(Asts.Ast):
     def __eq__(self, other: GenericParameterGroupAst) -> bool:
         # Check both ASTs are the same type and have the same parameters.
         return self.parameters == other.parameters
+
+    def __hash__(self) -> int:
+        # Use the id of the object as the hash.
+        return id(self)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -48,23 +53,28 @@ class GenericParameterGroupAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.tok_r.pos_end
 
-    def get_required_params(self) -> Seq[Asts.GenericParameterRequiredAst]:
+    @FunctionCache.cache
+    def get_required_params(self) -> list[Asts.GenericParameterRequiredAst]:
         # Get all the required generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericParameterRequiredAst)]
 
-    def get_optional_params(self) -> Seq[Asts.GenericParameterOptionalAst]:
+    @FunctionCache.cache
+    def get_optional_params(self) -> list[Asts.GenericParameterOptionalAst]:
         # Get all the optional generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericParameterOptionalAst)]
 
-    def get_variadic_params(self) -> Seq[Asts.GenericParameterVariadicAst]:
+    @FunctionCache.cache
+    def get_variadic_params(self) -> list[Asts.GenericParameterVariadicAst]:
         # Get all the variadic generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericParameterVariadicAst)]
 
-    def get_comp_params(self) -> Seq[Asts.GenericCompParameterAst]:
+    @FunctionCache.cache
+    def get_comp_params(self) -> list[Asts.GenericCompParameterAst]:
         # Get all the computation generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericCompParameterAst)]
 
-    def get_type_params(self) -> Seq[Asts.GenericTypeParameterAst]:
+    @FunctionCache.cache
+    def get_type_params(self) -> list[Asts.GenericTypeParameterAst]:
         # Get all the type generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericTypeParameterAst)]
 
@@ -72,9 +82,9 @@ class GenericParameterGroupAst(Asts.Ast):
         # Create a new group where optional parameters become required.
         new_params = []
         for p in self.parameters:
-            if isinstance(p, Asts.GenericTypeParameterOptionalAst):
+            if type(p) is Asts.GenericTypeParameterOptionalAst:
                 new_params.append(Asts.GenericTypeParameterRequiredAst(p.pos, name=p.name, constraints=p.constraints))
-            elif isinstance(p, Asts.GenericCompParameterOptionalAst):
+            elif type(p) is Asts.GenericCompParameterOptionalAst:
                 new_params.append(Asts.GenericCompParameterRequiredAst(p.pos, name=p.name, type=p.type))
             else:
                 new_params.append(p)
@@ -84,6 +94,9 @@ class GenericParameterGroupAst(Asts.Ast):
         # Qualify the types of the generic parameters.
         for p in self.parameters:
             p.qualify_types(sm, **kwargs)
+
+            if isinstance(p, Asts.GenericCompParameterAst):
+                sm.current_scope.get_symbol(p.name).type = p.type
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there are no duplicate generic parameter names.

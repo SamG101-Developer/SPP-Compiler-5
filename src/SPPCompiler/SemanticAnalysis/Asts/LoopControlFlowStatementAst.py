@@ -11,13 +11,16 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
-    tok_seq_exit: Seq[Asts.TokenAst] = field(default_factory=Seq)
+    tok_seq_exit: list[Asts.TokenAst] = field(default_factory=list)
     skip_or_expr: Optional[Asts.ExpressionAst] = field(default=None)
+
+    def __hash__(self) -> int:
+        return id(self)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -37,7 +40,7 @@ class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Get the number of control flow statement, and the loop's nesting level.
-        has_skip = isinstance(self.skip_or_expr, Asts.TokenAst) and self.skip_or_expr.token_type == SppTokenType.KwSkip
+        has_skip = type(self.skip_or_expr) is Asts.TokenAst and self.skip_or_expr.token_type == SppTokenType.KwSkip
         number_of_controls = len(self.tok_seq_exit) + (has_skip is True)
         nested_loop_depth  = kwargs["loop_level"]
 
@@ -79,7 +82,7 @@ class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         if self.skip_or_expr:
             AstMemoryUtils.enforce_memory_integrity(
                 self.skip_or_expr, self.skip_or_expr, sm, check_move=True, check_partial_move=True,
-                check_move_from_borrowed_ctx=True, check_pins=True, mark_moves=True)
+                check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
 
 
 __all__ = [

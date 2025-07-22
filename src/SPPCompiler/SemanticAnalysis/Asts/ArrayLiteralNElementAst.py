@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from llvmlite import ir
+
+from SPPCompiler.CodeGen.LlvmConfig import LlvmConfig
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
@@ -9,10 +12,10 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.Utils.Sequence import Seq, SequenceUtils
+from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The ArrayLiteralNElementAst class is an AST node that represents an array literal with n elements. The type of the
@@ -33,7 +36,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_l: Asts.TokenAst = field(default=None)
     """The opening ``[`` token marking an array literal."""
 
-    elems: Seq[Asts.ExpressionAst] = field(default_factory=Seq)
+    elems: list[Asts.ExpressionAst] = field(default_factory=list)
     """The expressions representing the elements in the array literal."""
 
     tok_r: Asts.TokenAst = field(default=None)
@@ -45,7 +48,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def __eq__(self, other: ArrayLiteralNElementAst) -> bool:
         # Needed for cmp-generic arg checking
-        return isinstance(other, ArrayLiteralNElementAst) and self.elems == other.elems
+        return type(other) is ArrayLiteralNElementAst and self.elems == other.elems
 
     def __hash__(self) -> int:
         return id(self)
@@ -75,7 +78,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Create the standard "std::array::Arr[T, n: BigNum]" type, with generic items.
         size = Asts.TokenAst.raw(token_type=SppTokenType.LxNumber, token_metadata=str(len(self.elems)))
-        size = Asts.IntegerLiteralAst(pos=self.pos, value=size, type=Asts.TypeSingleAst.from_identifier(Asts.IdentifierAst(value="uz")))
+        size = Asts.IntegerLiteralAst(pos=self.pos, value=size, type=Asts.TypeIdentifierAst.from_identifier(Asts.IdentifierAst(value="uz")))
         element_type = self.elems[0].infer_type(sm, **kwargs)
         array_type = CommonTypes.Arr(self.pos, element_type, size)
         array_type.analyse_semantics(sm, **kwargs)
@@ -89,7 +92,6 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         :param sm: The scope manager.
         :param kwargs: Additional keyword arguments.
-        :return: None.
         :raise SemanticErrors.ExpressionTypeInvalidError: This exception is raised if an expression for a value is
             syntactically valid but makes no sense in this context (".." or a type).
         :raise SemanticErrors.ArrayElementsDifferentTypesError(): This exception is raised if an array element
@@ -123,6 +125,32 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the inferred array type to generate the generic implementation.
         self.infer_type(sm, **kwargs).analyse_semantics(sm, **kwargs)
+
+    def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> ir.AllocaInstr:
+        """
+        This array AST will create an array with the element all created, by recursively calling code_gen_pass_2 on each
+        element AST belonging to this array literal. The array will be created on the stack, and the elements will be
+        stored in the array.
+
+        :param sm: The scope manager.
+        :param llvm_module: The LLVM module to generate code into.
+        :param kwargs: Additional keyword arguments.
+        :return: The LLVM array object that can be used in the expression context.
+        """
+
+        # Use the 0-element generator to create the array (shared code).
+        array_ptr = Asts.ArrayLiteral0ElementAst.code_gen_pass_2(self, sm, llvm_module, **kwargs)
+
+        # For each element, covert it to LLVM and store it in the array.
+        zero = ir.Constant(ir.IntType(LlvmConfig.LLVM_USIZE), 0)
+        for i in range(len(self.elems)):
+            index = ir.Constant(ir.IntType(LlvmConfig.LLVM_USIZE), i)
+            elem_ptr = kwargs["builder"].gep(array_ptr, [zero, index])
+            elem = self.elems[i].code_gen_pass_2(sm, llvm_module, **kwargs)
+            kwargs["builder"].store(elem, elem_ptr)
+
+        # Return the array pointer to be used in the expression context.
+        return array_ptr
 
 
 __all__ = [

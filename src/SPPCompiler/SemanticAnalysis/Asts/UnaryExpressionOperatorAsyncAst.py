@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class UnaryExpressionOperatorAsyncAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_async: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwAsync))
 
@@ -25,14 +25,14 @@ class UnaryExpressionOperatorAsyncAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def infer_type(self, sm: ScopeManager, rhs: Asts.ExpressionAst = None, **kwargs) -> Asts.TypeAst:
         # Async calls wrap the return type in a future type.
-        inner_type = rhs.infer_type(sm)
+        inner_type = rhs.infer_type(sm, **kwargs)
         future_type = CommonTypes.Fut(self.tok_async.pos, inner_type)
         future_type.analyse_semantics(sm, **kwargs)
         return future_type
 
     def analyse_semantics(self, sm: ScopeManager, rhs: Asts.ExpressionAst = None, **kwargs) -> None:
         # Check the rhs is a postfix function call.
-        if not (isinstance(rhs, Asts.PostfixExpressionAst) and isinstance(rhs.op, Asts.PostfixExpressionOperatorFunctionCallAst)):
+        if not (type(rhs) is Asts.PostfixExpressionAst and type(rhs.op) is Asts.PostfixExpressionOperatorFunctionCallAst):
             raise SemanticErrors.AsyncFunctionCallInvalidTargetError().add(
                 self, rhs).scopes(sm.current_scope)
 

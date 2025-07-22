@@ -9,11 +9,12 @@ PrimaryExpressionAst = Union[
     Asts.IdentifierAst,
     Asts.ParenthesizedExpressionAst,
     Asts.GenExpressionAst,
+    Asts.GenWithExpressionAst,
     Asts.ObjectInitializerAst,
     Asts.InnerScopeAst,
     Asts.CaseExpressionAst,
     Asts.LoopExpressionAst,
-    Asts.TypeSingleAst,
+    Asts.TypeIdentifierAst,
     Asts.TokenAst,
 ]
 

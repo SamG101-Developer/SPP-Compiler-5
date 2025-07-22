@@ -16,7 +16,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 #  - [3] Maintain the borrow from the iterator - x in y.iter_mut() => cant borrow from y inside the loop
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     variable: Asts.LocalVariableAst = field(default=None)
     in_keyword: Asts.TokenAst = field(default=None)
@@ -53,12 +53,12 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Get the generator and yielded type from the iterable.
         iterable_type = self.iterable.infer_type(sm, **kwargs)
-        gen_type, yield_type = AstTypeUtils.get_generator_and_yielded_type(
+        gen_type, yield_type, *_ = AstTypeUtils.get_generator_and_yielded_type(
             iterable_type, sm, self.iterable, "loop condition")
 
         # Create a "let" statement to introduce the loop variable into the scope.
         let_ast = Asts.LetStatementUninitializedAst(pos=self.variable.pos, assign_to=self.variable, type=yield_type)
-        let_ast.analyse_semantics(sm, **kwargs)
+        let_ast.analyse_semantics(sm, explicit_type=yield_type, **kwargs)
 
         # Set the memory information of the symbol based on the type of iteration.
         syms = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]
@@ -69,8 +69,12 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             sym.memory_info.is_borrow_ref = type(yield_type.convention) is Asts.ConventionRefAst is not None
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
-        self.iterable.check_memory(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(self.iterable, self.iterable, sm, mark_moves=False)
+        # Todo: maybe alias the iterable to an analysed variable so this "loop_double_check" isn't needed.
+        if not kwargs.pop("loop_double_check", False):
+            self.iterable.check_memory(sm, **kwargs)
+            AstMemoryUtils.enforce_memory_integrity(
+                self.iterable, self.iterable, sm, check_move=True, check_partial_move=True,
+                check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, mark_moves=False, **kwargs)
 
         # Re-initialize for the double-loop analysis.
         syms = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]

@@ -55,7 +55,6 @@ from SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentUnnamedAst import *
 from SPPCompiler.SemanticAnalysis.Asts.GenericTypeParameterInlineConstraintsAst import *
 from SPPCompiler.SemanticAnalysis.Asts.GenericArgumentAst import *
 
-from SPPCompiler.SemanticAnalysis.Asts.GenericIdentifierAst import *
 from SPPCompiler.SemanticAnalysis.Asts.IdentifierAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.FloatLiteralAst import *
@@ -65,6 +64,7 @@ from SPPCompiler.SemanticAnalysis.Asts.TupleLiteralAst import *
 from SPPCompiler.SemanticAnalysis.Asts.LiteralAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.GenExpressionAst import *
+from SPPCompiler.SemanticAnalysis.Asts.GenWithExpressionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.CmpStatementAst import *
 from SPPCompiler.SemanticAnalysis.Asts.InnerScopeAst import *
 
@@ -116,10 +116,17 @@ from SPPCompiler.SemanticAnalysis.Asts.PatternVariantLiteralAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PatternVariantSingleIdentifierAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PatternVariantAst import *
 
+from SPPCompiler.SemanticAnalysis.Asts.IterPatternNoValueAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterPatternExceptionAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterPatternExhaustedAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterPatternVariableAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterPatternAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterExpressionBranchAst import *
+from SPPCompiler.SemanticAnalysis.Asts.IterExpressionAst import *
+
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorEarlyReturnAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst import *
-from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorIndexAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst import *
 from SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorResumeCoroutineAst import *
@@ -142,7 +149,7 @@ from SPPCompiler.SemanticAnalysis.Asts.TokenAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.TypeArrayAst import *
 from SPPCompiler.SemanticAnalysis.Asts.TypeTupleAst import *
-from SPPCompiler.SemanticAnalysis.Asts.TypeSingleAst import *
+from SPPCompiler.SemanticAnalysis.Asts.TypeIdentifierAst import *
 from SPPCompiler.SemanticAnalysis.Asts.TypeBinaryExpressionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.TypeParenthesizedAst import *
 from SPPCompiler.SemanticAnalysis.Asts.TypePostfixExpressionAst import *
@@ -157,6 +164,7 @@ from SPPCompiler.SemanticAnalysis.Asts.TypeAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionAst import *
 from SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAsyncAst import *
+from SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorDerefAst import *
 from SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.WhereBlockAst import *

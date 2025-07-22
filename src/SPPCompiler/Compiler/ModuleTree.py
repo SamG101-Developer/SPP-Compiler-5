@@ -3,14 +3,14 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from glob import glob
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional
 
 from SPPCompiler.LexicalAnalysis.TokenType import RawToken
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class Module:
     """
     A Module represents a file of code, and associated information for convenience, such as the token stream, which is
@@ -22,7 +22,7 @@ class Module:
 
     path: str
     code: str = field(default="")
-    token_stream: List[RawToken] = field(default_factory=list)
+    token_stream: list[RawToken] = field(default_factory=list)
     module_ast: Optional[Asts.ModulePrototypeAst] = field(default=None)
     error_formatter: Optional[ErrorFormatter] = field(default=None)
 
@@ -37,7 +37,7 @@ class ModuleTree:
     _src_path: str
     _vcs_path: str
     _ffi_path: str
-    _modules: List[Module]
+    _modules: list[Module]
 
     def __init__(self, path: str) -> None:
         # Get all the spp module files from the src path.
@@ -74,7 +74,7 @@ class ModuleTree:
         return iter(self._modules)
 
     @property
-    def modules(self) -> List[Module]:
+    def modules(self) -> list[Module]:
         """
         Get the list of modules in the module tree.
 

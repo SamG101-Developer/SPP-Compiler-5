@@ -3,16 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-# TODO
-#  - Prevent abstract types being initialized (types with an abstract method)?
+# Todo: prevent constructing variant types?
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     class_type: Asts.TypeAst = field(default=None)
     object_argument_group: Asts.ObjectInitializerArgumentGroupAst = field(default=None)
@@ -21,7 +20,6 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.object_argument_group = self.object_argument_group or Asts.ObjectInitializerArgumentGroupAst(pos=self.pos)
 
     def __eq__(self, other: ObjectInitializerAst) -> bool:
-        # Check there are the same attribute keys on both objects, then compare the expressions on them (might be in a different order). Todo
         return False
 
     def __hash__(self) -> int:
@@ -41,7 +39,7 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Use the type of the object initializer.
-        return self.class_type
+        return sm.current_scope.get_symbol(self.class_type).fq_name.with_convention(self.class_type.convention)
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Get the base symbol.
@@ -50,10 +48,12 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             raise SemanticErrors.IdentifierUnknownError().add(
                 self.class_type, "type", None).scopes(sm.current_scope)
 
-        # Prevent generic types from being initialized.
+        # Generic types cannot have any attributes set (full default initialization only).
         if base_symbol.is_generic:
-            raise SemanticErrors.GenericTypeInvalidUsageError().add(
-                self.class_type, self.class_type, "object initializer").scopes(sm.current_scope)
+            if self.object_argument_group.arguments:
+                raise SemanticErrors.ObjectInitializerGenericWithArgumentsError().add(
+                    self.class_type, self.object_argument_group.arguments[0]).scopes(sm.current_scope)
+            return
 
         self.object_argument_group.pre_analyse_semantics(sm, class_type=self.class_type.without_generics, **kwargs)
 
@@ -61,14 +61,14 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         generic_infer_source = {
             a.name: self.object_argument_group.get_arg_val(a).infer_type(sm, **kwargs)
             for a in self.object_argument_group.arguments
-            if isinstance(a.name, Asts.IdentifierAst)}
+            if type(a.name) is Asts.IdentifierAst}  # todo: why constrain to IdentifierAst?
 
         generic_infer_target = {
-            a.name: a.type
+            a.name: base_symbol.scope.get_symbol(a.type).fq_name
             for a in base_symbol.type.body.members}
 
         # Analyse the type and object argument group.
-        base_symbol.type.body.analyse_semantics(ScopeManager(sm.current_scope, base_symbol.scope), **kwargs)
+        base_symbol.type.body.analyse_semantics(ScopeManager(sm.current_scope, base_symbol.scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks), **kwargs)
         self.class_type.analyse_semantics(sm, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
         self.object_argument_group.analyse_semantics(sm, class_type=self.class_type, **kwargs)
 

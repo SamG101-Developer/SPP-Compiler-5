@@ -5,7 +5,7 @@ class TestUseStatementAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_use_statement_reduction(self):
         """
-        use std::number::bigint::BigInt
+        use std::bignum::bigint::BigInt
         use std::string::Str
         use std::option::Opt
         """
@@ -23,7 +23,7 @@ class TestUseStatementAst(CustomTestCase):
         """
         use std::array::Arr
         use std::void::Void
-        use std::number::usize::USize
+        use std::number::USize
 
         fun f[T, cmp n: USize](a: Arr[T, n]) -> Void { }
         """

@@ -29,7 +29,7 @@ class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstLinkPinnedError)
     def test_invalid_async_moving_future_with_pins_mov(self):
         """
         fun f(a: &std::string::Str) -> std::string::Str { ret "hello" }
@@ -40,7 +40,7 @@ class TestUnaryExpressionOperatorAsyncAst(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstPinnedError)
+    @should_fail_compilation(SemanticErrors.MemoryMovedWhilstLinkPinnedError)
     def test_invalid_async_moving_future_with_pins_ret(self):
         """
         fun f(a: &std::string::Str) -> std::string::Str { ret "hello" }
