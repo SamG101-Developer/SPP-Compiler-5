@@ -155,7 +155,7 @@ class TestAstMemoryYieldedBorrowOverlap(CustomTestCase):
         fun test() -> std::void::Void {
             let mut object = MyType()
             let generator_mut: std::generator::Gen[&mut std::string::Str, std::void::Void]
-            loop true {
+            case true {
                 generator_mut = object.custom_iter_mut()
             }
             let generator_ref = object.custom_iter_ref()
@@ -175,7 +175,7 @@ class TestAstMemoryYieldedBorrowOverlap(CustomTestCase):
         fun test() -> std::void::Void {
             let mut object = MyType()
             let generator_ref: std::generator::Gen[&std::string::Str, std::void::Void]
-            loop true {
+            case true {
                 generator_ref = object.custom_iter_ref()
             }
             let generator_mut = object.custom_iter_mut()
@@ -195,7 +195,7 @@ class TestAstMemoryYieldedBorrowOverlap(CustomTestCase):
         fun test() -> std::void::Void {
             let mut object = MyType()
             let generator_mut_1: std::generator::Gen[&mut std::string::Str, std::void::Void]
-            loop true {
+            case true {
                 generator_mut_1 = object.custom_iter_mut()
             }
             let generator_mut_2 = object.custom_iter_mut()
@@ -214,7 +214,7 @@ class TestAstMemoryYieldedBorrowOverlap(CustomTestCase):
         fun test() -> std::void::Void {
             let object = MyType()
             let mut generator_ref_1: std::generator::Gen[&std::string::Str, std::void::Void]
-            loop true {
+            case true {
                 generator_ref_1 = object.custom_iter_ref()
             }
             let generator_ref_2 = object.custom_iter_ref()

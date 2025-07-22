@@ -14,8 +14,8 @@ class TestSupPrototypeFunctionsAst(CustomTestCase):
     def test_invalid_sup_prototype_functions_unconstrained_generic_parameter_1(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         sup [T] Point { }

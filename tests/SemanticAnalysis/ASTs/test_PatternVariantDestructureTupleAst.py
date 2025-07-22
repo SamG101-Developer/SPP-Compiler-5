@@ -5,7 +5,7 @@ class TestPatternVariantDestructureTupleAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.VariableDestructureContainsMultipleMultiSkipsError)
     def test_invalid_pattern_variant_destructure_tuple_multiple_multi_skip(self):
         """
-        fun f(p: (std::number::bigint::BigInt, std::number::bigint::BigInt)) -> std::void::Void {
+        fun f(p: (std::bignum::bigint::BigInt, std::bignum::bigint::BigInt)) -> std::void::Void {
             case p is (.., ..) { }
         }
         """
@@ -13,7 +13,7 @@ class TestPatternVariantDestructureTupleAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.VariableTupleDestructureTupleSizeMismatchError)
     def test_invalid_pattern_variant_destructure_object_missing_attribute(self):
         """
-        fun f(p: (std::number::bigint::BigInt, std::number::bigint::BigInt)) -> std::void::Void {
+        fun f(p: (std::bignum::bigint::BigInt, std::bignum::bigint::BigInt)) -> std::void::Void {
             case p is (x) { }
         }
         """
@@ -21,7 +21,7 @@ class TestPatternVariantDestructureTupleAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.VariableTupleDestructureTupleSizeMismatchError)
     def test_invalid_pattern_variant_destructure_object_invalid_attribute(self):
         """
-        fun f(p: (std::number::bigint::BigInt, std::number::bigint::BigInt)) -> std::void::Void {
+        fun f(p: (std::bignum::bigint::BigInt, std::bignum::bigint::BigInt)) -> std::void::Void {
             case p is (x, y, z) { }
         }
         """
@@ -29,7 +29,7 @@ class TestPatternVariantDestructureTupleAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pattern_variant_destructure_object(self):
         """
-        fun f(p: (std::number::bigint::BigInt, std::number::bigint::BigInt)) -> std::void::Void {
+        fun f(p: (std::bignum::bigint::BigInt, std::bignum::bigint::BigInt)) -> std::void::Void {
             case p is (x, y) { }
         }
         """
@@ -37,7 +37,7 @@ class TestPatternVariantDestructureTupleAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pattern_variant_destructure_object_skip_1(self):
         """
-        fun f(p: (std::number::bigint::BigInt, std::number::bigint::BigInt)) -> std::void::Void {
+        fun f(p: (std::bignum::bigint::BigInt, std::bignum::bigint::BigInt)) -> std::void::Void {
             case p is (x, ..) { }
         }
         """
@@ -45,7 +45,7 @@ class TestPatternVariantDestructureTupleAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_pattern_variant_destructure_object_bound_multi_skip(self):
         """
-        fun f(p: (std::number::bigint::BigInt, std::number::bigint::BigInt)) -> std::void::Void {
+        fun f(p: (std::bignum::bigint::BigInt, std::bignum::bigint::BigInt)) -> std::void::Void {
             case p is (..mut x) { }
         }
         """

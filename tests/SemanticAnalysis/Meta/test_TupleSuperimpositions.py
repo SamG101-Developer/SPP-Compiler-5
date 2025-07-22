@@ -5,9 +5,9 @@ class TestTupleSuperimpositions(CustomTestCase):
     @should_pass_compilation()
     def test_tuple_superimposition_any_3_tuple(self):
         """
-        use std::number::u16::U16
-        use std::number::u32::U32
-        use std::number::u64::U64
+        use std::number::U16
+        use std::number::U32
+        use std::number::U64
         use std::void::Void
 
         sup [T, U, V] std::tuple::Tup[T, U, V] {
@@ -23,8 +23,8 @@ class TestTupleSuperimpositions(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
     def test_tuple_superimposition_wrong_number_elems_1(self):
         """
-        use std::number::u32::U32
-        use std::number::u64::U64
+        use std::number::U32
+        use std::number::U64
         use std::void::Void
 
         sup [T, U, V] std::tuple::Tup[T, U, V] {
@@ -40,9 +40,9 @@ class TestTupleSuperimpositions(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
     def test_tuple_superimposition_wrong_number_elems_2(self):
         """
-        use std::number::u16::U16
-        use std::number::u32::U32
-        use std::number::u64::U64
+        use std::number::U16
+        use std::number::U32
+        use std::number::U64
         use std::void::Void
 
         sup [T, U] std::tuple::Tup[T, U] {
@@ -58,9 +58,9 @@ class TestTupleSuperimpositions(CustomTestCase):
     @should_fail_compilation(SemanticErrors.IdentifierUnknownError)
     def test_tuple_superimposition_specific_3_tuple_mismatch_types(self):
         """
-        use std::number::u16::U16
-        use std::number::u32::U32
-        use std::number::u64::U64
+        use std::number::U16
+        use std::number::U32
+        use std::number::U64
         use std::void::Void
 
         sup std::tuple::Tup[U64, U32, U16] {
@@ -76,9 +76,9 @@ class TestTupleSuperimpositions(CustomTestCase):
     @should_pass_compilation()
     def test_tuple_superimposition_specific_3_tuple_correct_types(self):
         """
-        use std::number::u16::U16
-        use std::number::u32::U32
-        use std::number::u64::U64
+        use std::number::U16
+        use std::number::U32
+        use std::number::U64
         use std::void::Void
 
         sup std::tuple::Tup[U64, U32, U16] {
@@ -94,9 +94,9 @@ class TestTupleSuperimpositions(CustomTestCase):
     @should_pass_compilation()
     def test_tuple_superimposition_specific_and_generic_3_tuple_correct_types(self):
         """
-        use std::number::u16::U16
-        use std::number::u32::U32
-        use std::number::u64::U64
+        use std::number::U16
+        use std::number::U32
+        use std::number::U64
         use std::void::Void
 
         sup [P, Q] std::tuple::Tup[U64, P, Q] {
@@ -112,9 +112,9 @@ class TestTupleSuperimpositions(CustomTestCase):
     @should_pass_compilation()
     def test_tuple_superimposition_variadic_generics(self):
         """
-        use std::number::u16::U16
-        use std::number::u32::U32
-        use std::number::u64::U64
+        use std::number::U16
+        use std::number::U32
+        use std::number::U64
         use std::void::Void
 
         sup [..T] std::tuple::Tup[T] {

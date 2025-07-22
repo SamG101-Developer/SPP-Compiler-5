@@ -53,7 +53,7 @@ class TestCaseExpressionAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_case_expression_3(self):
         """
-        fun f(a: std::number::bigint::BigInt, b: std::number::bigint::BigInt) -> std::void::Void {
+        fun f(a: std::bignum::bigint::BigInt, b: std::bignum::bigint::BigInt) -> std::void::Void {
             let x = case a == 1 {
                 "hello world"
             }
@@ -70,8 +70,8 @@ class TestCaseExpressionAst(CustomTestCase):
     def test_invalid_case_expression_partial_move_in_condition(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {
@@ -91,8 +91,8 @@ class TestCaseExpressionAst(CustomTestCase):
     def test_valid_case_expression_partial_move_in_pattern(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f(p: Point) -> std::void::Void {

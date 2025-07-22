@@ -6,7 +6,7 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_type_assign_1(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
@@ -19,7 +19,7 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_type_assign_2(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
@@ -32,7 +32,7 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_type_assign_3(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
@@ -45,7 +45,7 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_type_assign_from_subset_variant_1(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
@@ -58,7 +58,7 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_type_assign_from_subset_variant_2(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
@@ -71,7 +71,7 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_type_assign_from_subset_variant_3(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
@@ -84,7 +84,7 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_type_assign_from_equal_variant(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
@@ -97,7 +97,7 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_collapse_arguments(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
@@ -110,12 +110,12 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_type_assign_mismatched_composite_type(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
         fun f(mut a: Str or U64 or Bool) -> Void {
-            a = 123_i64
+            a = 123_s64
         }
         """
 
@@ -123,8 +123,8 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_type_assign_from_superset_variant(self):
         """
         use std::boolean::Bool
-        use std::number::u32::U32
-        use std::number::u64::U64
+        use std::number::U32
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
@@ -137,8 +137,8 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_type_assign_from_invalid_variant_some_overlap(self):
         """
         use std::boolean::Bool
-        use std::number::u32::U32
-        use std::number::u64::U64
+        use std::number::U32
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 
@@ -151,7 +151,7 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_including_a_borrowed_type_1(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
 
         fun f(a: &Str or U64 or Bool) -> Str {
@@ -163,7 +163,7 @@ class TestVariantTypes(CustomTestCase):
     def test_variant_including_a_borrowed_type_2(self):
         """
         use std::boolean::Bool
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
 
         fun f(a: Str or &mut U64 or Bool) -> Str {
@@ -176,7 +176,7 @@ class TestVariantTypes(CustomTestCase):
         """
         use std::option::Opt
         use std::option::Some
-        use std::number::u64::U64
+        use std::number::U64
         use std::string::Str
         use std::void::Void
 

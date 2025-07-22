@@ -54,11 +54,11 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # ref borrow variable & move attribute
         """
         cls A {
-            a: std::boolean::Bool
-            b: std::boolean::Bool
+            a: std::string::Str
+            b: std::string::Str
         }
 
-        fun f(a: &A, b: std::boolean::Bool) -> std::void::Void { }
+        fun f(a: &A, b: std::string::Str) -> std::void::Void { }
 
         fun g(a: A) -> std::void::Void {
             f(&a, a.b)
@@ -70,11 +70,11 @@ class TestFunctionCallArgumentGroupAst(CustomTestCase):
         # mut borrow variable & move attribute
         """
         cls A {
-            a: std::boolean::Bool
-            b: std::boolean::Bool
+            a: std::string::Str
+            b: std::string::Str
         }
 
-        fun f(a: &mut A, b: std::boolean::Bool) -> std::void::Void { }
+        fun f(a: &mut A, b: std::string::Str) -> std::void::Void { }
 
         fun g(mut a: A) -> std::void::Void {
             f(&mut a, a.b)

@@ -29,7 +29,7 @@ class TestTupleLiteralNElementAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.TupleElementBorrowedError)
     def test_invalid_tuple_filled_tuple_borrowed_elements(self):
         """
-        fun f(a: &std::number::bigint::BigInt) -> std::void::Void {
+        fun f(a: &std::bignum::bigint::BigInt) -> std::void::Void {
             let a = (a, 2, 3)
         }
         """

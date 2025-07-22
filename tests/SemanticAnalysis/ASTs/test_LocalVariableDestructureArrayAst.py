@@ -111,8 +111,8 @@ class TestLocalVariableDestructureArrayAst(CustomTestCase):
     def test_valid_local_variable_destructure_array_nested_object(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {

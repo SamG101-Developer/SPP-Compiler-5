@@ -11,7 +11,7 @@ class TestMain(CustomTestCase):
     @should_pass_compilation(no_main=True)
     def test_valid_main_different_return_type(self) -> None:
         """
-        fun main(args: std::vector::Vec[std::string::Str]) -> std::number::bigint::BigInt { ret 0 }
+        fun main(args: std::vector::Vec[std::string::Str]) -> std::bignum::bigint::BigInt { ret 0 }
         """
 
     @should_pass_compilation(no_main=True)
@@ -37,5 +37,5 @@ class TestMain(CustomTestCase):
     @should_fail_compilation(SemanticErrors.MissingMainFunctionError, no_main=True)
     def test_invalid_main_argument_type_mismatch(self) -> None:
         """
-        fun main(args: std::vector::Vec[std::number::bigint::BigInt]) -> std::void::Void { }
+        fun main(args: std::vector::Vec[std::bignum::bigint::BigInt]) -> std::void::Void { }
         """

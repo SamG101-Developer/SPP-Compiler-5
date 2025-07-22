@@ -5,7 +5,7 @@ class TestSubroutinePrototypeAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.FunctionSubroutineMissingReturnStatementError)
     def test_invalid_subroutine_missing_ret_statement(self):
         """
-        fun c() -> std::number::bigint::BigInt {
+        fun c() -> std::bignum::bigint::BigInt {
             let x = 123
         }
         """
@@ -27,7 +27,7 @@ class TestSubroutinePrototypeAst(CustomTestCase):
     @should_pass_compilation()
     def test_valid_subroutine_valid_ret_statement_non_void(self):
         """
-        fun c() -> std::number::bigint::BigInt {
+        fun c() -> std::bignum::bigint::BigInt {
             ret 123
         }
         """

@@ -13,7 +13,7 @@ class TestAstMemoryLoopChecks(CustomTestCase):
         }
         """
 
-    @should_fail_compilation(SemanticErrors.MemoryPartiallyInitializedUsageError)
+    @should_fail_compilation(SemanticErrors.MemoryNotInitializedUsageError)
     def test_invalid_loop_with_memory_move_nested(self):
         """
         fun f() -> std::void::Void {

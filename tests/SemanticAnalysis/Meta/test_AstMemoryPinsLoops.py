@@ -131,7 +131,7 @@ class TestAstMemoryPinsLoops(CustomTestCase):
 
         fun f(mut v: Vec[Str]) -> Void {
             loop x in v.iter_ref() {
-                let l = v.len()
+                let l = v.length()
             }
         }
         """

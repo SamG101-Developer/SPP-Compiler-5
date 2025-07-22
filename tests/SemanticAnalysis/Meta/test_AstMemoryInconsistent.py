@@ -7,8 +7,8 @@ class TestAstMemoryInconsistent(CustomTestCase):
         # Move an initialized value in one branch and not in the other.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -27,8 +27,8 @@ class TestAstMemoryInconsistent(CustomTestCase):
         # Initialize a non-initialized value in one branch and not in the other.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -46,8 +46,8 @@ class TestAstMemoryInconsistent(CustomTestCase):
         # Partially move an initialized value in one branch and not in the other.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -65,8 +65,8 @@ class TestAstMemoryInconsistent(CustomTestCase):
         # Partially move different parts of an initialized value in both branches.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -84,8 +84,8 @@ class TestAstMemoryInconsistent(CustomTestCase):
         # Partially initialize different parts of a partially initialized value in one branch and not the other.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -105,8 +105,8 @@ class TestAstMemoryInconsistent(CustomTestCase):
         # Partially initialize different parts of a partially initialized value in both branches.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -127,8 +127,8 @@ class TestAstMemoryInconsistent(CustomTestCase):
         # Cause a value to be pinned in one branch and not in the other.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         cor c(p: &Point) -> std::generator::Gen[std::boolean::Bool] { }
@@ -148,11 +148,11 @@ class TestAstMemoryInconsistent(CustomTestCase):
         # Cause part of a value to be pinned in one branch and not in the other.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
-        cor c(x: &std::number::bigint::BigInt) -> std::generator::Gen[std::boolean::Bool] { }
+        cor c(x: &std::bignum::bigint::BigInt) -> std::generator::Gen[std::boolean::Bool] { }
 
         fun f() -> std::void::Void {
             let p = Point(x=5, y=5)
@@ -169,11 +169,11 @@ class TestAstMemoryInconsistent(CustomTestCase):
         # Cause different parts of a value to be pinned in both branches.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
-        cor c(x: &std::number::bigint::BigInt) -> std::generator::Gen[std::boolean::Bool] { }
+        cor c(x: &std::bignum::bigint::BigInt) -> std::generator::Gen[std::boolean::Bool] { }
 
         fun f() -> std::void::Void {
             let p = Point(x=5, y=5)

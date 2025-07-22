@@ -18,8 +18,8 @@ class TestAstMemoryCopy(CustomTestCase):
         # Perform a "double move" when the use superimposes Copy over the type.
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
 
         sup Point ext std::copy::Copy { }

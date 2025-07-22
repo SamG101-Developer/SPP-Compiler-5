@@ -6,8 +6,8 @@ class TestIsExpressionAst(CustomTestCase):
     def test_invalid_is_expression_incorrect_type_destructure(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
         fun f() -> std::void::Void {
             let a: Point = Point(x=1, y=2)
@@ -20,7 +20,7 @@ class TestIsExpressionAst(CustomTestCase):
         """
         fun f() -> std::void::Void {
             let a: std::string::Str or std::boolean::Bool = "hello"
-            case a is std::number::bigint::BigInt() { }
+            case a is std::bignum::bigint::BigInt() { }
         }
         """
 
@@ -32,7 +32,7 @@ class TestIsExpressionAst(CustomTestCase):
             y: T
         }
         fun f() -> std::void::Void {
-            let a: Point[std::number::bigint::BigInt] = Point[std::number::bigint::BigInt](x=1, y=2)
+            let a: Point[std::bignum::bigint::BigInt] = Point[std::bignum::bigint::BigInt](x=1, y=2)
             case a is Point[std::string::Str](x, y) { }
         }
         """
@@ -41,8 +41,8 @@ class TestIsExpressionAst(CustomTestCase):
     def test_valid_is_expression_correct_type(self):
         """
         cls Point {
-            x: std::number::bigint::BigInt
-            y: std::number::bigint::BigInt
+            x: std::bignum::bigint::BigInt
+            y: std::bignum::bigint::BigInt
         }
         fun f() -> std::void::Void {
             let a: Point = Point(x=1, y=2)
@@ -67,7 +67,7 @@ class TestIsExpressionAst(CustomTestCase):
             y: T
         }
         fun f() -> std::void::Void {
-            let a: Point[std::number::bigint::BigInt] = Point[std::number::bigint::BigInt](x=1, y=2)
-            case a is Point[std::number::bigint::BigInt](x, y) { }
+            let a: Point[std::bignum::bigint::BigInt] = Point[std::bignum::bigint::BigInt](x=1, y=2)
+            case a is Point[std::bignum::bigint::BigInt](x, y) { }
         }
         """

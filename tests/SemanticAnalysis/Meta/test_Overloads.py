@@ -62,7 +62,7 @@ class TestOverloads_FreeFuncs(CustomTestCase):
     def test_valid_overload_parameter_types(self):
         """
         fun f(a: std::boolean::Bool) -> std::void::Void { }
-        fun f(a: std::number::bigint::BigInt) -> std::void::Void { }
+        fun f(a: std::bignum::bigint::BigInt) -> std::void::Void { }
         """
 
     @should_fail_compilation(SemanticErrors.FunctionPrototypeConflictError)
@@ -215,7 +215,7 @@ class TestOverloads_SupBlocks(CustomTestCase):
         }
 
         sup A {
-            fun f(a: std::number::bigint::BigInt) -> std::void::Void { }
+            fun f(a: std::bignum::bigint::BigInt) -> std::void::Void { }
         }
         """
 

@@ -22,7 +22,7 @@ class TestObjectInitializerAst(CustomTestCase):
     def test_valid_object_initializer(self):
         """
         cls Foo {
-            a: std::number::bigint::BigInt
+            a: std::bignum::bigint::BigInt
         }
 
         fun f() -> std::void::Void {
@@ -34,7 +34,7 @@ class TestObjectInitializerAst(CustomTestCase):
     def test_object_initializer_overridden_abstract_base_class(self):
         """
         cls Foo {
-            a: std::number::bigint::BigInt
+            a: std::bignum::bigint::BigInt
         }
 
         cls Bar { }

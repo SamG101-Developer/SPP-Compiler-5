@@ -7,7 +7,7 @@ class TestAstMemoryPartialMoves(CustomTestCase):
         # Cannot take an attribute off of a non-initialized variable.
         """
         use std::string::Str
-        use std::number::u8::U8
+        use std::number::U8
         use std::vector::Vec
 
         fun f() -> std::void::Void {
