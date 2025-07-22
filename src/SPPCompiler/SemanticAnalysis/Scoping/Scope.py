@@ -173,6 +173,12 @@ class Scope:
             AliasSymbol   : Asts.GenericTypeArgumentNamedAst}
         return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self.all_symbols() if type(s) is not NamespaceSymbol and s.is_generic and (s.scope if isinstance(s, TypeSymbol) else True)]
 
+    def generics_extended_for(self, generic_argument_group: list[Asts.GenericArgumentAst]) -> list[Symbol]:
+        syms = [self.get_symbol(g.value) for g in generic_argument_group]
+        gens = [s for s in self.all_symbols() if type(s) is not NamespaceSymbol and s.is_generic]
+        syms = gens + [s for s in syms if s is not None]
+        return syms
+
     def add_symbol(self, symbol: Symbol) -> None:
         # Add a symbol to the scope.
         self._symbol_table.add(symbol)
@@ -207,7 +213,7 @@ class Scope:
 
         # Adjust the namespace and symbol name for namespaced typ symbols.
         scope = self
-        if isinstance(name, Asts.TypeAst):
+        if name.is_type_ast:
             name = name.without_convention
             scope, name = shift_scope_for_namespaced_type(self, name)
 
@@ -346,7 +352,7 @@ class Scope:
         # Get all the ancestors, including this scope and the global scope.
         return [node := self] + [node for _ in iter(lambda: node.parent, None) if (node := node.parent)]
 
-    @property
+    @FunctionCache.cache_property
     def parent_module(self) -> Scope:
         # Get the ancestor module scope.
         return [s for s in self.ancestors if type(s.name) is Asts.IdentifierAst][0]
