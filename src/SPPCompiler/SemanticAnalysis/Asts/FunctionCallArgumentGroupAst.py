@@ -88,10 +88,16 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
             sym = sm.current_scope.get_variable_symbol_outermost_part(argument.value)
             if not sym: continue
 
-            # A mutable borrow requires a mutable symbol.
-            if type(argument.convention) is Asts.ConventionMutAst and not sym.is_mutable:
-                raise SemanticErrors.MutabilityInvalidMutationError().add(
-                    argument.value, argument.convention, sym.memory_info.ast_initialization).scopes(sm.current_scope)
+            if type(argument.convention) is Asts.ConventionMutAst:
+                # A mutable borrow requires a mutable symbol.
+                if not sym.is_mutable:
+                    raise SemanticErrors.MutabilityInvalidMutationError().add(
+                        argument.value, argument.convention, sym.memory_info.ast_initialization).scopes(sm.current_scope)
+
+                # Check the argument isn't already an immutable borrow.
+                if sym.memory_info.ast_borrowed and sym.memory_info.is_borrow_ref:
+                    raise SemanticErrors.MutabilityInvalidMutationError().add(
+                        argument.value, argument.convention, sym.memory_info.ast_borrowed).scopes(sm.current_scope)
 
     def check_memory(
             self, sm: ScopeManager, target_proto: Asts.FunctionPrototypeAst = None,
@@ -163,7 +169,8 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
             if argument.convention is None:
                 # Don't bother rechecking the moves or partial moves, but ensure that attributes aren't being moved off
                 # of a borrowed value and that pins are maintained. Mark the move or partial move of the argument.
-                # argument.check_memory(sm, **kwargs)
+                # Note the "check_pins_linked=False" because function calls can only imply an inner scope, so it is
+                # guaranteed that lifetimes aren't being extended.
                 AstMemoryUtils.enforce_memory_integrity(
                     argument.value, argument, sm, check_move=False, check_partial_move=False,
                     check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, mark_moves=True,
@@ -183,11 +190,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                     raise SemanticErrors.MemoryOverlapUsageError().add(
                         overlap[0], argument.value).scopes(sm.current_scope)
 
-                # Check the argument isn't already an immutable borrow.
-                if sym.memory_info.ast_borrowed and sym.memory_info.is_borrow_ref:
-                    raise SemanticErrors.MutabilityInvalidMutationError().add(
-                        argument.value, argument.convention, sym.memory_info.ast_borrowed).scopes(sm.current_scope)
-
                 for existing_assign in pre_existing_borrows_mut[argument.value]:
                     sm.current_scope.get_symbol(existing_assign).memory_info.moved_by(argument.value)
                 for existing_assign in pre_existing_borrows_ref[argument.value]:
@@ -202,8 +204,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                     for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
                         sym.memory_info.borrow_refers_to.append((assign_target, argument, True, sm.current_scope))
-                    # else:
-                    #     sym.memory_info.borrow_refers_to.append((None, argument, True, sm.current_scope))
 
                 # Add the mutable borrow to the mutable borrow set.
                 borrows_mut.append(argument.value)
@@ -226,8 +226,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                     for assign_target in kwargs.get("assignment", []):
                         sm.current_scope.get_symbol(assign_target).memory_info.ast_pins.append(argument.value)
                         sym.memory_info.borrow_refers_to.append((assign_target, argument, False, sm.current_scope))
-                    # else:
-                    #     sym.memory_info.borrow_refers_to.append((None, argument, False, sm.current_scope))
 
                 # Add the immutable borrow to the immutable borrow set.
                 borrows_ref.append(argument.value)
