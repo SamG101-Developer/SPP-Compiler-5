@@ -50,6 +50,7 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.FunctionParameterVariadicAst
    SPPCompiler.SemanticAnalysis.Asts.FunctionPrototypeAst
    SPPCompiler.SemanticAnalysis.Asts.GenExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.GenWithExpressionAst
    SPPCompiler.SemanticAnalysis.Asts.GenericArgumentAst
    SPPCompiler.SemanticAnalysis.Asts.GenericArgumentGroupAst
    SPPCompiler.SemanticAnalysis.Asts.GenericCompArgumentNamedAst
@@ -57,7 +58,6 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterOptionalAst
    SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterRequiredAst
    SPPCompiler.SemanticAnalysis.Asts.GenericCompParameterVariadicAst
-   SPPCompiler.SemanticAnalysis.Asts.GenericIdentifierAst
    SPPCompiler.SemanticAnalysis.Asts.GenericParameterAst
    SPPCompiler.SemanticAnalysis.Asts.GenericParameterGroupAst
    SPPCompiler.SemanticAnalysis.Asts.GenericTypeArgumentNamedAst
@@ -70,6 +70,13 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.InnerScopeAst
    SPPCompiler.SemanticAnalysis.Asts.IntegerLiteralAst
    SPPCompiler.SemanticAnalysis.Asts.IsExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.IterExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.IterExpressionBranchAst
+   SPPCompiler.SemanticAnalysis.Asts.IterPatternAst
+   SPPCompiler.SemanticAnalysis.Asts.IterPatternExceptionAst
+   SPPCompiler.SemanticAnalysis.Asts.IterPatternExhaustedAst
+   SPPCompiler.SemanticAnalysis.Asts.IterPatternNoValueAst
+   SPPCompiler.SemanticAnalysis.Asts.IterPatternVariableAst
    SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionAst
    SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionCaptureItemAst
    SPPCompiler.SemanticAnalysis.Asts.LambdaExpressionParameterAndCaptureGroupAst
@@ -119,7 +126,6 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorAst
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorEarlyReturnAst
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorFunctionCallAst
-   SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorIndexAst
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorMemberAccessAst
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorNotKeywordAst
    SPPCompiler.SemanticAnalysis.Asts.PostfixExpressionOperatorResumeCoroutineAst
@@ -140,12 +146,12 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.TypeArrayAst
    SPPCompiler.SemanticAnalysis.Asts.TypeAst
    SPPCompiler.SemanticAnalysis.Asts.TypeBinaryExpressionAst
+   SPPCompiler.SemanticAnalysis.Asts.TypeIdentifierAst
    SPPCompiler.SemanticAnalysis.Asts.TypeParenthesizedAst
    SPPCompiler.SemanticAnalysis.Asts.TypePostfixExpressionAst
    SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorAst
    SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorNestedTypeAst
    SPPCompiler.SemanticAnalysis.Asts.TypePostfixOperatorOptionalTypeAst
-   SPPCompiler.SemanticAnalysis.Asts.TypeSingleAst
    SPPCompiler.SemanticAnalysis.Asts.TypeStatementAst
    SPPCompiler.SemanticAnalysis.Asts.TypeTupleAst
    SPPCompiler.SemanticAnalysis.Asts.TypeUnaryExpressionAst
@@ -155,6 +161,7 @@ Submodules
    SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionAst
    SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAst
    SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorAsyncAst
+   SPPCompiler.SemanticAnalysis.Asts.UnaryExpressionOperatorDerefAst
    SPPCompiler.SemanticAnalysis.Asts.UseStatementAst
    SPPCompiler.SemanticAnalysis.Asts.WhereBlockAst
    SPPCompiler.SemanticAnalysis.Asts.WhereConstraintsAst
