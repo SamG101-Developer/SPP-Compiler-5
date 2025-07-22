@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class LightweightMemoryInfo:
     ast_initialization: Optional[Asts.Ast]
     ast_moved: Optional[Asts.Ast]
@@ -21,7 +21,7 @@ class LightweightMemoryInfo:
     initialization_counter: int
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class MemoryInfo:
     """
     The MemoryInfo class is used to store information about the memory state of a symbol. It is used to identify
@@ -96,6 +96,12 @@ class MemoryInfo:
         self.ast_initialization_old = ast
         self.ast_moved = None
         self.initialization_counter += 1
+
+        # Wipe the inconsistent memory status, as the symbol is now fully initialized.
+        self.is_inconsistently_initialized = None
+        self.is_inconsistently_moved = None
+        self.is_inconsistently_partially_moved = None
+        self.is_inconsistently_pinned = None  # todo: this one too?
 
     def remove_partial_move(self, ast: Asts.Ast) -> None:
         # Remove the partial move from the list, and mark the symbol as initialized if there are no more partial moves.
