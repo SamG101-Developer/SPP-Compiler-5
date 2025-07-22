@@ -72,9 +72,13 @@ class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         sym = sm.current_scope.get_symbol(self.alias.name if self.alias else self.name)
         if not kwargs.get("from_non_init", False):
             value.check_memory(sm, **kwargs)
+
+            # Note the "check_pins_linked" is set to False, as this a lifetime extension is impossible with "let x = y"
+            # statements ("let" means the new symbol must be a variable in this scope / inner to the rhs symbol, meaning
+            # the lifetime cannot grow).
             AstMemoryUtils.enforce_memory_integrity(
                 value, self, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
-                check_pins=True, check_pins_linked=True, mark_moves=True, **kwargs)
+                check_pins=True, check_pins_linked=False, mark_moves=True, **kwargs)
             sym.memory_info.initialized_by(self.name)
 
 

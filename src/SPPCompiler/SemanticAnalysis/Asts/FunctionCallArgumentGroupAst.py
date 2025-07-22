@@ -173,7 +173,7 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
                 # guaranteed that lifetimes aren't being extended.
                 AstMemoryUtils.enforce_memory_integrity(
                     argument.value, argument, sm, check_move=False, check_partial_move=False,
-                    check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, mark_moves=True,
+                    check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=False, mark_moves=True,
                     **kwargs)
 
                 # Check the move doesn't overlap with any borrows. This is to ensure that "f(&x, x)" can never happen,
