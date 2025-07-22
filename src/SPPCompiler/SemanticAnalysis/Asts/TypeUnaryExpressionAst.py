@@ -6,7 +6,6 @@ from typing import Iterator, Optional, TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.FunctionCache import FunctionCache
@@ -38,6 +37,9 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
 
     def __str__(self) -> str:
         return f"{self.op}{self.rhs}"
+
+    def __post_init__(self) -> None:
+        self.is_type_ast = True
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

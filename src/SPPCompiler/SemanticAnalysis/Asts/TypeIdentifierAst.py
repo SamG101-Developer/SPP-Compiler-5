@@ -28,6 +28,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
     def __post_init__(self) -> None:
         self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=0)
+        self.is_type_ast = True
 
     def __eq__(self, other: TypeIdentifierAst | Asts.IdentifierAst) -> bool:
         if type(other) is TypeIdentifierAst:
@@ -248,7 +249,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
         # If the generically filled type doesn't exist (Vec[Str]), but the base does (Vec[T]), create it.
         if not type_scope.parent.has_symbol(self):
-            external_generics = [x for x in sm.current_scope.all_symbols() if type(x) is not NamespaceSymbol and x.is_generic]
+            external_generics = sm.current_scope.generics_extended_for(self.generic_argument_group.arguments)
             new_scope = AstTypeUtils.create_generic_cls_scope(sm, self, type_symbol, external_generics, is_tuple=is_tuple, **kwargs)
 
             # Handle type aliasing (providing generics to the original type).

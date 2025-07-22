@@ -6,7 +6,6 @@ from typing import Optional, TYPE_CHECKING
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
@@ -31,6 +30,9 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
 
     def __json__(self) -> str:
         return f"{self.lhs}{self.op}"
+
+    def __post_init__(self) -> None:
+        self.is_type_ast = True
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

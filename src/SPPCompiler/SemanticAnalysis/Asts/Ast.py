@@ -29,6 +29,9 @@ class Ast(CompilerStages):
     _scope: Optional[Scope] = field(default=None, kw_only=True, repr=False)
     """The scope representing top-level ASTs (function/class scopes)"""
 
+    is_type_ast: bool = field(default=False, kw_only=True, repr=False)
+    """Optimization tag to check if this AST is a type. This is used to avoid unnecessary type checks in the compiler."""
+
     def clone_at(self, pos: int) -> Ast:
         """
         Clone an AST at a new position. This is used to create a new AST with the same attributes as the original, but
