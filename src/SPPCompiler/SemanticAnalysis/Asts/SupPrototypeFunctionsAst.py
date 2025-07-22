@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingConte
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class SupPrototypeFunctionsAst(Asts.Ast):
     tok_sup: Asts.TokenAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default=None)
