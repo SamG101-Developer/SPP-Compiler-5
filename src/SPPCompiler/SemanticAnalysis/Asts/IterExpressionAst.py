@@ -69,19 +69,20 @@ class IterExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         pattern_types = {type(b.pattern) for b in self.branches}
 
         # For a GenOpt, ensure there is a "value", "no-value" and "exhausted" branch.
-        if AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATED_OPT, cond_type.without_generics, sm.current_scope, sm.current_scope):
+        ignore_else = kwargs.pop("ignore_else", False)
+        if AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATED_OPT, cond_type.without_generics, sm.current_scope, sm.current_scope) and not ignore_else:
             if missing := {Asts.IterPatternVariableAst, Asts.IterPatternNoValueAst, Asts.IterPatternExhaustedAst} - pattern_types:
                 raise SemanticErrors.IterExpressionBranchMissingError().add(
                     self.cond, cond_type, self, list(missing)[0]).scopes(sm.current_scope)
 
         # For a GenRes, ensure there is a "value", "exception" and "exhausted" branch.
-        elif AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATED_RES, cond_type.without_generics, sm.current_scope, sm.current_scope):
+        elif AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATED_RES, cond_type.without_generics, sm.current_scope, sm.current_scope) and not ignore_else:
             if missing := {Asts.IterPatternVariableAst, Asts.IterPatternExceptionAst, Asts.IterPatternExhaustedAst} - pattern_types:
                 raise SemanticErrors.IterExpressionBranchMissingError().add(
                     self.cond, cond_type, self, list(missing)[0]).scopes(sm.current_scope)
 
         # For a Gen, ensure there is a "value" and "exhausted" branch.
-        elif AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATED, cond_type.without_generics, sm.current_scope, sm.current_scope):
+        elif AstTypeUtils.symbolic_eq(CommonTypesPrecompiled.EMPTY_GENERATED, cond_type.without_generics, sm.current_scope, sm.current_scope) and not ignore_else:
             if missing := {Asts.IterPatternVariableAst, Asts.IterPatternExhaustedAst} - pattern_types:
                 raise SemanticErrors.IterExpressionBranchMissingError().add(
                     self.cond, cond_type, self, list(missing)[0]).scopes(sm.current_scope)
