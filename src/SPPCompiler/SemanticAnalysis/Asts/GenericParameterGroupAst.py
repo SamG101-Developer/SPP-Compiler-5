@@ -9,6 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
@@ -32,6 +33,10 @@ class GenericParameterGroupAst(Asts.Ast):
         # Check both ASTs are the same type and have the same parameters.
         return self.parameters == other.parameters
 
+    def __hash__(self) -> int:
+        # Use the id of the object as the hash.
+        return id(self)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
@@ -48,22 +53,27 @@ class GenericParameterGroupAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.tok_r.pos_end
 
+    @FunctionCache.cache
     def get_required_params(self) -> list[Asts.GenericParameterRequiredAst]:
         # Get all the required generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericParameterRequiredAst)]
 
+    @FunctionCache.cache
     def get_optional_params(self) -> list[Asts.GenericParameterOptionalAst]:
         # Get all the optional generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericParameterOptionalAst)]
 
+    @FunctionCache.cache
     def get_variadic_params(self) -> list[Asts.GenericParameterVariadicAst]:
         # Get all the variadic generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericParameterVariadicAst)]
 
+    @FunctionCache.cache
     def get_comp_params(self) -> list[Asts.GenericCompParameterAst]:
         # Get all the computation generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericCompParameterAst)]
 
+    @FunctionCache.cache
     def get_type_params(self) -> list[Asts.GenericTypeParameterAst]:
         # Get all the type generic parameters.
         return [p for p in self.parameters if isinstance(p, Asts.GenericTypeParameterAst)]
