@@ -151,7 +151,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                 # Create a new overload with the generic arguments applied.
                 if generic_arguments:
                     new_fn_proto = fast_deepcopy(fn_proto)
-                    external_generics = [x for x in sm.current_scope.all_symbols() if type(x) is not NamespaceSymbol and x.is_generic]
+                    external_generics = sm.current_scope.generics_extended_for(generic_arguments)
                     new_fn_scope = AstTypeUtils.create_generic_fun_scope(sm, fn_scope, Asts.GenericArgumentGroupAst(arguments=generic_arguments), external_generics, **kwargs)
                     tm = ScopeManager(sm.global_scope, new_fn_scope, sm.normal_sup_blocks, sm.generic_sup_blocks)
 
@@ -206,12 +206,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                         parameter_type.analyse_semantics(sm, **kwargs)
 
                     # Special case for self parameters.
-                    if type(parameter) is Asts.FunctionParameterSelfAst:
+                    elif type(parameter) is Asts.FunctionParameterSelfAst:
                         argument.convention = parameter.convention
-                        argument_type = argument_type.without_generics
-
-                        if fn_proto.function_parameter_group.get_self_param()._arbitrary and not AstTypeUtils.symbolic_eq(parameter_type, argument_type, fn_scope, sm.current_scope):
-                            raise SemanticErrors.TypeMismatchError().add(parameter, parameter_type, argument, argument_type)
 
                     # Regular parameters (with a folding argument check too).
                     else:
@@ -288,7 +284,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
             other_generics = []
             try:
                 lhs_lhs_scope = sm.current_scope.get_symbol(lhs.lhs.infer_type(sm, **kwargs)).scope
-                other_generics = lhs_lhs_scope.name.type_parts[-1].generic_argument_group.arguments
+                if not AstTypeUtils.is_type_tuple(lhs_lhs_scope.name, sm.current_scope):
+                    other_generics = lhs_lhs_scope.name.type_parts[-1].generic_argument_group.arguments
             except AttributeError:
                 pass
 
@@ -335,7 +332,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
         # If a closure is being called, apply memory rules to symbolic target.
         if self._closure_arg:
             group = Asts.FunctionCallArgumentGroupAst(pos=lhs.pos, arguments=[self._closure_arg])
-            group.check_memory(sm)
+            group.analyse_semantics(sm, **kwargs)
+            group.check_memory(sm, **kwargs)
 
         # Check the argument group, now the old borrows have been invalidated.
         self.generic_argument_group.check_memory(sm, **kwargs)
