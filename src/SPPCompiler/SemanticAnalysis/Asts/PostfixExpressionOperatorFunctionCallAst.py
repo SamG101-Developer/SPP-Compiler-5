@@ -4,17 +4,15 @@ import copy
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING, Tuple
 
-from ordered_set import OrderedSet
-
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FastOrderedSet import FastOrderedSet
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -187,12 +185,12 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     fn_scope = new_fn_scope
 
                 # Check for any named arguments without a corresponding parameter.
-                if invalid_arguments := OrderedSet(argument_names) - OrderedSet(parameter_names):
+                if invalid_arguments := FastOrderedSet(argument_names) - FastOrderedSet(parameter_names):
                     raise SemanticErrors.ArgumentNameInvalidError().add(
                         parameters[0], "parameter", invalid_arguments.pop(0), "argument").scopes(sm.current_scope)
 
                 # Check if there are too few arguments for the function (by missing names).
-                if missing_parameters := OrderedSet(parameter_names_req) - OrderedSet(argument_names):
+                if missing_parameters := FastOrderedSet(parameter_names_req) - FastOrderedSet(argument_names):
                     raise SemanticErrors.ArgumentRequiredNameMissingError().add(
                         self, missing_parameters.pop(0), "parameter", "argument").scopes(sm.current_scope)
 

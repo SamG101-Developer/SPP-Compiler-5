@@ -4,8 +4,6 @@ import copy
 from collections import defaultdict
 from typing import Dict, Optional, TYPE_CHECKING, Tuple, Type
 
-from ordered_set import OrderedSet
-
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
@@ -14,6 +12,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import NamespaceSymbol
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FastOrderedSet import FastOrderedSet
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 if TYPE_CHECKING:
@@ -316,10 +315,10 @@ class AstFunctionUtils:
         is_variadic = parameters and type(parameters[-1]) is Asts.FunctionParameterVariadicAst
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
-        if invalid_argument_names := OrderedSet(argument_names) - OrderedSet(parameter_names):
+        if invalid_argument_names := FastOrderedSet(argument_names) - FastOrderedSet(parameter_names):
             raise SemanticErrors.ArgumentNameInvalidError().add(
                 parameters[0], "parameter", invalid_argument_names.pop(0), "argument").scopes(sm.current_scope)
-        parameter_names = OrderedSet(parameter_names) - OrderedSet(argument_names)
+        parameter_names = FastOrderedSet(parameter_names) - FastOrderedSet(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
         for i, unnamed_argument in enumerate([a for a in arguments if type(a) is Asts.FunctionCallArgumentUnnamedAst]):
@@ -385,10 +384,10 @@ class AstFunctionUtils:
         is_variadic = parameters and isinstance(parameters[-1], Asts.GenericParameterVariadicAst)
 
         # Check for invalid argument names against parameter names, then remove the valid ones.
-        if invalid_argument_names := OrderedSet(argument_names) - OrderedSet(parameter_names):
+        if invalid_argument_names := FastOrderedSet(argument_names) - FastOrderedSet(parameter_names):
             raise SemanticErrors.ArgumentNameInvalidError().add(
                 owner, "owner", invalid_argument_names.pop(0), "generic argument").scopes(sm.current_scope)
-        parameter_names = OrderedSet(parameter_names) - OrderedSet(argument_names)
+        parameter_names = FastOrderedSet(parameter_names) - FastOrderedSet(argument_names)
 
         # Name all the unnamed arguments with leftover parameter names.
         for i, unnamed_argument in enumerate([a for a in arguments if isinstance(a, Asts.GenericArgumentUnnamedAst)]):

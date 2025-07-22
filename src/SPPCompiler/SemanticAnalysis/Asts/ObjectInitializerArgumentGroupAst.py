@@ -3,15 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from ordered_set import OrderedSet
-
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastOrderedSet import FastOrderedSet
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
@@ -105,7 +104,7 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
                 def_args[0], def_args[1]).scopes(sm.current_scope)
 
         # Check there are no invalidly named arguments.
-        if invalid_arguments := OrderedSet(argument_names) - OrderedSet(all_attribute_names):
+        if invalid_arguments := FastOrderedSet(argument_names) - FastOrderedSet(all_attribute_names):
             raise SemanticErrors.ArgumentNameInvalidError().add(
                 self, "attribute", invalid_arguments.pop(0), "object initialization argument").scopes(sm.current_scope)
 
