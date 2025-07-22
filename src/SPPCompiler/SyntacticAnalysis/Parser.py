@@ -349,7 +349,6 @@ class SppParser:
 
     def parse_function_parameter(self) -> Optional[Asts.FunctionParameterAst]:
         p1 = self.parse_alternate([
-            self.parse_function_parameter_self_with_arbitrary_type,
             self.parse_function_parameter_variadic,
             self.parse_function_parameter_optional,
             self.parse_function_parameter_required,
@@ -357,21 +356,22 @@ class SppParser:
         return p1
 
     def parse_function_parameter_self(self) -> Optional[Asts.FunctionParameterSelfAst]:
-        p1 = self.parse_optional(self.parse_keyword_mut)
-        p2 = self.parse_optional(self.parse_convention)
-        p3 = self.parse_once(self.parse_self_identifier)
-        if p3 is None: return None
-        return Asts.FunctionParameterSelfAst((p1 or p2 or p3).pos, p1, p2, p3)
+        p1 = self.parse_alternate([
+            self.parse_function_parameter_self_with_conv,
+            self.parse_function_parameter_self_without_conv])
+        return p1
 
-    def parse_function_parameter_self_with_arbitrary_type(self) -> Optional[Asts.FunctionParameterSelfAst]:
+    def parse_function_parameter_self_with_conv(self) -> Optional[Asts.FunctionParameterSelfAst]:
+        p1 = self.parse_optional(self.parse_convention)
+        p2 = self.parse_once(self.parse_self_identifier)
+        if p2 is None: return None
+        return Asts.FunctionParameterSelfAst((p1 or p2).pos, None, p1, p2)
+
+    def parse_function_parameter_self_without_conv(self) -> Optional[Asts.FunctionParameterSelfAst]:
         p1 = self.parse_optional(self.parse_keyword_mut)
         p2 = self.parse_once(self.parse_self_identifier)
         if p2 is None: return None
-        p3 = self.parse_once(self.parse_token_colon)
-        if p3 is None: return None
-        p4 = self.parse_once(self.parse_type)
-        if p4 is None: return None
-        return Asts.FunctionParameterSelfAst((p1 or p2).pos, p1, None, p2, p4)
+        return Asts.FunctionParameterSelfAst((p1 or p2).pos, p1, None, p2)
 
     def parse_function_parameter_required(self) -> Optional[Asts.FunctionParameterRequiredAst]:
         p1 = self.parse_once(self.parse_local_variable)
