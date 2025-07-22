@@ -4,11 +4,9 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
-from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
 @dataclass(slots=True, repr=False)
@@ -17,12 +15,10 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
     convention: Optional[Asts.ConventionAst] = field(default=None)
     name: Asts.IdentifierAst = field(default=None)
     type: Asts.TypeAst = field(default=None)
-    _arbitrary: bool = field(default=False)
     _true_self_type: Optional[Asts.TypeAst] = field(default=None)
 
     def __post_init__(self) -> None:
-        self._arbitrary = self.type is not None
-        self.type = self.type or CommonTypes.Self(self.pos)
+        self.type = CommonTypes.Self(self.pos)
         self._variant = "Self"
 
     @ast_printer_method
@@ -31,8 +27,7 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
         string = [
             self.tok_mut.print(printer) + " " if self.tok_mut else "",
             self.convention.print(printer) if self.convention else "",
-            self.name.print(printer),
-            self.type.print(printer) if self._arbitrary else ""]
+            self.name.print(printer)]
         return "".join(string)
 
     @property
@@ -51,20 +46,6 @@ class FunctionParameterSelfAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixins.V
         # Analyse the type.
         self.type.analyse_semantics(sm, **kwargs)
         self.type = sm.current_scope.get_symbol(self.type).fq_name
-
-        # Check the "type" is either "Self" or superimposes "Deref[Self]". If not, raise an error.
-        if self._arbitrary:
-
-            # The convention is taken from the arbitrary type.
-            self.convention = self.type.convention
-
-            deref_type = CommonTypes.DerefRef(self.pos, self._true_self_type)
-            deref_type.analyse_semantics(sm, **kwargs)
-
-            self_type_super_types = sm.current_scope.get_symbol(self.type).scope.direct_sup_types
-            if not any(AstTypeUtils.symbolic_eq(t, deref_type, sm.current_scope, sm.current_scope) for t in self_type_super_types):
-                raise SemanticErrors.InvalidSelfTypeError().add(
-                    self.type).scopes(sm.current_scope)
 
         # Create the variable using ASTs, because "let self: ..." will be a parse error.
         ast = Asts.LetStatementUninitializedAst(
