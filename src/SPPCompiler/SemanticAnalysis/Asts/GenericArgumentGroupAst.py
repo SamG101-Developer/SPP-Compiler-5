@@ -3,11 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import SequenceUtils
@@ -18,10 +17,6 @@ class GenericArgumentGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     arguments: list[Asts.GenericArgumentAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
-
-    def __post_init__(self) -> None:
-        self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftSquareBracket)
-        self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.arguments[-1].pos_end if self.arguments else self.pos, token_type=SppTokenType.TkRightSquareBracket)
 
     def __copy__(self) -> GenericArgumentGroupAst:
         return GenericArgumentGroupAst(arguments=self.arguments.copy())
@@ -42,10 +37,7 @@ class GenericArgumentGroupAst(Asts.Ast):
 
     def __str__(self) -> str:
         if self.arguments:
-            string = [
-                str(self.tok_l),
-                ", ".join([str(a) for a in self.arguments]),
-                str(self.tok_r)]
+            string = ["[", ", ".join([str(a) for a in self.arguments]), "]"]
             return "".join(string)
         return ""
 
@@ -75,10 +67,7 @@ class GenericArgumentGroupAst(Asts.Ast):
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         if self.arguments:
-            string = [
-                self.tok_l.print(printer),
-                SequenceUtils.print(printer, self.arguments, sep=", "),
-                self.tok_r.print(printer)]
+            string = ["[", SequenceUtils.print(printer, self.arguments, sep=", "), "]"]
             return "".join(string)
         return ""
 
