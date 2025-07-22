@@ -54,6 +54,13 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
                 final_member = self.body.members[-1] if self.body.members else self.body.tok_r
                 raise SemanticErrors.TypeMismatchError().add(self, loop_type, final_member, else_type).scopes(sm.current_scope)
 
+        # If the return type is "Void", but the condition is compiler time "true", then the loop is infinite.
+        # Todo: Change this to count "exits", as breaking with Void is possible
+        if AstTypeUtils.symbolic_eq(loop_type, CommonTypesPrecompiled.VOID, sm.current_scope, sm.current_scope):
+            if type(self.cond) is Asts.LoopConditionBooleanAst and type(self.cond.expr) is Asts.BooleanLiteralAst:
+                if self.cond.expr.to_python_literal():
+                    loop_type = CommonTypesPrecompiled.NEVER
+
         return loop_type
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
