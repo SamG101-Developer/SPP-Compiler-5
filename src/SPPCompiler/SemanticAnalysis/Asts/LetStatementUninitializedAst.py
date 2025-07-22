@@ -43,7 +43,7 @@ class LetStatementUninitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Analyse the variable's type, and recursively analyse the variable.
         self.type.analyse_semantics(sm, **kwargs)
-        self.assign_to.analyse_semantics(sm, value=mock_init, **(kwargs | {"from_non_init": True}))
+        self.assign_to.analyse_semantics(sm, value=mock_init, **(kwargs | {"from_non_init": True, "explicit_type": self.type}))
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         self.assign_to.check_memory(sm, **(kwargs | {"from_non_init": True}))
