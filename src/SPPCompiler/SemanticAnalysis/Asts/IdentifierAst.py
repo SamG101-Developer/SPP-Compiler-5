@@ -71,7 +71,7 @@ class IdentifierAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             return self
 
         else:
-            raise ValueError(f"Symbol for {self} is not a variable or namespace: {type(symbol)}.")
+            raise ValueError(f"Symbol for '{self}' is not a variable or namespace: '{type(symbol)}'.")
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Check there is a symbol with the same name in the current scope.
