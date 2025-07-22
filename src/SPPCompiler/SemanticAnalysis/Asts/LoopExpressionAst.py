@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
-from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
+from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
@@ -44,12 +44,11 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Get the loop type set by exit expressions inside the loop.
-        loop_type = self._loop_type_info.get(self._loop_level, (None, None))[1]
-        if loop_type is None:
-            return CommonTypes.Void(self.pos)
+        loop_type = self._loop_type_info.get(self._loop_level, (None, CommonTypes.Void(self.pos)))[1]
 
         # Check the else block's type if it exists and match it against the loop type.
-        if self.else_block:
+        ignore_else = kwargs.pop("ignore_else", False)
+        if self.else_block and not ignore_else:
             else_type = self.else_block.infer_type(sm, **kwargs)
             if not AstTypeUtils.symbolic_eq(loop_type, else_type, sm.current_scope, sm.current_scope):
                 final_member = self.body.members[-1] if self.body.members else self.body.tok_r
@@ -89,10 +88,10 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         sm.move_to_next_scope()
 
         # Check twice so that once-time invalidation fail on the second loop.
-        # tm = ScopeManager(sm.global_scope, sm.current_scope)
-        # for m in [tm, sm]:
-        self.cond.check_memory(sm, **kwargs)
-        self.body.check_memory(sm, **kwargs)
+        tm = ScopeManager(sm.global_scope, sm.current_scope)
+        for m in [tm, sm]:
+            self.cond.check_memory(m, **(kwargs | {"loop_double_check": m is sm}))
+            self.body.check_memory(m, **kwargs)
 
         if self.else_block:
             self.else_block.check_memory(sm, **kwargs)
