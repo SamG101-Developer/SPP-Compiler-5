@@ -90,11 +90,6 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def contains_generic(self, generic_type: Asts.TypeIdentifierAst) -> bool:
         return self.rhs.contains_generic(generic_type)
 
-    def get_symbol(self, scope: Scope) -> TypeSymbol:
-        if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst:
-            scope = scope.get_namespace_symbol(self.op.name).scope
-        return self.rhs.get_symbol(scope)
-
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         self.rhs.qualify_types(sm, **kwargs)
 

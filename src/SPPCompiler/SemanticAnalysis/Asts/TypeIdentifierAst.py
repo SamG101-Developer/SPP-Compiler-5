@@ -186,9 +186,6 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
         # Todo: change this to use a custom iterator as-well?
         return generic_type in self
 
-    def get_symbol(self, scope: Scope) -> TypeSymbol:
-        return scope.get_symbol(self.without_generics, exclusive=True)
-
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
         # todo: qualify the types on the comp args? like "cmp a: X"
         for g in self.generic_argument_group.get_type_args():

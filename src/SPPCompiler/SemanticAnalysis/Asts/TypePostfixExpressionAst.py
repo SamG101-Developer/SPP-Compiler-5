@@ -82,10 +82,6 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def contains_generic(self, generic_type: Asts.TypeIdentifierAst) -> bool:
         return self.op.name.contains_generic(generic_type)
 
-    def get_symbol(self, scope: Scope) -> TypeSymbol:
-        self_scope = scope.get_symbol(self.lhs.infer_type(ScopeManager(scope, scope))).scope
-        return self_scope.get_symbol(self.op.name)
-
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None, generic_infer_target: Optional[dict] = None, **kwargs) -> None:
         self.lhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
         lhs_type = self.lhs.infer_type(sm, **kwargs)

@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING, final
+from typing import Optional, final
 
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.FunctionCache import FunctionCache
-
-if TYPE_CHECKING:
-    from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
 class AbstractTypeTemporaryAst:
@@ -120,12 +115,6 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
         """
 
         return False
-
-    def get_symbol(self, scope: Scope) -> TypeSymbol:
-        """
-        Get the symbol for this type. This is used to get the symbol for the type in the current scope. Type unary
-        expressions use their namespace to move into the type, and postfix types use the lhs types. TODO: REMOVE
-        """
 
     @final
     def with_generics(self: Asts.TypeAst, generics_argument_group: Asts.GenericArgumentGroupAst) -> Asts.TypeAst:
