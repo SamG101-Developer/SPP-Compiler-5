@@ -564,7 +564,7 @@ class AstTypeUtils:
             return True
 
         # Handle generic comp arguments (simple value comparison).
-        if not isinstance(lhs_type, Asts.TypeAst):
+        if not lhs_type.is_type_ast:
             if type(rhs_type) is Asts.IdentifierAst:
                 generics[TypeIdentifierAst.from_identifier(rhs_type)] = lhs_type
                 return True
@@ -588,15 +588,18 @@ class AstTypeUtils:
             return False
 
         # The next step is to get the generic arguments for both types.
-        lhs_type_fq = lhs_scope.get_symbol(lhs_type).fq_name
-        rhs_type_fq = rhs_scope.get_symbol(rhs_type).fq_name
+        lhs_sym = lhs_scope.get_symbol(lhs_type)
+        rhs_sym = rhs_scope.get_symbol(rhs_type)
+
+        lhs_type_fq = lhs_sym.fq_name
+        rhs_type_fq = rhs_sym.fq_name
 
         lhs_generics = lhs_type_fq.type_parts[-1].generic_argument_group.arguments
         rhs_generics = rhs_type_fq.type_parts[-1].generic_argument_group.arguments
 
         # Special case for variadic parameter types.
-        shared_generic_parameters = lhs_scope.get_symbol(lhs_type).type.generic_parameter_group.parameters
-        if shared_generic_parameters and isinstance(shared_generic_parameters[-1], Asts.GenericParameterVariadicAst):
+        shared_generic_parameters = lhs_sym.type.generic_parameter_group
+        if shared_generic_parameters.parameters and shared_generic_parameters.get_variadic_params():
             if len(lhs_generics) != len(rhs_generics):
                 return False
 
