@@ -69,10 +69,12 @@ class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             sym.memory_info.is_borrow_ref = type(yield_type.convention) is Asts.ConventionRefAst is not None
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
-        self.iterable.check_memory(sm, **kwargs)
-        AstMemoryUtils.enforce_memory_integrity(
-            self.iterable, self.iterable, sm, check_move=True, check_partial_move=True,
-            check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, mark_moves=False, **kwargs)
+        # Todo: maybe alias the iterable to an analysed variable so this "loop_double_check" isn't needed.
+        if not kwargs.pop("loop_double_check", False):
+            self.iterable.check_memory(sm, **kwargs)
+            AstMemoryUtils.enforce_memory_integrity(
+                self.iterable, self.iterable, sm, check_move=True, check_partial_move=True,
+                check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True, mark_moves=False, **kwargs)
 
         # Re-initialize for the double-loop analysis.
         syms = [sm.current_scope.get_symbol(n) for n in self.variable.extract_names]
