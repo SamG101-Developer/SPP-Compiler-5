@@ -147,8 +147,8 @@ class ScopeManager:
             scope_generics = Asts.GenericArgumentGroupAst.from_dict(scope_generics_dict)
 
             # Create a generic version of the super scope if needed.
-            if len(scope_generics.arguments) > 0:
-                external_generics = [x for x in scope.type_symbol.scope_defined_in.all_symbols() if type(x) is not NamespaceSymbol and x.is_generic]
+            if len(scope_generics.arguments) > 0 and sup_scope not in self.generic_sup_blocks.values():
+                external_generics = scope.type_symbol.scope_defined_in.generics_extended_for(scope_generics.arguments)
                 new_sup_scope, new_cls_scope = AstTypeUtils.create_generic_sup_scope(self, sup_scope, scope, scope_generics, external_generics, **kwargs)
                 sup_symbol = new_cls_scope.type_symbol if new_cls_scope else None
             else:
@@ -172,8 +172,7 @@ class ScopeManager:
                 scope._direct_sup_scopes.append(new_cls_scope)
 
             if isinstance(sup_scope._ast, Asts.SupPrototypeAst):
-                check_conflicting_type_statements(cls_symbol, sup_scope, self)
-                check_conflicting_cmp_statements(cls_symbol, sup_scope, self)
+                check_conflicting_type_or_cmp_statements(cls_symbol, sup_scope, self)
 
         if progress:
             progress.next(str(scope.name))
@@ -187,34 +186,30 @@ class ScopeManager:
         return self._current_scope
 
 
-def check_conflicting_type_statements(cls_symbol: TypeSymbol, super_scope: Scope, sm: ScopeManager) -> None:
+def check_conflicting_type_or_cmp_statements(cls_symbol: TypeSymbol, super_scope: Scope, sm: ScopeManager) -> None:
     from SPPCompiler.SemanticAnalysis import Asts
 
     # Prevent duplicate types by checking if the types appear in any super class (allow overrides though).
-    existing_type_names = SequenceUtils.flatten([
-        [m.new_type for m in s._ast.body.members if type(m) is Asts.SupTypeStatementAst]
-        for s in cls_symbol.scope._direct_sup_scopes
+    existing_scopes = [
+        s for s in cls_symbol.scope._direct_sup_scopes
         if type(s._ast) is Asts.SupPrototypeExtensionAst or type(s._ast) is Asts.SupPrototypeFunctionsAst
-           and AstTypeUtils.relaxed_symbolic_eq(super_scope._ast.name, s._ast.name, super_scope, s._ast._scope)])
+           and AstTypeUtils.relaxed_symbolic_eq(super_scope._ast.name, s._ast.name, super_scope, s._ast._scope)]
 
+    existing_types = SequenceUtils.flatten([[m.new_type for m in s._ast.body.members if type(m) is Asts.SupTypeStatementAst] for s in existing_scopes])
+    existing_type_names = [t.value for t in existing_types]
     if duplicates := SequenceUtils.duplicates(existing_type_names):
+        d1 = existing_types[i1 := existing_type_names.index(duplicates[0])]
+        d2 = existing_types[i2 := existing_type_names.index(duplicates[1], i1 + 1)]
         raise SemanticErrors.IdentifierDuplicationError().add(
-            duplicates[0], duplicates[1], "associated type").scopes(sm.current_scope)
+            d1, d2, "associated type").scopes(sm.current_scope)
 
-
-def check_conflicting_cmp_statements(cls_symbol: TypeSymbol, super_scope: Scope, sm: ScopeManager) -> None:
-    from SPPCompiler.SemanticAnalysis import Asts
-
-    # Prevent duplicate cmp declarations by checking if the cmp statements appear in any super class.
-    existing_cmp_names = SequenceUtils.flatten([
-        [m.name for m in s._ast.body.members if type(m) is Asts.SupCmpStatementAst and m.type.type_parts[-1].value[0] != "$"]
-        for s in cls_symbol.scope._direct_sup_scopes
-        if type(s._ast) is Asts.SupPrototypeExtensionAst or type(s._ast) is Asts.SupPrototypeFunctionsAst
-           and AstTypeUtils.relaxed_symbolic_eq(super_scope._ast.name, s._ast.name, super_scope, s._ast._scope)])
-
+    existing_cmps = SequenceUtils.flatten([[m.name for m in s._ast.body.members if type(m) is Asts.SupCmpStatementAst and m.type.type_parts[-1].value[0] != "$"] for s in existing_scopes])
+    existing_cmp_names = [c.value for c in existing_cmps]
     if duplicates := SequenceUtils.duplicates(existing_cmp_names):
+        d1 = existing_cmps[i1 := existing_cmp_names.index(duplicates[0])]
+        d2 = existing_cmps[i2 := existing_cmp_names.index(duplicates[1], i1 + 1)]
         raise SemanticErrors.IdentifierDuplicationError().add(
-            duplicates[0], duplicates[1], "associated const").scopes(sm.current_scope)
+            d1, d2, "associated const").scopes(sm.current_scope)
 
 
 __all__ = [
