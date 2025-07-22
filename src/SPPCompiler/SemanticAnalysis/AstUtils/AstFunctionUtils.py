@@ -58,7 +58,7 @@ class AstFunctionUtils:
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
 
         # Static access into a type: "Type::method()" or "ns::Type::method()".
-        elif type(lhs) is Asts.PostfixExpressionAst and isinstance(lhs.lhs, Asts.TypeAst) and lhs.op.is_static_access():
+        elif type(lhs) is Asts.PostfixExpressionAst and lhs.lhs.is_type_ast and lhs.op.is_static_access():
             function_owner_type = lhs.lhs
             function_name = lhs.op.field
             function_owner_scope = sm.current_scope.get_symbol(function_owner_type).scope
@@ -164,7 +164,7 @@ class AstFunctionUtils:
             for ancestor_scope in target_scope.ancestors:
 
                 # Find all the scopes at the module level superimposing a function type over the function.
-                for sup_scope in [c for c in ancestor_scope.children if isinstance(c._ast, Asts.SupPrototypeExtensionAst) and c._ast.name == target_function_name]:
+                for sup_scope in [c for c in ancestor_scope.children if type(c._ast) is Asts.SupPrototypeExtensionAst and c._ast.name == target_function_name]:
                     generics = Asts.GenericArgumentGroupAst()
                     if not for_override:
                         inner_function_scope = sup_scope.children[0]
@@ -405,21 +405,27 @@ class AstFunctionUtils:
 
             # The variadic parameter requires a tuple of the remaining arguments.
             if len(parameter_names) == 0 and is_variadic:
-                if isinstance(parameter, Asts.GenericTypeParameterVariadicAst):
+
+                # Map args "func[U32, U32, U32]" for "func[..Ts]" to "func[Ts=(U32, U32, U32)]".
+                if type(parameter) is Asts.GenericTypeParameterVariadicAst:
                     named_argument.value = CommonTypes.Tup(pos=unnamed_argument.pos, inner_types=[a.value for a in arguments[i:]])
-                elif isinstance(parameter, Asts.GenericCompParameterVariadicAst):
+
+                # Map args "func[1_32, 1_u32, 1_u32]" for "func[cmp ..ts: U32]" to "func[ts=(1_u32, 1_u32, 1_u32)]".
+                elif type(parameter) is Asts.GenericCompParameterVariadicAst:
                     named_argument.value = Asts.TupleLiteralAst(pos=unnamed_argument.pos, elems=[a.value for a in arguments[i:]])
 
-                if isinstance(parameter, Asts.GenericTypeParameterVariadicAst) and not all(isinstance(a, Asts.GenericTypeArgumentAst) for a in arguments[i:]):
+                # Check the args for "func[..Ts]" are all type args, not any comp args.
+                if type(parameter) is Asts.GenericTypeParameterVariadicAst and not all(isinstance(a, Asts.GenericTypeArgumentAst) for a in arguments[i:]):
                     raise SemanticErrors.GenericArgumentIncorrectVariationError().add(
                         parameter, [a for a in arguments[i:] if not isinstance(a, Asts.GenericTypeArgumentAst)][0], owner).scopes(sm.current_scope)
-                elif isinstance(parameter, Asts.GenericCompParameterVariadicAst) and not all(isinstance(a, Asts.GenericCompArgumentAst) for a in arguments[i:]):
+
+                # Check the args for "func[cmp ..ts: U32]" are all comp args, not any type args.
+                elif type(parameter) is Asts.GenericCompParameterVariadicAst and not all(isinstance(a, Asts.GenericCompArgumentAst) for a in arguments[i:]):
                     raise SemanticErrors.GenericArgumentIncorrectVariationError().add(
                         parameter, [a for a in arguments[i:] if not isinstance(a, Asts.GenericCompArgumentAst)][0], owner).scopes(sm.current_scope)
 
                 arguments[i] = named_argument
                 arguments[:] = arguments[:i + 1]
-
                 break
 
             # Set the value of the named argument to the unnamed argument's value.
@@ -427,10 +433,12 @@ class AstFunctionUtils:
                 named_argument.value = unnamed_argument.value
                 arguments[i] = named_argument
 
+                # Check the arg for "func[T]" is a type arg, not a comp arg.
                 if isinstance(parameter, Asts.GenericTypeParameterAst) and not isinstance(unnamed_argument, Asts.GenericTypeArgumentAst):
                     raise SemanticErrors.GenericArgumentIncorrectVariationError().add(
                         parameter, unnamed_argument, owner).scopes(sm.current_scope)
 
+                # Check the arg for "func[cmp t: U32]" is a comp arg, not a type arg.
                 elif isinstance(parameter, Asts.GenericCompParameterAst) and not isinstance(unnamed_argument, Asts.GenericCompArgumentAst):
                     raise SemanticErrors.GenericArgumentIncorrectVariationError().add(
                         parameter, unnamed_argument, owner).scopes(sm.current_scope)
@@ -547,7 +555,7 @@ class AstFunctionUtils:
             for optional_generic_parameter in optional_generic_parameters:
                 if optional_generic_parameter.name not in inferred_generic_arguments:
                     default = optional_generic_parameter.default
-                    if isinstance(owner, Asts.TypeAst) and tm.current_scope.get_symbol(default):
+                    if owner.is_type_ast and tm.current_scope.get_symbol(default):
                         default = tm.current_scope.get_symbol(default).fq_name
                     inferred_generic_arguments[optional_generic_parameter.name].append(default)
 
@@ -588,18 +596,20 @@ class AstFunctionUtils:
             if generic_parameter_name in [g.name for g in explicit_generic_arguments]:
                 continue
 
-            if isinstance(generic_parameter_value, Asts.TypeAst):
+            if generic_parameter_value.is_type_ast:
                 args_excluding_this_one = formatted_generic_arguments.copy()
                 del args_excluding_this_one[generic_parameter_name]
                 formatted_generic_arguments[generic_parameter_name] = generic_parameter_value.substituted_generics(Asts.GenericArgumentGroupAst.from_dict(args_excluding_this_one).arguments)
 
         # Create the inferred generic arguments, by passing the generic arguments map into the parser, to produce a
-        # GenericXXXArgumentASTs. Todo: pos_adjust?
+        # GenericXXXArgumentASTs.
+        # Todo: Add a "pos_adjust"?
+        # Todo: Use "Asts.GenericArgumentGroupAst.from_dict" constructor (remove MAPPING)?
         final_args = []
         for k, v in formatted_generic_arguments.items():
             if k not in generic_parameter_names: continue
-            ctor: type = GEN_MAPPING[type([p for p in generic_parameters if p.name == k][0])]
-            value = Asts.IdentifierAst.from_type(v) if isinstance(v, Asts.TypeAst) and ctor is Asts.GenericCompArgumentNamedAst else v
+            ctor: type = GEN_MAPPING[type([p for p in generic_parameters if p.name == k][0])]  # remove this "==": SLOW
+            value = Asts.IdentifierAst.from_type(v) if v.is_type_ast and ctor is Asts.GenericCompArgumentNamedAst else v
             final_args.append(ctor(pos=owner.pos if owner else 0, name=k, value=value))
 
         # Re-order the arguments to match the parameter order.
@@ -609,16 +619,17 @@ class AstFunctionUtils:
         # setup correctly yet, and will be analysed anyway later).
         if kwargs["stage"] > 5:
             for comp_arg, comp_param in zip(final_args, generic_parameters):
-                if isinstance(comp_arg, Asts.GenericCompArgumentNamedAst):
+                if type(comp_arg) is Asts.GenericCompArgumentNamedAst:
                     a_type = comp_arg.value.infer_type(sm, **kwargs)
                     p_type = comp_param.type.substituted_generics(final_args)  # todo: analyse the p_type here?
 
                     # For a variadic comp argument, check every element of the args tuple.
-                    if isinstance(comp_param, Asts.GenericCompParameterVariadicAst):
+                    if type(comp_param) is Asts.GenericCompParameterVariadicAst:
                         for a_type_inner in a_type.type_parts[0].generic_argument_group.arguments:
                             if not AstTypeUtils.symbolic_eq(p_type, a_type_inner.value, owner_scope, sm.current_scope):
                                 raise SemanticErrors.TypeMismatchError().add(
                                     comp_param, p_type, comp_arg, a_type_inner.value).scopes(sm.current_scope)
+                        break
 
                     # Otherwise, just check the argument type against the parameter type.
                     elif not AstTypeUtils.symbolic_eq(p_type, a_type, owner_scope, sm.current_scope):

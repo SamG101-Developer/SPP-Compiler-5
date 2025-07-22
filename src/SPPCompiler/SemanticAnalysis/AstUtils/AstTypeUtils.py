@@ -475,7 +475,7 @@ class AstTypeUtils:
         """
 
         # Handle generic comp arguments (simple value comparison).
-        if not isinstance(lhs_type, Asts.TypeAst):
+        if not lhs_type.is_type_ast:
             return lhs_type == rhs_type
 
         # Handle the "!" never type.
