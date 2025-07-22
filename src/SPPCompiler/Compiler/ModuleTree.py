@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class Module:
     """
     A Module represents a file of code, and associated information for convenience, such as the token stream, which is

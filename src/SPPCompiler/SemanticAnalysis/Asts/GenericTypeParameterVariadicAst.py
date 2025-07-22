@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.Symbols import TypeSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericTypeParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
     tok_variadic: Asts.TokenAst = field(default=None)
     name: Asts.TypeAst = field(default=None)

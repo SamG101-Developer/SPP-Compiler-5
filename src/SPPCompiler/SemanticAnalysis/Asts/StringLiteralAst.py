@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class StringLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     value: Asts.TokenAst = field(default=None)
 

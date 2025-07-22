@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericCompParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
     kw_cmp: Asts.TokenAst = field(default=None)
     tok_variadic: Asts.TokenAst = field(default=None)

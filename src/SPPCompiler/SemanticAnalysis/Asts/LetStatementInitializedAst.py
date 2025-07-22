@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 # from llvmlite import ir as llvm
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LetStatementInitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_let: Asts.TokenAst = field(default=None)
     assign_to: Asts.LocalVariableAst = field(default=None)

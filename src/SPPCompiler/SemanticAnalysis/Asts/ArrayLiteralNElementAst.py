@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The ArrayLiteralNElementAst class is an AST node that represents an array literal with n elements. The type of the

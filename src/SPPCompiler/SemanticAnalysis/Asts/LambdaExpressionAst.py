@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The LambdaExpressionAst is an anonymous function that can be used as a value. It is a first-class function in the

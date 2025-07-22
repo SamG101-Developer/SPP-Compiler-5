@@ -23,7 +23,7 @@ from SPPCompiler.Utils.Sequence import SequenceUtils
 #  test.
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The CaseExpressionAst represents a conditional jumping structure in S++. Case expressions are highly flexible, and

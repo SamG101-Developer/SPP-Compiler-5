@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTy
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenWithExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_gen: Asts.TokenAst = field(default=None)
     kw_with: Optional[Asts.TokenAst] = field(default=None)

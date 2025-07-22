@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     class_type: Asts.TypeAst = field(default=None)
     tok_l: Asts.TokenAst = field(default=None)
@@ -50,7 +50,7 @@ class LocalVariableDestructureObjectAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
 
         # Analyse the class and determine the attributes of the class.
         self.class_type.analyse_semantics(sm, skip_generic_check=True, **kwargs)
-        value_type = value.infer_type(sm, **kwargs).without_convention
+        value_type = value.infer_type(sm, **kwargs)  # .without_convention
         if not AstTypeUtils.symbolic_eq(value_type, self.class_type, sm.current_scope, sm.current_scope, check_variant=self._from_pattern):
             raise SemanticErrors.TypeMismatchError().add(value, value_type, self.class_type, self.class_type).scopes(sm.current_scope)
         attributes = sm.current_scope.get_symbol(self.class_type).type.body.members

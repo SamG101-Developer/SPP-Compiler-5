@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     value: str = field(default="")
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default=None)

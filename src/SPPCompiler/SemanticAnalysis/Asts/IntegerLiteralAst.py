@@ -37,7 +37,7 @@ SIZE_MAPPING = {
     "uz": _unsigned_integer_limits(sys.maxsize.bit_length() + 1)}
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
     value: Asts.TokenAst = field(default=None)

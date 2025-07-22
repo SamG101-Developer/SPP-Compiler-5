@@ -13,7 +13,7 @@ from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericArgumentGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     arguments: list[Asts.GenericArgumentAst] = field(default_factory=list)

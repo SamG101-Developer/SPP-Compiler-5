@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_l: Asts.TokenAst = field(default=None)
     members: list[Asts.StatementAst] = field(default_factory=list)

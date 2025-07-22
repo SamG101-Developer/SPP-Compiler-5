@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class IterExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     Represents a branch in an iteration expression, which will contain a pattern and an inner scope.

@@ -15,12 +15,12 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class BaseSymbol:
     ...
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class NamespaceSymbol(BaseSymbol):
     name: Asts.IdentifierAst
     scope: Optional[Scope] = field(default=None)
@@ -45,7 +45,7 @@ class NamespaceSymbol(BaseSymbol):
         return NamespaceSymbol(name=fast_deepcopy(self.name), scope=self.scope)
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class VariableSymbol(BaseSymbol):
     name: Asts.IdentifierAst
     type: Asts.TypeAst
@@ -150,7 +150,7 @@ class TypeSymbol(BaseSymbol):
         return fq_name.with_convention(self.convention)
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class AliasSymbol(TypeSymbol):
     old_sym: TypeSymbol = field(default=None)
 

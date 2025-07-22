@@ -349,7 +349,7 @@ class SppTokenType(TokenType):
         return SppTokenType.TkWhitespace
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class RawToken:
     """
     A RawToken allows for pairing metadata will a RawTokenType. For example, when "a" is lexed, the RawToken will

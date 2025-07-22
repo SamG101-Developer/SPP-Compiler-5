@@ -5,10 +5,9 @@ from dataclasses import dataclass, field
 from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
-from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypePostfixOperatorNestedTypeAst(Asts.Ast):
     tok_sep: Asts.TokenAst = field(default=None)
     name: Asts.TypeIdentifierAst = field(default=None)

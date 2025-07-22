@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ParenthesizedExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_l: Asts.TokenAst = field(default=None)
     expr: Asts.ExpressionAst = field(default=None)

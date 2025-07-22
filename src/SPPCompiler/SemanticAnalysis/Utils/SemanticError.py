@@ -21,7 +21,7 @@ class SemanticError(BaseException):
         MINIMAL = 1
         NONE = 2
 
-    @dataclass(slots=True)
+    @dataclass(slots=True, repr=False)
     class ErrorInfo:
         ast: Asts.Ast
         tag: str

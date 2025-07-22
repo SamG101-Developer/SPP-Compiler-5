@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class IterPatternExceptionAst(Asts.Ast):
     """
     Represents an iteration pattern that matches an exception, represented by "!<identifier>". This is for when

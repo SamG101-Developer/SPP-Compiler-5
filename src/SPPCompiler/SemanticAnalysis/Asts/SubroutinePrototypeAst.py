@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompile
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class SubroutinePrototypeAst(Asts.FunctionPrototypeAst):
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Perform default function prototype semantic analysis.

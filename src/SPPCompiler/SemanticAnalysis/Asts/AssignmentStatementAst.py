@@ -20,7 +20,7 @@ from SPPCompiler.Utils.Sequence import SequenceUtils
 #  "assignment" list. Test multi-assignment or ban it if its a problem. would like to keep it though.
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The AssignmentStatementAst class is an AST node that represents an assignment statement. This AST can be used to

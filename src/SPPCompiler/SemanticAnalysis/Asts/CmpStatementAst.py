@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     """
     Unlike the UseStatementAst, this AST can not be used in local scopes; only at the module or superimposition level.

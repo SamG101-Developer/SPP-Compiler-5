@@ -4,12 +4,12 @@ from typing import Optional
 from llvmlite import ir
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class LlvmTypeSymbolInfo:
     llvm_type: ir.IdentifiedStructType
     llvm_module: ir.Module
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, repr=False, kw_only=True)
 class LlvmVariableSymbolInfo:
     ptr: Optional[ir.AllocaInstr]

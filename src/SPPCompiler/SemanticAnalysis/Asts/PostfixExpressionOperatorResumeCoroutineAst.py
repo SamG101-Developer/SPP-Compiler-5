@@ -12,7 +12,7 @@ from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PostfixExpressionOperatorResumeCoroutineAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The PostfixExpressionOperatorResumeCoroutineAst class represents the resume coroutine operator over an expression.

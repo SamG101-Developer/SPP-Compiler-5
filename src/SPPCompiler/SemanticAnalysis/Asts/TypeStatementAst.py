@@ -19,7 +19,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingConte
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.TypeInferrable):
     annotations: list[Asts.AnnotationAst] = field(default_factory=list)
     kw_type: Asts.TokenAst = field(default=None)

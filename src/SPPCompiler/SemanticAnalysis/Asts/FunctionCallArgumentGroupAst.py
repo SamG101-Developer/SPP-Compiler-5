@@ -17,7 +17,7 @@ from SPPCompiler.SyntacticAnalysis.Parser import SppParser
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class FunctionCallArgumentGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     arguments: list[Asts.FunctionCallArgumentAst] = field(default_factory=list)

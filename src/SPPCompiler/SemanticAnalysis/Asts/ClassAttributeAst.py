@@ -16,7 +16,7 @@ from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     annotations: list[Asts.AnnotationAst] = field(default_factory=list)
     name: Asts.IdentifierAst = field(default=None)

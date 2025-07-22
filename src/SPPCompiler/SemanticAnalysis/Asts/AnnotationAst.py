@@ -42,7 +42,7 @@ class _Annotations(Enum):
     Inline = "inline"  # test
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class AnnotationAst(Asts.Ast):
     """
     The AnnotationAst class is used to represent annotations applied to ASTs. Annotations alter the behaviour of an AST,

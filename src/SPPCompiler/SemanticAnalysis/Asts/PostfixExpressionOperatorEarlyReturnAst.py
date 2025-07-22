@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompile
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PostfixExpressionOperatorEarlyReturnAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_qst: Asts.TokenAst = field(default=None)
 

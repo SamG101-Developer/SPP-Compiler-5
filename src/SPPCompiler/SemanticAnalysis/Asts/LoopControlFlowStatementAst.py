@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LoopControlFlowStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_seq_exit: list[Asts.TokenAst] = field(default_factory=list)
     skip_or_expr: Optional[Asts.ExpressionAst] = field(default=None)

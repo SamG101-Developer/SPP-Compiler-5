@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LocalVariableDestructureTupleAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_l: Asts.TokenAst = field(default=None)
     elems: list[Asts.LocalVariableNestedForDestructureTupleAst] = field(default_factory=list)

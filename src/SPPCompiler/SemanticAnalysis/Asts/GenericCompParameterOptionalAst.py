@@ -13,7 +13,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
     kw_cmp: Asts.TokenAst = field(default=None)
     name: Asts.TypeAst = field(default=None)

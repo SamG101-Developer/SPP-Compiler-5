@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class CoroutinePrototypeAst(Asts.FunctionPrototypeAst):
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # Perform default function prototype semantic analysis.

@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class IterPatternExhaustedAst(Asts.Ast):
     """
     Represents an iteration pattern that matches an exhausted coroutine, represented by "!!". This is for when any

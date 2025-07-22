@@ -13,7 +13,7 @@ from SPPCompiler.Utils.Sequence import SequenceUtils
 # from llvmlite import ir as llvm
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class FunctionImplementationAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     members: list[Asts.FunctionMemberAst] = field(default_factory=list)

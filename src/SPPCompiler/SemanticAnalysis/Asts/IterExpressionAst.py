@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompile
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class IterExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The IterExpressionAst represents is used to unpack a yielded value from a generator, allowing the inspection of: a

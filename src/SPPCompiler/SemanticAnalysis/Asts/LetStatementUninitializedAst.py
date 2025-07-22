@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LetStatementUninitializedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_let: Asts.TokenAst = field(default=None)
     assign_to: Asts.LocalVariableAst = field(default=None)

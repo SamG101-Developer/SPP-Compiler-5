@@ -9,7 +9,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PatternVariantDestructureTupleAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     tok_l: Asts.TokenAst = field(default=None)
     elems: list[Asts.PatternVariantNestedForDestructureTupleAst] = field(default_factory=list)

@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class IterPatternVariableAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     """
     Represents an iteration pattern that matches a yielded value, represented by "<identifier>". This is for when any

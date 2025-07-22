@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingContext
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ModulePrototypeAst(Asts.Ast):
     body: Asts.ModuleImplementationAst = field(default_factory=Asts.ModuleImplementationAst)
     _name: str = field(init=False, default="")

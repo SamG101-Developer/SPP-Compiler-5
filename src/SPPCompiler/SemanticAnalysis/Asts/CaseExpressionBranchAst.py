@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     A CaseExpressionBranchAst represents a branch of a case expression. It contains an optional operator (the "else"

@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class UnaryExpressionOperatorDerefAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
     The dereference operator can be used in a very specific context - to when the RHS is a borrow type that superimposes

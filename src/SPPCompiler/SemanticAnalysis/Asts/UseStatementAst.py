@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import PreProcessingConte
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class UseStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.TypeInferrable):
     annotations: list[Asts.AnnotationAst] = field(default_factory=list)
     kw_use: Asts.TokenAst = field(default=None)

@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 # todo: check memory w lhs here
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PostfixExpressionOperatorNotKeywordAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_dot: Asts.TokenAst = field(default=None)
     tok_not: Asts.TokenAst = field(default=None)

@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class IterPatternNoValueAst(Asts.Ast):
     """
     Represents an iteration pattern that matches no value, typically represented by an underscore token. This is for

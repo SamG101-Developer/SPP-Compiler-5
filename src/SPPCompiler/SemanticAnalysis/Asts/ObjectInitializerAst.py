@@ -11,7 +11,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 # Todo: prevent constructing variant types?
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     class_type: Asts.TypeAst = field(default=None)
     object_argument_group: Asts.ObjectInitializerArgumentGroupAst = field(default=None)
@@ -20,7 +20,6 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.object_argument_group = self.object_argument_group or Asts.ObjectInitializerArgumentGroupAst(pos=self.pos)
 
     def __eq__(self, other: ObjectInitializerAst) -> bool:
-        # Check there are the same attribute keys on both objects, then compare the expressions on them (might be in a different order). Todo
         return False
 
     def __hash__(self) -> int:

@@ -16,7 +16,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 # from llvmlite import ir as llvm
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class RetStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_ret: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst.raw(token_type=SppTokenType.KwRet))
     expr: Optional[Asts.ExpressionAst] = field(default=None)

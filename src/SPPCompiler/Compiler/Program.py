@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class Program(CompilerStages):
     """
     The Program class holds a list of modules and performs each stage of the compiler on them. It is interacted with

@@ -16,7 +16,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 #  - [3] Maintain the borrow from the iterator - x in y.iter_mut() => cant borrow from y inside the loop
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LoopConditionIterableAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     variable: Asts.LocalVariableAst = field(default=None)
     in_keyword: Asts.TokenAst = field(default=None)

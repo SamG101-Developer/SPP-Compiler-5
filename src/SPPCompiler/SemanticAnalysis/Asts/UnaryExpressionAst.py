@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class UnaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     op: Asts.UnaryExpressionOperatorAst = field(default=None)
     rhs: Asts.ExpressionAst = field(default=None)

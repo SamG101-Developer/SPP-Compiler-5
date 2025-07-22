@@ -10,7 +10,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LambdaExpressionParameterAndCaptureGroupAst(Asts.Ast):
     """
     The LambdaExpressionParameterAndCaptureGroupAst holds the captured variables and parameters for a lambda expression.

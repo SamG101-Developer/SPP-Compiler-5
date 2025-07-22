@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypeUnaryOperatorNamespaceAst(Asts.Ast):
     name: Asts.IdentifierAst = field(default=None)
     tok_dbl_colon: Asts.TokenAst = field(default=None)

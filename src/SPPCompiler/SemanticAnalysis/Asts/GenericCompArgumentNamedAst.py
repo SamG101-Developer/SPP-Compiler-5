@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     name: Asts.TypeAst = field(default=None)
     tok_assign: Asts.TokenAst = field(default=None)

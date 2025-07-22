@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypeParenthesizedAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
     tok_l: Asts.TokenAst = field(default=None)
     type_expr: Asts.TypeAst = field(default=None)

@@ -17,7 +17,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 # Todo: test "cor || { ... }"
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_gen: Asts.TokenAst = field(default=None)
     convention: Optional[Asts.ConventionAst] = field(default=None)

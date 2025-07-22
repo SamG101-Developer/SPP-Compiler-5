@@ -12,7 +12,7 @@ from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class GenericParameterGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     parameters: list[Asts.GenericParameterAst] = field(default_factory=list)

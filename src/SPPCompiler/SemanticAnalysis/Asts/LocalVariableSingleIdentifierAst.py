@@ -14,7 +14,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 # Todo: check the ast_initialization (when there's aliases) - what do we want to show exactly?
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LocalVariableSingleIdentifierAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
     tok_mut: Optional[Asts.TokenAst] = field(default=None)
     name: Asts.IdentifierAst = field(default=None)

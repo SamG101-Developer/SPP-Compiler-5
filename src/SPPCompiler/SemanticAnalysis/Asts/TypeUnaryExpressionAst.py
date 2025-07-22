@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     op: Asts.TypeUnaryOperatorAst = field(default=None)
     rhs: Asts.TypeAst = field(default=None)

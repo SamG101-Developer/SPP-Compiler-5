@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LambdaExpressionCaptureItemAst(Asts.Ast, Asts.Mixins.OrderableAst):
     """
     The LambdaExpressionCaptureItemAst class represents a capture item in a lambda expression. A convention can be

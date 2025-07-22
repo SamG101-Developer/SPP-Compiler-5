@@ -15,7 +15,7 @@ from SPPCompiler.Utils.Sequence import SequenceUtils
 # from llvmlite import ir as llvm
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class FunctionParameterGroupAst(Asts.Ast):
     tok_l: Asts.TokenAst = field(default=None)
     params: list[Asts.FunctionParameterAst] = field(default_factory=list)

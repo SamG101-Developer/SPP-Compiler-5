@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     kw_loop: Asts.TokenAst = field(default=None)
     cond: Asts.LoopConditionAst = field(default=None)

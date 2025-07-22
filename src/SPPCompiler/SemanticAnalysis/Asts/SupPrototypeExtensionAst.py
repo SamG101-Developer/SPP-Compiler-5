@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 #  - Only allow 1 Try superimposition?
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class SupPrototypeExtensionAst(Asts.Ast):
     tok_sup: Asts.TokenAst = field(default=None)
     generic_parameter_group: Asts.GenericParameterGroupAst = field(default=None)
@@ -59,6 +59,18 @@ class SupPrototypeExtensionAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.super_class.pos_end
 
+    def _check_cyclic_extension(self, sup_symbol: TypeSymbol, check_scope: Scope) -> None:
+        # Prevent double inheritance by checking if the scopes are already registered the other way around.
+        existing_sup_scope = [
+            s for s in sup_symbol.scope.sup_scopes
+            if (type(s._ast) is SupPrototypeExtensionAst)
+                and AstTypeUtils.relaxed_symbolic_eq(self.super_class, s._ast.name, check_scope, s)
+                and AstTypeUtils.symbolic_eq(s._ast.super_class, self.name, s, check_scope)]
+
+        if existing_sup_scope:
+            raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
+                existing_sup_scope[0]._ast.super_class, self.name).scopes(check_scope)
+
     def _check_double_extension(self, cls_symbol: TypeSymbol, sup_symbol: TypeSymbol, check_scope: Scope) -> None:
         # Prevent cyclic inheritance by checking if the sup scope is already in the list.
         existing_sup_scope = [
@@ -70,18 +82,6 @@ class SupPrototypeExtensionAst(Asts.Ast):
         if existing_sup_scope and cls_symbol.name.value[0] != "$":
             raise SemanticErrors.SuperimpositionExtensionDuplicateSuperclassError().add(
                 existing_sup_scope[0]._ast.super_class, self.super_class).scopes(check_scope)
-
-    def _check_cyclic_extension(self, sup_symbol: TypeSymbol, check_scope: Scope) -> None:
-        # Prevent double inheritance by checking if the scopes are already registered the other way around.
-        existing_sup_scope = [
-            s for s in sup_symbol.scope.sup_scopes
-            if (type(s._ast) is SupPrototypeExtensionAst)
-                and AstTypeUtils.relaxed_symbolic_eq(self.name, s._ast.name, check_scope, s)
-                and AstTypeUtils.symbolic_eq(s._ast.super_class, self.name, s, check_scope)]
-
-        if existing_sup_scope:
-            raise SemanticErrors.SuperimpositionExtensionCyclicExtensionError().add(
-                existing_sup_scope[0]._ast.super_class, self.name).scopes(check_scope)
 
     def _check_self_extension(self, cls_symbol: TypeSymbol, sup_symbol: TypeSymbol, check_scope: Scope) -> None:
         # Prevent self-inheritance by checking if the superimposition type is the same as the super type.

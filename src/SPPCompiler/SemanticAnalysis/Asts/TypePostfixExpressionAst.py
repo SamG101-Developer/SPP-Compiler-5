@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     lhs: Asts.TypeAst = field(default=None)
     op: Asts.TypePostfixOperatorAst = field(default=None)

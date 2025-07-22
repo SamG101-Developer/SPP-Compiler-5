@@ -12,7 +12,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_access: Asts.TokenAst = field(default=None)
     field: Asts.IdentifierAst | Asts.TokenAst = field(default=None)

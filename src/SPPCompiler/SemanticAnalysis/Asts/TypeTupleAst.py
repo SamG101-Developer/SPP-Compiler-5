@@ -8,7 +8,7 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, As
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypeTupleAst(Asts.Ast, Asts.Mixins.AbstractTypeTemporaryAst):
     tok_l: Asts.TokenAst = field(default=None)
     type_elems: list[Asts.TypeAst] = field(default_factory=list)

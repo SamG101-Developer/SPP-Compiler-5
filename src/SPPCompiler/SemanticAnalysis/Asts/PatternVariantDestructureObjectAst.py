@@ -13,7 +13,7 @@ from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVariantAst):
     class_type: Asts.TypeAst = field(default=None)
     tok_l: Asts.TokenAst = field(default=None)

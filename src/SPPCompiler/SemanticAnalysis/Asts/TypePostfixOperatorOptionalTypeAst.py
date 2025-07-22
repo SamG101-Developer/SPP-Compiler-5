@@ -6,7 +6,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=False)
 class TypePostfixOperatorOptionalTypeAst(Asts.Ast):
     tok_qst: Asts.TokenAst = field(default_factory=lambda: Asts.TokenAst())
 
