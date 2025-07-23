@@ -1,6 +1,6 @@
 # Project Structure
 
-S++ follows a strict project structure, that teh compiler verifies at compile time. There are a number of key files and
+S++ follows a strict project structure, that the compiler verifies at compile time. There are a number of key files and
 folders that must be present in the project root, and the compiler will throw an error if they are not found. The
 project structure is as follows:
 

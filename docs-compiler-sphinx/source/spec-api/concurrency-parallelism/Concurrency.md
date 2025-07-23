@@ -12,11 +12,11 @@ An important distinction is that coroutines are baked into control flow, rather 
 whilst the multiplicity, optionality and fallibility of a coroutine is depicted in the type system, the actual
 destructuring of a yielded value requires a specific block, designated for coroutines. This is because of second class
 borrows; for example, `Opt[&T]` cannot exist as a type, because this requires `Some[&T]`, which requires a borrow type
-attribute, invalidating the second class borrow rules. The `iter` block is explored in the [**section**]().
+attribute, invalidating the second class borrow rules. The `iter` block is explored in this [**section**]().
 
 ## Coroutine Return Types
 
-There are three possible coroutine return types in S++:
+There are four possible coroutine return types in S++:
 
 - `Gen[Yield, Send=Void]`
 - `GenOnce[Yield, Send=Void]`
@@ -91,57 +91,39 @@ cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
 }
 ```
 
-[//]: # (### Invalidating Borrows)
+### Invalidating Borrows [SECTION SUBJECT TO CHANGE]
 
-[//]: # ()
-[//]: # (Yielded borrowed belong to the generator they are yielded from. That being said, the law of exclusivity is applied to)
+Yielded borrowed belong to the generator they are yielded from. That being said, the law of exclusivity is applied to
+them, to prevent accessing multiple mutable parts of a generator, which could be overlapping. So a mutably borrowed
+yield will invalidate the previous mutably borrowed yield.
 
-[//]: # (them, to prevent accessing multiple mutable parts of a generator, which could be overlapping. So a mutably borrowed)
+Further to this, a borrow could be yielded, then its corresponding owned object consumed in the next resuming of the
+caller. Therefore, each yield must be isolated, and invalidate the previous yield.
 
-[//]: # (yield will invalidate the previous mutably borrowed yield.)
+```S++
 
-[//]: # ()
-[//]: # (Further to this, a borrow could be yielded, then its corresponding owned object consumed in the next resuming of the)
+cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
+    gen &a
 
-[//]: # (caller. Therefore, each yield must be isolated, and invalidate the previous yield.)
+    let s = a + b
+    gen &s
 
-[//]: # ()
-[//]: # (```S++)
+}
 
-[//]: # (cor coroutine&#40;a: BigInt, b: BigInt, c: BigInt&#41; -> Gen[Yield=&BigInt] {)
 
-[//]: # (    gen &a)
+fun main() -> Void {
+    let generator = coroutine(1, 2, 3)
+    let a = generator.res()
+    let b = generator.res()
+    let c = generator.res()
+}
 
-[//]: # (    )
-[//]: # (    let s = a + b)
+```
 
-[//]: # (    gen &s)
-
-[//]: # (})
-
-[//]: # ()
-[//]: # (fun main&#40;&#41; -> Void {)
-
-[//]: # (    let generator = coroutine&#40;1, 2, 3&#41;)
-
-[//]: # (    let a = generator.res&#40;&#41;)
-
-[//]: # (    let b = generator.res&#40;&#41;)
-
-[//]: # (    let c = generator.res&#40;&#41;)
-
-[//]: # (})
-
-[//]: # (```)
-
-[//]: # ()
-[//]: # (In this example it can be seen that `a` is consumed in the coroutine. As there is no guarantee whether a variable is)
-
-[//]: # (consumed or not in the coroutine after being yielded as a borrow, it must be assumed that a worst-cast scenario occurs,)
-
-[//]: # (and that every variable yielded as a borrow might subsequently be consumed. As such, every time another borrowed value)
-
-[//]: # (is yielded, the previous borrow will be invalidated in the caller.)
+In this example it can be seen that `a` is consumed in the coroutine. As there is no guarantee whether a variable is
+consumed or not in the coroutine after being yielded as a borrow, it must be assumed that a worst-cast scenario occurs,
+and that every variable yielded as a borrow might subsequently be consumed. As such, every time another borrowed value
+is yielded, the previous borrow will be invalidated in the caller.
 
 ## Passing Data Into a Coroutine
 

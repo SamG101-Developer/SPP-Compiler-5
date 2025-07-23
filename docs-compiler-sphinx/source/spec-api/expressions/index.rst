@@ -7,4 +7,6 @@ Expressions
    Binary-Expressions
    Anonymous-Blocks
    Conditional-Blocks
+   Generator-Blocks
    Looping-Blocks
+   Object-Initialization

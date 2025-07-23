@@ -19,7 +19,8 @@ but don't introduce ASTs.
 - `ext`: extend a superimposition
 - `fun`: define a function (subroutine)
 - `cor`: define a coroutine
-- `use`: define a type alias
+- `use`: define a namespace reduction
+- `type`: define a type alias
 - `cmp`: define a compile-time constant of generic
 - `let`: define a variable
 - `mut`: mark a variable or borrow as mutable
@@ -29,6 +30,7 @@ but don't introduce ASTs.
 - `with`: introduce a context block
 - `skip`: skip the current iteration of a loop
 - `exit`: exit a loop
+- `iter`: inspect a generated value
 - `ret`: return a value from a function
 - `gen`: yield a value from a coroutine
 - `res`: advance a generator
@@ -55,10 +57,11 @@ but don't introduce ASTs.
 - `@private`: mark a symbol as private
 - `@cold`: mark a function as cold
 - `@hot`: mark a function as hot
+- `@inline`: prefer to inline a function
+- `@alwaysinline`: always inline a function
 
 ####  Future
-- `@inline`: inline a function
-- `@noinline`: don't inline ever
+- `@noinline`: don't inline a function
 - `@friend`: define a friend for the symbol
 - `@deprecated/@obselete`: mark deprecation/obsolete
 - `@likely/@unlikely/@fallthrough`: conditionals
