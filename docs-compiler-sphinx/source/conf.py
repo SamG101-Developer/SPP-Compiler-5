@@ -59,7 +59,7 @@ class SppSphinxLexer(RegexLexer):
             (r"\b\d+\b", Number),
             (r"\"[^\"]*\"", String),
             (r"[\+\-\*/%=\?<>&!]", Operator),
-            (r"[\(\)\{\}\[\]:,@\.]", Punctuation),
+            (r"[\(\)\{\}\[\]:,@\.(->)]", Punctuation),
             (r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", Name),
             (r"\s+", Text),
             (r"#.*$", Comment.Singleline),
