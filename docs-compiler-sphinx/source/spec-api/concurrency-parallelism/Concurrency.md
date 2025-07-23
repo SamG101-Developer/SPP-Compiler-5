@@ -8,10 +8,39 @@ Coroutine return types are constrained to generators, as explored below. Typical
 expressions inside the coroutine, to generate or yield values to the caller. Assigning a value from the `gen` expression
 allows for sending data back into the coroutine on resuming.
 
+An important distinction is that coroutines are baked into control flow, rather than the type system purely. This means
+whilst the multiplicity, optionality and fallibility of a coroutine is depicted in the type system, the actual
+destructuring of a yielded value requires a specific block, designated for coroutines. This is because of second class
+borrows; for example, `Opt[&T]` cannot exist as a type, because this requires `Some[&T]`, which requires a borrow type
+attribute, invalidating the second class borrow rules. The `iter` block is explored in the [**section**]().
+
 ## Coroutine Return Types
 
-The generator type in S++ is the `std::generator::Gen[Yield, Send=std::void::Void]` type. This is a compiler known type,
-and has special behaviour for coroutine and yielding analysis.
+There are three possible coroutine return types in S++:
+
+- `Gen[Yield, Send=Void]`
+- `GenOnce[Yield, Send=Void]`
+- `GenOpt[Yield, Send=Void]`
+- `GenRes[Yield, Err, Send=Void]`
+
+The standard generator type, `Gen`, will only ever yield into 2 different states: yielding a value of type `Yield`, or
+being exhausted with no more values. Every value yielded from a `Gen` coroutine is safely assumed to be valid, existing,
+and inferred as the `Yield` type. The `iter` block can match on value and exhaustion.
+
+The `GenOnce` type is used when the coroutine is designed to yield a single value, and then be exhausted. This is useful
+for things like indexing a value in a vector. Calling `.res()` on a `GenOnce` coroutine will yield a value and
+auto-unwrap it into the inner value. `GenOpt` and `GenRes` can't be one hit due to their no-value or error states
+requiring consideration. If the one-hit generator is exhausted immediately, it will panic.
+
+The `GenOpt` type is used when the coroutine might yield a "no-value". This is seen when "getting" an element from a
+vector, as the bounds check might fail, and a "no-value" should be signified. A value yielded from a `GenOpt` coroutine
+can be assumed to be either a value of type `Yield`, or a "no-value" (which is represented as `Void` in the typesystem).
+The `iter` block can match on value, "no-value", and exhaustion.
+
+Finally, the `GenRes` type is used when the coroutine might yield a value of type `Yield`, or an error of type `Err`.
+This is used for fallible generators, where the result can be either a value or an error. A value yielded from a
+`GenRes` coroutine can be assumed to be either a value of type `Yield`, or an error of type `Err`. The `iter` block can
+match on value, error and exhaustion.
 
 The `Yield` generic parameter's corresponding argument determines the type of value being yielded from the coroutine.
 Whilst this is inferrable, a design decision was taken to mark it explicitly in the return type, in the same way that a
@@ -28,8 +57,8 @@ into a coroutine.
 
 ## Advancing a Generator
 
-A generator is advanced by using the `.res()` method. As this requires a special compiler intrinsic (the `resume` method
-is a coroutine, but the internal value needs to be got), `res` is a callable postfix keyword, rather than a method.
+A generator is advanced by using the `.res()` method. As this requires a special compiler intrinsic, `res` is a callable
+postfix keyword, rather than a method.
 
 ```S++
 cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
@@ -41,8 +70,8 @@ cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
 fun main() -> Void {
     let generator = coroutine(1, 2, 3)
     let a = generator.res()
-    let b = generator.res()  # invalidates "a"
-    let c = generator.res()  # invalidates "b"
+    let b = generator.res()
+    let c = generator.res()
 }
 ```
 
@@ -62,31 +91,57 @@ cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
 }
 ```
 
-### Invalidating Borrows
+[//]: # (### Invalidating Borrows)
 
-When borrowed values are yielded from a coroutine, they are only valid until the next `.res()` call is made to the
-coroutine. This is to ensure they remain valid for the coroutine to use in steps up to the next yield.
+[//]: # ()
+[//]: # (Yielded borrowed belong to the generator they are yielded from. That being said, the law of exclusivity is applied to)
 
-```S++
-cor coroutine(a: BigInt, b: BigInt, c: BigInt) -> Gen[Yield=&BigInt] {
-    gen &a
-    
-    let s = a + b
-    gen &s
-}
+[//]: # (them, to prevent accessing multiple mutable parts of a generator, which could be overlapping. So a mutably borrowed)
 
-fun main() -> Void {
-    let generator = coroutine(1, 2, 3)
-    let a = generator.res()
-    let b = generator.res()  # invalidates "a"
-    let c = generator.res()  # invalidates "b"
-}
-```
+[//]: # (yield will invalidate the previous mutably borrowed yield.)
 
-In this example it can be seen that `a` is consumed in the coroutine. As there is no guarantee whether a variable is
-consumed or not in the coroutine after being yielded as a borrow, it must be assumed that a worst-cast scenario occurs,
-and that every variable yielded as a borrow might subsequently be consumed. As such, every time another borrowed value
-is yielded, the previous borrow will be invalidated in the caller.
+[//]: # ()
+[//]: # (Further to this, a borrow could be yielded, then its corresponding owned object consumed in the next resuming of the)
+
+[//]: # (caller. Therefore, each yield must be isolated, and invalidate the previous yield.)
+
+[//]: # ()
+[//]: # (```S++)
+
+[//]: # (cor coroutine&#40;a: BigInt, b: BigInt, c: BigInt&#41; -> Gen[Yield=&BigInt] {)
+
+[//]: # (    gen &a)
+
+[//]: # (    )
+[//]: # (    let s = a + b)
+
+[//]: # (    gen &s)
+
+[//]: # (})
+
+[//]: # ()
+[//]: # (fun main&#40;&#41; -> Void {)
+
+[//]: # (    let generator = coroutine&#40;1, 2, 3&#41;)
+
+[//]: # (    let a = generator.res&#40;&#41;)
+
+[//]: # (    let b = generator.res&#40;&#41;)
+
+[//]: # (    let c = generator.res&#40;&#41;)
+
+[//]: # (})
+
+[//]: # (```)
+
+[//]: # ()
+[//]: # (In this example it can be seen that `a` is consumed in the coroutine. As there is no guarantee whether a variable is)
+
+[//]: # (consumed or not in the coroutine after being yielded as a borrow, it must be assumed that a worst-cast scenario occurs,)
+
+[//]: # (and that every variable yielded as a borrow might subsequently be consumed. As such, every time another borrowed value)
+
+[//]: # (is yielded, the previous borrow will be invalidated in the caller.)
 
 ## Passing Data Into a Coroutine
 

@@ -44,18 +44,18 @@ default the value to `False`.
 ## Array Literal
 
 The array literal is a list of same-type items inside the `[]` tokens. The type of the array, and its size, are inferred
-from the items. For example, `let x = [1, 2, 3]` infers a `std::array::Arr[std::number::BigNum, 3]` type. Note that the
+from the items. For example, `let x = [1, 2, 3]` infers a `std::array::Arr[std::bignum::BigNum, 3]` type. Note that the
 size of an array is fixed, so it might be necessary to use the `std::vector::Vec` type if the size is unknown. All
 elements must be the same type. For more details see the section on [array types](../type-system/Arrays-Tuples.md).
 
-Empty arrays must be given a type and size, so the literal for empty arrays is `let x = [std::number::BigInt, 100]`.
+Empty arrays must be given a type and size, so the literal for empty arrays is `let x = [std::bignum::BigInt, 100]`.
 This tells the compiler to allocate 100 elements of the `BigInt` type, but no value will be set in the slots.
 
 ## Tuple Literal
 
 The tuple literal is a list of different-type items inside the `()` tokens. The type of the tuple is inferred from the
 items. For example, `let x = (1, "Hello", 3.14)` infers a
-`std::tuple::Tup[std::number::BigNum, std::string::Str, std::number::BigDec]` type. There is slightly different syntax
+`std::tuple::Tup[std::bignum::bigint::BigInt, std::string::Str, std::bignum::bigdec::BigDec]` type. There is slightly different syntax
 for 1-tuples, to differentiate them from regular parenthesized expressions.
 
 | Tuple Length | Syntax   |

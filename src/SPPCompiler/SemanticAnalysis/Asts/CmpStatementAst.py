@@ -88,7 +88,8 @@ class CmpStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         expected_type = self.type
         given_type = self.value.infer_type(sm, **kwargs)
 
-        if not AstTypeUtils.symbolic_eq(expected_type, given_type, sm.current_scope, sm.current_scope):
+        # Don't allow variants, because they type must be exact for constants.
+        if not AstTypeUtils.symbolic_eq(expected_type, given_type, sm.current_scope, sm.current_scope, check_variant=False):
             raise SemanticErrors.TypeMismatchError().add(
                 self.type, expected_type, self.value, given_type).scopes(sm.current_scope)
 

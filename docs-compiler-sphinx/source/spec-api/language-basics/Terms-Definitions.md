@@ -19,7 +19,7 @@ retains ownership of the value.
 
 ---
 
-#### Owned values:
+#### Owned value:
 
 An owned value is a value that exists in the current scope as in a non-borrowed state. The variable it
 is tied to explicitly owns the value. An owned value was either created in, or moved into, the variable that contains it

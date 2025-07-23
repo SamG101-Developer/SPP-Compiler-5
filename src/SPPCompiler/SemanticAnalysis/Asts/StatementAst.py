@@ -10,7 +10,8 @@ StatementAst = Union[
     Asts.LetStatementAst,
     Asts.LoopControlFlowStatementAst,
     Asts.RetStatementAst,
-    Asts.UseStatementAst]
+    Asts.UseStatementAst,
+    Asts.TypeStatementAst]
 
 __all__ = [
     "StatementAst"]

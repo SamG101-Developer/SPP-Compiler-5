@@ -85,6 +85,7 @@ class SupPrototypeExtensionAst(Asts.Ast):
 
     def _check_self_extension(self, cls_symbol: TypeSymbol, sup_symbol: TypeSymbol, check_scope: Scope) -> None:
         # Prevent self-inheritance by checking if the superimposition type is the same as the super type.
+        # Todo: Should this comparison be done without generics? Because Vec[Str] extending Vec[BigInt] makes no sense.
         if AstTypeUtils.symbolic_eq(self.name, self.super_class, check_scope, check_scope):
             raise SemanticErrors.SuperimpositionExtensionSelfExtensionError().add(
                 self.tok_ext).scopes(check_scope)

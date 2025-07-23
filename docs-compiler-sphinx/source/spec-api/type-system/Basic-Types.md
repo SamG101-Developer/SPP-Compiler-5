@@ -3,13 +3,15 @@
 S++ has a number of basic types, which are the building blocks of all S++ programs. This section will detail the basic
 types in S++. The basic types in S++ are:
 
-- [Number types](#number-types)
-- [Boolean type](#boolean-type)
-- [Void type](#void-type)
+- [**Number types**](#number-types)
+- [**Boolean type**](#boolean-type)
+- [**Void type**](#void-type)
 
 As every type in S++ is treated as first class, these types are also treated as objects, and follow standard type
 identifier regex, rather that a keyword-like identifier. All of these types have `std::copy::Copy` superimposed over
 them, to allow easy use of the numbers without having to place `.clone()` everywhere for simple calculations.
+Furthermore, simple CPU instructions are used to copy these types, which fit directly inside the registers. The
+superimposition of the `Copy` type is used to model tje copy logic for the memory checker.
 
 ## Number Types
 
@@ -26,13 +28,13 @@ All of these types are found in the `std::number` module of the STL:
 | `F32`    | `_f32`  | `32`           | `~ -2^127`     | `~ 2^127`      | `e8m23`        | Signed 32-bit float         |
 | `F64`    | `_f64`  | `64`           | `~ -2^1023`    | `~ 2^1023`     | `e11m52`       | Signed 64-bit float         |
 | `F128`   | `_f128` | `128`          | `~ -2^16383`   | `~ 2^16383`    | `e15m112`      | Signed 128-bit float        |
-| `F256`   | `_f256` | `256`          | `~ -2^262143`  | `~ 2^262143`   | `e18m237`      | Signed 256-bit float        |
-| `I8`     | `_i8`   | `8`            | `-2^7`         | `2^7 - 1`      | `7 bits`       | Signed 8-bit integer        |
-| `I16`    | `_i16`  | `16`           | `-2^15`        | `2^15 - 1`     | `15 bits`      | Signed 16-bit integer       |
-| `I32`    | `_i32`  | `32`           | `-2^31`        | `2^31 - 1`     | `31 bits`      | Signed 32-bit integer       |
-| `I64`    | `_i64`  | `64`           | `-2^63`        | `2^63 - 1`     | `63 bits`      | Signed 64-bit integer       |
-| `I128`   | `_i128` | `128`          | `-2^127`       | `2^127-1`      | `127 bits`     | Signed 128-bit integer      |
-| `I256`   | `_i256` | `256`          | `-2^255`       | `2^255-1`      | `255 bits`     | Signed 256-bit integer      |
+| `S8`     | `_s8`   | `8`            | `-2^7`         | `2^7 - 1`      | `7 bits`       | Signed 8-bit integer        |
+| `S16`    | `_s16`  | `16`           | `-2^15`        | `2^15 - 1`     | `15 bits`      | Signed 16-bit integer       |
+| `S32`    | `_s32`  | `32`           | `-2^31`        | `2^31 - 1`     | `31 bits`      | Signed 32-bit integer       |
+| `S64`    | `_s64`  | `64`           | `-2^63`        | `2^63 - 1`     | `63 bits`      | Signed 64-bit integer       |
+| `S128`   | `_s128` | `128`          | `-2^127`       | `2^127-1`      | `127 bits`     | Signed 128-bit integer      |
+| `S256`   | `_s256` | `256`          | `-2^255`       | `2^255-1`      | `255 bits`     | Signed 256-bit integer      |
+| `SSize`  | `_sz`   | [Here](#ssize) | [Here](#ssize) | [Here](#ssize) | [Here](#ssize) | Signed "size" type          |
 | `U8`     | `_u8`   | `8`            | `0`            | `2^8 - 1`      | `8 bits`       | Unsigned 8-bit integer      |
 | `U16`    | `_u16`  | `16`           | `0`            | `2^16 - 1`     | `16 bits`      | Unsigned 16-bit integer     |
 | `U32`    | `_u32`  | `32`           | `0`            | `2^32 - 1`     | `32 bits`      | Unsigned 32-bit integer     |
@@ -43,25 +45,20 @@ All of these types are found in the `std::number` module of the STL:
 | `BigInt` | `N/A`   | `inf`          | `-inf`         | `inf`          | `inf`          | Arbitrary precision integer |
 | `BigDec` | `N/A`   | `inf`          | `-inf`         | `inf`          | `inf`          | Arbitrary precision float   |
 
-A number literal's is always the `std::number::BigInt` or `std::number::BigDec` if no postfix type is provided. Use the
-above postfixes to set the numeric type explicitly. All the number types, except `BigInt` and `BigDec` have compiler
-builtin operation methods, to hook into llvm-specialized functions.
+A number literal's is always the `std::bignum::bigint::BigInt` or `std::bignum::bigdec::BigDec` if no postfix type is
+provided. Use the above postfixes to set the numeric type explicitly. All the number types, except `BigInt` and `BigDec`
+have compiler builtin operation methods, to hook into llvm-specialized functions.
 
 The `Copy` class is superimposed over all of these number types so that they can be used in calculations easily without
 having to manually clone them. Also, numer types are small so this doesnt create a memory issue.
 
-### USize
+### USize, SSize
 
-The `USize` is slightly special, as it is used to represent the numeric type that corresponds to the maximum size of
-addressable memory on the target architecture. This means that on a 32-bit architecture, `USize` is equivalent to `U32`,
-and on a 64-bit architecture, `USize` is equivalent to `U64`. The `USize` type is used for indexing and slicing
-operations, typically seen in arrays and vectors. It is also used for system resource objects, such as socket and thread
-identifiers.
-
-It should be noted that on a 64-bit architecture for example, whilst `USize` is equivalent to `U64`, the `USize` and
-`U64` types cannot be used interchangeably, as they are defined as separate types. The idea behind this is to allow for
-seamless platform portability, as the `USize` type will always be the same size as the maximum addressable memory on the
-target architecture.
+The `USize` and `SSize` types are slightly special, as they are used to represent the numeric type that corresponds to
+the maximum size of addressable memory on the target architecture, unsigned and signed. This means that on a 32-bit
+architecture, `USize <=> U32` and `SSize <=> S32`, and on a 64-bit architecture, the 64-bit integer equivalents. The
+`USize` type is used for indexing and slicing operations, typically seen in arrays and vectors. It is also used for
+system resource objects, such as socket and thread identifiers.
 
 ## Boolean Type
 

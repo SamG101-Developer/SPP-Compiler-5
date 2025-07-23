@@ -27,31 +27,33 @@ second-class borrows, the law of exclusivity, and ownership tracking.
 
 ## Key Features
 
-1. **Expression Oriented**: In S++, almost every "statement" is an expression, including conditional branching,
-   conditional looping, contextual blocks, etc.
-2. **Advanced Type System**: All types in S++ are first-class. Flow typing, type shorthands, type inference, type
-   aliasing, and a full generic system are all supported.
-3. **Memory Safety**: S++ follows Rust in having a strong emphasis on memory safety. It uses a blend of techniques to
-   ensure that memory is managed safely and efficiently, mitigating memory bugs.
-4. **Class System**: The class system in S++ is split into state and behaviour. Each class definition includes state
-   only (attributes). All methods and inheritance are defined using superimposition.
-5. **Module System**: Module definitions, namespaces and directory structures are all the same in S++, providing a
-   structured and simple module system. All modules are "imported" but namespaced.
-6. **Functions**: Function and methods support overloading and recursion, and type-afe variadic parameters. Functions
-   can be called asynchronously, and closures can capture variables from their enclosing scope.
-7. **Generics**: S++ has a powerful generics system, supporting generic functions, types, and methods. Generic types can
-   be constrained . Generic types can also be variadic, allowing for a variable number of different type arguments.
-8. **Asynchronous functions**: S++ uses Golang like syntax for asynchronous functions, where the asynchronous convention
-   is defined at the function call site, not the function definition, mitigating the "function color" problem.
-9. **Concurrency**: Coroutines form the concurrency model in S++. They can be suspended and resumed, support
-   bilateral data movement, and can yield borrowed values. They form the basis of iteration.
-10. **Parallelism**: S++ uses threads, and their associated primitives, such as mutexes and condition variables, for
-    parallelism. This is pulled from C++, withAPIs have been modernized to fit S++.
-11. **Error Handling**: S++ uses a result-type for error handling, similar to Rust. This allows for more expressive
-    error handling. The `?` operator cn be used to propagate errors up the call stack.
-12. **Pattern Matching**: S++ has a powerful pattern matching system. This allows for complex
-    destructuring of tuples, arrays, object and variants, and can be used in conjunction with flow typing.
-13. **Loop Control Flow**. S++ provides the ability to exit or skip an iteration of an n-depth loop. This alsop allows
-    variables to be returned out of loops.
-4**Operator Overloading**: S++ supports operator overloading, allowing for operators to be defined for custom types.
-    This is limited to the binary operators and the `not` operator, as S++ doesn't have unary operators.
+- **Expression Oriented**: In S++, almost every "statement" is an expression, including conditional branching,
+  conditional looping, contextual blocks, etc.
+
+- **Advanced Type System**: All types in S++ are first-class. Flow typing, type shorthands, type inference, type
+  aliasing, and a full generic system are all supported.
+- **Memory Safety**: S++ follows Rust in having a strong emphasis on memory safety. It uses a blend of techniques to
+  ensure that memory is managed safely and efficiently, mitigating memory bugs.
+- **Class System**: The class system in S++ is split into state and behaviour. Each class definition includes state
+  only (attributes). All methods and inheritance are defined using superimposition.
+- **Superimposition**: Similar to Rust `impl`, behaviour blocks or isolated type extension blocks with controlled
+  override capability.
+- **Module System**: Module definitions, namespaces and directory structures are all the same in S++, providing a
+  structured and simple module system. All modules are "imported" but namespaced.
+- **Functions**: Function and methods support overloading and recursion, and type-afe variadic parameters. Functions
+  can be called asynchronously, and closures can capture variables from their enclosing scope.
+- **Generics**: S++ has a powerful generics system, supporting generic functions, types and methods. Generic types can
+  be constrained. Generic types can also be variadic, allowing for a variable number of type arguments.
+- **Asynchronous functions**: S++ uses Golang like syntax for asynchronous functions, where the asynchronous convention
+  is defined at the function call site, not the function definition, mitigating the "function color" problem.
+- **Concurrency**: Coroutines form the concurrency model in S++. They can be suspended and resumed, support
+  bilateral data movement, and can yield borrowed values. They form the basis of iteration.
+- **Parallelism**: S++ uses threads, and their associated primitives, such as mutexes and condition variables, for
+  parallelism. This is pulled from C++, withAPIs have been modernized to fit S++.
+- **Error Handling**: S++ uses a result-type for error handling, similar to Rust. This allows for more expressive
+  error handling. The `?` operator cn be used to propagate errors up the call stack.
+- **Pattern Matching**: S++ has a powerful pattern matching system. This allows for complex
+  destructuring of tuples, arrays, object and variants, and can be used in conjunction with flow typing.
+- **Loop Control Flow**. S++ provides the ability to exit or skip an iteration of an n-depth loop. This alsop allows
+  variables to be returned out of loops.
+  4**Operator Overloading**: S++ supports operator overloading, allowing for operators to be defined for custom types.

@@ -27,14 +27,29 @@ Static methods are always the `FunRef` type.
 
 ## Closures
 
-With closures, the function type depends on the _captures_. This section is under development because closures aren't
-implemented yet, but the general gist is that a closure type matches the most-constrictive capture:
+With closures, the function type depends on the _captures_. This most restrictive convention is used to determine the
+function type.
+
+An example closure that has captures:
 
 ```S++
 let a = 123
 let b = 456
-let x = fun (x: BigInt) with (a, &b) -> Void { ... }
+let x = |x: BigInt caps a, &b| -> Void { ... }
 ```
 
-This creates a `FunMov` type, because it can only be called once; once the captured value is consumed once, the closure
-cannot be called again.
+| Most constrictive capture         | Function Type          |
+|-----------------------------------|------------------------|
+| `\|a: Str, caps x\| -> Void`      | `FunMov[(Str,), Void]` |
+| `\|a: Str, caps &mut x\| -> Void` | `FunMut[(Str,), Void]` |
+| `\|a: Str, caps &x\| -> Void`     | `FunRef[(Str,), Void]` |
+
+If a closure has a move-based convention, then the closure will be a `FunMov` type. This means that the symbol it is
+attached to will be consumed when the function is called. For example, for `let c1 = |caps a| -> Void { ... }`, then
+calling `c1()` twice will result in the first call consuming `a`, and the second call will fail with a memory
+uninitialized error.
+
+If a closure's most constrictive capture is a mutable borrow, then the closure will be a `FunMut` type. This means that
+the symbol it is attached to will be borrowed mutably when the function is called. For example, for
+`let c2 = |&mut a| -> Void { ... }`, then `c2` cannot be called, as it is not defined as mutable. The definition
+` let mut c2 = ...` is required.

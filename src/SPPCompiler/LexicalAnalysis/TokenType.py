@@ -166,7 +166,6 @@ class SppTokenType(TokenType):
     KwGen = "gen"
     KwWhere = "where"
     KwAs = "as"
-    KwIsNot = "is not"
     KwIs = "is"
     KwTrue = "true"
     KwFalse = "false"

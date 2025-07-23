@@ -21,8 +21,8 @@ let tuple2 = (0, "hello", false)
 
 This creates tuples with the types:
 
-- `std::tuple::Tup[std::array::Arr[std::number::BigInt, 2]]`
-- `std::tuple::Tup[std::number::BigInt, std::string::Str, std::boolean::Bool]`
+- `std::tuple::Tup[std::array::Arr[std::bignum::bigint::BigInt, 2]]`
+- `std::tuple::Tup[std::bignum::bigint::BigInt, std::string::Str, std::boolean::Bool]`
 
 Tuples are always declared with values inside them, unlike arrays, which can be created with empty slots.
 

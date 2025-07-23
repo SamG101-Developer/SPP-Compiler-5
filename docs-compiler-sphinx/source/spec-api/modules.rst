@@ -9,6 +9,7 @@ SPPSpecification
    expressions/index
    statements/index
    type-system/index
+   exceptions/index
    memory/index
    concurrency-parallelism/index
    stl/index
