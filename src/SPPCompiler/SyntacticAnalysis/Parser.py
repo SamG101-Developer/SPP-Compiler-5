@@ -1740,6 +1740,7 @@ class SppParser:
         p1 = self.parse_alternate([
             self.parse_literal_integer_b10,
             self.parse_literal_integer_b02,
+            self.parse_literal_integer_b08,
             self.parse_literal_integer_b16])
         return p1
 
@@ -1790,6 +1791,13 @@ class SppParser:
     def parse_literal_integer_b02(self) -> Optional[Asts.IntegerLiteralAst]:
         p1 = self.parse_optional(self.parse_numeric_prefix_op)
         p2 = self.parse_once(self.parse_lexeme_bin_integer)
+        if p2 is None: return None
+        p3 = self.parse_optional(self.parse_integer_postfix_type)
+        return Asts.IntegerLiteralAst((p1 or p2).pos, p1, p2, p3)
+
+    def parse_literal_integer_b08(self) -> Optional[Asts.IntegerLiteralAst]:
+        p1 = self.parse_optional(self.parse_numeric_prefix_op)
+        p2 = self.parse_once(self.parse_lexeme_oct_integer)
         if p2 is None: return None
         p3 = self.parse_optional(self.parse_integer_postfix_type)
         return Asts.IntegerLiteralAst((p1 or p2).pos, p1, p2, p3)
@@ -2305,9 +2313,6 @@ class SppParser:
     def parse_keyword_caps(self) -> Optional[Asts.TokenAst]:
         return self.parse_token_raw(RawKeywordType.Caps, SppTokenType.KwCaps)
 
-    def parse_keyword_die(self) -> Optional[Asts.TokenAst]:
-        return self.parse_token_raw(RawKeywordType.Die, SppTokenType.KwDie)
-
     # ===== LEXEMES =====
 
     def parse_lexeme_character(self) -> Optional[Asts.TokenAst]:
@@ -2364,6 +2369,37 @@ class SppParser:
             p3 = self.parse_once(self.parse_lexeme_digit)
             if p3 is None or p3.token_data not in "01":
                 self.store_error(self.current_pos(), "Invalid binary integer literal")
+                return out
+            out.token_data += p3.token_data
+
+        return out
+
+    def parse_lexeme_oct_integer(self) -> Optional[Asts.TokenAst]:
+        self.parse_nothing()
+        out = Asts.TokenAst(self.current_pos(), SppTokenType.LxNumber, "")
+
+        p1 = self.parse_once(self.parse_lexeme_digit)
+        if p1 is None or p1.token_data != "0":
+            self.store_error(self.current_pos(), "Invalid octal integer literal")
+            return None
+        out.token_data += p1.token_data
+
+        p2 = self.parse_once(self.parse_lexeme_character)
+        if p2 is None or p2.token_data not in "o":
+            self.store_error(self.current_pos(), "Invalid octal integer literal")
+            return None
+        out.token_data += p2.token_data
+
+        p3 = self.parse_once(self.parse_lexeme_digit)
+        if p3 is None or p3.token_data not in "01234567":
+            self.store_error(self.current_pos(), "Invalid octal integer literal")
+            return None
+        out.token_data += p3.token_data
+
+        while self._token_types[self._pos] == RawTokenType.TkDigit:
+            p3 = self.parse_once(self.parse_lexeme_digit)
+            if p3 is None or p3.token_data not in "01234567":
+                self.store_error(self.current_pos(), "Invalid octal integer literal")
                 return out
             out.token_data += p3.token_data
 
