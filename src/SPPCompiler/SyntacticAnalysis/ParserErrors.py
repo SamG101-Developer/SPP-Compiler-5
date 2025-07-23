@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import NoReturn
 
-from ordered_set import OrderedSet
-
 from SPPCompiler.Utils.ErrorFormatter import ErrorFormatter
+from SPPCompiler.Utils.FastOrderedSet import FastOrderedSet
 
 
 class ParserError(BaseException):
@@ -35,7 +34,7 @@ class ParserErrors:
 
         def throw(self, error_formatter: ErrorFormatter) -> NoReturn:
             # Convert the list of expected tokens into a set of strings.
-            all_expected_tokens = OrderedSet(self.expected_tokens)
+            all_expected_tokens = FastOrderedSet(self.expected_tokens)
             all_expected_tokens = "'" + "', '".join(all_expected_tokens).replace("\n", "\\n") + "'"
 
             # Replace the "$" token with the set of expected tokens.

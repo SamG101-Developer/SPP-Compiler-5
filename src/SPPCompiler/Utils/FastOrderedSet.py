@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Iterator
 
 
-class FastOrderedSet[T]:
+class FastOrderedSet[T](Iterable[T]):
     __slots__ = ("_data",)
 
     _data: dict[T, None]
@@ -19,6 +19,9 @@ class FastOrderedSet[T]:
 
     def __contains__(self, item: T) -> bool:
         return item in self._data
+
+    def __iter__(self) -> Iterator[T]:
+        return iter(self._data.keys())
 
     def pop(self, i: int) -> T:
         item = list(self._data.keys())[i]
