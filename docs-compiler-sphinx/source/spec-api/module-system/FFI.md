@@ -1,4 +1,4 @@
-# 13.2. FFI
+# FFI
 
 ## Foreign Function Interface
 
