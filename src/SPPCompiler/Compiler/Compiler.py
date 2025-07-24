@@ -184,10 +184,12 @@ class Compiler:
                 file.write(json.dumps(self._scope_manager.global_scope, indent=4))
 
     def try_dump_llvm(self) -> None:
-        if self._mode == Compiler.Mode.Dev:
-            for module, llvm_module in zip(self._module_tree.modules, self._ast.llvm_modules):
-                out_llvm_path = module.path.replace("src", "out/llvm", 1).replace(".spp", ".ll")
-                if not os.path.exists(os.path.dirname(out_llvm_path)):
-                    os.makedirs(os.path.dirname(out_llvm_path))
-                with open(out_llvm_path, "w") as file:
-                    file.write(str(llvm_module))
+        out_llvm_path = os.path.join("out", "llvm")
+        if not os.path.exists(out_llvm_path):
+            os.makedirs(out_llvm_path)
+        for module, llvm_module in zip(self._module_tree.modules, self._ast.llvm_modules):
+            out_llvm_path = os.path.join("out", "llvm", llvm_module.name + ".ll")
+            if not os.path.exists(os.path.dirname(out_llvm_path)):
+                os.makedirs(os.path.dirname(out_llvm_path))
+            with open(out_llvm_path, "w") as file:
+                file.write(str(llvm_module))
