@@ -74,8 +74,8 @@ class ArrayLiteral0ElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         """
-        The inferred type will always be std::array::Arr, with its generic arguments determined by the element type and
-        the size. The type will be ``std::Arr[Element=<self.element_type>, n=<self.size>]``.
+        The inferred type will always be ``std::array::Arr``, with its generic arguments determined by the element type
+        and the size. The type will be ``std::Arr[Element=<self.element_type>, n=<self.size>]``.
 
         :param sm: The scope manager.
         :param kwargs: Additional keyword arguments.

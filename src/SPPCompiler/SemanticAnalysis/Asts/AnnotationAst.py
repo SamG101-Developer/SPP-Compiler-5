@@ -15,7 +15,7 @@ from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 """
 Todo - ideas:
 - Allow all bocks (loop/case+branches/with) etc to have annotations
-- @inline, @noinline, @hot, @cold for functions
+- @noinline, @hot, @cold for functions
 - @likely, @unlikely, @fallthrough for case branches
 - @unroll, @allow_infinite for loops => map to a special return type?
 """
@@ -94,8 +94,8 @@ class AnnotationAst(Asts.Ast):
         compiler stages to utilize the additional behaviour based on the annotations.
 
         Most of the values set are setting this AST node itself as a flag (ie
-        `Asts.FunctionPrototypeAst._virtual = self`), but the visibility annotations also include the mapped Visibility,
-        so the mapping doesn't have to be recomputed per attribute access.
+        ``Asts.FunctionPrototypeAst._virtual = self``), but the visibility annotations also include the mapped
+        ``Visibility``, so the mapping doesn't have to be recomputed per attribute access.
 
         :param ctx: The context AST to apply the annotation to.
         """
@@ -140,9 +140,9 @@ class AnnotationAst(Asts.Ast):
     def generate_top_level_scopes(self, sm: ScopeManager) -> None:
         """
         All annotation context checks, conflict checks, and validity checks are performed at this stage. They require
-        ScopeManager access for error messages, so can't be performed at the ``pre_process`` stage. Although this stage
-        of the compiler is typically used for generating a top level scope for a function or class, it is just utilized
-        as an annotation analysis method that happens with scope access.
+        a scope manager for error messages, so can't be performed at the ``pre_process`` stage. Although this stage of
+        the compiler is typically used for generating a top level scope for a function or class, it is just utilized as
+        an annotation analysis method that happens with scope access.
 
         It cannot be done in the analyse_semantics stage, because certain checks must happen before the behaviour based
         of annotations is utilized. For example, if both ``virtual_method`` and ``abstract_method`` were applied, their
@@ -150,7 +150,6 @@ class AnnotationAst(Asts.Ast):
         invalid.
 
         :param sm: The scope manager.
-        :return: None.
         :raise SemanticErrors.AnnotationInvalidLocationError: This exception is thrown if an annotation is applied to an
             invalid context. For example, applying ``virtual_method`` to a free function, or ``hot`` to a class.
         :raise SemanticErrors.AnnotationConflictError: This exception is raised if the annotation conflicts with another

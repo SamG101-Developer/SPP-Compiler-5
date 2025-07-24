@@ -128,9 +128,9 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> ir.AllocaInstr:
         """
-        This array AST will create an array with the element all created, by recursively calling code_gen_pass_2 on each
-        element AST belonging to this array literal. The array will be created on the stack, and the elements will be
-        stored in the array.
+        This array AST will create an array with the element all created, by recursively calling ``code_gen_pass_2`` on
+        each element AST belonging to this array literal. The array will be created on the stack, and the elements will
+        be stored in the array.
 
         :param sm: The scope manager.
         :param llvm_module: The LLVM module to generate code into.

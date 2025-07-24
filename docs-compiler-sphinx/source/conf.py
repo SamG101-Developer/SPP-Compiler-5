@@ -37,10 +37,10 @@ html_theme = "furo"
 html_theme_options = {
     "dark_css_variables": {
         "color-api-name": "#ffff00",
-        "color-api-pre-name": "#00e626",
-        "color-brand-primary": "#4dff6a",
-        "color-brand-content": "#4dff6a",
-        "color-brand-visited": "#4dff6a",
+        "color-api-pre-name": "#ff3300",
+        "color-brand-primary": "#FF643F",
+        "color-brand-content": "#FF643F",
+        "color-brand-visited": "#FF643F",
     }
 }
 html_static_path = ["_static"]

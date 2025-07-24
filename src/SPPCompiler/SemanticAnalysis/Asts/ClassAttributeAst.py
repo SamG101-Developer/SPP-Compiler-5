@@ -19,7 +19,17 @@ from SPPCompiler.Utils.Sequence import SequenceUtils
 @dataclass(slots=True, repr=False)
 class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     annotations: list[Asts.AnnotationAst] = field(default_factory=list)
+    """
+    List of annotation to apply to the class prototype. Commonly used annotations over classes include access
+    modifiers such as ``@public``, ``@private``, and ``@protected``.
+    """
+
     name: Asts.IdentifierAst = field(default=None)
+    """
+    The name of the class attribute. This is an identifier that must be unique within the class scope. It will be
+    registered in the symbol table, and used when accessing the attribute off the type.
+    """
+
     tok_colon: Asts.TokenAst = field(default=None)
     type: Asts.TypeAst = field(default=None)
     default: Optional[Asts.ExpressionAst] = None
