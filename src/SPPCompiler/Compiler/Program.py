@@ -165,7 +165,7 @@ class Program(CompilerStages):
         self.llvm_modules = []
         for module in self.modules:
             self._move_scope_manager_to_namespace(sm, [m for m in module_tree.modules if m.module_ast is module][0])
-            llvm_module = ir.Module(Mangler.mangle_module_name(sm.current_scope))
+            llvm_module = ir.Module(Mangler.mangle_module_name(sm.current_scope), context=ir.Context())
             sm.current_scope.generate_llvm_type_mappings(llvm_module)
             self.llvm_modules.append(llvm_module)
             sm.reset()

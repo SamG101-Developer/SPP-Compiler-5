@@ -16,7 +16,7 @@ class Mangler:
 
     @staticmethod
     def mangle_module_name(scope: Scope) -> str:
-        return "::".join([str(a.name) for a in scope.ancestors])
+        return "#".join([str(a.name) for a in reversed(scope.ancestors)])
 
     @staticmethod
     def mangle_function_name(scope: Scope, function: Asts.FunctionPrototypeAst) -> str:
@@ -24,4 +24,4 @@ class Mangler:
         func_name = "".join([
             *[Mangler.mangle_type_name(scope.get_symbol(p.type)) for p in function.function_parameter_group.params],
             Mangler.mangle_type_name(scope.get_symbol(function.return_type))])
-        return f"{module_name}::{func_name}"
+        return f"{module_name}#{func_name}"
