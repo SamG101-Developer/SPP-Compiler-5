@@ -35,7 +35,7 @@ class CompilerStages:
         includes classes, attributes, functions, sup-methods, aliases and global constants. No generation is done for
         symbols inside functions. The symbols are generated here so that they can be used in any module, allowing for
         circular imports.
-        @param sm The scope manager
+        :param sm The scope manager.
         """
 
     def generate_top_level_aliases(self, sm: ScopeManager, **kwargs) -> None:
@@ -44,8 +44,8 @@ class CompilerStages:
         symbol generation stage, as it requires symbol knowledge to attach the correct "old types". It must also come
         before the load sup scopes stage, because superimposing over aliases requires the alias to exist beforehand, in
         any order of compilation.
-        @param sm The scope manager
-        @param kwargs Additional keyword arguments.
+        :param sm The scope manager.
+        :param kwargs Additional keyword arguments.
         """
 
     def qualify_types(self, sm: ScopeManager, **kwargs) -> None:
@@ -63,12 +63,12 @@ class CompilerStages:
         ...
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
-        """!
+        """
         The semantic analysis stage is the most complex, and final analysis, stage of the semantic pipeline. This stage
         performs all the semantic checks, type inference, and type checking. This stage requires all symbols to be
         generated, and all types to be aliased, loaded, and post-processed. All functions scopes are inspected.
-        @param sm The scope manager
-        @param kwargs Additional keyword arguments.
+        :param sm The scope manager.
+        :param kwargs Additional keyword arguments.
         """
 
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
@@ -77,7 +77,7 @@ class CompilerStages:
         and has to happen after, and not during semantic analysis, because sometimes the ASTs are analysed out of order
         to allow for type-inference. This messes up the strict order of memory checks, so the additional stage enforces
         the order of memory checks.
-        :param sm: The scope manager
+        :param sm: The scope manager.
         :param kwargs: Additional keyword arguments.
         """
 
@@ -86,7 +86,7 @@ class CompilerStages:
         The first pass of the code generation handles declarations. This includes type declarations (no memory layout
         set), and function declarations (no body set). This is because for class attributes, the types need to have
         already been created
-        :param sm: The scope manager
+        :param sm: The scope manager.
         :param llvm_module: The LLVM module to generate code for.
         :param kwargs: Additional keyword arguments.
         """
@@ -95,7 +95,7 @@ class CompilerStages:
         """
         The second pass of the code generation handles definitions. This includes type definitions (memory layout set),
         and function definitions (body set).
-        :param sm: The scope manager
+        :param sm: The scope manager.
         :param llvm_module: The LLVM module to generate code for.
         :param kwargs: Additional keyword arguments.
         """
