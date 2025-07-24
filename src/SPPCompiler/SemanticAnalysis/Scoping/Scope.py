@@ -314,6 +314,14 @@ class Scope:
             if isinstance(scope._ast, Asts.ClassPrototypeAst):
                 cls_symbol = scope.type_symbol
 
+                # Don't generate LLVM types for aliases (coed converts to FQ types).
+                if type(cls_symbol) is AliasSymbol:
+                    continue
+
+                # Ensure there are no unfilled generics in the class symbol.
+                if any(sym.scope is None for sym in cls_symbol.scope.all_symbols() if type(sym) is TypeSymbol):
+                    continue
+
                 # Create the class type in the LLVM module.
                 llvm_type_name = Mangler.mangle_type_name(cls_symbol)
                 llvm_type = llvm_module.context.get_identified_type(llvm_type_name)
