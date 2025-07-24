@@ -30,6 +30,8 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     _is_alias: bool = field(default=False, init=False, repr=False)
     _cls_sym: Optional[TypeSymbol] = field(default=None, init=False, repr=False)
 
+    _generic_impls: list[tuple[TypeSymbol, Asts.ClassPrototypeAst]] = field(default_factory=list, kw_only=True, repr=False)
+
     def __post_init__(self) -> None:
         self.tok_cls = self.tok_cls or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwCls)
         self.generic_parameter_group = self.generic_parameter_group or Asts.GenericParameterGroupAst(pos=self.pos)
@@ -43,7 +45,7 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
         return ClassPrototypeAst(
             self.pos, copy.copy(self.annotations), self.tok_cls, self.name,
             fast_deepcopy(self.generic_parameter_group), self.where_block, fast_deepcopy(self.body),
-            _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
+            _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope, _generic_impls=[])
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -165,30 +167,49 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def code_gen_pass_1(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> None:
         # Move into the class scope and get the class symbol.
-        sm.move_to_next_scope()
-        sm.move_out_of_current_scope()
+        if not kwargs.get("skip_scope", False):
+            sm.move_to_next_scope()
+
+        cls_sym = sm.current_scope.type_symbol
+
+        # Don't generate LLVM types for aliases (coed converts to FQ types).
+        if type(cls_sym) is AliasSymbol:
+            sm.move_out_of_current_scope()
+            return
+
+        # Ensure there are no unfilled generics in the class symbol.
+        if [sym for sym in cls_sym.scope.all_symbols() if type(sym) is TypeSymbol and sym.scope is None]:
+            print("Symbol", cls_sym, "has unfilled generics, skipping LLVM type generation.")
+            for generic_sym, generic_ast in self._generic_impls:
+                generic_ast.code_gen_pass_1(sm, llvm_module, **(kwargs | {"skip_scope": True}))
+            return
+
+        print("Filling LLVM memory layout for class:", cls_sym)
+        self._fill_llvm_memory_layout(cls_sym, llvm_module)
+
+        if not kwargs.get("skip_scope", False):
+            sm.move_out_of_current_scope()
+
+    def _fill_llvm_memory_layout(self, cls_symbol: TypeSymbol, llvm_module: ir.Module) -> None:
+        print(cls_symbol)
+        # Create the attribute types for the class's memory layout.
+        if type(cls_symbol) is TypeSymbol and self.name.type_parts[-1].value[0] != "$":
+
+            # Get the class scope and sup scopes' class scope ASTs.
+            scopes = [cls_symbol.scope] + [c for c in cls_symbol.scope.sup_scopes]
+            asts   = [scope._ast for scope in scopes if type(scope._ast) is ClassPrototypeAst]
+
+            # Get the attribute types from the class ASTs.
+            attribute_types = []
+            for ast in asts:
+                attribute_types.extend([a.type for a in ast.body.members])
+
+            # Set the body of the LLVM type.
+            cls_symbol.llvm_info.llvm_type.set_body(*attribute_types)
 
     def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module = None, **kwargs) -> None:
         # Move into the class scope and get the class symbol.
         sm.move_to_next_scope()
-        cls_symbol = sm.current_scope.type_symbol
-
-        # Create the attribute types for the class's memory layout.
-        # if type(cls_symbol) is TypeSymbol and self.name.type_parts[-1].value[0] != "$":
-        #
-        #     # Get the class scope and sup scopes' class scope ASTs.
-        #     scopes = [cls_symbol.scope] + [c for c in cls_symbol.scope.sup_scopes]
-        #     asts   = [scope._ast for scope in scopes if type(scope._ast) is ClassPrototypeAst]
-        #
-        #     # Get the attribute types from the class ASTs.
-        #     attribute_types = []
-        #     for ast in asts:
-        #         attribute_types.extend([a.type for a in ast.body.members])
-        #
-        #     # Set the body of the LLVM type.
-        #     print(cls_symbol)
-        #     print(self.name.type_parts[-1].value)
-        #     cls_symbol.llvm_info.llvm_type.set_body(*attribute_types)
 
         # Move out of the class scope.
         sm.move_out_of_current_scope()

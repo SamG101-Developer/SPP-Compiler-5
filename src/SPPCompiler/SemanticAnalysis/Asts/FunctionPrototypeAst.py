@@ -40,6 +40,8 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     _hot: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
     _inline: Optional[Asts.AnnotationAst] = field(default=None, kw_only=True, repr=False)
 
+    _generic_impls: list[Asts.FunctionPrototypeAst] = field(default_factory=list, kw_only=True, repr=False)
+
     def __post_init__(self) -> None:
         self.tok_fun = self.tok_fun or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwFun)
         self.function_parameter_group = self.function_parameter_group or Asts.FunctionParameterGroupAst()
@@ -260,7 +262,8 @@ class FunctionPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             fast_deepcopy(self.name), fast_deepcopy(self.generic_parameter_group),
             fast_deepcopy(self.function_parameter_group), self.tok_arrow, fast_deepcopy(self.return_type),
             fast_deepcopy(self.where_block), self.body, _ctx=self._ctx, _orig=self._orig, _scope=None,
-            _abstract=self._abstract, _virtual=self._virtual, _non_implemented=self._non_implemented)
+            _abstract=self._abstract, _virtual=self._virtual, _non_implemented=self._non_implemented,
+            _generic_impls=self._generic_impls)
 
 
 __all__ = [

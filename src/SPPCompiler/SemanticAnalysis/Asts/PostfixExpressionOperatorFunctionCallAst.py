@@ -180,7 +180,8 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     parameter_names     = [p.extract_name for p in new_fn_proto.function_parameter_group.params]
                     parameter_names_req = [p.extract_name for p in new_fn_proto.function_parameter_group.get_required_params()]
 
-                    # Overwrite the function prototype and scope.
+                    # Log the generic implementation, and overwrite the function prototype and scope.
+                    fn_proto._generic_impls.append(new_fn_proto)
                     fn_proto = new_fn_proto
                     fn_scope = new_fn_scope
 

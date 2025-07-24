@@ -164,11 +164,9 @@ class AstTypeUtils:
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         # Create a new scope & symbol for the generic substituted type.
-        # Todo: issue here is when using type statements in super blocks, because the base type of the type statement
-        #  may be defined in a different block to where the specialization is being used, so it adds the specialization
-        #  in the wrong sup scope, and it can't be accessed from where it needs to be accessed.
+        old_cls_scope = old_cls_symbol.scope
         new_cls_scope = Scope(
-            name=fast_deepcopy(type_part), parent=old_cls_symbol.scope.parent, ast=old_cls_symbol.scope._ast)
+            name=fast_deepcopy(type_part), parent=old_cls_scope.parent, ast=old_cls_scope._ast)
 
         new_cls_symbol = TypeSymbol(
             name=type_part, type=new_cls_scope._ast, scope=new_cls_scope,
@@ -177,9 +175,10 @@ class AstTypeUtils:
 
         # Configure the new scope based on the base scope, register non-generic scope as the base scope.
         new_cls_scope.parent.add_symbol(new_cls_symbol)
-        new_cls_scope._children = old_cls_symbol.scope.children
-        new_cls_scope._symbol_table = fast_deepcopy(old_cls_symbol.scope._symbol_table)
-        new_cls_scope._non_generic_scope = old_cls_symbol.scope
+        new_cls_scope._children = old_cls_scope.children
+        new_cls_scope._symbol_table = fast_deepcopy(old_cls_scope._symbol_table)
+        new_cls_scope._non_generic_scope = old_cls_scope
+        new_ast = fast_deepcopy(new_cls_scope._ast)
         if type(new_cls_scope.parent.name) is not str:
             new_cls_scope.parent.children.append(new_cls_scope)
 
@@ -203,10 +202,10 @@ class AstTypeUtils:
                 scoped_sym.type = scoped_sym.type.substituted_generics(type_part.generic_argument_group.arguments)
 
         # Duplicate the ast to validate the type substituted attributes (no borrows etc).
-        new_ast = fast_deepcopy(new_cls_scope._ast)
         for attribute in new_ast.body.members:
             attribute.type = attribute.type.substituted_generics(type_part.generic_argument_group.arguments)
             attribute.analyse_semantics(sm, **kwargs)
+        old_cls_scope._ast._generic_impls.append((new_cls_symbol, new_ast))
 
         # Return the new scope.
         return new_cls_scope
