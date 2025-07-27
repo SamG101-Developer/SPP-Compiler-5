@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 from SPPCompiler.Utils.FunctionCache import FunctionCache
@@ -19,19 +18,18 @@ class GenericParameterGroupAst(Asts.Ast):
     parameters: list[Asts.GenericParameterAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
+    def __hash__(self) -> int:
+        return id(self)
+
     def __copy__(self) -> GenericParameterGroupAst:
-        return GenericParameterGroupAst(parameters=self.parameters.copy())
+        return GenericParameterGroupAst(pos=self.pos, tok_l=self.tok_l, parameters=self.parameters.copy(), tok_r=self.tok_r)
 
     def __deepcopy__(self, memodict=None) -> GenericParameterGroupAst:
-        return GenericParameterGroupAst(parameters=fast_deepcopy(self.parameters))
+        return GenericParameterGroupAst(pos=self.pos, tok_l=self.tok_l, parameters=fast_deepcopy(self.parameters), tok_r=self.tok_r)
 
     def __eq__(self, other: GenericParameterGroupAst) -> bool:
         # Check both ASTs are the same type and have the same parameters.
         return self.parameters == other.parameters
-
-    def __hash__(self) -> int:
-        # Use the id of the object as the hash.
-        return id(self)
 
     def __str__(self) -> str:
         string = ["[", ", ".join([str(p) for p in self.parameters]), "]"] if self.parameters else []

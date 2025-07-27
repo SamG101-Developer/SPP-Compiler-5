@@ -67,11 +67,11 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
         return self.op.type_parts + self.rhs.type_parts
 
-    @property
+    @FunctionCache.cache_property
     def without_convention(self) -> Optional[Asts.TypeAst]:
         return self if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst else self.rhs.without_convention
 
-    @property
+    @FunctionCache.cache_property
     def convention(self) -> Optional[Asts.ConventionAst]:
         return self.op.convention if type(self.op) is Asts.TypeUnaryOperatorBorrowAst else None
 
@@ -98,7 +98,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None, generic_infer_target: Optional[dict] = None, **kwargs) -> None:
         if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst:
             tm = ScopeManager(sm.global_scope, type_scope or sm.current_scope)
-            type_scope = AstTypeUtils.get_namespaced_scope_with_error(tm, [self.op.name])
+            type_scope = AstTypeUtils.get_namespaced_scope_with_error(tm, tm.current_scope, self.op.name)
         # if type_scope in self._cached_for_scopes:
         #     return
         self.rhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)

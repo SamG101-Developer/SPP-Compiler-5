@@ -358,16 +358,6 @@ class CommonTypes:
         return type
 
     @staticmethod
-    def DerefRef(pos: int, inner_type: Asts.TypeAst = None):
-        return CodeInjection.inject_code(
-            f"std::ops::deref::DerefRef[{inner_type}]", SppParser.parse_type, pos_adjust=pos)
-
-    @staticmethod
-    def DerefMut(pos: int, inner_type: Asts.TypeAst = None):
-        return CodeInjection.inject_code(
-            f"std::ops::deref::DerefMut[{inner_type}]", SppParser.parse_type, pos_adjust=pos)
-
-    @staticmethod
     def Try(pos: int, output: Asts.TypeAst = None, residual: Asts.TypeAst = None):
         return CodeInjection.inject_code(
             f"std::ops::try::Try[{output}, {residual}]", SppParser.parse_type, pos_adjust=pos)

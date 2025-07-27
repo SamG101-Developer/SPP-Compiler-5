@@ -9,6 +9,7 @@ from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
@@ -19,10 +20,10 @@ class GenericArgumentGroupAst(Asts.Ast):
     tok_r: Asts.TokenAst = field(default=None)
 
     def __copy__(self) -> GenericArgumentGroupAst:
-        return GenericArgumentGroupAst(arguments=self.arguments.copy())
+        return GenericArgumentGroupAst(pos=self.pos, tok_l=self.tok_l, arguments=self.arguments.copy(), tok_r=self.tok_r)
 
     def __deepcopy__(self, memodict=None) -> GenericArgumentGroupAst:
-        return GenericArgumentGroupAst(tok_l=self.tok_l, arguments=fast_deepcopy(self.arguments), tok_r=self.tok_r)
+        return GenericArgumentGroupAst(pos=self.pos, tok_l=self.tok_l, arguments=fast_deepcopy(self.arguments), tok_r=self.tok_r)
 
     def __eq__(self, other: GenericArgumentGroupAst) -> bool:
         return self.arguments == other.arguments
@@ -74,15 +75,19 @@ class GenericArgumentGroupAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.tok_r.pos_end if self.arguments else self.tok_l.pos_end
 
+    @FunctionCache.cache
     def get_type_args(self) -> list[Asts.GenericTypeArgumentAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericTypeArgumentAst)]
 
+    @FunctionCache.cache
     def get_comp_args(self) -> list[Asts.GenericCompArgumentAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericCompArgumentAst)]
 
+    @FunctionCache.cache
     def get_named_args(self) -> list[Asts.GenericArgumentNamedAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericArgumentNamedAst)]
 
+    @FunctionCache.cache
     def get_unnamed_args(self) -> list[Asts.GenericArgumentUnnamedAst]:
         return [a for a in self.arguments if isinstance(a, Asts.GenericArgumentUnnamedAst)]
 

@@ -22,7 +22,7 @@ class AbstractTypeTemporaryAst:
         """
 
 
-@dataclass()
+@dataclass(slots=True, repr=False)
 class AbstractTypeAst(AbstractTypeTemporaryAst):
     """
     The AbstractTypeAst contains a number of methods required to be implemented by all the different TypeAst classes.

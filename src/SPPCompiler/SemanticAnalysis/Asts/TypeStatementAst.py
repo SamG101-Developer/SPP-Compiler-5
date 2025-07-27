@@ -89,8 +89,7 @@ class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.T
                 c, self.new_type, "use statement new type").scopes(sm.current_scope)
 
         # Create a class ast for the aliased type, and generate it.
-        cls_ast = Asts.ClassPrototypeAst(
-            pos=self.pos, name=self.new_type, generic_parameter_group=copy.copy(self.generic_parameter_group))
+        cls_ast = Asts.ClassPrototypeAst(pos=self.pos, name=self.new_type, generic_parameter_group=copy.copy(self.generic_parameter_group))
         cls_ast._is_alias = True
         cls_ast._visibility = (visibility, None)
         self._alias_symbol = cls_ast.generate_top_level_scopes(sm)

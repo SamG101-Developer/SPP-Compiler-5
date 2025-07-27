@@ -120,26 +120,26 @@ class AstTypeUtils:
         raise NotImplementedError("Only tuple and array types are indexable.")
 
     @staticmethod
-    def get_namespaced_scope_with_error(sm: ScopeManager, namespace: list[Asts.IdentifierAst]) -> Scope:
-        # Work through each cumulative namespace, checking if the namespace exists.
-        namespace_scope = sm.current_scope
-        for i in range(len(namespace)):
-            sub_namespace = namespace[:i + 1]
+    @FunctionCache.cache
+    def get_namespaced_scope_with_error(sm: ScopeManager, namespace_scope: Scope, namespace: Asts.IdentifierAst) -> Scope:
+        """
+        Note that `namespace_scope` will always be the same as `sm.current_scope`, but uniqueness is required for
+        caching.
+        """
 
-            # If the namespace does not exist, raise an error.
-            if not sm.get_namespaced_scope(sub_namespace):
-                alternatives = [a.name.value for a in namespace_scope.all_symbols(sup_scope_search=True) if type(a) is NamespaceSymbol]
-                closest_match = difflib.get_close_matches(sub_namespace[-1].value, alternatives, n=1, cutoff=0)
-                raise SemanticErrors.IdentifierUnknownError().add(
-                    sub_namespace[-1], "namespace", closest_match[0] if closest_match else None).scopes(sm.current_scope)
-
-            # Move into the next part of the namespace.
-            namespace_scope = sm.get_namespaced_scope(sub_namespace)
+        # If the namespace does not exist, raise an error.
+        namespace_scope = sm.get_namespaced_scope([namespace])
+        if namespace_scope is None:
+            alternatives = [a.name.value for a in namespace_scope.all_symbols(sup_scope_search=True) if type(a) is NamespaceSymbol]
+            closest_match = difflib.get_close_matches(namespace.value, alternatives, n=1, cutoff=0)
+            raise SemanticErrors.IdentifierUnknownError().add(
+                namespace, "namespace", closest_match[0] if closest_match else None).scopes(namespace_scope)
 
         # Return the final namespace scope.
         return namespace_scope
 
     @staticmethod
+    @FunctionCache.cache
     def get_type_part_symbol_with_error(
             scope: Scope, sm: ScopeManager, type_part: Asts.TypeIdentifierAst, ignore_alias: bool = False,
             **kwargs) -> TypeSymbol | AliasSymbol:
