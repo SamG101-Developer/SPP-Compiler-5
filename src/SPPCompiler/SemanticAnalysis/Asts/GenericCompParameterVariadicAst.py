@@ -68,15 +68,6 @@ class GenericCompParameterVariadicAst(Asts.Ast, Asts.Mixins.OrderableAst):
         # Analyse the type of the default expression.
         self.type.analyse_semantics(sm, **kwargs)
 
-        # Create the variable for the const parameter.
-        ast = CodeInjection.inject_code(
-            f"let {self.name}: {self.type}", SppParser.parse_let_statement_uninitialized, pos_adjust=self.pos)
-        ast.analyse_semantics(sm, **kwargs)
-
-        # Mark the symbol as initialized.
-        symbol = sm.current_scope.get_symbol(Asts.IdentifierAst.from_type(self.name))
-        symbol.memory_info.initialized_by(self)
-
 
 __all__ = [
     "GenericCompParameterVariadicAst"]

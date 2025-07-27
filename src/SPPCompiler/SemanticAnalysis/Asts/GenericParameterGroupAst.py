@@ -19,10 +19,6 @@ class GenericParameterGroupAst(Asts.Ast):
     parameters: list[Asts.GenericParameterAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
-    def __post_init__(self) -> None:
-        self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftSquareBracket)
-        self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightSquareBracket)
-
     def __copy__(self) -> GenericParameterGroupAst:
         return GenericParameterGroupAst(parameters=self.parameters.copy())
 
@@ -37,16 +33,14 @@ class GenericParameterGroupAst(Asts.Ast):
         # Use the id of the object as the hash.
         return id(self)
 
+    def __str__(self) -> str:
+        string = ["[", ", ".join([str(p) for p in self.parameters]), "]"] if self.parameters else []
+        return "".join(string)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
-        if self.parameters:
-            string = [
-                self.tok_l.print(printer),
-                SequenceUtils.print(printer, self.parameters, sep=", "),
-                self.tok_r.print(printer) + " "]
-        else:
-            string = []
+        string = ["[", SequenceUtils.print(printer, self.parameters, sep=", "), "]"] if self.parameters else []
         return "".join(string)
 
     @property
@@ -106,7 +100,8 @@ class GenericParameterGroupAst(Asts.Ast):
 
         # Check the generic parameters are in the correct order.
         if dif := AstOrderingUtils.order_params(self.parameters):
-            raise SemanticErrors.OrderInvalidError().add(dif[0][0], dif[0][1], dif[1][0], dif[1][1], "generic parameter")
+            raise SemanticErrors.OrderInvalidError().add(dif[0][0], dif[0][1], dif[1][0], dif[1][1],
+                                                         "generic parameter")
 
         # Analyse the parameters.
         for p in self.parameters:

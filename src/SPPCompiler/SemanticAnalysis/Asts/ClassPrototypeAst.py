@@ -178,20 +178,17 @@ class ClassPrototypeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
             return
 
         # Ensure there are no unfilled generics in the class symbol.
-        if [sym for sym in cls_sym.scope.all_symbols() if type(sym) is TypeSymbol and sym.scope is None]:
-            print("Symbol", cls_sym, "has unfilled generics, skipping LLVM type generation.")
+        if [sym for sym in cls_sym.scope.all_symbols(exclusive=True) if type(sym) is TypeSymbol and sym.scope is None]:
             for generic_sym, generic_ast in self._generic_impls:
                 generic_ast.code_gen_pass_1(sm, llvm_module, **(kwargs | {"skip_scope": True}))
             return
 
-        print("Filling LLVM memory layout for class:", cls_sym)
         self._fill_llvm_memory_layout(cls_sym, llvm_module)
 
         if not kwargs.get("skip_scope", False):
             sm.move_out_of_current_scope()
 
     def _fill_llvm_memory_layout(self, cls_symbol: TypeSymbol, llvm_module: ir.Module) -> None:
-        print(cls_symbol)
         # Create the attribute types for the class's memory layout.
         if type(cls_symbol) is TypeSymbol and self.name.type_parts[-1].value[0] != "$":
 

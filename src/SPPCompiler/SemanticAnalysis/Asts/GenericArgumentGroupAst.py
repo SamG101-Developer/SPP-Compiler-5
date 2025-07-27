@@ -31,13 +31,20 @@ class GenericArgumentGroupAst(Asts.Ast):
         return id(self)
 
     def __getitem__(self, item: str) -> Optional[Asts.GenericArgumentAst]:
-        # assert isinstance(item, str), type(item)
         args = [a for a in self.arguments if Asts.IdentifierAst.from_type(a.name).value == item]
         return args[0] if args else None
 
     def __str__(self) -> str:
         if self.arguments:
             string = ["[", ", ".join([str(a) for a in self.arguments]), "]"]
+            return "".join(string)
+        return ""
+
+    @ast_printer_method
+    def print(self, printer: AstPrinter) -> str:
+        # Print the AST with auto-formatting.
+        if self.arguments:
+            string = ["[", SequenceUtils.print(printer, self.arguments, sep=", "), "]"]
             return "".join(string)
         return ""
 
@@ -62,14 +69,6 @@ class GenericArgumentGroupAst(Asts.Ast):
             else:
                 args.append(Asts.GenericCompArgumentNamedAst(name=arg_name, value=arg_val))
         return GenericArgumentGroupAst(arguments=args)
-
-    @ast_printer_method
-    def print(self, printer: AstPrinter) -> str:
-        # Print the AST with auto-formatting.
-        if self.arguments:
-            string = ["[", SequenceUtils.print(printer, self.arguments, sep=", "), "]"]
-            return "".join(string)
-        return ""
 
     @property
     def pos_end(self) -> int:

@@ -27,9 +27,11 @@ class GenericCompArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
 
     def __deepcopy__(self, memodict=None) -> GenericCompArgumentUnnamedAst:
         # Create a deep copy of the AST.
-        return GenericCompArgumentUnnamedAst(
-            pos=self.pos,
-            value=fast_deepcopy(self.value))
+        return GenericCompArgumentUnnamedAst(pos=self.pos, value=fast_deepcopy(self.value))
+
+    def __str__(self) -> str:
+        # Return the string representation of the unnamed argument.
+        return str(self.value)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

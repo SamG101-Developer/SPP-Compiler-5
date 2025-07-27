@@ -78,15 +78,6 @@ class GenericCompParameterOptionalAst(Asts.Ast, Asts.Mixins.OrderableAst):
             raise SemanticErrors.TypeMismatchError().add(
                 self.name, target_type, self.default, default_type).scopes(sm.current_scope)
 
-        # Create the variable for the const parameter.
-        var = Asts.LocalVariableSingleIdentifierAst(pos=self.name.pos, name=Asts.IdentifierAst.from_type(self.name))
-        ast = Asts.LetStatementUninitializedAst(pos=self.pos, assign_to=var, type=self.type)
-        ast.analyse_semantics(sm, explicit_type=self.type, **kwargs)
-
-        # Mark the symbol as initialized.
-        symbol = sm.current_scope.get_symbol(Asts.IdentifierAst.from_type(self.name))
-        symbol.memory_info.initialized_by(self)
-
     def check_memory(self, sm: ScopeManager, **kwargs) -> None:
         """
         Check the memory integrity of the default. Comptime constants don't have nested checks as they are a subset of

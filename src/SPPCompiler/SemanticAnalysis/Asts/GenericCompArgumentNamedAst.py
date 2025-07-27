@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 from SPPCompiler.SemanticAnalysis.Scoping.Symbols import VariableSymbol
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
@@ -19,12 +18,11 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
     value: Asts.ExpressionAst = field(default=None)
 
     def __post_init__(self) -> None:
-        self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
         self.value = self.value or Asts.IdentifierAst.from_type(self.name)
         self._variant = "Named"
 
     def __eq__(self, other: GenericCompArgumentNamedAst) -> bool:
-        return type(other) is GenericCompArgumentNamedAst and self.name == other.name and self.value == other.value
+        return type(other) is GenericCompArgumentNamedAst and self.value == other.value  # and self.name == other.name
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -35,19 +33,13 @@ class GenericCompArgumentNamedAst(Asts.Ast, Asts.Mixins.OrderableAst):
             pos=self.pos, name=self.name, tok_assign=self.tok_assign, value=fast_deepcopy(self.value))
 
     def __str__(self) -> str:
-        string = [
-            str(self.name),
-            str(self.tok_assign),
-            str(self.value)]
+        string = [str(self.name), "=", str(self.value)]
         return "".join(string)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
-        string = [
-            self.name.print(printer),
-            self.tok_assign.print(printer),
-            self.value.print(printer)]  # todo ?
+        string = [self.name.print(printer), "=", self.value.print(printer)]
         return "".join(string)
 
     @property
