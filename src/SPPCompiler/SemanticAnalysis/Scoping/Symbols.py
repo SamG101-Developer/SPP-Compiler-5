@@ -10,6 +10,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import MemoryInfo
 from SPPCompiler.SemanticAnalysis.Asts.Mixins.VisibilityEnabledAst import Visibility
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -127,7 +128,7 @@ class TypeSymbol(BaseSymbol):
     def is_copyable(self) -> bool:
         return self.is_direct_copyable
 
-    @property
+    @FunctionCache.cache_property
     def fq_name(self) -> Asts.TypeAst:
         fq_name = self.name
 

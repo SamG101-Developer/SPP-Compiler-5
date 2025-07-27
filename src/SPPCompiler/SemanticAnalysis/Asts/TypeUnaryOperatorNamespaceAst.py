@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 
 @dataclass(slots=True, repr=False)
@@ -13,7 +13,7 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
     tok_dbl_colon: Asts.TokenAst = field(default=None)
 
     def __post_init__(self) -> None:
-        self.tok_dbl_colon = self.tok_dbl_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDoubleColon)
+        self.is_type_ast = True
 
     def __eq__(self, other: TypeUnaryOperatorNamespaceAst) -> bool:
         return self.name.value == other.name.value
@@ -26,17 +26,17 @@ class TypeUnaryOperatorNamespaceAst(Asts.Ast):
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
-        return f"{self.name.print(printer)}{self.tok_dbl_colon.print(printer)}"
+        return f"{self.name.print(printer)}::"
 
-    @property
+    @FunctionCache.cache_property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return [self.name]
 
-    @property
+    @FunctionCache.cache_property
     def namespace_parts(self) -> list[Asts.IdentifierAst]:
         return [self.name]
 
-    @property
+    @FunctionCache.cache_property
     def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
         return []
 

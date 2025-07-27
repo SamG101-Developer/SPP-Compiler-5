@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 
 
 @dataclass(slots=True, repr=False)
@@ -27,15 +28,15 @@ class TypeUnaryOperatorBorrowAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.convention.pos_end
 
-    @property
+    @FunctionCache.cache_property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return []
 
-    @property
+    @FunctionCache.cache_property
     def namespace_parts(self) -> list[Asts.IdentifierAst]:
         return []
 
-    @property
+    @FunctionCache.cache_property
     def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
         return []
 

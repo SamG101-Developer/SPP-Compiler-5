@@ -96,15 +96,15 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
     def is_never_type(self) -> bool:
         return self.is_never
 
-    @property
+    @FunctionCache.cache_property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return [self]
 
-    @property
+    @FunctionCache.cache_property
     def namespace_parts(self) -> list[Asts.IdentifierAst]:
         return []
 
-    @property
+    @FunctionCache.cache_property
     def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
         return [self]
 
@@ -208,6 +208,8 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
         type_scope = type_scope or sm.current_scope
         original_scope = type_scope
+        # if original_scope in self._cached_for_scopes:
+        #     return
 
         # Determine the type scope and type symbol.
         type_symbol = AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.without_generics, ignore_alias=True)
@@ -256,7 +258,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
             if type(type_symbol) is AliasSymbol:
 
                 # Substitute the old type: "Opt[Str]" => "Var[Some[Str], None]"
-                generics = self.generic_argument_group.arguments + original_scope.generics
+                generics = self.generic_argument_group.arguments  # + original_scope.generics
                 old_type = type_symbol.old_sym.fq_name.substituted_generics(generics)
                 old_type.analyse_semantics(sm, type_scope=type_scope.parent, **kwargs)
 
@@ -275,6 +277,9 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
         else:
             type_symbol = type_scope.parent.get_symbol(self)
+
+        # Cache the scope
+        # self._cached_for_scopes.add(type_scope)
 
     def infer_type(self, sm: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or sm.current_scope

@@ -19,6 +19,9 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     op: Asts.TypeUnaryOperatorAst = field(default=None)
     rhs: Asts.TypeAst = field(default=None)
 
+    def __post_init__(self) -> None:
+        self.is_type_ast = True
+
     def __eq__(self, other: TypeUnaryExpressionAst) -> bool:
         return type(other) is TypeUnaryExpressionAst and type(self.op) is type(other.op) and self.op == other.op and self.rhs == other.rhs
 
@@ -38,9 +41,6 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def __str__(self) -> str:
         return f"{self.op}{self.rhs}"
 
-    def __post_init__(self) -> None:
-        self.is_type_ast = True
-
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         return f"{self.op.print(printer)}{self.rhs.print(printer)}"
@@ -55,15 +55,15 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
     def is_never_type(self) -> bool:
         return False
 
-    @property
+    @FunctionCache.cache_property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
         return self.op.fq_type_parts + self.rhs.fq_type_parts
 
-    @property
+    @FunctionCache.cache_property
     def namespace_parts(self) -> list[Asts.IdentifierAst]:
         return self.op.namespace_parts + self.rhs.namespace_parts
 
-    @property
+    @FunctionCache.cache_property
     def type_parts(self) -> list[Asts.TypeIdentifierAst | Asts.TokenAst]:
         return self.op.type_parts + self.rhs.type_parts
 
@@ -97,9 +97,12 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
 
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None, generic_infer_target: Optional[dict] = None, **kwargs) -> None:
         if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst:
-            temp_manager = ScopeManager(sm.global_scope, type_scope or sm.current_scope)
-            type_scope = AstTypeUtils.get_namespaced_scope_with_error(temp_manager, [self.op.name])
+            tm = ScopeManager(sm.global_scope, type_scope or sm.current_scope)
+            type_scope = AstTypeUtils.get_namespaced_scope_with_error(tm, [self.op.name])
+        # if type_scope in self._cached_for_scopes:
+        #     return
         self.rhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
+        # self._cached_for_scopes.add(type_scope)
 
     def infer_type(self, sm: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or sm.current_scope

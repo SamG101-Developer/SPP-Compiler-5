@@ -21,6 +21,9 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     lhs: Asts.TypeAst = field(default=None)
     op: Asts.TypePostfixOperatorAst = field(default=None)
 
+    def __post_init__(self) -> None:
+        self.is_type_ast = True
+
     def __deepcopy__(self, memodict=None) -> TypePostfixExpressionAst:
         # Create a deep copy of the AST.
         return TypePostfixExpressionAst(pos=self.pos, lhs=fast_deepcopy(self.lhs), op=fast_deepcopy(self.op))
@@ -30,9 +33,6 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
 
     def __json__(self) -> str:
         return f"{self.lhs}{self.op}"
-
-    def __post_init__(self) -> None:
-        self.is_type_ast = True
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -50,9 +50,9 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
     def is_never_type(self) -> bool:
         return False
 
-    @property
+    @FunctionCache.cache_property
     def fq_type_parts(self) -> list[Asts.IdentifierAst | Asts.TypeIdentifierAst | Asts.TokenAst]:
-        return CommonTypes.Opt(self.pos, self.lhs).fq_type_parts if type(self.op) is Asts.TypePostfixOperatorOptionalTypeAst else self.lhs.fq_type_parts + self.op.fq_type_parts
+        return self.lhs.fq_type_parts + self.op.fq_type_parts
 
     @FunctionCache.cache_property
     def namespace_parts(self) -> list[Asts.IdentifierAst]:
@@ -89,6 +89,8 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         lhs_type = self.lhs.infer_type(sm, **kwargs)
         lhs_type_symbol = sm.current_scope.get_symbol(lhs_type)
         lhs_type_scope = lhs_type_symbol.scope
+        # if lhs_type_scope in self._cached_for_scopes:
+        #     return
 
         # Check there is only 1 target field on the type at the highest level.
         if type(self.op) is Asts.TypePostfixOperatorNestedTypeAst and lhs_type_scope:
@@ -103,6 +105,7 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
                     sm.current_scope, closest[0][0], closest[1][0])
 
         self.op.name.analyse_semantics(sm, type_scope=lhs_type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
+        # self._cached_for_scopes.add(lhs_type_scope)
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         self.lhs.analyse_semantics(sm, **kwargs)
