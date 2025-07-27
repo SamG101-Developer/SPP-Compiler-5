@@ -4,7 +4,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 
 
 class AstOrderingUtils:
-    """!
+    """
     The ASTOrdering class contains utility function pertaining to the ordering of arguments and parameters in ASTs.
     Because ordering checks are required in multiple places, they are consolidated here.
     """
@@ -14,14 +14,14 @@ class AstOrderingUtils:
 
     @staticmethod
     def order(ordering: list[str], current: list[Asts.Mixins.OrderableAst]) -> list[tuple[str, Intersection[Asts.Ast, Asts.Mixins.OrderableAst]]]:
-        """!
+        """
         Order the arguments in the AST by the ordering defined in the "ordering" parameter. This re-arranges ASTs in the
         sequence by sorting the values by their "_variant" attribute, which is one of the _ARGUMENT_ORDERING or
         _PARAM_ORDERING values. The order of the arguments in their respective groups is preserved.
 
-        @param ordering The ordering to use for the ASTs.
-        @param current The current ASTs in the sequence.
-        @return A new, ordered sequence of ASTs. The ASTs themselves are not copied, but a new sequence is created.
+        :param ordering The ordering to use for the ASTs.
+        :param current The current ASTs in the sequence.
+        :return A new, ordered sequence of ASTs. The ASTs themselves are not copied, but a new sequence is created.
         """
 
         current = [(c._variant, c) for c in current]
@@ -30,14 +30,14 @@ class AstOrderingUtils:
 
     @staticmethod
     def order_args(current: list[Asts.Mixins.OrderableAst]) -> list[tuple[str, Asts.Ast]]:
-        """!
+        """
         Order the arguments in the AST by the ordering defined in _ARGUMENT_ORDERING. This ensures that unnamed
         arguments come first, and are followed by the named arguments. The order of the arguments in their respective
         groups is preserved. This function is used to ensure the ordering of function call arguments, and generic
         arguments used in a range of places.
 
-        @param current The current arguments in the AST.
-        @return A new, ordered sequence of arguments.
+        :param current The current arguments in the AST.
+        :return A new, ordered sequence of arguments.
         """
 
         # Call the order function with the argument ordering.
@@ -52,8 +52,8 @@ class AstOrderingUtils:
         preserved. This function is used to ensure the ordering of function parameters, and generic parameters used in
         a range of places.
 
-        @param current The current parameters in the AST.
-        @return A new, ordered sequence of parameters.
+        :param current The current parameters in the AST.
+        :return A new, ordered sequence of parameters.
         """
 
         # Call the order function with the parameter ordering.

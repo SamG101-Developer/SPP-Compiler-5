@@ -182,7 +182,7 @@ class AstMemoryUtils:
 
         # For tuple and array literals, analyse each element (recursively). This ensures that all elements are
         # memory-integral such that the entire tuple or array is memory-integral.
-        if isinstance(value_ast, (Asts.TupleLiteralAst, Asts.ArrayLiteralNElementAst)):
+        if isinstance(value_ast, (Asts.TupleLiteralAst, Asts.ArrayLiteralExplicitElementsAst)):
             for e in value_ast.elems:
                 AstMemoryUtils.enforce_memory_integrity(
                     e, move_ast, sm, check_move=True, check_partial_move=True, check_move_from_borrowed_ctx=True,
@@ -241,7 +241,7 @@ class AstMemoryUtils:
         # partial move, if it is an attribute access taking place).
         if check_move and var_sym.memory_info.ast_moved:
             raise SemanticErrors.MemoryNotInitializedUsageError().add(
-                var_sym.memory_info.ast_initialization_old, value_ast, var_sym.memory_info.ast_moved, sm).scopes(sm.current_scope)
+                var_sym.memory_info.ast_initialization_old, value_ast, var_sym.memory_info.ast_moved).scopes(sm.current_scope)
 
         # Check the symbol doesn't have any outstanding partial moves, in the case that the entire symbol itself is
         # being used. This means that "a" cannot be moved, or borrowed from etc, if "a.b has been moved. This guarantees
@@ -256,7 +256,7 @@ class AstMemoryUtils:
         if check_partial_move and var_sym.memory_info.ast_partial_moves and type(value_ast) is not Asts.IdentifierAst:
             if overlaps := [p for p in var_sym.memory_info.ast_partial_moves if AstMemoryUtils.right_overlaps(p, value_ast)]:
                 raise SemanticErrors.MemoryNotInitializedUsageError().add(
-                    var_sym.memory_info.ast_initialization_old, value_ast, overlaps[0], sm).scopes(sm.current_scope)
+                    var_sym.memory_info.ast_initialization_old, value_ast, overlaps[0]).scopes(sm.current_scope)
 
         # Check the symbol is not being moved from a borrowed context. This prevents partial moves off of borrowed
         # object, because the current context doesn't have ownership of the object. This guarantees that when control is

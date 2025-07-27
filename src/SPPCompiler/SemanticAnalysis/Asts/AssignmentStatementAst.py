@@ -168,7 +168,7 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             # Todo: for "a.b.c", if "a.b" is moved, i think "a.b.c = 1" still works, but it should not.
             # Ensure the memory status of the left and right hand side.
             AstMemoryUtils.enforce_memory_integrity(
-                lhs_sym.name.clone_at(lhs_expr.pos), self.op, sm, check_move=is_attr(lhs_expr),
+                lhs_expr, self.op, sm, check_move=is_attr(lhs_expr),
                 check_partial_move=False, check_move_from_borrowed_ctx=True, check_pins=True, check_pins_linked=True,
                 mark_moves=False, **kwargs)
 
