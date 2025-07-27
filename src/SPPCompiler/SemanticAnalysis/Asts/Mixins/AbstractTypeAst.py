@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, final
+from typing import Optional, TYPE_CHECKING, final
 
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
@@ -29,6 +29,8 @@ class AbstractTypeAst(AbstractTypeTemporaryAst):
     This allows for any of the Unary/Postfix/Single types to be used for any TypeAst value, with a common interface for
     all utility methods.
     """
+
+    # _cached_for_scopes: set[Scope] = field(default_factory=set, init=False, repr=False)
 
     def is_never_type(self) -> bool:
         return False

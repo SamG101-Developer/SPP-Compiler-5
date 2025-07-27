@@ -817,9 +817,7 @@ class SemanticErrors:
         been moved.
         """
 
-        def add(
-                self, init_location: Asts.Ast, ast: Asts.ExpressionAst, move_location: Asts.Ast,
-                sm: ScopeManager) -> SemanticError:
+        def add(self, init_location: Asts.Ast, ast: Asts.ExpressionAst, move_location: Asts.Ast) -> SemanticError:
 
             if init_location:
                 self.add_info(
@@ -1923,5 +1921,20 @@ class SemanticErrors:
                 tag=f"Type inferred as '{rhs_type}'",
                 msg="Dereference expressions can only occur on copyable types.",
                 tip="Change the expression type to a copyable type.")
+
+            return self
+
+    class CompileTimeConstantError(SemanticError):
+        """
+        The CompileTimeConstantError is raised if an expression is not a compile-time constant, but is expected to be.
+        This is used to ensure that certain expressions are evaluated at compile time.
+        """
+
+        def add(self, expr: Asts.ExpressionAst) -> SemanticError:
+            self.add_error(
+                ast=expr,
+                tag="Expression not a compile-time constant.",
+                msg="The expression must be a compile-time constant.",
+                tip="Change the expression to be a compile-time constant.")
 
             return self
