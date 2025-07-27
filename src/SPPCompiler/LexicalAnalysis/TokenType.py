@@ -78,12 +78,13 @@ class RawTokenType(TokenType):
     TkUnderscore = 24
     TkSpeechMark = 25
     TkExclamationMark = 26
-    TkWhitespace = 27
-    TkNewLine = 28
-    TkDollar = 29
-    TkUnknown = 30
-    NoToken = 31
-    EndOfFile = 32
+    TkSemicolon = 27
+    TkWhitespace = 28
+    TkNewLine = 29
+    TkDollar = 30
+    TkUnknown = 31
+    NoToken = 32
+    EndOfFile = 33
 
     @staticmethod
     def newline_token() -> TokenType:
@@ -326,6 +327,9 @@ class SppTokenType(TokenType):
 
     TkDoubleExclamationMark = "!!"
     """The token for a double exclamation mark. This is used to indicate an exhausted generator."""
+
+    TkSemicolon = ";"
+    """The token for a semicolon. Used in repeated array literals."""
 
     TkWhitespace = " "
     """The token for whitespace. This is a single space, and is used to separate tokens."""

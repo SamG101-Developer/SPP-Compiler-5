@@ -1,7 +1,7 @@
 from tests._Utils import *
 
 
-class TestArrayLiteralNElementAst(CustomTestCase):
+class TestArrayLiteralExplicitElementsAst(CustomTestCase):
     @should_fail_compilation(SemanticErrors.ExpressionTypeInvalidError)
     def test_invalid_array_filled_array_literal_invalid_element(self):
         """

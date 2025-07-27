@@ -16,17 +16,17 @@ from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
 @dataclass(slots=True, repr=False)
-class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
+class ArrayLiteralExplicitElementsAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     """
-    The ArrayLiteralNElementAst class is an AST node that represents an array literal with n elements. The type of the
-    element is never given, because every expression in S++ is type-inferrable on declaration. This means that the type
-    of the array is inferred from the first element in the array.
+    The ArrayLiteralExplicitElementAst class is an AST node that represents an array literal with n elements. The type
+    of the element is never given, because every expression in S++ is type-inferrable on declaration. This means that
+    the type of the array is inferred from the first element in the array.
 
     Example:
 
     .. code-block:: S++
 
-        let x = [1, 2, 3, 4]
+        let x = [1_u8, 2_u8, 3_u8, 4_u8]
 
     This will create a std::array::Arr[std::number::U8, 4] type. Arrays in S++ are low-level constructs, and map
     directly to memory. For example, this array will be stored in memory as 4 consecutive bytes. It is analogous to a C
@@ -46,9 +46,9 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftSquareBracket)
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightSquareBracket)
 
-    def __eq__(self, other: ArrayLiteralNElementAst) -> bool:
+    def __eq__(self, other: ArrayLiteralExplicitElementsAst) -> bool:
         # Needed for cmp-generic arg checking
-        return type(other) is ArrayLiteralNElementAst and self.elems == other.elems
+        return type(other) is ArrayLiteralExplicitElementsAst and self.elems == other.elems
 
     def __hash__(self) -> int:
         return id(self)
@@ -78,7 +78,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Create the standard "std::array::Arr[T, n: BigNum]" type, with generic items.
         size = Asts.TokenAst.raw(token_type=SppTokenType.LxNumber, token_metadata=str(len(self.elems)))
-        size = Asts.IntegerLiteralAst(pos=self.pos, value=size, type=Asts.TypeIdentifierAst.from_identifier(Asts.IdentifierAst(value="uz")))
+        size = Asts.IntegerLiteralAst(pos=self.pos, value=size, raw_type=Asts.TypeIdentifierAst.from_identifier(Asts.IdentifierAst(value="uz")))
         element_type = self.elems[0].infer_type(sm, **kwargs)
         array_type = CommonTypes.Arr(self.pos, element_type, size)
         array_type.analyse_semantics(sm, **kwargs)
@@ -139,7 +139,7 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         """
 
         # Use the 0-element generator to create the array (shared code).
-        array_ptr = Asts.ArrayLiteral0ElementAst.code_gen_pass_2(self, sm, llvm_module, **kwargs)
+        array_ptr = Asts.ArrayLiteralRepeatedElementAst.code_gen_pass_2(self, sm, llvm_module, **kwargs)
 
         # For each element, covert it to LLVM and store it in the array.
         zero = ir.Constant(ir.IntType(LlvmConfig.LLVM_USIZE), 0)
@@ -154,4 +154,4 @@ class ArrayLiteralNElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
 
 __all__ = [
-    "ArrayLiteralNElementAst"]
+    "ArrayLiteralExplicitElementsAst"]

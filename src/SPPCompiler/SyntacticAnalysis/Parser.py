@@ -1613,9 +1613,9 @@ class SppParser:
         if p1 is None: return None
         p2 = self.parse_once(self.parse_type)
         if p2 is None: return None
-        p3 = self.parse_once(self.parse_token_comma)
+        p3 = self.parse_once(self.parse_token_semicolon)
         if p3 is None: return None
-        p4 = self.parse_once(self.parse_lexeme_dec_integer)
+        p4 = self.parse_once(self.parse_cmp_value)
         if p4 is None: return None
         p5 = self.parse_once(self.parse_token_right_square_bracket)
         if p5 is None: return None
@@ -1757,8 +1757,8 @@ class SppParser:
 
     def parse_literal_array(self, item) -> Optional[Asts.ArrayLiteralAst]:
         p1 = self.parse_alternate([
-            self.parse_literal_array_0_items,
-            lambda : self.parse_literal_array_n_items(item)])
+            lambda : self.parse_literal_array_repeated_element(item),
+            lambda : self.parse_literal_array_explicit_elements(item)])
         return p1
 
     def parse_literal_boolean(self) -> Optional[Asts.BooleanLiteralAst]:
@@ -1872,27 +1872,27 @@ class SppParser:
 
     # ===== ARRAYS =====
 
-    def parse_literal_array_0_items(self) -> Optional[Asts.ArrayLiteral0ElementAst]:
+    def parse_literal_array_repeated_element(self, item) -> Optional[Asts.ArrayLiteralRepeatedElementAst]:
         p1 = self.parse_once(self.parse_token_left_square_bracket)
         if p1 is None: return None
-        p2 = self.parse_once(self.parse_type)
+        p2 = self.parse_once(item)
         if p2 is None: return None
-        p3 = self.parse_once(self.parse_token_comma)
+        p3 = self.parse_once(self.parse_token_semicolon)
         if p3 is None: return None
-        p4 = self.parse_once(self.parse_lexeme_dec_integer)
+        p4 = self.parse_once(self.parse_cmp_value)
         if p4 is None: return None
         p5 = self.parse_once(self.parse_token_right_square_bracket)
         if p5 is None: return None
-        return Asts.ArrayLiteral0ElementAst(p1.pos, p1, p2, p3, p4, p5)
+        return Asts.ArrayLiteralRepeatedElementAst(p1.pos, p1, p2, p3, p4, p5)
 
-    def parse_literal_array_n_items(self, item) -> Optional[Asts.ArrayLiteralNElementAst]:
+    def parse_literal_array_explicit_elements(self, item) -> Optional[Asts.ArrayLiteralExplicitElementsAst]:
         p1 = self.parse_once(self.parse_token_left_square_bracket)
         if p1 is None: return None
         p2 = self.parse_one_or_more(item, self.parse_token_comma)
         if p2 is None: return None
         p3 = self.parse_once(self.parse_token_right_square_bracket)
         if p3 is None: return None
-        return Asts.ArrayLiteralNElementAst(p1.pos, p1, p2, p3)
+        return Asts.ArrayLiteralExplicitElementsAst(p1.pos, p1, p2, p3)
 
     # ===== GLOBAL CONSTANTS =====
 
@@ -2023,6 +2023,9 @@ class SppParser:
 
     def parse_token_bit_xor(self) -> Optional[Asts.TokenAst]:
         return self.parse_token_raw(RawTokenType.TkCaret, SppTokenType.TkBitXor)
+
+    def parse_token_semicolon(self) -> Optional[Asts.TokenAst]:
+        return self.parse_token_raw(RawTokenType.TkSemicolon, SppTokenType.TkSemicolon)
 
     def parse_token_arrow_right(self) -> Optional[Asts.TokenAst]:
         p1 = self.parse_token_raw(RawTokenType.TkMinusSign, SppTokenType.TkArrowR)
@@ -2333,7 +2336,7 @@ class SppParser:
 
         p1 = self.parse_once(self.parse_lexeme_digit)
         if p1 is None:
-            self.store_error(self.current_pos(), "Invalid binary integer literal")
+            self.store_error(self._pos, "Invalid binary integer literal")
             return None
         out.token_data += p1.token_data
 
@@ -2349,26 +2352,26 @@ class SppParser:
 
         p1 = self.parse_once(self.parse_lexeme_digit)
         if p1 is None or p1.token_data != "0":
-            self.store_error(self.current_pos(), "Invalid binary integer literal")
+            self.store_error(self._pos, "Invalid binary integer literal")
             return None
         out.token_data += p1.token_data
 
         p2 = self.parse_once(self.parse_lexeme_character)
         if p2 is None or p2.token_data != "b":
-            self.store_error(self.current_pos(), "Invalid binary integer literal")
+            self.store_error(self._pos, "Invalid binary integer literal")
             return None
         out.token_data += p2.token_data
 
         p3 = self.parse_once(self.parse_lexeme_digit)
         if p3 is None or p3.token_data not in "01":
-            self.store_error(self.current_pos(), "Invalid binary integer literal")
+            self.store_error(self._pos, "Invalid binary integer literal")
             return None
         out.token_data += p3.token_data
 
         while self._token_types[self._pos] == RawTokenType.TkDigit:
             p3 = self.parse_once(self.parse_lexeme_digit)
             if p3 is None or p3.token_data not in "01":
-                self.store_error(self.current_pos(), "Invalid binary integer literal")
+                self.store_error(self._pos, "Invalid binary integer literal")
                 return out
             out.token_data += p3.token_data
 
@@ -2380,26 +2383,26 @@ class SppParser:
 
         p1 = self.parse_once(self.parse_lexeme_digit)
         if p1 is None or p1.token_data != "0":
-            self.store_error(self.current_pos(), "Invalid octal integer literal")
+            self.store_error(self._pos, "Invalid octal integer literal")
             return None
         out.token_data += p1.token_data
 
         p2 = self.parse_once(self.parse_lexeme_character)
         if p2 is None or p2.token_data not in "o":
-            self.store_error(self.current_pos(), "Invalid octal integer literal")
+            self.store_error(self._pos, "Invalid octal integer literal")
             return None
         out.token_data += p2.token_data
 
         p3 = self.parse_once(self.parse_lexeme_digit)
         if p3 is None or p3.token_data not in "01234567":
-            self.store_error(self.current_pos(), "Invalid octal integer literal")
+            self.store_error(self._pos, "Invalid octal integer literal")
             return None
         out.token_data += p3.token_data
 
         while self._token_types[self._pos] == RawTokenType.TkDigit:
             p3 = self.parse_once(self.parse_lexeme_digit)
             if p3 is None or p3.token_data not in "01234567":
-                self.store_error(self.current_pos(), "Invalid octal integer literal")
+                self.store_error(self._pos, "Invalid octal integer literal")
                 return out
             out.token_data += p3.token_data
 
@@ -2411,25 +2414,25 @@ class SppParser:
 
         p1 = self.parse_once(self.parse_lexeme_digit)
         if p1 is None or p1.token_data != "0":
-            self.store_error(self.current_pos(), "Invalid hexadecimal integer literal")
+            self.store_error(self._pos, "Invalid hexadecimal integer literal")
             return None
         out.token_data += p1.token_data
 
         p2 = self.parse_once(self.parse_lexeme_character)
         if p2 is None or p2.token_data not in "x":
-            self.store_error(self.current_pos(), "Invalid hexadecimal integer literal")
+            self.store_error(self._pos, "Invalid hexadecimal integer literal")
             return None
         out.token_data += p2.token_data
 
         p3 = self.parse_once(self.parse_lexeme_character)
         if p3 is None or p3.token_data not in "0123456789abcdefABCDEF":
-            self.store_error(self.current_pos(), "Invalid hexadecimal integer literal")
+            self.store_error(self._pos, "Invalid hexadecimal integer literal")
             return None
 
         while self._token_types[self._pos] in [RawTokenType.TkCharacter, RawTokenType.TkDigit]:
             p3 = self.parse_once(self.parse_lexeme_character_or_digit)
             if p3 is None or p3.token_data not in "0123456789abcdefABCDEF":
-                self.store_error(self.current_pos(), "Invalid hexadecimal integer literal")
+                self.store_error(self._pos, "Invalid hexadecimal integer literal")
                 return out
             out.token_data += p3.token_data
 
@@ -2462,7 +2465,7 @@ class SppParser:
 
         p1 = self.parse_once(self.parse_lexeme_character)
         if p1 is None or not p1.token_data.islower():
-            self.store_error(self.current_pos(), "Invalid identifier")
+            self.store_error(self._pos, "Invalid identifier")
             return None
         out.token_data += p1.token_data
 
@@ -2483,7 +2486,7 @@ class SppParser:
 
         p1 = self.parse_once(self.parse_lexeme_character)
         if p1 is None or not p1.token_data.isupper():
-            self.store_error(self.current_pos(), "Invalid upper identifier")
+            self.store_error(self._pos, "Invalid upper identifier")
             return None
         out.token_data += p1.token_data
 
@@ -2517,7 +2520,7 @@ class SppParser:
     def parse_character(self, value: str) -> Optional[Asts.TokenAst]:
         p1 = self.parse_once(self.parse_lexeme_character_or_digit)
         if p1 is None or p1.token_data != value:
-            self.store_error(self.current_pos(), f"Expected '{value}'")
+            self.store_error(self._pos, f"Expected '{value}'")
             return None
         return p1
 

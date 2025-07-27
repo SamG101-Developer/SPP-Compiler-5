@@ -158,6 +158,10 @@ class SppLexer:
                     tokens.append(RawToken(RawTokenType.TkExclamationMark, c))
                     i += 1
                     continue
+                case ";":
+                    tokens.append(RawToken(RawTokenType.TkSemicolon, c))
+                    i += 1
+                    continue
                 case '"':
                     in_string = not in_string
                     tokens.append(RawToken(RawTokenType.TkSpeechMark, c))

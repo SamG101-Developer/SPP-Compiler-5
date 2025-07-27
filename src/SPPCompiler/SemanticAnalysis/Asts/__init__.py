@@ -6,8 +6,8 @@ from SPPCompiler.SemanticAnalysis.Asts.FunctionPrototypeAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.AnnotationAst import *
 
-from SPPCompiler.SemanticAnalysis.Asts.ArrayLiteral0ElementAst import *
-from SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralNElementAst import *
+from SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralRepeatedElementAst import *
+from SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralExplicitElementsAst import *
 from SPPCompiler.SemanticAnalysis.Asts.ArrayLiteralAst import *
 
 from SPPCompiler.SemanticAnalysis.Asts.AssignmentStatementAst import *
