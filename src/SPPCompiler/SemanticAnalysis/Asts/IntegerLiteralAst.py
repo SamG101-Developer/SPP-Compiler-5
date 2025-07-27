@@ -41,7 +41,8 @@ SIZE_MAPPING = {
 class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
     value: Asts.TokenAst = field(default=None)
-    type: Optional[Asts.TypeAst] = field(default=None)  # why TypeSingleAst? just use str metadata?
+    raw_type: Optional[Asts.TypeAst] = field(default=None)  # why TypeSingleAst? just use str metadata?
+    true_type: Optional[Asts.TypeAst] = field(default=None, init=False)
 
     def __hash__(self) -> int:
         return id(self)
@@ -61,58 +62,62 @@ class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         string = [
             self.tok_sign.print(printer) if self.tok_sign else "",
             self.value.print(printer),
-            ("_" + self.type.print(printer)) if self.type else ""]
+            ("_" + self.raw_type.print(printer)) if self.raw_type else ""]
         return "".join(string)
 
     @property
     def pos_end(self) -> int:
-        return self.type.pos_end if self.type else self.value.pos_end
+        return self.raw_type.pos_end if self.raw_type else self.value.pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         # Create an integer type based on the (optional) type postfix.
+        if self.true_type is not None:
+            return self.true_type
 
-        # Match the type against the allowed type postfixes (no postfix is BigInt).
-        match self.type:
+        # Match the type against the allowed type postfixes (no postfix is S32).
+        match self.raw_type:
             case None:
-                return CommonTypes.BigInt(self.pos)
+                self.true_type = CommonTypes.S32(self.pos)
             case type if type.type_parts[0].value == "s8":
-                return CommonTypes.S8(self.pos)
+                self.true_type = CommonTypes.S8(self.pos)
             case type if type.type_parts[0].value == "u8":
-                return CommonTypes.U8(self.pos)
+                self.true_type = CommonTypes.U8(self.pos)
             case type if type.type_parts[0].value == "s16":
-                return CommonTypes.S16(self.pos)
+                self.true_type = CommonTypes.S16(self.pos)
             case type if type.type_parts[0].value == "u16":
-                return CommonTypes.U16(self.pos)
+                self.true_type = CommonTypes.U16(self.pos)
             case type if type.type_parts[0].value == "s32":
-                return CommonTypes.S32(self.pos)
+                self.true_type = CommonTypes.S32(self.pos)
             case type if type.type_parts[0].value == "u32":
-                return CommonTypes.U32(self.pos)
+                self.true_type = CommonTypes.U32(self.pos)
             case type if type.type_parts[0].value == "s64":
-                return CommonTypes.S64(self.pos)
+                self.true_type = CommonTypes.S64(self.pos)
             case type if type.type_parts[0].value == "u64":
-                return CommonTypes.U64(self.pos)
+                self.true_type = CommonTypes.U64(self.pos)
             case type if type.type_parts[0].value == "s128":
-                return CommonTypes.S128(self.pos)
+                self.true_type = CommonTypes.S128(self.pos)
             case type if type.type_parts[0].value == "u128":
-                return CommonTypes.U128(self.pos)
+                self.true_type = CommonTypes.U128(self.pos)
             case type if type.type_parts[0].value == "s256":
-                return CommonTypes.S256(self.pos)
+                self.true_type = CommonTypes.S256(self.pos)
             case type if type.type_parts[0].value == "u256":
-                return CommonTypes.U256(self.pos)
+                self.true_type = CommonTypes.U256(self.pos)
             case type if type.type_parts[0].value == "sz":
-                return CommonTypes.SSize(self.pos)
+                self.true_type = CommonTypes.SSize(self.pos)
             case type if type.type_parts[0].value == "uz":
-                return CommonTypes.USize(self.pos)
+                self.true_type = CommonTypes.USize(self.pos)
             case _:
-                raise ValueError(f"Invalid type for integer literal: {self.type}.")
+                raise ValueError(f"Invalid type for integer literal: {self.raw_type}.")
+
+        return self.true_type
 
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # No analysis needs to be done for the BigInt automatically inferred type.
-        if not self.type:
+        if not self.raw_type:
             return
 
         # Check if the value is within the bounds.
-        lower, upper = SIZE_MAPPING[self.type.type_parts[0].value]
+        lower, upper = SIZE_MAPPING[self.raw_type.type_parts[0].value]
         true_value = int((self.tok_sign.token_data if self.tok_sign else "") + self.value.token_data)
         if true_value < lower or true_value > upper:
             raise SemanticErrors.NumberOutOfBoundsError().add(self, lower, upper, "integer").scopes(sm.current_scope)

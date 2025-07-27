@@ -29,7 +29,8 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     integer_value: Asts.TokenAst = field(default=None)
     tok_dot: Asts.TokenAst = field(default=None)
     decimal_value: Asts.TokenAst = field(default=None)
-    type: Optional[Asts.TypeAst] = field(default=None)
+    raw_type: Optional[Asts.TypeAst] = field(default=None)
+    true_type: Optional[Asts.TypeAst] = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         self.integer_value = self.integer_value or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.LxNumber)
@@ -52,38 +53,44 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             self.integer_value.print(printer),
             self.tok_dot.print(printer),
             self.decimal_value.print(printer),
-            ("_" + self.type.print(printer)) if self.type else ""]
+            ("_" + self.raw_type.print(printer)) if self.raw_type else ""]
         return "".join(string)
 
     @property
     def pos_end(self) -> int:
-        return self.type.pos_end if self.type else self.decimal_value.pos_end
+        return self.raw_type.pos_end if self.raw_type else self.decimal_value.pos_end
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
-        # Match the type against the allowed type postfixes (no postfix is BigDec).
-        match self.type:
+        if self.true_type:
+            # If the type is already inferred, return it.
+            return self.true_type
+
+        # Match the type against the allowed type postfixes (no postfix is F64).
+        match self.raw_type:
             case None:
-                return CommonTypes.BigDec(self.pos)
+                self.true_type = CommonTypes.F64(self.pos)
             case type if type.type_parts[0].value == "f8":
-                return CommonTypes.F8(self.pos)
+                self.true_type = CommonTypes.F8(self.pos)
             case type if type.type_parts[0].value == "f16":
-                return CommonTypes.F16(self.pos)
+                self.true_type = CommonTypes.F16(self.pos)
             case type if type.type_parts[0].value == "f32":
-                return CommonTypes.F32(self.pos)
+                self.true_type = CommonTypes.F32(self.pos)
             case type if type.type_parts[0].value == "f64":
-                return CommonTypes.F64(self.pos)
+                self.true_type = CommonTypes.F64(self.pos)
             case type if type.type_parts[0].value == "f128":
-                return CommonTypes.F128(self.pos)
+                self.true_type = CommonTypes.F128(self.pos)
             case _:
                 raise
 
+        return self.true_type
+
     def analyse_semantics(self, sm: ScopeManager, **kwargs) -> None:
         # No analysis needs to be done for the BigDec automatically inferred type.
-        if not self.type:
+        if not self.raw_type:
             return
 
         # Check if the value is within the bounds.
-        lower, upper = SIZE_MAPPING[self.type.type_parts[0].value]
+        lower, upper = SIZE_MAPPING[self.raw_type.type_parts[0].value]
         true_value = float(self.integer_value.token_data + "." + self.decimal_value.token_data)
         if False:  # Todo: true_value < lower or true_value > upper:
             raise SemanticErrors.NumberOutOfBoundsError().add(
