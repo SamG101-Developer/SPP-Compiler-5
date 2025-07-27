@@ -4,7 +4,7 @@ from typing import Iterable, Iterator
 
 
 class FastOrderedSet[T](Iterable[T]):
-    __slots__ = ("_data",)
+    __slots__ = {"_data"}
 
     _data: dict[T, None]
 
