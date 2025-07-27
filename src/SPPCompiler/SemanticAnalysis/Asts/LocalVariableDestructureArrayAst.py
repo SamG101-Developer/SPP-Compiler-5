@@ -71,7 +71,7 @@ class LocalVariableDestructureArrayAst(Asts.Ast, Asts.Mixins.VariableLikeAst):
         if multi_arg_skips and multi_arg_skips[0].binding:
             m = self.elems.index(multi_arg_skips[0])
             indexes = [*range(m, m + num_rhs_array_elements - num_lhs_array_elements + 1)]
-            new_ast = Asts.ArrayLiteralNElementAst(
+            new_ast = Asts.ArrayLiteralExplicitElementsAst(
                 pos=value.pos,
                 elems=[Asts.PostfixExpressionAst(pos=value.pos, lhs=value, op=Asts.PostfixExpressionOperatorMemberAccessAst.new_runtime(value.pos, Asts.TokenAst(0, SppTokenType.LxNumber, str(i)))) for i in indexes])
             bound_multi_skip = new_ast

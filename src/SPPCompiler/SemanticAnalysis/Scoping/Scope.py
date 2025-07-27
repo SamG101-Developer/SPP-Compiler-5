@@ -25,7 +25,7 @@ class Scope:
     superclasses. This allows extended classes to integrate seamlessly symbol resolution.
     """
 
-    _name: str | Asts.IdentifierAst | Asts.TypeAst
+    name: str | Asts.IdentifierAst | Asts.TypeAst
     """
     The name of the scope. Likely to be a string, IdentifierAst or TypeAst. For classes, it will be the TypeAst
     representing the name of the class. For namespace/module scopes, it will be the IdentifierAst representing the
@@ -33,14 +33,14 @@ class Scope:
     and the token position of the scope, mainly for debugging.
     """
 
-    _parent: Optional[Scope]
+    parent: Optional[Scope]
     """
     The parent scope of this module. This is used to search for symbols in parent scopes if they aren't found in the
     current scope. Every scope has a [rent scope, except for the global scope which is the top level scope of the entire
     program.
     """
 
-    _children: list[Scope]
+    children: list[Scope]
     """
     The children scopes of a scope are the scopes that are created within this scope. A function scope will contain all
     scopes created by the statements that make up the function, and module scopes will contain all the class, function
@@ -107,12 +107,12 @@ class Scope:
         """
 
         # Initialize the scope with the given name, parent, and AST.
-        self._name = name
-        self._parent = parent
+        self.name = name
+        self.parent = parent
         self._ast = ast
 
         # Initialize everything else with default values.
-        self._children = []
+        self.children = []
         self._symbol_table = SymbolTable()
         self._direct_sup_scopes = []
         self._direct_sub_scopes = []
@@ -138,15 +138,15 @@ class Scope:
 
     def __json__(self) -> dict:
         return {
-            "scope_name": self._name, "parent": self._parent.name if self._parent else "",
-            "children": self._children, "symbol_table": self._symbol_table,
+            "scope_name": self.name, "parent": self.parent.name if self.parent else "",
+            "children": self.children, "symbol_table": self._symbol_table,
             "sup_scopes": [s.name for s in self._direct_sup_scopes],
             "sup_scopes_ids": [id(s) for s in self._direct_sup_scopes],
             "sub_scopes": [s.name for s in self._direct_sub_scopes],
             "type_symbol": self._type_symbol.name if self._type_symbol else ""}
 
     def __str__(self) -> str:
-        return str(self._name)
+        return str(self.name)
 
     def __hash__(self) -> int:
         return id(self)
@@ -156,12 +156,12 @@ class Scope:
 
     def __copy__(self) -> Scope:
         # Create a shallow copy of the scope.
-        new_scope = Scope(name=self._name, parent=self._parent, ast=self._ast, error_formatter=self._error_formatter)
+        new_scope = Scope(name=self.name, parent=self.parent, ast=self._ast, error_formatter=self._error_formatter)
         new_scope._symbol_table = self._symbol_table
         new_scope._direct_sup_scopes = self._direct_sup_scopes
         new_scope._direct_sub_scopes = self._direct_sub_scopes
         new_scope._type_symbol = self._type_symbol
-        new_scope._children = self._children
+        new_scope.children = self.children
         new_scope._non_generic_scope = self._non_generic_scope
         return new_scope
 
@@ -169,13 +169,23 @@ class Scope:
     def generics(self) -> list[Asts.GenericArgumentAst]:
         GenericArgumentCTor = {
             VariableSymbol: Asts.GenericCompArgumentNamedAst,
-            TypeSymbol    : Asts.GenericTypeArgumentNamedAst,
-            AliasSymbol   : Asts.GenericTypeArgumentNamedAst}
-        return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self.all_symbols() if type(s) is not NamespaceSymbol and s.is_generic and (s.scope if isinstance(s, TypeSymbol) else True)]
+            TypeSymbol    : Asts.GenericTypeArgumentNamedAst}
+
+        syms = []
+        for scope in self.ancestors:
+            if type(scope.name) is Asts.IdentifierAst: break
+            sub_syms = [GenericArgumentCTor[type(s)].from_symbol(s) for s in scope.all_symbols(exclusive=True) if type(s) in GenericArgumentCTor and s.is_generic and (s.scope if type(s) is TypeSymbol else True)]
+            syms.extend(sub_syms)
+        return syms
+        # return [GenericArgumentCTor[type(s)].from_symbol(s) for s in self.all_symbols() if type(s) is not NamespaceSymbol and s.is_generic and (s.scope if isinstance(s, TypeSymbol) else True)]
 
     def generics_extended_for(self, generic_argument_group: list[Asts.GenericArgumentAst]) -> list[Symbol]:
         syms = [self.get_symbol(g.value) for g in generic_argument_group]
-        gens = [s for s in self.all_symbols() if type(s) is not NamespaceSymbol and s.is_generic]
+        gens = []
+        for scope in self.ancestors:
+            if type(scope.name) is Asts.IdentifierAst: break
+            gens.extend([s for s in scope.all_symbols(exclusive=True) if type(s) is not NamespaceSymbol and s.is_generic])
+        # gens = [s for s in self.all_symbols() if type(s) is not NamespaceSymbol and s.is_generic]
         syms = gens + [s for s in syms if s is not None]
         return syms
 
@@ -192,8 +202,8 @@ class Scope:
         for sym in self._symbol_table.all():
             yield sym
 
-        if not exclusive and self._parent:
-            yield from self._parent.all_symbols(exclusive=exclusive)
+        if not exclusive and self.parent:
+            yield from self.parent.all_symbols(exclusive=exclusive)
 
         if sup_scope_search:
             # Search the super scopes for symbols.
@@ -223,8 +233,8 @@ class Scope:
             symbol = None
 
         # If this is not an exclusive search, search the parent scope.
-        if symbol is None and scope._parent and not exclusive:
-            symbol = scope._parent.get_symbol(name, ignore_alias=ignore_alias, sym_type=sym_type)
+        if symbol is None and scope.parent and not exclusive:
+            symbol = scope.parent.get_symbol(name, ignore_alias=ignore_alias, sym_type=sym_type)
 
         # If either a variable or "$" type is being searched for, search the super scopes.
         if symbol is None:
@@ -310,7 +320,7 @@ class Scope:
         """
 
         # Only check top level scopes (where ClassPrototypeAsts are defined).
-        for scope in self._children:
+        for scope in self.children:
             if isinstance(scope._ast, Asts.ClassPrototypeAst):
                 cls_symbol = scope.type_symbol
 
@@ -319,7 +329,7 @@ class Scope:
                     continue
 
                 # Ensure there are no unfilled generics in the class symbol.
-                if any(sym.scope is None for sym in cls_symbol.scope.all_symbols() if type(sym) is TypeSymbol):
+                if any(sym.scope is None for sym in cls_symbol.scope.all_symbols(exclusive=True) if type(sym) is TypeSymbol):
                     continue
 
                 # Create the class type in the LLVM module.
@@ -334,26 +344,11 @@ class Scope:
         :return: The final child scope.
         """
 
-        if not self._children:
+        if not self.children:
             return self
 
         # Recursively get the last child scope.
-        return self._children[-1].final_child_scope()
-
-    @property
-    def name(self) -> Any:
-        # Get the name of the scope.
-        return self._name
-
-    @property
-    def parent(self) -> Optional[Scope]:
-        # Get the parent scope.
-        return self._parent
-
-    @parent.setter
-    def parent(self, parent: Scope) -> None:
-        # Set the parent scope.
-        self._parent = parent
+        return self.children[-1].final_child_scope()
 
     @property
     def ancestors(self) -> list[Scope]:
@@ -364,11 +359,6 @@ class Scope:
     def parent_module(self) -> Scope:
         # Get the ancestor module scope.
         return [s for s in self.ancestors if type(s.name) is Asts.IdentifierAst][0]
-
-    @property
-    def children(self) -> list[Scope]:
-        # Get the children scopes.
-        return self._children
 
     @property
     def type_symbol(self) -> Optional[TypeSymbol | AliasSymbol]:
@@ -408,13 +398,14 @@ class Scope:
 
 def shift_scope_for_namespaced_type(scope: Scope, fq_type: Asts.TypeAst) -> tuple[Scope, Asts.TypeIdentifierAst]:
     # For TypeAsts, move through each namespace/type part accessing the namespace scope.
-    for part in fq_type.fq_type_parts[:-1]:
+    type_parts = fq_type.fq_type_parts
+    for part in type_parts[:-1]:
         # Get the next type/namespace symbol from the scope.
         inner_symbol = scope.get_namespace_symbol(part) if type(part) is Asts.IdentifierAst else scope.get_symbol(part)
         match inner_symbol:
             case None: break
             case _: scope = inner_symbol.scope
-    fq_type = fq_type.type_parts[-1]
+    fq_type = type_parts[-1]
     return scope, fq_type
 
 

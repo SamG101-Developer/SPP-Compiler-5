@@ -175,7 +175,7 @@ class AstTypeUtils:
 
         # Configure the new scope based on the base scope, register non-generic scope as the base scope.
         new_cls_scope.parent.add_symbol(new_cls_symbol)
-        new_cls_scope._children = old_cls_scope.children
+        new_cls_scope.children = old_cls_scope.children
         new_cls_scope._symbol_table = fast_deepcopy(old_cls_scope._symbol_table)
         new_cls_scope._non_generic_scope = old_cls_scope
         new_ast = fast_deepcopy(new_cls_scope._ast)
@@ -221,9 +221,9 @@ class AstTypeUtils:
         # Create the "fun" scope that will be a replacement. The children and symbol table are copied over.
         new_fun_scope_name = fast_deepcopy(old_fun_scope.name)
         new_fun_scope = Scope(new_fun_scope_name, old_fun_scope.parent, ast=old_fun_scope._ast)
-        new_fun_scope._children = [copy.copy(c) for c in old_fun_scope.children]
-        for c in new_fun_scope._children:
-            c._parent = new_fun_scope
+        new_fun_scope.children = [copy.copy(c) for c in old_fun_scope.children]
+        for c in new_fun_scope.children:
+            c.parent = new_fun_scope
         sm = ScopeManager(sm.global_scope, new_fun_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
 
         for e in external_generic_symbols:
@@ -250,9 +250,9 @@ class AstTypeUtils:
         new_sup_scope_name = old_sup_scope.name
 
         new_sup_scope = Scope(new_sup_scope_name, old_sup_scope.parent, ast=old_sup_scope._ast)
-        new_sup_scope._children = [copy.copy(c) for c in old_sup_scope.children]
-        for c in new_sup_scope._children:
-            c._parent = new_sup_scope
+        new_sup_scope.children = [copy.copy(c) for c in old_sup_scope.children]
+        for c in new_sup_scope.children:
+            c.parent = new_sup_scope
         new_sup_scope._symbol_table = fast_deepcopy(old_sup_scope._symbol_table)
         new_sup_scope.parent.children.append(new_sup_scope)
         sm = ScopeManager(sm.global_scope, new_sup_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
@@ -297,7 +297,7 @@ class AstTypeUtils:
         # Create the scope for the new super class type. This will handle recursive sup-scope creation.
         super_cls_scope = None
         if type(old_sup_scope._ast) is Asts.SupPrototypeExtensionAst:
-            new_fq_super_type = fast_deepcopy(old_sup_scope._ast.super_class)
+            new_fq_super_type = old_sup_scope._ast.super_class
             new_fq_super_type = new_fq_super_type.substituted_generics(generic_arguments.arguments)
             new_fq_super_type.analyse_semantics(sm, **kwargs)
             super_cls_scope = new_cls_scope.get_symbol(new_fq_super_type).scope

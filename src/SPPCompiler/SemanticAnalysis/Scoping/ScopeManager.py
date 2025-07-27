@@ -32,7 +32,7 @@ class ScopeManager:
     def __iter__(self) -> Iterator[Scope]:
         # Iterate over the scope manager's scopes, starting from the global scope.
         def _iterator(s: Scope) -> Iterator[Scope]:
-            for child in s._children:
+            for child in s.children:
                 yield child
                 yield from _iterator(child)
 
@@ -49,7 +49,7 @@ class ScopeManager:
 
         # Create a new scope (parent is the current scope) and move into it.
         scope = Scope(name, self._current_scope, ast=ast, error_formatter=error_formatter)
-        self._current_scope._children.append(scope)
+        self._current_scope.children.append(scope)
 
         # Set the new scope as the current scope, and advance the iterator to match.
         self._current_scope = scope
@@ -60,7 +60,7 @@ class ScopeManager:
 
     def move_out_of_current_scope(self) -> Scope:
         # Exit the current scope into the parent scope and return the parent scope.
-        self._current_scope = self._current_scope._parent
+        self._current_scope = self._current_scope.parent
 
         # Return the new current scope.
         return self._current_scope
