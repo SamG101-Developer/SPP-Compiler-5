@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Optional, TYPE_CHECKING
 
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import *
 from SPPCompiler.SemanticAnalysis.Utils.CompilerStages import CompilerStages, PreProcessingContext
-from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
 
 if TYPE_CHECKING:
     from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
@@ -32,21 +30,7 @@ class Ast(CompilerStages):
     is_type_ast: bool = field(default=False, kw_only=True, repr=False)
     """Optimization tag to check if this AST is a type. This is used to avoid unnecessary type checks in the compiler."""
 
-    def clone_at(self, pos: int) -> Ast:
-        """
-        Clone an AST at a new position. This is used to create a new AST with the same attributes as the original, but
-        with a different position.
-
-        :param pos: The new position of the cloned AST.
-        :return: The cloned AST.
-        """
-
-        d = fast_deepcopy(self)
-        d.pos = pos
-        return d
-
     @ast_printer_method
-    @abstractmethod
     def print(self, printer: AstPrinter) -> str:
         """
         Print an AST with indentation for inner scopes. The decorator and AstPrinter object "printer" work together to
@@ -59,8 +43,9 @@ class Ast(CompilerStages):
         :return: The output string to be printed, fully formatted and pre-processed.
         """
 
+        return ""
+
     @property
-    @abstractmethod
     def pos_end(self) -> int:
         """
         The ``pos_end`` property gets the final index spanned to by this AST. Implementations recursively choose the
@@ -69,6 +54,7 @@ class Ast(CompilerStages):
 
         :return: The final index spanned by this AST.
         """
+
         return 0
 
     def __eq__(self, other: Ast) -> bool:
