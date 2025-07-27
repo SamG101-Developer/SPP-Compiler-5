@@ -15,19 +15,19 @@ if TYPE_CHECKING:
 
 
 class ScopeManager:
-    _global_scope: Scope
-    _current_scope: Scope
-    _iterator: Iterator[Scope]
+    global_scope: Scope
+    current_scope: Scope
     normal_sup_blocks: DefaultDict[TypeSymbol, list[Scope]]
     generic_sup_blocks: dict[TypeSymbol, Scope]
+    _iterator: Iterator[Scope]
 
     def __init__(self, global_scope, current_scope: Optional[Scope] = None, nsbs=None, gsbs=None) -> None:
         # Create the default global and current scopes if they are not provided.
-        self._global_scope = global_scope
-        self._current_scope = current_scope or self._global_scope
-        self._iterator = iter(self)
+        self.global_scope = global_scope
+        self.current_scope = current_scope or self.global_scope
         self.normal_sup_blocks = nsbs or DefaultDict(list)
         self.generic_sup_blocks = gsbs or DefaultDict(list)
+        self._iterator = iter(self)
 
     def __iter__(self) -> Iterator[Scope]:
         # Iterate over the scope manager's scopes, starting from the global scope.
@@ -37,22 +37,29 @@ class ScopeManager:
                 yield from _iterator(child)
 
         # Initialize the iterator with the current scope.
-        return _iterator(self._current_scope)
+        return _iterator(self.current_scope)
+
+    def __hash__(self) -> int:
+        return 0
+
+    def __eq__(self, other: ScopeManager) -> bool:
+        # Only used for function caching purposes.
+        return True
 
     def reset(self, scope: Optional[Scope] = None, iterator: Optional[Iterator[Scope]] = None) -> None:
         # Reset the scope manager to the provided/default scope and iterator.
-        self._current_scope = scope or self._global_scope
+        self.current_scope = scope or self.global_scope
         self._iterator = iterator or iter(self)
 
     def create_and_move_into_new_scope(self, name: Any, ast: Optional[Asts.Ast] = None, error_formatter: Optional[ErrorFormatter] = None) -> Scope:
         from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 
         # Create a new scope (parent is the current scope) and move into it.
-        scope = Scope(name, self._current_scope, ast=ast, error_formatter=error_formatter)
-        self._current_scope.children.append(scope)
+        scope = Scope(name, self.current_scope, ast=ast, error_formatter=error_formatter)
+        self.current_scope.children.append(scope)
 
         # Set the new scope as the current scope, and advance the iterator to match.
-        self._current_scope = scope
+        self.current_scope = scope
         next(self._iterator)
 
         # Return the new scope.
@@ -60,20 +67,20 @@ class ScopeManager:
 
     def move_out_of_current_scope(self) -> Scope:
         # Exit the current scope into the parent scope and return the parent scope.
-        self._current_scope = self._current_scope.parent
+        self.current_scope = self.current_scope.parent
 
         # Return the new current scope.
-        return self._current_scope
+        return self.current_scope
 
     def move_to_next_scope(self) -> Scope:
         # Move to the next scope in the iterator and return it.
-        self._current_scope = next(self._iterator)
-        return self._current_scope
+        self.current_scope = next(self._iterator)
+        return self.current_scope
 
     def get_namespaced_scope(self, namespace: list[Asts.IdentifierAst]) -> Optional[Scope]:
         # Find the first scope that matches the first part of the namespace.
         namespace_symbol = None
-        namespace_symbol = self._current_scope.get_namespace_symbol(namespace[0])
+        namespace_symbol = self.current_scope.get_namespace_symbol(namespace[0])
 
         # If the namespace symbol is found, move through the namespace parts to find the scope.
         if namespace_symbol:
@@ -176,14 +183,6 @@ class ScopeManager:
 
         if progress:
             progress.next(str(scope.name))
-
-    @property
-    def global_scope(self) -> Scope:
-        return self._global_scope
-
-    @property
-    def current_scope(self) -> Scope:
-        return self._current_scope
 
 
 def check_conflicting_type_or_cmp_statements(cls_symbol: TypeSymbol, super_scope: Scope, sm: ScopeManager) -> None:

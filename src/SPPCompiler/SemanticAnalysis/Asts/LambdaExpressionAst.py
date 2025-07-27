@@ -120,7 +120,7 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self._ret_type = kwargs["function_ret_type"][0] if kwargs["function_ret_type"] else final_body_type
 
         # Move out of the inner and outer lambda scopes.
-        sm._current_scope = parent_scope
+        sm.current_scope = parent_scope
 
         # Note there is no "sm.move_out_of_current_scope()" here, as the parent scope is manually chosen above. This is
         # because of scope re-arranging to prevent access to uncaptured variables.
@@ -138,7 +138,7 @@ class LambdaExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         self.body.check_memory(sm, **kwargs)
 
         # Move out of the inner and outer lambda scopes.
-        sm._current_scope = parent_scope
+        sm.current_scope = parent_scope
 
         # Pin the lambda symbol if it is assigned to a variable and has borrowed captures.
         if "assignment" in kwargs and (borrowed_captures := [c for c in self.pc_group.captures if c.convention is not None]):
