@@ -30,6 +30,8 @@ class BooleanLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     value: Asts.TokenAst = field(default=None)
     """The token representing the boolean value."""
 
+    true_type: Asts.TypeAst = field(default=None, init=False, repr=False)
+
     def __post_init__(self) -> None:
         self.value = self.value or Asts.TokenAst.raw(token_type=SppTokenType.KwFalse)
 
@@ -82,8 +84,12 @@ class BooleanLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         :return: The "std::boolean::Bool" type.
         """
 
+        if self.true_type is not None:
+            return self.true_type
+
         # Create the standard "std::boolean::Bool" type.
-        return CommonTypes.Bool(self.pos)
+        self.true_type = CommonTypes.Bool(self.pos)
+        return self.true_type
 
     def code_gen_pass_2(self, sm: ScopeManager, llvm_module: ir.Module, **kwargs) -> ir.Constant:
         """

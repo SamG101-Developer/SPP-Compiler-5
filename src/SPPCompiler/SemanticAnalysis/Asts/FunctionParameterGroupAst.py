@@ -7,8 +7,10 @@ from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
@@ -25,8 +27,14 @@ class FunctionParameterGroupAst(Asts.Ast):
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightParenthesis)
 
+    def __hash__(self) -> int:
+        return id(self)
+
     def __copy__(self) -> FunctionParameterGroupAst:
-        return FunctionParameterGroupAst(params=self.params.copy())
+        return FunctionParameterGroupAst(pos=self.pos, tok_l=self.tok_l, params=self.params.copy(), tok_r=self.tok_r)
+
+    def __deepcopy__(self, memodict=None) -> FunctionParameterGroupAst:
+        return FunctionParameterGroupAst(pos=self.pos, tok_l=self.tok_l, params=fast_deepcopy(self.params), tok_r=self.tok_r)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -41,26 +49,31 @@ class FunctionParameterGroupAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.tok_r.pos_end
 
+    @FunctionCache.cache
     def get_self_param(self) -> Optional[Asts.FunctionParameterSelfAst]:
         # Get the "self" function parameter (if it exists).
         ps = [p for p in self.params if type(p) is Asts.FunctionParameterSelfAst]
         return ps[0] if ps else None
 
+    @FunctionCache.cache
     def get_required_params(self) -> list[Asts.FunctionParameterRequiredAst]:
         # Get all the required function parameters.
         ps = [p for p in self.params if type(p) is Asts.FunctionParameterRequiredAst]
         return ps
 
+    @FunctionCache.cache
     def get_optional_params(self) -> list[Asts.FunctionParameterOptionalAst]:
         # Get all the optional function parameters.
         ps = [p for p in self.params if type(p) is Asts.FunctionParameterOptionalAst]
         return ps
 
+    @FunctionCache.cache
     def get_variadic_param(self) -> Optional[Asts.FunctionParameterVariadicAst]:
         # Get the variadic function parameter (if it exists).
         ps = [p for p in self.params if type(p) is Asts.FunctionParameterVariadicAst]
         return ps[0] if ps else None
 
+    @FunctionCache.cache
     def get_non_self_params(self) -> list[Asts.FunctionParameterAst]:
         # Get all the function parameters that are not "self".
         ps = [p for p in self.params if type(p) is not Asts.FunctionParameterSelfAst]

@@ -19,13 +19,13 @@ class FunctionCache:
     _cache_property: list[functools.cached_property] = []
 
     @staticmethod
-    def cache[T](function: Callable[[...], T]) -> Callable[[...], T]:
+    def cache[T](function: Callable[..., T]) -> Callable[..., T]:
         cached_function = functools.cache(function)
         FunctionCache._cache.append(cached_function)
         return cached_function
 
     @staticmethod
-    def cache_property[T](function: Callable[[...], T]) -> functools.cached_property:
+    def cache_property[T](function: Callable[..., T]) -> functools.cached_property:
         cached_function = functools.cached_property(function)
         FunctionCache._cache_property.append(cached_function)
         return cached_function

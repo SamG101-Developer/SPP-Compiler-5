@@ -14,6 +14,8 @@ from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printe
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticErrors
 from SPPCompiler.SyntacticAnalysis.Parser import SppParser
+from SPPCompiler.Utils.FastDeepcopy import fast_deepcopy
+from SPPCompiler.Utils.FunctionCache import FunctionCache
 from SPPCompiler.Utils.Sequence import SequenceUtils
 
 
@@ -27,8 +29,14 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
         self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightParenthesis)
 
+    def __hash__(self) -> int:
+        return id(self)
+
     def __copy__(self) -> FunctionCallArgumentGroupAst:
-        return FunctionCallArgumentGroupAst(pos=self.pos, arguments=self.arguments.copy())
+        return FunctionCallArgumentGroupAst(pos=self.pos, tok_l=self.tok_l, arguments=self.arguments.copy(), tok_r=self.tok_r)
+
+    def __deepcopy__(self, memodict=None) -> FunctionCallArgumentGroupAst:
+        return FunctionCallArgumentGroupAst(pos=self.pos, tok_l=self.tok_l, arguments=fast_deepcopy(self.arguments), tok_r=self.tok_r)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
@@ -43,10 +51,12 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
     def pos_end(self) -> int:
         return self.tok_r.pos_end
 
+    @FunctionCache.cache
     def get_named_args(self) -> list[Asts.FunctionCallArgumentNamedAst]:
         # Get all the named function call arguments.
         return [a for a in self.arguments if type(a) is Asts.FunctionCallArgumentNamedAst]
 
+    @FunctionCache.cache
     def get_unnamed_args(self) -> list[Asts.FunctionCallArgumentUnnamedAst]:
         # Get all the unnamed function call arguments.
         return [a for a in self.arguments if type(a) is Asts.FunctionCallArgumentUnnamedAst]
