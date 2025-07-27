@@ -2,15 +2,14 @@ from __future__ import annotations
 
 import json
 import os
-from enum import Enum
 from typing import Optional, TYPE_CHECKING
 
 import xxhash
+from fastenum import Enum
 
 from SPPCompiler.CodeGen import LlvmInitialization
 from SPPCompiler.SemanticAnalysis.Scoping.Scope import Scope
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypesPrecompiled
 from SPPCompiler.SemanticAnalysis.Utils.SemanticError import SemanticError
 from SPPCompiler.Utils.Progress import Progress
@@ -121,24 +120,24 @@ class Compiler:
             self._ast.pre_analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.analyse_semantics(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.check_memory(self._scope_manager, next(progress_bar), self._module_tree)
-            self.try_dump()
+            self._try_dump()
 
             LlvmInitialization.initialize_llvm()
             self._ast.code_gen_pass_1(self._scope_manager, next(progress_bar), self._module_tree)
             self._ast.code_gen_pass_2(self._scope_manager, next(progress_bar), self._module_tree)
 
             # Save the LLVM to a file.
-            self.try_dump_llvm()
+            self._try_dump_llvm()
 
         except SemanticError as error:
-            self.try_dump()
+            self._try_dump()
             error.throw()
 
         except Exception:
-            self.try_dump()
+            self._try_dump()
             raise
 
-    def try_dump(self) -> None:
+    def _try_dump(self) -> None:
         """
         All dumped symbols reside in the "out" folder. It is created if it not present. Each module has its AST dumped
         (showing the preprocessed changes), and the global scope is dumped to a JSON file. This includes all children
@@ -150,15 +149,9 @@ class Compiler:
         in, saving time.
         """
 
-        # Todo: Implement the pickling and un-pickling of scopes, injection of un-pickled scopes, and skipping modules
-        #  that will be re-injected.
-
-        # Make an output directory for the ASTs.
-        if not os.path.exists("out"):
-            os.makedirs("out")
+        os.makedirs("out", exist_ok=True)
 
         # Save the file hashes to the output file (don't need to recompile if nothing has changed).
-        # Will need run steps from load_super_scopes and onwards again though.
         with open("out/file_hashes.json", "w") as file:
             file.write(json.dumps({
                 module.path: xxhash.xxh3_64(module.code).hexdigest()
@@ -166,6 +159,7 @@ class Compiler:
 
         # Only save asts and symbols if in dev mode.
         if self._mode == Compiler.Mode.Dev:
+            os.makedirs(os.path.join("out", "ast"), exist_ok=True)
             for module in self._module_tree:
                 ast = module.module_ast
 
@@ -177,13 +171,14 @@ class Compiler:
                     file.write(ast.print(AstPrinter()))
 
             # Dump the entire symbol table (rooted at the global scope) to a JSON file.
+            os.makedirs(os.path.join("out", "smg"), exist_ok=True)
             out_scope_manager_path = self._src_path.replace("src", "out/smg", 1)
             if not os.path.exists(out_scope_manager_path):
                 os.makedirs(out_scope_manager_path)
             with open(out_scope_manager_path + "/scope_manager.json", "w") as file:
                 file.write(json.dumps(self._scope_manager.global_scope, indent=4))
 
-    def try_dump_llvm(self) -> None:
+    def _try_dump_llvm(self) -> None:
         out_llvm_path = os.path.join("out", "llvm")
         if not os.path.exists(out_llvm_path):
             os.makedirs(out_llvm_path)
