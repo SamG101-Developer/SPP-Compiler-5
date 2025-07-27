@@ -401,7 +401,7 @@ class AstFunctionUtils:
             parameter_name = parameter_names.pop(0)
             parameter = [p for p in parameters if p.name is parameter_name][0]
             ctor: type = GEN_MAPPING[type(parameter)]
-            named_argument = ctor(pos=unnamed_argument.pos, name=fast_deepcopy(parameter_name))
+            named_argument = ctor(pos=unnamed_argument.pos, name=parameter_name)
 
             # The variadic parameter requires a tuple of the remaining arguments.
             if len(parameter_names) == 0 and is_variadic:

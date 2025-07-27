@@ -166,7 +166,7 @@ class AstTypeUtils:
         # Create a new scope & symbol for the generic substituted type.
         old_cls_scope = old_cls_symbol.scope
         new_cls_scope = Scope(
-            name=fast_deepcopy(type_part), parent=old_cls_scope.parent, ast=old_cls_scope._ast)
+            name=type_part, parent=old_cls_scope.parent, ast=old_cls_scope._ast)
 
         new_cls_symbol = TypeSymbol(
             name=type_part, type=new_cls_scope._ast, scope=new_cls_scope,

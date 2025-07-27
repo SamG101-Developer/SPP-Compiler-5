@@ -39,8 +39,8 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
 
     def __deepcopy__(self, memodict: Dict = None) -> ClassAttributeAst:
         return ClassAttributeAst(
-            self.pos, self.annotations, fast_deepcopy(self.name), self.tok_colon,
-            fast_deepcopy(self.type), _visibility=self._visibility, _ctx=self._ctx, _scope=self._scope)
+            self.pos, self.annotations, self.name, self.tok_colon, self.type, _visibility=self._visibility,
+            _ctx=self._ctx, _scope=self._scope)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
