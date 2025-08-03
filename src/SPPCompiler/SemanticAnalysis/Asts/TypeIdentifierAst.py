@@ -7,7 +7,7 @@ from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstFunctionUtils import AstFunctionUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
-from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol, NamespaceSymbol, TypeSymbol
+from SPPCompiler.SemanticAnalysis.Scoping.Symbols import AliasSymbol
 from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 from SPPCompiler.SemanticAnalysis.Utils.CodeInjection import CodeInjection
 from SPPCompiler.SemanticAnalysis.Utils.CommonTypes import CommonTypes, CommonTypesPrecompiled
@@ -25,9 +25,10 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
     value: str = field(default="")
     generic_argument_group: Asts.GenericArgumentGroupAst = field(default=None)
     is_never: bool = field(default=False, repr=False)
+    _cached_for_scopes: set[Scope] = field(default_factory=set, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=0)
+        self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=self.pos)
         self.is_type_ast = True
 
     def __eq__(self, other: TypeIdentifierAst | Asts.IdentifierAst) -> bool:
@@ -208,8 +209,8 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
 
         type_scope = type_scope or sm.current_scope
         original_scope = type_scope
-        # if original_scope in self._cached_for_scopes:
-        #     return
+        if original_scope in self._cached_for_scopes:
+            return
 
         # Determine the type scope and type symbol.
         type_symbol = AstTypeUtils.get_type_part_symbol_with_error(original_scope, sm, self.without_generics, ignore_alias=True)
@@ -279,7 +280,7 @@ class TypeIdentifierAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeI
             type_symbol = type_scope.parent.get_symbol(self)
 
         # Cache the scope
-        # self._cached_for_scopes.add(type_scope)
+        self._cached_for_scopes.add(type_scope)
 
     def infer_type(self, sm: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or sm.current_scope

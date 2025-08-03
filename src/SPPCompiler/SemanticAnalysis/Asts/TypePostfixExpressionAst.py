@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     lhs: Asts.TypeAst = field(default=None)
     op: Asts.TypePostfixOperatorAst = field(default=None)
+    _cached_for_scopes: set[Scope] = field(default_factory=set, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.is_type_ast = True
@@ -89,8 +90,8 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
         lhs_type = self.lhs.infer_type(sm, **kwargs)
         lhs_type_symbol = sm.current_scope.get_symbol(lhs_type)
         lhs_type_scope = lhs_type_symbol.scope
-        # if lhs_type_scope in self._cached_for_scopes:
-        #     return
+        if lhs_type_scope in self._cached_for_scopes:
+            return
 
         # Check there is only 1 target field on the type at the highest level.
         if type(self.op) is Asts.TypePostfixOperatorNestedTypeAst and lhs_type_scope:
@@ -105,7 +106,7 @@ class TypePostfixExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixin
                     sm.current_scope, closest[0][0], closest[1][0])
 
         self.op.name.analyse_semantics(sm, type_scope=lhs_type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
-        # self._cached_for_scopes.add(lhs_type_scope)
+        self._cached_for_scopes.add(lhs_type_scope)
 
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         self.lhs.analyse_semantics(sm, **kwargs)

@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.TypeInferrable):
     op: Asts.TypeUnaryOperatorAst = field(default=None)
     rhs: Asts.TypeAst = field(default=None)
+    _cached_for_scopes: set[Scope] = field(default_factory=set, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.is_type_ast = True
@@ -99,10 +100,10 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst:
             tm = ScopeManager(sm.global_scope, type_scope or sm.current_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
             type_scope = AstTypeUtils.get_namespaced_scope_with_error(tm, tm.current_scope, self.op.name)
-        # if type_scope in self._cached_for_scopes:
-        #     return
+        if type_scope in self._cached_for_scopes:
+            return
         self.rhs.analyse_semantics(sm, type_scope=type_scope, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
-        # self._cached_for_scopes.add(type_scope)
+        self._cached_for_scopes.add(type_scope)
 
     def infer_type(self, sm: ScopeManager, type_scope: Optional[Scope] = None, **kwargs) -> Asts.TypeAst:
         type_scope  = type_scope or sm.current_scope
