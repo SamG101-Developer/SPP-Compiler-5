@@ -212,11 +212,11 @@ class Scope:
 
     def has_symbol(
             self, name: Asts.IdentifierAst | Asts.TypeAst, exclusive: bool = False,
-            sym_type: Optional[type] = None, debug: bool = False) -> bool:
+            sym_type: Optional[type] = None) -> bool:
 
         # Get the symbol and check if it is None or not (None => not found).
         return self.get_symbol(name, exclusive, ignore_alias=True, sym_type=sym_type) is not None
-
+    
     def get_symbol(
             self, name: Asts.IdentifierAst | Asts.TypeAst, exclusive: bool = False,
             ignore_alias: bool = False, sym_type: Optional[type] = None) -> Optional[Symbol]:
