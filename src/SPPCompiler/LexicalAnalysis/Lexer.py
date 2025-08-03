@@ -40,6 +40,7 @@ class SppLexer:
         tokens = []
         in_string = False
         in_single_line_comment = False
+        keywords = [*RawKeywordType]
 
         i = 0
         while i < len(self._code):
@@ -185,7 +186,7 @@ class SppLexer:
                     continue
 
             kw = False
-            for keyword in RawKeywordType:
+            for keyword in keywords:
                 if self._code.startswith(keyword.value, i) and not (
                     (i > 0 and is_alphanumeric(self._code[i - 1])) or
                     (i + len(keyword.value) < len(self._code) and is_alphanumeric(self._code[i + len(keyword.value)]))
