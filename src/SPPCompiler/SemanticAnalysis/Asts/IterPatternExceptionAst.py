@@ -21,7 +21,7 @@ class IterPatternExceptionAst(Asts.Ast):
     variable: Asts.LocalVariableAst = field(default=None)
     """The local variable that the exception is bound to."""
 
-    _new_ast: Asts.LetStatementInitializedAst = field(default=None, init=False)
+    _new_ast: Asts.LetStatementInitializedAst = field(default=None, init=False, repr=False)
     """The AST node that this pattern is transformed into, to create its variable (bound exception)."""
 
     def __post_init__(self) -> None:

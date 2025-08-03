@@ -153,7 +153,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
                     new_fn_proto = fast_deepcopy(fn_proto)
                     external_generics = sm.current_scope.generics_extended_for(generic_arguments)
                     new_fn_scope = AstTypeUtils.create_generic_fun_scope(sm, fn_scope, Asts.GenericArgumentGroupAst(arguments=generic_arguments), external_generics, **kwargs)
-                    tm = ScopeManager(sm.global_scope, new_fn_scope, sm.normal_sup_blocks, sm.generic_sup_blocks)
+                    tm = ScopeManager(sm.global_scope, new_fn_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
 
                     new_fn_proto.generic_parameter_group.parameters = []
                     for p in new_fn_proto.function_parameter_group.params.copy():
@@ -294,7 +294,7 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
             return_type = return_type.substituted_generics(other_generics)
             return_type = return_type.substituted_generics(self._overload[0].generics)
 
-            tm = ScopeManager(sm.global_scope, self._overload[0], sm.normal_sup_blocks, sm.generic_sup_blocks)
+            tm = ScopeManager(sm.global_scope, self._overload[0], nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
             return_type.analyse_semantics(tm, **kwargs)
 
         # For GenOnce coroutines, auto resume the coroutine and return the "Yield" type.

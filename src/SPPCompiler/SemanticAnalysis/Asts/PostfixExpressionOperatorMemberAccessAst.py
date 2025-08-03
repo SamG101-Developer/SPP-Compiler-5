@@ -73,8 +73,9 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
 
         # Accessing a member from the scope by the identifier.
         if type(self.field) is Asts.IdentifierAst and type(field_symbol) is VariableSymbol:
+            tm = ScopeManager(sm.global_scope, lhs_master_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
             attribute_type = field_symbol.type
-            attribute_type.analyse_semantics(ScopeManager(sm.global_scope, lhs_master_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks), **kwargs)
+            attribute_type.analyse_semantics(tm, **kwargs)
             attribute_type = lhs_master_scope.get_symbol(attribute_type).fq_name
             return attribute_type
 

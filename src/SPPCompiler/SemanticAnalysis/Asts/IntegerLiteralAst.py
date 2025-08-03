@@ -42,7 +42,7 @@ class IntegerLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_sign: Optional[Asts.TokenAst] = field(default=None)
     value: Asts.TokenAst = field(default=None)
     raw_type: Optional[Asts.TypeAst] = field(default=None)  # why TypeSingleAst? just use str metadata?
-    true_type: Optional[Asts.TypeAst] = field(default=None, init=False)
+    true_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
     def __hash__(self) -> int:
         return id(self)

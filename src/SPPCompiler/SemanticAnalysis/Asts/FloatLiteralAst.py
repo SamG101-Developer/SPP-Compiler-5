@@ -30,7 +30,7 @@ class FloatLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_dot: Asts.TokenAst = field(default=None)
     decimal_value: Asts.TokenAst = field(default=None)
     raw_type: Optional[Asts.TypeAst] = field(default=None)
-    true_type: Optional[Asts.TypeAst] = field(default=None, init=False)
+    true_type: Optional[Asts.TypeAst] = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.integer_value = self.integer_value or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.LxNumber)

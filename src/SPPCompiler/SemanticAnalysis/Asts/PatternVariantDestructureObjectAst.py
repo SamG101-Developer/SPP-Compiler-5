@@ -20,7 +20,7 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
     elems: list[Asts.PatternVariantNestedForDestructureObjectAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
-    _new_ast: Asts.LetStatementInitializedAst = field(default=None, init=False)
+    _new_ast: Asts.LetStatementInitializedAst = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
