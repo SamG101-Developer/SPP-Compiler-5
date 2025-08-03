@@ -51,6 +51,14 @@ class ArrayLiteralExplicitElementsAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         return type(other) is ArrayLiteralExplicitElementsAst and self.elems == other.elems
 
     def __hash__(self) -> int:
+        """
+        Array literals can be used as comptime generic arguments, and so might be stored in a list when considering
+        generic arguments to a type. As such, a ``__hash__`` function is required. Uniqueness is the only thing required
+        (ie two arguments could be the same value, but are different arguments), so a fast ``id`` call can be used,
+        ensuring uniqueness.
+        """
+
+        # Use the id of the object to ensure uniqueness.
         return id(self)
 
     @ast_printer_method
