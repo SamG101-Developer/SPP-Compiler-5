@@ -121,10 +121,9 @@ class AstTypeUtils:
 
     @staticmethod
     @FunctionCache.cache
-    def get_namespaced_scope_with_error(sm: ScopeManager, namespace_scope: Scope, namespace: Asts.IdentifierAst) -> Scope:
+    def get_namespaced_scope_with_error(sm: ScopeManager, _: Scope, namespace: Asts.IdentifierAst) -> Scope:
         """
-        Note that `namespace_scope` will always be the same as `sm.current_scope`, but uniqueness is required for
-        caching.
+        Note that `_` will always be the same as `sm.current_scope`, but uniqueness is required for caching.
         """
 
         # If the namespace does not exist, raise an error.

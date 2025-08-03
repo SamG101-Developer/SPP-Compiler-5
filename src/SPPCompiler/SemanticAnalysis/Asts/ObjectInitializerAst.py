@@ -68,7 +68,7 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
             for a in base_symbol.type.body.members}
 
         # Analyse the type and object argument group.
-        tm = ScopeManager(sm.current_scope, base_symbol.scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
+        tm = ScopeManager(sm.global_scope, base_symbol.scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
         base_symbol.type.body.analyse_semantics(tm, **kwargs)
         self.class_type.analyse_semantics(sm, generic_infer_source=generic_infer_source, generic_infer_target=generic_infer_target, **kwargs)
         self.object_argument_group.analyse_semantics(sm, class_type=self.class_type, **kwargs)
