@@ -97,7 +97,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
 
     def analyse_semantics(self, sm: ScopeManager, type_scope: Optional[Scope] = None, generic_infer_source: Optional[dict] = None, generic_infer_target: Optional[dict] = None, **kwargs) -> None:
         if type(self.op) is Asts.TypeUnaryOperatorNamespaceAst:
-            tm = ScopeManager(sm.global_scope, type_scope or sm.current_scope)
+            tm = ScopeManager(sm.global_scope, type_scope or sm.current_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
             type_scope = AstTypeUtils.get_namespaced_scope_with_error(tm, tm.current_scope, self.op.name)
         # if type_scope in self._cached_for_scopes:
         #     return

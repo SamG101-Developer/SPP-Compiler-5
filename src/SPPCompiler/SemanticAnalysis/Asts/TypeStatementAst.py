@@ -109,7 +109,7 @@ class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.T
         self.old_type.without_generics.analyse_semantics(sm, skip_generic_check=True, **kwargs)
 
         # Load the generics into the type-alias and class scopes.
-        tm = ScopeManager(sm.global_scope, sm.current_scope.get_symbol(self.old_type.without_generics).scope)
+        tm = ScopeManager(sm.global_scope, sm.current_scope.get_symbol(self.old_type.without_generics).scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
         for generic_argument in Asts.GenericArgumentGroupAst.from_parameter_group(self.generic_parameter_group).arguments:
             generic_symbol = AstTypeUtils.create_generic_symbol(sm, generic_argument, tm)
             sm.current_scope.add_symbol(generic_symbol)
@@ -137,7 +137,7 @@ class TypeStatementAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst, Asts.Mixins.T
 
         stripped_old_type_symbol = sm.current_scope.get_symbol(self.old_type.without_generics, ignore_alias=True)
         if not stripped_old_type_symbol.is_generic:
-            tm = ScopeManager(sm.global_scope, sm.current_scope.get_symbol(self.old_type.without_generics, ignore_alias=True).scope)
+            tm = ScopeManager(sm.global_scope, sm.current_scope.get_symbol(self.old_type.without_generics, ignore_alias=True).scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
 
             self.generic_parameter_group.qualify_types(tm, **kwargs)
             self.old_type.qualify_types(tm, **kwargs)

@@ -550,7 +550,7 @@ class AstFunctionUtils:
 
         # Add any default generic arguments in that were missing.
         if sm.current_scope.get_symbol(owner):
-            tm = ScopeManager(sm.global_scope, owner_scope)
+            tm = ScopeManager(sm.global_scope, owner_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
             for optional_generic_parameter in optional_generic_parameters:
                 if optional_generic_parameter.name not in inferred_generic_arguments:
                     default = optional_generic_parameter.default

@@ -45,8 +45,8 @@ class InnerScopeAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Return the last member's inferred type, if there are any members.
         if self.members:
-            temp_manager = ScopeManager(sm.global_scope, self._scope)
-            return self.members[-1].infer_type(temp_manager, **kwargs)
+            tm = ScopeManager(sm.global_scope, self._scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
+            return self.members[-1].infer_type(tm, **kwargs)
 
         # An empty scope is inferred to have a void type.
         return CommonTypes.Void(self.pos)

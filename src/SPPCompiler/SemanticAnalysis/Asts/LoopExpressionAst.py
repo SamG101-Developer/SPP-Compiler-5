@@ -95,7 +95,7 @@ class LoopExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
         sm.move_to_next_scope()
 
         # Check twice so that once-time invalidation fail on the second loop.
-        tm = ScopeManager(sm.global_scope, sm.current_scope)
+        tm = ScopeManager(sm.global_scope, sm.current_scope, nsbs=sm.normal_sup_blocks, gsbs=sm.generic_sup_blocks)
         for m in [tm, sm]:
             self.cond.check_memory(m, **(kwargs | {"loop_double_check": m is sm}))
             self.body.check_memory(m, **kwargs)
