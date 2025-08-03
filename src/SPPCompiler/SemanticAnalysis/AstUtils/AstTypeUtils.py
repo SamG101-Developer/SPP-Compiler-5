@@ -517,7 +517,8 @@ class AstTypeUtils:
         rhs_generics = rhs_type_fq.type_parts[-1].generic_argument_group.arguments
 
         # Special case for variadic parameter types.
-        shared_generic_parameters = lhs_scope.get_symbol(lhs_type).type.generic_parameter_group.parameters if lhs_scope.get_symbol(lhs_type).type else []
+        temp_type_proto = lhs_scope.get_symbol(lhs_type).type
+        shared_generic_parameters = temp_type_proto.generic_parameter_group.parameters if temp_type_proto else []
         if shared_generic_parameters and isinstance(shared_generic_parameters[-1], Asts.GenericParameterVariadicAst):
             if len(lhs_generics) != len(rhs_generics):
                 return False
