@@ -100,6 +100,7 @@ class Scope:
         """
         Create a new scope with the given name and parent. The AST and error formatter are optional. Attributes are
         defaulted here, with the error formatter of the parent scope being used if not provided.
+
         :param name: The name of the scope. This is usually a string, but can be an IdentifierAst or TypeAst.
         :param parent: The parent scope that this scope was created in.
         :param ast: The optional AST for this scope. This is used for top level scopes, such as functions and classes.

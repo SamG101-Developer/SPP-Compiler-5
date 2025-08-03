@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from abc import abstractmethod
-
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
 
@@ -12,7 +10,6 @@ class TypeInferrable:
     Every expression-based AST, and a few others, are type inferrable.
     """
 
-    @abstractmethod
     def infer_type(self, sm: ScopeManager, **kwargs) -> Asts.TypeAst:
         """
         Given the AST, and the scope manager (with knowledge o the current scope etc), determine the resulting type of
@@ -21,6 +18,8 @@ class TypeInferrable:
         :param kwargs: Additional keyword arguments.
         :return: The resulting type of the AST.
         """
+
+        raise NotImplementedError()
 
 
 __all__ = [
