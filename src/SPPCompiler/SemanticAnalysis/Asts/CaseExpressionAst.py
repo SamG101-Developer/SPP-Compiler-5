@@ -72,12 +72,13 @@ class CaseExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
     _binary_pattern_conversions: dict[int, list] = field(default_factory=dict)
 
-    def __post_init__(self) -> None:
-        self.kw_case = self.kw_case or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwCase)
-        self.kw_of = self.kw_of or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.KwOf)
-
     def __hash__(self) -> int:
         return id(self)
+
+    def __str__(self) -> str:
+        # String representation of the case expression.
+        branches_str = " ".join(str(branch) for branch in self.branches)
+        return f"{self.kw_case} {self.cond} {self.kw_of} {branches_str}"
 
     @staticmethod
     def from_simple(

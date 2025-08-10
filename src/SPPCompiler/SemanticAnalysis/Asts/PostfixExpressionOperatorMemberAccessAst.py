@@ -20,6 +20,10 @@ class PostfixExpressionOperatorMemberAccessAst(Asts.Ast, Asts.Mixins.TypeInferra
     def __eq__(self, other: PostfixExpressionOperatorMemberAccessAst) -> bool:
         return self.tok_access == other.tok_access and self.field == other.field
 
+    def __str__(self) -> str:
+        # String representation of the member access.
+        return f"{self.tok_access}{self.field}"
+
     @staticmethod
     def new_runtime(pos: int, new_field: Asts.IdentifierAst | Asts.TokenAst) -> PostfixExpressionOperatorMemberAccessAst:
         return PostfixExpressionOperatorMemberAccessAst(

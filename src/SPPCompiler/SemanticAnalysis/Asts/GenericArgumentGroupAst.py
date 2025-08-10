@@ -36,10 +36,8 @@ class GenericArgumentGroupAst(Asts.Ast):
         return args[0] if args else None
 
     def __str__(self) -> str:
-        if self.arguments:
-            string = ["[", ", ".join([str(a) for a in self.arguments]), "]"]
-            return "".join(string)
-        return ""
+        gen_str = ", ".join([str(a) for a in self.arguments])
+        return f"[{gen_str}]" if gen_str else ""
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

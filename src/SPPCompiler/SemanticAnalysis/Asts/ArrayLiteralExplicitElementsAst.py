@@ -42,10 +42,6 @@ class ArrayLiteralExplicitElementsAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     tok_r: Asts.TokenAst = field(default=None)
     """The closing ``]`` token marking the end of an array literal."""
 
-    def __post_init__(self) -> None:
-        self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftSquareBracket)
-        self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightSquareBracket)
-
     def __eq__(self, other: ArrayLiteralExplicitElementsAst) -> bool:
         # Needed for cmp-generic arg checking
         return type(other) is ArrayLiteralExplicitElementsAst and self.elems == other.elems
@@ -60,6 +56,11 @@ class ArrayLiteralExplicitElementsAst(Asts.Ast, Asts.Mixins.TypeInferrable):
 
         # Use the id of the object to ensure uniqueness.
         return id(self)
+
+    def __str__(self) -> str:
+        # String representation of the array literal.
+        elem_string = ", ".join(str(elem) for elem in self.elems)
+        return f"[{elem_string}]"
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

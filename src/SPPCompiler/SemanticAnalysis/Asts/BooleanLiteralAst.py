@@ -42,6 +42,9 @@ class BooleanLiteralAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __hash__(self) -> int:
         return id(self)
 
+    def __str__(self) -> str:
+        return f"{self.value}"
+
     @staticmethod
     def from_python_literal(pos: int, value: bool) -> BooleanLiteralAst:
         """

@@ -16,6 +16,10 @@ class UnaryExpressionAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __hash__(self) -> int:
         return id(self)
 
+    def __str__(self) -> str:
+        # String representation of the unary expression.
+        return f"{self.op}{self.rhs}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

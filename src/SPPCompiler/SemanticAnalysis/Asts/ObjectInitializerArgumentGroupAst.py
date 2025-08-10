@@ -28,13 +28,15 @@ class ObjectInitializerArgumentGroupAst(Asts.Ast):
         # Create a shallow copy of the AST.
         return ObjectInitializerArgumentGroupAst(arguments=self.arguments.copy())
 
+    def __str__(self) -> str:
+        # String representation of the object initializer argument group.
+        arg_string = ", ".join(str(arg) for arg in self.arguments)
+        return f"({arg_string})"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
-        string = [
-            self.tok_l.print(printer),
-            SequenceUtils.print(printer, self.arguments, sep=", "),
-            self.tok_r.print(printer)]
+        string = ["(", SequenceUtils.print(printer, self.arguments, sep=", "), ")"]
         return "".join(string)
 
     @property

@@ -43,20 +43,23 @@ class AssignmentStatementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     rhs: list[Asts.ExpressionAst] = field(default_factory=list)
     """The sequence of rhs values to assign to the targets."""
 
-    def __post_init__(self) -> None:
-        self.op = self.op or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
-
     def __hash__(self) -> int:
         return id(self)
+
+    def __str__(self) -> str:
+        # Print the AST as a string.
+        lhs_string = ", ".join([str(expr) for expr in self.lhs])
+        rhs_string = ", ".join([str(expr) for expr in self.rhs])
+        return f"{lhs_string} = {rhs_string}"
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
             SequenceUtils.print(printer, self.lhs, sep=", "),
-            " " + self.op.print(printer) + " ",
+            "=",
             SequenceUtils.print(printer, self.rhs, sep=", ")]
-        return "".join(string)
+        return " ".join(string)
 
     @property
     def pos_end(self) -> int:

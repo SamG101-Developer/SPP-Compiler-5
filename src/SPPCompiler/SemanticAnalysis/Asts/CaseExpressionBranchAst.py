@@ -63,6 +63,11 @@ class CaseExpressionBranchAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __post_init__(self) -> None:
         self.body = self.body or Asts.InnerScopeAst(pos=self.pos)
 
+    def __str__(self) -> str:
+        # String representation of the branch.
+        pat_string = ", ".join(str(p) for p in self.patterns)
+        return f"{self.op or ""}{pat_string} {self.guard or ""} {self.body}"
+
     @staticmethod
     def from_else_to_else_case(pos: int, else_case: Asts.PatternVariantElseCaseAst) -> CaseExpressionBranchAst:
         """

@@ -30,14 +30,18 @@ class PostfixExpressionOperatorFunctionCallAst(Asts.Ast, Asts.Mixins.TypeInferra
     _closure_arg: Optional[Asts.FunctionCallArgumentUnnamedAst] = field(default=None, repr=False)
     _is_coro_and_auto_resume: bool = field(default=False, repr=False)
 
+    def __post_init__(self) -> None:
+        self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=self.pos)
+        self.function_argument_group = self.function_argument_group or Asts.FunctionCallArgumentGroupAst(pos=self.pos)
+
     def __copy__(self, memodict=None) -> PostfixExpressionOperatorFunctionCallAst:
         return PostfixExpressionOperatorFunctionCallAst(
             self.pos, copy.copy(self.generic_argument_group), copy.copy(self.function_argument_group),
             fold_token=self.fold_token, _is_async=self._is_async, _overload=self._overload, _ctx=self._ctx)
 
-    def __post_init__(self) -> None:
-        self.generic_argument_group = self.generic_argument_group or Asts.GenericArgumentGroupAst(pos=self.pos)
-        self.function_argument_group = self.function_argument_group or Asts.FunctionCallArgumentGroupAst(pos=self.pos)
+    def __str__(self) -> str:
+        # String representation of the function call.
+        return f"{self.generic_argument_group}{self.function_argument_group}{self.fold_token if self.fold_token else ""}"
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

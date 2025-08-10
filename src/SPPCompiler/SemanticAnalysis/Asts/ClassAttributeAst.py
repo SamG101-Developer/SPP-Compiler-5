@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
@@ -33,22 +32,21 @@ class ClassAttributeAst(Asts.Ast, Asts.Mixins.VisibilityEnabledAst):
     type: Asts.TypeAst = field(default=None)
     default: Optional[Asts.ExpressionAst] = None
 
-    def __post_init__(self) -> None:
-        self.tok_colon = self.tok_colon or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkColon)
-
     def __deepcopy__(self, memodict: Dict = None) -> ClassAttributeAst:
         return ClassAttributeAst(
             self.pos, self.annotations, self.name, self.tok_colon, self.type, _visibility=self._visibility,
             _ctx=self._ctx, _scope=self._scope)
 
+    def __str__(self) -> str:
+        # String representation of the class attribute.
+        annotations_str = "\n".join(str(a) for a in self.annotations) + "\n" if self.annotations else ""
+        return f"{annotations_str}{self.name}: {self.type}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
         string = [
-            SequenceUtils.print(printer, self.annotations, sep="\n"),
-            self.name.print(printer),
-            self.tok_colon.print(printer) + " ",
-            self.type.print(printer)]
+            SequenceUtils.print(printer, self.annotations, sep="\n"), self.name.print(printer), ":", self.type.print(printer)]
         return "".join(string)
 
     @property

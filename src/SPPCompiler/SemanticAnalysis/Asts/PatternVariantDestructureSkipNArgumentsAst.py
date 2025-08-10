@@ -3,9 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
-from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import ast_printer_method, AstPrinter
+from SPPCompiler.SemanticAnalysis.Utils.AstPrinter import AstPrinter, ast_printer_method
 
 
 @dataclass(slots=True, repr=False)
@@ -13,8 +12,9 @@ class PatternVariantDestructureSkipNArgumentsAst(Asts.Ast, Asts.Mixins.AbstractP
     tok_variadic: Asts.TokenAst = field(default=None)
     binding: Optional[Asts.PatternVariantSingleIdentifierAst] = field(default=None)
 
-    def __post_init__(self) -> None:
-        self.tok_variadic = self.tok_variadic or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkDoubleDot)
+    def __str__(self) -> str:
+        # String representation of the AST.
+        return f"{self.tok_variadic}{self.binding if self.binding else ""}"
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstTypeUtils import AstTypeUtils
 from SPPCompiler.SemanticAnalysis.Scoping.ScopeManager import ScopeManager
@@ -22,18 +21,16 @@ class PatternVariantDestructureObjectAst(Asts.Ast, Asts.Mixins.AbstractPatternVa
 
     _new_ast: Asts.LetStatementInitializedAst = field(default=None, init=False, repr=False)
 
-    def __post_init__(self) -> None:
-        self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
-        self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightParenthesis)
+    def __str__(self) -> str:
+        # String representation of the AST.
+        string = [
+            str(self.class_type), "(", ", ".join(str(e) for e in self.elems), ")"]
+        return "".join(string)
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.
-        string = [
-            self.class_type.print(printer),
-            self.tok_l.print(printer),
-            SequenceUtils.print(printer, self.elems, sep=", "),
-            self.tok_r.print(printer)]
+        string = [self.class_type.print(printer), "(", SequenceUtils.print(printer, self.elems, sep=", "), ")"]
         return "".join(string)
 
     @property

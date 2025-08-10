@@ -19,7 +19,7 @@ class FunctionParameterRequiredAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mixi
         self.variable = self.variable or Asts.LocalVariableSingleIdentifierAst(pos=self.pos, name=Asts.IdentifierAst(pos=self.pos, value=f"$_{id(self)}"))
         self._variant = "Required"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.variable}{self.tok_colon} {self.type}"
 
     @ast_printer_method

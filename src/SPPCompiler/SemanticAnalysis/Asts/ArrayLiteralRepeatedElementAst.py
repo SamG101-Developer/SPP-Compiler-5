@@ -49,10 +49,8 @@ class ArrayLiteralRepeatedElementAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __hash__(self) -> int:
         return id(self)
 
-    def __str__(self):
-        string = [
-            "[", str(self.elem), "; ", str(self.size), "]"]
-        return "".join(string)
+    def __str__(self) -> str:
+        return f"[{self.elem}; {self.size}]"
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:

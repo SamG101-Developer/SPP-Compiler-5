@@ -54,6 +54,7 @@ class TypeUnaryExpressionAst(Asts.Ast, Asts.Mixins.AbstractTypeAst, Asts.Mixins.
         return self
 
     def is_never_type(self) -> bool:
+        # Todo: surely could be via std::never::Never? The NEver part will be true for this check, maybe move into RHS?
         return False
 
     @FunctionCache.cache_property

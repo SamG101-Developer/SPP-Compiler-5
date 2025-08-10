@@ -25,6 +25,10 @@ class ObjectInitializerAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __hash__(self) -> int:
         return id(self)
 
+    def __str__(self) -> str:
+        # String representation of the object initializer.
+        return f"{self.class_type}{self.object_argument_group}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

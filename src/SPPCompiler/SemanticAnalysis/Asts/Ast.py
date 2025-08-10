@@ -58,11 +58,15 @@ class Ast(CompilerStages):
         return 0
 
     def __eq__(self, other: Ast) -> bool:
-        return True
+        """
+        AST equality is not needed unless specialized steps for a specific AST have been defined. Base case is to return
+        True, as the ASTs are not compared in any way, for performance reasons.
 
-    def __str__(self) -> str:
-        printer = AstPrinter()
-        return self.print(printer)
+        :param other: The other AST to compare to.
+        :return: True for all ASTs, as they are not compared in any way.
+        """
+
+        return True
 
     def pre_process(self, ctx: PreProcessingContext) -> None:
         """

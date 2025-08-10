@@ -14,6 +14,14 @@ class PatternVariantSingleIdentifierAst(Asts.Ast, Asts.Mixins.AbstractPatternVar
     name: Asts.IdentifierAst = field(default=None)
     alias: Optional[Asts.LocalVariableSingleIdentifierAliasAst] = field(default=None)
 
+    def __str__(self) -> str:
+        # String representation of the AST.
+        string = [
+            str(self.tok_mut) if self.tok_mut is not None else "",
+            str(self.name),
+            (" " + str(self.alias)) if self.alias is not None else ""]
+        return " ".join(string)
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

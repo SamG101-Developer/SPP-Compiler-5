@@ -19,7 +19,7 @@ class ScopeManager:
     global_scope: Scope
     current_scope: Scope
     normal_sup_blocks: defaultdict[TypeSymbol, list[Scope]]
-    generic_sup_blocks: dict[TypeSymbol, Scope]
+    generic_sup_blocks: defaultdict[TypeSymbol, list[Scope]]
     _iterator: Iterator[Scope]
 
     def __init__(self, global_scope, current_scope: Optional[Scope] = None, nsbs=None, gsbs=None) -> None:

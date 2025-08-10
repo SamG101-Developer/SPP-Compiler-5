@@ -18,6 +18,10 @@ class ObjectInitializerArgumentNamedAst(Asts.Ast, Asts.Mixins.TypeInferrable):
     def __post_init__(self) -> None:
         self.tok_assign = self.tok_assign or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkAssign)
 
+    def __str__(self) -> str:
+        # String representation of the object initializer argument.
+        return f"{self.name}{self.tok_assign}{self.value}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

@@ -23,6 +23,9 @@ class FunctionCallArgumentUnnamedAst(Asts.Ast, Asts.Mixins.OrderableAst, Asts.Mi
         # Get the id of the AST (same as "is" matching).
         return id(self)
 
+    def __str__(self) -> str:
+        return f"{self.convention or ""}{self.tok_unpack or ""}{self.value}"
+
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
         # Print the AST with auto-formatting.

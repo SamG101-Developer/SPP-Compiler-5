@@ -4,7 +4,6 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Optional
 
-from SPPCompiler.LexicalAnalysis.TokenType import SppTokenType
 from SPPCompiler.SemanticAnalysis import Asts
 from SPPCompiler.SemanticAnalysis.AstUtils.AstMemoryUtils import AstMemoryUtils
 from SPPCompiler.SemanticAnalysis.AstUtils.AstOrderingUtils import AstOrderingUtils
@@ -25,10 +24,6 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
     arguments: list[Asts.FunctionCallArgumentAst] = field(default_factory=list)
     tok_r: Asts.TokenAst = field(default=None)
 
-    def __post_init__(self) -> None:
-        self.tok_l = self.tok_l or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkLeftParenthesis)
-        self.tok_r = self.tok_r or Asts.TokenAst.raw(pos=self.pos, token_type=SppTokenType.TkRightParenthesis)
-
     def __hash__(self) -> int:
         return id(self)
 
@@ -37,6 +32,11 @@ class FunctionCallArgumentGroupAst(Asts.Ast):
 
     def __deepcopy__(self, memodict=None) -> FunctionCallArgumentGroupAst:
         return FunctionCallArgumentGroupAst(pos=self.pos, tok_l=self.tok_l, arguments=fast_deepcopy(self.arguments), tok_r=self.tok_r)
+
+    def __str__(self) -> str:
+        # Print the AST as a string.
+        arg_string = ", ".join(str(arg) for arg in self.arguments)
+        return f"({arg_string})"
 
     @ast_printer_method
     def print(self, printer: AstPrinter) -> str:
